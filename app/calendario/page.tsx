@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BellRing,
@@ -47,54 +47,16 @@ import { logError } from '@/lib/observability';
 import { validateCalendarWrite, describeCalendarSaveError } from '@/lib/calendar-write-validation';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
-import { TourCard } from '@/components/ui/tour-card';
 import { AppPageHeader } from '@/components/ui/app-page-header';
 
 type CalendarStorageMode = 'supabase' | 'local';
-
-type CalendarTourStep = {
-  id: 'month' | 'grid' | 'composer' | 'create';
-  title: string;
-  description: string;
-};
 
 const WEEKDAY_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const DEFAULT_FORM_STATE = DEFAULT_CALENDAR_FORM_STATE;
 
-const CALENDAR_TOUR_STEPS: CalendarTourStep[] = [
-  {
-    id: 'month',
-    title: 'Navegá el mes',
-    description:
-      'Usá estas flechas para cambiar de mes o volvé a hoy cuando quieras ubicarte rápido.',
-  },
-  {
-    id: 'grid',
-    title: 'Elegí un día',
-    description:
-      'Tocá cualquier día del calendario para ver su contenido o cargar una nueva fecha en ese momento.',
-  },
-  {
-    id: 'composer',
-    title: 'Completá la fecha',
-    description:
-      'Aquí elegís la materia o el trabajo práctico, definís la instancia y dejás listo el evento para guardarlo.',
-  },
-  {
-    id: 'create',
-    title: 'Guardá el evento',
-    description:
-      'Cuando ya tengas los datos listos, guardá el evento para verlo dentro del calendario y consultarlo después.',
-  },
-];
-
 function getLocalCalendarStorageKey(userId: string) {
   return `evaluo_calendar_events_${userId}`;
-}
-
-function getCalendarTourStorageKey(userId: string) {
-  return `evaluo_calendar_tour_seen:${userId}`;
 }
 
 function readLocalCalendarEvents(userId: string) {
@@ -206,13 +168,7 @@ export default function CalendarioPage() {
   const [careerMateriaLoading, setCareerMateriaLoading] = useState(false);
   const [careerId, setCareerId] = useState<string | null>(null);
   const [careerName, setCareerName] = useState<string | null>(null);
-  const [showCalendarTour, setShowCalendarTour] = useState(false);
-  const [calendarTourStepIndex, setCalendarTourStepIndex] = useState(0);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
-  const monthTourRef = useRef<HTMLDivElement | null>(null);
-  const gridTourRef = useRef<HTMLDivElement | null>(null);
-  const composerTourRef = useRef<HTMLDivElement | null>(null);
-  const createTourRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -445,8 +401,6 @@ export default function CalendarioPage() {
   }, [user]);
 
   const selectedDateKey = formatStorageDate(selectedDate);
-  const currentCalendarTourStep =
-    CALENDAR_TOUR_STEPS[calendarTourStepIndex] ?? CALENDAR_TOUR_STEPS[0];
 
   const eventsByDate = useMemo(() => {
     return events.reduce<Record<string, StudyCalendarEvent[]>>((accumulator, event) => {
@@ -495,60 +449,15 @@ export default function CalendarioPage() {
     );
   }, [careerMateriaOptions, formState.selectedMateriaId, formState.subjectName]);
 
-  useEffect(() => {
-    if (!user || !hasLoadedEvents || typeof window === 'undefined') return;
-    if (events.length > 0) return;
 
-    const alreadySeen = window.localStorage.getItem(getCalendarTourStorageKey(user.id)) === 'done';
-    if (alreadySeen) return;
-
-    setCalendarTourStepIndex(0);
-    setShowCalendarTour(true);
-  }, [events.length, hasLoadedEvents, user]);
-
-  useEffect(() => {
-    if (!showCalendarTour) return;
-
-    const tourTargets: Record<CalendarTourStep['id'], HTMLElement | null> = {
-      month: monthTourRef.current,
-      grid: gridTourRef.current,
-      composer: composerTourRef.current,
-      create: createTourRef.current,
-    };
-
-    const target = tourTargets[currentCalendarTourStep.id];
-    if (!target) return;
-
-    const timeoutId = window.setTimeout(() => {
-      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-    }, 50);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [currentCalendarTourStep.id, showCalendarTour]);
-
-  const closeCalendarTour = () => {
-    setShowCalendarTour(false);
-    if (typeof window !== 'undefined' && user) {
-      window.localStorage.setItem(getCalendarTourStorageKey(user.id), 'done');
-    }
-  };
-
-  const handleCalendarTourNext = () => {
-    if (currentCalendarTourStep.id === 'grid') {
-      openComposerForDate(selectedDate);
-    }
-
-    if (calendarTourStepIndex >= CALENDAR_TOUR_STEPS.length - 1) {
-      closeCalendarTour();
-      return;
-    }
-
-    setCalendarTourStepIndex((current) => current + 1);
-  };
-
-  const handleCalendarTourPrevious = () => {
-    if (calendarTourStepIndex === 0) return;
-    setCalendarTourStepIndex((current) => current - 1);
+    setFormState((current) => ({
+      type: current.type,
+      subjectName: '',
+      selectedMateriaId: null,
+      examInstance: current.type === 'exam' ? current.examInstance : '1',
+      assignmentTitle: '',
+      reminderDays: current.type === 'exam' ? [7, 3, 1] : [],
+    }));
   };
 
   const resetForm = () => {
@@ -851,17 +760,9 @@ export default function CalendarioPage() {
         />
         <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_50%,#edf4ff_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
           <div className="relative px-1.5 py-1.5 min-[380px]:px-2 min-[380px]:py-2 sm:px-4 sm:py-4">
-            {showCalendarTour ? (
-              <div className="pointer-events-none absolute inset-0 z-[60] bg-white/18 backdrop-blur-[3px]" />
-            ) : null}
             <div className="min-w-0 overflow-hidden rounded-[22px] border border-slate-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:rounded-[28px]">
               <div
-                ref={monthTourRef}
-                className={`flex flex-col gap-2 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between ${
-                  showCalendarTour && currentCalendarTourStep.id === 'month'
-                    ? 'relative z-[70] shadow-[0_24px_70px_rgba(15,23,42,0.12)] ring-1 ring-[#BFD4FF]'
-                    : ''
-                }`}
+                className="flex flex-col gap-2 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between"
               >
                 <div className="relative flex min-w-0 items-center justify-between gap-1 min-[380px]:justify-start min-[380px]:gap-2">
                   <button
@@ -883,18 +784,6 @@ export default function CalendarioPage() {
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
-                  {showCalendarTour && currentCalendarTourStep.id === 'month' ? (
-                    <TourCard
-                      title={currentCalendarTourStep.title}
-                      description={currentCalendarTourStep.description}
-                      stepIndex={calendarTourStepIndex}
-                      totalSteps={CALENDAR_TOUR_STEPS.length}
-                      onNext={handleCalendarTourNext}
-                      onPrevious={handleCalendarTourPrevious}
-                      onClose={closeCalendarTour}
-                      className="pointer-events-auto absolute top-full left-0 z-[80] mt-4 max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:bottom-[5.75rem] max-sm:translate-x-0 max-sm:translate-y-0"
-                    />
-                  ) : null}
                 </div>
 
                 <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 min-[420px]:flex min-[420px]:flex-wrap">
@@ -937,29 +826,11 @@ export default function CalendarioPage() {
               </div>
 
               <div
-                ref={gridTourRef}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
                 }}
-                className={
-                  showCalendarTour && currentCalendarTourStep.id === 'grid'
-                    ? 'relative z-[70] shadow-[0_24px_70px_rgba(15,23,42,0.12)] ring-1 ring-[#BFD4FF]'
-                    : ''
-                }
               >
-                {showCalendarTour && currentCalendarTourStep.id === 'grid' ? (
-                  <TourCard
-                    title={currentCalendarTourStep.title}
-                    description={currentCalendarTourStep.description}
-                    stepIndex={calendarTourStepIndex}
-                    totalSteps={CALENDAR_TOUR_STEPS.length}
-                    onNext={handleCalendarTourNext}
-                    onPrevious={handleCalendarTourPrevious}
-                    onClose={closeCalendarTour}
-                    className="pointer-events-auto absolute top-4 left-1/2 z-[80] -translate-x-1/2 max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:bottom-[5.75rem] max-sm:translate-x-0 max-sm:translate-y-0"
-                  />
-                ) : null}
                 {monthGrid.map((date) => {
                   const dateKey = formatStorageDate(date);
                   const cellEvents = eventsByDate[dateKey] ?? [];
@@ -1046,9 +917,6 @@ export default function CalendarioPage() {
       <Dialog open={isComposerOpen} onOpenChange={setIsComposerOpen}>
         <DialogContent className="h-[min(78vh,640px)] w-[min(calc(100vw-1rem),360px)] max-w-[360px] overflow-hidden rounded-[22px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] md:h-auto md:max-h-[76vh] md:w-[680px] md:max-w-[680px] lg:w-[760px] lg:max-w-[760px]">
           <div className="relative h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
-            {showCalendarTour && currentCalendarTourStep.id === 'composer' ? (
-              <div className="pointer-events-none absolute inset-0 z-[70] bg-white/18 backdrop-blur-[3px]" />
-            ) : null}
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
                 <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-[#050B2C]">
@@ -1104,13 +972,9 @@ export default function CalendarioPage() {
             </div>
 
             <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
-              <div ref={composerTourRef} className="relative">
+              <div className="relative">
                 <div
-                  className={`h-[332px] overflow-hidden ${
-                    showCalendarTour && currentCalendarTourStep.id === 'composer'
-                      ? 'relative z-[80] rounded-[24px] shadow-[0_24px_70px_rgba(15,23,42,0.12)] ring-1 ring-[#BFD4FF]'
-                      : ''
-                  }`}
+                  className="h-[332px] overflow-hidden"
                 >
                   {formState.type === 'exam' ? (
                     <div className="grid h-full grid-rows-[auto_auto_minmax(112px,1fr)] gap-3">
@@ -1265,18 +1129,6 @@ export default function CalendarioPage() {
                   )}
                 </div>
 
-                {showCalendarTour && currentCalendarTourStep.id === 'composer' ? (
-                  <TourCard
-                    title={currentCalendarTourStep.title}
-                    description={currentCalendarTourStep.description}
-                    stepIndex={calendarTourStepIndex}
-                    totalSteps={CALENDAR_TOUR_STEPS.length}
-                    onNext={handleCalendarTourNext}
-                    onPrevious={handleCalendarTourPrevious}
-                    onClose={closeCalendarTour}
-                    className="pointer-events-auto absolute top-full left-1/2 z-[90] mt-3 -translate-x-1/2 max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:bottom-[5.75rem] max-sm:translate-x-0 max-sm:translate-y-0"
-                  />
-                ) : null}
               </div>
 
               <div className="space-y-3">
@@ -1372,7 +1224,6 @@ export default function CalendarioPage() {
                     Cancelar
                   </Button>
                   <Button
-                    ref={createTourRef}
                     className="h-9 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3.5 text-[13px] text-white hover:opacity-95"
                     onClick={handleCreateEvent}
                     disabled={isSavingEvent}
@@ -1380,18 +1231,6 @@ export default function CalendarioPage() {
                     <Plus className="h-4 w-4" />
                     {isSavingEvent ? 'Guardando...' : 'Guardar'}
                   </Button>
-                  {showCalendarTour && currentCalendarTourStep.id === 'create' ? (
-                    <TourCard
-                      title={currentCalendarTourStep.title}
-                      description={currentCalendarTourStep.description}
-                      stepIndex={calendarTourStepIndex}
-                      totalSteps={CALENDAR_TOUR_STEPS.length}
-                      onNext={handleCalendarTourNext}
-                      onPrevious={handleCalendarTourPrevious}
-                      onClose={closeCalendarTour}
-                      className="pointer-events-auto absolute right-0 bottom-full z-[80] mb-3 max-sm:fixed max-sm:inset-x-4 max-sm:top-auto max-sm:bottom-[5.75rem] max-sm:translate-x-0 max-sm:translate-y-0"
-                    />
-                  ) : null}
                 </div>
               </div>
             </div>
