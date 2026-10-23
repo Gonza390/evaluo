@@ -47,7 +47,7 @@ export function PdfMobileNavigation({
   const itemClass = (selected: boolean) =>
     cn(
       'focus-visible:outline-ring flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2',
-      selected ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'
+      selected ? 'bg-primary/10 text-blue-800 dark:text-blue-200' : 'text-muted-foreground hover:bg-muted'
     );
   const moreActive = active === 'glosario' || active === 'mapa';
 
@@ -106,7 +106,7 @@ export function PdfMobileNavigation({
               onSelect={() => onSelect('glosario')}
               className={cn(
                 'min-h-11 gap-2 rounded-lg text-[13px]',
-                active === 'glosario' && 'bg-primary/10 text-primary'
+                active === 'glosario' && 'bg-primary/10 text-blue-800 dark:text-blue-200'
               )}
             >
               <SquareLibrary aria-hidden="true" className="size-4" /> Glosario
@@ -115,7 +115,7 @@ export function PdfMobileNavigation({
               onSelect={() => onSelect('mapa')}
               className={cn(
                 'min-h-11 gap-2 rounded-lg text-[13px]',
-                active === 'mapa' && 'bg-primary/10 text-primary'
+                active === 'mapa' && 'bg-primary/10 text-blue-800 dark:text-blue-200'
               )}
             >
               <Map aria-hidden="true" className="size-4" /> Mapa mental
