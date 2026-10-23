@@ -12,7 +12,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { CalendarDays, CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
 import {
-  getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
   type StudentMaterialProcessingState,
 } from '@/app/dashboard/materiales/actions';
@@ -34,6 +33,7 @@ import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
+import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 import { PdfProcessingPanel } from '@/components/pdf-processing/pdf-processing-panel';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
@@ -258,7 +258,7 @@ export function PdfFirstUploadShell({
     const poll = async () => {
       if (document.visibilityState === 'hidden') return;
       const outcome = await processingPollRef.current.run(
-        () => getStudentMaterialProcessingStateAction(materialId)
+        () => fetchStudentMaterialProcessingState(materialId)
       );
       if (!active || outcome.kind === 'busy') return;
       if (outcome.kind === 'error') {
