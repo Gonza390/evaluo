@@ -9,7 +9,7 @@ import { isInternalQueueRequestAuthorized } from '@/lib/student-materials/job-au
 // Conservamos margen bajo el timeout de la función para no iniciar un nuevo PDF
 // cuando se agotó el presupuesto del lote.
 const MAX_JOBS_PER_DISPATCH = 3;
-const DISPATCH_BUDGET_MS = 210_000;
+const DISPATCH_BUDGET_MS = 90_000;
 const EMPTY_QUEUE_MESSAGE = 'No hay materiales pendientes en la cola.';
 
 async function processNextJob(request: Request) {
