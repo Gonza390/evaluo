@@ -465,3 +465,13 @@ assertIncludesAll('lib/attribution.ts', [
   'latest_landing_market',
   'if (!hasAttribution && !landingMarket) return;',
 ]);
+
+assertIncludesAll('lib/analytics-metadata.ts', [
+  'international_study_demo_answer_revealed:',
+  'international_study_demo_progress_viewed:',
+  'international_study_demo_pdf_answered:',
+  'international_study_demo_pdf_progress_viewed:',
+  "'landing_market'",
+  "'latest_landing_market'",
+  "pdf_first_landing_viewed:",
+]);
