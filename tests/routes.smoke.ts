@@ -76,6 +76,22 @@ const universityRequestFormSource = readFileSync(
 );
 const nextConfigSource = readFileSync(resolve('next.config.mjs'), 'utf8');
 const pdfRenderSource = readFileSync(resolve('lib/student-materials/pdf-render.ts'), 'utf8');
+const materialActionsSource = readFileSync(
+  resolve('app/dashboard/materiales/actions.ts'),
+  'utf8'
+);
+const materialProcessingActionsSource = readFileSync(
+  resolve('app/dashboard/materiales/processing-actions.ts'),
+  'utf8'
+);
+const materialProcessingServiceSource = readFileSync(
+  resolve('lib/student-materials/processing-service.ts'),
+  'utf8'
+);
+const stageCheckpointsSource = readFileSync(
+  resolve('lib/student-materials/stage-checkpoints.ts'),
+  'utf8'
+);
 const footerHomeSource = readFileSync(resolve('components/footer-home.tsx'), 'utf8');
 const footerSource = readFileSync(resolve('components/footer.tsx'), 'utf8');
 const publicSiteHeaderSource = readFileSync(
@@ -300,6 +316,18 @@ assert.ok(
 );
 assert.match(sharedPdfThumbnail, /if \(studentMaterialMatch && !user\)/);
 assert.match(sharedPdfThumbnail, /private, no-store, max-age=0/);
+assert.match(sharedPdfThumbnail, /loadStudentMaterialThumbnail/);
+assert.match(sharedPdfThumbnail, /generateAndStoreStudentMaterialThumbnail/);
+assert.doesNotMatch(sharedPdfThumbnail, /from 'sharp'/);
+assert.doesNotMatch(materialActionsSource, /processStudentMaterialAction/);
+assert.doesNotMatch(materialActionsSource, /processNextStudentMaterialJobAction/);
+assert.doesNotMatch(materialActionsSource, /regenerateStudentMaterialStudyAction/);
+assert.doesNotMatch(materialActionsSource, /processStudentMaterial,/);
+assert.match(materialProcessingActionsSource, /processStudentMaterialAction/);
+assert.match(materialProcessingActionsSource, /processNextStudentMaterialJobAction/);
+assert.match(materialProcessingActionsSource, /regenerateStudentMaterialStudyAction/);
+assert.match(stageCheckpointsSource, /loadReusableSourceStageCheckpoint/);
+assert.match(materialProcessingServiceSource, /skippedPdfDownload: Boolean\(reusableSource\)/);
 assert.match(materialLoginForm, /reason === 'shared-pdf'/);
 assert.match(materialLoginForm, /emailRedirectTo/);
 // OAuth conserva el enlace al material a través de nextPath validado.
