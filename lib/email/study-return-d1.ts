@@ -5,6 +5,7 @@ import { getDashboardNextStudyAction, type DashboardNextStudyAction } from '@/li
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { logError, logInfo } from '@/lib/observability';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 import { getRealStudyMaterialId } from '@/lib/email/study-return-material-id';
 
 const CAMPAIGN_KEY = 'study_return_d1_v1';
@@ -110,12 +111,16 @@ export function buildStudyReturnD1Message(input: {
   materialTitle: string;
   action: Pick<DashboardNextStudyAction, 'kind' | 'title' | 'description' | 'cta'>;
   returnUrl: string;
+  pendingTopics?: string[];
 }) {
   const title = truncate(input.materialTitle);
   const safeFirstName = escapeHtml(input.firstname);
   const safeTitle = escapeHtml(title);
   const safeUrl = escapeHtml(input.returnUrl);
   const safeCta = escapeHtml(input.action.cta);
+  const safeNextStep = escapeHtml(input.action.description);
+  const topics = [...new Set((input.pendingTopics ?? []).map((topic) => topic.trim()).filter(Boolean))].slice(0, 2);
+  const topicsHtml = topics.length ? `<p style="margin:0 0 10px;font-weight:700;font-size:14px;color:#0F1B3D;">Temas para reforzar</p><ul style="padding-left:20px;margin:0 0 12px;color:#334155;">${topics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join('')}</ul>` : '';
 
   const copyByKind: Record<
     DashboardNextStudyAction['kind'],
@@ -161,18 +166,16 @@ export function buildStudyReturnD1Message(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px;">
-                  <span style="color:#032269;">evalu</span><span style="color:#0546f3;">o</span>
-                </div>
+                <div style="margin:0 0 28px;padding:14px 18px;background:#174BBD;border-radius:14px;"><img src="https://cdn.sender.net/email_images/455373/images/0/evaluo_logo_blanco_email.png" width="176" height="64" alt="Evaluo" style="display:block;width:176px;height:64px;border:0;" /></div>
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeTitle}</p>
-                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
+                <div style="padding:14px 18px;border:1px solid #DCE6F9;border-radius:12px;background:#F4F7FF;margin:0 0 22px;">${topicsHtml}<p style="margin:0;font-size:14px;line-height:1.5;color:#334155;">${safeNextStep}</p></div>
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-                  <img src="https://evaluo.com.ar/evaluo-logo-icono.svg" width="52" height="52" alt="Evaluo" style="display:block;width:52px;height:52px;margin:0 auto 10px;object-fit:contain;border:0;" />
-                  <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                 </div>
               </td>
             </tr>
@@ -269,6 +272,7 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     skippedDisabled: 0,
     skippedAdmin: 0,
     skippedRecentEmail: 0,
+    skippedFrequency: 0,
     skippedInvalid: 0,
     failed: 0,
     actions: {
@@ -392,6 +396,10 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       summary.skippedRecentEmail += 1;
       continue;
     }
+    if (!dryRun && !(await canSendPdfStudyNudge(candidate.userId))) {
+      summary.skippedFrequency += 1;
+      continue;
+    }
 
     const material = materialById.get(candidate.materialId);
     if (!material || material.user_id !== candidate.userId) {
@@ -426,12 +434,18 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       profile?.nombre ||
       (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null) ||
       (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : null);
+    const pendingTopics = action.kind === 'reinforce'
+      ? await db.from('study_errors').select('topic').eq('user_id', candidate.userId)
+          .eq('student_material_id', material.id).eq('status', 'pending').limit(50)
+      : { data: [], error: null };
+    if (pendingTopics.error) logError('studyReturnD1.pendingTopics', pendingTopics.error, { userId: candidate.userId });
     const returnUrl = buildTrackedReturnUrl(action);
     const message = buildStudyReturnD1Message({
       firstname: firstName(displayName),
       materialTitle: materialTitle(material),
       action,
       returnUrl,
+      pendingTopics: (pendingTopics.data ?? []).map((x: { topic: string | null }) => x.topic ?? '').filter(Boolean),
     });
     const uniqueCampaignKey = `${CAMPAIGN_KEY}:${candidate.lastStudyAt}`;
 

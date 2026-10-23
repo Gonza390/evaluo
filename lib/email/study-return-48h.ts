@@ -3,6 +3,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 
 const CAMPAIGN_KEY = 'study_return_48h_v1';
 const INACTIVE_HOURS = 48;
@@ -44,6 +45,7 @@ function escapeHtml(value: string) {
 function buildReturnUrl(materialId: string, hasPending: boolean) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
   const url = new URL(`/materiales/${materialId}`, baseUrl);
+  url.searchParams.set('tab', hasPending ? 'progreso' : 'ejercicios');
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
   url.searchParams.set('utm_campaign', CAMPAIGN_KEY);
@@ -55,6 +57,7 @@ export function buildStudyReturn48hMessage(input: {
   firstname: string;
   materialTitle: string;
   pendingCount: number;
+  pendingTopics: string[];
   returnUrl: string;
 }) {
   const title = truncate(input.materialTitle);
@@ -72,7 +75,9 @@ export function buildStudyReturn48hMessage(input: {
     ? `En tu última sesión con ${title} quedaron algunos conceptos pendientes. Podés retomarlos y comprobar si ahora los entendés mejor.`
     : `Hace un par de días estuviste trabajando con ${title}. Podés volver al material y seguir estudiando desde donde lo dejaste.`;
 
-  const cta = hasPending ? 'Repasar ahora' : 'Continuar estudiando';
+  const cta = hasPending ? 'Reforzar mis temas' : 'Practicar con mi PDF';
+  const topicNames = [...new Set(input.pendingTopics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
+  const topicHtml = hasPending && topicNames.length ? `<div style="background:#F4F7FF;border:1px solid #DCE6F9;border-radius:12px;padding:14px 18px;margin:0 0 22px;"><p style="margin:0 0 10px;font-weight:700;font-size:14px;">Temas que te conviene repasar</p><ul style="padding-left:18px;margin:0;">${topicNames.map((name) => `<li style="margin-bottom:5px;">${escapeHtml(name)}</li>`).join('')}</ul></div>` : '';
 
   const safeFirstName = escapeHtml(input.firstname);
   const safeHeading = escapeHtml(heading);
@@ -89,17 +94,15 @@ export function buildStudyReturn48hMessage(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px;">
-                  <span style="color:#032269;">evalu</span><span style="color:#0546f3;">o</span>
-                </div>
+                <div style="margin:0 0 28px;padding:14px 18px;background:#174BBD;border-radius:14px;"><img src="https://cdn.sender.net/email_images/455373/images/0/evaluo_logo_blanco_email.png" width="176" height="64" alt="Evaluo" style="display:block;width:176px;height:64px;border:0;" /></div>
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
+                ${topicHtml}
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material en Evaluo.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-                  <img src="https://evaluo.com.ar/evaluo-logo-icono.svg" width="52" height="52" alt="Evaluo" style="display:block;width:52px;height:52px;margin:0 auto 10px;object-fit:contain;border:0;" />
-                  <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                 </div>
               </td>
             </tr>
@@ -163,6 +166,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
     skippedDisabled: 0,
     skippedReturned: 0,
     skippedInvalid: 0,
+    skippedFrequency: 0,
     failed: 0,
   };
 
@@ -193,6 +197,10 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
   }
 
   for (const candidate of candidates) {
+    if (!(await canSendPdfStudyNudge(candidate.user_id))) {
+      summary.skippedFrequency += 1;
+      continue;
+    }
     const { data: reservation, error: reservationError } = await db
       .from('study_return_reminders')
       .insert({
@@ -221,6 +229,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
           .select('id')
           .eq('user_id', candidate.user_id)
           .gt('created_at', candidate.last_activity_at)
+          .or('session_key.is.null,session_key.not.like.server:%')
           .limit(1),
         db
           .from('student_materials')
@@ -273,6 +282,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
         firstname: displayFirstName,
         materialTitle: material.title,
         pendingCount,
+        pendingTopics: ((errorsResult.data ?? []) as Array<{ topic: string | null }>).map((x) => x.topic ?? ''),
         returnUrl,
       });
 
