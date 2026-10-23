@@ -9,7 +9,6 @@ import {
   prepareStudentMaterialUploadAction,
 } from '@/app/dashboard/materiales/upload-actions';
 import {
-  getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
 } from '@/app/dashboard/materiales/actions';
 import {
@@ -21,6 +20,7 @@ import { getStudentMaterialRoute } from '@/lib/routes';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
+import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 
 type UniversidadOption = {
   id: string;
@@ -88,7 +88,7 @@ export function QuickPdfUpload({
   const [analyzeVisuals, setAnalyzeVisuals] = useState(false);
   const [visualQuota, setVisualQuota] = useState<StudentMaterialVisualAnalysisQuota | null>(null);
   const [visualQuotaLoading, setVisualQuotaLoading] = useState(true);
-  const processingPollRef = useRef(createSingleFlightPolling<Awaited<ReturnType<typeof getStudentMaterialProcessingStateAction>>>());
+  const processingPollRef = useRef(createSingleFlightPolling<Awaited<ReturnType<typeof fetchStudentMaterialProcessingState>>>());
   const [uploading, setUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingMaterialId, setProcessingMaterialId] = useState<string | null>(null);
@@ -152,7 +152,7 @@ export function QuickPdfUpload({
     const poll = async () => {
       if (document.visibilityState === 'hidden') return;
       const outcome = await processingPollRef.current.run(
-        () => getStudentMaterialProcessingStateAction(processingMaterialId)
+        () => fetchStudentMaterialProcessingState(processingMaterialId)
       );
       if (!active || outcome.kind === 'busy') return;
       if (outcome.kind === 'error') {
