@@ -32,7 +32,7 @@ function getSamplePageNumbers(pageCount: number) {
 }
 
 function countSelectableTextCharacters(items: unknown[]) {
-  return items.reduce((total, item) => {
+  return items.reduce<number>((total, item) => {
     if (!item || typeof item !== 'object' || !('str' in item)) return total;
     const value = (item as { str?: unknown }).str;
     return total + (typeof value === 'string' ? value.replace(/\s+/g, '').length : 0);
