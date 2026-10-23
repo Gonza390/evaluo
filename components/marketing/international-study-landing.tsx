@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ArrowRight, BookOpenCheck, CheckCircle2, FileText, Layers3, Target } from 'lucide-react';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
+import { InternationalPracticePreview } from '@/components/marketing/international-practice-preview';
+import { TrackedLink } from '@/components/marketing/tracked-link';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -44,7 +46,7 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
   const copy = STUDY_MARKETS[market];
   const guide = REGIONAL_STUDY_GUIDES[market];
   const source = 'international-study-' + market;
-  const demoUrl = '/demo/material-estudio?source=' + source;
+  const demoUrl = '/demo/material-estudio?tour=0&start=ejercicios&source=' + source;
 
   return (
     <div lang={copy.htmlLang} className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100">
@@ -96,12 +98,14 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
                   Puedes empezar gratis
                 </span>
               </div>
-              <Link
+              <TrackedLink
                 href={demoUrl}
+                eventName="cta_click"
+                payload={{ location: `international_${market}_hero_demo`, cta_name: 'ver_practica_pdf_real', market, source }}
                 className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
-                Ver una sesión de ejemplo <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+                Probar una sesión con PDF de muestra <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </TrackedLink>
             </div>
             <div id="seleccionar-pdf" className="scroll-mt-24">
               <PdfFirstLandingUploader
@@ -135,47 +139,7 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
           </div>
         </section>
 
-        <section className="border-y border-slate-100 bg-slate-50/60 py-16 sm:py-20" aria-labelledby="ejemplo-de-pregunta">
-          <div className="mx-auto grid w-full max-w-[1120px] gap-8 px-4 sm:px-8 md:grid-cols-2 md:items-center">
-            <div>
-              <p className="text-xs font-bold tracking-wider text-blue-700 uppercase">{copy.exampleLabel}</p>
-              <h2 id="ejemplo-de-pregunta" className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-                Practica el contenido, no respuestas al azar.
-              </h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600">
-                Este ejemplo ilustra cómo trabajar un concepto. Tus preguntas se basan en el PDF que selecciones y pueden incluir otros tipos de ejercicio.
-              </p>
-              <Link href={demoUrl} className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline">
-                Ver cómo funciona Evaluo <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
-            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_16px_42px_rgba(15,23,42,0.06)] sm:p-8">
-              <p className="text-[11px] font-bold tracking-wide text-blue-700 uppercase">Tema: {copy.exampleTopic}</p>
-              <h3 className="mt-4 text-lg font-bold leading-7 text-slate-950">{copy.exampleQuestion}</h3>
-              {copy.exampleOptions ? (
-                <ol className="mt-4 space-y-2" type="A">
-                  {copy.exampleOptions.map((option, index) => (
-                    <li key={option} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
-                      <span className="mr-2 font-bold text-blue-700">{String.fromCharCode(65 + index)}.</span>{option}
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
-              <details className="group mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
-                <summary className="cursor-pointer text-sm font-bold text-blue-800">
-                  Intenta responder y descubre la explicación
-                </summary>
-                <p className="mt-3 border-t border-blue-100 pt-3 text-sm leading-7 text-slate-700">{copy.exampleAnswer}</p>
-                <p className="mt-2 text-xs leading-5 text-slate-600">
-                  Comprueba si tu razonamiento coincide y qué parte del tema necesitas repasar.
-                </p>
-              </details>
-              <p className="mt-4 text-xs leading-5 text-slate-500">
-                Ejemplo preparado para esta página; no representa una pregunta oficial ni un resultado de un estudiante.
-              </p>
-            </div>
-          </div>
-        </section>
+        <InternationalPracticePreview market={market} />
 
         <section className="py-16 sm:py-20" aria-labelledby="guia-regional">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
