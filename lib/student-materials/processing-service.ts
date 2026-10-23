@@ -35,6 +35,7 @@ import {
   enhancePdfExtractionWithVision,
   selectVisionPageNumbers,
 } from '@/lib/student-materials/vision-extract';
+import { buildClientVisionPagePaths } from '@/lib/student-materials/client-vision-cache';
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
@@ -223,12 +224,14 @@ export async function processStudentMaterial(input: {
         visionUsed: sourceCheckpoint.visionUsed,
         visionPageNumbers: sourceCheckpoint.visionPageNumbers,
         visionModel: null,
+        clientRenderedPageNumbers: [] as number[],
       }
     : await enhancePdfExtractionWithVision({
         pdfBuffer: buffer,
         nativeText,
         nativePages,
         pageCount,
+        filePath: material.file_path,
         analysis: documentAnalysis,
         materialId: material.id,
         userId: material.user_id,
@@ -243,6 +246,8 @@ export async function processStudentMaterial(input: {
   const pages = visionExtraction.pages;
   const visionUsed = visionExtraction.visionUsed;
   const visionPageNumbers = visionExtraction.visionPageNumbers;
+  const clientRenderedPageNumbers =
+    visionExtraction.clientRenderedPageNumbers ?? [];
 
   /**
    * `pagesProcessed` mide páginas físicas procesadas por el extractor,
@@ -726,6 +731,7 @@ export async function processStudentMaterial(input: {
     visualCandidateCount: selectedVisionPageNumbers.length,
     visionUsed,
     visionPageCount: visionPageNumbers.length,
+    clientRenderedVisionPageCount: clientRenderedPageNumbers.length,
     visionModel: visionExtraction.visionModel,
     pedagogicalQualityStatus: pedagogicalQualityReport.status,
     pedagogicalQualityScore: pedagogicalQualityReport.score,
@@ -749,6 +755,23 @@ export async function processStudentMaterial(input: {
         ? Math.round(aiUsage.totalAiTokens / pageCount)
         : null,
   });
+
+  if (clientRenderedPageNumbers.length > 0 && material.file_path) {
+    const { error: cleanupError } = await admin.storage
+      .from('biblioteca')
+      .remove(
+        buildClientVisionPagePaths(
+          material.file_path,
+          clientRenderedPageNumbers
+        )
+      );
+    if (cleanupError) {
+      logError('processStudentMaterial.clientVisionCleanup', cleanupError, {
+        materialId: material.id,
+        pageCount: clientRenderedPageNumbers.length,
+      });
+    }
+  }
 
   return {
     success: true,
