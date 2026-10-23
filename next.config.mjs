@@ -23,17 +23,6 @@ const nextConfig = {
       './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
     ],
   },
-  // Keep the removed legacy image URL functional for old emails and bookmarks.
-  // All requests now resolve to the new logo; no legacy artwork is served.
-  async redirects() {
-    return [
-      {
-        source: '/evaluo-logo-icono.svg',
-        destination: '/evaluo-icon.svg',
-        permanent: true,
-      },
-    ];
-  },
   async headers() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
     const scriptSrc = [

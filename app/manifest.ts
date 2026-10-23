@@ -18,13 +18,13 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['education', 'productivity', 'study'],
     icons: [
       {
-        src: '/evaluo-icon.svg',
+        src: '/evaluo-logo-icono.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'any',
       },
       {
-        src: '/evaluo-icon.svg',
+        src: '/evaluo-logo-icono.svg',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'maskable',

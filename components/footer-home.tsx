@@ -18,7 +18,8 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               aria-label="Ir al inicio de Evaluo"
               className="inline-flex items-center gap-2 font-bold text-slate-950 transition hover:text-blue-700"
             >
-              <Image src="/evaluo-logo.svg" alt="Evaluo" width={135} height={50} className="h-8 w-auto" />
+              <Image src="/evaluo-logo-icono.svg" alt="" width={28} height={28} className="h-7 w-7" />
+              Evaluo
             </Link>
             <p className="mt-1 text-xs text-slate-500">Tu plataforma de estudio</p>
           </div>
@@ -58,7 +59,8 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               href="/"
               className="inline-flex items-center gap-2 text-xl font-bold tracking-tight"
             >
-              <Image src="/evaluo-logo-white.svg" alt="Evaluo" width={150} height={55} className="h-10 w-auto" />
+              <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} className="h-8 w-8" />
+              <span>Evaluo</span>
             </Link>
             <p className="mt-2 max-w-xs text-xs text-white/70">
               Te ayudamos a aprobar, te impulsamos a crecer.
