@@ -53,6 +53,19 @@ for (const client of [pdfFirst, quickPdf]) {
 assert.match(pdfFirst, /processStudentMaterialAction\(result\.materialId\)\.catch/);
 assert.match(quickPdf, /processStudentMaterialAction\(result\.materialId\)\.catch/);
 
+for (const client of [pdfFirst, quickPdf]) {
+  assert.match(client, /fetchStudentMaterialProcessingState/);
+}
+const stateRoute = readFileSync('app/api/student-materials/[id]/processing-state/route.ts', 'utf8');
+assert.match(stateRoute, /getStudentMaterialProcessingStateAction\(id\)/);
+assert.match(stateRoute, /private, no-store/);
+const stateClient = readFileSync('lib/student-materials/processing-state-client.ts', 'utf8');
+assert.match(stateClient, /credentials: 'same-origin'/);
+assert.match(stateClient, /cache: 'no-store'/);
+const stateAction = readFileSync('app/dashboard/materiales/actions.ts', 'utf8');
+assert.match(stateAction, /const user = await requireAuthenticatedUser\(\)/);
+assert.match(stateAction, /\.eq\('user_id', user.id\)/);
+
 const proxy = readFileSync('proxy.ts', 'utf8');
 const guard = readFileSync('components/SessionIdleGuard.tsx', 'utf8');
 const callback = readFileSync('app/auth/callback/route.ts', 'utf8');
