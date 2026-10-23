@@ -24,6 +24,8 @@ export type ProcessableStudentMaterial = {
   title: string;
   file_name: string;
   file_path: string;
+  content_fingerprint: string | null;
+  pipeline_version: string | null;
 };
 
 type StudentMaterialUpdate = Database['public']['Tables']['student_materials']['Update'];
@@ -41,7 +43,7 @@ export async function findStudentMaterialForProcessing(
 ) {
   const query = admin
     .from('student_materials')
-    .select('id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path')
+    .select('id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path, content_fingerprint, pipeline_version')
     .eq('id', materialId);
 
   if (ownerUserId) query.eq('user_id', ownerUserId);
@@ -51,12 +53,11 @@ export async function findStudentMaterialForProcessing(
   return (data ?? null) as ProcessableStudentMaterial | null;
 }
 
-export async function loadStudentMaterialProcessingContext(
+export async function loadStudentMaterialProcessingMetadata(
   admin: AdminClient,
   material: ProcessableStudentMaterial
 ) {
-  const [fileResult, profileResult, materiaResult] = await Promise.all([
-    admin.storage.from('biblioteca').download(material.file_path),
+  const [profileResult, materiaResult] = await Promise.all([
     admin
       .from('profiles')
       .select('universidad_id, carrera_id')
@@ -67,9 +68,6 @@ export async function loadStudentMaterialProcessingContext(
       : Promise.resolve({ data: null, error: null }),
   ]);
 
-  if (fileResult.error || !fileResult.data) {
-    throw new Error('No pudimos volver a leer el PDF desde almacenamiento.');
-  }
   if (profileResult.error) throw profileResult.error;
   if (materiaResult.error) throw materiaResult.error;
 
@@ -93,10 +91,39 @@ export async function loadStudentMaterialProcessingContext(
   if (universidadResult.error) throw universidadResult.error;
 
   return {
-    file: fileResult.data,
     carreraName: carreraResult.data?.nombre ?? undefined,
     universidadName: universidadResult.data?.nombre ?? undefined,
     materiaName: materiaResult.data?.nombre ?? undefined,
+  };
+}
+
+export async function downloadStudentMaterialFile(
+  admin: AdminClient,
+  material: ProcessableStudentMaterial
+) {
+  const { data, error } = await admin.storage
+    .from('biblioteca')
+    .download(material.file_path);
+
+  if (error || !data) {
+    throw new Error('No pudimos volver a leer el PDF desde almacenamiento.');
+  }
+
+  return data;
+}
+
+export async function loadStudentMaterialProcessingContext(
+  admin: AdminClient,
+  material: ProcessableStudentMaterial
+) {
+  const [file, metadata] = await Promise.all([
+    downloadStudentMaterialFile(admin, material),
+    loadStudentMaterialProcessingMetadata(admin, material),
+  ]);
+
+  return {
+    file,
+    ...metadata,
   };
 }
 

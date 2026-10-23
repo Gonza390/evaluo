@@ -12,9 +12,9 @@ import {
 import { useRouter } from 'next/navigation';
 import { CalendarDays, CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
 import {
-  processStudentMaterialAction,
-  type StudentMaterialProcessingState,
+    type StudentMaterialProcessingState,
 } from '@/app/dashboard/materiales/actions';
+import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
 import { saveStudentMaterialExamContextAction } from '@/app/dashboard/materiales/context-actions';
 import { savePdfFirstAcademicContextAction } from '@/app/dashboard/materiales/pdf-first-context-actions';
 import { loadDashboardAcademicOptionsAction } from '@/app/dashboard/materiales/academic-options-actions';

@@ -54,7 +54,7 @@ import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
-import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
+import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/processing-actions';
 import { getMaterialPendingStudyErrorTopicCountAction } from '@/lib/actions/study-errors';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
