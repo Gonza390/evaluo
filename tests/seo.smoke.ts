@@ -406,13 +406,12 @@ assertIncludesAll('lib/regional-study-guides.ts', [
   'temario',
 ]);
 assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  'InternationalPracticePreview',
   'REGIONAL_STUDY_GUIDES[market]',
   'guide.guideTitle',
   'guide.steps.map(',
   'guide.mistakes.map(',
   'guide.selfCheckQuestions.map(',
-  'copy.exampleOptions.map(',
-  'Intenta responder y descubre la explicación',
   'buildBreadcrumbJsonLd',
   'InternationalDocumentLanguage',
   '/funciones/resumir-pdf-con-ia',
@@ -433,4 +432,36 @@ assertIncludesAll('lib/analytics-client.ts', [
 ]);
 assertIncludesAll('lighthouserc.cjs', [
   '/es-es/estudiar-pdf-con-ia',
+]);
+
+/* El ejemplo interactivo jamás debe registrarse como práctica real con PDF. */
+assertIncludesAll('components/marketing/international-practice-preview.tsx', [
+  'demo_only: true',
+  'international_study_demo_answer_revealed',
+  'international_study_demo_progress_viewed',
+  'Corregir mi respuesta',
+  'Probar ejercicios con un PDF de muestra',
+  'tour=0&start=ejercicios',
+]);
+assertIncludesAll('app/demo/material-estudio/page.tsx', [
+  'internationalSource',
+  'initialTab',
+  'uploadHref',
+  'start === \'ejercicios\'',
+]);
+assertIncludesAll('components/demo-four-step-study.tsx', [
+  'international_study_demo_pdf_answered',
+  'international_study_demo_pdf_progress_viewed',
+  'demo_only: true',
+]);
+assertIncludesAll('lib/analytics-events.ts', [
+  "'international_study_demo_answer_revealed'",
+  "'international_study_demo_progress_viewed'",
+  "'international_study_demo_pdf_answered'",
+  "'international_study_demo_pdf_progress_viewed'",
+]);
+assertIncludesAll('lib/attribution.ts', [
+  'landing_market',
+  'latest_landing_market',
+  'if (!hasAttribution && !landingMarket) return;',
 ]);
