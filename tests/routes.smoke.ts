@@ -128,6 +128,11 @@ const loginSource = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'),
 const simulatorLegacySource = readFileSync(resolve('components/simulador/SimuladorExamenLegacy.tsx'), 'utf8');
 const profileCompletionSource = readFileSync(resolve('app/completar-perfil/page.tsx'), 'utf8');
 const pdfUploadShellSource = readFileSync(resolve('components/dashboard/pdf-first-upload-shell.tsx'), 'utf8');
+const vercelConfigSource = readFileSync(resolve('vercel.json'), 'utf8');
+const visionExtractSource = readFileSync(
+  resolve('lib/student-materials/vision-extract.ts'),
+  'utf8'
+);
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
 assert.match(materiaPageSource, /contentSignals\.hasAcademicContent/);
@@ -159,6 +164,11 @@ assert.match(profileCompletionSource, /function sanitizeNextPath/);
 assert.match(profileCompletionSource, /router\.replace\(nextPath\)/);
 assert.match(profileCompletionSource, /AcademicProfileSimpleForm nextPath=\{nextPath\}/);
 assert.match(pdfUploadShellSource, /preguntero_exam_pdf_uploaded/);
+assert.doesNotMatch(vercelConfigSource, /\/api\/internal\/explanations\/warm/);
+assert.match(pdfUploadShellSource, /inspectPdfForClientVision/);
+assert.match(pdfUploadShellSource, /renderPdfPagesForClientVision/);
+assert.match(visionExtractSource, /loadClientRenderedPages/);
+assert.match(visionExtractSource, /renderPdfPagesToPngs/);
 
 for (const href of ['/explorar', '/pregunteros', '/']) {
   assert.ok(notFoundSource.includes(`href="${href}"`));

@@ -14,6 +14,11 @@ import {
 } from '@/lib/student-materials/pdf-validation';
 import { stripStudocuCoverPage } from '@/lib/student-materials/studocu-cover';
 import {
+  CLIENT_VISION_MAX_PAGES,
+  buildClientVisionPagePath,
+  buildClientVisionPagePaths,
+} from '@/lib/student-materials/client-vision-cache';
+import {
   buildStudentMaterialStoragePath,
   getValidationMessage,
   isOwnedStudentMaterialStoragePath,
@@ -49,6 +54,14 @@ type ActionResult = { success: boolean; message: string };
 export type PreparePdfFirstUploadResult = ActionResult & {
   filePath?: string;
   token?: string;
+};
+
+export type PreparePdfClientVisionUploadsResult = ActionResult & {
+  uploads?: Array<{
+    pageNumber: number;
+    filePath: string;
+    token: string;
+  }>;
 };
 
 export type FinalizePdfFirstUploadResult = ActionResult & {
@@ -154,13 +167,29 @@ function parseInput(input: PdfFirstUploadInput) {
   return { success: true as const, metadata: metadata.data, file: file.data };
 }
 
+async function removeOwnedClientVisionCache(filePath: string, userId: string) {
+  if (!isOwnedStudentMaterialStoragePath(filePath, userId)) return;
+  const admin = createAdminClient();
+  const pageNumbers = Array.from(
+    { length: CLIENT_VISION_MAX_PAGES },
+    (_, index) => index + 1
+  );
+  await admin.storage
+    .from('biblioteca')
+    .remove(buildClientVisionPagePaths(filePath, pageNumbers))
+    .catch(() => undefined);
+}
+
 async function removeOwnedUpload(filePath: string, userId: string) {
   if (!isOwnedStudentMaterialStoragePath(filePath, userId)) return;
   const admin = createAdminClient();
-  await admin.storage
-    .from('biblioteca')
-    .remove([filePath])
-    .catch(() => undefined);
+  await Promise.all([
+    admin.storage
+      .from('biblioteca')
+      .remove([filePath])
+      .catch(() => undefined),
+    removeOwnedClientVisionCache(filePath, userId),
+  ]);
 }
 
 async function resolveVerifiedMateriaId(
@@ -274,6 +303,67 @@ export async function preparePdfFirstUploadAction(
   }
 }
 
+export async function preparePdfClientVisionUploadsAction(input: {
+  filePath: string;
+  pageNumbers: number[];
+}): Promise<PreparePdfClientVisionUploadsResult> {
+  try {
+    const user = await requireAuthenticatedUser();
+    if (!isOwnedStudentMaterialStoragePath(input.filePath, user.id)) {
+      return { success: false, message: 'La ruta de subida no es válida.' };
+    }
+
+    const pageNumbers = [...new Set(input.pageNumbers)]
+      .filter(
+        (pageNumber) =>
+          Number.isInteger(pageNumber) &&
+          pageNumber >= 1 &&
+          pageNumber <= CLIENT_VISION_MAX_PAGES
+      )
+      .sort((left, right) => left - right);
+
+    if (
+      pageNumbers.length === 0 ||
+      pageNumbers.length > CLIENT_VISION_MAX_PAGES
+    ) {
+      return {
+        success: false,
+        message: 'No pudimos preparar las páginas del PDF para OCR.',
+      };
+    }
+
+    const admin = createAdminClient();
+    const uploads = await Promise.all(
+      pageNumbers.map(async (pageNumber) => {
+        const filePath = buildClientVisionPagePath(input.filePath, pageNumber);
+        const { data, error } = await admin.storage
+          .from('biblioteca')
+          .createSignedUploadUrl(filePath, { upsert: true });
+
+        if (error || !data?.token) {
+          throw error ?? new Error('No pudimos preparar una página para OCR.');
+        }
+
+        return { pageNumber, filePath, token: data.token };
+      })
+    );
+
+    return {
+      success: true,
+      uploads,
+      message: 'Páginas preparadas para OCR en el navegador.',
+    };
+  } catch (error) {
+    logError('studentMaterials.pdfFirst.prepareClientVision', error, {
+      filePath: input.filePath,
+    });
+    return {
+      success: false,
+      message: 'Seguimos con el procesamiento normal del PDF.',
+    };
+  }
+}
+
 export async function cancelPdfFirstUploadAction(filePath: string): Promise<ActionResult> {
   try {
     const user = await requireAuthenticatedUser();
@@ -349,6 +439,10 @@ export async function finalizePdfFirstUploadAction(
           upsert: true,
         });
       if (replaceError) throw replaceError;
+
+      // Las páginas prerenderizadas corresponden al archivo original. Si se
+      // quitó una portada, su numeración deja de coincidir y no deben usarse.
+      await removeOwnedClientVisionCache(input.filePath, user.id);
     }
 
     const pageCount = await assertStudentMaterialPdfPageLimit(storedFileBytes);

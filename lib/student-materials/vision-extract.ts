@@ -8,6 +8,7 @@ import { extractJsonObject } from '@/lib/ai/json';
 import { logError, logInfo } from '@/lib/observability';
 import { recordAiUsage } from '@/lib/student-materials/ai-usage';
 import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
+import { buildClientVisionPagePath } from '@/lib/student-materials/client-vision-cache';
 import { cleanMultilineBlock } from '@/lib/student-materials/text';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
@@ -73,6 +74,7 @@ export type VisionEnhancedPdfExtraction = {
   visionUsed: boolean;
   visionPageNumbers: number[];
   visionModel: string | null;
+  clientRenderedPageNumbers: number[];
 };
 
 function countMatches(value: string, pattern: RegExp) {
@@ -303,11 +305,50 @@ function buildResolvedPages(nativePages: string[] | null, totalPages: number) {
   return Array.from({ length: totalPages }, (_, index) => nativePages?.[index] ?? '');
 }
 
+function isPngBuffer(buffer: Buffer) {
+  return (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  );
+}
+
+async function loadClientRenderedPages(
+  admin: ReturnType<typeof createAdminClient>,
+  filePath: string,
+  pageNumbers: number[]
+) {
+  const entries = await Promise.all(
+    pageNumbers.map(async (pageNumber) => {
+      const path = buildClientVisionPagePath(filePath, pageNumber);
+      const { data, error } = await admin.storage.from('biblioteca').download(path);
+      if (error || !data) return null;
+
+      const image = Buffer.from(await data.arrayBuffer());
+      if (!isPngBuffer(image)) return null;
+      return { pageNumber, image };
+    })
+  );
+
+  const result = new Map<number, Buffer>();
+  for (const entry of entries) {
+    if (entry) result.set(entry.pageNumber, entry.image);
+  }
+  return result;
+}
+
 export async function enhancePdfExtractionWithVision(input: {
   pdfBuffer: Buffer;
   nativeText: string;
   nativePages: string[] | null;
   pageCount: number | null;
+  filePath?: string;
   analysis: StudyDocumentAnalysis;
   materialId?: string;
   userId?: string;
@@ -332,6 +373,7 @@ export async function enhancePdfExtractionWithVision(input: {
       visionUsed: false,
       visionPageNumbers: [],
       visionModel: null,
+      clientRenderedPageNumbers: [],
     };
   }
 
@@ -350,6 +392,7 @@ export async function enhancePdfExtractionWithVision(input: {
       visionUsed: false,
       visionPageNumbers: [],
       visionModel: null,
+      clientRenderedPageNumbers: [],
     };
   }
 
@@ -392,6 +435,7 @@ export async function enhancePdfExtractionWithVision(input: {
   let visionModel: string | null = null;
   let renderedPageCount = 0;
   let retriedPageCount = 0;
+  const clientRenderedPageNumbers = new Set<number>();
   const visionStartedAt = Date.now();
   const requiredOcr = input.forceRequiredOcr === true || input.analysis.requiresOcr;
   const OCR_EXTRACTION_BUDGET_MS = 145_000;
@@ -425,12 +469,35 @@ export async function enhancePdfExtractionWithVision(input: {
       break;
     }
 
-    const renderResult = await renderPdfPagesToPngs(input.pdfBuffer, {
-      pageNumbers,
-      batchSize: visionBatchSize,
-      scale: VISION_RENDER_SCALE,
-    });
-    renderedPageCount += renderResult.renderedPageNumbers.length;
+    const clientRendered =
+      admin && input.filePath
+        ? await loadClientRenderedPages(admin, input.filePath, pageNumbers)
+        : new Map<number, Buffer>();
+    for (const pageNumber of clientRendered.keys()) {
+      clientRenderedPageNumbers.add(pageNumber);
+    }
+
+    const pagesMissingClientRender = pageNumbers.filter(
+      (pageNumber) => !clientRendered.has(pageNumber)
+    );
+    const renderResult =
+      pagesMissingClientRender.length > 0
+        ? await renderPdfPagesToPngs(input.pdfBuffer, {
+            pageNumbers: pagesMissingClientRender,
+            batchSize: visionBatchSize,
+            scale: VISION_RENDER_SCALE,
+          })
+        : {
+            images: [] as Buffer[],
+            renderedPageNumbers: [] as number[],
+            blankPageNumbers: [] as number[],
+            pageCount: input.pageCount ?? 0,
+            pagesProcessed: 0,
+            coverageRatio: 0,
+          };
+
+    renderedPageCount +=
+      clientRendered.size + renderResult.renderedPageNumbers.length;
     await persistPages(renderResult.blankPageNumbers.map((pageNumber) => ({
       pageNumber, content: '', origin: 'blank' as const,
       confidence: 'alta' as const, hasMath: false,
@@ -439,12 +506,21 @@ export async function enhancePdfExtractionWithVision(input: {
       deterministicBlankPages.add(pageNumber);
     }
 
-    const rendered = renderResult.images
-      .map((image, index) => ({
-        image,
-        pageNumber: renderResult.renderedPageNumbers[index],
-      }))
-      .filter((entry): entry is { image: Buffer; pageNumber: number } => Boolean(entry.pageNumber));
+    const serverRendered = new Map<number, Buffer>();
+    renderResult.images.forEach((image, index) => {
+      const pageNumber = renderResult.renderedPageNumbers[index];
+      if (pageNumber) serverRendered.set(pageNumber, image);
+    });
+
+    const rendered = pageNumbers
+      .map((pageNumber) => {
+        const image =
+          clientRendered.get(pageNumber) ?? serverRendered.get(pageNumber);
+        return image ? { image, pageNumber } : null;
+      })
+      .filter(
+        (entry): entry is { image: Buffer; pageNumber: number } => Boolean(entry)
+      );
     const candidates = rendered.filter(
       (entry) => !deterministicBlankPages.has(entry.pageNumber)
     );
@@ -605,6 +681,9 @@ export async function enhancePdfExtractionWithVision(input: {
       visionUsed: false,
       visionPageNumbers: [],
       visionModel,
+      clientRenderedPageNumbers: [...clientRenderedPageNumbers].sort(
+        (left, right) => left - right
+      ),
     };
   }
 
@@ -616,6 +695,7 @@ export async function enhancePdfExtractionWithVision(input: {
     forcedRequiredOcr: input.forceRequiredOcr === true,
     selectedPages: selectedPageNumbers.length,
     renderedPages: renderedPageCount,
+    clientRenderedPages: clientRenderedPageNumbers.size,
     blankPages: deterministicBlankPages.size,
     extractedPages: visionPages.size,
     retriedPages: retriedPageCount,
@@ -629,5 +709,8 @@ export async function enhancePdfExtractionWithVision(input: {
     visionUsed,
     visionPageNumbers: visionUsed ? contentVisionPageNumbers : [],
     visionModel,
+    clientRenderedPageNumbers: [...clientRenderedPageNumbers].sort(
+      (left, right) => left - right
+    ),
   };
 }
