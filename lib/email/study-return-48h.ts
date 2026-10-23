@@ -44,6 +44,7 @@ function escapeHtml(value: string) {
 function buildReturnUrl(materialId: string, hasPending: boolean) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
   const url = new URL(`/materiales/${materialId}`, baseUrl);
+  url.searchParams.set('tab', hasPending ? 'progreso' : 'ejercicios');
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
   url.searchParams.set('utm_campaign', CAMPAIGN_KEY);
@@ -55,6 +56,7 @@ export function buildStudyReturn48hMessage(input: {
   firstname: string;
   materialTitle: string;
   pendingCount: number;
+  pendingTopics: string[];
   returnUrl: string;
 }) {
   const title = truncate(input.materialTitle);
@@ -72,7 +74,9 @@ export function buildStudyReturn48hMessage(input: {
     ? `En tu última sesión con ${title} quedaron algunos conceptos pendientes. Podés retomarlos y comprobar si ahora los entendés mejor.`
     : `Hace un par de días estuviste trabajando con ${title}. Podés volver al material y seguir estudiando desde donde lo dejaste.`;
 
-  const cta = hasPending ? 'Repasar ahora' : 'Continuar estudiando';
+  const cta = hasPending ? 'Reforzar mis temas' : 'Practicar con mi PDF';
+  const topicNames = [...new Set(input.pendingTopics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
+  const topicHtml = hasPending && topicNames.length ? `<div style="background:#F4F7FF;border:1px solid #DCE6F9;border-radius:12px;padding:14px 18px;margin:0 0 22px;"><p style="margin:0 0 10px;font-weight:700;font-size:14px;">Temas que te conviene repasar</p><ul style="padding-left:18px;margin:0;">${topicNames.map((name) => `<li style="margin-bottom:5px;">${escapeHtml(name)}</li>`).join('')}</ul></div>` : '';
 
   const safeFirstName = escapeHtml(input.firstname);
   const safeHeading = escapeHtml(heading);
@@ -93,6 +97,7 @@ export function buildStudyReturn48hMessage(input: {
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
+                ${topicHtml}
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material en Evaluo.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
@@ -270,6 +275,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
         firstname: displayFirstName,
         materialTitle: material.title,
         pendingCount,
+        pendingTopics: ((errorsResult.data ?? []) as Array<{ topic: string | null }>).map((x) => x.topic ?? ''),
         returnUrl,
       });
 
