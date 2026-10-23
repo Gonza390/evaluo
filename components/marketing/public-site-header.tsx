@@ -14,15 +14,14 @@ export function PublicBrandLink() {
       className="group flex min-w-0 items-center gap-2 text-lg font-black tracking-[-0.045em] text-slate-950 sm:gap-2.5 sm:text-2xl"
     >
       <Image
-        src="/evaluo-logo-icono.svg"
+        src="/evaluo-logo.svg"
         alt=""
-        width={40}
-        height={40}
+        width={160}
+        height={60}
         priority
         unoptimized
-        className="h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-9 sm:w-9"
+        className="h-9 w-auto max-w-[158px] shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-10"
       />
-      <span className="truncate">Evaluo</span>
     </Link>
   );
 }

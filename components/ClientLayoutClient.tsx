@@ -241,21 +241,14 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 className="group flex min-w-0 items-center gap-2.5 transition hover:opacity-90"
               >
                 <Image
-                  src="/evaluo-logo-icono.svg"
+                  src="/evaluo-logo.svg"
                   alt=""
-                  width={40}
-                  height={40}
+                  width={150}
+                  height={56}
                   priority
-                  className="h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-9 sm:w-9"
+                  className="h-9 w-auto shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-10"
                 />
-                <div className="min-w-0">
-                  <div className="truncate text-[1.05rem] font-bold tracking-[-0.025em] text-slate-950 sm:text-lg">
-                    Evaluo
-                  </div>
-                  <p className="mt-0.5 hidden text-[11px] font-medium text-slate-400 sm:block">
-                    Tu espacio académico
-                  </p>
-                </div>
+                <p className="hidden text-[11px] font-medium text-slate-400 sm:block">Tu espacio académico</p>
               </Link>
             )}
             {!user ? (

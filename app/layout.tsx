@@ -99,7 +99,7 @@ export const metadata: Metadata = {
     locale: 'es_AR',
     images: [
       {
-        url: '/opengraph-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
@@ -111,19 +111,19 @@ export const metadata: Metadata = {
     title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     description:
       'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
-    images: ['/opengraph-image.png'],
+    images: ['/opengraph-image'],
   },
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
       {
-        url: '/evaluo-logo-icono.svg',
+        url: '/evaluo-icon.svg?v=20261023',
         type: 'image/svg+xml',
         sizes: 'any',
       },
     ],
-    shortcut: [{ url: '/evaluo-logo-icono.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/apple-icon.png' }],
+    shortcut: [{ url: '/evaluo-icon.svg?v=20261023', type: 'image/svg+xml' }],
+    apple: [{ url: '/apple-icon.png?v=20261023' }],
   },
 };
 
