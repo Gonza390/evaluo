@@ -44,3 +44,13 @@ export async function generateAndStoreStudentMaterialThumbnail(
   if (error) throw error;
   return thumbnail;
 }
+
+export async function ensureStudentMaterialThumbnail(
+  admin: AdminClient,
+  filePath: string,
+  pdfBuffer: Buffer
+): Promise<Buffer | null> {
+  const cached = await loadStudentMaterialThumbnail(admin, filePath);
+  if (cached) return cached;
+  return generateAndStoreStudentMaterialThumbnail(admin, filePath, pdfBuffer);
+}
