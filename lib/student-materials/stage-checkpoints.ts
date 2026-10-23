@@ -67,6 +67,42 @@ export async function savePageOcrCheckpoint(
   if (error) throw new Error(`No se pudo guardar el OCR recuperado: ${error.message}`);
 }
 
+export async function loadReusableSourceStageCheckpoint(
+  admin: AdminClient,
+  materialId: string,
+  pipelineVersion: string
+): Promise<{ fileHash: string; source: CachedSource } | null> {
+  const { data, error } = await admin
+    .from(CHECKPOINT_TABLE)
+    .select('file_sha256,pipeline_version,source_payload')
+    .eq('student_material_id', materialId)
+    .maybeSingle();
+
+  if (error) throw new Error(`No se pudo leer el punto de recuperación: ${error.message}`);
+  if (!data) return null;
+
+  const row = data as unknown as {
+    file_sha256: string;
+    pipeline_version: string;
+    source_payload: CachedSource;
+  };
+
+  if (
+    row.pipeline_version !== pipelineVersion ||
+    !isReusableSource({
+      cachedHash: row.file_sha256,
+      currentHash: row.file_sha256,
+      cachedVersion: row.pipeline_version,
+      currentVersion: pipelineVersion,
+      source: row.source_payload,
+    })
+  ) {
+    return null;
+  }
+
+  return { fileHash: row.file_sha256, source: row.source_payload };
+}
+
 export async function loadSourceStageCheckpoint(
   admin: AdminClient,
   materialId: string,
