@@ -194,6 +194,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Facturación
               </Link>
+              <Link href="/reembolsos" className="text-xs text-white/80 transition hover:text-white">
+                Política de reembolsos
+              </Link>
             </nav>
           </div>
         </div>
