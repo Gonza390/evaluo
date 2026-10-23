@@ -231,7 +231,7 @@ export async function processStudentMaterial(input: {
         nativeText,
         nativePages,
         pageCount,
-        filePath: material.file_path,
+        filePath: material.file_path ?? undefined,
         analysis: documentAnalysis,
         materialId: material.id,
         userId: material.user_id,
