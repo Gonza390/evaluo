@@ -21,6 +21,7 @@ import { loadDashboardAcademicOptionsAction } from '@/app/dashboard/materiales/a
 import {
   cancelPdfFirstUploadAction,
   finalizePdfFirstUploadAction,
+  preparePdfClientVisionUploadsAction,
   preparePdfFirstUploadAction,
 } from '@/app/dashboard/materiales/pdf-first-upload-actions';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,11 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
 import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
+import { CLIENT_VISION_MAX_PAGES } from '@/lib/student-materials/client-vision-cache';
+import {
+  inspectPdfForClientVision,
+  renderPdfPagesForClientVision,
+} from '@/lib/student-materials/client-pdf-vision-render';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
@@ -452,11 +458,63 @@ export function PdfFirstUploadShell({
       preparedPath = prepared.filePath;
 
       const supabase = getSupabaseBrowserClient();
-      const { error: uploadError } = await supabase.storage
-        .from('biblioteca')        .uploadToSignedUrl(prepared.filePath, prepared.token, activeFile, {
+      const pdfUploadPromise = supabase.storage
+        .from('biblioteca')
+        .uploadToSignedUrl(prepared.filePath, prepared.token, activeFile, {
           contentType: fileMetadata.mimeType,
         });
-      if (uploadError) throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
+
+      // Para escaneos cortos/medios movemos el render de páginas al navegador.
+      // Es una optimización best-effort: si el dispositivo no puede hacerlo,
+      // Vercel conserva el renderer del servidor como fallback.
+      const clientVisionPromise = (async () => {
+        try {
+          const plan = await inspectPdfForClientVision(
+            activeFile,
+            CLIENT_VISION_MAX_PAGES
+          );
+          if (!plan.shouldPreRender || plan.pageNumbers.length === 0) return;
+
+          const preparedVision = await preparePdfClientVisionUploadsAction({
+            filePath: prepared.filePath,
+            pageNumbers: plan.pageNumbers,
+          });
+          if (!preparedVision.success || !preparedVision.uploads?.length) return;
+
+          const uploadsByPage = new Map(
+            preparedVision.uploads.map((upload) => [upload.pageNumber, upload])
+          );
+
+          await renderPdfPagesForClientVision({
+            file: activeFile,
+            pageNumbers: plan.pageNumbers,
+            onPage: async (pageNumber, blob) => {
+              const target = uploadsByPage.get(pageNumber);
+              if (!target) return;
+
+              const { error } = await supabase.storage
+                .from('biblioteca')
+                .uploadToSignedUrl(target.filePath, target.token, blob, {
+                  contentType: 'image/png',
+                });
+              if (error) {
+                throw new Error('No pudimos subir una página prerenderizada.');
+              }
+            },
+          });
+        } catch {
+          // Nunca bloquear la carga principal por esta optimización. El worker
+          // vuelve automáticamente al render del servidor si falta una página.
+        }
+      })();
+
+      const [pdfUploadResult] = await Promise.all([
+        pdfUploadPromise,
+        clientVisionPromise,
+      ]);
+      if (pdfUploadResult.error) {
+        throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
+      }
 
       const result = await finalizePdfFirstUploadAction({
         metadata,
