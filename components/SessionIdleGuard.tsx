@@ -65,6 +65,16 @@ export default function SessionIdleGuard() {
       lastWriteRef.current = now;
     };
 
+    const redirectToLogin = (reason: 'inactive' | 'auth-expired') => {
+      if (disposed) return;
+      signingOutRef.current = true;
+      hasSessionRef.current = false;
+      clearLastActivity();
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      const nextPath = window.location.pathname.startsWith('/login') ? '/dashboard' : currentPath;
+      window.location.replace(`/login?reason=${reason}&next=${encodeURIComponent(nextPath)}`);
+    };
+
     const expireSession = async (reason: 'inactive' | 'auth-expired' = 'inactive') => {
       if (signingOutRef.current || disposed) return;
       signingOutRef.current = true;
@@ -74,10 +84,7 @@ export default function SessionIdleGuard() {
       try {
         await supabase.auth.signOut({ scope: 'local' });
       } finally {
-        if (disposed) return;
-        const currentPath = `${window.location.pathname}${window.location.search}`;
-        const nextPath = window.location.pathname.startsWith('/login') ? '/dashboard' : currentPath;
-        window.location.replace(`/login?reason=${reason}&next=${encodeURIComponent(nextPath)}`);
+        redirectToLogin(reason);
       }
     };
 
@@ -154,7 +161,9 @@ export default function SessionIdleGuard() {
       if (!session) {
         clearLastActivity();
         if (event === 'SIGNED_OUT' && previouslyAuthenticated && !signingOutRef.current) {
-          void expireSession('auth-expired');
+          // No llamar a supabase.auth.signOut desde onAuthStateChange:
+          // GoTrue puede mantener su lock de sesión mientras entrega el evento.
+          redirectToLogin('auth-expired');
         }
         return;
       }
