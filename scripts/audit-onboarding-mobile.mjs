@@ -130,7 +130,7 @@ try {
     await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
     await call('Emulation.setTouchEmulationEnabled',{enabled:mobile});
     await call('Page.navigate',{url:directDemo+'?start=eleccion&qa='+name});
-    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-entry]")'),'direct study choice '+name,150);
+    await waitFor(()=>evaluate('location.search.includes("start=eleccion") && !!document.querySelector("[data-first-pdf-study-entry]")?.textContent?.includes("¿Ya estudiaste este material?")'),'direct study choice '+name,150);
     const choiceData=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-entry]");return {label:n?.textContent||"",overflow:document.documentElement.scrollWidth>innerWidth+2,visible:!!n?.getBoundingClientRect().height,guide:!!document.querySelector("[data-first-pdf-guide]")}})()');
     if(!choiceData.visible || choiceData.overflow || choiceData.guide || !choiceData.label.includes('¿Ya estudiaste este material?')) {
       failures.push('direct choice '+name+': '+JSON.stringify(choiceData));
@@ -143,9 +143,9 @@ try {
     const planData=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-plan]");return {topics:n?.querySelectorAll("ol li").length||0,overflow:document.documentElement.scrollWidth>innerWidth+2}})()');
     if(planData.topics<1 || planData.overflow)failures.push('direct plan '+name+': '+JSON.stringify(planData));
     await call('Page.navigate',{url:directDemo+'?start=plan&qa='+name});
-    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-plan]")'),'direct chapter plan '+name,100);
+    await waitFor(()=>evaluate('location.search.includes("start=plan") && !!document.querySelector("[data-first-pdf-study-plan]")'),'direct chapter plan '+name,100);
     await call('Page.navigate',{url:directDemo+'?start=eleccion&qa='+name+'-practice'});
-    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-entry]")'),'direct practice choice '+name,100);
+    await waitFor(()=>evaluate('location.search.includes("start=eleccion") && !!document.querySelector("[data-first-pdf-study-entry]")?.textContent?.includes("¿Ya estudiaste este material?")'),'direct practice choice '+name,100);
     const practice=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-entry]");const b=Array.from(n?.querySelectorAll("button")||[]).find(v=>v.textContent.includes("Sí, sé algo"));if(!b)return false;b.click();return true})()');
     if(!practice)failures.push('direct choice '+name+': missing Sí, sé algo');
     await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'practice choice dismissed '+name,100);
