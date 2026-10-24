@@ -766,6 +766,22 @@ export function StudentMaterialExam({
               Aciertos en esta tanda, no dominio definitivo de los temas.
               {hasOpenQuestions ? ' Las respuestas abiertas fueron autoevaluadas.' : ''}
             </p>
+            <Link
+              href={`/materiales/${materialId}?tab=progreso`}
+              onClick={() => {
+                void trackClientAnalyticsEvent({
+                  eventName: 'cta_click',
+                  metadata: {
+                    location: 'practice_result',
+                    cta_name: 'view_pdf_progress',
+                    destination: 'pdf_progress',
+                  },
+                });
+              }}
+              className="text-primary mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
+            >
+              Ver mi progreso <ArrowRight className="h-4 w-4" />
+            </Link>
           </section>
 
           <div className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-2 @min-[660px]/practice-result:row-span-2 @min-[660px]/practice-result:row-start-1 @min-[1040px]/practice-result:col-start-3 @min-[1040px]/practice-result:row-span-1">
@@ -990,10 +1006,6 @@ export function StudentMaterialExam({
                 </div>
               </details>
               <div className="flex flex-wrap gap-3 @min-[800px]/practice-result:col-span-2">
-                <Link href={`/dashboard/progreso?material=${materialId}`}
-                  className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold">
-                  Ver mi progreso
-                </Link>
                 <Button type="button" variant="outline" onClick={resetExam}>
                   <RotateCcw className="h-4 w-4" /> Nueva práctica
                 </Button>
