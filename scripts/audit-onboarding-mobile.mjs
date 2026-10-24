@@ -73,6 +73,28 @@ try {
     const end=await evaluate('({guide:!!document.querySelector("[data-first-pdf-guide]"),examples:document.querySelectorAll("[data-tour-example-topic]").length})');
     console.log(name+'/finished',JSON.stringify(end));
     if(end.guide||end.examples)failures.push(name+': guide or fake progress persisted after completion');
+    // Dos pasos nuevos tras el tour: elección y primer recorrido basado en el PDF.
+    if(name==='small' || name==='se') {
+      const choiceReady=await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-entry]")'),'study choice '+name);
+      if(!choiceReady)failures.push(name+': first study choice missing');
+      const choice= name==='small'?'Todavía no':'Sí, sé algo';
+      const selected=await evaluate('(() => {const c=document.querySelector("[data-first-pdf-study-entry]");const b=Array.from(c?.querySelectorAll("button")||[]).find(n=>n.textContent.includes('+JSON.stringify(choice)+'));if(!b)return false;b.click();return true})()');
+      if(!selected)failures.push(name+': study choice '+choice+' missing');
+      if(name==='small') {
+        await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-plan]")'),'chapter plan '+name);
+        const route=await evaluate('(() => {const plan=document.querySelector("[data-first-pdf-study-plan]");const ol=plan?.querySelector("ol");return {label:plan?.textContent||"",chapters:ol?.querySelectorAll("li").length||0,overflow:document.documentElement.scrollWidth>innerWidth+2}})()');
+        if(route.chapters<1 || route.overflow || !route.label.includes('Empezar por el tema 1')) failures.push(name+': chapter route broken '+JSON.stringify(route));
+        const shot=await call('Page.captureScreenshot',{format:'png',fromSurface:true});
+        await writeFile('artifacts/mobile-onboarding/'+name+'-study-plan.png',Buffer.from(shot.result.data,'base64'));
+        const started=await evaluate('(() => {const p=document.querySelector("[data-first-pdf-study-plan]");const b=Array.from(p?.querySelectorAll("button")||[]).find(n=>n.textContent.includes("Empezar por el tema 1"));if(!b)return false;b.click();return true})()');
+        if(!started)failures.push(name+': first chapter start action missing');
+        await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'study plan dismissed '+name);
+      } else {
+        await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'practice entry dismissed '+name);
+        const entry=await evaluate('(() => {const n=document.querySelector("[data-pdf-mobile-navigation]");const a=n?.querySelector("button[aria-current=page]");return a?.textContent?.trim()||""})()');
+        if(!entry.includes('Práctica'))failures.push(name+': knowledge route did not open practice: '+entry);
+      }
+    }
   }
   // La guía también debe caber en escritorio/tablet: esta regresión se produjo
   // cuando el CTA final competía con las cuatro barras de pasos en la misma fila.
