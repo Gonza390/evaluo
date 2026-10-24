@@ -8,12 +8,12 @@ import {
   BookOpenText,
   BrainCircuit,
   ChartNoAxesColumnIncreasing,
-  ListTree,
+  RefreshCcw,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export type RecommendedStudyStep = 'summary' | 'practice' | 'topic' | 'errors';
+export type RecommendedStudyStep = 'summary' | 'practice' | 'progress' | 'reinforce';
 
 const steps = {
   summary: {
@@ -28,21 +28,21 @@ const steps = {
     description: 'Practicá con preguntas creadas a partir de tu PDF.',
     icon: BrainCircuit,
   },
-  topic: {
-    label: 'Estudiar por tema',
-    title: 'Estudiá tema por tema',
-    description: 'Entrá en un capítulo, leé su contenido y practicá sus preguntas cuando estén disponibles.',
-    icon: ListTree,
-  },
-  errors: {
+  progress: {
     label: 'Progreso',
-    title: 'Ahora sabés dónde mejorar',
-    description: 'Practicá y descubrí qué temas dominás y cuáles reforzar.',
+    title: 'Descubrí cómo venís',
+    description: 'Después de practicar, vas a ver qué temas reforzar y cuáles faltan evaluar.',
     icon: ChartNoAxesColumnIncreasing,
+  },
+  reinforce: {
+    label: 'Reforzar',
+    title: 'Volvé a lo que te cuesta',
+    description: 'Revisá el tema, aclará conceptos y volvé a practicar cuando estés listo.',
+    icon: RefreshCcw,
   },
 } as const;
 
-const order: RecommendedStudyStep[] = ['summary', 'practice', 'topic', 'errors'];
+const order: RecommendedStudyStep[] = ['summary', 'practice', 'progress', 'reinforce'];
 
 // Cuatro pantallas reales. El contexto permanece visible: sin recortes de texto
 // ni una evaluación obligatoria para recorrer la plataforma.
@@ -124,7 +124,7 @@ function getSpotlight(node: HTMLElement, cardHeight: number, cardWidth: number):
 }
 
 /**
- * Recorrido breve: entender, practicar, estudiar por tema y ver progreso.
+ * Recorrido breve: entender, practicar, ver progreso y reforzar.
  * La pantalla real se ve completa durante todo el tutorial.
  * El portal evita que los contenedores con overflow recorten el spotlight.
  */
@@ -355,13 +355,13 @@ export function RecommendedStudyGuide({
           </button>
         </div>
 
-        {step === 'errors' && (
+        {step === 'progress' && (
           <p className="text-muted-foreground mt-2 hidden text-[11px] leading-4 sm:block">
             Los estados que ves son ilustrativos: tus resultados aparecerán después de practicar.
           </p>
         )}
 
-        <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${step === 'errors'
+        <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${step === 'progress'
           ? 'flex flex-col items-stretch gap-2'
           : 'flex items-center justify-between gap-2'}`}>
           <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 4'}>
@@ -379,14 +379,14 @@ export function RecommendedStudyGuide({
               />
             ))}
           </div>
-          <div className={`flex min-w-0 items-center gap-1.5 ${step === 'errors' ? 'justify-between' : ''}`}>
+          <div className={`flex min-w-0 items-center gap-1.5 ${step === 'progress' ? 'justify-between' : ''}`}>
             {onBack ? (
               <Button type="button" variant="ghost" size="sm" onClick={handleBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
             <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 min-w-0 gap-1.5 whitespace-normal rounded-full px-3 text-[12px] leading-4 sm:whitespace-nowrap sm:px-4">
-              {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
+              {step === 'reinforce' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </div>
