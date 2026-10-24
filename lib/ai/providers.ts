@@ -1,5 +1,6 @@
 import { logError } from '@/lib/observability';
 import { getNextGeminiAppKeySlot } from '@/lib/ai/gemini-app-routing';
+import { isProviderAttemptBlocked, markProviderHttpFailure, clearProviderFailure } from '@/lib/ai/provider-health';
 
 export type AiProviderName = 'gemini' | 'groq' | 'nvidia' | 'github';
 
@@ -98,6 +99,19 @@ async function fetchWithTimeout(
   }
 }
 
+// Retry corto y progresivo solo ante saturacion temporal del proveedor.
+async function fetchWithTransientRetry(input: RequestInfo | URL, init: RequestInit) {
+  for (let retry = 0; retry <= 2; retry += 1) {
+    const response = await fetchWithTimeout(input, init);
+    if ((response.status !== 429 && response.status !== 503) || retry === 2) {
+      return response;
+    }
+    await response.body?.cancel().catch(() => undefined);
+    await new Promise<void>((resolve) => setTimeout(resolve, 250 * 2 ** retry));
+  }
+  throw new Error('Se agotaron los reintentos transitorios de IA.');
+}
+
 function uniqueConfiguredValues(values: Array<string | undefined>) {
   return values.filter(
     (value, index, array): value is string => Boolean(value) && array.indexOf(value) === index
@@ -171,6 +185,7 @@ async function requestOpenAiCompatibleJson(
 
   for (const apiKey of apiKeys) {
     for (const model of models) {
+      if (isProviderAttemptBlocked(cfg.provider, model, apiKey)) continue;
       try {
         const body: Record<string, unknown> = {
           model,
@@ -183,7 +198,7 @@ async function requestOpenAiCompatibleJson(
           response_format: { type: 'json_object' },
         };
 
-        let response = await fetchWithTimeout(cfg.endpoint, {
+        let response = await fetchWithTransientRetry(cfg.endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -196,7 +211,7 @@ async function requestOpenAiCompatibleJson(
           const errorText = await response.text().catch(() => '');
           if (isJsonModeRejectedError(errorText)) {
             delete body.response_format;
-            response = await fetchWithTimeout(cfg.endpoint, {
+            response = await fetchWithTransientRetry(cfg.endpoint, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -211,7 +226,8 @@ async function requestOpenAiCompatibleJson(
 
         if (!response.ok) {
           const errorText = await response.text().catch(() => '');
-          if (cfg.transientStatuses.includes(response.status)) {
+          markProviderHttpFailure(cfg.provider, model, apiKey, response.status);
+          if (cfg.transientStatuses.includes(response.status) || [401, 403, 404, 410].includes(response.status)) {
             lastErrorMessage = `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
             continue;
           }
@@ -243,6 +259,7 @@ async function requestOpenAiCompatibleJson(
         const normalized = typeof content === 'string' ? content.trim() : '';
         if (!normalized) continue;
 
+        clearProviderFailure(cfg.provider, model, apiKey);
         return {
           provider: cfg.provider,
           model,
@@ -280,6 +297,7 @@ async function requestOpenAiCompatibleText(
 
   for (const apiKey of apiKeys) {
     for (const model of models) {
+      if (isProviderAttemptBlocked(cfg.provider, model, apiKey)) continue;
       try {
         const body = {
           model,
@@ -291,7 +309,7 @@ async function requestOpenAiCompatibleText(
           ],
         };
 
-        const response = await fetchWithTimeout(cfg.endpoint, {
+        const response = await fetchWithTransientRetry(cfg.endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -302,7 +320,8 @@ async function requestOpenAiCompatibleText(
 
         if (!response.ok) {
           const errorText = await response.text().catch(() => '');
-          if (cfg.transientStatuses.includes(response.status)) {
+          markProviderHttpFailure(cfg.provider, model, apiKey, response.status);
+          if (cfg.transientStatuses.includes(response.status) || [401, 403, 404, 410].includes(response.status)) {
             lastErrorMessage = `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
             continue;
           }
@@ -325,6 +344,7 @@ async function requestOpenAiCompatibleText(
         const normalized = typeof content === 'string' ? content.trim() : '';
         if (!normalized) continue;
 
+        clearProviderFailure(cfg.provider, model, apiKey);
         return {
           provider: cfg.provider,
           model,
