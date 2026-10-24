@@ -270,6 +270,45 @@ for (const width of [355, 433]) {
   });
 }
 
+// Accesos directos a las dos vistas del nuevo flujo sin recorrer otra vez el tour.
+for (const width of [375, 1440]) {
+  await check('enlace directo a elección ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 850 } });
+    try {
+      const response = await page.goto(baseUrl + '/demo/material-estudio?start=eleccion', { waitUntil: 'domcontentloaded', timeout: 60000 });
+      assert.equal(response?.status(), 200);
+      const entry = page.locator('[data-first-pdf-study-entry]');
+      await entry.waitFor(wait);
+      await entry.getByText('¿Ya estudiaste este material?').waitFor(wait);
+      assert.equal(await page.locator('[data-first-pdf-guide]').count(), 0,
+        'El enlace directo no debe reabrir el onboarding');
+      const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(horizontal <= 2, 'La pregunta desborda horizontalmente: ' + horizontal);
+      await page.screenshot({ path: folder + '/eleccion-directa-' + width + '.png', animations: 'disabled' });
+      await entry.getByRole('button', { name: 'Todavía no' }).click();
+      const plan = page.locator('[data-first-pdf-study-plan]');
+      await plan.waitFor(wait);
+      await plan.getByText('Empecemos por el primer tema').waitFor(wait);
+    } finally { await page.close(); }
+  });
+  await check('enlace directo al plan ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 850 } });
+    try {
+      const response = await page.goto(baseUrl + '/demo/material-estudio?start=plan', { waitUntil: 'domcontentloaded', timeout: 60000 });
+      assert.equal(response?.status(), 200);
+      const plan = page.locator('[data-first-pdf-study-plan]');
+      await plan.waitFor(wait);
+      assert.equal(await page.locator('[data-first-pdf-guide]').count(), 0);
+      assert.ok((await plan.locator('ol li').count()) > 0, 'Debe mostrar los temas reales del PDF de prueba');
+      const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(horizontal <= 2, 'El plan desborda horizontalmente: ' + horizontal);
+      await page.screenshot({ path: folder + '/plan-directo-' + width + '.png', animations: 'disabled' });
+      await plan.getByRole('button', { name: /Empezar por el tema 1/ }).click();
+      await plan.waitFor({ state: 'detached', timeout: 20000 });
+    } finally { await page.close(); }
+  });
+}
+
 await browser.close();
 if (failures.length) {
   console.error('\nQA failures:\n' + failures.join('\n\n'));
