@@ -147,6 +147,8 @@ export function RecommendedStudyGuide({
   const current = steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
+  // Progreso y Reforzar necesitan una fila propia para los botones en todo viewport.
+  const stackedControls = step === 'progress' || step === 'reinforce';
   const handleNext = onNext;
   const handleBack = onBack;
 
@@ -306,7 +308,7 @@ export function RecommendedStudyGuide({
           }} />
           <div
             aria-hidden="true"
-            className="pointer-events-none fixed z-[81] rounded-[28px] border border-primary/25 shadow-[0_0_0_3px_rgba(37,99,235,0.045)] transition-[top,left,width,height,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+            className={`pointer-events-none fixed z-[81] rounded-[28px] border transition-[top,left,width,height,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${stackedControls ? 'border-transparent shadow-none' : 'border-primary/25 shadow-[0_0_0_3px_rgba(37,99,235,0.045)]'}`}
             style={{ top: spotlight.top, left: spotlight.left, width: spotlight.width, height: spotlight.height }}
           />
         </>
@@ -322,7 +324,7 @@ export function RecommendedStudyGuide({
         tabIndex={-1}
         data-first-pdf-guide
         aria-busy={transitioning}
-        className="bg-card border-border fixed z-[90] max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-[340px] overflow-y-auto overscroll-contain rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4"
+        className="bg-card border-border fixed z-[90] max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-[340px] overflow-x-hidden overflow-y-auto overscroll-contain rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4"
         style={
           spotlight
             ? { top: spotlight.cardTop, left: spotlight.cardLeft, opacity: 1 }
@@ -361,7 +363,7 @@ export function RecommendedStudyGuide({
           </p>
         )}
 
-        <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${step === 'progress'
+        <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${stackedControls
           ? 'flex flex-col items-stretch gap-2'
           : 'flex items-center justify-between gap-2'}`}>
           <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 4'}>
@@ -379,14 +381,14 @@ export function RecommendedStudyGuide({
               />
             ))}
           </div>
-          <div className={`flex min-w-0 items-center gap-1.5 ${step === 'progress' ? 'justify-between' : ''}`}>
+          <div className={`flex min-w-0 items-center gap-1.5 ${stackedControls ? 'w-full justify-between' : ''}`}>
             {onBack ? (
               <Button type="button" variant="ghost" size="sm" onClick={handleBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
-            <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 min-w-0 gap-1.5 whitespace-normal rounded-full px-3 text-[12px] leading-4 sm:whitespace-nowrap sm:px-4">
-              {step === 'reinforce' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
+            <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 min-w-0 gap-1.5 whitespace-normal rounded-full px-3 text-[12px] leading-4 sm:px-4">
+              {step === 'reinforce' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5 shrink-0" />
             </Button>
           </div>
         </div>

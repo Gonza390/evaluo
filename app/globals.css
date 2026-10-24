@@ -513,21 +513,12 @@ body:has([data-progress-open='true']) [data-student-material-share-control] {
   background: rgb(37 99 235 / 0.025);
 }
 
+/* Progreso ya tiene un borde de tarjeta: no duplicarlo durante la guía.
+   En Reforzar usar apenas un acento interno sobre el título del capítulo. */
 [data-onboarding-step='reinforce'] [data-onboarding-topic-detail] > div:first-child {
   border-radius: 12px;
-  outline: 2px solid rgb(37 99 235 / 0.2);
-  outline-offset: 4px;
-  background: rgb(37 99 235 / 0.035);
-}
-
-[data-onboarding-step='reinforce'] aside[aria-label='Navegación entre temas del PDF'] {
-  border-color: rgb(37 99 235 / 0.28);
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.045);
-}
-
-[data-onboarding-step='progress'] [data-recommended-topics] {
-  border-color: rgb(37 99 235 / 0.32);
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.06);
+  box-shadow: inset 3px 0 0 rgb(37 99 235 / 0.2);
+  background: rgb(37 99 235 / 0.025);
 }
 
 /* Al entrar al paso 3 (Progreso), aparecen los estados ilustrativos en secuencia.

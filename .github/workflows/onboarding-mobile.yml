@@ -2,6 +2,12 @@ name: Onboarding mobile visual QA
 on:
   push:
     branches: [master, "codex/**"]
+  pull_request:
+    paths:
+      - 'components/study/recommended-study-guide.tsx'
+      - 'app/globals.css'
+      - 'scripts/audit-onboarding-mobile.mjs'
+      - '.github/workflows/onboarding-mobile.yml'
   workflow_dispatch:
 jobs:
   mobile:
