@@ -123,6 +123,35 @@ try {
       await sleep(650);
     }
   }
+  // Los accesos directos son exclusivos de la demo y evitan repetir el tutorial.
+  // Cubrimos ambos destinos usando el mismo espacio de estudio en un navegador real.
+  const directDemo = 'http://127.0.0.1:3150/demo/material-estudio';
+  for(const [width,height,mobile,name] of [[375,667,true,'phone'],[1440,900,false,'desktop']]) {
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile});
+    await call('Emulation.setTouchEmulationEnabled',{enabled:mobile});
+    await call('Page.navigate',{url:directDemo+'?start=eleccion&qa='+name});
+    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-entry]")'),'direct study choice '+name,150);
+    const choiceData=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-entry]");return {label:n?.textContent||"",overflow:document.documentElement.scrollWidth>innerWidth+2,visible:!!n?.getBoundingClientRect().height,guide:!!document.querySelector("[data-first-pdf-guide]")}})()');
+    if(!choiceData.visible || choiceData.overflow || choiceData.guide || !choiceData.label.includes('¿Ya estudiaste este material?')) {
+      failures.push('direct choice '+name+': '+JSON.stringify(choiceData));
+    }
+    const screenshot=await call('Page.captureScreenshot',{format:'png',fromSurface:true});
+    await writeFile('artifacts/mobile-onboarding/direct-choice-'+name+'.png',Buffer.from(screenshot.result.data,'base64'));
+    const first=await evaluate('(() => {const c=document.querySelector("[data-first-pdf-study-entry]");const b=Array.from(c?.querySelectorAll("button")||[]).find(n=>n.textContent.includes("Todavía no"));if(!b)return false;b.click();return true})()');
+    if(!first)failures.push('direct choice '+name+': missing Todavía no');
+    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-plan]")'),'direct study plan '+name,100);
+    const planData=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-plan]");return {topics:n?.querySelectorAll("ol li").length||0,overflow:document.documentElement.scrollWidth>innerWidth+2}})()');
+    if(planData.topics<1 || planData.overflow)failures.push('direct plan '+name+': '+JSON.stringify(planData));
+    await call('Page.navigate',{url:directDemo+'?start=plan&qa='+name});
+    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-plan]")'),'direct chapter plan '+name,100);
+    await call('Page.navigate',{url:directDemo+'?start=eleccion&qa='+name+'-practice'});
+    await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-entry]")'),'direct practice choice '+name,100);
+    const practice=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-entry]");const b=Array.from(n?.querySelectorAll("button")||[]).find(v=>v.textContent.includes("Sí, sé algo"));if(!b)return false;b.click();return true})()');
+    if(!practice)failures.push('direct choice '+name+': missing Sí, sé algo');
+    await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'practice choice dismissed '+name,100);
+    const practiced=await evaluate('(() => {const active=Array.from(document.querySelectorAll("[role=tab][data-state=active]")).filter(n=>n.getBoundingClientRect().width>0).map(n=>n.textContent?.trim()||"");const mobile=document.querySelector("[data-pdf-mobile-navigation] button[aria-current=page]")?.textContent?.trim()||"";return active.includes("Práctica") || mobile.includes("Práctica")})()');
+    if(!practiced)failures.push('direct choice '+name+': practice tab not selected');
+  }
   // Recorremos también el lector real con contenido del PDF de prueba sin
   // onboarding: las pestañas no deben desbordar ni desaparecer en móviles.
   const readerBase = 'http://127.0.0.1:3150/preview/progreso-pdf';
