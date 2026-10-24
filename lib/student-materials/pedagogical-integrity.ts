@@ -53,7 +53,7 @@ export function incompleteOpenAnswerReason(
   if (question.kind !== 'section') return null;
   const section = sectionForQuestion(question, sections);
   if (!section) return null;
-  const focus = question.prompt.match(/[“"]([^”"]+)[”"]/u)?.[1] ?? question.topic;
+  const focus = question.prompt.match(/[“"]([^”"]+)[”"]/u)?.[1] ?? question.topic ?? '';
   if (!/\b(?:proceso|procedimiento|etapas|fases|pasos|secuencia)\b/u.test(norm(focus))) {
     return null;
   }
