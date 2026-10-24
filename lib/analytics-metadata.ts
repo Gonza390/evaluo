@@ -365,6 +365,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'material_id',
     'entry',
   ],
+  pdf_progress_panel_opened: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'entry'],
+  pdf_progress_practice_clicked: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'section_index'],
   summary_topic_check_prompted: [
     'attribution',
     'anonymous_id',
