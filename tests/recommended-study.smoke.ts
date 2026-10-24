@@ -247,6 +247,18 @@ assert.match(materialWorkspaceSource, /Estudiar libremente/,
   'Ambas rutas deben permitir abandonar las recomendaciones.');
 assert.match(materialWorkspaceSource, /studyEntryStage === 'choice'/,
   'La interfaz de elección debe ser compacta y de una sola pregunta.');
+const demoStudyPageSource = readFileSync('app/demo/material-estudio/page.tsx', 'utf8');
+const demoFourStepSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
+assert.match(demoStudyPageSource, /start === 'eleccion' \? 'choice'/,
+  'La demo debe ofrecer un enlace directo a la pregunta tras el onboarding.');
+assert.match(demoStudyPageSource, /start === 'plan' \? 'plan'/,
+  'La demo debe ofrecer un enlace directo al plan de los primeros temas.');
+assert.match(demoStudyPageSource, /initialStudyEntryStage=\{directStudyEntry\}/,
+  'La demo debe enviar la pantalla elegida al recorrido real.');
+assert.match(demoFourStepSource, /initialStudyEntryStage=\{initialStudyEntryStage\}/,
+  'El componente de demostración debe conservar la pantalla inicial.');
+assert.match(materialWorkspaceSource, /demo \? \(initialStudyEntryStage \?\? null\) : null/,
+  'El acceso directo nunca debe abrirse automáticamente en los materiales reales.');
 
 assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
   'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
