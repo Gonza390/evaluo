@@ -171,6 +171,8 @@ type MaterialStudyWorkspaceProps = {
   initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
+  /** Solo la demo permite abrir una etapa directamente desde un enlace público. */
+  initialStudyEntryStage?: 'choice' | 'plan';
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
@@ -336,6 +338,7 @@ export function MaterialStudyWorkspace({
   initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
+  initialStudyEntryStage,
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
@@ -409,7 +412,9 @@ export function MaterialStudyWorkspace({
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
-  const [studyEntryStage, setStudyEntryStage] = useState<'choice' | 'plan' | null>(null);
+  const [studyEntryStage, setStudyEntryStage] = useState<'choice' | 'plan' | null>(
+    demo ? (initialStudyEntryStage ?? null) : null
+  );
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
