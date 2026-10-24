@@ -81,6 +81,18 @@ import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 
 
+function readPdfStudyEntryChoice(materialId: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try { return window.localStorage.getItem(getPdfStudyEntryStorageKey(materialId)); }
+  catch { return null; }
+}
+
+function savePdfStudyEntryChoice(materialId: string, choice: PdfStudyEntryChoice | 'pending'): void {
+  if (typeof window === 'undefined') return;
+  try { window.localStorage.setItem(getPdfStudyEntryStorageKey(materialId), choice); }
+  catch { /* No bloquear el acceso al PDF por restricciones de almacenamiento. */ }
+}
+
 /** Conserva la navegación del alumno: nunca desplaza la página completa. */
 const tourStudySelectors: Record<RecommendedStudyStep, string> = {
   summary: '[data-summary-reading-section="0"]',
@@ -424,27 +436,23 @@ export function MaterialStudyWorkspace({
   const [studyEntryStage, setStudyEntryStage] = useState<'choice' | 'plan' | null>(
     demo ? (initialStudyEntryStage ?? null) : null
   );
-  // La respuesta es independiente del tutorial y tiene una clave por material.
-  // Si el almacenamiento está bloqueado, la pregunta sigue siendo usable.
-  const savedPdfStudyEntryChoice = () => {
-    if (typeof window === 'undefined') return null;
-    try { return window.localStorage.getItem(getPdfStudyEntryStorageKey(materialId)); }
-    catch { return null; }
-  };
-  const persistPdfStudyEntryChoice = (choice: PdfStudyEntryChoice) => {
-    if (demo || !isOwner || typeof window === 'undefined') return;
-    try { window.localStorage.setItem(getPdfStudyEntryStorageKey(materialId), choice); }
-    catch { /* No impedir el estudio cuando el almacenamiento esté deshabilitado. */ }
-  };
-
+  // El estado 'pending' permite retomar la pregunta si se vuelve al PDF sin
+  // el enlace de carga original. Se reemplaza por la elección al responder.
+  const [pendingPdfStudyEntry, setPendingPdfStudyEntry] = useState(false);
   useEffect(() => {
-    if (!initialStudyEntryAvailable || recommendedActive || demo) return;
+    if (!isOwner || demo) return;
+    const savedChoice = readPdfStudyEntryChoice(materialId);
+    const entryRequested = initialStudyEntryAvailable || savedChoice === 'pending';
+    if (entryRequested && !isSavedPdfStudyEntryChoice(savedChoice)) {
+      setPendingPdfStudyEntry(true);
+      if (!savedChoice) savePdfStudyEntryChoice(materialId, 'pending');
+    }
     if (shouldPresentPdfStudyEntry({
       isOwner,
       isReady: true,
-      entryRequested: initialStudyEntryAvailable,
+      entryRequested,
       guideActive: recommendedActive,
-      savedChoice: savedPdfStudyEntryChoice(),
+      savedChoice,
     })) {
       setStudyEntryStage((current) => current ?? 'choice');
     }
@@ -737,7 +745,11 @@ export function MaterialStudyWorkspace({
       // Tras omitir el tutorial de un PDF recién cargado también ofrecemos la elección.
       const showStudyChoice = Boolean(demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable))) &&
         (outcome === 'completed' || initialStudyEntryAvailable) &&
-        (demo || !isSavedPdfStudyEntryChoice(savedPdfStudyEntryChoice()));
+        (demo || !isSavedPdfStudyEntryChoice(readPdfStudyEntryChoice(materialId)));
+      if (showStudyChoice && !demo && isOwner) {
+        savePdfStudyEntryChoice(materialId, 'pending');
+        setPendingPdfStudyEntry(true);
+      }
       setStudyEntryStage(showStudyChoice ? 'choice' : null);
       setFocusFirstChapterOnExit(outcome === 'completed' && !showStudyChoice);
       setLocalProgressOpen(false);
@@ -1207,8 +1219,8 @@ export function MaterialStudyWorkspace({
   }, [studyEntryStage, isOwner, demo, materialId]);
 
   const chooseStudyEntry = (choice: 'not_studied' | 'some_knowledge') => {
-    persistPdfStudyEntryChoice(choice);
     if (!demo && isOwner) {
+      savePdfStudyEntryChoice(materialId, choice);
       trackMarketingEvent('pdf_study_entry_selected', {
         material_id: materialId,
         study_path: choice,
@@ -1254,8 +1266,8 @@ export function MaterialStudyWorkspace({
   };
 
   const studyFreely = () => {
-    persistPdfStudyEntryChoice('free_exploration');
     if (!demo && isOwner) {
+      savePdfStudyEntryChoice(materialId, 'free_exploration');
       trackMarketingEvent('pdf_study_entry_selected', {
         material_id: materialId,
         study_path: 'free_exploration',
@@ -2307,7 +2319,7 @@ export function MaterialStudyWorkspace({
           />
       )}
 
-      {studyEntryStage && !recommendedActive && (demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable))) ? (
+      {studyEntryStage && !recommendedActive && (demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable || pendingPdfStudyEntry))) ? (
         <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-3 sm:px-4" data-first-pdf-study-entry data-pdf-study-entry>
           {studyEntryStage === 'choice' ? (
             <section
