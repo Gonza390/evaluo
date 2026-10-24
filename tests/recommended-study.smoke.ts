@@ -246,10 +246,19 @@ assert.match(materialWorkspaceSource, /Empiezo desde cero/,
   'El alumno que no estudió debe poder comenzar desde el resumen.');
 assert.match(materialWorkspaceSource, /Ya lo estudié/,
   'El alumno que ya conoce algo debe tener una ruta directa a Práctica.');
-assert.match(materialWorkspaceSource, /data-first-pdf-study-plan/,
-  'La segunda etapa debe mostrar el orden real de capítulos sin crear otra pantalla.');
-assert.match(materialWorkspaceSource, /summaryChapters\.slice\(0, 3\)/,
-  'La ruta inicial debe usar los capítulos existentes y no títulos inventados.');
+const topicPlanSource = readFileSync('components/study/pdf-topic-study-plan.tsx', 'utf8');
+assert.match(materialWorkspaceSource, /<PdfTopicStudyPlan/,
+  'La ruta inicial debe abrir el plan completo dentro del material.');
+assert.match(materialWorkspaceSource, /summaryChapters\.map\(/,
+  'El plan debe recibir los capítulos reales y no temas inventados.');
+assert.match(topicPlanSource, /data-first-pdf-study-plan/,
+  'La segunda etapa debe tener una pantalla específica de estudio.');
+assert.match(topicPlanSource, /topics\.map\(/,
+  'El plan debe mostrar todos los temas del material.');
+assert.match(topicPlanSource, /data-study-plan-start-first/,
+  'La primera fila debe ofrecer empezar por el tema 1.');
+assert.match(topicPlanSource, /onExplore/,
+  'El usuario debe conservar el acceso libre a todas las herramientas.');
 assert.match(materialWorkspaceSource, /handleStudyTabChange\('ejercicios'\)/,
   'La ruta de quien sabe algo debe abrir Práctica del PDF.');
 assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(summaryChapters.length > 0\)/,
