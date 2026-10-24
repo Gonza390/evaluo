@@ -47,7 +47,7 @@ assert.match(page, /initialStudyEntryAvailable=\{isOwner && material\.processing
 assert.match(processing, /\?inicio=1/);
 assert.match(quick, /\?inicio=1/);
 assert.match(workspace, /data-pdf-study-entry-choice/);
-assert.match(workspace, /recommendedActive \|\| pendingPdfStudyEntry/);
+assert.match(workspace, /recommendedStudyAvailable \|\| initialStudyEntryAvailable \|\| pendingPdfStudyEntry/);
 assert.match(workspace, /savePdfStudyEntryChoice\(materialId, 'pending'\)/);
 assert.match(workspace, /savePdfStudyEntryChoice\(materialId, choice\)/);
 assert.match(workspace, /savePdfStudyEntryChoice\(materialId, 'free_exploration'\)/);
