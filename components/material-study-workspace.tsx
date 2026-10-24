@@ -49,6 +49,12 @@ import {
 } from '@/lib/student-materials/practice-entry';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
+import {
+  getPdfStudyEntryStorageKey,
+  isSavedPdfStudyEntryChoice,
+  shouldPresentPdfStudyEntry,
+  type PdfStudyEntryChoice,
+} from '@/lib/pdf-study-entry';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
@@ -171,6 +177,8 @@ type MaterialStudyWorkspaceProps = {
   initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
+  /** El usuario acaba de procesar este PDF y debe elegir cómo comenzar. */
+  initialStudyEntryAvailable?: boolean;
   /** Solo para la demo pública: habilita enlaces a una etapa sin forzar onboarding real. */
   initialStudyEntryStage?: 'choice' | 'plan';
   initialTab?: StudyTabId;
@@ -338,6 +346,7 @@ export function MaterialStudyWorkspace({
   initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
+  initialStudyEntryAvailable = false,
   initialStudyEntryStage,
   initialTab,
   initialPdfPage = null,
@@ -415,6 +424,32 @@ export function MaterialStudyWorkspace({
   const [studyEntryStage, setStudyEntryStage] = useState<'choice' | 'plan' | null>(
     demo ? (initialStudyEntryStage ?? null) : null
   );
+  // La respuesta es independiente del tutorial y tiene una clave por material.
+  // Si el almacenamiento está bloqueado, la pregunta sigue siendo usable.
+  const savedPdfStudyEntryChoice = () => {
+    if (typeof window === 'undefined') return null;
+    try { return window.localStorage.getItem(getPdfStudyEntryStorageKey(materialId)); }
+    catch { return null; }
+  };
+  const persistPdfStudyEntryChoice = (choice: PdfStudyEntryChoice) => {
+    if (demo || !isOwner || typeof window === 'undefined') return;
+    try { window.localStorage.setItem(getPdfStudyEntryStorageKey(materialId), choice); }
+    catch { /* No impedir el estudio cuando el almacenamiento esté deshabilitado. */ }
+  };
+
+  useEffect(() => {
+    if (!initialStudyEntryAvailable || recommendedActive || demo) return;
+    if (shouldPresentPdfStudyEntry({
+      isOwner,
+      isReady: true,
+      entryRequested: initialStudyEntryAvailable,
+      guideActive: recommendedActive,
+      savedChoice: savedPdfStudyEntryChoice(),
+    })) {
+      setStudyEntryStage((current) => current ?? 'choice');
+    }
+  }, [initialStudyEntryAvailable, recommendedActive, demo, isOwner, materialId]);
+
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -698,7 +733,11 @@ export function MaterialStudyWorkspace({
       setRecommendedActive(false);
       // Después de completar el tour, ofrecer una sola elección, sin otra pantalla modal.
       // En la demo también puede probarse el recorrido sin guardar datos de cuenta.
-      const showStudyChoice = outcome === 'completed' && Boolean(demo || (isOwner && recommendedStudyAvailable));
+      // Completar el tutorial no es requisito para elegir cómo estudiar un PDF.
+      // Tras omitir el tutorial de un PDF recién cargado también ofrecemos la elección.
+      const showStudyChoice = Boolean(demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable))) &&
+        (outcome === 'completed' || initialStudyEntryAvailable) &&
+        (demo || !isSavedPdfStudyEntryChoice(savedPdfStudyEntryChoice()));
       setStudyEntryStage(showStudyChoice ? 'choice' : null);
       setFocusFirstChapterOnExit(outcome === 'completed' && !showStudyChoice);
       setLocalProgressOpen(false);
@@ -714,6 +753,7 @@ export function MaterialStudyWorkspace({
       materialId,
       recommendedStudyAvailable,
       recommendedTourStep,
+      initialStudyEntryAvailable,
     ]
   );
   const finishRecommendedTour = async () => {
@@ -1153,18 +1193,32 @@ export function MaterialStudyWorkspace({
 
   useEffect(() => {
     if (!studyEntryStage || !isOwner || demo) return;
+    const entrySource = guideCompletedRef.current ? 'post_onboarding' : 'post_upload';
     trackMarketingEvent(
-      studyEntryStage === 'choice' ? 'first_pdf_study_path_viewed' : 'first_pdf_study_plan_viewed',
-      { material_id: materialId }
+      studyEntryStage === 'choice' ? 'pdf_study_entry_viewed' : 'pdf_study_plan_viewed',
+      { material_id: materialId, entry_source: entrySource }
     );
+    if (guideCompletedRef.current) {
+      trackMarketingEvent(
+        studyEntryStage === 'choice' ? 'first_pdf_study_path_viewed' : 'first_pdf_study_plan_viewed',
+        { material_id: materialId }
+      );
+    }
   }, [studyEntryStage, isOwner, demo, materialId]);
 
   const chooseStudyEntry = (choice: 'not_studied' | 'some_knowledge') => {
+    persistPdfStudyEntryChoice(choice);
     if (!demo && isOwner) {
-      trackMarketingEvent('first_pdf_study_path_selected', {
+      trackMarketingEvent('pdf_study_entry_selected', {
         material_id: materialId,
         study_path: choice,
       });
+      if (guideCompletedRef.current) {
+        trackMarketingEvent('first_pdf_study_path_selected', {
+          material_id: materialId,
+          study_path: choice,
+        });
+      }
     }
     trackPostGuideAction(choice === 'not_studied' ? 'start_learning' : 'start_practice');
     setFocusFirstChapterOnExit(false);
@@ -1181,10 +1235,16 @@ export function MaterialStudyWorkspace({
 
   const startStudyPlan = () => {
     if (!demo && isOwner) {
-      trackMarketingEvent('first_pdf_study_plan_started', {
+      trackMarketingEvent('pdf_study_plan_started', {
         material_id: materialId,
         chapter_count: summaryChapters.length,
       });
+      if (guideCompletedRef.current) {
+        trackMarketingEvent('first_pdf_study_plan_started', {
+          material_id: materialId,
+          chapter_count: summaryChapters.length,
+        });
+      }
     }
     setStudyEntryStage(null);
     setProgressOpen(false);
@@ -1194,6 +1254,13 @@ export function MaterialStudyWorkspace({
   };
 
   const studyFreely = () => {
+    persistPdfStudyEntryChoice('free_exploration');
+    if (!demo && isOwner) {
+      trackMarketingEvent('pdf_study_entry_selected', {
+        material_id: materialId,
+        study_path: 'free_exploration',
+      });
+    }
     trackPostGuideAction('free_study');
     setStudyEntryStage(null);
     setFocusFirstChapterOnExit(false);
@@ -2240,56 +2307,66 @@ export function MaterialStudyWorkspace({
           />
       )}
 
-      {studyEntryStage && !recommendedActive && (demo || (isOwner && recommendedStudyAvailable)) ? (
-        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-2 sm:px-4" data-first-pdf-study-entry>
+      {studyEntryStage && !recommendedActive && (demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable))) ? (
+        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-3 sm:px-4" data-first-pdf-study-entry data-pdf-study-entry>
           {studyEntryStage === 'choice' ? (
-            <div className="border-border bg-card flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
-              <p className="text-foreground text-sm font-semibold">¿Ya estudiaste este material?</p>
-              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                <Button type="button" size="sm" onClick={() => chooseStudyEntry('not_studied')}>
-                  Todavía no
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => chooseStudyEntry('some_knowledge')}>
-                  Sí, sé algo
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={studyFreely}>
-                  Estudiar libremente
-                </Button>
+            <section
+              aria-labelledby="pdf-study-entry-title"
+              data-pdf-study-entry-choice
+              className="overflow-hidden rounded-2xl border border-blue-200 bg-[linear-gradient(115deg,#EFF6FF_0%,#FFFFFF_56%,#EEF2FF_100%)] px-4 py-5 shadow-[0_12px_35px_rgba(37,99,235,0.07)] sm:px-7 sm:py-6"
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">Tu punto de partida</p>
+              <h2 id="pdf-study-entry-title" className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
+                ¿Ya estudiaste este material?
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600">
+                Elegí cómo querés empezar. Te recomendamos un recorrido según cuánto conocés del contenido.
+              </p>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => chooseStudyEntry('not_studied')}
+                  className="group flex min-h-24 flex-col items-start justify-center gap-1 rounded-xl border border-blue-200 bg-white px-4 py-3 text-left transition hover:border-blue-500 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                >
+                  <span className="text-sm font-bold text-slate-900 group-hover:text-blue-700">Empiezo desde cero</span>
+                  <span className="text-xs leading-relaxed text-slate-600">Vamos tema por tema para comprender el PDF antes de practicar.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => chooseStudyEntry('some_knowledge')}
+                  className="group flex min-h-24 flex-col items-start justify-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-indigo-500 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  <span className="text-sm font-bold text-slate-900 group-hover:text-indigo-700">Ya lo estudié</span>
+                  <span className="text-xs leading-relaxed text-slate-600">Empezá por una práctica para descubrir qué temas necesitás reforzar.</span>
+                </button>
               </div>
-            </div>
+              <button type="button" className="mt-3 text-xs font-medium text-slate-600 underline-offset-4 hover:text-blue-700 hover:underline" onClick={studyFreely}>
+                Prefiero explorar el material libremente
+              </button>
+            </section>
           ) : (
-            <section data-first-pdf-study-plan aria-label="Orden recomendado de estudio" className="border-border bg-card rounded-xl border px-4 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-foreground text-sm font-semibold">Empecemos por el primer tema</p>
-                  <p className="text-muted-foreground mt-0.5 text-xs">
-                    Seguimos el orden de los capítulos de tu PDF.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" onClick={startStudyPlan}>
-                    {summaryChapters.length > 0 ? 'Empezar por el tema 1' : 'Abrir resumen'}
-                    <ChevronRight className="ml-1 size-4" aria-hidden="true" />
-                  </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={studyFreely}>
-                    Estudiar libremente
-                  </Button>
-                </div>
-              </div>
+            <section data-first-pdf-study-plan aria-label="Orden recomendado de estudio" className="overflow-hidden rounded-2xl border border-blue-200 bg-[linear-gradient(115deg,#EFF6FF_0%,#FFFFFF_60%,#EEF2FF_100%)] px-4 py-5 shadow-sm sm:px-7 sm:py-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">Tu recorrido recomendado</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-950">Empecemos por el primer tema</h2>
+              <p className="mt-1 text-sm text-slate-600">Seguimos el orden real de los capítulos de tu PDF.</p>
               {summaryChapters.length > 0 ? (
-                <ol className="text-muted-foreground mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+                <ol className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-700">
                   {summaryChapters.slice(0, 3).map((chapter, index) => (
                     <li key={chapter.anchor} className="min-w-0 max-w-full truncate">
-                      <span className="text-primary mr-1 font-semibold">{index + 1}.</span>
+                      <span className="mr-1 font-bold text-blue-600">{index + 1}.</span>
                       {chapter.displayTitle}
                     </li>
                   ))}
                   {summaryChapters.length > 3 ? <li>+{summaryChapters.length - 3} temas más</li> : null}
                 </ol>
               ) : null}
-              <p className="text-muted-foreground mt-2 text-xs">
-                Leé el resumen, consultá el glosario o las flashcards si te ayudan y practicá cuando estés listo.
-              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Button type="button" size="sm" onClick={startStudyPlan}>
+                  {summaryChapters.length > 0 ? 'Empezar por el tema 1' : 'Abrir resumen'}
+                  <ChevronRight className="ml-1 size-4" aria-hidden="true" />
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={studyFreely}>Estudiar libremente</Button>
+              </div>
             </section>
           )}
         </div>
