@@ -7,7 +7,7 @@ import demoArtifacts from '@/public/material-general-prueba.study.json';
 
 export const metadata: Metadata = {
   title: 'Probá Evaluo con un PDF de muestra',
-  description: 'Recorré el estudio guiado de Evaluo en cuatro pasos: entender, practicar, estudiar por tema y ver el progreso.',
+  description: 'Probá el estudio guiado de Evaluo: entender, practicar, ver progreso y reforzar, o empezá por la elección inicial.'
   robots: { index: false, follow: false },
 };
 
@@ -31,7 +31,9 @@ export default async function DemoMaterialEstudioPage({
     : UPLOAD_HREF;
   // Un único tutorial principal, también en la muestra. Permitir exploración libre al terminarlo
   // o desde un enlace explícito ?tour=0.
-  const guided = tour !== '0';
+  // Enlaces directos de revisión: permiten ver la elección y el plan sin repetir el tour.
+  const previewStage = start === 'eleccion' ? 'choice' : start === 'plan' ? 'plan' : undefined;
+  const guided = tour !== '0' && !previewStage;
 
   return (
     <>
@@ -81,6 +83,7 @@ export default async function DemoMaterialEstudioPage({
       <AppShellProviders>
         <DemoFourStepStudy
           guided={guided}
+          initialStudyEntryStage={previewStage}
           initialTab={!guided && start === 'ejercicios' ? 'ejercicios' : 'resumen'}
           internationalSource={internationalSource}
           summary={SUMMARY}
