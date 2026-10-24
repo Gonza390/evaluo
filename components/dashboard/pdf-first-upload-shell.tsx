@@ -741,7 +741,7 @@ export function PdfFirstUploadShell({
     if (!processing || !ready) return;
     setOpen(false);
     router.push(
-      `${getStudentMaterialRoute(processing.materialId)}${processing.isFirstReadyMaterial ? '?recorrido=1' : ''}`
+      `${getStudentMaterialRoute(processing.materialId)}?inicio=1${processing.isFirstReadyMaterial ? '&recorrido=1' : ''}`
     );
     router.refresh();
   };
@@ -763,7 +763,7 @@ export function PdfFirstUploadShell({
     }
     setOpen(false);
     router.push(
-      `${getStudentMaterialRoute(processing.materialId)}?${processing.isFirstReadyMaterial ? 'recorrido=1' : 'tab=resumen'}`
+      `${getStudentMaterialRoute(processing.materialId)}?inicio=1${processing.isFirstReadyMaterial ? '&recorrido=1' : ''}`
     );
     router.refresh();
   };
