@@ -145,6 +145,10 @@ assert.match(globalCssSource, /\[data-onboarding-step='practice'\] \[data-onboar
   'Practicar debe señalar las opciones reales.');
 assert.match(globalCssSource, /\[data-onboarding-step='reinforce'\] \[data-onboarding-topic-detail\]/,
   'El cuarto paso debe señalar la vista real del tema.');
+assert.doesNotMatch(globalCssSource, /\[data-onboarding-step='progress'\] \[data-recommended-topics\]/,
+  'Progreso debe usar el borde original de la tarjeta, sin un segundo resaltado.');
+assert.doesNotMatch(globalCssSource, /\[data-onboarding-step='reinforce'\] aside\[aria-label=/,
+  'Reforzar no debe sumar otro borde al panel de navegación de temas.');
 assert.match(globalCssSource, /\[data-onboarding-step='progress'\] \[data-tour-example-topic\]/,
   'El tercer paso debe presentar los estados ilustrativos con movimiento suave.');
 assert.match(globalCssSource, /prefers-reduced-motion: reduce/,
@@ -181,8 +185,14 @@ assert.match(firstGuideSource, /Empezar a estudiar/,
   'El CTA final debe devolver al primer capítulo.');
 assert.doesNotMatch(firstGuideSource, /progressExplained|Ver cómo funciona/,
   'Progreso no debe añadir un quinto clic oculto.');
-assert.match(firstGuideSource, /step === 'progress'.*flex flex-col items-stretch/s,
-  'La navegación final debe mantenerse dentro de la tarjeta.');
+assert.match(firstGuideSource, /const stackedControls = step === 'progress' \|\| step === 'reinforce'/,
+  'Progreso y Reforzar deben apilar los controles para impedir desbordes.');
+assert.match(firstGuideSource, /stackedControls[\s\S]*?flex flex-col items-stretch gap-2/,
+  'El indicador de pasos debe quedar en una fila propia.');
+assert.match(firstGuideSource, /overflow-x-hidden overflow-y-auto/,
+  'La guía no debe mostrar una barra horizontal al terminar.');
+assert.match(firstGuideSource, /stackedControls \? 'border-transparent shadow-none'/,
+  'Los pasos 3 y 4 no deben duplicar el borde del panel de estudio.');
 assert.match(firstGuideSource, /cardRef\.current\?\.getBoundingClientRect\(\)\.width/,
   'El centrado debe medir el ancho de la tarjeta.');
 assert.match(firstGuideSource, /onBack/,
