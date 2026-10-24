@@ -56,6 +56,7 @@ import {
   type PdfStudyEntryChoice,
 } from '@/lib/pdf-study-entry';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
+import { PdfTopicStudyPlan } from '@/components/study/pdf-topic-study-plan';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
@@ -87,7 +88,7 @@ function readPdfStudyEntryChoice(materialId: string): string | null {
   catch { return null; }
 }
 
-function savePdfStudyEntryChoice(materialId: string, choice: PdfStudyEntryChoice | 'pending'): void {
+function savePdfStudyEntryChoice(materialId: string, choice: PdfStudyEntryChoice | 'pending' | 'plan_pending'): void {
   if (typeof window === 'undefined') return;
   try { window.localStorage.setItem(getPdfStudyEntryStorageKey(materialId), choice); }
   catch { /* No bloquear el acceso al PDF por restricciones de almacenamiento. */ }
@@ -442,7 +443,7 @@ export function MaterialStudyWorkspace({
   useEffect(() => {
     if (!isOwner || demo) return;
     const savedChoice = readPdfStudyEntryChoice(materialId);
-    const entryRequested = initialStudyEntryAvailable || savedChoice === 'pending';
+    const entryRequested = initialStudyEntryAvailable || savedChoice === 'pending' || savedChoice === 'plan_pending';
     if (entryRequested && !isSavedPdfStudyEntryChoice(savedChoice)) {
       setPendingPdfStudyEntry(true);
       if (!savedChoice) savePdfStudyEntryChoice(materialId, 'pending');
@@ -454,7 +455,7 @@ export function MaterialStudyWorkspace({
       guideActive: recommendedActive,
       savedChoice,
     })) {
-      setStudyEntryStage((current) => current ?? 'choice');
+      setStudyEntryStage((current) => current ?? (savedChoice === 'plan_pending' ? 'plan' : 'choice'));
     }
   }, [initialStudyEntryAvailable, recommendedActive, demo, isOwner, materialId]);
 
@@ -1220,7 +1221,7 @@ export function MaterialStudyWorkspace({
 
   const chooseStudyEntry = (choice: 'not_studied' | 'some_knowledge') => {
     if (!demo && isOwner) {
-      savePdfStudyEntryChoice(materialId, choice);
+      savePdfStudyEntryChoice(materialId, choice === 'not_studied' ? 'plan_pending' : choice);
       trackMarketingEvent('pdf_study_entry_selected', {
         material_id: materialId,
         study_path: choice,
@@ -1247,6 +1248,7 @@ export function MaterialStudyWorkspace({
 
   const startStudyPlan = () => {
     if (!demo && isOwner) {
+      savePdfStudyEntryChoice(materialId, 'not_studied');
       trackMarketingEvent('pdf_study_plan_started', {
         material_id: materialId,
         chapter_count: summaryChapters.length,
@@ -2319,7 +2321,7 @@ export function MaterialStudyWorkspace({
           />
       )}
 
-      {studyEntryStage && !recommendedActive && (demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable || pendingPdfStudyEntry))) ? (
+      {studyEntryStage === 'choice' && !recommendedActive && (demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable || pendingPdfStudyEntry))) ? (
         <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-3 sm:px-4" data-first-pdf-study-entry data-pdf-study-entry>
           {studyEntryStage === 'choice' ? (
             <section
@@ -2356,32 +2358,17 @@ export function MaterialStudyWorkspace({
                 Prefiero explorar el material libremente
               </button>
             </section>
-          ) : (
-            <section data-first-pdf-study-plan aria-label="Orden recomendado de estudio" className="overflow-hidden rounded-2xl border border-blue-200 bg-[linear-gradient(115deg,#EFF6FF_0%,#FFFFFF_60%,#EEF2FF_100%)] px-4 py-5 shadow-sm sm:px-7 sm:py-6">
-              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">Tu recorrido recomendado</p>
-              <h2 className="mt-1 text-lg font-bold text-slate-950">Empecemos por el primer tema</h2>
-              <p className="mt-1 text-sm text-slate-600">Seguimos el orden real de los capítulos de tu PDF.</p>
-              {summaryChapters.length > 0 ? (
-                <ol className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-700">
-                  {summaryChapters.slice(0, 3).map((chapter, index) => (
-                    <li key={chapter.anchor} className="min-w-0 max-w-full truncate">
-                      <span className="mr-1 font-bold text-blue-600">{index + 1}.</span>
-                      {chapter.displayTitle}
-                    </li>
-                  ))}
-                  {summaryChapters.length > 3 ? <li>+{summaryChapters.length - 3} temas más</li> : null}
-                </ol>
-              ) : null}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <Button type="button" size="sm" onClick={startStudyPlan}>
-                  {summaryChapters.length > 0 ? 'Empezar por el tema 1' : 'Abrir resumen'}
-                  <ChevronRight className="ml-1 size-4" aria-hidden="true" />
-                </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={studyFreely}>Estudiar libremente</Button>
-              </div>
-            </section>
-          )}
+          ) : null}
         </div>
+      ) : null}
+
+      {studyEntryStage === 'plan' && !recommendedActive ? (
+        <PdfTopicStudyPlan
+          materialTitle={title}
+          topics={summaryChapters.map((chapter) => ({ title: chapter.displayTitle, anchor: chapter.anchor }))}
+          onStart={startStudyPlan}
+          onExplore={studyFreely}
+        />
       ) : null}
 
       {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
@@ -2389,7 +2376,7 @@ export function MaterialStudyWorkspace({
         <div aria-hidden="true" data-onboarding-guide-space className="h-28 shrink-0 md:h-2" />
       ) : null}
 
-      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
+      {studyEntryStage !== 'plan' ? <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
           <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
@@ -2531,7 +2518,7 @@ export function MaterialStudyWorkspace({
             )
           ) : null}
         </div>
-      </section>
+      </section> : null}
     </div>
   );
 }
