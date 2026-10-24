@@ -409,6 +409,7 @@ export function MaterialStudyWorkspace({
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
+  const [studyEntryChoiceVisible, setStudyEntryChoiceVisible] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -690,8 +691,10 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      // Solo el cierre completo dirige al primer capítulo; Saltar conserva una salida rápida.
-      setFocusFirstChapterOnExit(outcome === 'completed');
+      // Al completar, ofrecemos una elección mínima; la guía mantiene su orden actual.
+      const askStudyPath = outcome === 'completed' && isOwner && !demo && recommendedStudyAvailable;
+      setStudyEntryChoiceVisible(askStudyPath);
+      setFocusFirstChapterOnExit(outcome === 'completed' && !askStudyPath);
       setLocalProgressOpen(false);
       demo?.onProgressChange?.(false);
       setActiveTab('resumen');
@@ -1142,6 +1145,31 @@ export function MaterialStudyWorkspace({
     setCommentsOpen((current) => !current);
   };
 
+  // Primera acción tras el onboarding; no modifica el tour ni la navegación libre.
+  useEffect(() => {
+    if (studyEntryChoiceVisible && isOwner && !demo) {
+      trackMarketingEvent('first_pdf_study_path_viewed', { material_id: materialId });
+    }
+  }, [studyEntryChoiceVisible, isOwner, demo, materialId]);
+
+  const chooseStudyEntry = (choice: 'not_studied' | 'some_knowledge') => {
+    trackMarketingEvent('first_pdf_study_path_selected', {
+      material_id: materialId,
+      study_path: choice,
+    });
+    setStudyEntryChoiceVisible(false);
+    setFocusFirstChapterOnExit(false);
+    if (choice === 'not_studied') {
+      setLocalProgressOpen(false);
+      setActiveTab('resumen');
+      setFocusFirstChapterOnExit(true);
+      return;
+    }
+    setDiagnosticMode(false);
+    setPracticeSectionIndex(undefined);
+    handleStudyTabChange('ejercicios');
+  };
+
   function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string) {
     // Las vistas responsive comparten contenido: buscar dentro del panel que recibió el clic.
     const chapter = event.currentTarget
@@ -1153,6 +1181,7 @@ export function MaterialStudyWorkspace({
   }
 
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
+    setStudyEntryChoiceVisible(false);
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
@@ -2183,6 +2212,22 @@ export function MaterialStudyWorkspace({
       {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
       {recommendedActive && recommendedTourStep ? (
         <div aria-hidden="true" data-onboarding-guide-space className="h-28 shrink-0 md:h-2" />
+      ) : null}
+
+      {studyEntryChoiceVisible && isOwner && !demo ? (
+        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-2 sm:px-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-3 sm:px-4" role="group" aria-label="Elegir cómo empezar a estudiar">
+            <p className="text-foreground text-sm font-semibold">¿Ya estudiaste este material?</p>
+            <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+              <Button size="sm" type="button" onClick={() => chooseStudyEntry('not_studied')}>
+                Todavía no
+              </Button>
+              <Button size="sm" variant="outline" type="button" onClick={() => chooseStudyEntry('some_knowledge')}>
+                Sí, sé algo
+              </Button>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
