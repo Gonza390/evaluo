@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { unstable_cache } from 'next/cache';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createPublicClient } from '@/lib/supabase-public';
@@ -13,6 +14,50 @@ type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+// Public catalog data only: never cache auth, student PDFs, exercises or progress.
+const getPublicMateriaMetadata = unstable_cache(
+  async (materiaId: string) => {
+    const client = createPublicClient();
+    const { data: materia, error } = await client
+      .from('materias')
+      .select('nombre, carrera_id')
+      .eq('id', materiaId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!materia) return null;
+
+    let carreraNombre: string | null = null;
+    if (materia.carrera_id) {
+      const { data: carrera, error: carreraError } = await client
+        .from('carreras')
+        .select('nombre')
+        .eq('id', materia.carrera_id)
+        .maybeSingle();
+      if (carreraError) throw carreraError;
+      carreraNombre = carrera?.nombre?.trim() ?? null;
+    }
+    return { nombre: materia.nombre, carreraNombre };
+  },
+  ['public-simulator-materia-metadata-v1'],
+  { revalidate: 600 },
+);
+
+const publicMateriaExists = unstable_cache(
+  async (materiaId: string) => {
+    const client = createPublicClient();
+    const { data, error } = await client
+      .from('materias')
+      .select('id')
+      .eq('id', materiaId)
+      .abortSignal(AbortSignal.timeout(8000))
+      .maybeSingle();
+    if (error) throw error;
+    return Boolean(data);
+  },
+  ['public-simulator-materia-exists-v1'],
+  { revalidate: 600 },
+);
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { materia_id } = await params;
 
@@ -23,32 +68,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const client = createPublicClient();
-
   try {
-    const { data: materia } = await client
-      .from('materias')
-      .select('nombre, carrera_id')
-      .eq('id', materia_id)
-      .maybeSingle();
-
+    const materia = await getPublicMateriaMetadata(materia_id);
     if (!materia) {
-      return {
-        title: 'Preguntero',
-        robots: { index: false, follow: false },
-      };
+      return { title: 'Preguntero', robots: { index: false, follow: false } };
     }
 
-    let carreraNombre: string | null = null;
-    if (materia.carrera_id) {
-      const { data: carrera } = await client
-        .from('carreras')
-        .select('nombre')
-        .eq('id', materia.carrera_id)
-        .maybeSingle();
-      carreraNombre = carrera?.nombre?.trim() ?? null;
-    }
-
+    const carreraNombre = materia.carreraNombre;
     const materiaNombre = materia.nombre?.trim() || 'Preguntero';
 
     return {
@@ -110,15 +136,10 @@ export default async function SimuladorPage({ params, searchParams }: PageProps)
     return notFound();
   }
 
-  const client = createPublicClient();
-  const { data: materia, error } = await client
-    .from('materias')
-    .select('id')
-    .eq('id', materia_id)
-    .abortSignal(AbortSignal.timeout(8000))
-    .maybeSingle();
-
-  if (error) {
+  let exists: boolean;
+  try {
+    exists = await publicMateriaExists(materia_id);
+  } catch (error) {
     logError('simulador.loadMateria', error, {
       materiaId: materia_id,
       parcial: parcialStr,
@@ -126,9 +147,7 @@ export default async function SimuladorPage({ params, searchParams }: PageProps)
     throw new Error('No pudimos consultar la materia del simulador.');
   }
 
-  if (!materia) {
-    return notFound();
-  }
+  if (!exists) return notFound();
 
   const parcial = parseInt(parcialStr, 10) || 1;
 
