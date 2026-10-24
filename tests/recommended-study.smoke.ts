@@ -110,6 +110,17 @@ assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
 // Las comprobaciones del lector deben ser respondibles, distintas y respaldadas por el material.
 const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
+const demoPageSource = readFileSync('app/demo/material-estudio/page.tsx', 'utf8');
+const demoWorkspaceSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
+assert.match(demoPageSource, /start === 'eleccion' \? 'choice'/,
+  'La demo debe permitir abrir la pregunta desde un enlace directo.');
+assert.match(demoPageSource, /start === 'plan' \? 'plan'/,
+  'La demo debe permitir abrir el orden recomendado de temas desde un enlace directo.');
+assert.match(demoPageSource, /tour !== '0' && !initialStudyEntryStage/,
+  'Los enlaces directos de revisión no deben iniciar el onboarding por encima de la pregunta.');
+assert.match(demoWorkspaceSource, /initialStudyEntryStage=\{initialStudyEntryStage\}/,
+  'La demo debe reenviar la etapa solicitada al espacio de estudio.');
+
 const firstGuideSource = readFileSync('components/study/recommended-study-guide.tsx', 'utf8');
 const progressPanelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
 const globalCssSource = readFileSync('app/globals.css', 'utf8');
