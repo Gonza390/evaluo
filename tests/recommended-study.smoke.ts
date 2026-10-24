@@ -120,43 +120,43 @@ const diagnosticSource = readFileSync('components/student-material-diagnostic.ts
 
 assert.ok(firstGuideSource.includes("label: 'Entender'") &&
           firstGuideSource.includes("label: 'Practicar'") &&
-          firstGuideSource.includes("label: 'Estudiar por tema'") &&
-          firstGuideSource.includes("label: 'Progreso'"),
+          firstGuideSource.includes("label: 'Progreso'") &&
+          firstGuideSource.includes("label: 'Reforzar'"),
           'El tutorial debe enseñar los cuatro momentos de Evaluo.');
-assert.match(firstGuideSource, /'summary', 'practice', 'topic', 'errors'/,
+assert.match(firstGuideSource, /'summary', 'practice', 'progress', 'reinforce'/,
   'Los cuatro pasos deben mantener este orden.');
 assert.match(firstGuideSource, /\{number\} de 4/,
   'El indicador debe comunicar cuatro pasos, no tres.');
 assert.match(firstGuideSource, /data-first-pdf-guide/,
   'La guía debe enseñar la interfaz real.');
-assert.match(firstGuideSource, /Estudiá tema por tema/,
-  'El tercer paso debe mostrar cómo estudiar por capítulo.');
-assert.match(firstGuideSource, /Ahora sabés dónde mejorar/,
-  'El cierre debe comunicar el beneficio del seguimiento.');
-assert.match(firstGuideSource, /Practicá y descubrí qué temas dominás/,
+assert.match(firstGuideSource, /Descubrí cómo venís/,
+  'El tercer paso debe explicar el seguimiento del estudio.');
+assert.match(firstGuideSource, /Aprendé cómo reforzar/,
+  'El cuarto paso debe enseñar cómo reforzar un tema.');
+assert.match(firstGuideSource, /Después de practicar, vas a ver qué temas reforzar/,
   'Progreso debe conectar la práctica con los temas que requieren repaso.');
-assert.match(materialWorkspaceSource, /recommendedTourStep === 'topic' \? 220 : 150/,
-  'El paso entre estudiar por tema y Progreso debe tener una transición más pausada.');
+assert.match(materialWorkspaceSource, /recommendedTourStep === 'progress' \? 220 : 150/,
+  'El paso de Progreso debe mantener una transición suave.');
 assert.equal((materialWorkspaceSource.match(/data-onboarding-step=\{recommendedActive \? recommendedTourStep : undefined\}/g) ?? []).length, 2,
   'El énfasis visual debe estar disponible en escritorio y móvil.');
 assert.match(globalCssSource, /\[data-onboarding-step='summary'\] \[data-summary-reading-section='0'\]/,
   'Entender debe señalar el primer capítulo.');
 assert.match(globalCssSource, /\[data-onboarding-step='practice'\] \[data-onboarding-practice-options\]/,
   'Practicar debe señalar las opciones reales.');
-assert.match(globalCssSource, /\[data-onboarding-step='topic'\] \[data-onboarding-topic-detail\]/,
-  'El tercer paso debe señalar la vista del tema.');
-assert.match(globalCssSource, /\[data-onboarding-step='errors'\] \[data-tour-example-topic\]/,
-  'El cuarto paso debe presentar los estados ilustrativos con movimiento suave.');
+assert.match(globalCssSource, /\[data-onboarding-step='reinforce'\] \[data-onboarding-topic-detail\]/,
+  'El cuarto paso debe señalar la vista real del tema.');
+assert.match(globalCssSource, /\[data-onboarding-step='progress'\] \[data-tour-example-topic\]/,
+  'El tercer paso debe presentar los estados ilustrativos con movimiento suave.');
 assert.match(globalCssSource, /prefers-reduced-motion: reduce/,
   'Los estados de ejemplo deben respetar movimiento reducido.');
-assert.match(firstGuideSource, /Ahora sabés dónde mejorar/,
-  'El cuarto paso debe cerrar mostrando el valor del seguimiento.');
+assert.match(firstGuideSource, /Volvé al tema, repasá conceptos y practicá cuando estés listo/,
+  'El cuarto paso debe mostrar una acción concreta de refuerzo.');
 assert.match(progressPanelSource, /data-onboarding-topic-detail/,
-  'El paso 3 debe abrir la vista real de estudio de un tema.');
+  'El paso 4 debe abrir la vista real de estudio de un tema.');
 assert.match(progressPanelSource, /showOnboardingTopic\s*\?\s*topics\[0\]/,
-  'El paso 3 debe usar el primer tema real del PDF.');
+  'El paso 4 debe usar el primer tema real del PDF.');
 assert.match(progressPanelSource, /showOnboardingExample\s*\?\s*null/,
-  'El paso 4 debe volver a la lista general y no quedar en el detalle.');
+  'El paso 3 debe mostrar la lista general de Progreso antes del detalle.');
 assert.match(progressPanelSource, /data-tour-example-topic/,
   'El ejemplo visual debe mostrarse en la lista de temas.');
 assert.match(progressPanelSource, /Dominado.*Reforzar.*Sin evaluar/s,
@@ -169,10 +169,10 @@ assert.match(progressPanelSource, /!showOnboardingExample && visibleTopics\.map/
   'Los resultados reales deben reaparecer al terminar.');
 assert.match(progressPanelSource, /const topicId = showOnboardingTopic/,
   'El modo guiado no debe modificar el estado persistente de temas.');
-assert.match(materialWorkspaceSource, /showOnboardingTopic = recommendedActive && recommendedTourStep === 'topic'/,
-  'El detalle guiado solo debe mostrarse en el paso 3.');
-assert.match(materialWorkspaceSource, /showOnboardingExample = recommendedActive && recommendedTourStep === 'errors'/,
-  'Los resultados simulados solo deben mostrarse en el paso 4.');
+assert.match(materialWorkspaceSource, /showOnboardingTopic = recommendedActive && recommendedTourStep === 'reinforce'/,
+  'El detalle guiado solo debe mostrarse en el paso 4.');
+assert.match(materialWorkspaceSource, /showOnboardingExample = recommendedActive && recommendedTourStep === 'progress'/,
+  'Los estados ilustrativos solo deben mostrarse en el paso 3.');
 assert.match(previewSource, /progress: \(\{ showOnboardingExample, showOnboardingTopic \}\) =>/,
   'La preview debe recibir los dos estados de Progreso.');
 assert.match(materialWorkspaceSource, /showOnboardingTopic=\{showOnboardingTopic\}/,
@@ -181,7 +181,7 @@ assert.match(firstGuideSource, /Empezar a estudiar/,
   'El CTA final debe devolver al primer capítulo.');
 assert.doesNotMatch(firstGuideSource, /progressExplained|Ver cómo funciona/,
   'Progreso no debe añadir un quinto clic oculto.');
-assert.match(firstGuideSource, /step === 'errors'.*flex flex-col items-stretch/s,
+assert.match(firstGuideSource, /step === 'progress'.*flex flex-col items-stretch/s,
   'La navegación final debe mantenerse dentro de la tarjeta.');
 assert.match(firstGuideSource, /cardRef\.current\?\.getBoundingClientRect\(\)\.width/,
   'El centrado debe medir el ancho de la tarjeta.');
@@ -230,7 +230,7 @@ assert.match(examSource, /data-onboarding-practice-options/,
 assert.doesNotMatch(materialWorkspaceSource, /guidedFirstQuestion|tourQuestionResult/,
   'El onboarding no debe bloquear su avance exigiendo una evaluación.');
 assert.match(materialWorkspaceSource, /data-recommended-topics/,
-  'El cuarto paso debe dirigir la vista hacia los temas de progreso.');
+  'El tercer paso debe dirigir la vista hacia los temas de progreso.');
 assert.match(materialWorkspaceSource, /md:h-2/,
   'El tutorial debe dejar disponible la mayor altura posible del lector.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
@@ -251,12 +251,12 @@ assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso deb
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
 assert.match(materialWorkspaceSource, /changeRecommendedTab\('ejercicios'\);\s*setRecommendedTourStep\('practice'\)/,
   'La guía debe abrir Práctica para enseñar su contenido real.');
-assert.match(materialWorkspaceSource, /setProgressOpen\(true\);\s*setRecommendedTourStep\('topic'\)/,
-  'El tercer paso debe abrir la vista de Progreso y su primer tema.');
-assert.match(materialWorkspaceSource, /setRecommendedTourStep\('errors'\)/,
-  'El cuarto paso debe enseñar la lista ilustrativa de seguimiento.');
-assert.match(materialWorkspaceSource, /setRecommendedTourStep\('topic'\)/,
-  'Desde el cuarto paso se debe poder volver al estudio por tema.');
+assert.match(materialWorkspaceSource, /setProgressOpen\(true\);\s*setRecommendedTourStep\('progress'\)/,
+  'El tercer paso debe abrir la vista ilustrativa de Progreso.');
+assert.match(materialWorkspaceSource, /setRecommendedTourStep\('reinforce'\)/,
+  'El cuarto paso debe mostrar el detalle del tema para reforzar.');
+assert.match(materialWorkspaceSource, /setRecommendedTourStep\('progress'\)/,
+  'Desde el cuarto paso se debe poder volver a Progreso.');
 assert.doesNotMatch(examSource, /<FirstStudyErrorOnboardingPrompt/, 'La práctica no debe abrir otro onboarding.');
 assert.doesNotMatch(diagnosticSource, /<FirstStudyErrorOnboardingPrompt/, 'El diagnóstico no debe abrir otro onboarding.');
 
