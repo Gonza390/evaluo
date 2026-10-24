@@ -109,6 +109,7 @@ function DemoProgress({
 /** Demo pública del onboarding real de cuatro pasos, sin efectos en perfiles. */
 export function DemoFourStepStudy({
   guided = true,
+  initialStudyEntryStage,
   summary,
   glossary,
   pageCount,
@@ -116,6 +117,7 @@ export function DemoFourStepStudy({
   internationalSource,
 }: {
   guided?: boolean;
+  initialStudyEntryStage?: 'choice' | 'plan';
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
   pageCount: number;
@@ -154,6 +156,7 @@ export function DemoFourStepStudy({
       pedagogicalArtifacts={artifacts}
       recommendedStudyAvailable={guided}
       initialRecommendedStudy={guided}
+      initialStudyEntryStage={initialStudyEntryStage}
       demo={{
         activeTab,
         onTabChange: setActiveTab,
