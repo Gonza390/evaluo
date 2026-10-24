@@ -1,5 +1,6 @@
 /** Analytics for the four-step first-PDF guide. Kept separate from the legacy summary flow. */
-export const FIRST_PDF_GUIDE_VERSION = 'first_pdf_guide_v4_20261020';
+// V5 distingue el recorrido Entender → Practicar → Progreso → Reforzar del orden anterior.
+export const FIRST_PDF_GUIDE_VERSION = 'first_pdf_guide_v5_20261024';
 export const FIRST_PDF_GUIDE_STEPS = ['summary', 'practice', 'topic', 'errors'] as const;
 export type FirstPdfGuideStep = (typeof FIRST_PDF_GUIDE_STEPS)[number];
 

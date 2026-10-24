@@ -513,38 +513,38 @@ body:has([data-progress-open='true']) [data-student-material-share-control] {
   background: rgb(37 99 235 / 0.025);
 }
 
-[data-onboarding-step='topic'] [data-onboarding-topic-detail] > div:first-child {
+[data-onboarding-step='reinforce'] [data-onboarding-topic-detail] > div:first-child {
   border-radius: 12px;
   outline: 2px solid rgb(37 99 235 / 0.2);
   outline-offset: 4px;
   background: rgb(37 99 235 / 0.035);
 }
 
-[data-onboarding-step='topic'] aside[aria-label='Navegación entre temas del PDF'] {
+[data-onboarding-step='reinforce'] aside[aria-label='Navegación entre temas del PDF'] {
   border-color: rgb(37 99 235 / 0.28);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.045);
 }
 
-[data-onboarding-step='errors'] [data-recommended-topics] {
+[data-onboarding-step='progress'] [data-recommended-topics] {
   border-color: rgb(37 99 235 / 0.32);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.06);
 }
 
-/* Al pasar de estudiar un capítulo a ver Progreso, aparecen sus estados en secuencia.
+/* Al entrar al paso 3 (Progreso), aparecen los estados ilustrativos en secuencia.
    Nunca se anima ni se modifica la evidencia real del alumno. */
 @keyframes evaluo-onboarding-status-reveal {
   from { opacity: 0.25; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-[data-onboarding-step='errors'] [data-tour-example-topic] {
+[data-onboarding-step='progress'] [data-tour-example-topic] {
   animation: evaluo-onboarding-status-reveal 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-[data-onboarding-step='errors'] [data-tour-example-topic]:nth-child(2) { animation-delay: 75ms; }
-[data-onboarding-step='errors'] [data-tour-example-topic]:nth-child(3) { animation-delay: 150ms; }
+[data-onboarding-step='progress'] [data-tour-example-topic]:nth-child(2) { animation-delay: 75ms; }
+[data-onboarding-step='progress'] [data-tour-example-topic]:nth-child(3) { animation-delay: 150ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-onboarding-step='errors'] [data-tour-example-topic] {
+  [data-onboarding-step='progress'] [data-tour-example-topic] {
     animation: none;
   }
 }

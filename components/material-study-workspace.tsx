@@ -79,8 +79,8 @@ import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 const tourStudySelectors: Record<RecommendedStudyStep, string> = {
   summary: '[data-summary-reading-section="0"]',
   practice: '[data-onboarding-practice-options]',
-  topic: '[data-onboarding-topic-detail]',
-  errors: '[data-recommended-topics]',
+  progress: '[data-recommended-topics]',
+  reinforce: '[data-onboarding-topic-detail]',
 };
 
 function getVisibleTourReader(): HTMLElement | null {
@@ -442,8 +442,8 @@ export function MaterialStudyWorkspace({
         : recommendedActive ? 'guided' : 'navigation',
     });
   }, [progressOpen, hasProgress, isOwner, demo, materialId, initialProgressOpen, recommendedActive]);
-  const showOnboardingTopic = recommendedActive && recommendedTourStep === 'topic';
-  const showOnboardingExample = recommendedActive && recommendedTourStep === 'errors';
+  const showOnboardingTopic = recommendedActive && recommendedTourStep === 'reinforce';
+  const showOnboardingExample = recommendedActive && recommendedTourStep === 'progress';
   const displayedProgressContent = typeof progressContent === 'function'
     ? progressContent({ showOnboardingExample, showOnboardingTopic })
     : progressContent;
@@ -750,7 +750,7 @@ export function MaterialStudyWorkspace({
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => setOnboardingFading(false));
       });
-    }, recommendedTourStep === 'topic' ? 220 : 150);
+    }, recommendedTourStep === 'progress' ? 220 : 150);
   };
 
   useEffect(() => {
@@ -2148,15 +2148,16 @@ export function MaterialStudyWorkspace({
                     changeRecommendedTab('resumen');
                     setRecommendedTourStep('summary');
                   })
-                : recommendedTourStep === 'topic'
+                : recommendedTourStep === 'progress'
                   ? () => transitionRecommendedTour(() => {
                       setProgressOpen(false);
                       changeRecommendedTab('ejercicios');
                       setRecommendedTourStep('practice');
                     })
-                  : recommendedTourStep === 'errors'
+                  : recommendedTourStep === 'reinforce'
                     ? () => transitionRecommendedTour(() => {
-                        setRecommendedTourStep('topic');
+                        setProgressOpen(true);
+                        setRecommendedTourStep('progress');
                       })
                     : undefined
             }
@@ -2170,9 +2171,10 @@ export function MaterialStudyWorkspace({
                 setRecommendedTourStep('practice');
               } else if (recommendedTourStep === 'practice') {
                 setProgressOpen(true);
-                setRecommendedTourStep('topic');
-              } else if (recommendedTourStep === 'topic') {
-                setRecommendedTourStep('errors');
+                setRecommendedTourStep('progress');
+              } else if (recommendedTourStep === 'progress') {
+                setProgressOpen(true);
+                setRecommendedTourStep('reinforce');
               } else {
                 void finishRecommendedTour();
               }
