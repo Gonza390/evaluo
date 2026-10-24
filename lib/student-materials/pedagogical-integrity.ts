@@ -24,6 +24,60 @@ function sectionForQuestion(question: StudyQuestion, sections: StudySummarySecti
   const label = question.chapterTitle ?? (question.kind === 'section' ? question.topic : null);
   return sections.find(s => label && norm(s.title) === norm(label)) ?? null;
 }
+/**
+ * Verifica correspondencia mínima entre el alcance de la consigna y la respuesta.
+ * Conservador: solo exige etapas completas cuando el PDF las enumera
+ * explícitamente, y contraste cuando la pregunta nombra dos entidades.
+ */
+export function incompleteOpenAnswerReason(
+  question: StudyQuestion,
+  sections: StudySummarySection[]
+): string | null {
+  if (question.type !== 'open') return null;
+
+  if (question.kind === 'relationship' && /^\s*Compar[aá](?=\s|[“"])/iu.test(question.prompt)) {
+    const pair = [...question.prompt.matchAll(/[“"]([^”"]+)[”"]/gu)]
+      .map(match => match[1]?.trim() ?? '')
+      .filter(Boolean)
+      .slice(0, 2);
+    if (pair.length === 2) {
+      if (pair.some(entity => norm(entity).length >= 4 && !containsTerm(question.answer, entity))) {
+        return 'comparison_answer_omits_entity';
+      }
+      if (!/\b(?:en cambio|mientras|a diferencia|por el contrario|sin embargo|en contraste|por su parte|frente a|versus)\b/u.test(norm(question.answer))) {
+        return 'comparison_answer_lacks_contrast';
+      }
+    }
+  }
+
+  if (question.kind !== 'section') return null;
+  const section = sectionForQuestion(question, sections);
+  if (!section) return null;
+  const focus = question.prompt.match(/[“"]([^”"]+)[”"]/u)?.[1] ?? question.topic ?? '';
+  if (!/\b(?:proceso|procedimiento|etapas|fases|pasos|secuencia)\b/u.test(norm(focus))) {
+    return null;
+  }
+
+  // Identificar el subtítulo exacto antes de evaluar pasos. No exigir etapas
+  // que pertenezcan a otro tema del mismo capítulo.
+  const subsection = section.body.split(/(?=^#{2,6}\s)/mu).find(block => {
+    const heading = block.split('\n')[0]
+      ?.replace(/^#{2,6}\s*/u, '')
+      .replace(/^\d+(?:\.\d+)*\s+/u, '')
+      .trim() ?? '';
+    return norm(heading) === norm(focus);
+  });
+  const source = subsection ?? section.body;
+  const stages = [...source.matchAll(/^\s*(?:\d{1,2}[.)]|(?:etapa|fase|paso)\s+\d+\s*[:.)-])\s*(?:\*\*)?\s*([^:\n]{4,100}):/gimu)]
+    .map(match => (match[1] ?? '').replace(/\*\*/gu, '').trim())
+    .filter(label => norm(label).length >= 4);
+  if (stages.length < 3) return null;
+  const covered = stages.filter(label => containsTerm(question.answer, label)).length;
+  return covered >= Math.ceil(stages.length * 0.75)
+    ? null
+    : 'section_process_missing_stages';
+}
+
 export function unsafeModelAnswerReason(question: StudyQuestion, sections: StudySummarySection[]): string | null {
   if (!question.prompt.trim() || !question.answer.trim()) return 'answer_missing';
   if (question.type === 'multiple_choice') {
@@ -80,6 +134,8 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
     // Una respuesta abierta tiene que desarrollar lo preguntado, no combinar
     // conceptos de otro capítulo sólo por cercanía en la página.
     if (!evidenceSupportsAnswer(question.answer, section.body)) return 'section_answer_not_grounded';
+    const completenessIssue = incompleteOpenAnswerReason(question, sections);
+    if (completenessIssue) return completenessIssue;
   }
   if (question.kind === 'confusion' || question.kind === 'relationship') {
     if (question.kind === 'relationship' && /\bEn cambio\b/iu.test(question.answer)) {
@@ -109,6 +165,8 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
       return 'confusion_fallback_unreliable';
     }
     if (!evidenceSupportsAnswer(question.answer, evidence)) return 'open_answer_not_grounded';
+    const completenessIssue = incompleteOpenAnswerReason(question, sections);
+    if (completenessIssue) return completenessIssue;
   }
   return null;
 }

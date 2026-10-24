@@ -4,6 +4,7 @@ import {
   isRecognitionPresentedAsHigherOrder,
   sanitizePedagogicalArtifacts,
   unsafeModelAnswerReason,
+  incompleteOpenAnswerReason,
   unsafeFlashcardReason,
   accurateFlashcardLevel,
 } from '../lib/student-materials/pedagogical-integrity.ts';
@@ -96,6 +97,81 @@ const foreignSection = open({
   answer: 'La idea central es causalidad. Un concepto clave es “Teoría económica”: teoría social.',
 });
 assert.equal(unsafeModelAnswerReason(foreignSection, sections), 'section_answer_contains_foreign_concepts');
+// Regresión real de Marketing: un proceso de varias etapas no puede
+// quedar respondido únicamente por la etapa "Generación de ideas".
+const processSection = {
+  title: '3. Desarrollo de Nuevos Productos y Comercialización',
+  body: [
+    '### 3.1 Categorías y Proceso de Desarrollo',
+    'El proceso estructurado comprende las siguientes etapas:',
+    '1. **Generación de ideas:** Búsqueda de oportunidades en necesidades insatisfechas.',
+    '2. **Análisis de ideas y evaluación:** Clasificación técnica y comercial de las propuestas.',
+    '3. **Desarrollo y test de concepto:** Transformación de la idea y validación con usuarios.',
+    '4. **Diseño y análisis económico:** Plan comercial y proyecciones de rentabilidad.',
+    '5. **Desarrollo del producto:** Elaboración de prototipos para evaluar costos.',
+  ].join('\n'),
+};
+const partialProcess = open({
+  id: 'marketing-partial-process',
+  kind: 'section',
+  topic: processSection.title,
+  chapterTitle: processSection.title,
+  prompt: '¿Qué sostiene el material sobre “Categorías y Proceso de Desarrollo”? Desarrollá la idea usando sus conceptos principales.',
+  answer: 'El proceso estructurado comprende varias etapas. Generación de ideas: búsqueda de oportunidades en necesidades insatisfechas.',
+  reference: { pageStart: 1, pageEnd: 1, sectionTitle: processSection.title, excerpt: processSection.body },
+});
+assert.equal(
+  incompleteOpenAnswerReason(partialProcess, [processSection]),
+  'section_process_missing_stages'
+);
+assert.equal(
+  unsafeModelAnswerReason(partialProcess, [processSection]),
+  'section_process_missing_stages',
+  'La respuesta parcial no debe llegar a la práctica aunque supere la validación por longitud y palabras.'
+);
+const completeProcess = {
+  ...partialProcess,
+  answer: 'El desarrollo comienza con Generación de ideas. Continúa con Análisis de ideas y evaluación, Desarrollo y test de concepto, Diseño y análisis económico, y Desarrollo del producto. Estos pasos permiten validar una propuesta antes de comercializarla.',
+};
+assert.equal(incompleteOpenAnswerReason(completeProcess, [processSection]), null,
+  'No rechazar una respuesta que cubre todas las etapas del proceso.');
+
+const otherSection = {
+  ...processSection,
+  body: [
+    '### 3.1 Categorías y Proceso de Desarrollo',
+    'La primera sección presenta una explicación de conceptos generales.',
+    '### 3.2 Procedimiento de Lanzamiento',
+    '1. **Planificación inicial:** Definir el alcance.',
+    '2. **Investigación de mercado:** Validar requisitos.',
+    '3. **Lanzamiento final:** Publicar la oferta.',
+  ].join('\n'),
+};
+const unconnectedProcess = { ...partialProcess, answer: 'Las categorías de desarrollo describen familias de productos y se organizan para entender qué necesidades atiende cada alternativa en el mercado. El texto resume sus diferencias.' };
+assert.equal(incompleteOpenAnswerReason(unconnectedProcess, [otherSection]), null,
+  'No exigir etapas de otro subtítulo del mismo capítulo.');
+
+const comparisonReference = { ...ref, excerpt: 'La teoría A enfatiza relaciones observables. La teoría B se centra en explicaciones causales.' };
+const incompleteComparison = open({
+  id: 'comparison-incomplete',
+  kind: 'relationship',
+  prompt: 'Compará “Teoría A” con “Teoría B” según el PDF.',
+  answer: 'La Teoría A enfatiza relaciones observables y sirve para examinar antecedentes conocidos.',
+  reference: comparisonReference,
+});
+assert.equal(incompleteOpenAnswerReason(incompleteComparison, sections), 'comparison_answer_omits_entity');
+assert.equal(
+  incompleteOpenAnswerReason({
+    ...incompleteComparison,
+    answer: 'La Teoría A enfatiza relaciones observables. La Teoría B se centra en explicaciones causales.',
+  }, sections),
+  'comparison_answer_lacks_contrast'
+);
+assert.equal(incompleteOpenAnswerReason({
+  ...incompleteComparison,
+  answer: 'La Teoría A enfatiza relaciones observables; en cambio, la Teoría B se centra en explicaciones causales.',
+}, sections), null);
+
 const incorrectCard = {
   front: '¿Cómo distinguís causa común de causalidad directa según el material?',
   back: 'Confundir los efectos de una causa común con causalidad directa.',

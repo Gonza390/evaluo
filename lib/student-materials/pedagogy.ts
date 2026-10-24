@@ -1,4 +1,5 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
+import { incompleteOpenAnswerReason } from '@/lib/student-materials/pedagogical-integrity';
 import type {
   CanonicalPedagogicalModel,
   CanonicalPedagogicalSourceKind,
@@ -13,7 +14,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 14;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 15;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -1548,7 +1549,7 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     `Si tuvieras que explicar “${grounded.focus}” a otro estudiante, ¿qué indicarías como fundamento principal?`,
     `¿Cómo presentarías el concepto central de “${grounded.focus}” sin repetir el texto de memoria?`,
   ];
-  return {
+  const question: StudyQuestion = {
     id: `section-open-${index + 1}`,
     type: 'open',
     level: 'comprender',
@@ -1561,6 +1562,8 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     explanation: 'La respuesta modelo presenta una idea y su desarrollo, extraídos del mismo apartado del PDF. Contrastá ambas partes con la fuente.',
     reference,
   };
+  // Evitar crear una pregunta de proceso que explique solamente su primer paso.
+  return incompleteOpenAnswerReason(question, [section]) ? null : question;
 }
 function buildOpenSectionQuestions(
   summary: StudentMaterialSummary,
