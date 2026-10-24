@@ -146,9 +146,9 @@ try {
     await waitFor(()=>evaluate('location.search.includes("start=plan") && !!document.querySelector("[data-first-pdf-study-plan]")'),'direct chapter plan '+name,100);
     await call('Page.navigate',{url:directDemo+'?start=eleccion&qa='+name+'-practice'});
     await waitFor(()=>evaluate('location.search.includes("start=eleccion") && !!document.querySelector("[data-first-pdf-study-entry]")?.textContent?.includes("¿Ya estudiaste este material?")'),'direct practice choice '+name,100);
-    const practice=await evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-entry]");const b=Array.from(n?.querySelectorAll("button")||[]).find(v=>v.textContent.includes("Sí, sé algo"));if(!b)return false;b.click();return true})()');
-    if(!practice)failures.push('direct choice '+name+': missing Sí, sé algo');
-    await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'practice choice dismissed '+name,100);
+    // Una página SSR puede dibujar el botón antes de hidratar React. Reintentar
+    // el clic hasta observar el cambio real evita falsos fallos por timing.
+    await waitFor(()=>evaluate('(() => {const n=document.querySelector("[data-first-pdf-study-entry]");if(!n)return true;const b=Array.from(n.querySelectorAll("button")).find(v=>v.textContent.includes("Sí, sé algo"));if(b)b.click();return false})()'),'practice choice dismissed '+name,100);
     const practiced=await evaluate('(() => {const active=Array.from(document.querySelectorAll("[role=tab][data-state=active]")).filter(n=>n.getBoundingClientRect().width>0).map(n=>n.textContent?.trim()||"");const mobile=document.querySelector("[data-pdf-mobile-navigation] button[aria-current=page]")?.textContent?.trim()||"";return active.includes("Práctica") || mobile.includes("Práctica")})()');
     if(!practiced)failures.push('direct choice '+name+': practice tab not selected');
   }
