@@ -58,7 +58,7 @@ function parseParcialCounts(value: unknown): Array<{ parcial: number; count: num
     .sort((a, b) => a.parcial - b.parcial);
 }
 
-export async function getPregunteroMateriaStats(
+async function readPregunteroMateriaStats(
   materiaId: string
 ): Promise<PregunteroMateriaStats> {
   const client = createPublicClient();
@@ -78,6 +78,17 @@ export async function getPregunteroMateriaStats(
     totalPreguntas,
     preguntasPorParcial: parseParcialCounts(row?.parcial_counts),
   };
+}
+
+// Las cifras publicas se comparten entre SEO y Explorar: una consulta por materia/10 minutos.
+const cachedPregunteroMateriaStats = unstable_cache(
+  readPregunteroMateriaStats,
+  ['preguntero-materia-stats-v1'],
+  { revalidate: 600, tags: ['materia-bootstrap', 'preguntero-stats'] }
+);
+
+export function getPregunteroMateriaStats(materiaId: string): Promise<PregunteroMateriaStats> {
+  return cachedPregunteroMateriaStats(materiaId);
 }
 
 export function parsePregunteroParcial(value: string): PregunteroParcialKey | null {
