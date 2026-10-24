@@ -260,6 +260,11 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   // siguen degradando el status de calidad, no la nota de extracción.
   const issues: string[] = [];
   if (!input.model) issues.push('canonical_model_missing');
+  // Una batería sólo de respuestas abiertas no permite comprobar el aprendizaje automáticamente.
+  // No presentar el material como listo para un diagnóstico si tiene menos de tres preguntas corregibles.
+  if (practiceCoverage.autoCorrectableQuestionCount < 3) {
+    issues.push('diagnostic_questions_insufficient');
+  }
   if (rejectedQuestions > 0) issues.push('unsafe_model_answers_rejected');
   if (rejectedFlashcards > 0) issues.push('unsafe_flashcards_rejected');
   if (formulaicHigherOrderQuestions >= 3) issues.push('higher_order_questions_are_recognition');
