@@ -263,8 +263,8 @@ assert.match(materialWorkspaceSource, /handleStudyTabChange\('ejercicios'\)/,
   'La ruta de quien sabe algo debe abrir Práctica del PDF.');
 assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(summaryChapters.length > 0\)/,
   'Empezar el plan debe enfocar el primer capítulo real.');
-assert.match(materialWorkspaceSource, /Estudiar libremente/,
-  'Ambas rutas deben permitir abandonar las recomendaciones.');
+assert.match(topicPlanSource, /Explorar material libremente/,
+  'El plan debe permitir explorar todo el material sin restricciones.');
 assert.match(materialWorkspaceSource, /studyEntryStage === 'choice'/,
   'La interfaz de elección debe ser compacta y de una sola pregunta.');
 
