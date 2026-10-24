@@ -409,6 +409,7 @@ export function MaterialStudyWorkspace({
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
+  const [studyEntryStage, setStudyEntryStage] = useState<'choice' | 'plan' | null>(null);
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -690,8 +691,11 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      // Solo el cierre completo dirige al primer capítulo; Saltar conserva una salida rápida.
-      setFocusFirstChapterOnExit(outcome === 'completed');
+      // Después de completar el tour, ofrecer una sola elección, sin otra pantalla modal.
+      // En la demo también puede probarse el recorrido sin guardar datos de cuenta.
+      const showStudyChoice = outcome === 'completed' && Boolean(demo || (isOwner && recommendedStudyAvailable));
+      setStudyEntryStage(showStudyChoice ? 'choice' : null);
+      setFocusFirstChapterOnExit(outcome === 'completed' && !showStudyChoice);
       setLocalProgressOpen(false);
       demo?.onProgressChange?.(false);
       setActiveTab('resumen');
@@ -1142,6 +1146,54 @@ export function MaterialStudyWorkspace({
     setCommentsOpen((current) => !current);
   };
 
+  useEffect(() => {
+    if (!studyEntryStage || !isOwner || demo) return;
+    trackMarketingEvent(
+      studyEntryStage === 'choice' ? 'first_pdf_study_path_viewed' : 'first_pdf_study_plan_viewed',
+      { material_id: materialId }
+    );
+  }, [studyEntryStage, isOwner, demo, materialId]);
+
+  const chooseStudyEntry = (choice: 'not_studied' | 'some_knowledge') => {
+    if (!demo && isOwner) {
+      trackMarketingEvent('first_pdf_study_path_selected', {
+        material_id: materialId,
+        study_path: choice,
+      });
+    }
+    trackPostGuideAction(choice === 'not_studied' ? 'start_learning' : 'start_practice');
+    setFocusFirstChapterOnExit(false);
+    if (choice === 'not_studied') {
+      setStudyEntryStage('plan');
+      return;
+    }
+    // La respuesta indica interés en practicar; no presume dominio del material.
+    setStudyEntryStage(null);
+    setDiagnosticMode(false);
+    setPracticeSectionIndex(undefined);
+    handleStudyTabChange('ejercicios');
+  };
+
+  const startStudyPlan = () => {
+    if (!demo && isOwner) {
+      trackMarketingEvent('first_pdf_study_plan_started', {
+        material_id: materialId,
+        chapter_count: summaryChapters.length,
+      });
+    }
+    setStudyEntryStage(null);
+    setProgressOpen(false);
+    setActiveTab('resumen');
+    demo?.onTabChange('resumen');
+    setFocusFirstChapterOnExit(summaryChapters.length > 0);
+  };
+
+  const studyFreely = () => {
+    trackPostGuideAction('free_study');
+    setStudyEntryStage(null);
+    setFocusFirstChapterOnExit(false);
+  };
+
   function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string) {
     // Las vistas responsive comparten contenido: buscar dentro del panel que recibió el clic.
     const chapter = event.currentTarget
@@ -1153,6 +1205,7 @@ export function MaterialStudyWorkspace({
   }
 
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
+    setStudyEntryStage(null);
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
@@ -2181,6 +2234,61 @@ export function MaterialStudyWorkspace({
             })}
           />
       )}
+
+      {studyEntryStage && !recommendedActive && (demo || (isOwner && recommendedStudyAvailable)) ? (
+        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-2 sm:px-4" data-first-pdf-study-entry>
+          {studyEntryStage === 'choice' ? (
+            <div className="border-border bg-card flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3">
+              <p className="text-foreground text-sm font-semibold">¿Ya estudiaste este material?</p>
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <Button type="button" size="sm" onClick={() => chooseStudyEntry('not_studied')}>
+                  Todavía no
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => chooseStudyEntry('some_knowledge')}>
+                  Sí, sé algo
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={studyFreely}>
+                  Estudiar libremente
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <section data-first-pdf-study-plan aria-label="Orden recomendado de estudio" className="border-border bg-card rounded-xl border px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-foreground text-sm font-semibold">Empecemos por el primer tema</p>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
+                    Seguimos el orden de los capítulos de tu PDF.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" size="sm" onClick={startStudyPlan}>
+                    {summaryChapters.length > 0 ? 'Empezar por el tema 1' : 'Abrir resumen'}
+                    <ChevronRight className="ml-1 size-4" aria-hidden="true" />
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={studyFreely}>
+                    Estudiar libremente
+                  </Button>
+                </div>
+              </div>
+              {summaryChapters.length > 0 ? (
+                <ol className="text-muted-foreground mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+                  {summaryChapters.slice(0, 3).map((chapter, index) => (
+                    <li key={chapter.anchor} className="min-w-0 max-w-full truncate">
+                      <span className="text-primary mr-1 font-semibold">{index + 1}.</span>
+                      {chapter.displayTitle}
+                    </li>
+                  ))}
+                  {summaryChapters.length > 3 ? <li>+{summaryChapters.length - 3} temas más</li> : null}
+                </ol>
+              ) : null}
+              <p className="text-muted-foreground mt-2 text-xs">
+                Leé el resumen, consultá el glosario o las flashcards si te ayudan y practicá cuando estés listo.
+              </p>
+            </section>
+          )}
+        </div>
+      ) : null}
 
       {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
       {recommendedActive && recommendedTourStep ? (
