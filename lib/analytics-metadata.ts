@@ -358,6 +358,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'attribution', 'anonymous_id', 'page_type', 'material_id',
     'guide_version', 'guide_run_id', 'action',
   ],
+  first_pdf_study_path_viewed: ['attribution', 'anonymous_id', 'page_type', 'material_id'],
+  first_pdf_study_path_selected: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'study_path'],
   first_pdf_practice_opened: [
     'attribution',
     'anonymous_id',
