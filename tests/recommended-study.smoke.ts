@@ -227,8 +227,27 @@ assert.match(materialWorkspaceSource, /reader\.scrollTo\(/,
   'Los desplazamientos deben quedar dentro del lector.');
 assert.match(materialWorkspaceSource, /MutationObserver/,
   'Progreso debe poder mostrar sus temas aunque se rendericen después.');
-assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === 'completed'\)/,
-  'Al completar la guía debe prepararse la navegación al primer capítulo.');
+assert.match(materialWorkspaceSource, /setStudyEntryStage\(showStudyChoice \? 'choice' : null\)/,
+  'Al completar la guía debe mostrarse la elección sin exigir una práctica.');
+assert.match(materialWorkspaceSource, /¿Ya estudiaste este material\?/,
+  'El alumno debe poder declarar si conoce el PDF.');
+assert.match(materialWorkspaceSource, /Todavía no/,
+  'El alumno que no estudió debe poder comenzar desde el resumen.');
+assert.match(materialWorkspaceSource, /Sí, sé algo/,
+  'El alumno que ya conoce algo debe tener una ruta directa a Práctica.');
+assert.match(materialWorkspaceSource, /data-first-pdf-study-plan/,
+  'La segunda etapa debe mostrar el orden real de capítulos sin crear otra pantalla.');
+assert.match(materialWorkspaceSource, /summaryChapters\.slice\(0, 3\)/,
+  'La ruta inicial debe usar los capítulos existentes y no títulos inventados.');
+assert.match(materialWorkspaceSource, /handleStudyTabChange\('ejercicios'\)/,
+  'La ruta de quien sabe algo debe abrir Práctica del PDF.');
+assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(summaryChapters.length > 0\)/,
+  'Empezar el plan debe enfocar el primer capítulo real.');
+assert.match(materialWorkspaceSource, /Estudiar libremente/,
+  'Ambas rutas deben permitir abandonar las recomendaciones.');
+assert.match(materialWorkspaceSource, /studyEntryStage === 'choice'/,
+  'La interfaz de elección debe ser compacta y de una sola pregunta.');
+
 assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
   'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
 assert.match(materialWorkspaceSource, /tabIndex=\{index === 0 \? -1 : undefined\}/,
