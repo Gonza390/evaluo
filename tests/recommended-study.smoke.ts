@@ -242,9 +242,9 @@ assert.match(materialWorkspaceSource, /setStudyEntryStage\(showStudyChoice \? 'c
   'Al completar la guía debe mostrarse la elección sin exigir una práctica.');
 assert.match(materialWorkspaceSource, /¿Ya estudiaste este material\?/,
   'El alumno debe poder declarar si conoce el PDF.');
-assert.match(materialWorkspaceSource, /Todavía no/,
+assert.match(materialWorkspaceSource, /Empiezo desde cero/,
   'El alumno que no estudió debe poder comenzar desde el resumen.');
-assert.match(materialWorkspaceSource, /Sí, sé algo/,
+assert.match(materialWorkspaceSource, /Ya lo estudié/,
   'El alumno que ya conoce algo debe tener una ruta directa a Práctica.');
 assert.match(materialWorkspaceSource, /data-first-pdf-study-plan/,
   'La segunda etapa debe mostrar el orden real de capítulos sin crear otra pantalla.');
