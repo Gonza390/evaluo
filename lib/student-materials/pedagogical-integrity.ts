@@ -35,7 +35,7 @@ export function incompleteOpenAnswerReason(
 ): string | null {
   if (question.type !== 'open') return null;
 
-  if (question.kind === 'relationship' && /^\s*Compar[aá]\b/iu.test(question.prompt)) {
+  if (question.kind === 'relationship' && /^\s*Compar[aá](?=\s|[“"])/iu.test(question.prompt)) {
     const pair = [...question.prompt.matchAll(/[“"]([^”"]+)[”"]/gu)]
       .map(match => match[1]?.trim() ?? '')
       .filter(Boolean)
