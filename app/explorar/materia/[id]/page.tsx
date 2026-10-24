@@ -15,6 +15,7 @@ import {
   getApprovedShareCreatorLabel,
 } from '@/lib/materia-share-path';
 import { createPublicClient } from '@/lib/supabase-public';
+import { getPregunteroMateriaStats } from '@/lib/data/preguntero';
 import { fetchSharedStudentMaterialsByMateria } from '@/lib/data/student-materials';
 import MateriaStudyHome from './materia-study-home';
 
@@ -58,22 +59,15 @@ function buildMateriaQuery(searchParams: {
 async function getMateriaStudyHomeData(materiaId: string) {
   const client = createPublicClient();
 
-  const [partial1, partial2, sharedStudentMaterials] = await Promise.all([
-    client
-      .from('preguntas_banco_public')
-      .select('id', { count: 'exact', head: true })
-      .eq('materia_id', materiaId)
-      .eq('parcial', 1),
-    client
-      .from('preguntas_banco_public')
-      .select('id', { count: 'exact', head: true })
-      .eq('materia_id', materiaId)
-      .eq('parcial', 2),
+  // Reusar el RPC publico cacheado en lugar de hacer dos COUNT por visita.
+  // La lista de PDF compartidos sigue siendo independiente y fresca.
+  const [stats, sharedStudentMaterials] = await Promise.all([
+    getPregunteroMateriaStats(materiaId).catch(() => null),
     fetchSharedStudentMaterialsByMateria(client, materiaId, 6).catch(() => []),
   ]);
 
-  const partial1Count = partial1.error ? 0 : (partial1.count ?? 0);
-  const partial2Count = partial2.error ? 0 : (partial2.count ?? 0);
+  const partial1Count = stats?.preguntasPorParcial.find((item) => item.parcial === 1)?.count ?? 0;
+  const partial2Count = stats?.preguntasPorParcial.find((item) => item.parcial === 2)?.count ?? 0;
 
   return {
     questionCounts: {
