@@ -15,6 +15,20 @@ const adminPanel = root('app/administrador/product-panel.tsx');
 const whitelist = root('lib/analytics-metadata.ts');
 const allowed = root('lib/analytics-events.ts');
 
+// El panel de Progreso debe medirse solo después de cargar los datos reales del PDF.
+const progressContent = root('components/study/material-progress-content.tsx');
+assert.ok(isAllowedAnalyticsEventName('pdf_progress_content_rendered'));
+assert.match(progressContent, /!result\?\.success/);
+assert.match(progressContent, /progressContentTrackedRef\.current/);
+assert.match(progressContent, /trackMarketingEvent\('pdf_progress_content_rendered'/);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('pdf_progress_content_rendered', {
+    material_id: 'material-example',
+    free_text: 'do-not-collect',
+  }),
+  { material_id: 'material-example' }
+);
+
 assert.match(workspace, /first_pdf_guide_started/);
 assert.match(workspace, /first_pdf_guide_step_viewed/);
 assert.match(workspace, /first_pdf_guide_post_action/);
