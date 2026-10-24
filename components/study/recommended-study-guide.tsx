@@ -36,8 +36,8 @@ const steps = {
   },
   reinforce: {
     label: 'Reforzar',
-    title: 'Volvé a lo que te cuesta',
-    description: 'Revisá el tema, aclará conceptos y volvé a practicar cuando estés listo.',
+    title: 'Aprendé cómo reforzar',
+    description: 'Volvé al tema, repasá conceptos y practicá cuando estés listo.',
     icon: RefreshCcw,
   },
 } as const;
