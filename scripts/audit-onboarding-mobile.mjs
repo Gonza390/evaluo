@@ -170,6 +170,10 @@ try {
       const x=await evaluate(readerMetrics);
       return x.region&&x.region.width>100;
     },'PDF reader desktop '+width,130);
+    // En desarrollo, el primer frame puede llegar antes que el CSS de Tailwind.
+    // Esperar al display:none real en escritorio para no confundir HTML sin estilos
+    // con una barra móvil visible (sin debilitar la comprobación responsive).
+    await waitFor(()=>evaluate('(() => {const n=document.querySelector("[data-pdf-mobile-navigation]");return !!n && getComputedStyle(n).display==="none"})()'),'desktop navigation CSS '+width,70);
     const x=await evaluate(readerMetrics);
     console.log('reader desktop/'+width,JSON.stringify(x));
     if(x.scrollWidth>width+2)failures.push('reader desktop/'+width+': horizontal overflow '+x.scrollWidth);
