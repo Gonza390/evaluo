@@ -423,6 +423,25 @@ export function MaterialStudyWorkspace({
   const [recommendedTourStep, setRecommendedTourStep] = useState<RecommendedStudyStep | null>(
     initialRecommendedStudy && !initialDiagnostic ? 'summary' : null
   );
+  // Track real progress exposure, including deep links and the guided tour.
+  const progressOpenTrackedRef = useRef(false);
+  const progressFirstOpeningTrackedRef = useRef(false);
+  useEffect(() => {
+    if (!progressOpen || !hasProgress || !isOwner || demo) {
+      if (!progressOpen) progressOpenTrackedRef.current = false;
+      return;
+    }
+    if (progressOpenTrackedRef.current) return;
+    progressOpenTrackedRef.current = true;
+    const firstOpening = !progressFirstOpeningTrackedRef.current;
+    progressFirstOpeningTrackedRef.current = true;
+    trackMarketingEvent('pdf_progress_panel_opened', {
+      material_id: materialId,
+      entry: firstOpening && initialProgressOpen
+        ? 'direct_link'
+        : recommendedActive ? 'guided' : 'navigation',
+    });
+  }, [progressOpen, hasProgress, isOwner, demo, materialId, initialProgressOpen, recommendedActive]);
   const showOnboardingTopic = recommendedActive && recommendedTourStep === 'topic';
   const showOnboardingExample = recommendedActive && recommendedTourStep === 'errors';
   const displayedProgressContent = typeof progressContent === 'function'
@@ -1921,6 +1940,12 @@ export function MaterialStudyWorkspace({
                   initialReinforce={topicReturn?.reinforce}
                   lastPracticeOutcome={topicReturn?.outcome}
                   onPracticeTopic={(index) => {
+                    if (isOwner && !demo) {
+                      trackMarketingEvent('pdf_progress_practice_clicked', {
+                        material_id: materialId,
+                        section_index: index,
+                      });
+                    }
                     setTopicReturn((previous) => ({
                       index,
                       reinforce: false,
