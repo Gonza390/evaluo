@@ -8,6 +8,8 @@ import {
   type StudyTabId,
 } from '@/components/material-study-workspace';
 import { StudentMaterialDiagnostic } from '@/components/student-material-diagnostic';
+import { StudentMaterialExam } from '@/components/student-material-exam';
+import { emptyTopicPracticeContext } from '@/lib/student-materials/topic-practice';
 import { buildPedagogicalArtifacts, type StudyQuestion } from '@/lib/student-materials/pedagogy';
 import type { StudyErrorsPageData } from '@/lib/study-errors';
 import type { PdfTopicEvidence } from '@/lib/student-materials/progress';
@@ -127,12 +129,14 @@ export function DemoFourStepStudy({
   const [viewerVisible, setViewerVisible] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [demoAnswers, setDemoAnswers] = useState<Record<string, DemoAnswer>>({});
+  const [demoTopicIndex, setDemoTopicIndex] = useState<number | null>(null);
   const artifacts = useMemo(
     () => buildPedagogicalArtifacts({ summary, glossary, pageCount }),
     [summary, glossary, pageCount]
   );
 
   const openPractice = () => {
+    setDemoTopicIndex(null);
     setProgressOpen(false);
     setActiveTab('ejercicios');
   };
@@ -157,9 +161,35 @@ export function DemoFourStepStudy({
       demo={{
         activeTab,
         onTabChange: setActiveTab,
+        onPracticeTopic: setDemoTopicIndex,
         viewerVisible,
         onViewerChange: setViewerVisible,
-        practice: (
+        practice: demoTopicIndex !== null ? (
+          <StudentMaterialExam
+            key={`demo-topic-${demoTopicIndex}`}
+            artifacts={artifacts}
+            sections={summary.sections}
+            materialId={DEMO_MATERIAL_ID}
+            topicSectionIndex={demoTopicIndex}
+            entrySource="topic_practice"
+            onContinueToTopic={(index) => setDemoTopicIndex(index)}
+            onReturnToTopic={() => { setProgressOpen(true); }}
+            simulation={{
+              context: emptyTopicPracticeContext,
+              onAnswer: (question, wasCorrect) => {
+                setDemoAnswers((previous) => ({
+                  ...previous,
+                  [question.id]: {
+                    question,
+                    selected: wasCorrect ? question.answer : '',
+                    answeredAt: new Date().toISOString(),
+                  },
+                }));
+              },
+              onProgress: () => setProgressOpen(true),
+            }}
+          />
+        ) : (
           <StudentMaterialDiagnostic
             artifacts={artifacts}
             sections={summary.sections}
