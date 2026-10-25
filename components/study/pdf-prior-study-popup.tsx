@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { BookOpen, ClipboardCheck, Sparkles } from 'lucide-react';
 import {
   Dialog,
@@ -21,6 +22,8 @@ type Props = {
  * Dos elecciones, sin navegación adicional hasta definir los recorridos de estudio.
  */
 export function PdfPriorStudyPopup({ open, onChoose, onDismiss }: Props) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
   return (
     <Dialog
       open={open}
@@ -30,6 +33,10 @@ export function PdfPriorStudyPopup({ open, onChoose, onDismiss }: Props) {
     >
       <DialogContent
         data-pdf-prior-study-popup
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          headingRef.current?.focus();
+        }}
         showCloseButton={false}
         aria-describedby="pdf-prior-study-description"
         overlayClassName="z-[125] bg-black/75 backdrop-blur-[3px]"
@@ -43,7 +50,7 @@ export function PdfPriorStudyPopup({ open, onChoose, onDismiss }: Props) {
             <Sparkles className="size-5 shrink-0 text-[#3981FF]" aria-hidden="true" />
           </div>
 
-          <DialogTitle className="mt-7 text-left text-[23px] font-bold leading-tight tracking-[-0.025em] text-[#F4F4F5] sm:text-[25px]">
+          <DialogTitle ref={headingRef} tabIndex={-1} className="mt-7 text-left text-[23px] font-bold leading-tight tracking-[-0.025em] text-[#F4F4F5] outline-none sm:text-[25px]">
             ¿Cómo llegás a este material?
           </DialogTitle>
           <DialogDescription
