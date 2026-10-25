@@ -434,6 +434,7 @@ export function MaterialStudyWorkspace({
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
   const promptedChapterFinishesRef = useRef(new Set<number>());
+  const chapterFinishNavigationPauseRef = useRef(0);
   const studyGuideArrivalHandledRef = useRef<string | null>(null);
   const onboardingTransitionRef = useRef<number | null>(null);
 
@@ -1017,7 +1018,7 @@ export function MaterialStudyWorkspace({
     };
 
     const visibleEndIndex = () => {
-      if (document.visibilityState !== 'visible') return null;
+      if (document.visibilityState !== 'visible' || Date.now() < chapterFinishNavigationPauseRef.current) return null;
       const readerRect = region.getBoundingClientRect();
       const viewportTop = Math.max(0, readerRect.top);
       const viewportBottom = Math.min(window.innerHeight, readerRect.bottom);
@@ -1390,6 +1391,7 @@ export function MaterialStudyWorkspace({
   };
 
   const startFirstTopic = () => {
+    chapterFinishNavigationPauseRef.current = Date.now() + 2000;
     setStudyStartGuideOpen(false);
     setProgressOpen(false);
     setActiveTab('resumen');
@@ -1408,6 +1410,7 @@ export function MaterialStudyWorkspace({
 
   function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string, index: number) {
     // Las vistas responsive comparten contenido: buscar dentro del panel que recibió el clic.
+    chapterFinishNavigationPauseRef.current = Date.now() + 2000;
     const chapter = event.currentTarget
       .closest('[role="tabpanel"]')
       ?.querySelector<HTMLElement>(`#${CSS.escape(anchor)}`);
@@ -1436,6 +1439,7 @@ export function MaterialStudyWorkspace({
   const continueAfterChapter = (index: number) => {
     const nextChapter = summaryChapters[index + 1];
     setChapterFinishIndex(null);
+    chapterFinishNavigationPauseRef.current = Date.now() + 2000;
     if (!nextChapter) return;
     const target = Array.from(
       document.querySelectorAll<HTMLElement>(`#${CSS.escape(nextChapter.anchor)}`)
