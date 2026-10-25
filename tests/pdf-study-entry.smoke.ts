@@ -49,12 +49,10 @@ assert.match(quick, /\?inicio=1/);
 assert.match(workspace, /data-pdf-study-entry-choice/);
 assert.match(workspace, /recommendedStudyAvailable \|\| initialStudyEntryAvailable \|\| pendingPdfStudyEntry/);
 assert.match(workspace, /savePdfStudyEntryChoice\(materialId, 'pending'\)/);
-assert.match(workspace, /choice === 'not_studied' \? 'plan_pending' : choice/,
-  'La ruta desde cero debe guardar un plan pendiente hasta iniciar el tema.');
-assert.match(workspace, /savedChoice === 'plan_pending' \? 'plan' : 'choice'/,
-  'Un plan no iniciado debe reabrirse en el mismo paso.');
-assert.match(workspace, /savePdfStudyEntryChoice\(materialId, 'not_studied'\)/,
-  'Empezar el primer tema registra la elección definitiva.');
+assert.match(workspace, /savePdfStudyEntryChoice\(materialId, choice\)/,
+  'La decisión de inicio debe guardarse por PDF.');
+assert.doesNotMatch(workspace, /PdfTopicStudyPlan|plan_pending/,
+  'No debe conservarse el plan anterior ni su estado temporal.');
 assert.match(workspace, /savePdfStudyEntryChoice\(materialId, 'free_exploration'\)/);
 assert.match(workspace, /handleStudyTabChange\('ejercicios'\)/);
 assert.match(workspace, /setFocusFirstChapterOnExit\(summaryChapters\.length > 0\)/);
