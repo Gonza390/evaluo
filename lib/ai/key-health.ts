@@ -17,6 +17,7 @@ export type AIKeyHealthReport = {
   healthy: number;
   total: number;
   checks: AIKeyHealthItem[];
+  capabilities?: { pdfGroqConfigured: boolean };
 };
 
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -117,6 +118,9 @@ function parseReport(value: unknown): AIKeyHealthReport | null {
     healthy: checks.filter((check) => check.status === 'ok').length,
     total: checks.length,
     checks,
+    ...(typeof report.capabilities?.pdfGroqConfigured === 'boolean'
+      ? { capabilities: { pdfGroqConfigured: report.capabilities.pdfGroqConfigured } }
+      : {}),
   };
 }
 
@@ -136,9 +140,14 @@ export async function getLatestAIKeyHealthReport(): Promise<AIKeyHealthReport | 
 
 export async function runAIKeyHealthCheck(): Promise<AIKeyHealthReport> {
   const checks: AIKeyHealthItem[] = [];
+  // La clave de respaldo Groq es opcional. No degradar salud por su ausencia.
+  const configuredKeys = EXPECTED_KEYS.filter(
+    (entry) => entry.name !== 'GROQ_API_KEY_FALLBACK' ||
+      Boolean(process.env.GROQ_API_KEY_FALLBACK?.trim())
+  );
   // Tres pruebas en paralelo para reducir tiempo y evitar ráfagas de cuota.
-  for (let index = 0; index < EXPECTED_KEYS.length; index += 3) {
-    const batch = EXPECTED_KEYS.slice(index, index + 3);
+  for (let index = 0; index < configuredKeys.length; index += 3) {
+    const batch = configuredKeys.slice(index, index + 3);
     checks.push(...await Promise.all(batch.map(probeKey)));
   }
 
@@ -147,6 +156,9 @@ export async function runAIKeyHealthCheck(): Promise<AIKeyHealthReport> {
     healthy: checks.filter((check) => check.status === 'ok').length,
     total: checks.length,
     checks,
+    capabilities: {
+      pdfGroqConfigured: Boolean(process.env.GROQ_API_KEY?.trim() || process.env.GROQ_API_KEY_FALLBACK?.trim()),
+    },
   };
 
   const admin = createAdminClient();
