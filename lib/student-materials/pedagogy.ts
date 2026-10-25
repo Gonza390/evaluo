@@ -1815,10 +1815,10 @@ export function buildPedagogicalArtifacts(input: {
     pageCount: input.pageCount,
     topicCount,
   });
-  const questionBankTarget = resolveQuestionBankTarget({
+  const questionBankTarget = resolveTopicAwareQuestionBankTarget({
     pageCount: input.pageCount,
     topicCount,
-  });
+  }, input.summary.sections.length);
   const sectionQuestionLimit = Math.min(input.summary.sections.length, 4 * categoryFactor);
   const modelQuestions = model
     ? [
