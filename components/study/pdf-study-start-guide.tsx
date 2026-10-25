@@ -12,12 +12,30 @@ type Props = {
 };
 
 /**
- * Pantalla introductoria del recorrido "Empiezo desde cero".
- * Explica cómo estudiar sin introducir nuevas herramientas o etapas obligatorias.
+ * Guía breve que se superpone al Resumen, con el mismo patrón del popup anterior.
+ * Tras elegir "Empiezo desde cero", orienta al alumno antes de abrir el tema 1.
  */
 export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const hasFirstTopic = Boolean(firstTopicTitle?.trim());
+
+  const steps = [
+    {
+      title: 'Primero, leé el resumen',
+      description: 'Empezá por el tema 1 y conocé sus ideas principales.',
+      Icon: BookOpenText,
+    },
+    {
+      title: 'Consultá y repasá',
+      description: 'Usá el glosario para entender los términos y las flashcards para recordarlos.',
+      Icon: Lightbulb,
+    },
+    {
+      title: 'Después, practicá',
+      description: 'Respondé preguntas del tema para saber qué aprendiste y qué reforzar.',
+      Icon: ClipboardCheck,
+    },
+  ] as const;
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onDismiss(); }}>
@@ -29,97 +47,55 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }
           event.preventDefault();
           headingRef.current?.focus();
         }}
-        overlayClassName="z-[135] bg-[#F5F7FB]"
-        className="z-[135] !fixed !inset-0 !top-0 !left-0 !h-dvh !w-screen !max-w-none !translate-x-0 !translate-y-0 !gap-0 !overflow-y-auto !overscroll-contain !rounded-none !border-0 !bg-[#F5F7FB] !p-0 !shadow-none sm:!max-w-none"
+        overlayClassName="z-[135] bg-slate-950/45 backdrop-blur-[2px]"
+        className="border-border bg-card text-card-foreground z-[135] flex max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[500px] flex-col gap-0 overflow-hidden rounded-[22px] border p-0 shadow-[0_22px_75px_rgba(15,27,61,0.18)] sm:max-w-[500px]"
       >
-        <div className="flex min-h-full flex-col">
-          <header className="border-b border-[#E7EBF4] bg-white">
-            <div className="mx-auto flex w-full max-w-[960px] items-center justify-between px-5 py-3.5 sm:px-8">
-              <div className="flex items-center gap-2.5">
-                <img src="/evaluo-logo-icono.svg" alt="" className="size-8 object-contain" />
-                <span className="text-[20px] font-extrabold tracking-[-0.055em] text-[#032269]">evalu<span className="text-[#0546F3]">o</span></span>
-              </div>
-              <button type="button" onClick={onDismiss} aria-label="Volver al resumen" className="flex size-9 items-center justify-center rounded-full text-[#7F8AA3] transition hover:bg-[#F5F7FB] hover:text-[#0F1B3D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
-                <X className="size-[18px]" aria-hidden="true" />
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
+              Tu guía de estudio
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
+                <Sparkles className="size-[16px]" />
+              </span>
+              <button type="button" onClick={onDismiss} aria-label="Cerrar guía y volver al resumen" className="text-muted-foreground hover:bg-muted flex size-8 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
+                <X className="size-4" aria-hidden="true" />
               </button>
             </div>
-          </header>
-
-          <main className="mx-auto flex w-full max-w-[760px] flex-1 flex-col justify-center px-5 pb-32 pt-7 sm:px-8 sm:py-9">
-            <div className="rounded-[24px] border border-[#E7EBF4] bg-white px-5 py-6 shadow-[0_20px_65px_rgba(15,27,61,0.06)] sm:px-9 sm:py-8">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#4F5DFF]">
-                <Sparkles className="size-[14px]" aria-hidden="true" />
-                Tu guía de estudio
-              </div>
-
-              <DialogTitle ref={headingRef} tabIndex={-1} className="mt-4 text-[24px] font-extrabold leading-tight tracking-[-0.045em] text-[#0F1B3D] outline-none sm:text-[29px]">
-                ¡Vamos a comenzar a estudiar!
-              </DialogTitle>
-              <DialogDescription id="pdf-study-start-description" className="mt-2 max-w-[59ch] text-[13px] leading-[1.65] text-[#65738C] sm:text-[14px]">
-                Te vamos a acompañar para que entiendas el material, recuerdes los conceptos importantes y compruebes lo que aprendiste.
-              </DialogDescription>
-
-              <div className="mt-6 space-y-4 border-t border-[#E7EBF4] pt-5 sm:space-y-5">
-                <div className="flex items-start gap-3.5">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-[12px] bg-[#EEF2FF] text-[#4F5DFF]">
-                    <BookOpenText className="size-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0 pt-0.5">
-                    <h2 className="text-[14px] font-bold text-[#0F1B3D]">Primero, leé el resumen</h2>
-                    <p className="mt-1 text-[12.5px] leading-[1.6] text-[#65738C]">
-                      Vamos a comenzar con el primer tema de tu PDF. Leé el resumen para comprender sus conceptos e ideas principales.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3.5">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-[12px] bg-[#EEF2FF] text-[#4F5DFF]">
-                    <Lightbulb className="size-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0 pt-0.5">
-                    <h2 className="text-[14px] font-bold text-[#0F1B3D]">Apoyate en tus herramientas</h2>
-                    <p className="mt-1 text-[12.5px] leading-[1.6] text-[#65738C]">
-                      En el glosario podés consultar los términos que no entiendas. También tenés flashcards para repasar y recordar lo más importante.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3.5">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-[12px] bg-[#EEF2FF] text-[#4F5DFF]">
-                    <ClipboardCheck className="size-5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0 pt-0.5">
-                    <h2 className="text-[14px] font-bold text-[#0F1B3D]">Después, comprobá lo aprendido</h2>
-                    <p className="mt-1 text-[12.5px] leading-[1.6] text-[#65738C]">
-                      Cuando termines de estudiar, vas a poder practicar con preguntas de ese tema y descubrir qué necesitás reforzar.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-[16px] border border-[#DCE5FF] bg-[#F4F7FF] px-4 py-4 sm:px-5">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#4F5DFF]">
-                  {hasFirstTopic ? 'Vamos a empezar por' : 'Tu primer paso'}
-                </p>
-                <p data-pdf-study-first-topic className="mt-1.5 break-words text-[15px] font-bold leading-snug text-[#0F1B3D]">
-                  {hasFirstTopic ? firstTopicTitle : 'Leé el resumen de tu material'}
-                </p>
-                <button type="button" data-pdf-study-start-cta onClick={onStart} className="mt-3 hidden min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#3948ED] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] sm:inline-flex sm:w-auto sm:min-w-[245px]">
-                  {hasFirstTopic ? 'Comenzar con este tema' : 'Ir al resumen'}
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          </main>
-          <div className="fixed inset-x-0 bottom-0 z-10 border-t border-[#E7EBF4] bg-white/95 px-5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_32px_rgba(15,27,61,0.08)] backdrop-blur-sm sm:hidden">
-            <p className="mb-2 truncate text-[12px] font-semibold text-[#0F1B3D]" data-pdf-study-mobile-first-topic>
-              {hasFirstTopic ? firstTopicTitle : 'Tu resumen'}
-            </p>
-            <button type="button" data-pdf-study-mobile-start-cta onClick={onStart} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 text-[13px] font-bold text-white transition hover:bg-[#3948ED] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
-              {hasFirstTopic ? 'Comenzar con este tema' : 'Ir al resumen'}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </button>
           </div>
+
+          <DialogTitle ref={headingRef} tabIndex={-1} className="text-foreground mt-2.5 text-left text-[20px] font-bold leading-tight tracking-[-0.035em] outline-none">
+            ¡Vamos a comenzar a estudiar!
+          </DialogTitle>
+          <DialogDescription id="pdf-study-start-description" className="text-muted-foreground mt-1.5 text-left text-[12.5px] leading-5">
+            Empezamos por el primer tema de tu PDF. Te mostramos cómo entenderlo, repasarlo y comprobar lo que aprendiste.
+          </DialogDescription>
+
+          <div className="border-border mt-4 space-y-3 border-t pt-4">
+            {steps.map(({ title, description, Icon }) => (
+              <div key={title} className="flex items-start gap-3">
+                <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg" aria-hidden="true">
+                  <Icon className="size-[17px]" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="text-foreground text-[13px] font-semibold leading-5">{title}</h2>
+                  <p className="text-muted-foreground mt-0.5 text-[12px] leading-[1.45]">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div data-pdf-study-start-footer className="border-border bg-card shrink-0 border-t px-5 py-4 sm:px-6">
+          <p className="text-primary text-[10px] font-bold uppercase tracking-[0.12em]">Vamos a empezar por</p>
+          <p data-pdf-study-first-topic className="text-foreground mt-1 break-words text-[13px] font-bold leading-5">
+            {hasFirstTopic ? firstTopicTitle : 'El resumen de tu material'}
+          </p>
+          <button type="button" data-pdf-study-start-cta onClick={onStart} className="bg-primary hover:bg-primary/90 focus-visible:outline-primary mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
+            {hasFirstTopic ? 'Comenzar con este tema' : 'Ir al resumen'}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
         </div>
       </DialogContent>
     </Dialog>
