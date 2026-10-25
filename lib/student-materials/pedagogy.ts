@@ -1853,7 +1853,8 @@ export function buildPedagogicalArtifacts(input: {
   // realmente disponible, pero sólo se eligen ítems respaldados por el PDF.
   const questions = selectBalancedQuestionBank(
     availableQuestions,
-    questionBankTarget
+    questionBankTarget,
+    input.summary.sections
   ).map((question) => ({
     ...question,
     id: contentStableQuestionId(question),
