@@ -1463,6 +1463,39 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
   })),
 });
 
+// Los ejercicios deben sonar como preguntas académicas: la referencia al PDF
+// vive en question.reference, no repetida como muletilla en cada consigna.
+const pdfSourceFiller = /(?:según\s+(?:el|este|tu|los|las)\s+(?:pdf|material|documento|texto|apuntes)|en\s+(?:el|este|tu|tus)\s+(?:pdf|material|documento|apuntes)|(?:el|este)\s+(?:pdf|material)\s+(?:explica|describe|establece|indica))/iu;
+const phrasingFixtures = [pedagogy, longBank, chapterBank, canonicalPedagogy];
+assert.ok(
+  phrasingFixtures.flatMap((artifact) => artifact.questions).every(
+    (question) => !pdfSourceFiller.test(question.prompt)
+  ),
+  'Las consignas de práctica no deben mencionar el soporte del estudiante cuando no añade significado.'
+);
+function wordingPrefixes(kind: 'concept' | 'relationship') {
+  return new Set(
+    longBank.questions
+      .filter((question) => question.kind === kind && question.type === 'multiple_choice')
+      .map((question) => question.prompt.split('“')[0]?.trim().toLocaleLowerCase('es-AR'))
+      .filter(Boolean)
+  );
+}
+assert.ok(
+  wordingPrefixes('concept').size >= 3,
+  'La práctica debe alternar al menos tres formas naturales de preguntar conceptos.'
+);
+assert.ok(
+  wordingPrefixes('relationship').size >= 3,
+  'Las relaciones causales también deben variar la pregunta en bancos extensos.'
+);
+assert.ok(
+  longBank.questions.every((question) => question.prompt.trim() && question.answer.trim()) &&
+  longBank.questions.filter((question) => question.type === 'multiple_choice').every((question) =>
+    question.options.some((option) => option === question.answer)
+  ),
+  'Mejorar enunciados no debe dejar preguntas sin respuesta ni opciones correctas.'
+);
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
   15,
