@@ -127,22 +127,29 @@ const previewSource = readFileSync('components/preview/real-pdf-progress-preview
 const mobileNavigationSource = readFileSync('components/study/pdf-mobile-navigation.tsx', 'utf8');
 const examSource = readFileSync('components/student-material-exam.tsx', 'utf8');
 const demoFourStepSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
-assert.ok(examSource.includes('onTopicFinished?.({'),
-  'La evaluación por tema debe entregar el resultado comprobado al contenedor.');
-assert.ok(materialWorkspaceSource.includes('data-topic-practice-final'),
-  'La pantalla final debe mostrarse en Práctica sin cambiar a la pestaña Progreso.');
-assert.ok(materialWorkspaceSource.includes('topicPracticeFinished && practiceSectionIndex !== undefined && progressConfig && isOwner'),
-  'La pantalla compartida con Progreso corresponde a la evaluación privada del PDF.');
-assert.ok(materialWorkspaceSource.includes('lastPracticeOutcome={topicPracticeFinished}'),
-  'La pantalla final debe recibir los datos del intento recién terminado.');
-assert.ok(materialWorkspaceSource.includes('initialTopicSectionIndex={topicPracticeFinished.sectionIndex}'),
-  'La pantalla final debe abrir el tema evaluado y no la lista general.');
-assert.ok(materialWorkspaceSource.includes('setTopicPracticeFinished(null)'),
-  'Una nueva práctica debe limpiar el resultado anterior.');
+// El cierre de la práctica de un tema debe usar su pantalla de resultado
+// concisa, no sustituirla al instante por el lector largo de Progreso.
+assert.ok(examSource.includes("if (topicSectionIndex !== undefined) {"),
+  'El resultado diseñado debe aparecer en prácticas reales y en la demo.');
+assert.ok(examSource.includes('Detectamos qué necesitás reforzar'),
+  'La pantalla final debe presentar el mensaje acordado.');
+assert.ok(examSource.includes('Reforzar mis errores') && examSource.includes('Seguir al siguiente tema'),
+  'La pantalla final debe ofrecer las acciones de continuidad por tema.');
+assert.ok(materialWorkspaceSource.includes('<StudentMaterialExam'),
+  'La pantalla real debe conservar el componente con el cierre de práctica.');
+assert.doesNotMatch(materialWorkspaceSource, /topicPracticeFinished|data-topic-practice-final/,
+  'No se puede reemplazar el cierre por el detalle largo de Progreso.');
+assert.ok(materialWorkspaceSource.includes('onStudyNextTopic={') && materialWorkspaceSource.includes('onReturnToTopic={'),
+  'Los botones del cierre deben dirigir al detalle de Progreso cuando corresponda.');
+assert.ok(demoFourStepSource.includes('practice: demoTopicIndex !== null ? ('),
+  'La demo debe mantener la práctica visible hasta mostrar su resultado.');
 assert.ok(demoFourStepSource.includes('onTopicFinished={setDemoTopicFinished}'),
-  'La demo también debe terminar mostrando el detalle real de Progreso.');
-assert.ok(demoFourStepSource.includes('initialTopicSectionIndex={demoTopicFinished.sectionIndex}'),
-  'La demo debe cerrar en el mismo tema que el estudiante evaluó.');
+  'La demo debe conservar el resultado para la navegación posterior.');
+assert.ok(demoFourStepSource.includes('onStudyNextTopic={(index) => {') &&
+          demoFourStepSource.includes('onViewAllTopics={() => {'),
+  'La demo también debe resolver sus acciones de continuidad.');
+assert.ok(demoFourStepSource.includes('lastPracticeOutcome={demoTopicFinished ?? undefined}'),
+  'Progreso debe recibir el resultado sólo al navegar hacia él.');
 
 const diagnosticSource = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
 
