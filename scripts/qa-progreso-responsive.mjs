@@ -32,7 +32,7 @@ for (const width of [375, 1440]) {
         timeout: 60000,
       });
       assert.equal(response?.status(), 200, 'La demostración debe abrirse');
-      await page.locator('[data-onboarding-study-panel]').first().waitFor(wait);
+      await page.locator('[data-onboarding-study-panel]:visible').first().waitFor(wait);
       assert.equal(await page.locator('[data-first-pdf-study-entry]').count(), 0,
         'No debe volver la elección de estudio eliminada.');
       assert.equal(await page.locator('[data-first-pdf-study-plan]').count(), 0,
