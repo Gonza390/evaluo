@@ -203,7 +203,7 @@ export function accurateFlashcardLevel(card: StudyFlashcard): StudyFlashcard['le
 export function isRecognitionPresentedAsHigherOrder(question: StudyQuestion) {
   if (question.level === 'recordar') return false;
   return (
-    /^(?:¿Cu[aá]l de estas afirmaciones representa mejor|¿Cu[aá]l opci[oó]n explica mejor|Un caso del material se describe as[ií]:|¿Qu[eé] explica el PDF sobre)/iu.test(question.prompt) ||
+    /^(?:¿Cu[aá]l de estas afirmaciones representa mejor|¿Cu[aá]l opci[oó]n explica mejor|¿Qu[eé] caracteriza mejor a|Un caso del material se describe as[ií]:|¿Qu[eé] explica el PDF sobre)/iu.test(question.prompt) ||
     (question.level === 'aplicar' &&
       /^(?:En una situaci[oó]n se observan estas acciones|¿Qu[eé] proceso del PDF describe)/iu.test(question.prompt))
   );
