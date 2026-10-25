@@ -29,9 +29,7 @@ export default async function DemoMaterialEstudioPage({
   const uploadHref = internationalSource
     ? `/dashboard?openUpload=1&source=${encodeURIComponent(internationalSource)}`
     : UPLOAD_HREF;
-  // La demo permite revisar la pregunta de inicio de estudio; el plan anterior se retiró.
-  const initialStudyEntryStage = start === 'eleccion' ? 'choice' : undefined;
-  const guided = tour !== '0' && !initialStudyEntryStage;
+  const guided = tour !== '0';
 
   return (
     <>
@@ -39,7 +37,7 @@ export default async function DemoMaterialEstudioPage({
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-600">
-              PDF de muestra · {initialStudyEntryStage ? 'Inicio de estudio' : 'Recorrido de cuatro pasos'}
+              PDF de muestra · Recorrido de cuatro pasos
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
               {internationalSource
@@ -81,7 +79,6 @@ export default async function DemoMaterialEstudioPage({
       <AppShellProviders>
         <DemoFourStepStudy
           guided={guided}
-          initialStudyEntryStage={initialStudyEntryStage}
           initialTab={!guided && start === 'ejercicios' ? 'ejercicios' : 'resumen'}
           internationalSource={internationalSource}
           summary={SUMMARY}
