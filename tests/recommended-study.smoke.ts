@@ -264,11 +264,11 @@ const studyStartGuideSource = readFileSync('components/study/pdf-study-start-gui
 const summaryChapterFinishSource = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
 assert.match(materialWorkspaceSource, /<SummaryChapterFinish/,
   'Cada capítulo del resumen debe terminar con la guía de evaluación.');
-assert.match(materialWorkspaceSource, /getTopicQuestionCounts\\(studySummary.sections, studyArtifacts.questions\\)/,
+assert.ok(materialWorkspaceSource.includes('getTopicQuestionCounts(studySummary.sections, studyArtifacts.questions)'),
   'El botón principal sólo debe poder evaluar preguntas corregibles del capítulo.');
-assert.match(materialWorkspaceSource, /getTopicStudyResources\\(studySummary.sections, usefulGlossary, studyArtifacts.flashcards, index\\)/,
+assert.ok(materialWorkspaceSource.includes('getTopicStudyResources(studySummary.sections, usefulGlossary, studyArtifacts.flashcards, index)'),
   'Flashcards y glosario del capítulo deben tener asociación temática verificable.');
-assert.match(materialWorkspaceSource, /handleStudyTabChange\\('ejercicios', 'summary_chapter'\\)/,
+assert.ok(materialWorkspaceSource.includes("handleStudyTabChange('ejercicios', 'summary_chapter')"),
   'El CTA debe abrir la práctica específica del tema y no el banco completo.');
 assert.match(summaryChapterFinishSource, /Descubrí qué sabés y qué necesitás reforzar/,
   'El encabezado debe vender el beneficio, sin sobreexplicar la evaluación.');
