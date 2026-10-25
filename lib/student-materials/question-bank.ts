@@ -38,7 +38,7 @@ function reserveTopicQuestions(
   targetCount: number
 ): StudyQuestion[] {
   if (sections.length === 0 || targetCount <= 0) return [];
-  const distinct = getDistinctEligibleExamQuestions(questions);
+  const distinct = getDistinctEligibleExamQuestions(questions.filter(isReliableTopicQuestion));
   const buckets = sections.map(() => [] as StudyQuestion[]);
   for (const question of distinct) {
     if (!isReliableTopicQuestion(question)) continue;
@@ -272,7 +272,7 @@ export function analyzeQuestionBankCoverage(
     byChapter[index]!.all += 1;
     if (item.type === 'multiple_choice') byChapter[index]!.auto += 1;
   }
-  const robust = getDistinctEligibleExamQuestions(questions).filter(isReliableTopicQuestion);
+  const robust = getDistinctEligibleExamQuestions(questions.filter(isReliableTopicQuestion));
   const chapterBuckets = sections.map(() => [] as StudyQuestion[]);
   for (const question of robust) {
     const chapterIndex = findSummarySectionForQuestion(question, sections);
