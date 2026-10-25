@@ -1,9 +1,66 @@
 import type { StudyQuestion } from '@/lib/student-materials/pedagogy';
 import type { StudySummarySection } from '@/lib/student-materials/types';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
-import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
+import { getDistinctEligibleExamQuestions, isEligibleExamQuestion, normalizeAnswer } from '@/lib/student-materials/practice-questions';
 
 type QuestionBankContext = { pageCount?: number | null; topicCount: number };
+
+export const MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS = 6;
+
+/** No contar preguntas con opciones duplicadas o sin respaldo verificable. */
+function isReliableTopicQuestion(question: StudyQuestion) {
+  if (question.type !== 'multiple_choice' || !isEligibleExamQuestion(question)) return false;
+  const options = question.options.map((option) =>
+    normalizeAnswer(option).replace(/[^a-z0-9\s]/g, '').trim()
+  );
+  if (options.some((option) => !option) || new Set(options).size !== options.length) return false;
+  return (question.reference.pageStart !== null && question.reference.pageStart > 0) ||
+    question.reference.excerpt.trim().length >= 20;
+}
+
+function chapterQuestionScore(
+  question: StudyQuestion,
+  picked: StudyQuestion[]
+) {
+  const usedTopics = new Set(picked.map((item) => normalizeAnswer(item.topic ?? '')));
+  const usedKinds = new Set(picked.map((item) => item.kind));
+  const usedPages = new Set(picked.map((item) => item.reference.pageStart));
+  return (usedKinds.has(question.kind) ? 0 : 30) +
+    (usedTopics.has(normalizeAnswer(question.topic ?? '')) ? 0 : 24) +
+    (usedPages.has(question.reference.pageStart) ? 0 : 8) +
+    (question.level === 'aplicar' ? 3 : question.level === 'comprender' ? 2 : 1);
+}
+
+/** Reserva una ronda por capítulo antes de repetir; sólo ítems corregibles y trazables. */
+function reserveTopicQuestions(
+  questions: StudyQuestion[],
+  sections: StudySummarySection[],
+  targetCount: number
+): StudyQuestion[] {
+  if (sections.length === 0 || targetCount <= 0) return [];
+  const distinct = getDistinctEligibleExamQuestions(questions);
+  const buckets = sections.map(() => [] as StudyQuestion[]);
+  for (const question of distinct) {
+    if (!isReliableTopicQuestion(question)) continue;
+    const chapter = findSummarySectionForQuestion(question, sections);
+    if (chapter >= 0) buckets[chapter]!.push(question);
+  }
+  const chosen: StudyQuestion[] = [];
+  const used = new Set<StudyQuestion>();
+  for (let round = 0; round < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS; round += 1) {
+    for (const bucket of buckets) {
+      if (chosen.length >= targetCount) return chosen;
+      const pickedHere = chosen.filter((question) => bucket.includes(question));
+      const candidate = bucket
+        .filter((question) => !used.has(question))
+        .sort((a, b) => chapterQuestionScore(b, pickedHere) - chapterQuestionScore(a, pickedHere))[0];
+      if (!candidate) continue;
+      chosen.push(candidate);
+      used.add(candidate);
+    }
+  }
+  return chosen;
+}
 
 function effectivePageCount(input: QuestionBankContext) {
   const pages = input.pageCount;
@@ -33,17 +90,26 @@ export function resolveQuestionBankTarget(input: QuestionBankContext) {
  */
 export function selectBalancedQuestionBank(
   questions: StudyQuestion[],
-  targetCount: number
+  targetCount: number,
+  sections: StudySummarySection[] = []
 ) {
   if (questions.length <= targetCount) return questions;
-  const selected: StudyQuestion[] = [];
-  const pending = [...questions];
+  const selected = reserveTopicQuestions(questions, sections, targetCount);
+  const reserved = new Set(selected);
+  const pending = questions.filter((question) => !reserved.has(question));
   const usedTopics = new Set<string>();
   const usedChapters = new Set<string>();
   const usedPages = new Set<number>();
   const perKind = new Map<StudyQuestion['kind'], number>();
   let openCount = 0;
   const maxOpen = Math.max(4, Math.round(targetCount * 0.18));
+  for (const item of selected) {
+    if (item.topic) usedTopics.add(item.topic.trim().toLocaleLowerCase('es'));
+    if (item.chapterTitle) usedChapters.add(item.chapterTitle.trim().toLocaleLowerCase('es'));
+    if (item.reference.pageStart) usedPages.add(item.reference.pageStart);
+    perKind.set(item.kind, (perKind.get(item.kind) ?? 0) + 1);
+    if (item.type === 'open') openCount += 1;
+  }
 
   while (selected.length < targetCount && pending.length > 0) {
     let bestIndex = -1;
@@ -158,6 +224,17 @@ export type PracticeCoverageAudit = {
   pageReferenceRatio: number | null;
   quartersWithReferencedQuestions: number;
   status: 'unknown' | 'limited' | 'distributed';
+  minimumAutoCorrectablePerChapter: number;
+  chaptersMeetingMinimum: number;
+  chaptersBelowMinimum: string[];
+  chaptersWithLowDiversity: string[];
+  chapterAssessments: Array<{
+    title: string;
+    validAutoCorrectable: number;
+    distinctKinds: number;
+    distinctConcepts: number;
+    sourceBacked: number;
+  }>;
 };
 
 /** Cobertura de evaluación, separada del éxito de extracción del PDF. */
@@ -184,6 +261,33 @@ export function analyzeQuestionBankCoverage(
     byChapter[index]!.all += 1;
     if (item.type === 'multiple_choice') byChapter[index]!.auto += 1;
   }
+  const robust = getDistinctEligibleExamQuestions(questions).filter(isReliableTopicQuestion);
+  const chapterBuckets = sections.map(() => [] as StudyQuestion[]);
+  for (const question of robust) {
+    const chapterIndex = findSummarySectionForQuestion(question, sections);
+    if (chapterIndex >= 0) chapterBuckets[chapterIndex]!.push(question);
+  }
+  const chapterAssessments = sections.map((section, index) => {
+    const bucket = chapterBuckets[index]!;
+    return {
+      title: section.title,
+      validAutoCorrectable: bucket.length,
+      distinctKinds: new Set(bucket.map((item) => item.kind)).size,
+      distinctConcepts: new Set(bucket.map((item) => normalizeAnswer(item.topic ?? ''))).size,
+      sourceBacked: bucket.filter((item) =>
+        item.reference.pageStart !== null || item.reference.excerpt.trim().length >= 20
+      ).length,
+    };
+  });
+  const chaptersBelowMinimum = chapterAssessments
+    .filter((chapter) => chapter.validAutoCorrectable < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS)
+    .map((chapter) => chapter.title);
+  // Advertencia informativa: seis preguntas del mismo concepto y formato no equivalen
+  // a seis oportunidades independientes de aprendizaje.
+  const chaptersWithLowDiversity = chapterAssessments
+    .filter((chapter) => chapter.validAutoCorrectable >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS &&
+      chapter.distinctKinds < 2 && chapter.distinctConcepts < 2)
+    .map((chapter) => chapter.title);
   const distinctPages = [...pageNumbers];
   const validPageCount = pageCount !== null && Number.isInteger(pageCount) && pageCount > 0;
   const quarters = validPageCount
@@ -213,5 +317,10 @@ export function analyzeQuestionBankCoverage(
     pageReferenceRatio: ratio === null ? null : Math.round(ratio * 1000) / 1000,
     quartersWithReferencedQuestions: quarters,
     status,
+    minimumAutoCorrectablePerChapter: MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS,
+    chaptersMeetingMinimum: chapterAssessments.length - chaptersBelowMinimum.length,
+    chaptersBelowMinimum,
+    chaptersWithLowDiversity,
+    chapterAssessments,
   };
 }
