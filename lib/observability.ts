@@ -1,3 +1,5 @@
+import { classifyBackendScope } from '@/lib/backend-flow';
+
 export function normalizeError(error: unknown) {
   if (error instanceof Error) {
     return {
@@ -14,17 +16,19 @@ export function normalizeError(error: unknown) {
 }
 
 export function logInfo(scope: string, details?: Record<string, unknown>) {
-  console.info(`[${scope}]`, details ?? {});
+  console.info(`[${scope}]`, { flow: classifyBackendScope(scope), ...(details ?? {}) });
 }
 
 export function logError(scope: string, error: unknown, details?: Record<string, unknown>) {
   const normalized = normalizeError(error);
   const entry = {
     scope,
+    flow: classifyBackendScope(scope),
     ...normalized,
     ...(details ? { details } : {}),
   };
   console.error(`[${scope}]`, {
+    flow: classifyBackendScope(scope),
     ...normalized,
     ...(details ? { details } : {}),
   });
