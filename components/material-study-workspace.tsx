@@ -52,6 +52,7 @@ import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { PdfPriorStudyPopup } from '@/components/study/pdf-prior-study-popup';
+import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
 import {
   isPriorStudyChoice,
   priorStudyStorageKey,
@@ -433,6 +434,7 @@ export function MaterialStudyWorkspace({
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const [priorStudyOpen, setPriorStudyOpen] = useState(false);
+  const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -827,7 +829,7 @@ export function MaterialStudyWorkspace({
   }, [recommendedActive, recommendedTourStep]);
 
   useEffect(() => {
-    if (!focusFirstChapterOnExit || recommendedActive || progressOpen || activeTab !== 'resumen') {
+    if (!focusFirstChapterOnExit || recommendedActive || progressOpen || studyStartGuideOpen || activeTab !== 'resumen') {
       return;
     }
 
@@ -843,7 +845,7 @@ export function MaterialStudyWorkspace({
       window.cancelAnimationFrame(frame);
       window.cancelAnimationFrame(nextFrame);
     };
-  }, [focusFirstChapterOnExit, recommendedActive, progressOpen, activeTab]);
+  }, [focusFirstChapterOnExit, recommendedActive, progressOpen, studyStartGuideOpen, activeTab]);
 
   const openRecommendedErrors = () => {
     setRecommendedTourStep(null);
@@ -946,6 +948,8 @@ export function MaterialStudyWorkspace({
       !isOwner ||
       recommendedActive ||
       recommendedTourStep ||
+      priorStudyOpen ||
+      studyStartGuideOpen ||
       summaryCheckChapterIndex !== null ||
       summaryCheckSuppressedRef.current
     ) {
@@ -1176,6 +1180,8 @@ export function MaterialStudyWorkspace({
     isOwner,
     recommendedActive,
     recommendedTourStep,
+    priorStudyOpen,
+    studyStartGuideOpen,
     summaryCheckChapterIndex,
     summaryCheckPlan,
     summaryCheckPolicy,
@@ -1195,8 +1201,25 @@ export function MaterialStudyWorkspace({
       });
     }
     setPriorStudyOpen(false);
-    // La siguiente etapa para cada respuesta se diseñará por separado:
-    // ambas opciones dejan al usuario en Resumen.
+    // Sólo "Empiezo desde cero" abre la explicación del método de estudio.
+    // La opción "Ya lo estudié" conserva el comportamiento actual.
+    if (choice === 'not_studied') setStudyStartGuideOpen(true);
+  };
+
+  const startFirstTopic = () => {
+    setStudyStartGuideOpen(false);
+    setProgressOpen(false);
+    setActiveTab('resumen');
+    demo?.onTabChange('resumen');
+    setIsViewerVisible(false);
+    setFocusFirstChapterOnExit(true);
+    if (isOwner && !demo) {
+      trackMarketingEvent('cta_click', {
+        location: 'pdf_study_start_guide',
+        cta_name: 'start_first_topic',
+        material_id: materialId,
+      });
+    }
   };
 
   function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string) {
@@ -2164,6 +2187,12 @@ export function MaterialStudyWorkspace({
         open={priorStudyOpen && !recommendedActive}
         onChoose={choosePriorStudy}
         onDismiss={() => setPriorStudyOpen(false)}
+      />
+      <PdfStudyStartGuide
+        open={studyStartGuideOpen && !recommendedActive}
+        firstTopicTitle={studySummary.sections.length > 0 ? summaryChapters[0]?.displayTitle ?? null : null}
+        onStart={startFirstTopic}
+        onDismiss={() => setStudyStartGuideOpen(false)}
       />
       {isOwner && materialId !== 'demo-material' ? (
         <ExamDatePlanPrompt
