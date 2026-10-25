@@ -96,9 +96,18 @@ function materialTitle(material: StudentMaterial) {
   return truncate(material.title?.trim() || material.file_name?.trim() || 'tu material');
 }
 
-function buildTrackedReturnUrl(action: DashboardNextStudyAction) {
+function buildTrackedReturnUrl(action: DashboardNextStudyAction, pendingErrorId?: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
-  const url = new URL(action.href, baseUrl);
+  // Link directly to the PDF: the legacy errors route redirects twice,
+  // dropping email attribution and the student's exact next action.
+  const url = new URL(
+    action.kind === 'reinforce' ? `/materiales/${action.materialId}` : action.href,
+    baseUrl
+  );
+  if (action.kind === 'reinforce') {
+    url.searchParams.set('tab', 'progreso');
+    if (pendingErrorId) url.searchParams.set('error', pendingErrorId);
+  }
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
   url.searchParams.set('utm_campaign', CAMPAIGN_KEY);
@@ -454,11 +463,14 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null) ||
       (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : null);
     const pendingTopics = action.kind === 'reinforce'
-      ? await db.from('study_errors').select('topic').eq('user_id', candidate.userId)
-          .eq('student_material_id', material.id).eq('status', 'pending').limit(50)
+      ? await db.from('study_errors').select('id,topic').eq('user_id', candidate.userId)
+          .eq('student_material_id', material.id).eq('status', 'pending')
+          .order('updated_at', { ascending: false }).limit(50)
       : { data: [], error: null };
     if (pendingTopics.error) logError('studyReturnD1.pendingTopics', pendingTopics.error, { userId: candidate.userId });
-    const returnUrl = buildTrackedReturnUrl(action);
+    const firstPendingErrorId =
+      action.kind === 'reinforce' ? pendingTopics.data?.[0]?.id : undefined;
+    const returnUrl = buildTrackedReturnUrl(action, firstPendingErrorId);
     const message = buildStudyReturnD1Message({
       firstname: firstName(displayName),
       materialTitle: materialTitle(material),
