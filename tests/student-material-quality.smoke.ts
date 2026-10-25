@@ -1284,6 +1284,11 @@ assert.ok(
 assert.equal(resolveQuestionCategoryFactor({ pageCount: 94, topicCount: 104 }), 4);
 assert.equal(resolveQuestionBankTarget({ pageCount: 94, topicCount: 104 }), 120);
 assert.equal(resolveQuestionCategoryFactor({ pageCount: 22, topicCount: 27 }), 1);
+assert.equal(resolveTopicAwareQuestionBankTarget({ pageCount: 8, topicCount: 10 }, 10), 60,
+  'Diez temas requieren capacidad para sesenta preguntas cuando hay candidatos.');
+assert.equal(resolveTopicAwareQuestionBankTarget({ pageCount: 94, topicCount: 104 }, 10), 120,
+  'En documentos largos sigue vigente el techo global.');
+
 
 const hundredPageConcepts = Array.from({ length: 100 }, (_, i) => ({
   label: `Concepto de la página ${i + 1}`,
