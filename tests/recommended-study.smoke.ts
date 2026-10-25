@@ -270,6 +270,15 @@ assert.ok(materialWorkspaceSource.includes('chapterFinishNavigationPauseRef'),
   'Al pasar al próximo capítulo no debe dispararse el popup inmediatamente.');
 assert.ok(materialWorkspaceSource.includes('visibleEndIndex()'),
   'La apertura debe depender de alcanzar el final del capítulo.');
+assert.ok(materialWorkspaceSource.includes('frame = window.requestAnimationFrame(checkReadingPosition)'),
+  'Los capítulos cortos deben poder activar la detección sin depender de un scroll.');
+assert.ok(materialWorkspaceSource.includes('dwellWithoutScroll'),
+  'La evaluación no debe interrumpir instantáneamente una lectura corta sin scroll.');
+assert.ok(materialWorkspaceSource.includes('resumeTimer = window.setTimeout(checkReadingPosition, pause + 30)'),
+  'El disparador debe volver a comprobar la posición después de la navegación automática.');
+assert.doesNotMatch(materialWorkspaceSource, /visibleTop \+ visibleHeight \* 0\.78/,
+  'El final del capítulo no debe exigir una ventana estrecha de scroll.');
+
 assert.ok(materialWorkspaceSource.includes('<SummaryChapterFinish'),
   'El popup debe montarse una única vez fuera del resumen.');
 assert.ok(summaryChapterFinishSource.includes('<Dialog open={open}'),
