@@ -521,7 +521,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           initialSummarySectionIndex={
             isOwner && query.tab === 'resumen' && !shouldShowFirstPdfGuide &&
             typeof query.summaryTopic === 'string' &&
-            /^(0|[1-9]\\d{0,3})$/.test(query.summaryTopic) &&
+            /^(0|[1-9]\d{0,3})$/.test(query.summaryTopic) &&
             Number(query.summaryTopic) < (studySummary.sections.length || Math.min(4, studySummary.keyPoints.length))
               ? Number(query.summaryTopic)
               : undefined
