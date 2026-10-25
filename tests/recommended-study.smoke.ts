@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { buildSummaryCheckPlan } from '../lib/student-materials/summary-checks.ts';
 import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
+import { getFirstTopicResourceInfo } from '../lib/student-materials/first-topic-resources.ts';
 import type { StudentMaterialSummary, StudyGlossaryItem } from '../lib/student-materials/types.ts';
 import { selectDiagnosticQuestions } from '../lib/student-materials/diagnostic-questions.ts';
 import { getFirstReadyStudentMaterialId } from '../lib/data/student-materials.ts';
@@ -241,8 +242,8 @@ assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === '
 assert.doesNotMatch(materialWorkspaceSource, /studyEntryStage|chooseStudyEntry|data-first-pdf-study-entry|¿Ya estudiaste este material\?/,
   'No deben persistir la tarjeta ni su lógica.');
 
-assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
-  'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
+assert.match(materialWorkspaceSource, /revealTourContent\('summary', true, scrollFirstChapterSmoothlyRef\.current \? 'smooth' : 'instant'\)/,
+  'Al finalizar debe mostrarse y enfocarse el primer capítulo real, con scroll suave al elegir estudiar.');
 assert.match(materialWorkspaceSource, /tabIndex=\{index === 0 \? -1 : undefined\}/,
   'El capítulo 1 debe admitir el foco programático sin agregarse a la navegación por Tab.');
 assert.match(materialWorkspaceSource, /data-onboarding-practice-options/,
@@ -319,30 +320,54 @@ assert.match(studyStartGuideSource, /bg-slate-950\/45 backdrop-blur-\[2px\]/,
   'La guía debe superponerse al Resumen con el mismo overlay que el popup anterior.');
 assert.doesNotMatch(studyStartGuideSource, /!inset-0|!w-screen|!h-dvh|!max-w-none|fixed inset-x-0 bottom-0/,
   'La guía no debe ocupar toda la pantalla ni usar un pie fijo global.');
-assert.match(studyStartGuideSource, /Primero, leé el resumen/,
-  'La guía debe comenzar indicando que el alumno lea el tema.');
-assert.match(studyStartGuideSource, /En el glosario aclarás los términos/,
-  'La guía debe explicar cómo usar el glosario.');
-assert.match(studyStartGuideSource, /flashcards repasás lo importante/,
-  'La guía debe explicar que las flashcards sirven para repasar.');
-assert.match(studyStartGuideSource, /Después, comprobá lo aprendido/,
-  'La guía debe indicar que después se practica ese tema.');
+assert.match(studyStartGuideSource, /¡Vamos a estudiar el tema 1!/,
+  'La guía debe presentar de inmediato el primer tema.');
+assert.match(studyStartGuideSource, /Empezá leyendo el resumen/,
+  'La introducción debe recomendar empezar leyendo.');
+assert.match(studyStartGuideSource, /glosario y las flashcards para repasar/,
+  'La introducción debe explicar brevemente cómo repasar.');
+assert.match(studyStartGuideSource, /practicá para comprobar cuánto aprendiste/,
+  'La introducción debe explicar el propósito de la práctica.');
+assert.match(studyStartGuideSource, /data-pdf-study-resources/,
+  'La guía debe mostrar visualmente los recursos del material.');
+assert.match(studyStartGuideSource, /data-pdf-study-flashcards-caption/,
+  'Las flashcards deben mostrar cantidades únicamente cuando sean atribuibles al tema.');
+assert.match(studyStartGuideSource, /data-pdf-study-glossary-caption/,
+  'El glosario debe mostrar cantidades únicamente cuando sean atribuibles al tema.');
 assert.match(studyStartGuideSource, /data-pdf-study-first-topic/,
-  'La guía debe mostrar el título del primer tema.');
+  'La guía debe mostrar el título real del primer tema.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
   'La guía debe permitir iniciar el tema seleccionado.');
 assert.match(studyStartGuideSource, /Leer el tema 1/,
   'El botón debe anticipar que el siguiente paso es leer el primer tema.');
-assert.match(studyStartGuideSource, /Tu primer tema, paso a paso/,
-  'La guía debe comunicar claramente el recorrido por tema.');
-assert.match(studyStartGuideSource, /TU PRIMER TEMA/,
-  'La guía debe identificar el nombre del primer tema sin repetir el mensaje de bienvenida.');
-assert.doesNotMatch(studyStartGuideSource, /¡Vamos a comenzar a estudiar!|Vamos a empezar por|Vamos a comenzar con el primer tema/,
-  'La guía debe evitar la copia redundante de la versión anterior.');
+assert.match(materialWorkspaceSource, /resources=\{firstTopicResources\}/,
+  'La guía debe recibir los recursos atribuidos al primer tema.');
+assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\.current = true/,
+  'El botón debe preparar el desplazamiento suave hasta el tema 1.');
+assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\.current \? 'smooth' : 'instant'/,
+  'El desplazamiento guiado debe ser suave sin cambiar los saltos del onboarding.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-footer/,
   'La acción para comenzar debe permanecer en el pie del popup, incluso en móvil.');
 assert.doesNotMatch(studyStartGuideSource, /Un tema a la vez, a tu ritmo|Cuando estés listo, avanzamos al siguiente/,
   'No debe reaparecer el contenido que el usuario descartó.');
+
+const firstTopicFixture = [{ title: '1. Fundamentos de IA', body: 'Texto' }, { title: '2. Aprendizaje automático', body: 'Texto' }];
+const matchingCard = { front: '¿Qué es IA?', back: 'Explicación', level: 'recordar' as const,
+  reference: { sectionTitle: 'Fundamentos de IA', pageStart: 1, pageEnd: 1, excerpt: 'Fuente' } };
+const unassignedCard = { ...matchingCard, front: 'Otra tarjeta',
+  reference: { ...matchingCard.reference, sectionTitle: 'Un capítulo no reconocido' } };
+const matchingTerm = { term: 'Inteligencia artificial', definition: 'Explicación larga suficiente',
+  context: 'Definiciones', importance: 'alta' as const, chapterTitle: '1. Fundamentos de IA' };
+const unassignedTerm = { ...matchingTerm, term: 'Otro concepto', chapterTitle: undefined };
+const firstTopicCounts = getFirstTopicResourceInfo(firstTopicFixture, [matchingCard, unassignedCard], [matchingTerm, unassignedTerm]);
+assert.equal(firstTopicCounts.flashcardCount, 1, 'Solo se cuentan flashcards asociadas exactamente al primer tema.');
+assert.equal(firstTopicCounts.glossaryCount, 1, 'Solo se cuentan términos asociados exactamente al primer tema.');
+const missingAssociation = getFirstTopicResourceInfo(firstTopicFixture, [unassignedCard], [unassignedTerm]);
+assert.equal(missingAssociation.flashcardCount, null, 'Las tarjetas sin asociación fiable no se presentan como propias del tema.');
+assert.equal(missingAssociation.glossaryCount, null, 'Los términos sin asociación fiable no se presentan como propios del tema.');
+assert.equal(missingAssociation.hasFlashcards, true, 'La guía puede mencionar recursos del PDF sin atribuirlos al tema.');
+const ambiguousTopic = getFirstTopicResourceInfo([firstTopicFixture[0], { ...firstTopicFixture[0] }], [matchingCard], [matchingTerm]);
+assert.equal(ambiguousTopic.flashcardCount, null, 'No se atribuyen tarjetas a capítulos con títulos duplicados.');
 
 assert.match(priorStudyLogicSource, /materialId/,
   'El almacenamiento se debe aislar por cada PDF.');
