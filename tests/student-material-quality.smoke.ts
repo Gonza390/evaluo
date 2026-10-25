@@ -18,6 +18,7 @@ import {
   buildPedagogicalArtifacts,
   PEDAGOGICAL_ARTIFACTS_VERSION,
   resolveFlashcardLimit,
+  type StudyQuestion,
 } from '../lib/student-materials/pedagogy.ts';
 import { buildStudentMaterialPedagogicalQualityReport } from '../lib/student-materials/quality.ts';
 import { buildPedagogicalArtifacts as buildCurrentPedagogicalArtifacts } from '../lib/student-materials/pedagogy-v2.ts';
@@ -48,6 +49,8 @@ import {
   resolveQuestionBankTarget,
   resolveQuestionCategoryFactor,
   selectSourceDistributedItems,
+  selectBalancedQuestionBank,
+  MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS,
   analyzeQuestionBankCoverage,
 } from '../lib/student-materials/question-bank.ts';
 
@@ -1408,6 +1411,76 @@ assert.ok(chapterBank.questions.filter((question) => question.chapterTitle).ever
   longSummaryWithChapters.sections.some((section) => section.title === question.chapterTitle)
 ), 'La asociación de capítulo requiere evidencia localizada, no inferencias sin fuente.');
 assert.ok(chapterBank.questions.length <= 120);
+
+// Selección por tema: asegurar primero seis preguntas confiables de cada unidad,
+ // sin permitir que una unidad abundante monopolice el banco global.
+const quotaSections = [
+  { title: 'Tema A', body: 'Conceptos y relaciones propias del tema A.' },
+  { title: 'Tema B', body: 'Conceptos y relaciones propias del tema B.' },
+  { title: 'Tema C', body: 'Conceptos y relaciones propias del tema C.' },
+];
+function topicQuestion(chapter: number, index: number): StudyQuestion {
+  return {
+    id: `chapter-${chapter}-q-${index}`,
+    type: 'multiple_choice',
+    level: index % 2 ? 'comprender' : 'recordar',
+    kind: index % 2 ? 'relationship' : 'concept',
+    topic: `Concepto ${index % 4}`,
+    chapterTitle: quotaSections[chapter]!.title,
+    prompt: `¿Cómo se evalúa el concepto ${index} en el tema ${chapter}?`,
+    options: [`Respuesta válida ${chapter} ${index}`, `Alternativa A ${index}`, `Alternativa B ${index}`],
+    answer: `Respuesta válida ${chapter} ${index}`,
+    explanation: 'La explicación se apoya en este concepto académico.',
+    reference: {
+      pageStart: chapter + 1,
+      pageEnd: chapter + 1,
+      sectionTitle: quotaSections[chapter]!.title,
+      excerpt: 'El concepto se explica en el pasaje original de esta unidad académica.',
+    },
+  };
+}
+const unevenQuestions = [
+  ...Array.from({ length: 35 }, (_, i) => topicQuestion(0, i)),
+  ...Array.from({ length: 8 }, (_, i) => topicQuestion(1, i)),
+  ...Array.from({ length: 8 }, (_, i) => topicQuestion(2, i)),
+];
+const reservedBank = selectBalancedQuestionBank(unevenQuestions, 18, quotaSections);
+const reservedCoverage = analyzeQuestionBankCoverage(reservedBank, quotaSections, 3);
+assert.equal(reservedBank.length, 18);
+assert.equal(MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS, 6);
+assert.deepEqual(reservedCoverage.chapterAssessments.map((chapter) => chapter.validAutoCorrectable), [6, 6, 6],
+  'Primero reservar seis preguntas autocorregibles para cada tema, aun con un banco global limitado.');
+assert.deepEqual(reservedCoverage.chaptersBelowMinimum, []);
+assert.ok(reservedCoverage.chapterAssessments.every((chapter) =>
+  chapter.distinctKinds >= 2 && chapter.distinctConcepts >= 2 && chapter.sourceBacked === 6
+), 'La reserva debe dar prioridad a conceptos y formatos variados con fuente.');
+assert.deepEqual(
+  selectBalancedQuestionBank(unevenQuestions, 18, quotaSections).map((question) => question.id),
+  reservedBank.map((question) => question.id),
+  'La reserva de preguntas por tema debe ser determinista.');
+const underCovered = [
+  ...Array.from({ length: 20 }, (_, i) => topicQuestion(0, i)),
+  ...Array.from({ length: 4 }, (_, i) => topicQuestion(1, i)),
+  topicQuestion(2, 0),
+  topicQuestion(2, 1),
+  topicQuestion(2, 2),
+  ...Array.from({ length: 3 }, (_, i) => ({
+    ...topicQuestion(2, i + 3),
+    options: ['Respuesta repetida', 'Respuesta repetida', 'Otra respuesta'],
+  })),
+];
+const underAudit = analyzeQuestionBankCoverage(underCovered, quotaSections, 3);
+assert.deepEqual(underAudit.chaptersBelowMinimum, ['Tema B', 'Tema C'],
+  'Nunca contar como suficientes preguntas con alternativas duplicadas.');
+assert.equal(underAudit.chapterAssessments[2]?.validAutoCorrectable, 3);
+const monotonous = Array.from({ length: 6 }, (_, i): StudyQuestion => ({
+  ...topicQuestion(0, i),
+  kind: 'concept',
+  topic: 'Único concepto',
+}));
+const monotonousAudit = analyzeQuestionBankCoverage(monotonous, quotaSections.slice(0, 1), 1);
+assert.deepEqual(monotonousAudit.chaptersWithLowDiversity, ['Tema A'],
+  'Seis preguntas repetitivas sobre un único concepto no deberían considerarse suficientemente diversas.');
 
 // Prueba integrada del generador ACTUAL (v2): glosario, flashcards y preguntas
 // comparten el modelo académico, pero se distribuyen en todas las páginas.
