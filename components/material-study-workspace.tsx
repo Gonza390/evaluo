@@ -913,6 +913,8 @@ export function MaterialStudyWorkspace({
         return;
       }
       if (!target || !reader || !target.getClientRects().length) return;
+      // Los capítulos posteriores al primero no tienen tabindex por defecto.
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
       reader.scrollTo({
         top: Math.max(0, reader.scrollTop + target.getBoundingClientRect().top -
           reader.getBoundingClientRect().top - 12),
@@ -1001,7 +1003,6 @@ export function MaterialStudyWorkspace({
       priorStudyOpen ||
       studyStartGuideOpen ||
       summaryCheckChapterIndex !== null ||
-      summaryCheckSuppressedRef.current ||
       demo
     ) {
       return;
@@ -1013,7 +1014,8 @@ export function MaterialStudyWorkspace({
     const triggers = Array.from(
       document.querySelectorAll<HTMLElement>('[data-summary-check-trigger]')
     );
-    if (sections.length === 0 || triggers.length === 0) return;
+    // Puede haber PDFs cortos sin comprobaciones; aun así guardamos el capítulo leído.
+    if (sections.length === 0) return;
 
     const getAccumulatedReadTime = (chapterIndex: number) => {
       const stored = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
