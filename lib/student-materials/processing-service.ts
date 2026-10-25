@@ -723,6 +723,7 @@ export async function processStudentMaterial(input: {
     userId: material.user_id,
     path: '/dashboard/materiales',
     metadata: {
+      flow: 'pdf_private',
       material_id: material.id,
       page_count: pageCount,
       processing_strategy: documentAnalysis.processingStrategy,
