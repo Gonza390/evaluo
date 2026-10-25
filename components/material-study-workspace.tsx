@@ -49,12 +49,6 @@ import {
 } from '@/lib/student-materials/practice-entry';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
-import {
-  getPdfStudyEntryStorageKey,
-  isSavedPdfStudyEntryChoice,
-  shouldPresentPdfStudyEntry,
-  type PdfStudyEntryChoice,
-} from '@/lib/pdf-study-entry';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
@@ -80,18 +74,6 @@ import {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 
-
-function readPdfStudyEntryChoice(materialId: string): string | null {
-  if (typeof window === 'undefined') return null;
-  try { return window.localStorage.getItem(getPdfStudyEntryStorageKey(materialId)); }
-  catch { return null; }
-}
-
-function savePdfStudyEntryChoice(materialId: string, choice: PdfStudyEntryChoice | 'pending'): void {
-  if (typeof window === 'undefined') return;
-  try { window.localStorage.setItem(getPdfStudyEntryStorageKey(materialId), choice); }
-  catch { /* No bloquear el acceso al PDF por restricciones de almacenamiento. */ }
-}
 
 /** Conserva la navegación del alumno: nunca desplaza la página completa. */
 const tourStudySelectors: Record<RecommendedStudyStep, string> = {
@@ -189,10 +171,7 @@ type MaterialStudyWorkspaceProps = {
   initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
-  /** El usuario acaba de procesar este PDF y debe elegir cómo comenzar. */
-  initialStudyEntryAvailable?: boolean;
   /** Solo para la demo pública: habilita enlaces a una etapa sin forzar onboarding real. */
-  initialStudyEntryStage?: 'choice';
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
@@ -358,8 +337,6 @@ export function MaterialStudyWorkspace({
   initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
-  initialStudyEntryAvailable = false,
-  initialStudyEntryStage,
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
@@ -433,31 +410,6 @@ export function MaterialStudyWorkspace({
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
-  const [studyEntryStage, setStudyEntryStage] = useState<'choice' | null>(
-    demo ? (initialStudyEntryStage ?? null) : null
-  );
-  // El estado 'pending' permite retomar la pregunta si se vuelve al PDF sin
-  // el enlace de carga original. Se reemplaza por la elección al responder.
-  const [pendingPdfStudyEntry, setPendingPdfStudyEntry] = useState(false);
-  useEffect(() => {
-    if (!isOwner || demo) return;
-    const savedChoice = readPdfStudyEntryChoice(materialId);
-    const entryRequested = initialStudyEntryAvailable || savedChoice === 'pending';
-    if (entryRequested && !isSavedPdfStudyEntryChoice(savedChoice)) {
-      setPendingPdfStudyEntry(true);
-      if (!savedChoice) savePdfStudyEntryChoice(materialId, 'pending');
-    }
-    if (shouldPresentPdfStudyEntry({
-      isOwner,
-      isReady: true,
-      entryRequested,
-      guideActive: recommendedActive,
-      savedChoice,
-    })) {
-      setStudyEntryStage((current) => current ?? 'choice');
-    }
-  }, [initialStudyEntryAvailable, recommendedActive, demo, isOwner, materialId]);
-
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -739,19 +691,8 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      // Después de completar el tour, ofrecer una sola elección, sin otra pantalla modal.
-      // En la demo también puede probarse el recorrido sin guardar datos de cuenta.
-      // Completar el tutorial no es requisito para elegir cómo estudiar un PDF.
-      // Tras omitir el tutorial de un PDF recién cargado también ofrecemos la elección.
-      const showStudyChoice = Boolean(demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable))) &&
-        (outcome === 'completed' || initialStudyEntryAvailable) &&
-        (demo || !isSavedPdfStudyEntryChoice(readPdfStudyEntryChoice(materialId)));
-      if (showStudyChoice && !demo && isOwner) {
-        savePdfStudyEntryChoice(materialId, 'pending');
-        setPendingPdfStudyEntry(true);
-      }
-      setStudyEntryStage(showStudyChoice ? 'choice' : null);
-      setFocusFirstChapterOnExit(outcome === 'completed' && !showStudyChoice);
+      // El onboarding termina directamente en Resumen, sin pregunta intermedia.
+      setFocusFirstChapterOnExit(outcome === 'completed');
       setLocalProgressOpen(false);
       demo?.onProgressChange?.(false);
       setActiveTab('resumen');
@@ -765,7 +706,6 @@ export function MaterialStudyWorkspace({
       materialId,
       recommendedStudyAvailable,
       recommendedTourStep,
-      initialStudyEntryAvailable,
     ]
   );
   const finishRecommendedTour = async () => {
@@ -1203,63 +1143,6 @@ export function MaterialStudyWorkspace({
     setCommentsOpen((current) => !current);
   };
 
-  useEffect(() => {
-    if (!studyEntryStage || !isOwner || demo) return;
-    const entrySource = guideCompletedRef.current ? 'post_onboarding' : 'post_upload';
-    trackMarketingEvent('pdf_study_entry_viewed', {
-      material_id: materialId,
-      entry_source: entrySource,
-    });
-    if (guideCompletedRef.current) {
-      trackMarketingEvent('first_pdf_study_path_viewed', { material_id: materialId });
-    }
-  }, [studyEntryStage, isOwner, demo, materialId]);
-
-  const chooseStudyEntry = (choice: 'not_studied' | 'some_knowledge') => {
-    if (!demo && isOwner) {
-      savePdfStudyEntryChoice(materialId, choice);
-      trackMarketingEvent('pdf_study_entry_selected', {
-        material_id: materialId,
-        study_path: choice,
-      });
-      if (guideCompletedRef.current) {
-        trackMarketingEvent('first_pdf_study_path_selected', {
-          material_id: materialId,
-          study_path: choice,
-        });
-      }
-    }
-    trackPostGuideAction(choice === 'not_studied' ? 'start_learning' : 'start_practice');
-    setFocusFirstChapterOnExit(false);
-    if (choice === 'not_studied') {
-      // Sin plan visual hasta redefinir su experiencia: empezar con el contenido real.
-      setStudyEntryStage(null);
-      setProgressOpen(false);
-      setActiveTab('resumen');
-      demo?.onTabChange('resumen');
-      setFocusFirstChapterOnExit(summaryChapters.length > 0);
-      return;
-    }
-    // La respuesta indica interés en practicar; no presume dominio del material.
-    setStudyEntryStage(null);
-    setDiagnosticMode(false);
-    setPracticeSectionIndex(undefined);
-    handleStudyTabChange('ejercicios');
-  };
-
-  const studyFreely = () => {
-    if (!demo && isOwner) {
-      savePdfStudyEntryChoice(materialId, 'free_exploration');
-      trackMarketingEvent('pdf_study_entry_selected', {
-        material_id: materialId,
-        study_path: 'free_exploration',
-      });
-    }
-    trackPostGuideAction('free_study');
-    setStudyEntryStage(null);
-    setFocusFirstChapterOnExit(false);
-  };
-
   function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string) {
     // Las vistas responsive comparten contenido: buscar dentro del panel que recibió el clic.
     const chapter = event.currentTarget
@@ -1271,7 +1154,6 @@ export function MaterialStudyWorkspace({
   }
 
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
-    setStudyEntryStage(null);
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
@@ -2300,45 +2182,6 @@ export function MaterialStudyWorkspace({
             })}
           />
       )}
-
-      {studyEntryStage === 'choice' && !recommendedActive && (demo || (isOwner && (recommendedStudyAvailable || initialStudyEntryAvailable || pendingPdfStudyEntry))) ? (
-        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-3 pt-3 sm:px-4" data-first-pdf-study-entry data-pdf-study-entry>
-          <section
-              aria-labelledby="pdf-study-entry-title"
-              data-pdf-study-entry-choice
-              className="overflow-hidden rounded-2xl border border-blue-200 bg-[linear-gradient(115deg,#EFF6FF_0%,#FFFFFF_56%,#EEF2FF_100%)] px-4 py-5 shadow-[0_12px_35px_rgba(37,99,235,0.07)] sm:px-7 sm:py-6"
-            >
-              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">Tu punto de partida</p>
-              <h2 id="pdf-study-entry-title" className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
-                ¿Ya estudiaste este material?
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600">
-                Elegí cómo querés empezar. Te recomendamos un recorrido según cuánto conocés del contenido.
-              </p>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => chooseStudyEntry('not_studied')}
-                  className="group flex min-h-24 flex-col items-start justify-center gap-1 rounded-xl border border-blue-200 bg-white px-4 py-3 text-left transition hover:border-blue-500 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                >
-                  <span className="text-sm font-bold text-slate-900 group-hover:text-blue-700">Empiezo desde cero</span>
-                  <span className="text-xs leading-relaxed text-slate-600">Comenzá leyendo el primer tema del Resumen antes de practicar.</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => chooseStudyEntry('some_knowledge')}
-                  className="group flex min-h-24 flex-col items-start justify-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-indigo-500 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                >
-                  <span className="text-sm font-bold text-slate-900 group-hover:text-indigo-700">Ya lo estudié</span>
-                  <span className="text-xs leading-relaxed text-slate-600">Empezá por una práctica para descubrir qué temas necesitás reforzar.</span>
-                </button>
-              </div>
-              <button type="button" className="mt-3 text-xs font-medium text-slate-600 underline-offset-4 hover:text-blue-700 hover:underline" onClick={studyFreely}>
-                Prefiero explorar el material libremente
-              </button>
-            </section>
-        </div>
-      ) : null}
 
       {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
       {recommendedActive && recommendedTourStep ? (
