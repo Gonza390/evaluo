@@ -10,7 +10,7 @@ assert.deepEqual(topicPracticeResultActions(false, false), ['all_topics', 'retry
 
 const exam = readFileSync('components/student-material-exam.tsx', 'utf8');
 const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
-const topicStart = exam.indexOf('    if (!isSimulation && topicSectionIndex !== undefined) {', exam.indexOf('  if (finished) {'));
+const topicStart = exam.indexOf('    if (topicSectionIndex !== undefined) {', exam.indexOf('  if (finished) {'));
 const generalStart = exam.indexOf('    if (!isSimulation && topicSectionIndex === undefined) {', topicStart);
 assert.ok(topicStart > 0 && generalStart > topicStart, 'Las pantallas por tema y general deben permanecer separadas.');
 const topicResult = exam.slice(topicStart, generalStart);
@@ -32,5 +32,7 @@ assert.match(topicResult, /onClick=\{\(\) => handleResultAction\(secondaryAction
 assert.match(generalResult, /Así te fue por tema/, 'No alterar el resumen del PDF completo.');
 assert.match(workspace, /onStudyNextTopic=\{/);
 assert.match(workspace, /setTopicReturn\(\{ index, reinforce: false \}\);/);
+assert.doesNotMatch(workspace, /topicPracticeFinished|data-topic-practice-final/,
+  'Ningún contenedor debe reemplazar el cierre diseñado de práctica por tema.');
 assert.match(workspace, /onViewAllTopics=\{/);
 assert.match(workspace, /setTopicReturn\(null\);/);

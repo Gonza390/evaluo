@@ -140,6 +140,7 @@ export function DemoFourStepStudy({
   const [demoAnswers, setDemoAnswers] = useState<Record<string, DemoAnswer>>({});
   const [demoTopicIndex, setDemoTopicIndex] = useState<number | null>(null);
   const [demoTopicFinished, setDemoTopicFinished] = useState<TopicPracticeOutcome | null>(null);
+  const [demoProgressTopicIndex, setDemoProgressTopicIndex] = useState<number | null>(null);
   const artifacts = useMemo(
     () => buildPedagogicalArtifacts({ summary, glossary, pageCount }),
     [summary, glossary, pageCount]
@@ -147,6 +148,7 @@ export function DemoFourStepStudy({
 
   const openPractice = () => {
     setDemoTopicFinished(null);
+    setDemoProgressTopicIndex(null);
     setDemoTopicIndex(null);
     setProgressOpen(false);
     setActiveTab('ejercicios');
@@ -174,30 +176,12 @@ export function DemoFourStepStudy({
         onTabChange: setActiveTab,
         onPracticeTopic: (index) => {
           setDemoTopicFinished(null);
+          setDemoProgressTopicIndex(null);
           setDemoTopicIndex(index);
         },
         viewerVisible,
         onViewerChange: setViewerVisible,
-        practice: demoTopicFinished ? (
-          <div data-topic-practice-final className="min-w-0 px-1 py-1 sm:px-2 sm:py-2">
-            <DemoProgress
-              summary={summary}
-              glossary={glossary}
-              flashcards={artifacts.flashcards}
-              questions={artifacts.questions}
-              answers={demoAnswers}
-              showOnboardingExample={false}
-              showOnboardingTopic={false}
-              onPractice={openPractice}
-              onPracticeTopic={(index) => {
-                setDemoTopicFinished(null);
-                setDemoTopicIndex(index);
-              }}
-              initialTopicSectionIndex={demoTopicFinished.sectionIndex}
-              lastPracticeOutcome={demoTopicFinished}
-            />
-          </div>
-        ) : demoTopicIndex !== null ? (
+        practice: demoTopicIndex !== null ? (
           <StudentMaterialExam
             key={`demo-topic-${demoTopicIndex}`}
             artifacts={artifacts}
@@ -210,11 +194,24 @@ export function DemoFourStepStudy({
               setDemoTopicIndex(index);
             }}
             onTopicFinished={setDemoTopicFinished}
+            onStudyNextTopic={(index) => {
+              setDemoTopicFinished(null);
+              setDemoProgressTopicIndex(index);
+              setProgressOpen(true);
+            }}
+            onViewAllTopics={() => {
+              setDemoTopicFinished(null);
+              setDemoProgressTopicIndex(null);
+              setProgressOpen(true);
+            }}
             onReturnToTopic={(_reinforce, outcome) => {
               if (outcome) {
+                setDemoTopicFinished(outcome);
+                setDemoProgressTopicIndex(outcome.sectionIndex);
                 setProgressOpen(true);
               } else {
                 setDemoTopicFinished(null);
+                setDemoProgressTopicIndex(null);
                 setDemoTopicIndex(null);
                 setProgressOpen(false);
                 setActiveTab('resumen');
@@ -272,6 +269,9 @@ export function DemoFourStepStudy({
         ),
         progress: ({ showOnboardingExample, showOnboardingTopic }) => (
           <DemoProgress
+            key={demoProgressTopicIndex === null ? 'demo-topic-list' : `demo-topic-${demoProgressTopicIndex}`}
+            initialTopicSectionIndex={demoProgressTopicIndex ?? undefined}
+            lastPracticeOutcome={demoTopicFinished ?? undefined}
             summary={summary}
             glossary={glossary}
             flashcards={artifacts.flashcards}

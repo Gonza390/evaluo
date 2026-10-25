@@ -663,10 +663,10 @@ export function StudentMaterialExam({
       )
     ).slice(0, 5);
 
-    // La práctica POR TEMA tiene su propio resultado: sin desglose por habilidades,
+    // La práctica POR TEMA (real o demo) conserva su pantalla final diseñada:
     // sin próximos objetivos visibles y con acciones según errores y tema siguiente.
     // No modifica ni el resultado GENERAL del PDF ni el simulador público.
-    if (!isSimulation && topicSectionIndex !== undefined) {
+    if (topicSectionIndex !== undefined) {
       const hasErrors = result.wrong.length > 0;
       const nextTopicIndex = topicSectionIndex + 1 < sections.length ? topicSectionIndex + 1 : null;
       const [primaryAction, secondaryAction] = topicPracticeResultActions(
