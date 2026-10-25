@@ -1506,7 +1506,7 @@ function buildCanonicalConfusionQuestions(
       level: 'comprender',
       kind: 'confusion',
       topic: 'Confusión frecuente',
-      prompt: `Explicá qué tiene de incorrecto esta confusión y cómo la resolverías: “${truncateAtWord(confusion, 180)}”`,
+      prompt: `Analizá esta confusión: “${truncateAtWord(confusion, 180)}”. Explicá cómo corregirla.`,
       options: [],
       answer,
       explanation:
@@ -1563,7 +1563,7 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     `¿Cuál es la idea central de “${grounded.focus}”? Explicala con tus palabras.`,
     `Desarrollá la idea principal de “${grounded.focus}” usando sus conceptos clave.`,
     `¿Cómo explicarías “${grounded.focus}” a otro estudiante?`,
-    `¿Qué necesitás comprender para explicar “${grounded.focus}” con tus palabras?`,
+    `Describí los aspectos centrales de “${grounded.focus}” con tus palabras.`,
   ];
   const question: StudyQuestion = {
     id: `section-open-${index + 1}`,
