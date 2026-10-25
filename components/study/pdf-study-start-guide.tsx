@@ -22,17 +22,17 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }
   const steps = [
     {
       title: 'Primero, leé el resumen',
-      description: 'Empezá por el tema 1 y conocé sus ideas principales.',
+      description: 'Vamos a comenzar con el primer tema de tu PDF. Leé el resumen para comprender sus conceptos e ideas principales.',
       Icon: BookOpenText,
     },
     {
-      title: 'Consultá y repasá',
-      description: 'Usá el glosario para entender los términos y las flashcards para recordarlos.',
+      title: 'Apoyate en tus herramientas',
+      description: 'En el glosario podés consultar los términos que no entiendas. También tenés flashcards para repasar y recordar lo más importante.',
       Icon: Lightbulb,
     },
     {
-      title: 'Después, practicá',
-      description: 'Respondé preguntas del tema para saber qué aprendiste y qué reforzar.',
+      title: 'Después, comprobá lo aprendido',
+      description: 'Cuando termines de estudiar, vas a poder practicar con preguntas de ese tema y descubrir qué necesitás reforzar.',
       Icon: ClipboardCheck,
     },
   ] as const;
@@ -69,7 +69,7 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }
             ¡Vamos a comenzar a estudiar!
           </DialogTitle>
           <DialogDescription id="pdf-study-start-description" className="text-muted-foreground mt-1.5 text-left text-[12.5px] leading-5">
-            Empezamos por el primer tema de tu PDF. Te mostramos cómo entenderlo, repasarlo y comprobar lo que aprendiste.
+            Te vamos a acompañar para que entiendas el material, recuerdes los conceptos importantes y compruebes lo que aprendiste.
           </DialogDescription>
 
           <div className="border-border mt-4 space-y-3 border-t pt-4">
