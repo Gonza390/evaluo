@@ -259,8 +259,8 @@ assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0
   'La guía no debe reiniciar todos los pasos a la introducción.');
 assert.doesNotMatch(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
   'Al saltar el tour no hay que forzar la navegación al capítulo 1.');
-assert.match(materialWorkspaceSource, /outcome === 'completed' && !showStudyChoice/,
-  'Saltar el tutorial no puede mostrar automáticamente la elección guiada.');
+assert.doesNotMatch(materialWorkspaceSource, /showStudyChoice/,
+  'Ni completar ni saltar el tutorial deben activar una elección adicional.');
 assert.equal((materialWorkspaceSource.match(/<div data-onboarding-study-panel/g) ?? []).length, 2,
   'Escritorio y móvil deben ofrecer el panel completo como objetivo.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');
