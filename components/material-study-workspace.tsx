@@ -2118,6 +2118,24 @@ export function MaterialStudyWorkspace({
                   setDiagnosticMode(false);
                   handleStudyTabChange('ejercicios', 'summary_chapter');
                 }}
+                onStudyNextTopic={
+                  hasProgress
+                    ? (index) => {
+                        if (!Number.isInteger(index) || index < 0 || index >= studySummary.sections.length) return;
+                        // Abrir la LECTURA del siguiente tema, no iniciar otra tanda de ejercicios.
+                        setTopicReturn({ index, reinforce: false });
+                        setProgressOpen(true);
+                      }
+                    : undefined
+                }
+                onViewAllTopics={
+                  hasProgress
+                    ? () => {
+                        setTopicReturn(null);
+                        setProgressOpen(true);
+                      }
+                    : undefined
+                }
                 onReturnToTopic={
                   hasProgress
                     ? (reinforce, outcome) => {
