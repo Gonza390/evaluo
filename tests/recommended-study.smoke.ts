@@ -261,6 +261,28 @@ assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0
 assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(false\)/,
   'Salir del onboarding no debe saltar al capítulo hasta pulsar Leer el tema 1.');
 const studyStartGuideSource = readFileSync('components/study/pdf-study-start-guide.tsx', 'utf8');
+const summaryChapterFinishSource = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
+assert.match(materialWorkspaceSource, /<SummaryChapterFinish/,
+  'Cada capítulo del resumen debe terminar con la guía de evaluación.');
+assert.match(materialWorkspaceSource, /getTopicQuestionCounts\\(studySummary.sections, studyArtifacts.questions\\)/,
+  'El botón principal sólo debe poder evaluar preguntas corregibles del capítulo.');
+assert.match(materialWorkspaceSource, /getTopicStudyResources\\(studySummary.sections, usefulGlossary, studyArtifacts.flashcards, index\\)/,
+  'Flashcards y glosario del capítulo deben tener asociación temática verificable.');
+assert.match(materialWorkspaceSource, /handleStudyTabChange\\('ejercicios', 'summary_chapter'\\)/,
+  'El CTA debe abrir la práctica específica del tema y no el banco completo.');
+assert.match(summaryChapterFinishSource, /Descubrí qué sabés y qué necesitás reforzar/,
+  'El encabezado debe vender el beneficio, sin sobreexplicar la evaluación.');
+assert.match(summaryChapterFinishSource, /data-summary-topic-evaluate/,
+  'La evaluación debe ser la acción principal.');
+assert.match(summaryChapterFinishSource, /data-summary-topic-flashcards/,
+  'El repaso con flashcards debe estar disponible de manera secundaria.');
+assert.match(summaryChapterFinishSource, /data-summary-topic-glossary/,
+  'El glosario debe estar disponible de manera secundaria.');
+assert.match(summaryChapterFinishSource, /data-summary-topic-continue/,
+  'Seguir leyendo debe quedar como una acción discreta.');
+assert.doesNotMatch(summaryChapterFinishSource, /preguntas generadas|máximo de 20|Preguntas de recordar/,
+  'No mostrar cantidades ni explicaciones largas en la tarjeta.');
+
 const firstUploadSource = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
 const quickUploadSource = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
 
