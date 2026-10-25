@@ -262,15 +262,15 @@ assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(false\)/,
   'Salir del onboarding no debe saltar al capítulo hasta pulsar Leer el tema 1.');
 const studyStartGuideSource = readFileSync('components/study/pdf-study-start-guide.tsx', 'utf8');
 const summaryChapterFinishSource = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
-assert.match(materialWorkspaceSource, /data-summary-chapter-end=\\{index\\}/,
+assert.ok(materialWorkspaceSource.includes('data-summary-chapter-end={index}'),
   'Cada capítulo debe marcar su final para abrir el popup al terminar la lectura.');
-assert.match(materialWorkspaceSource, /promptedChapterFinishesRef/,
+assert.ok(materialWorkspaceSource.includes('promptedChapterFinishesRef'),
   'El popup debe abrirse una sola vez por tema durante el recorrido.');
-assert.match(materialWorkspaceSource, /visibleEndIndex\\(\\)/,
+assert.ok(materialWorkspaceSource.includes('visibleEndIndex()'),
   'La apertura debe depender de alcanzar el final del capítulo.');
-assert.match(materialWorkspaceSource, /<SummaryChapterFinish/,
-  'El popup debe montarse una única vez fuera del resumen y no dentro de cada capítulo.');
-assert.match(summaryChapterFinishSource, /<Dialog open=\\{open\\}/,
+assert.ok(materialWorkspaceSource.includes('<SummaryChapterFinish'),
+  'El popup debe montarse una única vez fuera del resumen.');
+assert.ok(summaryChapterFinishSource.includes('<Dialog open={open}'),
   'La invitación debe ser un popup real, no una tarjeta debajo del tema.');
 assert.ok(materialWorkspaceSource.includes('getTopicQuestionCounts(studySummary.sections, studyArtifacts.questions)'),
   'El botón principal sólo debe poder evaluar preguntas corregibles del capítulo.');
