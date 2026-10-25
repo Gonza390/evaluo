@@ -237,8 +237,8 @@ assert.match(materialWorkspaceSource, /reader\.scrollTo\(/,
   'Los desplazamientos deben quedar dentro del lector.');
 assert.match(materialWorkspaceSource, /MutationObserver/,
   'Progreso debe poder mostrar sus temas aunque se rendericen después.');
-assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === 'completed'\)/,
-  'Terminar el onboarding debe abrir Resumen directamente.');
+assert.match(materialWorkspaceSource, /setStudyStartGuideOpen\(true\)/,
+  'Terminar el onboarding debe abrir la guía de estudio directamente.');
 assert.doesNotMatch(materialWorkspaceSource, /studyEntryStage|chooseStudyEntry|data-first-pdf-study-entry|¿Ya estudiaste este material\?/,
   'No deben persistir la tarjeta ni su lógica.');
 
@@ -258,54 +258,30 @@ assert.match(materialWorkspaceSource, /md:h-2/,
   'El tutorial debe dejar disponible la mayor altura posible del lector.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
   'La guía no debe reiniciar todos los pasos a la introducción.');
-assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === 'completed'\)/,
-  'Al salir del onboarding se mantiene el comportamiento original según se completó o se saltó.');
-const priorStudyPopupSource = readFileSync('components/study/pdf-prior-study-popup.tsx', 'utf8');
+assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(false\)/,
+  'Salir del onboarding no debe saltar al capítulo hasta pulsar Leer el tema 1.');
 const studyStartGuideSource = readFileSync('components/study/pdf-study-start-guide.tsx', 'utf8');
-const priorStudyLogicSource = readFileSync('lib/pdf-prior-study.ts', 'utf8');
 const firstUploadSource = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
 const quickUploadSource = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
-assert.match(materialWorkspaceSource, /<PdfPriorStudyPopup/,
-  'Resumen debe renderizar el modal de dos opciones, no una tarjeta.');
-assert.match(materialWorkspaceSource, /setPriorStudyOpen\(true\)/,
-  'Al terminar el onboarding debe aparecer la pregunta.');
-assert.match(materialWorkspaceSource, /savePriorStudyChoice\(materialId, choice\)/,
-  'La respuesta debe guardarse por PDF.');
-assert.match(materialWorkspaceSource, /initialPriorStudyPopupRequested/,
-  'La pregunta debe poder mostrarse tras cargar un PDF nuevo sin repetir el onboarding.');
-assert.match(materialPageSource, /query\.inicio === '1'/,
-  'Solo el enlace posterior a la carga debe solicitar la pregunta.');
-assert.match(firstUploadSource, /\?inicio=1/,
-  'La carga normal debe solicitar la pregunta para el PDF nuevo.');
-assert.match(quickUploadSource, /\?inicio=1/,
-  'La carga rápida debe solicitar la pregunta para el PDF nuevo.');
-assert.match(priorStudyPopupSource, /<DialogContent/,
-  'La pregunta debe ser un popup modal sobre Resumen.');
-assert.match(priorStudyPopupSource, /data-pdf-prior-study-no/,
-  'El estudiante debe poder marcar que no estudió.');
-assert.match(priorStudyPopupSource, /data-pdf-prior-study-yes/,
-  'El estudiante debe poder marcar que sí estudió.');
-assert.match(priorStudyPopupSource, /¿Cómo llegás a este material\?/,
-  'La pregunta debe conservar el texto del diseño elegido.');
-assert.match(priorStudyPopupSource, /Empiezo desde cero/,
-  'La primera tarjeta debe presentar el recorrido desde cero.');
-assert.match(priorStudyPopupSource, /Ya lo estudié/,
-  'La segunda tarjeta debe presentar el recorrido de práctica.');
-assert.match(priorStudyPopupSource, /max-w-\[610px\]/,
-  'El modal debe ser compacto en escritorio.');
-assert.match(priorStudyPopupSource, /bg-card text-card-foreground/,
-  'El modal debe respetar la paleta visual de Evaluo.');
-assert.doesNotMatch(priorStudyPopupSource, /bg-black\/75|bg-\[\#080808\]|max-w-\[1000px\]/,
-  'No deben quedar el fondo negro ni el ancho del diseño anterior.');
-assert.match(priorStudyPopupSource, /grid-cols-1 gap-3 sm:grid-cols-2/,
-  'Las opciones deben verse lado a lado en escritorio y apiladas en móvil.');
 
-assert.match(priorStudyPopupSource, /showCloseButton=\{false\}/,
-  'La pregunta debe tener un diseño simple, sin tercer botón.');
 assert.match(materialWorkspaceSource, /<PdfStudyStartGuide/,
-  'Elegir empezar desde cero debe mostrar la guía para estudiar.');
-assert.match(materialWorkspaceSource, /if \(choice === 'not_studied'\) setStudyStartGuideOpen\(true\)/,
-  'La guía debe abrirse solamente cuando el estudiante comienza desde cero.');
+  'Resumen debe mostrar directamente la guía de estudio.');
+assert.match(materialWorkspaceSource, /studyGuideArrivalHandledRef\.current = materialId/,
+  'Cada PDF debe mostrar su guía una sola vez por llegada.');
+assert.match(materialWorkspaceSource, /initialStudyStartGuideRequested/,
+  'Las cargas posteriores deben poder abrir la guía sin repetir el onboarding.');
+assert.match(materialPageSource, /initialStudyStartGuideRequested=\{isOwner/,
+  'La ruta debe activar directamente la guía de un nuevo PDF.');
+assert.match(materialPageSource, /query\.inicio === '1'/,
+  'Solo el enlace posterior a la carga debe solicitar la guía inicial.');
+assert.match(firstUploadSource, /\?inicio=1/,
+  'La carga normal debe solicitar la guía para el PDF nuevo.');
+assert.match(quickUploadSource, /\?inicio=1/,
+  'La carga rápida debe solicitar la guía para el PDF nuevo.');
+assert.match(materialWorkspaceSource, /if \(demo \|\| isOwner\) \{/,
+  'Completar o saltar el recorrido debe abrir la guía directamente.');
+assert.doesNotMatch(materialWorkspaceSource, /PdfPriorStudyPopup|priorStudyOpen|choosePriorStudy|savePriorStudyChoice|readPriorStudyChoice|setPriorStudyOpen/,
+  'La pregunta de si ya estudió y su almacenamiento no deben continuar en el flujo.');
 assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
   'El botón de la guía debe abrir el primer capítulo real en Resumen.');
 assert.match(materialWorkspaceSource, /studySummary\.sections\.length > 0 \? summaryChapters\[0\]\?\.displayTitle/,
