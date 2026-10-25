@@ -598,14 +598,16 @@ export function MaterialStudyWorkspace({
               flow_version: SUMMARY_FLOW_VERSION,
             });
           }
-          // También medir lecturas legítimas de PDFs compartidos: el popup se
-          // muestra a visitantes autenticados, no únicamente al propietario.
-          trackMarketingEvent('summary_completion_popup_viewed', {
-            material_id: materialId,
-            pending_count: count,
-            flow_version: SUMMARY_FLOW_VERSION,
-          });
-          setSummaryCompletionOpen(true);
+          // El recorrido por temas ya muestra una acción al final de cada capítulo.
+          // No superponer el antiguo popup global; conservar el registro de lectura.
+          if (studySummary.sections.length === 0 && studySummary.keyPoints.length === 0) {
+            trackMarketingEvent('summary_completion_popup_viewed', {
+              material_id: materialId,
+              pending_count: count,
+              flow_version: SUMMARY_FLOW_VERSION,
+            });
+            setSummaryCompletionOpen(true);
+          }
         });
       }, 4000);
     };
@@ -1079,6 +1081,9 @@ export function MaterialStudyWorkspace({
     };
 
     const maybePrompt = (chapterIndex: number) => {
+      // La práctica al final de cada tema reemplaza las comprobaciones
+      // emergentes durante la lectura; mantenemos la medición de tiempo.
+      if (summaryChapters.length > 0) return;
       const group = summaryCheckPolicy.get(chapterIndex);
       if (
         summaryCheckSuppressedRef.current ||
