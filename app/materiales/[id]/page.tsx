@@ -527,7 +527,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           }
           recommendedStudyAvailable={eligibleByAccount}
           initialRecommendedStudy={shouldShowFirstPdfGuide}
-          initialPriorStudyPopupRequested={isOwner && material.processing_status === 'ready' && query.inicio === '1'}
+          initialStudyStartGuideRequested={isOwner && material.processing_status === 'ready' && query.inicio === '1'}
           initialTab={shouldShowFirstPdfGuide ? 'resumen' : (
             query.tab === 'tarjetas' ||
             query.tab === 'mapa' ||
