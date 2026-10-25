@@ -33,7 +33,7 @@ export function PdfPriorStudyPopup({ open, onChoose, onDismiss }: Props) {
         showCloseButton={false}
         aria-describedby="pdf-prior-study-description"
         overlayClassName="z-[125] bg-black/75 backdrop-blur-[3px]"
-        className="z-[125] w-[calc(100%-1.5rem)] max-w-[1000px] gap-0 overflow-y-auto overscroll-contain rounded-[24px] border border-[#242424] bg-[#080808] p-0 text-[#F4F4F5] shadow-[0_30px_90px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-1.5rem)]"
+        className="z-[125] w-[calc(100%-1.5rem)] max-w-[1000px] gap-0 sm:max-w-[1000px] overflow-y-auto overscroll-contain rounded-[24px] border border-[#242424] bg-[#080808] p-0 text-[#F4F4F5] shadow-[0_30px_90px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-1.5rem)]"
       >
         <div className="px-5 pb-7 pt-7 sm:px-8 sm:pb-8 sm:pt-8">
           <div className="flex items-center justify-between gap-4">
