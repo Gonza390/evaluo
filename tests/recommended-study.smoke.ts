@@ -433,17 +433,21 @@ assert.match(
   /summaryActiveReadingSectionRef/,
   'El lector debe mantener una única sección activa para medir tiempo de lectura.'
 );
-assert.match(materialWorkspaceSource, /activeSummaryChapterIndex/,
+assert.ok(materialWorkspaceSource.includes('activeSummaryChapterIndex'),
   'El índice Contenido debe mantener una sección de lectura activa.');
-assert.equal((materialWorkspaceSource.match(/data-active-chapter=\\{activeSummaryChapterIndex === index \\|\\| undefined\\}/g) ?? []).length, 2,
-  'El tema activo debe distinguirse en los índices móvil y escritorio.');
-assert.equal((materialWorkspaceSource.match(/aria-current=\\{activeSummaryChapterIndex === index \\? 'location' : undefined\\}/g) ?? []).length, 2,
-  'Ambos índices deben exponer el capítulo activo para accesibilidad.');
-assert.match(materialWorkspaceSource, /region.addEventListener\\('scroll', scheduleSync/,
+assert.equal(
+  materialWorkspaceSource.split('data-active-chapter={activeSummaryChapterIndex === index || undefined}').length - 1, 2,
+  'El tema activo debe distinguirse en los índices móvil y escritorio.'
+);
+assert.equal(
+  materialWorkspaceSource.split("aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}").length - 1, 2,
+  'Ambos índices deben exponer el capítulo activo para accesibilidad.'
+);
+assert.ok(materialWorkspaceSource.includes("region.addEventListener('scroll', scheduleSync"),
   'El índice debe seguir el desplazamiento interno del lector.');
-assert.match(materialWorkspaceSource, /window.addEventListener\\('scroll', scheduleSync/,
+assert.ok(materialWorkspaceSource.includes("window.addEventListener('scroll', scheduleSync"),
   'El índice debe seguir el scroll de página en la demo.');
-assert.match(materialWorkspaceSource, /setActiveSummaryChapterIndex\\(index\\)/,
+assert.ok(materialWorkspaceSource.includes('setActiveSummaryChapterIndex(index)'),
   'Seleccionar un tema en Contenido debe resaltarlo de inmediato.');
 
 assert.match(
