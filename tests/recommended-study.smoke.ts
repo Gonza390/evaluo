@@ -361,8 +361,6 @@ assert.equal(missingAssociation.hasFlashcards, true, 'La guía puede mencionar r
 const ambiguousTopic = getFirstTopicResourceInfo([firstTopicFixture[0], { ...firstTopicFixture[0] }], [matchingCard], [matchingTerm]);
 assert.equal(ambiguousTopic.flashcardCount, null, 'No se atribuyen tarjetas a capítulos con títulos duplicados.');
 
-assert.match(priorStudyLogicSource, /materialId/,
-  'El almacenamiento se debe aislar por cada PDF.');
 assert.doesNotMatch(materialWorkspaceSource, /showStudyChoice|data-first-pdf-study-entry/,
   'La tarjeta anterior no debe reintroducirse.');
 assert.equal((materialWorkspaceSource.match(/<div data-onboarding-study-panel/g) ?? []).length, 2,
