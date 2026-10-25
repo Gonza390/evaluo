@@ -257,8 +257,8 @@ assert.match(materialWorkspaceSource, /md:h-2/,
   'El tutorial debe dejar disponible la mayor altura posible del lector.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
   'La guía no debe reiniciar todos los pasos a la introducción.');
-assert.doesNotMatch(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
-  'Al saltar el tour no hay que forzar la navegación al capítulo 1.');
+assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === 'completed'\)/,
+  'Al salir del onboarding se mantiene el comportamiento original según se completó o se saltó.');
 const priorStudyPopupSource = readFileSync('components/study/pdf-prior-study-popup.tsx', 'utf8');
 const studyStartGuideSource = readFileSync('components/study/pdf-study-start-guide.tsx', 'utf8');
 const priorStudyLogicSource = readFileSync('lib/pdf-prior-study.ts', 'utf8');
