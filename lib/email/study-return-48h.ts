@@ -7,7 +7,9 @@ import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 
 const CAMPAIGN_KEY = 'study_return_48h_v1';
 const INACTIVE_HOURS = 48;
-const CANDIDATE_WINDOW_HOURS = 72;
+// Extend the candidate window so the second message can respect D+1 cooldown.
+const CANDIDATE_WINDOW_HOURS = 96;
+const D1_COOLDOWN_HOURS = 36;
 const MAX_STUDY_AGE_DAYS = 7;
 const BATCH_SIZE = 50;
 
@@ -44,6 +46,7 @@ function escapeHtml(value: string) {
 
 function buildReturnUrl(materialId: string, hasPending: boolean) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
+  // Open the PDF's progress directly; intermediate redirects strip UTM tags.
   const url = new URL(`/materiales/${materialId}`, baseUrl);
   url.searchParams.set('tab', hasPending ? 'progreso' : 'ejercicios');
   url.searchParams.set('utm_source', 'sender');
@@ -64,18 +67,18 @@ export function buildStudyReturn48hMessage(input: {
   const hasPending = input.pendingCount > 0;
 
   const subject = hasPending
-    ? `Te quedaron ${input.pendingCount} conceptos para reforzar`
-    : `¿Seguís con ${title}?`;
+    ? `Un repaso breve para tus temas de ${title}`
+    : `¿Hacemos una práctica corta de ${title}?`;
 
   const heading = hasPending
-    ? `Tenés ${input.pendingCount} concepto${input.pendingCount === 1 ? '' : 's'} para reforzar`
-    : 'Tu material sigue listo para continuar';
+    ? 'Elegí un tema para reforzar hoy'
+    : 'Retomá con una práctica breve';
 
   const paragraph = hasPending
-    ? `En tu última sesión con ${title} quedaron algunos conceptos pendientes. Podés retomarlos y comprobar si ahora los entendés mejor.`
-    : `Hace un par de días estuviste trabajando con ${title}. Podés volver al material y seguir estudiando desde donde lo dejaste.`;
+    ? `En tu último estudio de ${title} quedaron ${input.pendingCount} ${input.pendingCount === 1 ? 'tema pendiente' : 'temas pendientes'}. No hace falta empezar todo el PDF: elegí uno y volvé a practicarlo.`
+    : `Hace unos días estudiaste ${title}. Si querés retomarlo, una práctica corta con tu PDF puede ayudarte a comprobar qué recordás.`;
 
-  const cta = hasPending ? 'Reforzar mis temas' : 'Practicar con mi PDF';
+  const cta = hasPending ? 'Elegir un tema para repasar' : 'Ir a mi práctica';
   const topicNames = [...new Set(input.pendingTopics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
   const topicHtml = hasPending && topicNames.length ? `<div style="background:#F4F7FF;border:1px solid #DCE6F9;border-radius:12px;padding:14px 18px;margin:0 0 22px;"><p style="margin:0 0 10px;font-weight:700;font-size:14px;">Temas que te conviene repasar</p><ul style="padding-left:18px;margin:0;">${topicNames.map((name) => `<li style="margin-bottom:5px;">${escapeHtml(name)}</li>`).join('')}</ul></div>` : '';
 
@@ -100,7 +103,7 @@ export function buildStudyReturn48hMessage(input: {
                 <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
                 ${topicHtml}
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material en Evaluo.</p>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Este repaso se basa en la actividad y los temas pendientes de tu propio PDF.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                   <img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
@@ -168,6 +171,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
     skippedReturned: 0,
     skippedInvalid: 0,
     skippedFrequency: 0,
+    skippedRecentD1: 0,
     failed: 0,
   };
 
@@ -198,6 +202,22 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
   }
 
   for (const candidate of candidates) {
+    // D+1 and the follow-up must not arrive almost together for the same PDF.
+    const d1Cutoff = new Date(Date.now() - D1_COOLDOWN_HOURS * 60 * 60 * 1000).toISOString();
+    const { data: recentD1, error: recentD1Error } = await db
+      .from('email_campaign_deliveries')
+      .select('id')
+      .eq('user_id', candidate.user_id)
+      .eq('status', 'sent')
+      .like('campaign_key', 'study_return_d1_v1:%')
+      .contains('context', { material_id: candidate.material_id })
+      .gte('sent_at', d1Cutoff)
+      .limit(1);
+    if (recentD1Error) throw recentD1Error;
+    if ((recentD1 ?? []).length > 0) {
+      summary.skippedRecentD1 += 1;
+      continue;
+    }
     if (!(await canSendPdfStudyNudge(candidate.user_id))) {
       summary.skippedFrequency += 1;
       continue;

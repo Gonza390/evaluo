@@ -106,6 +106,7 @@ export async function getDashboardNextStudyAction(
       .eq('user_id', userId)
       .in('event_name', [
         'student_material_study_opened',
+        'summary_chapter_read',
         'summary_completed',
         'student_material_exam_started',
         'student_material_exam_completed',
@@ -262,12 +263,24 @@ export async function getDashboardNextStudyAction(
 
   if (!fallbackMaterial) return null;
 
+  const lastRead = events.find((row) =>
+    row.event_name === 'summary_chapter_read' &&
+    materialIdFromEvent(row) === fallbackMaterial.id &&
+    typeof row.metadata?.chapter_index === 'number' &&
+    Number.isInteger(row.metadata.chapter_index) &&
+    row.metadata.chapter_index >= 0 && row.metadata.chapter_index < 1000
+  );
+  const params = new URLSearchParams({ tab: 'resumen' });
+  if (lastRead) params.set('summaryTopic', String(lastRead.metadata!.chapter_index));
+
   return {
     kind: 'continue_summary',
     materialId: fallbackMaterial.id,
     title: `Continuá con ${titleForMaterial(fallbackMaterial)}`,
-    description: 'Seguí estudiando desde tu material y avanzá con el próximo paso cuando estés listo.',
+    description: lastRead
+      ? 'Retomá el capítulo del resumen que estabas leyendo.'
+      : 'Seguí estudiando desde tu material y avanzá con el próximo paso cuando estés listo.',
     cta: 'Seguir estudiando',
-    href: `/materiales/${fallbackMaterial.id}?tab=resumen`,
+    href: `/materiales/${fallbackMaterial.id}?${params.toString()}`,
   };
 }

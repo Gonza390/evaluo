@@ -84,6 +84,7 @@ const ANALYTICS_EVENT_NAMES = [
   'pdf_progress_panel_opened',
   'pdf_progress_practice_clicked',
   'summary_reading_started',
+  'summary_chapter_read',
   'summary_topic_check_prompted',
   'summary_topic_check_started',
   'summary_topic_check_answered',

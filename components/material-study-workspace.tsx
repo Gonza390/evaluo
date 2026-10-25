@@ -200,6 +200,8 @@ type MaterialStudyWorkspaceProps = {
   pedagogicalArtifacts?: PedagogicalArtifacts;
   initialDiagnostic?: boolean;
   initialPracticeSectionIndex?: number;
+  /** Capítulo del resumen para retomar desde un enlace de email. */
+  initialSummarySectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
   /** Abrir la pregunta una vez, tras llegar a Resumen desde un PDF nuevo. */
@@ -368,6 +370,7 @@ export function MaterialStudyWorkspace({
   pedagogicalArtifacts,
   initialDiagnostic = false,
   initialPracticeSectionIndex,
+  initialSummarySectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
   initialPriorStudyPopupRequested = false,
@@ -499,6 +502,7 @@ export function MaterialStudyWorkspace({
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
   const summaryReadingVisibilityRef = useRef(new Map<number, { ratio: number; top: number }>());
   const summaryActiveReadingSectionRef = useRef<number | null>(null);
+  const summaryChapterLastTrackedAtRef = useRef(new Map<number, number>());
   const summaryCheckTriggerVisibleRef = useRef(new Set<number>());
   const summaryCheckTimerRef = useRef(new Map<number, number>());
   const lastSummaryCheckPromptRef = useRef<{ chapterIndex: number; promptedAt: number } | null>(
@@ -896,6 +900,51 @@ export function MaterialStudyWorkspace({
     [fullSummarySections]
   );
 
+  // El CTA del email vuelve al capítulo que efectivamente se leyó, dentro del lector del PDF.
+  useEffect(() => {
+    if (initialSummarySectionIndex === undefined || !isOwner || demo ||
+        recommendedActive || activeTab !== 'resumen' || progressOpen) return;
+    if (!Number.isInteger(initialSummarySectionIndex) || initialSummarySectionIndex < 0 ||
+        initialSummarySectionIndex >= summaryChapters.length) return;
+
+    let cancelled = false;
+    let frame = 0;
+    let attempts = 0;
+    const revealChapter = () => {
+      if (cancelled) return;
+      // Hay dos lectores responsive en el DOM. Elegir el que está realmente visible
+      // (desktop o móvil), para no intentar desplazar un panel oculto.
+      const target = Array.from(document.querySelectorAll<HTMLElement>(
+        `[data-onboarding-study-panel] [data-summary-reading-section="${initialSummarySectionIndex}"]`
+      )).find((node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+      const reader = target?.closest<HTMLElement>(
+        '[role="region"][aria-label="Contenido de estudio"]'
+      );
+      if ((!target || !reader || !target.getClientRects().length) && attempts++ < 10) {
+        frame = requestAnimationFrame(revealChapter);
+        return;
+      }
+      if (!target || !reader || !target.getClientRects().length) return;
+      // Los capítulos posteriores al primero no tienen tabindex por defecto.
+      if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+      reader.scrollTo({
+        top: Math.max(0, reader.scrollTop + target.getBoundingClientRect().top -
+          reader.getBoundingClientRect().top - 12),
+        behavior: 'instant',
+      });
+      target.focus({ preventScroll: true });
+    };
+    frame = requestAnimationFrame(revealChapter);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [initialSummarySectionIndex, isOwner, demo, recommendedActive, activeTab,
+    progressOpen, summaryChapters.length]);
+
   const firstTopicResources = useMemo(
     () => getFirstTopicResourceInfo(studySummary.sections, studyArtifacts.flashcards, usefulGlossary),
     [studySummary.sections, studyArtifacts.flashcards, usefulGlossary]
@@ -969,7 +1018,7 @@ export function MaterialStudyWorkspace({
       priorStudyOpen ||
       studyStartGuideOpen ||
       summaryCheckChapterIndex !== null ||
-      summaryCheckSuppressedRef.current
+      demo
     ) {
       return;
     }
@@ -980,7 +1029,8 @@ export function MaterialStudyWorkspace({
     const triggers = Array.from(
       document.querySelectorAll<HTMLElement>('[data-summary-check-trigger]')
     );
-    if (sections.length === 0 || triggers.length === 0) return;
+    // Puede haber PDFs cortos sin comprobaciones; aun así guardamos el capítulo leído.
+    if (sections.length === 0) return;
 
     const getAccumulatedReadTime = (chapterIndex: number) => {
       const stored = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
@@ -1054,7 +1104,10 @@ export function MaterialStudyWorkspace({
       summaryCheckTimerRef.current.set(chapterIndex, timer);
     };
 
+    let chapterReadTimer: number | null = null;
     const stopActiveReading = (now: number) => {
+      if (chapterReadTimer !== null) window.clearTimeout(chapterReadTimer);
+      chapterReadTimer = null;
       const activeChapterIndex = summaryActiveReadingSectionRef.current;
       if (activeChapterIndex === null) return;
 
@@ -1097,6 +1150,19 @@ export function MaterialStudyWorkspace({
       summaryActiveReadingSectionRef.current = dominantSection;
       if (dominantSection !== null) {
         summaryReadVisibleSinceRef.current.set(dominantSection, now);
+        // Sólo guardar el tema tras 8 segundos visibles, nunca por una simple apertura.
+        chapterReadTimer = window.setTimeout(() => {
+          if (summaryActiveReadingSectionRef.current !== dominantSection ||
+              document.visibilityState !== 'visible') return;
+          const lastTracked = summaryChapterLastTrackedAtRef.current.get(dominantSection) ?? 0;
+          if (Date.now() - lastTracked < 60_000) return;
+          summaryChapterLastTrackedAtRef.current.set(dominantSection, Date.now());
+          trackMarketingEvent('summary_chapter_read', {
+            material_id: materialId,
+            chapter_index: dominantSection,
+            flow_version: SUMMARY_FLOW_VERSION,
+          });
+        }, 8_000);
       }
     };
 
@@ -1196,6 +1262,8 @@ export function MaterialStudyWorkspace({
   }, [
     activeTab,
     isOwner,
+    demo,
+    materialId,
     recommendedActive,
     recommendedTourStep,
     priorStudyOpen,

@@ -38,6 +38,7 @@ type PageProps = {
     page?: string;
     tab?: string;
     studyTopic?: string;
+    summaryTopic?: string;
     recorrido?: string;
     inicio?: string;
     error?: string;
@@ -433,6 +434,15 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     });
     const visibility = normalizeMaterialVisibility(material.visibility);
 
+    // Un email de retorno retoma el capítulo leído incluso si la guía inicial quedó sin completar.
+    const requestedSummarySectionIndex =
+      query.tab === 'resumen' &&
+      typeof query.summaryTopic === 'string' &&
+      /^(0|[1-9]\d{0,3})$/.test(query.summaryTopic) &&
+      Number(query.summaryTopic) < (studySummary.sections.length || Math.min(4, studySummary.keyPoints.length))
+        ? Number(query.summaryTopic)
+        : null;
+
     // One onboarding per NEW account, not per URL, PDF or entry point.
     // A skipped tour is intentionally eligible again until explicitly completed.
     const completedAt = user?.app_metadata?.[FIRST_PDF_ONBOARDING_COMPLETED_KEY];
@@ -462,7 +472,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       if (priorCompletionError) throw priorCompletionError;
       previouslyCompleted = Boolean(priorCompletion);
     }
-    const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
+    const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted && requestedSummarySectionIndex === null;
 
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
@@ -485,7 +495,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           />
         ) : null}
         <LazyMaterialStudyWorkspace
-          key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
+          key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}:${query.summaryTopic ?? ''}`}
           initialProgressOpen={isOwner && query.tab === 'progreso' && !shouldShowFirstPdfGuide}
           progressConfig={
             isOwner && user
@@ -517,6 +527,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1' && !shouldShowFirstPdfGuide}
+          initialSummarySectionIndex={isOwner && requestedSummarySectionIndex !== null
+            ? requestedSummarySectionIndex : undefined}
           initialPracticeSectionIndex={
             isOwner && query.tab === 'ejercicios' &&
             typeof query.studyTopic === 'string' &&

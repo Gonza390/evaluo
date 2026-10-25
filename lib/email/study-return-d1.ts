@@ -81,6 +81,7 @@ function isMeaningfulStudySignal(row: AnalyticsRow) {
   return new Set([
     'student_material_study_opened',
     'summary_reading_started',
+    'summary_chapter_read',
     'summary_completed',
     'student_material_exam_started',
     'student_material_exam_completed',
@@ -96,9 +97,18 @@ function materialTitle(material: StudentMaterial) {
   return truncate(material.title?.trim() || material.file_name?.trim() || 'tu material');
 }
 
-function buildTrackedReturnUrl(action: DashboardNextStudyAction) {
+function buildTrackedReturnUrl(action: DashboardNextStudyAction, pendingErrorId?: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
-  const url = new URL(action.href, baseUrl);
+  // Link directly to the PDF: the legacy errors route redirects twice,
+  // dropping email attribution and the student's exact next action.
+  const url = new URL(
+    action.kind === 'reinforce' ? `/materiales/${action.materialId}` : action.href,
+    baseUrl
+  );
+  if (action.kind === 'reinforce') {
+    url.searchParams.set('tab', 'progreso');
+    if (pendingErrorId) url.searchParams.set('error', pendingErrorId);
+  }
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
   url.searchParams.set('utm_campaign', CAMPAIGN_KEY);
@@ -127,29 +137,29 @@ export function buildStudyReturnD1Message(input: {
     { subject: string; heading: string; paragraph: string }
   > = {
     reinforce: {
-      subject: `Volvé a reforzar ${title}`,
+      subject: `Retomá los temas que te costaron de ${title}`, 
       heading: input.action.title,
-      paragraph: `Ya avanzaste con ${title}. Volvé a los puntos que te costaron y comprobá si ahora los entendés mejor.`,
+      paragraph: `En tu último estudio de ${title} detectamos temas que todavía podés reforzar. Retomá esos puntos y comprobá cuánto avanzaste.`,
     },
     resume_practice: {
-      subject: `Te quedó una práctica de ${title} pendiente`,
-      heading: 'Tenés una práctica pendiente',
-      paragraph: `Ya empezaste a practicar ${title}. Retomá desde ahí y terminá de comprobar qué entendiste.`,
+      subject: `Tu práctica de ${title} quedó pendiente`,
+      heading: 'Retomá la práctica que empezaste',
+      paragraph: `Ya comenzaste los ejercicios de ${title}. Seguí desde donde los dejaste para descubrir qué necesitás repasar.`,
     },
     start_practice: {
-      subject: `Ya terminaste el resumen de ${title}`,
-      heading: 'Ahora comprobá qué entendiste',
-      paragraph: `Ya recorriste el resumen de ${title}. El próximo paso es practicar para detectar qué parte necesitás reforzar antes de seguir.`,
+      subject: `¿Probamos cuánto entendiste de ${title}?`,
+      heading: 'Del resumen a la práctica',
+      paragraph: `Ya recorriste el resumen de ${title}. Ahora podés practicar con preguntas de tu propio PDF y ver qué temas necesitás reforzar.`,
     },
     saved_objective: {
-      subject: `Tenés un repaso listo de ${title}`,
+      subject: `Tu próximo repaso de ${title} está preparado`,
       heading: input.action.title,
-      paragraph: `Preparaste tu próximo objetivo en ${title}. Retomá el repaso que Evaluo te dejó guardado.`,
+      paragraph: `Guardaste una próxima acción para este material. Entrá directamente a ese repaso y seguí desde donde lo dejaste.`,
     },
     continue_summary: {
-      subject: `Seguí con ${title} desde donde lo dejaste`,
-      heading: `Continuá con ${title}`,
-      paragraph: `Hace más de un día que no volvés a este material. Retomalo desde el resumen y seguí avanzando con tu próximo paso de estudio.`,
+      subject: `Tu resumen de ${title} te espera`,
+      heading: `Retomá el resumen de ${title}`,
+      paragraph: `Todavía podés continuar leyendo tu material por temas. Volvé al resumen y seguí con el siguiente apartado, sin empezar desde cero.`,
     },
   };
 
@@ -173,7 +183,7 @@ export function buildStudyReturnD1Message(input: {
                 <p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
                 <div style="padding:14px 18px;border:1px solid #DCE6F9;border-radius:12px;background:#F4F7FF;margin:0 0 22px;">${topicsHtml}<p style="margin:0;font-size:14px;line-height:1.5;color:#334155;">${safeNextStep}</p></div>
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.</p>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Este recordatorio se basa en la última actividad que registramos con tu PDF en Evaluo.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                   <img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
@@ -219,6 +229,8 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     .from('analytics_events')
     .select('user_id,event_name,path,metadata,created_at')
     .not('user_id', 'is', null)
+    // A dispatch email is not a student returning to the product.
+    .or('session_key.is.null,session_key.not.like.server:%')
     .gte('created_at', lookback)
     .order('created_at', { ascending: false })
     .limit(MAX_EVENTS);
@@ -273,6 +285,7 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     skippedDisabled: 0,
     skippedAdmin: 0,
     skippedRecentEmail: 0,
+    skippedReturned: 0,
     skippedFrequency: 0,
     skippedInvalid: 0,
     failed: 0,
@@ -408,6 +421,21 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       continue;
     }
 
+    // Revalidate activity just before sending: the student might have returned
+    // after we built the daily candidate list.
+    const { data: freshActivity, error: freshActivityError } = await db
+      .from('analytics_events')
+      .select('id')
+      .eq('user_id', candidate.userId)
+      .gt('created_at', candidate.lastActivityAt)
+      .or('session_key.is.null,session_key.not.like.server:%')
+      .limit(1);
+    if (freshActivityError) throw freshActivityError;
+    if ((freshActivity ?? []).length > 0) {
+      summary.skippedReturned += 1;
+      continue;
+    }
+
     const action = await getDashboardNextStudyAction(candidate.userId, [material]);
     if (!action) {
       summary.skippedInvalid += 1;
@@ -436,11 +464,14 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null) ||
       (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : null);
     const pendingTopics = action.kind === 'reinforce'
-      ? await db.from('study_errors').select('topic').eq('user_id', candidate.userId)
-          .eq('student_material_id', material.id).eq('status', 'pending').limit(50)
+      ? await db.from('study_errors').select('id,topic').eq('user_id', candidate.userId)
+          .eq('student_material_id', material.id).eq('status', 'pending')
+          .order('updated_at', { ascending: false }).limit(50)
       : { data: [], error: null };
     if (pendingTopics.error) logError('studyReturnD1.pendingTopics', pendingTopics.error, { userId: candidate.userId });
-    const returnUrl = buildTrackedReturnUrl(action);
+    const firstPendingErrorId =
+      action.kind === 'reinforce' ? pendingTopics.data?.[0]?.id : undefined;
+    const returnUrl = buildTrackedReturnUrl(action, firstPendingErrorId);
     const message = buildStudyReturnD1Message({
       firstname: firstName(displayName),
       materialTitle: materialTitle(material),
