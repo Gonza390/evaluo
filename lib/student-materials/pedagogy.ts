@@ -1069,8 +1069,8 @@ function buildFallbackMultipleChoice(
         topic: concept.term,
         prompt:
           level === 'recordar'
-            ? `¿Cuál es la definición correcta de “${concept.term}” según el material?`
-            : `¿Cuál opción explica mejor “${concept.term}” según el material?`,
+            ? `¿Qué significa “${concept.term}”?`
+            : `¿Qué caracteriza mejor a “${concept.term}”?`,
         options,
         answer: correctAnswer,
         explanation:
@@ -1118,12 +1118,15 @@ function buildCanonicalConceptQuestions(
         level,
         kind: 'concept',
         topic: concept.term,
+        // Cuatro consignas equivalentes para recordar conceptos sin muletillas sobre el PDF.
         prompt:
-          index % 3 === 0
-            ? `¿Qué significa “${concept.term}” en este material?`
-            : index % 3 === 1
-              ? `¿Con qué descripción se corresponde “${concept.term}” en tus apuntes?`
-              : `Al estudiar “${concept.term}”, ¿qué característica permite reconocerlo?`,
+          index % 4 === 0
+            ? `¿Qué significa “${concept.term}”?`
+            : index % 4 === 1
+              ? `¿Cuál de estas opciones define “${concept.term}”?`
+              : index % 4 === 2
+                ? `¿Qué característica permite reconocer “${concept.term}”?`
+                : `¿Cómo se describe “${concept.term}”?`,
         options,
         answer: correct,
         explanation: `En el material, “${concept.term}” se define como: ${correct}. Las demás opciones expresan definiciones de otros conceptos, no de éste.`,
@@ -1174,12 +1177,14 @@ function buildCanonicalRelationshipQuestions(
         kind: 'relationship',
         topic: `${item.source} ↔ ${item.target}`,
         prompt: isCausal
-          ? `Si se considera “${item.source}”, ¿qué consecuencia para “${item.target}” sostiene el material?`
-          : index % 3 === 0
-            ? `¿Qué vínculo entre “${item.source}” y “${item.target}” permite explicar el PDF?`
-            : index % 3 === 1
-              ? `¿Por qué se relacionan “${item.source}” y “${item.target}” en este tema?`
-              : `¿Qué sucede con “${item.target}” cuando se considera “${item.source}” según estos apuntes?`,
+          ? `¿Qué efecto de “${item.source}” sobre “${item.target}” se describe?`
+          : index % 4 === 0
+            ? `¿Cómo se relacionan “${item.source}” y “${item.target}”?`
+            : index % 4 === 1
+              ? `¿Qué relación existe entre “${item.source}” y “${item.target}”?`
+              : index % 4 === 2
+                ? `¿De qué manera se vinculan “${item.source}” y “${item.target}”?`
+                : `¿Cuál es el vínculo entre “${item.source}” y “${item.target}”?`,
         options,
         answer: correct,
         explanation: `La relación presentada en el PDF es: ${correct}. Se vincula específicamente “${item.source}” con “${item.target}”.`,
@@ -1324,6 +1329,15 @@ function buildCanonicalProcessQuestions(
       const options = placeCorrectOption(process.title, distractors, index % 4).slice(0, 4);
       if (options.length < 3) return null;
 
+      const listedSteps = scenarioSteps
+        .map((step) => `“${truncateAtWord(step, 105)}”`)
+        .join(' → ');
+      const prompts = [
+        `¿A qué proceso corresponde esta secuencia de acciones: ${listedSteps}?`,
+        `Identificá el proceso que sigue estas etapas: ${listedSteps}.`,
+        `Observá estos pasos: ${listedSteps}. ¿Qué proceso representan?`,
+      ];
+
       return {
         id: `model-process-${index + 1}`,
         type: 'multiple_choice',
@@ -1332,9 +1346,7 @@ function buildCanonicalProcessQuestions(
         level: 'comprender',
         kind: 'process',
         topic: process.title,
-        prompt: `En el material se organizan estos pasos: ${scenarioSteps
-          .map((step) => `“${truncateAtWord(step, 105)}”`)
-          .join(' → ')}. ¿Qué proceso explican en conjunto?`,
+        prompt: prompts[index % prompts.length]!,
         options,
         answer: process.title,
         explanation: `La secuencia de acciones identifica “${process.title}”. El material lo organiza en estos pasos: ${truncateAtWord(process.steps.join(' → '), 260)}.`,
@@ -1403,7 +1415,7 @@ function buildCanonicalFormulaQuestions(
         level: 'comprender',
         kind: 'formula',
         topic: formula.expression,
-        prompt: `El material describe: “${truncateAtWord(formula.description, 170)}”. ¿Qué expresión o magnitud corresponde?`,
+        prompt: `¿A qué expresión o magnitud corresponde esta descripción: “${truncateAtWord(formula.description, 170)}”?`,
         options,
         answer: formula.expression,
         explanation: `La descripción es la que el PDF asocia con “${formula.expression}”.`,
@@ -1454,7 +1466,7 @@ function buildCanonicalComparisonQuestions(
         level: 'comprender',
         kind: 'relationship',
         topic: truncateAtWord(`${pair.left} ↔ ${pair.right}`, 100),
-        prompt: `Compará “${pair.left}” con “${pair.right}” según el PDF. Explicá al menos una diferencia concreta usando los criterios del material.`,
+        prompt: `Compará “${pair.left}” con “${pair.right}”. Explicá al menos una diferencia concreta.`,
         options: [],
         answer,
         explanation:
@@ -1490,7 +1502,7 @@ function buildCanonicalConfusionQuestions(
       level: 'comprender',
       kind: 'confusion',
       topic: 'Confusión frecuente',
-      prompt: `Aclará con tus palabras esta confusión que el material considera importante: “${truncateAtWord(confusion, 180)}”`,
+      prompt: `Explicá qué tiene de incorrecto esta confusión y cómo la resolverías: “${truncateAtWord(confusion, 180)}”`,
       options: [],
       answer,
       explanation:
@@ -1544,10 +1556,10 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     emptyReference(section.title, grounded.answer)
   );
   const prompts = [
-    `Explicá con tus palabras qué plantea el apartado “${grounded.focus}”. ¿Qué idea central deberías recordar?`,
-    `¿Qué sostiene el material sobre “${grounded.focus}”? Desarrollá la idea usando sus conceptos principales.`,
-    `Si tuvieras que explicar “${grounded.focus}” a otro estudiante, ¿qué indicarías como fundamento principal?`,
-    `¿Cómo presentarías el concepto central de “${grounded.focus}” sin repetir el texto de memoria?`,
+    `¿Cuál es la idea central de “${grounded.focus}”? Explicala con tus palabras.`,
+    `Desarrollá la idea principal de “${grounded.focus}” usando sus conceptos clave.`,
+    `¿Cómo explicarías “${grounded.focus}” a otro estudiante?`,
+    `¿Qué necesitás comprender para explicar “${grounded.focus}” con tus palabras?`,
   ];
   const question: StudyQuestion = {
     id: `section-open-${index + 1}`,
@@ -1637,7 +1649,12 @@ function anchorAndCompleteChapterQuestions(
       ).map((item) => truncateAtWord(item.detail, 210));
       const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
       if (options.length < 3) continue;
-      const prompt = `¿Qué explica el PDF sobre “${concept.term}”?`;
+            const prompts = [
+        `¿Cuál de las opciones define mejor “${concept.term}”?`,
+        `¿Cómo se define “${concept.term}”?`,
+        `¿Qué característica describe “${concept.term}”?`,
+      ];
+      const prompt = prompts[index % prompts.length]!;
       if (usedPrompts.has(normalizeForDedupe(prompt))) continue;
 
       // También la pregunta de cobertura hereda una referencia verificable.
