@@ -289,8 +289,12 @@ assert.match(priorStudyPopupSource, /Empiezo desde cero/,
   'La primera tarjeta debe presentar el recorrido desde cero.');
 assert.match(priorStudyPopupSource, /Ya lo estudié/,
   'La segunda tarjeta debe presentar el recorrido de práctica.');
-assert.match(priorStudyPopupSource, /bg-\[\#303030\]/,
-  'Las opciones deben usar las superficies gris oscuro del diseño de referencia.');
+assert.match(priorStudyPopupSource, /max-w-\\[610px\\]/,
+  'El modal debe ser compacto en escritorio.');
+assert.match(priorStudyPopupSource, /bg-card text-card-foreground/,
+  'El modal debe respetar la paleta visual de Evaluo.');
+assert.doesNotMatch(priorStudyPopupSource, /bg-black\/75|bg-\\[\\#080808\\]|max-w-\\[1000px\\]/,
+  'No deben quedar el fondo negro ni el ancho del diseño anterior.');
 assert.match(priorStudyPopupSource, /grid-cols-1 gap-3 sm:grid-cols-2/,
   'Las opciones deben verse lado a lado en escritorio y apiladas en móvil.');
 
