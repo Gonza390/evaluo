@@ -38,6 +38,7 @@ type PageProps = {
     page?: string;
     tab?: string;
     studyTopic?: string;
+    summaryTopic?: string;
     recorrido?: string;
     inicio?: string;
     error?: string;
@@ -485,7 +486,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           />
         ) : null}
         <LazyMaterialStudyWorkspace
-          key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
+          key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}:${query.summaryTopic ?? ''}`}
           initialProgressOpen={isOwner && query.tab === 'progreso' && !shouldShowFirstPdfGuide}
           progressConfig={
             isOwner && user
@@ -517,6 +518,14 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1' && !shouldShowFirstPdfGuide}
+          initialSummarySectionIndex={
+            isOwner && query.tab === 'resumen' && !shouldShowFirstPdfGuide &&
+            typeof query.summaryTopic === 'string' &&
+            /^(0|[1-9]\\d{0,3})$/.test(query.summaryTopic) &&
+            Number(query.summaryTopic) < (studySummary.sections.length || Math.min(4, studySummary.keyPoints.length))
+              ? Number(query.summaryTopic)
+              : undefined
+          }
           initialPracticeSectionIndex={
             isOwner && query.tab === 'ejercicios' &&
             typeof query.studyTopic === 'string' &&
