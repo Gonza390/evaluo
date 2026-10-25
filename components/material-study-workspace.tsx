@@ -51,15 +51,8 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
-import { PdfPriorStudyPopup } from '@/components/study/pdf-prior-study-popup';
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
 import { getFirstTopicResourceInfo } from '@/lib/student-materials/first-topic-resources';
-import {
-  isPriorStudyChoice,
-  priorStudyStorageKey,
-  shouldOpenPriorStudyPopup,
-  type PriorStudyChoice,
-} from '@/lib/pdf-prior-study';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
@@ -83,18 +76,6 @@ import {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 
-
-function readPriorStudyChoice(materialId: string): string | null {
-  if (typeof window === 'undefined') return null;
-  try { return window.localStorage.getItem(priorStudyStorageKey(materialId)); }
-  catch { return null; }
-}
-
-function savePriorStudyChoice(materialId: string, choice: PriorStudyChoice): void {
-  if (typeof window === 'undefined') return;
-  try { window.localStorage.setItem(priorStudyStorageKey(materialId), choice); }
-  catch { /* La selección no debe bloquear la navegación si el navegador restringe storage. */ }
-}
 
 /** Conserva la navegación del alumno: nunca desplaza la página completa. */
 const tourStudySelectors: Record<RecommendedStudyStep, string> = {
@@ -202,8 +183,8 @@ type MaterialStudyWorkspaceProps = {
   initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
-  /** Abrir la pregunta una vez, tras llegar a Resumen desde un PDF nuevo. */
-  initialPriorStudyPopupRequested?: boolean;
+  /** Mostrar la guía de estudio al llegar al Resumen desde un PDF recién procesado. */
+  initialStudyStartGuideRequested?: boolean;
   /** Solo para la demo pública: habilita enlaces a una etapa sin forzar onboarding real. */
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
@@ -370,7 +351,7 @@ export function MaterialStudyWorkspace({
   initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
-  initialPriorStudyPopupRequested = false,
+  initialStudyStartGuideRequested = false,
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
@@ -445,8 +426,8 @@ export function MaterialStudyWorkspace({
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const scrollFirstChapterSmoothlyRef = useRef(false);
-  const [priorStudyOpen, setPriorStudyOpen] = useState(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
+  const studyGuideArrivalHandledRef = useRef<string | null>(null);
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -512,20 +493,23 @@ export function MaterialStudyWorkspace({
   const isDemo = Boolean(demo);
   const hasPendingStudyErrors = (demo?.pendingStudyErrorCount ?? pendingStudyErrorCount) > 0;
 
-  // Se muestra solo al llegar desde la carga de este PDF, nunca en una visita común
-  // al Resumen. El recorrido de cuatro pasos tiene prioridad sobre el popup.
+  // Cada PDF recién cargado presenta una sola vez la guía, sin pregunta previa.
+  // El tour inicial de cuatro pasos tiene prioridad y muestra la guía al finalizar.
   useEffect(() => {
-    if (shouldOpenPriorStudyPopup({
-      isOwner,
-      isDemo,
-      isOnboardingActive: recommendedActive,
-      isResumen: activeTab === 'resumen' && !progressOpen,
-      justUploaded: initialPriorStudyPopupRequested,
-      savedChoice: readPriorStudyChoice(materialId),
-    })) {
-      setPriorStudyOpen(true);
+    if (
+      !initialStudyStartGuideRequested ||
+      !isOwner ||
+      isDemo ||
+      recommendedActive ||
+      activeTab !== 'resumen' ||
+      progressOpen ||
+      studyGuideArrivalHandledRef.current === materialId
+    ) {
+      return;
     }
-  }, [isOwner, isDemo, recommendedActive, activeTab, progressOpen, initialPriorStudyPopupRequested, materialId]);
+    studyGuideArrivalHandledRef.current = materialId;
+    setStudyStartGuideOpen(true);
+  }, [initialStudyStartGuideRequested, isOwner, isDemo, recommendedActive, activeTab, progressOpen, materialId]);
 
   useEffect(() => {
     if (!isOwner || isDemo) return;
@@ -743,12 +727,14 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      // Primero dejamos al estudiante en Resumen; allí aparece un popup de dos opciones.
-      // La demo permite comprobar el flujo sin escribir datos de ningún usuario.
-      if (demo || (isOwner && !isPriorStudyChoice(readPriorStudyChoice(materialId)))) {
-        setPriorStudyOpen(true);
+      // Una sola guía práctica sobre Resumen, sin selección "ya estudié".
+      // La demo permite comprobar el flujo sin escribir datos del usuario.
+      if (demo || isOwner) {
+        studyGuideArrivalHandledRef.current = materialId;
+        setStudyStartGuideOpen(true);
       }
-      setFocusFirstChapterOnExit(outcome === 'completed');
+      // El capítulo 1 se enfoca sólo al pulsar "Leer el tema 1".
+      setFocusFirstChapterOnExit(false);
       setLocalProgressOpen(false);
       demo?.onProgressChange?.(false);
       setActiveTab('resumen');
@@ -966,7 +952,6 @@ export function MaterialStudyWorkspace({
       !isOwner ||
       recommendedActive ||
       recommendedTourStep ||
-      priorStudyOpen ||
       studyStartGuideOpen ||
       summaryCheckChapterIndex !== null ||
       summaryCheckSuppressedRef.current
@@ -1198,7 +1183,6 @@ export function MaterialStudyWorkspace({
     isOwner,
     recommendedActive,
     recommendedTourStep,
-    priorStudyOpen,
     studyStartGuideOpen,
     summaryCheckChapterIndex,
     summaryCheckPlan,
@@ -1207,21 +1191,6 @@ export function MaterialStudyWorkspace({
 
   const handleComments = () => {
     setCommentsOpen((current) => !current);
-  };
-
-  const choosePriorStudy = (choice: PriorStudyChoice) => {
-    if (isOwner && !demo) {
-      savePriorStudyChoice(materialId, choice);
-      trackMarketingEvent('cta_click', {
-        location: 'pdf_prior_study_popup',
-        cta_name: choice,
-        material_id: materialId,
-      });
-    }
-    setPriorStudyOpen(false);
-    // Sólo "Empiezo desde cero" abre la explicación del método de estudio.
-    // La opción "Ya lo estudié" conserva el comportamiento actual.
-    if (choice === 'not_studied') setStudyStartGuideOpen(true);
   };
 
   const startFirstTopic = () => {
@@ -2202,11 +2171,6 @@ export function MaterialStudyWorkspace({
           }}
         />
       )}
-      <PdfPriorStudyPopup
-        open={priorStudyOpen && !recommendedActive}
-        onChoose={choosePriorStudy}
-        onDismiss={() => setPriorStudyOpen(false)}
-      />
       <PdfStudyStartGuide
         open={studyStartGuideOpen && !recommendedActive}
         firstTopicTitle={studySummary.sections.length > 0 ? summaryChapters[0]?.displayTitle ?? null : null}
