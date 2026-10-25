@@ -113,7 +113,6 @@ export function DemoFourStepStudy({
   glossary,
   pageCount,
   initialTab = 'resumen',
-  initialStudyEntryStage,
   internationalSource,
 }: {
   guided?: boolean;
@@ -121,7 +120,6 @@ export function DemoFourStepStudy({
   glossary: StudyGlossaryItem[];
   pageCount: number;
   initialTab?: StudyTabId;
-  initialStudyEntryStage?: 'choice';
   internationalSource?: string;
 }) {
   const [activeTab, setActiveTab] = useState<StudyTabId>(initialTab);
@@ -156,7 +154,6 @@ export function DemoFourStepStudy({
       pedagogicalArtifacts={artifacts}
       recommendedStudyAvailable={guided}
       initialRecommendedStudy={guided}
-      initialStudyEntryStage={initialStudyEntryStage}
       demo={{
         activeTab,
         onTabChange: setActiveTab,
