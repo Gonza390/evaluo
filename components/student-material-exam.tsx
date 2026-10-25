@@ -59,6 +59,8 @@ type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
+  /** Entrega el resultado de la tanda al contenedor para reutilizar la vista de Progreso. */
+  onTopicFinished?: (outcome: TopicPracticeOutcome) => void;
   onContinueToTopic?: (index: number) => void;
   onStudyNextTopic?: (index: number) => void;
   onViewAllTopics?: () => void;
@@ -80,6 +82,7 @@ export function StudentMaterialExam({
   entrySource = 'direct_tab',
   entryId = null,
   onComplete,
+  onTopicFinished,
   onContinueToTopic,
   onStudyNextTopic,
   onViewAllTopics,
@@ -1324,6 +1327,15 @@ export function StudentMaterialExam({
           },
         });
       onComplete?.();
+      if (topicSectionIndex !== undefined) {
+        onTopicFinished?.({
+          sectionIndex: topicSectionIndex,
+          total: result.total,
+          correct: result.correct,
+          incorrect: result.wrong.length,
+          incorrectPrompts: result.wrong.map((question) => question.prompt),
+        });
+      }
       setFinished(true);
       // También guardar el próximo objetivo al practicar un tema concreto.
       // El resultado y la salida no dependen de que este guardado termine.
