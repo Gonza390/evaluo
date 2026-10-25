@@ -346,6 +346,12 @@ assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\.current = 
   'El botón debe preparar el desplazamiento suave hasta el tema 1.');
 assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\.current \? 'smooth' : 'instant'/,
   'El desplazamiento guiado debe ser suave sin cambiar los saltos del onboarding.');
+assert.match(materialWorkspaceSource, /reader\.scrollHeight <= reader\.clientHeight \+ 4/,
+  'El CTA debe detectar cuando la vista de demostración no tiene scroll interno.');
+assert.match(materialWorkspaceSource, /target\.scrollIntoView\(\{ block: 'start', behavior: scrollBehavior \}\)/,
+  'La demo debe llegar al capítulo 1 desplazando la página cuando corresponda.');
+assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/,
+  'El desplazamiento suave debe respetar la preferencia de movimiento reducido.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-footer/,
   'La acción para comenzar debe permanecer en el pie del popup, incluso en móvil.');
 assert.doesNotMatch(studyStartGuideSource, /Un tema a la vez, a tu ritmo|Cuando estés listo, avanzamos al siguiente/,
