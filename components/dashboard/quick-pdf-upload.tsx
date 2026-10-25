@@ -166,7 +166,7 @@ export function QuickPdfUpload({
       setProcessingProgress(state.progress ?? 0);
 
       if (state.status === 'ready') {
-        router.replace(getStudentMaterialRoute(processingMaterialId));
+        router.replace(`${getStudentMaterialRoute(processingMaterialId)}?inicio=1`);
         router.refresh();
       } else if (state.status === 'failed') {
         setErrorMessage(state.error || 'No pudimos terminar de preparar el PDF.');
