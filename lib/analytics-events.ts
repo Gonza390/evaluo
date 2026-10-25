@@ -82,8 +82,6 @@ const ANALYTICS_EVENT_NAMES = [
   'first_pdf_study_plan_started',
   'pdf_study_entry_viewed',
   'pdf_study_entry_selected',
-  'pdf_study_plan_viewed',
-  'pdf_study_plan_started',
   'first_pdf_practice_opened',
   'pdf_progress_panel_opened',
   'pdf_progress_practice_clicked',
