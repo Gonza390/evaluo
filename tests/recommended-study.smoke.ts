@@ -321,9 +321,9 @@ assert.doesNotMatch(studyStartGuideSource, /!inset-0|!w-screen|!h-dvh|!max-w-non
   'La guía no debe ocupar toda la pantalla ni usar un pie fijo global.');
 assert.match(studyStartGuideSource, /Primero, leé el resumen/,
   'La guía debe comenzar indicando que el alumno lea el tema.');
-assert.match(studyStartGuideSource, /En el glosario podés consultar los términos/,
+assert.match(studyStartGuideSource, /En el glosario aclarás los términos/,
   'La guía debe explicar cómo usar el glosario.');
-assert.match(studyStartGuideSource, /También tenés flashcards/,
+assert.match(studyStartGuideSource, /flashcards repasás lo importante/,
   'La guía debe explicar que las flashcards sirven para repasar.');
 assert.match(studyStartGuideSource, /Después, comprobá lo aprendido/,
   'La guía debe indicar que después se practica ese tema.');
@@ -331,6 +331,14 @@ assert.match(studyStartGuideSource, /data-pdf-study-first-topic/,
   'La guía debe mostrar el título del primer tema.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
   'La guía debe permitir iniciar el tema seleccionado.');
+assert.match(studyStartGuideSource, /Leer el tema 1/,
+  'El botón debe anticipar que el siguiente paso es leer el primer tema.');
+assert.match(studyStartGuideSource, /Tu primer tema, paso a paso/,
+  'La guía debe comunicar claramente el recorrido por tema.');
+assert.match(studyStartGuideSource, /TU PRIMER TEMA/,
+  'La guía debe identificar el nombre del primer tema sin repetir el mensaje de bienvenida.');
+assert.doesNotMatch(studyStartGuideSource, /¡Vamos a comenzar a estudiar!|Vamos a empezar por|Vamos a comenzar con el primer tema/,
+  'La guía debe evitar la copia redundante de la versión anterior.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-footer/,
   'La acción para comenzar debe permanecer en el pie del popup, incluso en móvil.');
 assert.doesNotMatch(studyStartGuideSource, /Un tema a la vez, a tu ritmo|Cuando estés listo, avanzamos al siguiente/,
