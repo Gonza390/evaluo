@@ -242,8 +242,8 @@ assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === '
 assert.doesNotMatch(materialWorkspaceSource, /studyEntryStage|chooseStudyEntry|data-first-pdf-study-entry|¿Ya estudiaste este material\?/,
   'No deben persistir la tarjeta ni su lógica.');
 
-assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
-  'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
+assert.match(materialWorkspaceSource, /revealTourContent\('summary', true, scrollFirstChapterSmoothlyRef\.current \? 'smooth' : 'instant'\)/,
+  'Al finalizar debe mostrarse y enfocarse el primer capítulo real, con scroll suave al elegir estudiar.');
 assert.match(materialWorkspaceSource, /tabIndex=\{index === 0 \? -1 : undefined\}/,
   'El capítulo 1 debe admitir el foco programático sin agregarse a la navegación por Tab.');
 assert.match(materialWorkspaceSource, /data-onboarding-practice-options/,
