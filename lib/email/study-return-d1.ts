@@ -127,29 +127,29 @@ export function buildStudyReturnD1Message(input: {
     { subject: string; heading: string; paragraph: string }
   > = {
     reinforce: {
-      subject: `Volvé a reforzar ${title}`,
+      subject: `Tus temas pendientes de ${title} siguen ahí`,
       heading: input.action.title,
-      paragraph: `Ya avanzaste con ${title}. Volvé a los puntos que te costaron y comprobá si ahora los entendés mejor.`,
+      paragraph: `En tu último estudio de ${title} detectamos temas que todavía podés reforzar. Retomá esos puntos y comprobá cuánto avanzaste.`,
     },
     resume_practice: {
-      subject: `Te quedó una práctica de ${title} pendiente`,
-      heading: 'Tenés una práctica pendiente',
-      paragraph: `Ya empezaste a practicar ${title}. Retomá desde ahí y terminá de comprobar qué entendiste.`,
+      subject: `Tu práctica de ${title} quedó pendiente`,
+      heading: 'Retomá la práctica que empezaste',
+      paragraph: `Ya comenzaste los ejercicios de ${title}. Seguí desde donde los dejaste para descubrir qué necesitás repasar.`,
     },
     start_practice: {
-      subject: `Ya terminaste el resumen de ${title}`,
-      heading: 'Ahora comprobá qué entendiste',
-      paragraph: `Ya recorriste el resumen de ${title}. El próximo paso es practicar para detectar qué parte necesitás reforzar antes de seguir.`,
+      subject: `¿Probamos cuánto entendiste de ${title}?`,
+      heading: 'Del resumen a la práctica',
+      paragraph: `Ya recorriste el resumen de ${title}. Ahora podés practicar con preguntas de tu propio PDF y ver qué temas necesitás reforzar.`,
     },
     saved_objective: {
-      subject: `Tenés un repaso listo de ${title}`,
+      subject: `Tu próximo repaso de ${title} está preparado`,
       heading: input.action.title,
-      paragraph: `Preparaste tu próximo objetivo en ${title}. Retomá el repaso que Evaluo te dejó guardado.`,
+      paragraph: `Guardaste una próxima acción para este material. Entrá directamente a ese repaso y seguí desde donde lo dejaste.`,
     },
     continue_summary: {
-      subject: `Seguí con ${title} desde donde lo dejaste`,
-      heading: `Continuá con ${title}`,
-      paragraph: `Hace más de un día que no volvés a este material. Retomalo desde el resumen y seguí avanzando con tu próximo paso de estudio.`,
+      subject: `Tu resumen de ${title} te espera`,
+      heading: `Retomá el resumen de ${title}`,
+      paragraph: `Todavía podés continuar leyendo tu material por temas. Volvé al resumen y seguí con el siguiente apartado, sin empezar desde cero.`,
     },
   };
 
@@ -173,7 +173,7 @@ export function buildStudyReturnD1Message(input: {
                 <p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
                 <div style="padding:14px 18px;border:1px solid #DCE6F9;border-radius:12px;background:#F4F7FF;margin:0 0 22px;">${topicsHtml}<p style="margin:0;font-size:14px;line-height:1.5;color:#334155;">${safeNextStep}</p></div>
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.</p>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Este recordatorio se basa en la última actividad que registramos con tu PDF en Evaluo.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                   <img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
@@ -219,6 +219,8 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     .from('analytics_events')
     .select('user_id,event_name,path,metadata,created_at')
     .not('user_id', 'is', null)
+    // A dispatch email is not a student returning to the product.
+    .or('session_key.is.null,session_key.not.like.server:%')
     .gte('created_at', lookback)
     .order('created_at', { ascending: false })
     .limit(MAX_EVENTS);
