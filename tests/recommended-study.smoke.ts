@@ -340,11 +340,11 @@ assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
   'La guía debe permitir iniciar el tema seleccionado.');
 assert.match(studyStartGuideSource, /Leer el tema 1/,
   'El botón debe anticipar que el siguiente paso es leer el primer tema.');
-assert.match(materialWorkspaceSource, /resources=\\{firstTopicResources\\}/,
+assert.match(materialWorkspaceSource, /resources=\{firstTopicResources\}/,
   'La guía debe recibir los recursos atribuidos al primer tema.');
-assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\\.current = true/,
+assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\.current = true/,
   'El botón debe preparar el desplazamiento suave hasta el tema 1.');
-assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\\.current \\? 'smooth' : 'instant'/,
+assert.match(materialWorkspaceSource, /scrollFirstChapterSmoothlyRef\.current \? 'smooth' : 'instant'/,
   'El desplazamiento guiado debe ser suave sin cambiar los saltos del onboarding.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-footer/,
   'La acción para comenzar debe permanecer en el pie del popup, incluso en móvil.');
