@@ -59,8 +59,8 @@ export function SummaryChapterFinish({
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <CheckCircle2 aria-hidden className="h-4 w-4 text-emerald-600" />
-              <span className="text-muted-foreground text-[10px] font-bold tracking-[0.13em] uppercase">
-                Tema {chapterIndex + 1} · Lectura finalizada
+              <span data-summary-topic-name className="text-muted-foreground min-w-0 break-words text-[11px] font-semibold leading-4">
+                {chapterTitle}
               </span>
             </div>
             <button
@@ -76,7 +76,7 @@ export function SummaryChapterFinish({
           <DialogTitle ref={headingRef} tabIndex={-1} className="text-foreground mt-3 text-left text-[20px] font-bold leading-tight tracking-[-0.04em] outline-none">
             Descubrí qué sabés y qué necesitás reforzar
           </DialogTitle>
-          <p className="text-muted-foreground mt-2 break-words text-[13px]">{chapterTitle}</p>
+          <p className="text-muted-foreground mt-1.5 text-[12px]">Lectura finalizada</p>
 
           <Button
             type="button"
@@ -85,7 +85,7 @@ export function SummaryChapterFinish({
             disabled={!canEvaluate}
             className="mt-5 h-11 w-full rounded-xl text-[14px] font-semibold"
           >
-            Evaluar este tema <ArrowRight aria-hidden className="ml-1 h-4 w-4" />
+            Comprobar cuánto aprendí <ArrowRight aria-hidden className="ml-1 h-4 w-4" />
           </Button>
           {!canEvaluate ? (
             <p role="status" className="text-muted-foreground mt-2 text-center text-xs">
