@@ -14,6 +14,7 @@ import { buildPedagogicalArtifacts, type StudyQuestion } from '@/lib/student-mat
 import type { StudyErrorsPageData } from '@/lib/study-errors';
 import type { PdfTopicEvidence } from '@/lib/student-materials/progress';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-materials/types';
 
 const DEMO_MATERIAL_ID = 'demo-material';
@@ -56,6 +57,9 @@ function DemoProgress({
   showOnboardingExample,
   showOnboardingTopic,
   onPractice,
+  onPracticeTopic,
+  initialTopicSectionIndex,
+  lastPracticeOutcome,
 }: {
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
@@ -65,6 +69,9 @@ function DemoProgress({
   showOnboardingExample: boolean;
   showOnboardingTopic: boolean;
   onPractice: () => void;
+  onPracticeTopic?: (index: number) => void;
+  initialTopicSectionIndex?: number;
+  lastPracticeOutcome?: TopicPracticeOutcome;
 }) {
   const { counts, evidence } = useMemo(() => {
     const counts = summary.sections.map(() => 0);
@@ -97,13 +104,15 @@ function DemoProgress({
         summaryUnavailable={false}
         assessmentData={{ items: evidence }}
         questionCounts={counts}
+        initialTopicSectionIndex={initialTopicSectionIndex}
+        lastPracticeOutcome={lastPracticeOutcome}
         glossary={glossary}
         flashcards={flashcards}
         sourcePdfHref={DEMO_PDF_URL}
         showOnboardingTopic={showOnboardingTopic}
         showOnboardingExample={showOnboardingExample}
         onPractice={onPractice}
-        onPracticeTopic={onPractice}
+        onPracticeTopic={onPracticeTopic ?? onPractice}
       />
   );
 }
@@ -130,12 +139,14 @@ export function DemoFourStepStudy({
   const [progressOpen, setProgressOpen] = useState(false);
   const [demoAnswers, setDemoAnswers] = useState<Record<string, DemoAnswer>>({});
   const [demoTopicIndex, setDemoTopicIndex] = useState<number | null>(null);
+  const [demoTopicFinished, setDemoTopicFinished] = useState<TopicPracticeOutcome | null>(null);
   const artifacts = useMemo(
     () => buildPedagogicalArtifacts({ summary, glossary, pageCount }),
     [summary, glossary, pageCount]
   );
 
   const openPractice = () => {
+    setDemoTopicFinished(null);
     setDemoTopicIndex(null);
     setProgressOpen(false);
     setActiveTab('ejercicios');
@@ -161,10 +172,32 @@ export function DemoFourStepStudy({
       demo={{
         activeTab,
         onTabChange: setActiveTab,
-        onPracticeTopic: setDemoTopicIndex,
+        onPracticeTopic: (index) => {
+          setDemoTopicFinished(null);
+          setDemoTopicIndex(index);
+        },
         viewerVisible,
         onViewerChange: setViewerVisible,
-        practice: demoTopicIndex !== null ? (
+        practice: demoTopicFinished ? (
+          <div data-topic-practice-final className="min-w-0 px-1 py-1 sm:px-2 sm:py-2">
+            <DemoProgress
+              summary={summary}
+              glossary={glossary}
+              flashcards={artifacts.flashcards}
+              questions={artifacts.questions}
+              answers={demoAnswers}
+              showOnboardingExample={false}
+              showOnboardingTopic={false}
+              onPractice={openPractice}
+              onPracticeTopic={(index) => {
+                setDemoTopicFinished(null);
+                setDemoTopicIndex(index);
+              }}
+              initialTopicSectionIndex={demoTopicFinished.sectionIndex}
+              lastPracticeOutcome={demoTopicFinished}
+            />
+          </div>
+        ) : demoTopicIndex !== null ? (
           <StudentMaterialExam
             key={`demo-topic-${demoTopicIndex}`}
             artifacts={artifacts}
@@ -172,11 +205,16 @@ export function DemoFourStepStudy({
             materialId={DEMO_MATERIAL_ID}
             topicSectionIndex={demoTopicIndex}
             entrySource="topic_practice"
-            onContinueToTopic={(index) => setDemoTopicIndex(index)}
+            onContinueToTopic={(index) => {
+              setDemoTopicFinished(null);
+              setDemoTopicIndex(index);
+            }}
+            onTopicFinished={setDemoTopicFinished}
             onReturnToTopic={(_reinforce, outcome) => {
               if (outcome) {
                 setProgressOpen(true);
               } else {
+                setDemoTopicFinished(null);
                 setDemoTopicIndex(null);
                 setProgressOpen(false);
                 setActiveTab('resumen');
