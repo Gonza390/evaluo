@@ -410,7 +410,6 @@ export function MaterialStudyWorkspace({
   const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(
     initialPracticeSectionIndex
   );
-  const [topicPracticeFinished, setTopicPracticeFinished] = useState<TopicPracticeOutcome | null>(null);
   // Atribución explícita del acceso a la pestaña Ejercicios; no implica que
   // el alumno haya iniciado la tanda de preguntas.
   const [practiceEntry, setPracticeEntry] = useState<{
@@ -1453,7 +1452,6 @@ export function MaterialStudyWorkspace({
 
   const startChapterEvaluation = (index: number) => {
     if (index < 0 || index >= studySummary.sections.length || !topicQuestionCounts[index]) return;
-    setTopicPracticeFinished(null);
     setTopicReturn(null);
     setPracticeSectionIndex(index);
     setDiagnosticMode(false);
@@ -1494,7 +1492,6 @@ export function MaterialStudyWorkspace({
       // El popup y la pestaña directa abren la práctica GENERAL del PDF.
       // Solo el acceso desde un tema conserva la selección de ese tema.
       if (entry !== 'summary_chapter') {
-        setTopicPracticeFinished(null);
         setPracticeSectionIndex(undefined);
         demo?.onPracticeTopic?.(null);
       }
@@ -2109,42 +2106,15 @@ export function MaterialStudyWorkspace({
                   changeRecommendedTab('resumen');
                 }}
               />
-            ) : topicPracticeFinished && practiceSectionIndex !== undefined && progressConfig && isOwner ? (
-              <div data-topic-practice-final className="min-w-0 px-1 py-1 sm:px-2 sm:py-2">
-                <MaterialProgressContent
-                  key={`final-${topicPracticeFinished.sectionIndex}-${topicPracticeFinished.correct}-${topicPracticeFinished.incorrect}`}
-                  material={{ id: materialId, title }}
-                  sections={studySummary.sections}
-                  questionCounts={progressConfig.questionCounts}
-                  initialTopicSectionIndex={topicPracticeFinished.sectionIndex}
-                  initialReinforce={false}
-                  lastPracticeOutcome={topicPracticeFinished}
-                  glossary={studyGlossary}
-                  flashcards={studyArtifacts.flashcards}
-                  sourcePdfHref={viewerUrl}
-                  onPracticeTopic={(index) => {
-                    setTopicPracticeFinished(null);
-                    setPracticeSectionIndex(index);
-                    setTopicReturn(null);
-                    handleStudyTabChange('ejercicios', 'summary_chapter');
-                  }}
-                />
-              </div>
             ) : (
               <StudentMaterialExam
                 key={practiceSectionIndex ?? 'all'}
                 topicSectionIndex={practiceSectionIndex}
-                onTopicFinished={(outcome) => {
-                  if (!progressConfig || !isOwner) return;
-                  setTopicReturn({ index: outcome.sectionIndex, reinforce: false, outcome });
-                  setTopicPracticeFinished(outcome);
-                }}
                 entrySource={practiceEntry.source}
                 entryId={practiceEntry.id}
                 onContinueToTopic={(index) => {
                   if (!Number.isInteger(index) || index < 0 || index >= studySummary.sections.length) return;
                   setTopicReturn(null);
-                  setTopicPracticeFinished(null);
                   setPracticeSectionIndex(index);
                   setDiagnosticMode(false);
                   handleStudyTabChange('ejercicios', 'summary_chapter');
@@ -2344,7 +2314,6 @@ export function MaterialStudyWorkspace({
                         section_index: index,
                       });
                     }
-                    setTopicPracticeFinished(null);
                     setTopicReturn((previous) => ({
                       index,
                       reinforce: false,
