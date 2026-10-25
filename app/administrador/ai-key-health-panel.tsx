@@ -49,7 +49,7 @@ export function AIKeyHealthPanel({ initialReport }: { initialReport: AIKeyHealth
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-[16px] font-semibold text-[#1d2a44]">Salud de las claves de IA</h2>
-          <p className="mt-1 text-[13px] text-[#7f8aa3]">Chequeo diario de las 10 claves, con prueba manual y sin exponer credenciales.</p>
+          <p className="mt-1 text-[13px] text-[#7f8aa3]">Chequeo de credenciales configuradas, con prueba manual y sin exponer claves.</p>
         </div>
         <button
           type="button"
@@ -91,6 +91,12 @@ export function AIKeyHealthPanel({ initialReport }: { initialReport: AIKeyHealth
               </div>
             ))}
           </div>
+          {report.capabilities?.pdfGroqConfigured === false ? (
+            <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">
+              Respaldo Groq para PDFs: sin configurar. Las claves disponibles para la aplicación
+              no se reutilizan automáticamente en el procesamiento de materiales.
+            </p>
+          ) : null}
           <p className="mt-3 text-[12px] text-[#7f8aa3]">
             Un 429 puede señalar cuota o límite de velocidad. Un 503 señala indisponibilidad temporal del proveedor, no necesariamente una clave inválida.
             Las comprobaciones prueban el acceso al modelo; no garantizan que una generación larga de PDF vaya a finalizar.
