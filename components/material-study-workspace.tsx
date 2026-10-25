@@ -135,13 +135,23 @@ function revealTourContent(step: RecommendedStudyStep, focus = false, behavior: 
   // En Práctica, mostrar el título y las opciones juntos. En las demás vistas
   // mantener el capítulo/los temas en la parte superior del lector.
   const breathingRoom = step === 'practice' ? Math.min(112, reader.clientHeight * 0.2) : 12;
-  reader.scrollTo({
-    top: Math.max(
-      0,
-      reader.scrollTop + rect.top - reader.getBoundingClientRect().top - breathingRoom
-    ),
-    behavior,
-  });
+  const scrollBehavior = behavior === 'smooth' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : behavior;
+
+  if (behavior === 'smooth' && reader.scrollHeight <= reader.clientHeight + 4) {
+    // La demo muestra el Resumen expandido y utiliza el scroll de la página.
+    // Sólo el CTA de lectura usa este fallback; el onboarding no mueve la página.
+    target.scrollIntoView({ block: 'start', behavior: scrollBehavior });
+  } else {
+    // En el producto, Resumen tiene un lector con desplazamiento interno.
+    reader.scrollTo({
+      top: Math.max(
+        0,
+        reader.scrollTop + rect.top - reader.getBoundingClientRect().top - breathingRoom
+      ),
+      behavior: scrollBehavior,
+    });
+  }
   if (focus) target.focus({ preventScroll: true });
   return true;
 }
