@@ -1664,6 +1664,27 @@ assert.ok((rejectedFixtureQuality.bankQualityScore ?? 0) > 59,
   'Un solo rechazo no debe limitar la calidad del banco a 59.');
 assert.ok((rejectedFixtureQuality.bankAcceptanceRatio ?? 1) < 1);
 
+// Regresión de calidad: material con actividades abiertas pero sin diagnóstico autocorregible.
+// Debe conservar sus ejercicios sin declarar que está listo para medir preparación.
+const openOnlyQuality = buildStudentMaterialPedagogicalQualityReport({
+  pageCount: 7,
+  pages: Array.from({ length: 7 }, (_, index) =>
+    `Página ${index + 1} con suficiente contenido académico para detectar preguntas sin autocorrección.`
+  ),
+  documentAnalysis: { ...analysis, pageCount: 7, requiresOcr: false },
+  model: canonicalGlossaryFixture,
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  artifacts: {
+    ...canonicalPedagogy,
+    questions: canonicalPedagogy.questions.filter((question) => question.type === 'open'),
+    miniExamQuestionIds: [],
+  },
+  visionUsed: false,
+});
+assert.ok(openOnlyQuality.issues.includes('diagnostic_questions_insufficient'));
+assert.equal(openOnlyQuality.status, 'degraded');
+
 const missingCanonicalQuality = buildStudentMaterialPedagogicalQualityReport({
   pageCount: 2,
   pages: [
