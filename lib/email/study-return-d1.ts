@@ -127,7 +127,7 @@ export function buildStudyReturnD1Message(input: {
     { subject: string; heading: string; paragraph: string }
   > = {
     reinforce: {
-      subject: `Tus temas pendientes de ${title} siguen ahí`,
+      subject: `Retomá los temas que te costaron de ${title}`, 
       heading: input.action.title,
       paragraph: `En tu último estudio de ${title} detectamos temas que todavía podés reforzar. Retomá esos puntos y comprobá cuánto avanzaste.`,
     },
@@ -275,6 +275,7 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     skippedDisabled: 0,
     skippedAdmin: 0,
     skippedRecentEmail: 0,
+    skippedReturned: 0,
     skippedFrequency: 0,
     skippedInvalid: 0,
     failed: 0,
@@ -407,6 +408,21 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     const material = materialById.get(candidate.materialId);
     if (!material || material.user_id !== candidate.userId) {
       summary.skippedInvalid += 1;
+      continue;
+    }
+
+    // Revalidate activity just before sending: the student might have returned
+    // after we built the daily candidate list.
+    const { data: freshActivity, error: freshActivityError } = await db
+      .from('analytics_events')
+      .select('id')
+      .eq('user_id', candidate.userId)
+      .gt('created_at', candidate.lastActivityAt)
+      .or('session_key.is.null,session_key.not.like.server:%')
+      .limit(1);
+    if (freshActivityError) throw freshActivityError;
+    if ((freshActivity ?? []).length > 0) {
+      summary.skippedReturned += 1;
       continue;
     }
 
