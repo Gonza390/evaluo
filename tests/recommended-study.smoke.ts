@@ -266,6 +266,8 @@ assert.ok(materialWorkspaceSource.includes('data-summary-chapter-end={index}'),
   'Cada capítulo debe marcar su final para abrir el popup al terminar la lectura.');
 assert.ok(materialWorkspaceSource.includes('promptedChapterFinishesRef'),
   'El popup debe abrirse una sola vez por tema durante el recorrido.');
+assert.ok(materialWorkspaceSource.includes('chapterFinishNavigationPauseRef'),
+  'Al pasar al próximo capítulo no debe dispararse el popup inmediatamente.');
 assert.ok(materialWorkspaceSource.includes('visibleEndIndex()'),
   'La apertura debe depender de alcanzar el final del capítulo.');
 assert.ok(materialWorkspaceSource.includes('<SummaryChapterFinish'),
