@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type MouseEvent } from 'react';
-import { ArrowRight, BookOpen, CheckCircle2, Layers3 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ArrowRight, BookOpen, CheckCircle2, Layers3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
@@ -9,6 +10,7 @@ import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 type ReviewMode = 'flashcards' | 'glossary' | null;
 
 export function SummaryChapterFinish({
+  open,
   chapterIndex,
   chapterTitle,
   flashcards,
@@ -17,7 +19,9 @@ export function SummaryChapterFinish({
   hasNextChapter,
   onEvaluate,
   onContinue,
+  onClose,
 }: {
+  open: boolean;
   chapterIndex: number;
   chapterTitle: string;
   flashcards: StudyFlashcard[];
@@ -25,8 +29,10 @@ export function SummaryChapterFinish({
   canEvaluate: boolean;
   hasNextChapter: boolean;
   onEvaluate: () => void;
-  onContinue: (event: MouseEvent<HTMLButtonElement>) => void;
+  onContinue: () => void;
+  onClose: () => void;
 }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const [reviewMode, setReviewMode] = useState<ReviewMode>(null);
   const [flashcardIndex, setFlashcardIndex] = useState(0);
   const [answerVisible, setAnswerVisible] = useState(false);
@@ -39,20 +45,36 @@ export function SummaryChapterFinish({
   };
 
   return (
-    <aside
-      data-summary-chapter-finish={chapterIndex}
-      aria-label={`Qué hacer después de estudiar ${chapterTitle}`}
-      className="border-primary/15 bg-card mt-7 rounded-2xl border px-4 py-5 sm:px-6 sm:py-6"
-    >
-      <div className="flex items-center gap-2">
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
+      <DialogContent
+        data-summary-chapter-finish={chapterIndex}
+        showCloseButton={false}
+        aria-describedby={undefined}
+        onOpenAutoFocus={(event) => { event.preventDefault(); headingRef.current?.focus(); }}
+        overlayClassName="z-[135] bg-slate-950/45 backdrop-blur-[2px]"
+        className="border-border bg-card text-card-foreground z-[135] flex max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[500px] flex-col gap-0 overflow-hidden rounded-[22px] border p-0 shadow-[0_22px_75px_rgba(15,27,61,0.18)] sm:max-w-[500px]"
+      >
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 aria-hidden className="h-4 w-4 text-emerald-600" />
+              <span className="text-muted-foreground text-[10px] font-bold tracking-[0.13em] uppercase">
+                Tema {chapterIndex + 1} · Fin de la lectura
+              </span>
+            </div>
+            <button type="button" onClick={onClose} aria-label="Cerrar y volver al resumen"
+              className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              <X aria-hidden className="size-4" />
+            </button>
+          </div>
         <CheckCircle2 aria-hidden className="h-4 w-4 text-emerald-600" />
         <span className="text-muted-foreground text-[10px] font-bold tracking-[0.13em] uppercase">
           Tema {chapterIndex + 1} · Fin de la lectura
         </span>
       </div>
-      <h4 className="text-foreground mt-3 max-w-[26ch] text-xl font-bold leading-tight tracking-[-0.04em] sm:text-2xl">
+      <DialogTitle ref={headingRef} tabIndex={-1} className="text-foreground mt-3 text-left text-[20px] font-bold leading-tight tracking-[-0.04em] outline-none">
         Descubrí qué sabés y qué necesitás reforzar
-      </h4>
+      </DialogTitle>
       <p className="text-muted-foreground mt-2 text-[13px]">{chapterTitle}</p>
 
       <Button
@@ -150,6 +172,8 @@ export function SummaryChapterFinish({
           </button>
         </div>
       ) : null}
-    </aside>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
