@@ -121,7 +121,7 @@ export function DemoFourStepStudy({
   glossary: StudyGlossaryItem[];
   pageCount: number;
   initialTab?: StudyTabId;
-  initialStudyEntryStage?: 'choice' | 'plan';
+  initialStudyEntryStage?: 'choice';
   internationalSource?: string;
 }) {
   const [activeTab, setActiveTab] = useState<StudyTabId>(initialTab);
