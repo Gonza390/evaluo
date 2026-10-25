@@ -13,11 +13,6 @@ type Props = {
   onDismiss: () => void;
 };
 
-function resourceCaption(count: number | null, available: boolean, singular: string, plural: string) {
-  if (count !== null) return `${count} ${count === 1 ? singular : plural}`;
-  return available ? 'En tu PDF' : 'No disponible';
-}
-
 /** Breve introducción al tema 1, superpuesta sobre el Resumen. */
 export function PdfStudyStartGuide({ open, firstTopicTitle, resources, onStart, onDismiss }: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -59,27 +54,27 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, resources, onStart, 
               {hasFirstTopic ? firstTopicTitle : 'El resumen de tu material'}
             </p>
             <p className="text-muted-foreground mt-2 text-[12px] leading-5">
-              Tu material de estudio está preparado:
+              En todo tu PDF tenés:
             </p>
 
             <div data-pdf-study-resources className="mt-3 grid grid-cols-3 gap-2">
               <div className="border-border bg-muted/25 flex min-w-0 flex-col items-center rounded-[13px] border px-1.5 py-3 text-center">
                 <BookOpenText className="text-primary size-5" aria-hidden="true" />
                 <span className="text-foreground mt-2 text-[12px] font-semibold">Resumen</span>
-                <span className="text-muted-foreground mt-0.5 text-[10.5px]">Tema 1</span>
+                <span className="text-muted-foreground mt-0.5 text-[10.5px]">Por temas</span>
               </div>
               <div className="border-border bg-muted/25 flex min-w-0 flex-col items-center rounded-[13px] border px-1.5 py-3 text-center">
                 <Layers className="text-primary size-5" aria-hidden="true" />
                 <span className="text-foreground mt-2 text-[12px] font-semibold">Flashcards</span>
                 <span data-pdf-study-flashcards-caption className="text-muted-foreground mt-0.5 text-[10.5px]">
-                  {resourceCaption(resources.flashcardCount, resources.hasFlashcards, 'tarjeta', 'tarjetas')}
+                  {resources.totalFlashcards} {resources.totalFlashcards === 1 ? 'tarjeta' : 'tarjetas'}
                 </span>
               </div>
               <div className="border-border bg-muted/25 flex min-w-0 flex-col items-center rounded-[13px] border px-1.5 py-3 text-center">
                 <SquareLibrary className="text-primary size-5" aria-hidden="true" />
                 <span className="text-foreground mt-2 text-[12px] font-semibold">Glosario</span>
                 <span data-pdf-study-glossary-caption className="text-muted-foreground mt-0.5 text-[10.5px]">
-                  {resourceCaption(resources.glossaryCount, resources.hasGlossary, 'término', 'términos')}
+                  {resources.totalGlossaryTerms} {resources.totalGlossaryTerms === 1 ? 'término' : 'términos'}
                 </span>
               </div>
             </div>
