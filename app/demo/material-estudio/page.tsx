@@ -29,9 +29,8 @@ export default async function DemoMaterialEstudioPage({
   const uploadHref = internationalSource
     ? `/dashboard?openUpload=1&source=${encodeURIComponent(internationalSource)}`
     : UPLOAD_HREF;
-  // Un enlace de revisión abre directamente la elección o el recorrido de capítulos,
-  // sin interferir con el onboarding de los alumnos que suben su propio PDF.
-  const initialStudyEntryStage = start === 'eleccion' ? 'choice' : start === 'plan' ? 'plan' : undefined;
+  // La demo permite revisar la pregunta de inicio de estudio; el plan anterior se retiró.
+  const initialStudyEntryStage = start === 'eleccion' ? 'choice' : undefined;
   const guided = tour !== '0' && !initialStudyEntryStage;
 
   return (
