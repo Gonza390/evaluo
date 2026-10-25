@@ -81,6 +81,7 @@ function isMeaningfulStudySignal(row: AnalyticsRow) {
   return new Set([
     'student_material_study_opened',
     'summary_reading_started',
+    'summary_chapter_read',
     'summary_completed',
     'student_material_exam_started',
     'student_material_exam_completed',
