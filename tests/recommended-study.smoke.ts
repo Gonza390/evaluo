@@ -323,6 +323,8 @@ assert.match(studyStartGuideSource, /data-pdf-study-first-topic/,
   'La guía debe mostrar el título del primer tema.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
   'La guía debe permitir iniciar el tema seleccionado.');
+assert.match(studyStartGuideSource, /data-pdf-study-mobile-start-cta/,
+  'En móvil la acción de comenzar debe permanecer visible en el pie de la guía.');
 assert.doesNotMatch(studyStartGuideSource, /Un tema a la vez, a tu ritmo|Cuando estés listo, avanzamos al siguiente/,
   'No debe reaparecer el contenido que el usuario descartó.');
 
