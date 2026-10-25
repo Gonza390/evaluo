@@ -114,8 +114,8 @@ const demoPageSource = readFileSync('app/demo/material-estudio/page.tsx', 'utf8'
 const demoWorkspaceSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
 assert.match(demoPageSource, /start === 'eleccion' \? 'choice'/,
   'La demo debe permitir abrir la pregunta desde un enlace directo.');
-assert.match(demoPageSource, /start === 'plan' \? 'plan'/,
-  'La demo debe permitir abrir el orden recomendado de temas desde un enlace directo.');
+assert.doesNotMatch(demoPageSource, /start === 'plan'/,
+  'La demo no debe ofrecer un enlace al plan retirado.');
 assert.match(demoPageSource, /tour !== '0' && !initialStudyEntryStage/,
   'Los enlaces directos de revisión no deben iniciar el onboarding por encima de la pregunta.');
 assert.match(demoWorkspaceSource, /initialStudyEntryStage=\{initialStudyEntryStage\}/,
