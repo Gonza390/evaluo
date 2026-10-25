@@ -260,6 +260,7 @@ assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0
 assert.doesNotMatch(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
   'Al saltar el tour no hay que forzar la navegación al capítulo 1.');
 const priorStudyPopupSource = readFileSync('components/study/pdf-prior-study-popup.tsx', 'utf8');
+const studyStartGuideSource = readFileSync('components/study/pdf-study-start-guide.tsx', 'utf8');
 const priorStudyLogicSource = readFileSync('lib/pdf-prior-study.ts', 'utf8');
 const firstUploadSource = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
 const quickUploadSource = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
@@ -300,6 +301,31 @@ assert.match(priorStudyPopupSource, /grid-cols-1 gap-3 sm:grid-cols-2/,
 
 assert.match(priorStudyPopupSource, /showCloseButton=\{false\}/,
   'La pregunta debe tener un diseño simple, sin tercer botón.');
+assert.match(materialWorkspaceSource, /<PdfStudyStartGuide/,
+  'Elegir empezar desde cero debe mostrar la guía para estudiar.');
+assert.match(materialWorkspaceSource, /if \(choice === 'not_studied'\) setStudyStartGuideOpen\(true\)/,
+  'La guía debe abrirse solamente cuando el estudiante comienza desde cero.');
+assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
+  'El botón de la guía debe abrir el primer capítulo real en Resumen.');
+assert.match(materialWorkspaceSource, /studySummary\.sections\.length > 0 \? summaryChapters\[0\]\?\.displayTitle/,
+  'La guía debe utilizar el título real de la primera sección del PDF.');
+assert.match(studyStartGuideSource, /data-pdf-study-start-guide/,
+  'La guía debe ser una pantalla propia, no una tarjeta encima del Resumen.');
+assert.match(studyStartGuideSource, /Primero, leé el resumen/,
+  'La guía debe comenzar indicando que el alumno lea el tema.');
+assert.match(studyStartGuideSource, /En el glosario podés consultar los términos/,
+  'La guía debe explicar cómo usar el glosario.');
+assert.match(studyStartGuideSource, /También tenés flashcards/,
+  'La guía debe explicar que las flashcards sirven para repasar.');
+assert.match(studyStartGuideSource, /Después, comprobá lo aprendido/,
+  'La guía debe indicar que después se practica ese tema.');
+assert.match(studyStartGuideSource, /data-pdf-study-first-topic/,
+  'La guía debe mostrar el título del primer tema.');
+assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
+  'La guía debe permitir iniciar el tema seleccionado.');
+assert.doesNotMatch(studyStartGuideSource, /Un tema a la vez, a tu ritmo|Cuando estés listo, avanzamos al siguiente/,
+  'No debe reaparecer el contenido que el usuario descartó.');
+
 assert.match(priorStudyLogicSource, /materialId/,
   'El almacenamiento se debe aislar por cada PDF.');
 assert.doesNotMatch(materialWorkspaceSource, /showStudyChoice|data-first-pdf-study-entry/,
