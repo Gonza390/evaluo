@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { ArrowRight, BookOpenText, ClipboardCheck, Lightbulb, Sparkles, X } from 'lucide-react';
+import { ArrowRight, BookOpenText, ClipboardCheck, Lightbulb, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 type Props = {
@@ -55,14 +55,9 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }
             <p className="text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
               Tu guía de estudio
             </p>
-            <div className="flex items-center gap-2">
-              <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
-                <Sparkles className="size-[16px]" />
-              </span>
-              <button type="button" onClick={onDismiss} aria-label="Cerrar guía y volver al resumen" className="text-muted-foreground hover:bg-muted flex size-8 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
+            <button type="button" onClick={onDismiss} aria-label="Cerrar guía y volver al resumen" className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
+              <X className="size-4" aria-hidden="true" />
+            </button>
           </div>
 
           <DialogTitle ref={headingRef} tabIndex={-1} className="text-foreground mt-2.5 text-left text-[20px] font-bold leading-tight tracking-[-0.035em] outline-none">
