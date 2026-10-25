@@ -432,6 +432,8 @@ export function MaterialStudyWorkspace({
   const [activeSummaryChapterIndex, setActiveSummaryChapterIndex] = useState(0);
   const scrollFirstChapterSmoothlyRef = useRef(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
+  const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
+  const promptedChapterFinishesRef = useRef(new Set<number>());
   const studyGuideArrivalHandledRef = useRef<string | null>(null);
   const onboardingTransitionRef = useRef<number | null>(null);
 
@@ -974,6 +976,110 @@ export function MaterialStudyWorkspace({
     };
   }, [activeTab, progressOpen, summaryChapters.length, materialId, recommendedActive, studyStartGuideOpen]);
 
+  // La invitación aparece como modal al llegar al final de la lectura,
+  // nunca como una tarjeta bajo el texto. No se reabre al volver a pasar.
+  useEffect(() => {
+    if (
+      activeTab !== 'resumen' ||
+      progressOpen ||
+      recommendedActive ||
+      studyStartGuideOpen ||
+      chapterFinishIndex !== null ||
+      summaryChapters.length === 0
+    ) return;
+
+    const regions = Array.from(
+      document.querySelectorAll<HTMLElement>('[role="region"][aria-label="Contenido de estudio"]')
+    );
+    const region = regions.find((candidate) => {
+      const rect = candidate.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 &&
+        rect.top < window.innerHeight && rect.bottom > 0 &&
+        candidate.querySelector('[data-summary-chapter-end]');
+    });
+    if (!region) return;
+
+    const endings = Array.from(
+      region.querySelectorAll<HTMLElement>('[data-summary-chapter-end]')
+    );
+    if (endings.length === 0) return;
+
+    let frame = 0;
+    let promptTimer = 0;
+    let pendingIndex: number | null = null;
+    let lastReaderScroll = region.scrollTop;
+    let lastPageScroll = window.scrollY;
+
+    const clearPending = () => {
+      window.clearTimeout(promptTimer);
+      promptTimer = 0;
+      pendingIndex = null;
+    };
+
+    const visibleEndIndex = () => {
+      if (document.visibilityState !== 'visible') return null;
+      const readerRect = region.getBoundingClientRect();
+      const viewportTop = Math.max(0, readerRect.top);
+      const viewportBottom = Math.min(window.innerHeight, readerRect.bottom);
+      const visibleHeight = viewportBottom - viewportTop;
+      if (visibleHeight <= 120) return null;
+
+      // El final del tema tiene que llegar al área de lectura (no basta
+      // con que aparezca fugazmente en el borde inferior de la pantalla).
+      const endLine = viewportTop + visibleHeight * 0.78;
+      const startLine = viewportTop + Math.min(24, visibleHeight * 0.08);
+      for (const marker of endings) {
+        const index = Number(marker.dataset.summaryChapterEnd);
+        if (!Number.isInteger(index) || promptedChapterFinishesRef.current.has(index)) continue;
+        const section = marker.closest<HTMLElement>('[data-summary-reading-section]');
+        if (!section || section.getBoundingClientRect().top > endLine) continue;
+        const markerTop = marker.getBoundingClientRect().top;
+        if (markerTop >= startLine && markerTop <= endLine) return index;
+      }
+      return null;
+    };
+
+    const checkOnScroll = () => {
+      frame = 0;
+      const index = visibleEndIndex();
+      if (index === null) {
+        clearPending();
+        return;
+      }
+      if (pendingIndex === index) return;
+      clearPending();
+      pendingIndex = index;
+      // Evita interrumpir al estudiante cuando pasa rápidamente por un tema.
+      promptTimer = window.setTimeout(() => {
+        promptTimer = 0;
+        if (visibleEndIndex() !== index || promptedChapterFinishesRef.current.has(index)) {
+          pendingIndex = null;
+          return;
+        }
+        promptedChapterFinishesRef.current.add(index);
+        pendingIndex = null;
+        setChapterFinishIndex(index);
+      }, 900);
+    };
+
+    const onScroll = () => {
+      const readerPos = region.scrollTop;
+      const pagePos = window.scrollY;
+      if (Math.abs(readerPos - lastReaderScroll) < 2 && Math.abs(pagePos - lastPageScroll) < 2) return;
+      lastReaderScroll = readerPos;
+      lastPageScroll = pagePos;
+      if (!frame) frame = window.requestAnimationFrame(checkOnScroll);
+    };
+    region.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      clearPending();
+      region.removeEventListener('scroll', onScroll);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [activeTab, progressOpen, recommendedActive, studyStartGuideOpen, chapterFinishIndex, summaryChapters.length, materialId]);
+
   const summaryCheckPlan = useMemo(
     () => buildSummaryCheckPlan(fullSummarySections, studyArtifacts),
     [fullSummarySections, studyArtifacts]
@@ -1327,12 +1433,13 @@ export function MaterialStudyWorkspace({
     handleStudyTabChange('ejercicios', 'summary_chapter');
   };
 
-  const continueAfterChapter = (event: MouseEvent<HTMLButtonElement>, index: number) => {
+  const continueAfterChapter = (index: number) => {
     const nextChapter = summaryChapters[index + 1];
+    setChapterFinishIndex(null);
     if (!nextChapter) return;
-    const target = event.currentTarget
-      .closest('[role="tabpanel"]')
-      ?.querySelector<HTMLElement>(`#${CSS.escape(nextChapter.anchor)}`);
+    const target = Array.from(
+      document.querySelectorAll<HTMLElement>(`#${CSS.escape(nextChapter.anchor)}`)
+    ).find((node) => node.getBoundingClientRect().width > 0);
     if (!target) return;
     setActiveSummaryChapterIndex(index + 1);
     target.scrollIntoView({
@@ -1834,16 +1941,7 @@ export function MaterialStudyWorkspace({
                         />
                       ) : null}
 
-                      <SummaryChapterFinish
-                        chapterIndex={index}
-                        chapterTitle={section.displayTitle}
-                        concepts={topicStudyResources[index]?.concepts ?? []}
-                        flashcards={topicStudyResources[index]?.flashcards ?? []}
-                        canEvaluate={Boolean(topicQuestionCounts[index])}
-                        hasNextChapter={index < summaryChapters.length - 1}
-                        onEvaluate={() => startChapterEvaluation(index)}
-                        onContinue={(event) => continueAfterChapter(event, index)}
-                      />
+                      <div data-summary-chapter-end={index} aria-hidden="true" className="mt-2 h-px w-full" />
                     </section>
                   ))}
 
@@ -2270,6 +2368,25 @@ export function MaterialStudyWorkspace({
           handleStudyTabChange(section);
         }}
       />
+      {chapterFinishIndex !== null && summaryChapters[chapterFinishIndex] ? (
+        <SummaryChapterFinish
+          key={chapterFinishIndex}
+          open
+          chapterIndex={chapterFinishIndex}
+          chapterTitle={summaryChapters[chapterFinishIndex].displayTitle}
+          concepts={topicStudyResources[chapterFinishIndex]?.concepts ?? []}
+          flashcards={topicStudyResources[chapterFinishIndex]?.flashcards ?? []}
+          canEvaluate={Boolean(topicQuestionCounts[chapterFinishIndex])}
+          hasNextChapter={chapterFinishIndex < summaryChapters.length - 1}
+          onEvaluate={() => {
+            const index = chapterFinishIndex;
+            setChapterFinishIndex(null);
+            startChapterEvaluation(index);
+          }}
+          onContinue={() => continueAfterChapter(chapterFinishIndex)}
+          onClose={() => setChapterFinishIndex(null)}
+        />
+      ) : null}
       {activeSummaryCheck ? (
         <SummaryTopicCheckPopup
           open
