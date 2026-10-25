@@ -291,6 +291,15 @@ assert.ok(materialWorkspaceSource.includes("handleStudyTabChange('ejercicios', '
   'El CTA debe abrir la práctica específica del tema y no el banco completo.');
 assert.match(summaryChapterFinishSource, /Descubrí qué sabés y qué necesitás reforzar/,
   'El encabezado debe vender el beneficio, sin sobreexplicar la evaluación.');
+assert.match(summaryChapterFinishSource, /data-summary-topic-name/,
+  'El pop-up debe mostrar el nombre real del tema, no solo su número.');
+assert.doesNotMatch(summaryChapterFinishSource, /Tema \\{chapterIndex \\+ 1\\} · Lectura finalizada/,
+  'El encabezado no debe volver a usar Tema 1 como identificador principal.');
+assert.match(summaryChapterFinishSource, /Comprobar cuánto aprendí/,
+  'El CTA debe comunicar el beneficio de la evaluación, no ser una orden genérica.');
+assert.doesNotMatch(summaryChapterFinishSource, /Evaluar este tema/,
+  'El CTA genérico no debe aparecer en el nuevo pop-up.');
+
 assert.match(summaryChapterFinishSource, /data-summary-topic-evaluate/,
   'La evaluación debe ser la acción principal.');
 assert.match(summaryChapterFinishSource, /data-summary-topic-flashcards/,
