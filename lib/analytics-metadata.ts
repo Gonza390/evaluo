@@ -466,6 +466,14 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'material_id',
     'flow_version',
   ],
+  summary_chapter_read: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'material_id',
+    'flow_version',
+    'chapter_index',
+  ],
   summary_completed: [
     'attribution',
     'anonymous_id',
