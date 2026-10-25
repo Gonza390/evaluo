@@ -1653,7 +1653,7 @@ function anchorAndCompleteChapterQuestions(
       ).map((item) => truncateAtWord(item.detail, 210));
       const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
       if (options.length < 3) continue;
-            const prompts = [
+      const prompts = [
         `¿Cuál de las opciones define mejor “${concept.term}”?`,
         `¿Cómo se define “${concept.term}”?`,
         `¿Qué característica describe “${concept.term}”?`,
