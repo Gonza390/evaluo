@@ -53,6 +53,7 @@ import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboardi
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { PdfPriorStudyPopup } from '@/components/study/pdf-prior-study-popup';
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
+import { getFirstTopicResourceInfo } from '@/lib/student-materials/first-topic-resources';
 import {
   isPriorStudyChoice,
   priorStudyStorageKey,
@@ -124,7 +125,7 @@ function getVisibleTourReader(): HTMLElement | null {
     })[0] ?? null;
 }
 
-function revealTourContent(step: RecommendedStudyStep, focus = false): boolean {
+function revealTourContent(step: RecommendedStudyStep, focus = false, behavior: ScrollBehavior = 'instant'): boolean {
   const reader = getVisibleTourReader();
   const target = reader?.querySelector<HTMLElement>(tourStudySelectors[step]);
   if (!reader || !target) return false;
@@ -139,7 +140,7 @@ function revealTourContent(step: RecommendedStudyStep, focus = false): boolean {
       0,
       reader.scrollTop + rect.top - reader.getBoundingClientRect().top - breathingRoom
     ),
-    behavior: 'instant',
+    behavior,
   });
   if (focus) target.focus({ preventScroll: true });
   return true;
@@ -433,6 +434,7 @@ export function MaterialStudyWorkspace({
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
+  const scrollFirstChapterSmoothlyRef = useRef(false);
   const [priorStudyOpen, setPriorStudyOpen] = useState(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
@@ -837,7 +839,8 @@ export function MaterialStudyWorkspace({
     let nextFrame = 0;
     const frame = window.requestAnimationFrame(() => {
       nextFrame = window.requestAnimationFrame(() => {
-        revealTourContent('summary', true);
+        revealTourContent('summary', true, scrollFirstChapterSmoothlyRef.current ? 'smooth' : 'instant');
+        scrollFirstChapterSmoothlyRef.current = false;
         setFocusFirstChapterOnExit(false);
       });
     });
@@ -881,6 +884,11 @@ export function MaterialStudyWorkspace({
         anchor: buildSummaryChapterAnchor(index, section.title),
       })),
     [fullSummarySections]
+  );
+
+  const firstTopicResources = useMemo(
+    () => getFirstTopicResourceInfo(studySummary.sections, studyArtifacts.flashcards, usefulGlossary),
+    [studySummary.sections, studyArtifacts.flashcards, usefulGlossary]
   );
 
   const summaryCheckPlan = useMemo(
@@ -1212,6 +1220,7 @@ export function MaterialStudyWorkspace({
     setActiveTab('resumen');
     demo?.onTabChange('resumen');
     setIsViewerVisible(false);
+    scrollFirstChapterSmoothlyRef.current = true;
     setFocusFirstChapterOnExit(true);
     if (isOwner && !demo) {
       trackMarketingEvent('cta_click', {
@@ -2191,6 +2200,7 @@ export function MaterialStudyWorkspace({
       <PdfStudyStartGuide
         open={studyStartGuideOpen && !recommendedActive}
         firstTopicTitle={studySummary.sections.length > 0 ? summaryChapters[0]?.displayTitle ?? null : null}
+        resources={firstTopicResources}
         onStart={startFirstTopic}
         onDismiss={() => setStudyStartGuideOpen(false)}
       />
