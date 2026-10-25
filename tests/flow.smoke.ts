@@ -672,4 +672,16 @@ for (const count of [7, 31]) {
   assert.equal(new Set(selected.map((item) => item.id)).size, selected.length, 'Sin repetidos.');
 }
 
+// La eliminación de cuenta sigue disponible y explícita detrás de un apartado de privacidad.
+const accountSettings = readFileSync('components/settings/delete-account-section.tsx', 'utf8');
+assert.match(accountSettings, /<details[^>]*>/);
+assert.match(accountSettings, /<summary/);
+assert.match(accountSettings, /Privacidad y cuenta/);
+assert.match(accountSettings, /Eliminar mi cuenta/);
+assert.match(accountSettings, /Ver detalles/);
+assert.match(accountSettings, /fetch\('\/api\/account\/delete'/);
+assert.match(accountSettings, /confirmation\.trim\(\)\.toUpperCase\(\) !== 'ELIMINAR'/);
+assert.match(accountSettings, /role="alert"/);
+assert.doesNotMatch(accountSettings, /Zona sensible/);
+
 console.log('Flow smoke tests passed.');
