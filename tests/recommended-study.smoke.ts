@@ -294,6 +294,12 @@ assert.ok(materialWorkspaceSource.includes('dwellWithoutScroll'),
   'La evaluación no debe interrumpir instantáneamente una lectura corta sin scroll.');
 assert.ok(materialWorkspaceSource.includes('resumeTimer = window.setTimeout(checkReadingPosition, pause + 30)'),
   'El disparador debe volver a comprobar la posición después de la navegación automática.');
+assert.ok(materialWorkspaceSource.includes('previouslyBelowViewport.delete(index) && hasUserScrolled'),
+  'Al cruzar el fin del capítulo con scroll rápido también debe recordarse la lectura terminada.');
+assert.ok(materialWorkspaceSource.includes('pendingIndex !== null && isEndReached(pendingIndex)'),
+  'El capítulo alcanzado debe mantenerse pendiente aunque su marca salga por arriba del lector.');
+assert.ok(materialWorkspaceSource.includes('!isEndReached(index)'),
+  'La comprobación final debe validar que el lector todavía pasó el final del capítulo, no que la marca siga visible.');
 assert.doesNotMatch(materialWorkspaceSource, /visibleTop \+ visibleHeight \* 0\.78/,
   'El final del capítulo no debe exigir una ventana estrecha de scroll.');
 
