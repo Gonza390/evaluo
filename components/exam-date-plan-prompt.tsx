@@ -119,12 +119,8 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
     [canOpenInSession, checking, materialId, saved, visible]
   );
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void checkAndOpen(false);
-    }, 8_000);
-    return () => window.clearTimeout(timer);
-  }, [checkAndOpen]);
+  // Sólo mostrar este formulario cuando el estudiante termina una actividad
+  // que solicita la fecha explícitamente; nunca interrumpir la lectura por tiempo.
 
   useEffect(() => {
     if (triggerNonce <= 0) return;
@@ -175,7 +171,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
           role="dialog"
           aria-modal="true"
           aria-labelledby="exam-date-prompt-title"
-          className="relative w-full max-w-[520px] overflow-hidden rounded-t-[28px] border border-white/60 bg-white shadow-[0_30px_100px_rgba(2,12,35,0.35)] sm:rounded-[28px]"
+          className="relative max-h-[calc(100dvh-1rem)] w-full min-w-0 max-w-[520px] overflow-x-hidden overflow-y-auto rounded-t-[28px] border border-white/60 bg-white shadow-[0_30px_100px_rgba(2,12,35,0.35)] sm:rounded-[28px]"
         >
           <button
             type="button"
@@ -200,8 +196,11 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 id="exam-date-prompt-title"
                 className="mt-2 pr-8 text-[25px] font-bold leading-[1.14] tracking-[-0.035em] text-[#0F1B3D] sm:text-[29px]"
               >
-                ¿Cuándo rendís “{fileName}”?
+                ¿Cuándo rendís este examen?
               </h2>
+              <p className="mt-2 line-clamp-2 min-w-0 break-all text-[12px] leading-5 text-slate-500" title={fileName}>
+                Material: {fileName}
+              </p>
 
               <p className="mt-4 text-[15px] leading-6 text-slate-600">
                 Cargá la fecha y Evaluo organiza tus repasos hasta el examen para ayudarte a llegar con los temas importantes reforzados.
@@ -220,9 +219,8 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                   value={examDate}
                   min={minDate}
                   onChange={(event) => setExamDate(event.target.value)}
-                  className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 pr-12 text-[15px] font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="h-13 w-full min-w-0 rounded-2xl border border-slate-300 bg-white px-4 text-[15px] font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
-                <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
               </div>
 
               <button
@@ -261,7 +259,10 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
               </h2>
 
               <p className="mt-3 text-[15px] leading-6 text-slate-600">
-                Evaluo va a usar esta fecha para ayudarte a organizar el repaso de “{fileName}”.
+                Evaluo va a usar esta fecha para ayudarte a organizar tus repasos.
+              </p>
+              <p className="mt-2 line-clamp-2 min-w-0 break-all text-[12px] leading-5 text-slate-500" title={fileName}>
+                Material: {fileName}
               </p>
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-[#E7EBF4]">
