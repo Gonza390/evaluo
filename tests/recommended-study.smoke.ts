@@ -112,14 +112,12 @@ const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
 const demoPageSource = readFileSync('app/demo/material-estudio/page.tsx', 'utf8');
 const demoWorkspaceSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
-assert.match(demoPageSource, /start === 'eleccion' \? 'choice'/,
-  'La demo debe permitir abrir la pregunta desde un enlace directo.');
-assert.doesNotMatch(demoPageSource, /start === 'plan'/,
-  'La demo no debe ofrecer un enlace al plan retirado.');
-assert.match(demoPageSource, /tour !== '0' && !initialStudyEntryStage/,
-  'Los enlaces directos de revisión no deben iniciar el onboarding por encima de la pregunta.');
-assert.match(demoWorkspaceSource, /initialStudyEntryStage=\{initialStudyEntryStage\}/,
-  'La demo debe reenviar la etapa solicitada al espacio de estudio.');
+assert.doesNotMatch(demoPageSource, /start === 'eleccion'|start === 'plan'/,
+  'La demo no debe ofrecer etapas de inicio eliminadas.');
+assert.match(demoPageSource, /tour !== '0'/,
+  'La demo debe conservar el onboarding de cuatro pasos.');
+assert.doesNotMatch(demoWorkspaceSource, /initialStudyEntryStage/,
+  'La demo no debe recibir estados de la tarjeta de elección.');
 
 const firstGuideSource = readFileSync('components/study/recommended-study-guide.tsx', 'utf8');
 const progressPanelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
@@ -238,26 +236,10 @@ assert.match(materialWorkspaceSource, /reader\.scrollTo\(/,
   'Los desplazamientos deben quedar dentro del lector.');
 assert.match(materialWorkspaceSource, /MutationObserver/,
   'Progreso debe poder mostrar sus temas aunque se rendericen después.');
-assert.match(materialWorkspaceSource, /setStudyEntryStage\(showStudyChoice \? 'choice' : null\)/,
-  'Al completar la guía debe mostrarse la elección sin exigir una práctica.');
-assert.match(materialWorkspaceSource, /¿Ya estudiaste este material\?/,
-  'El alumno debe poder declarar si conoce el PDF.');
-assert.match(materialWorkspaceSource, /Empiezo desde cero/,
-  'El alumno que no estudió debe poder comenzar desde el resumen.');
-assert.match(materialWorkspaceSource, /Ya lo estudié/,
-  'El alumno que ya conoce algo debe tener una ruta directa a Práctica.');
-assert.doesNotMatch(materialWorkspaceSource, /PdfTopicStudyPlan|data-first-pdf-study-plan/,
-  'La pantalla de plan anterior debe permanecer retirada hasta el nuevo diseño.');
-assert.match(materialWorkspaceSource, /choice === 'not_studied'/,
-  'Quien no estudió debe conservar el acceso al Resumen.');
-assert.match(materialWorkspaceSource, /handleStudyTabChange\('ejercicios'\)/,
-  'La ruta de quien sabe algo debe abrir Práctica del PDF.');
-assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(summaryChapters.length > 0\)/,
-  'Empezar el plan debe enfocar el primer capítulo real.');
-assert.match(materialWorkspaceSource, /Prefiero explorar el material libremente/,
-  'La pantalla de elección debe permitir explorar el material sin restricciones.');
-assert.match(materialWorkspaceSource, /studyEntryStage === 'choice'/,
-  'La interfaz de elección debe ser compacta y de una sola pregunta.');
+assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === 'completed'\)/,
+  'Terminar el onboarding debe abrir Resumen directamente.');
+assert.doesNotMatch(materialWorkspaceSource, /studyEntryStage|chooseStudyEntry|data-first-pdf-study-entry|¿Ya estudiaste este material\?/,
+  'No deben persistir la tarjeta ni su lógica.');
 
 assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
   'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
