@@ -1021,6 +1021,10 @@ export function MaterialStudyWorkspace({
       pendingIndex = null;
     };
 
+    // Recordamos qué finales estaban más abajo del lector. Así, si un scroll rápido
+    // atraviesa el final antes de que el temporizador dispare, no perdemos el tema.
+    const previouslyBelowViewport = new Set<number>();
+
     const visibleEndIndex = () => {
       if (document.visibilityState !== 'visible') return null;
       const readerRect = region.getBoundingClientRect();
@@ -1028,15 +1032,33 @@ export function MaterialStudyWorkspace({
       const visibleBottom = Math.min(window.innerHeight, readerRect.bottom);
       if (visibleBottom - visibleTop <= 120) return null;
 
-      // Basta con que el final haya entrado en el área visible de lectura.
-      // Un límite del 78 % hacía que el popup no se abriera en temas cortos.
+      let visibleIndex: number | null = null;
+      let crossedIndex: number | null = null;
       for (const marker of endings) {
         const index = Number(marker.dataset.summaryChapterEnd);
         if (!Number.isInteger(index) || promptedChapterFinishesRef.current.has(index)) continue;
         const top = marker.getBoundingClientRect().top;
-        if (top >= visibleTop - 64 && top <= visibleBottom - 20) return index;
+        if (top > visibleBottom - 20) {
+          previouslyBelowViewport.add(index);
+          continue;
+        }
+        // La marca pudo quedar arriba del lector durante un desplazamiento veloz.
+        if (previouslyBelowViewport.delete(index) && hasUserScrolled) crossedIndex = index;
+        if (top >= visibleTop - 64 && visibleIndex === null) visibleIndex = index;
       }
-      return null;
+      return visibleIndex ?? crossedIndex;
+    };
+
+    const isEndReached = (index: number) => {
+      if (document.visibilityState !== 'visible') return false;
+      const readerRect = region.getBoundingClientRect();
+      const marker = endings.find((ending) => Number(ending.dataset.summaryChapterEnd) === index);
+      return Boolean(
+        marker &&
+        readerRect.width > 0 &&
+        readerRect.height > 0 &&
+        marker.getBoundingClientRect().top <= Math.min(window.innerHeight, readerRect.bottom) - 20
+      );
     };
 
     const checkReadingPosition = () => {
@@ -1049,7 +1071,11 @@ export function MaterialStudyWorkspace({
         resumeTimer = window.setTimeout(checkReadingPosition, pause + 30);
         return;
       }
-      const index = visibleEndIndex();
+      // Un final ya alcanzado sigue siendo válido aunque la marca haya salido
+      // por arriba de la pantalla: sólo se cancela si volvimos antes del final.
+      const index = pendingIndex !== null && isEndReached(pendingIndex)
+        ? pendingIndex
+        : visibleEndIndex();
       if (index === null) {
         clearPending();
         return;
@@ -1071,7 +1097,7 @@ export function MaterialStudyWorkspace({
         pendingIndex = null;
         if (
           Date.now() < chapterFinishNavigationPauseRef.current ||
-          visibleEndIndex() !== index ||
+          !isEndReached(index) ||
           promptedChapterFinishesRef.current.has(index)
         ) return;
         promptedChapterFinishesRef.current.add(index);
