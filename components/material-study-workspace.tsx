@@ -52,7 +52,10 @@ import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
+import { SummaryChapterFinish } from '@/components/study/summary-chapter-finish';
 import { getFirstTopicResourceInfo } from '@/lib/student-materials/first-topic-resources';
+import { getTopicStudyResources } from '@/lib/student-materials/topic-study-resources';
+import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
@@ -888,6 +891,16 @@ export function MaterialStudyWorkspace({
     [studySummary.sections, studyArtifacts.flashcards, usefulGlossary]
   );
 
+  const topicQuestionCounts = useMemo(
+    () => getTopicQuestionCounts(studySummary.sections, studyArtifacts.questions),
+    [studySummary.sections, studyArtifacts.questions]
+  );
+  const topicStudyResources = useMemo(
+    () => summaryChapters.map((_, index) =>
+      getTopicStudyResources(studySummary.sections, usefulGlossary, studyArtifacts.flashcards, index)),
+    [summaryChapters, studySummary.sections, usefulGlossary, studyArtifacts.flashcards]
+  );
+
   // Mantener sincronizado el índice «Contenido» con el capítulo realmente visible.
   // Funciona con scroll interno del lector y con scroll de página (demo).
   useEffect(() => {
@@ -1291,6 +1304,35 @@ export function MaterialStudyWorkspace({
     setActiveSummaryChapterIndex(index);
     chapter.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
+
+  const startChapterEvaluation = (index: number) => {
+    if (index < 0 || index >= studySummary.sections.length || !topicQuestionCounts[index]) return;
+    setPracticeSectionIndex(index);
+    setDiagnosticMode(false);
+    if (isOwner && !demo) {
+      trackMarketingEvent('cta_click', {
+        location: 'summary_chapter_finish',
+        cta_name: 'evaluate_topic',
+        material_id: materialId,
+        section_index: index,
+      });
+    }
+    handleStudyTabChange('ejercicios', 'summary_chapter');
+  };
+
+  const continueAfterChapter = (event: MouseEvent<HTMLButtonElement>, index: number) => {
+    const nextChapter = summaryChapters[index + 1];
+    if (!nextChapter) return;
+    const target = event.currentTarget
+      .closest('[role="tabpanel"]')
+      ?.querySelector<HTMLElement>(`#${CSS.escape(nextChapter.anchor)}`);
+    if (!target) return;
+    setActiveSummaryChapterIndex(index + 1);
+    target.scrollIntoView({
+      block: 'start',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    });
+  };
 
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
     setProgressOpen(false);
@@ -1782,11 +1824,16 @@ export function MaterialStudyWorkspace({
                         />
                       ) : null}
 
-                      <div className="mt-4 border-t border-slate-100 pt-4">
-                        <span className="text-muted-foreground text-[11px] font-medium">
-                          Capítulo {index + 1} de {summaryChapters.length}
-                        </span>
-                      </div>
+                      <SummaryChapterFinish
+                        chapterIndex={index}
+                        chapterTitle={section.displayTitle}
+                        concepts={topicStudyResources[index]?.concepts ?? []}
+                        flashcards={topicStudyResources[index]?.flashcards ?? []}
+                        canEvaluate={Boolean(topicQuestionCounts[index])}
+                        hasNextChapter={index < summaryChapters.length - 1}
+                        onEvaluate={() => startChapterEvaluation(index)}
+                        onContinue={(event) => continueAfterChapter(event, index)}
+                      />
                     </section>
                   ))}
 
