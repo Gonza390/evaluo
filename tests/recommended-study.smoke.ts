@@ -259,8 +259,36 @@ assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0
   'La guía no debe reiniciar todos los pasos a la introducción.');
 assert.doesNotMatch(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
   'Al saltar el tour no hay que forzar la navegación al capítulo 1.');
-assert.doesNotMatch(materialWorkspaceSource, /showStudyChoice/,
-  'Ni completar ni saltar el tutorial deben activar una elección adicional.');
+const priorStudyPopupSource = readFileSync('components/study/pdf-prior-study-popup.tsx', 'utf8');
+const priorStudyLogicSource = readFileSync('lib/pdf-prior-study.ts', 'utf8');
+const firstUploadSource = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
+const quickUploadSource = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
+assert.match(materialWorkspaceSource, /<PdfPriorStudyPopup/,
+  'Resumen debe renderizar el modal de dos opciones, no una tarjeta.');
+assert.match(materialWorkspaceSource, /setPriorStudyOpen\(true\)/,
+  'Al terminar el onboarding debe aparecer la pregunta.');
+assert.match(materialWorkspaceSource, /savePriorStudyChoice\(materialId, choice\)/,
+  'La respuesta debe guardarse por PDF.');
+assert.match(materialWorkspaceSource, /initialPriorStudyPopupRequested/,
+  'La pregunta debe poder mostrarse tras cargar un PDF nuevo sin repetir el onboarding.');
+assert.match(materialPageSource, /query\.inicio === '1'/,
+  'Solo el enlace posterior a la carga debe solicitar la pregunta.');
+assert.match(firstUploadSource, /\?inicio=1/,
+  'La carga normal debe solicitar la pregunta para el PDF nuevo.');
+assert.match(quickUploadSource, /\?inicio=1/,
+  'La carga rápida debe solicitar la pregunta para el PDF nuevo.');
+assert.match(priorStudyPopupSource, /<DialogContent/,
+  'La pregunta debe ser un popup modal sobre Resumen.');
+assert.match(priorStudyPopupSource, /data-pdf-prior-study-no/,
+  'El estudiante debe poder marcar que no estudió.');
+assert.match(priorStudyPopupSource, /data-pdf-prior-study-yes/,
+  'El estudiante debe poder marcar que sí estudió.');
+assert.match(priorStudyPopupSource, /showCloseButton=\{false\}/,
+  'La pregunta debe tener un diseño simple, sin tercer botón.');
+assert.match(priorStudyLogicSource, /materialId/,
+  'El almacenamiento se debe aislar por cada PDF.');
+assert.doesNotMatch(materialWorkspaceSource, /showStudyChoice|data-first-pdf-study-entry/,
+  'La tarjeta anterior no debe reintroducirse.');
 assert.equal((materialWorkspaceSource.match(/<div data-onboarding-study-panel/g) ?? []).length, 2,
   'Escritorio y móvil deben ofrecer el panel completo como objetivo.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');
