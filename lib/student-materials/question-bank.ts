@@ -83,6 +83,17 @@ export function resolveQuestionBankTarget(input: QuestionBankContext) {
   );
 }
 
+/** El tamaño global debe dejar lugar a seis por tema cuando existen candidatos. */
+export function resolveTopicAwareQuestionBankTarget(
+  context: QuestionBankContext,
+  chapterCount: number
+) {
+  return Math.min(120, Math.max(
+    resolveQuestionBankTarget(context),
+    Math.max(0, Math.floor(chapterCount)) * MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS
+  ));
+}
+
 /**
  * Equilibrar el banco por tipo de conocimiento, tema y página. Evita elegir
  * únicamente los primeros conceptos del PDF cuando hay más candidatos
