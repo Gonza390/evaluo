@@ -902,9 +902,14 @@ export function MaterialStudyWorkspace({
     let attempts = 0;
     const revealChapter = () => {
       if (cancelled) return;
-      const target = document.querySelector<HTMLElement>(
+      // Hay dos lectores responsive en el DOM. Elegir el que está realmente visible
+      // (desktop o móvil), para no intentar desplazar un panel oculto.
+      const target = Array.from(document.querySelectorAll<HTMLElement>(
         `[data-onboarding-study-panel] [data-summary-reading-section="${initialSummarySectionIndex}"]`
-      );
+      )).find((node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
       const reader = target?.closest<HTMLElement>(
         '[role="region"][aria-label="Contenido de estudio"]'
       );
