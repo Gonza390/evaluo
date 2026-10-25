@@ -47,24 +47,18 @@ export function DeleteAccountSection() {
   }
 
   return (
-    <section className="border-t border-slate-200 pt-6" aria-labelledby="delete-account-title">
+    <section className="rounded-xl border border-border bg-card p-4 sm:p-5" aria-labelledby="delete-account-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-xs font-bold tracking-[0.14em] text-rose-700 uppercase">Zona sensible</p>
-          <h2 id="delete-account-title" className="mt-2 text-xl font-bold text-slate-950">
-            Eliminar cuenta
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Borra tu perfil, progreso, materiales, archivos y demás datos asociados. Si tenés una suscripción activa, primero intentamos cancelarla en Mercado Pago para evitar nuevos cobros.
-          </p>
+          <h2 id="delete-account-title" className="text-sm font-semibold text-foreground">Privacidad y cuenta</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">Administrá las opciones de privacidad y eliminación de tu cuenta.</p>
         </div>
         {!open ? (
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-rose-300 bg-white px-4 text-sm font-bold text-rose-700 transition hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-[13px] font-medium text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
             Eliminar mi cuenta
           </button>
         ) : null}
@@ -76,6 +70,7 @@ export function DeleteAccountSection() {
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" aria-hidden="true" />
             <div className="min-w-0 flex-1">
               <h3 className="text-sm font-bold text-rose-950">Esta acción es permanente</h3>
+              <p className="mt-1 text-sm leading-6 text-rose-900">Se borrarán tu perfil, progreso, materiales, archivos y demás datos asociados. Si tenés una suscripción activa, primero intentamos cancelarla en Mercado Pago para evitar nuevos cobros.</p>
               <p className="mt-1 text-sm leading-6 text-rose-900">
                 Para confirmar, escribí <strong>ELIMINAR</strong>. Si la cancelación del pago o la limpieza de archivos falla, detenemos el proceso y te avisamos.
               </p>
