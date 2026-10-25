@@ -1177,7 +1177,11 @@ function buildCanonicalRelationshipQuestions(
         kind: 'relationship',
         topic: `${item.source} ↔ ${item.target}`,
         prompt: isCausal
-          ? `¿Qué efecto de “${item.source}” sobre “${item.target}” se describe?`
+          ? index % 3 === 0
+            ? `¿Qué efecto de “${item.source}” sobre “${item.target}” se describe?`
+            : index % 3 === 1
+              ? `¿Cómo influye “${item.source}” en “${item.target}”?`
+              : `¿Qué consecuencia sobre “${item.target}” se atribuye a “${item.source}”?`
           : index % 4 === 0
             ? `¿Cómo se relacionan “${item.source}” y “${item.target}”?`
             : index % 4 === 1
