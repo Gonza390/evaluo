@@ -21,52 +21,34 @@ async function check(label, run) {
 const wait = { timeout: 25000 };
 const target = baseUrl + '/preview/progreso-pdf?tab=progreso&nuevo=1';
 
-// Revisar la nueva entrada de estudio sin repetir el onboarding de cuatro pasos.
-// Solo afecta la demo pública y no modifica datos del alumno.
+// La demo actual ya no muestra la antigua elección «¿Ya estudiaste?» ni un plan separado.
+// Comprobar que el resumen se abre sin esos pasos, en móvil y escritorio.
 for (const width of [375, 1440]) {
-  await check('enlace directo a elección de estudio ' + width, async () => {
+  await check('demo muestra estudio directamente ' + width, async () => {
     const page = await browser.newPage({ viewport: { width, height: 900 } });
     try {
-      const response = await page.goto(baseUrl + '/demo/material-estudio?start=eleccion', {
+      const response = await page.goto(baseUrl + '/demo/material-estudio?tour=0', {
         waitUntil: 'domcontentloaded',
         timeout: 60000,
       });
       assert.equal(response?.status(), 200, 'La demostración debe abrirse');
-      const entry = page.locator('[data-first-pdf-study-entry]');
-      await entry.getByText('¿Ya estudiaste este material?').waitFor(wait);
-      assert.equal(await page.locator('[data-first-pdf-guide]').count(), 0,
-        'El enlace directo no debe iniciar el tutorial.');
-      await entry.getByRole('button', { name: 'Todavía no' }).click();
-      const plan = page.locator('[data-first-pdf-study-plan]');
-      await plan.getByText('Empecemos por el primer tema').waitFor(wait);
-      assert.ok(await plan.locator('ol li').count() > 0, 'La guía debe mostrar capítulos reales');
-      const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-      assert.ok(horizontal <= 2, 'La guía no debe desbordarse: ' + horizontal);
-      await page.screenshot({ path: folder + '/estudio-eleccion-' + width + '.png', animations: 'disabled' });
-      await plan.getByRole('button', { name: /Empezar por el tema 1/ }).click();
-      await entry.waitFor({ state: 'detached', timeout: 15000 });
+      await page.locator('[data-onboarding-study-panel]:visible').first().waitFor(wait);
+      assert.equal(await page.locator('[data-first-pdf-study-entry]').count(), 0,
+        'No debe volver la elección de estudio eliminada.');
+      assert.equal(await page.locator('[data-first-pdf-study-plan]').count(), 0,
+        'No debe volver el plan previo eliminado.');
+      const horizontal = await page.evaluate(() =>
+        document.documentElement.scrollWidth - window.innerWidth
+      );
+      assert.ok(horizontal <= 2, 'La demo no debe desbordarse: ' + horizontal);
+      await page.screenshot({
+        path: folder + '/demo-estudio-directo-' + width + '.png', animations: 'disabled',
+      });
     } finally {
       await page.close();
     }
   });
 }
-
-await check('enlace directo al orden de temas', async () => {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  try {
-    const response = await page.goto(baseUrl + '/demo/material-estudio?start=plan', {
-      waitUntil: 'domcontentloaded', timeout: 60000,
-    });
-    assert.equal(response?.status(), 200);
-    const plan = page.locator('[data-first-pdf-study-plan]');
-    await plan.getByText('Empecemos por el primer tema').waitFor(wait);
-    await plan.getByRole('button', { name: /Empezar por el tema 1/ }).waitFor(wait);
-    await page.screenshot({ path: folder + '/estudio-plan-directo.png', animations: 'disabled' });
-  } finally {
-    await page.close();
-  }
-});
-
 
 for (const width of widths) {
   await check('progreso layout ' + width, async () => {

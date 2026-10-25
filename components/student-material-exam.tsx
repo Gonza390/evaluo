@@ -42,6 +42,10 @@ import {
 } from '@/lib/student-materials/practice-result-topics';
 import { practiceScope, type PracticeEntrySource } from '@/lib/student-materials/practice-entry';
 import {
+  topicPracticeResultActions,
+  type TopicPracticeResultAction,
+} from '@/lib/student-materials/topic-practice-result-actions';
+import {
   practiceBankSignature,
   practiceDraftKey,
   readPracticeDraft,
@@ -56,6 +60,8 @@ type StudentMaterialExamProps = {
   materialId: string;
   onComplete?: () => void;
   onContinueToTopic?: (index: number) => void;
+  onStudyNextTopic?: (index: number) => void;
+  onViewAllTopics?: () => void;
   onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
   sections?: StudySummarySection[];
   topicSectionIndex?: number;
@@ -75,6 +81,8 @@ export function StudentMaterialExam({
   entryId = null,
   onComplete,
   onContinueToTopic,
+  onStudyNextTopic,
+  onViewAllTopics,
   onReturnToTopic,
   sections = [],
   simulation,
@@ -652,8 +660,108 @@ export function StudentMaterialExam({
       )
     ).slice(0, 5);
 
+    // La práctica POR TEMA tiene su propio resultado: sin desglose por habilidades,
+    // sin próximos objetivos visibles y con acciones según errores y tema siguiente.
+    // No modifica ni el resultado GENERAL del PDF ni el simulador público.
+    if (!isSimulation && topicSectionIndex !== undefined) {
+      const hasErrors = result.wrong.length > 0;
+      const nextTopicIndex = topicSectionIndex + 1 < sections.length ? topicSectionIndex + 1 : null;
+      const [primaryAction, secondaryAction] = topicPracticeResultActions(
+        hasErrors, nextTopicIndex !== null
+      );
+      const actionLabel: Record<TopicPracticeResultAction, string> = {
+        reinforce: 'Reforzar mis errores',
+        next_topic: 'Seguir al siguiente tema',
+        all_topics: 'Ver todos mis temas',
+        retry: 'Practicar de nuevo',
+      };
+      const handleResultAction = (action: TopicPracticeResultAction) => {
+        void trackClientAnalyticsEvent({
+          eventName: 'cta_click',
+          metadata: {
+            location: 'topic_practice_result',
+            cta_name: action,
+            material_id: materialId,
+            topic_section_index: topicSectionIndex,
+          },
+        });
+        if (action === 'retry') {
+          resetExam();
+        } else if (action === 'reinforce') {
+          if (onReturnToTopic) {
+            onReturnToTopic(true, {
+              sectionIndex: topicSectionIndex,
+              total: result.total,
+              correct: result.correct,
+              incorrect: result.wrong.length,
+              incorrectPrompts: result.wrong.map((question) => question.prompt),
+            });
+          } else {
+            router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
+          }
+        } else if (action === 'next_topic' && nextTopicIndex !== null) {
+          if (onStudyNextTopic) onStudyNextTopic(nextTopicIndex);
+          else router.push(`/materiales/${encodeURIComponent(materialId)}?tab=progreso`);
+        } else if (action === 'all_topics') {
+          if (onViewAllTopics) onViewAllTopics();
+          else router.push(`/materiales/${encodeURIComponent(materialId)}?tab=progreso`);
+        }
+      };
+
+      return (
+        <div ref={finalResultRef} className="mx-auto w-full max-w-xl px-2 py-5 sm:px-4 sm:py-9">
+          <div className="border-border bg-card rounded-2xl border px-5 py-7 sm:px-9 sm:py-10">
+            <div className="flex flex-col items-center text-center">
+              <p className="text-primary text-[11px] font-bold tracking-[0.13em] uppercase">
+                Práctica finalizada{topicTitle ? ` · ${topicTitle}` : ''}
+              </p>
+              <h2
+                className="text-foreground mt-5 text-5xl font-bold tracking-[-0.06em] sm:text-6xl"
+                aria-label={`Resultado: ${result.correct} de ${result.total}`}
+              >
+                {result.correct} de {result.total}
+              </h2>
+            </div>
+
+            <div className="border-border mt-7 border-t pt-7 text-center">
+              <h3 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
+                {hasErrors ? 'Detectamos qué necesitás reforzar' : '¡Excelente! Respondiste todo correctamente'}
+              </h3>
+              <p className="text-muted-foreground mx-auto mt-3 max-w-md text-sm leading-6">
+                {hasErrors
+                  ? result.wrong.length === 1
+                    ? 'Encontramos una dificultad en tus respuestas. Vamos a trabajarla para comprobar si la superaste.'
+                    : 'Identificamos dificultades en tus respuestas. Vamos a reforzarlas y comprobar si las superaste.'
+                  : 'No detectamos dificultades en esta práctica. Podés seguir avanzando.'}
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3">
+              <Button
+                type="button"
+                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+                onClick={() => handleResultAction(primaryAction)}
+              >
+                {actionLabel[primaryAction]} <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+                onClick={() => handleResultAction(secondaryAction)}
+              >
+                {secondaryAction === 'retry' ? <RotateCcw className="mr-1 h-4 w-4" /> : null}
+                {actionLabel[secondaryAction]}
+                {secondaryAction !== 'retry' ? <ArrowRight className="ml-1 h-4 w-4" /> : null}
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // Mostrar el desglose por temas únicamente al terminar la práctica GENERAL del PDF.
-    // Las tandas exclusivas de un capítulo conservan su pantalla anterior hasta diseñarlas.
+    // El simulador conserva su resultado anterior.
     if (!isSimulation && topicSectionIndex === undefined) {
       const nextStepTitle =
         nextObjective?.kind === 'reinforce'
