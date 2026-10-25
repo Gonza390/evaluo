@@ -956,7 +956,7 @@ export function MaterialStudyWorkspace({
       window.removeEventListener('scroll', scheduleSync);
       window.removeEventListener('resize', scheduleSync);
     };
-  }, [activeTab, progressOpen, summaryChapters.length, materialId]);
+  }, [activeTab, progressOpen, summaryChapters.length, materialId, recommendedActive, studyStartGuideOpen]);
 
   const summaryCheckPlan = useMemo(
     () => buildSummaryCheckPlan(fullSummarySections, studyArtifacts),
