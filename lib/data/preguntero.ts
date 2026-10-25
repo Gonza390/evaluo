@@ -1,4 +1,5 @@
 import { unstable_cache } from 'next/cache';
+import { logError, logInfo } from '@/lib/observability';
 import { createPublicClient } from '@/lib/supabase-public';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
@@ -61,6 +62,7 @@ function parseParcialCounts(value: unknown): Array<{ parcial: number; count: num
 async function readPregunteroMateriaStats(
   materiaId: string
 ): Promise<PregunteroMateriaStats> {
+  const startedAt = Date.now();
   const client = createPublicClient();
   const { data, error } = await (client as unknown as PregunteroStatsRpcClient).rpc(
     'get_public_preguntero_materia_stats',
@@ -68,8 +70,11 @@ async function readPregunteroMateriaStats(
   );
 
   if (error) {
+    logError('preguntero.materiaStats', error, { durationMs: Date.now() - startedAt });
     throw new Error(error.message || 'No se pudieron cargar las estadísticas del preguntero.');
   }
+  // Se ejecuta únicamente en cache miss; no agrega operaciones a PostgREST.
+  logInfo('preguntero.materiaStats', { durationMs: Date.now() - startedAt });
 
   const row = data?.[0];
   const totalPreguntas = Math.max(0, Number(row?.question_count ?? 0) || 0);

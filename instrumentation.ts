@@ -1,3 +1,4 @@
+import { classifyBackendPath } from '@/lib/backend-flow';
 import type { Instrumentation } from 'next';
 
 const SENTRY_DSN = process.env.SENTRY_DSN;
@@ -138,16 +139,21 @@ async function reportToAxiom(err: unknown, request: unknown, context: unknown) {
 
 export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
   const eventId = crypto.randomUUID().replace(/-/g, '').slice(0, 32);
+  // Preferir el patrón de ruta de Next; no registrar IDs de usuarios ni query strings.
+  const routePath = context.routePath || '';
+  const flow = classifyBackendPath(routePath);
+  const taggedContext = { ...context, backendFlow: flow };
+  console.error('[backend.requestError]', { flow, routePath });
   const reports = [];
-  if (SENTRY_DSN) reports.push(reportToSentry(eventId, err, request, context));
-  if (AXIOM_INGEST_URL) reports.push(reportToAxiom(err, request, context));
+  if (SENTRY_DSN) reports.push(reportToSentry(eventId, err, request, taggedContext));
+  if (AXIOM_INGEST_URL) reports.push(reportToAxiom(err, request, taggedContext));
   if (ERROR_REPORT_URL) {
     const { message, digest } = getErrorDetails(err);
     reports.push(
       fetch(ERROR_REPORT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, message, digest, request: sanitizeRequestMeta(request), context }),
+        body: JSON.stringify({ eventId, message, digest, request: sanitizeRequestMeta(request), context: taggedContext }),
       })
     );
   }

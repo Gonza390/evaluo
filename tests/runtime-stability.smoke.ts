@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { classifyBackendPath, classifyBackendScope } from '../lib/backend-flow.ts';
 
 // Los modelos y credenciales son ficticios: las solicitudes se interceptan.
 // La prueba verifica que AbortError no bloquee el fallback al modelo secundario.
@@ -43,3 +44,12 @@ const flashcardSource = readFileSync(new URL('../app/dashboard/materiales/action
 assert.match(flashcardSource, /logError\('flashcard_progress_load', error, \{ materialId \}\)/);
 assert.match(flashcardSource, /logError\('flashcard_progress_save', error, \{ materialId \}\)/);
 console.log('AI fallback and production error guard regression tests passed.');
+
+// Las rutas SEO no cuentan como uso del producto basado en PDFs.
+assert.equal(classifyBackendPath('/pregunteros/derecho'), 'seo_public');
+assert.equal(classifyBackendPath('/simulador/fixture/1'), 'seo_public');
+assert.equal(classifyBackendPath('/api/student-materials/fixture/processing-state'), 'pdf_private');
+assert.equal(classifyBackendPath('/dashboard/materiales'), 'pdf_private');
+assert.equal(classifyBackendPath('/dashboard'), 'other');
+assert.equal(classifyBackendScope('pedagogy.localReduce.map'), 'pdf_private');
+assert.equal(classifyBackendScope('simulatorTopicMemory.aiClassification'), 'seo_public');

@@ -42,6 +42,8 @@ const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_SUMMARY_MODEL ?? 'openai/gpt-oss-20b';
 const GROQ_FALLBACK_SUMMARY_MODEL = process.env.GROQ_FALLBACK_MODEL;
 const RETIRED_GROQ_MODELS = new Set(['llama-3.1-8b-instant', 'llama-3.3-70b-versatile']);
+// El fallback Nemotron Super devuelve 404 en producción: no reintentarlo hasta validarlo.
+const UNAVAILABLE_NVIDIA_MODELS = new Set(['nvidia/nemotron-3-super-120b-a12b']);
 const NVIDIA_PRIMARY_CHAT_MODEL =
   process.env.NVIDIA_CHAT_MODEL ?? 'nvidia/nemotron-3.5-lightning-30b-a3b';
 const NVIDIA_FALLBACK_CHAT_MODEL =
@@ -74,11 +76,13 @@ export function getGithubModelsSummaryModels() {
 }
 
 export function getNvidiaChatModels() {
-  return uniqueConfiguredValues([NVIDIA_PRIMARY_CHAT_MODEL, NVIDIA_FALLBACK_CHAT_MODEL]);
+  return uniqueConfiguredValues([NVIDIA_PRIMARY_CHAT_MODEL, NVIDIA_FALLBACK_CHAT_MODEL])
+    .filter((model) => !UNAVAILABLE_NVIDIA_MODELS.has(model));
 }
 
 export function getNvidiaSummaryModels() {
-  return uniqueConfiguredValues([NVIDIA_PRIMARY_SUMMARY_MODEL, NVIDIA_FALLBACK_SUMMARY_MODEL]);
+  return uniqueConfiguredValues([NVIDIA_PRIMARY_SUMMARY_MODEL, NVIDIA_FALLBACK_SUMMARY_MODEL])
+    .filter((model) => !UNAVAILABLE_NVIDIA_MODELS.has(model));
 }
 
 async function fetchWithTimeout(

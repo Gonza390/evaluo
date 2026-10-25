@@ -12,6 +12,8 @@ import {
   getGithubModelsSummaryModels,
   getGroqSummaryModels,
   PINNED_GEMINI_SUMMARY_MODEL,
+  getNvidiaChatModels,
+  getNvidiaSummaryModels,
 } from '../lib/ai/providers.ts';
 
 // extractJsonObject: JSON puro, fenced, con relleno y JSON invalido.
@@ -64,3 +66,9 @@ assert.ok(getGithubModelsSummaryModels().length >= 1);
 assert.ok(!getGeminiSummaryModels().includes('gemini-1.5-flash'));
 assert.ok(!getGeminiSummaryModels().includes('gemini-2.5-flash-lite'));
 assert.ok(!getGeminiSummaryModels().some((model) => model.includes('preview')));
+
+// Un modelo que devolvió 404 no puede quedar como fallback de producción.
+for (const models of [getNvidiaChatModels(), getNvidiaSummaryModels()]) {
+  assert.ok(!models.includes('nvidia/nemotron-3-super-120b-a12b'));
+  assert.ok(models.length > 0);
+}
