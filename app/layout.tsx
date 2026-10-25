@@ -93,25 +93,26 @@ export const metadata: Metadata = {
     type: 'website',
     url: '/',
     siteName: 'Evaluo',
-    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+    title: 'No estudies todo por igual | Evaluo',
     description:
-      'Subí tu PDF y transformalo en resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
+      'Descubrí qué sabés, qué reforzar y cómo avanzás. Practicá con tus apuntes y seguí tu progreso por tema.',
     locale: 'es_AR',
     images: [
       {
-        url: '/opengraph-image.png',
+        url: '/evaluo-whatsapp-progreso.png',
         width: 1200,
         height: 630,
-        alt: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+        type: 'image/png',
+        alt: 'Evaluo: no estudies todo por igual. Descubrí qué sabés, qué reforzar y cómo avanzás.',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+    title: 'No estudies todo por igual | Evaluo',
     description:
-      'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
-    images: ['/opengraph-image.png'],
+      'Descubrí qué sabés, qué reforzar y cómo avanzás. Practicá con tus apuntes y seguí tu progreso por tema.',
+    images: ['/evaluo-whatsapp-progreso.png'],
   },
   manifest: '/manifest.webmanifest',
   icons: {

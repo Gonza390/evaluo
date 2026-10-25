@@ -19,14 +19,22 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Evaluo',
     locale: 'es_AR',
-    title: 'Subí tu PDF y prepará tu examen | Evaluo',
-    description: 'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
+    title: 'No estudies todo por igual | Evaluo',
+    description: 'Descubrí qué sabés, qué reforzar y cómo avanzás. Practicá con tus propios apuntes y seguí tu progreso por tema.',
     url: '/',
+    images: [{
+      url: '/evaluo-whatsapp-progreso.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+      alt: 'Evaluo: progreso por tema y refuerzo personalizado',
+    }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Subí tu PDF y prepará tu examen | Evaluo',
-    description: 'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
+    title: 'No estudies todo por igual | Evaluo',
+    description: 'Descubrí qué sabés, qué reforzar y cómo avanzás.',
+    images: ['/evaluo-whatsapp-progreso.png'],
   },
 };
 
