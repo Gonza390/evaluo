@@ -283,6 +283,17 @@ assert.match(priorStudyPopupSource, /data-pdf-prior-study-no/,
   'El estudiante debe poder marcar que no estudió.');
 assert.match(priorStudyPopupSource, /data-pdf-prior-study-yes/,
   'El estudiante debe poder marcar que sí estudió.');
+assert.match(priorStudyPopupSource, /¿Cómo llegás a este material\?/,
+  'La pregunta debe conservar el texto del diseño elegido.');
+assert.match(priorStudyPopupSource, /Empiezo desde cero/,
+  'La primera tarjeta debe presentar el recorrido desde cero.');
+assert.match(priorStudyPopupSource, /Ya lo estudié/,
+  'La segunda tarjeta debe presentar el recorrido de práctica.');
+assert.match(priorStudyPopupSource, /bg-\[\#303030\]/,
+  'Las opciones deben usar las superficies gris oscuro del diseño de referencia.');
+assert.match(priorStudyPopupSource, /grid-cols-1 gap-3 sm:grid-cols-2/,
+  'Las opciones deben verse lado a lado en escritorio y apiladas en móvil.');
+
 assert.match(priorStudyPopupSource, /showCloseButton=\{false\}/,
   'La pregunta debe tener un diseño simple, sin tercer botón.');
 assert.match(priorStudyLogicSource, /materialId/,
