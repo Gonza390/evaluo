@@ -310,7 +310,15 @@ assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
 assert.match(materialWorkspaceSource, /studySummary\.sections\.length > 0 \? summaryChapters\[0\]\?\.displayTitle/,
   'La guía debe utilizar el título real de la primera sección del PDF.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-guide/,
-  'La guía debe ser una pantalla propia, no una tarjeta encima del Resumen.');
+  'La guía debe ser un modal sobre el Resumen, no una tarjeta dentro de él.');
+assert.match(studyStartGuideSource, /max-w-\\[500px\\]/,
+  'La guía debe ser más angosta que el popup de punto de partida.');
+assert.match(studyStartGuideSource, /bg-card text-card-foreground/,
+  'La guía debe usar la misma superficie que el popup anterior.');
+assert.match(studyStartGuideSource, /bg-slate-950\\/45 backdrop-blur-\\[2px\\]/,
+  'La guía debe superponerse al Resumen con el mismo overlay que el popup anterior.');
+assert.doesNotMatch(studyStartGuideSource, /!inset-0|!w-screen|!h-dvh|!max-w-none|fixed inset-x-0 bottom-0/,
+  'La guía no debe ocupar toda la pantalla ni usar un pie fijo global.');
 assert.match(studyStartGuideSource, /Primero, leé el resumen/,
   'La guía debe comenzar indicando que el alumno lea el tema.');
 assert.match(studyStartGuideSource, /En el glosario podés consultar los términos/,
@@ -323,8 +331,8 @@ assert.match(studyStartGuideSource, /data-pdf-study-first-topic/,
   'La guía debe mostrar el título del primer tema.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
   'La guía debe permitir iniciar el tema seleccionado.');
-assert.match(studyStartGuideSource, /data-pdf-study-mobile-start-cta/,
-  'En móvil la acción de comenzar debe permanecer visible en el pie de la guía.');
+assert.match(studyStartGuideSource, /data-pdf-study-start-footer/,
+  'La acción para comenzar debe permanecer en el pie del popup, incluso en móvil.');
 assert.doesNotMatch(studyStartGuideSource, /Un tema a la vez, a tu ritmo|Cuando estés listo, avanzamos al siguiente/,
   'No debe reaparecer el contenido que el usuario descartó.');
 
