@@ -8,7 +8,7 @@ import type {
   StudySummarySection,
 } from '@/lib/student-materials/types';
 import {
-  resolveQuestionBankTarget,
+  resolveTopicAwareQuestionBankTarget,
   resolveQuestionCategoryFactor,
   selectBalancedQuestionBank,
   selectSourceDistributedItems,
