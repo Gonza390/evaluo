@@ -16,6 +16,9 @@ function chapterKey(value: string | null | undefined) {
 }
 
 export type FirstTopicResourceInfo = {
+  /** Totales reales del material, no necesariamente del primer tema. */
+  totalFlashcards: number;
+  totalGlossaryTerms: number;
   flashcardCount: number | null;
   glossaryCount: number | null;
   hasFlashcards: boolean;
@@ -39,6 +42,8 @@ export function getFirstTopicResourceInfo(
     : 0;
 
   return {
+    totalFlashcards: flashcards.length,
+    totalGlossaryTerms: glossary.length,
     flashcardCount: flashcardMatches > 0 ? flashcardMatches : null,
     glossaryCount: glossaryMatches > 0 ? glossaryMatches : null,
     hasFlashcards: flashcards.length > 0,
