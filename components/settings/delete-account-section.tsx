@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, Loader2, Trash2, X } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Loader2, ShieldCheck, Trash2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 
 export function DeleteAccountSection() {
@@ -47,11 +47,30 @@ export function DeleteAccountSection() {
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 sm:p-5" aria-labelledby="delete-account-title">
+    <details className="group overflow-hidden rounded-xl border border-border bg-card">
+      <summary
+        onClick={(event) => {
+          if (deleting) {
+            event.preventDefault();
+          } else if (event.currentTarget.parentElement?.hasAttribute('open')) {
+            setOpen(false);
+            setConfirmation('');
+            setError(null);
+          }
+        }}
+        className="text-foreground hover:bg-muted/40 focus-visible:ring-primary flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset sm:px-5 [&::-webkit-details-marker]:hidden"
+      >
+        <span className="flex items-center gap-3">
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          Privacidad y cuenta
+        </span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <section className="border-t border-border px-4 pb-5 pt-4 sm:px-5" aria-labelledby="delete-account-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-2xl">
-          <h2 id="delete-account-title" className="text-sm font-semibold text-foreground">Privacidad y cuenta</h2>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">Administrá las opciones de privacidad y eliminación de tu cuenta.</p>
+          <h2 id="delete-account-title" className="text-sm font-semibold text-foreground">Eliminar mi cuenta</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">Consultá las consecuencias antes de eliminar tu cuenta definitivamente.</p>
         </div>
         {!open ? (
           <button
@@ -59,7 +78,7 @@ export function DeleteAccountSection() {
             onClick={() => setOpen(true)}
             className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 text-[13px] font-medium text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            Eliminar mi cuenta
+            Ver detalles
           </button>
         ) : null}
       </div>
@@ -121,6 +140,7 @@ export function DeleteAccountSection() {
           </div>
         </div>
       ) : null}
-    </section>
+      </section>
+    </details>
   );
 }
