@@ -47,6 +47,7 @@ import {
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
 import {
   resolveQuestionBankTarget,
+  resolveTopicAwareQuestionBankTarget,
   resolveQuestionCategoryFactor,
   selectSourceDistributedItems,
   selectBalancedQuestionBank,
