@@ -111,6 +111,19 @@ assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
 // Las comprobaciones del lector deben ser respondibles, distintas y respaldadas por el material.
 const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
+const examDatePromptSource = readFileSync('components/exam-date-plan-prompt.tsx', 'utf8');
+assert.doesNotMatch(examDatePromptSource, /8_000|checkAndOpen\(false\)/,
+  'Registrar fecha de examen no debe interrumpir automáticamente la lectura o el resultado.');
+assert.match(examDatePromptSource, /if \(triggerNonce <= 0\) return;/,
+  'El formulario sólo puede abrirse por la señal explícita de actividad completada.');
+assert.match(examDatePromptSource, /¿Cuándo rendís este examen\?/,
+  'El título del modal no debe contener nombres extensos de PDF.');
+assert.match(examDatePromptSource, /line-clamp-2 min-w-0 break-all/,
+  'El nombre del material debe truncarse de manera segura en pantallas pequeñas.');
+assert.match(examDatePromptSource, /max-h-\[calc\(100dvh-1rem\)\]/,
+  'El modal debe mantenerse dentro de la pantalla móvil.');
+assert.doesNotMatch(examDatePromptSource, /pointer-events-none absolute right-4 top-1\/2/,
+  'El input date no debe sumar un segundo icono de calendario al del navegador.');
 const demoPageSource = readFileSync('app/demo/material-estudio/page.tsx', 'utf8');
 const demoWorkspaceSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
 assert.doesNotMatch(demoPageSource, /start === 'eleccion'|start === 'plan'/,
