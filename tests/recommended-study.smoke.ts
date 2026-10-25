@@ -331,9 +331,15 @@ assert.match(studyStartGuideSource, /practicá para comprobar cuánto aprendiste
 assert.match(studyStartGuideSource, /data-pdf-study-resources/,
   'La guía debe mostrar visualmente los recursos del material.');
 assert.match(studyStartGuideSource, /data-pdf-study-flashcards-caption/,
-  'Las flashcards deben mostrar cantidades únicamente cuando sean atribuibles al tema.');
+  'La guía debe mostrar la cantidad real de flashcards del PDF.');
+assert.match(studyStartGuideSource, /resources\.totalFlashcards/,
+  'Debe utilizar el total de flashcards, no una cifra estimada para el tema 1.');
 assert.match(studyStartGuideSource, /data-pdf-study-glossary-caption/,
-  'El glosario debe mostrar cantidades únicamente cuando sean atribuibles al tema.');
+  'La guía debe mostrar la cantidad real de términos del PDF.');
+assert.match(studyStartGuideSource, /resources\.totalGlossaryTerms/,
+  'Debe utilizar el total de términos, no una cifra estimada para el tema 1.');
+assert.match(studyStartGuideSource, /En todo tu PDF tenés:/,
+  'El encabezado debe aclarar que las cantidades corresponden al PDF completo.');
 assert.match(studyStartGuideSource, /data-pdf-study-first-topic/,
   'La guía debe mostrar el título real del primer tema.');
 assert.match(studyStartGuideSource, /data-pdf-study-start-cta/,
@@ -367,10 +373,14 @@ const matchingTerm = { term: 'Inteligencia artificial', definition: 'Explicació
 const unassignedTerm = { ...matchingTerm, term: 'Otro concepto', chapterTitle: undefined };
 const firstTopicCounts = getFirstTopicResourceInfo(firstTopicFixture, [matchingCard, unassignedCard], [matchingTerm, unassignedTerm]);
 assert.equal(firstTopicCounts.flashcardCount, 1, 'Solo se cuentan flashcards asociadas exactamente al primer tema.');
+assert.equal(firstTopicCounts.totalFlashcards, 2, 'La guía debe poder mostrar todas las tarjetas reales del PDF.');
 assert.equal(firstTopicCounts.glossaryCount, 1, 'Solo se cuentan términos asociados exactamente al primer tema.');
+assert.equal(firstTopicCounts.totalGlossaryTerms, 2, 'La guía debe poder mostrar todos los términos del glosario filtrado.');
 const missingAssociation = getFirstTopicResourceInfo(firstTopicFixture, [unassignedCard], [unassignedTerm]);
 assert.equal(missingAssociation.flashcardCount, null, 'Las tarjetas sin asociación fiable no se presentan como propias del tema.');
+assert.equal(missingAssociation.totalFlashcards, 1, 'Los recursos sin tema siguen contando en el total real del PDF.');
 assert.equal(missingAssociation.glossaryCount, null, 'Los términos sin asociación fiable no se presentan como propios del tema.');
+assert.equal(missingAssociation.totalGlossaryTerms, 1, 'El total del PDF incluye términos sin vínculo fiable a un capítulo.');
 assert.equal(missingAssociation.hasFlashcards, true, 'La guía puede mencionar recursos del PDF sin atribuirlos al tema.');
 const ambiguousTopic = getFirstTopicResourceInfo([firstTopicFixture[0], { ...firstTopicFixture[0] }], [matchingCard], [matchingTerm]);
 assert.equal(ambiguousTopic.flashcardCount, null, 'No se atribuyen tarjetas a capítulos con títulos duplicados.');
