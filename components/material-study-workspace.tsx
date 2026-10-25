@@ -977,8 +977,8 @@ export function MaterialStudyWorkspace({
     };
   }, [activeTab, progressOpen, summaryChapters.length, materialId, recommendedActive, studyStartGuideOpen]);
 
-  // La invitación aparece como modal al llegar al final de la lectura,
-  // nunca como una tarjeta bajo el texto. No se reabre al volver a pasar.
+  // Se detecta el final visible de cada tema sin depender de una franja
+  // estrecha de scroll. Los temas cortos también funcionan sin desplazarse.
   useEffect(() => {
     if (
       activeTab !== 'resumen' ||
@@ -989,10 +989,9 @@ export function MaterialStudyWorkspace({
       summaryChapters.length === 0
     ) return;
 
-    const regions = Array.from(
+    const region = Array.from(
       document.querySelectorAll<HTMLElement>('[role="region"][aria-label="Contenido de estudio"]')
-    );
-    const region = regions.find((candidate) => {
+    ).find((candidate) => {
       const rect = candidate.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0 &&
         rect.top < window.innerHeight && rect.bottom > 0 &&
@@ -1007,9 +1006,13 @@ export function MaterialStudyWorkspace({
 
     let frame = 0;
     let promptTimer = 0;
+    let resumeTimer = 0;
     let pendingIndex: number | null = null;
+    let pendingUserScroll = false;
+    let hasUserScrolled = false;
     let lastReaderScroll = region.scrollTop;
     let lastPageScroll = window.scrollY;
+    const mountedAt = Date.now();
 
     const clearPending = () => {
       window.clearTimeout(promptTimer);
@@ -1018,68 +1021,95 @@ export function MaterialStudyWorkspace({
     };
 
     const visibleEndIndex = () => {
-      if (document.visibilityState !== 'visible' || Date.now() < chapterFinishNavigationPauseRef.current) return null;
+      if (document.visibilityState !== 'visible') return null;
       const readerRect = region.getBoundingClientRect();
-      const viewportTop = Math.max(0, readerRect.top);
-      const viewportBottom = Math.min(window.innerHeight, readerRect.bottom);
-      const visibleHeight = viewportBottom - viewportTop;
-      if (visibleHeight <= 120) return null;
+      const visibleTop = Math.max(0, readerRect.top);
+      const visibleBottom = Math.min(window.innerHeight, readerRect.bottom);
+      if (visibleBottom - visibleTop <= 120) return null;
 
-      // El final del tema tiene que llegar al área de lectura (no basta
-      // con que aparezca fugazmente en el borde inferior de la pantalla).
-      const endLine = viewportTop + visibleHeight * 0.78;
-      const startLine = viewportTop + Math.min(24, visibleHeight * 0.08);
+      // Basta con que el final haya entrado en el área visible de lectura.
+      // Un límite del 78 % hacía que el popup no se abriera en temas cortos.
       for (const marker of endings) {
         const index = Number(marker.dataset.summaryChapterEnd);
         if (!Number.isInteger(index) || promptedChapterFinishesRef.current.has(index)) continue;
-        const section = marker.closest<HTMLElement>('[data-summary-reading-section]');
-        if (!section || section.getBoundingClientRect().top > endLine) continue;
-        const markerTop = marker.getBoundingClientRect().top;
-        if (markerTop >= startLine && markerTop <= endLine) return index;
+        const top = marker.getBoundingClientRect().top;
+        if (top >= visibleTop - 64 && top <= visibleBottom - 20) return index;
       }
       return null;
     };
 
-    const checkOnScroll = () => {
+    const checkReadingPosition = () => {
       frame = 0;
+      window.clearTimeout(resumeTimer);
+
+      const pause = chapterFinishNavigationPauseRef.current - Date.now();
+      if (pause > 0) {
+        clearPending();
+        resumeTimer = window.setTimeout(checkReadingPosition, pause + 30);
+        return;
+      }
       const index = visibleEndIndex();
       if (index === null) {
         clearPending();
         return;
       }
-      if (pendingIndex === index) return;
+
+      // Si el capítulo cabe completo sin scroll, esperar un tiempo de lectura.
+      // El scroll manual reduce la espera; el automático nunca cuenta como lectura.
+      const words = summaryChapters[index]?.body.trim().split(/\s+/u).filter(Boolean).length ?? 0;
+      const dwellWithoutScroll = Math.max(8500, Math.min(20000, words * 95));
+      const delay = hasUserScrolled
+        ? 900
+        : Math.max(900, mountedAt + dwellWithoutScroll - Date.now());
+      if (pendingIndex === index && pendingUserScroll === hasUserScrolled) return;
       clearPending();
       pendingIndex = index;
-      // Evita interrumpir al estudiante cuando pasa rápidamente por un tema.
+      pendingUserScroll = hasUserScrolled;
       promptTimer = window.setTimeout(() => {
         promptTimer = 0;
-        if (visibleEndIndex() !== index || promptedChapterFinishesRef.current.has(index)) {
-          pendingIndex = null;
-          return;
-        }
-        promptedChapterFinishesRef.current.add(index);
         pendingIndex = null;
+        if (
+          Date.now() < chapterFinishNavigationPauseRef.current ||
+          visibleEndIndex() !== index ||
+          promptedChapterFinishesRef.current.has(index)
+        ) return;
+        promptedChapterFinishesRef.current.add(index);
         setChapterFinishIndex(index);
-      }, 900);
+      }, delay);
     };
 
     const onScroll = () => {
-      const readerPos = region.scrollTop;
-      const pagePos = window.scrollY;
-      if (Math.abs(readerPos - lastReaderScroll) < 2 && Math.abs(pagePos - lastPageScroll) < 2) return;
-      lastReaderScroll = readerPos;
-      lastPageScroll = pagePos;
-      if (!frame) frame = window.requestAnimationFrame(checkOnScroll);
+      const readerPosition = region.scrollTop;
+      const pagePosition = window.scrollY;
+      if (
+        Math.abs(readerPosition - lastReaderScroll) < 2 &&
+        Math.abs(pagePosition - lastPageScroll) < 2
+      ) return;
+      lastReaderScroll = readerPosition;
+      lastPageScroll = pagePosition;
+      if (Date.now() >= chapterFinishNavigationPauseRef.current) {
+        hasUserScrolled = true;
+      }
+      if (!frame) frame = window.requestAnimationFrame(checkReadingPosition);
     };
+
+    // Al montar el Resumen el tema puede caber completo y no emitir scroll.
+    frame = window.requestAnimationFrame(checkReadingPosition);
     region.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', checkReadingPosition);
+    document.addEventListener('visibilitychange', checkReadingPosition);
+
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
+      window.clearTimeout(resumeTimer);
       clearPending();
       region.removeEventListener('scroll', onScroll);
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', checkReadingPosition);
+      document.removeEventListener('visibilitychange', checkReadingPosition);
     };
-  }, [activeTab, progressOpen, recommendedActive, studyStartGuideOpen, chapterFinishIndex, summaryChapters.length, materialId]);
+  }, [activeTab, progressOpen, recommendedActive, studyStartGuideOpen, chapterFinishIndex, summaryChapters, materialId]);
 
   const summaryCheckPlan = useMemo(
     () => buildSummaryCheckPlan(fullSummarySections, studyArtifacts),
