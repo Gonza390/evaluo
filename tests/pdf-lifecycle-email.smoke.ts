@@ -18,8 +18,12 @@ assert.match(followup, /D1_COOLDOWN_HOURS = 36/);
 assert.match(followup, /\.like\('campaign_key', 'study_return_d1_v1:%'\)/);
 assert.match(followup, /\.contains\('context', \{ material_id: candidate\.material_id \}\)/);
 assert.match(followup, /summary\.skippedRecentD1 \+= 1/);
-assert.match(followup, /dashboard\/explicaciones/);
+assert.match(followup, /url\.searchParams\.set\('tab', hasPending \? 'progreso' : 'ejercicios'\)/);
+assert.doesNotMatch(followup, /new URL\(hasPending/);
 assert.match(followup, /Temas que te conviene repasar/);
-assert.match(followup, /Hacer una práctica/);
+assert.match(followup, /Ir a mi práctica/);
+assert.match(d1, /url\.searchParams\.set\('error', pendingErrorId\)/);
+assert.match(d1, /action\.kind === 'reinforce'/);
+assert.match(d1, /pendingTopics\.data\?\.\[0\]\?\.id/);
 
 console.log('pdf-lifecycle-email.smoke passed');
