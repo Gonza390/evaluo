@@ -207,6 +207,7 @@ type MaterialStudyWorkspaceProps = {
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
     practice: ReactNode;
+    onPracticeTopic?: (index: number | null) => void;
     progress?: ReactNode | ((args: {
       showOnboardingExample: boolean;
       showOnboardingTopic: boolean;
@@ -1309,6 +1310,7 @@ export function MaterialStudyWorkspace({
     if (index < 0 || index >= studySummary.sections.length || !topicQuestionCounts[index]) return;
     setPracticeSectionIndex(index);
     setDiagnosticMode(false);
+    demo?.onPracticeTopic?.(index);
     if (isOwner && !demo) {
       trackMarketingEvent('cta_click', {
         location: 'summary_chapter_finish',
@@ -1342,7 +1344,10 @@ export function MaterialStudyWorkspace({
     if (nextTab === 'ejercicios') {
       // El popup y la pestaña directa abren la práctica GENERAL del PDF.
       // Solo el acceso desde un tema conserva la selección de ese tema.
-      if (entry !== 'summary_chapter') setPracticeSectionIndex(undefined);
+      if (entry !== 'summary_chapter') {
+        setPracticeSectionIndex(undefined);
+        demo?.onPracticeTopic?.(null);
+      }
       const source = resolvePracticeEntrySource(entry);
       const entryId = crypto.randomUUID();
       setPracticeEntry({ source, id: entryId });
