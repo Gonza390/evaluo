@@ -173,7 +173,15 @@ export function DemoFourStepStudy({
             topicSectionIndex={demoTopicIndex}
             entrySource="topic_practice"
             onContinueToTopic={(index) => setDemoTopicIndex(index)}
-            onReturnToTopic={() => { setProgressOpen(true); }}
+            onReturnToTopic={(_reinforce, outcome) => {
+              if (outcome) {
+                setProgressOpen(true);
+              } else {
+                setDemoTopicIndex(null);
+                setProgressOpen(false);
+                setActiveTab('resumen');
+              }
+            }}
             simulation={{
               context: emptyTopicPracticeContext,
               onAnswer: (question, wasCorrect) => {
