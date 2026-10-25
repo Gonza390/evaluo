@@ -45,7 +45,7 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }
             </div>
           </header>
 
-          <main className="mx-auto flex w-full max-w-[760px] flex-1 flex-col justify-center px-5 py-7 sm:px-8 sm:py-9">
+          <main className="mx-auto flex w-full max-w-[760px] flex-1 flex-col justify-center px-5 pb-32 pt-7 sm:px-8 sm:py-9">
             <div className="rounded-[24px] border border-[#E7EBF4] bg-white px-5 py-6 shadow-[0_20px_65px_rgba(15,27,61,0.06)] sm:px-9 sm:py-8">
               <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.13em] text-[#4F5DFF]">
                 <Sparkles className="size-[14px]" aria-hidden="true" />
@@ -104,13 +104,22 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, onStart, onDismiss }
                 <p data-pdf-study-first-topic className="mt-1.5 break-words text-[15px] font-bold leading-snug text-[#0F1B3D]">
                   {hasFirstTopic ? firstTopicTitle : 'Leé el resumen de tu material'}
                 </p>
-                <button type="button" data-pdf-study-start-cta onClick={onStart} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#3948ED] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] sm:w-auto sm:min-w-[245px]">
+                <button type="button" data-pdf-study-start-cta onClick={onStart} className="mt-3 hidden min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#3948ED] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] sm:inline-flex sm:w-auto sm:min-w-[245px]">
                   {hasFirstTopic ? 'Comenzar con este tema' : 'Ir al resumen'}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
           </main>
+          <div className="fixed inset-x-0 bottom-0 z-10 border-t border-[#E7EBF4] bg-white/95 px-5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-10px_32px_rgba(15,27,61,0.08)] backdrop-blur-sm sm:hidden">
+            <p className="mb-2 truncate text-[12px] font-semibold text-[#0F1B3D]" data-pdf-study-mobile-first-topic>
+              {hasFirstTopic ? firstTopicTitle : 'Tu resumen'}
+            </p>
+            <button type="button" data-pdf-study-mobile-start-cta onClick={onStart} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 text-[13px] font-bold text-white transition hover:bg-[#3948ED] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
+              {hasFirstTopic ? 'Comenzar con este tema' : 'Ir al resumen'}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
