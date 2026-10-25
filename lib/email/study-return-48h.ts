@@ -46,11 +46,9 @@ function escapeHtml(value: string) {
 
 function buildReturnUrl(materialId: string, hasPending: boolean) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
-  const url = new URL(hasPending
-    ? '/dashboard/explicaciones'
-    : `/materiales/${materialId}`, baseUrl);
-  if (hasPending) url.searchParams.set('material', materialId);
-  else url.searchParams.set('tab', 'ejercicios');
+  // Open the PDF's progress directly; intermediate redirects strip UTM tags.
+  const url = new URL(`/materiales/${materialId}`, baseUrl);
+  url.searchParams.set('tab', hasPending ? 'progreso' : 'ejercicios');
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
   url.searchParams.set('utm_campaign', CAMPAIGN_KEY);
@@ -80,7 +78,7 @@ export function buildStudyReturn48hMessage(input: {
     ? `En tu último estudio de ${title} quedaron ${input.pendingCount} ${input.pendingCount === 1 ? 'tema pendiente' : 'temas pendientes'}. No hace falta empezar todo el PDF: elegí uno y volvé a practicarlo.`
     : `Hace unos días estudiaste ${title}. Si querés retomarlo, una práctica corta con tu PDF puede ayudarte a comprobar qué recordás.`;
 
-  const cta = hasPending ? 'Elegir un tema para repasar' : 'Hacer una práctica';
+  const cta = hasPending ? 'Elegir un tema para repasar' : 'Ir a mi práctica';
   const topicNames = [...new Set(input.pendingTopics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
   const topicHtml = hasPending && topicNames.length ? `<div style="background:#F4F7FF;border:1px solid #DCE6F9;border-radius:12px;padding:14px 18px;margin:0 0 22px;"><p style="margin:0 0 10px;font-weight:700;font-size:14px;">Temas que te conviene repasar</p><ul style="padding-left:18px;margin:0;">${topicNames.map((name) => `<li style="margin-bottom:5px;">${escapeHtml(name)}</li>`).join('')}</ul></div>` : '';
 
