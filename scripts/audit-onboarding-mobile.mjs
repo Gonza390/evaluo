@@ -73,27 +73,14 @@ try {
     const end=await evaluate('({guide:!!document.querySelector("[data-first-pdf-guide]"),examples:document.querySelectorAll("[data-tour-example-topic]").length})');
     console.log(name+'/finished',JSON.stringify(end));
     if(end.guide||end.examples)failures.push(name+': guide or fake progress persisted after completion');
-    // Dos pasos nuevos tras el tour: elección y primer recorrido basado en el PDF.
+    // El flujo vigente termina directamente en Resumen, sin bifurcación
+    // «¿Ya estudiaste?» ni pantalla independiente de planificación.
     if(name==='small' || name==='se') {
-      const choiceReady=await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-entry]")'),'study choice '+name);
-      if(!choiceReady)failures.push(name+': first study choice missing');
-      const choice= name==='small'?'Todavía no':'Sí, sé algo';
-      const selected=await evaluate('(() => {const c=document.querySelector("[data-first-pdf-study-entry]");const b=Array.from(c?.querySelectorAll("button")||[]).find(n=>n.textContent.includes('+JSON.stringify(choice)+'));if(!b)return false;b.click();return true})()');
-      if(!selected)failures.push(name+': study choice '+choice+' missing');
-      if(name==='small') {
-        await waitFor(()=>evaluate('!!document.querySelector("[data-first-pdf-study-plan]")'),'chapter plan '+name);
-        const route=await evaluate('(() => {const plan=document.querySelector("[data-first-pdf-study-plan]");const ol=plan?.querySelector("ol");return {label:plan?.textContent||"",chapters:ol?.querySelectorAll("li").length||0,overflow:document.documentElement.scrollWidth>innerWidth+2}})()');
-        if(route.chapters<1 || route.overflow || !route.label.includes('Empezar por el tema 1')) failures.push(name+': chapter route broken '+JSON.stringify(route));
-        const shot=await call('Page.captureScreenshot',{format:'png',fromSurface:true});
-        await writeFile('artifacts/mobile-onboarding/'+name+'-study-plan.png',Buffer.from(shot.result.data,'base64'));
-        const started=await evaluate('(() => {const p=document.querySelector("[data-first-pdf-study-plan]");const b=Array.from(p?.querySelectorAll("button")||[]).find(n=>n.textContent.includes("Empezar por el tema 1"));if(!b)return false;b.click();return true})()');
-        if(!started)failures.push(name+': first chapter start action missing');
-        await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'study plan dismissed '+name);
-      } else {
-        await waitFor(()=>evaluate('!document.querySelector("[data-first-pdf-study-entry]")'),'practice entry dismissed '+name);
-        const entry=await evaluate('(() => {const n=document.querySelector("[data-pdf-mobile-navigation]");const a=n?.querySelector("button[aria-current=page]");return a?.textContent?.trim()||""})()');
-        if(!entry.includes('Práctica'))failures.push(name+': knowledge route did not open practice: '+entry);
-      }
+      const obsolete = await evaluate('({choice:!!document.querySelector("[data-first-pdf-study-entry]"),plan:!!document.querySelector("[data-first-pdf-study-plan]")})');
+      if(obsolete.choice || obsolete.plan) failures.push(name+': onboarding antiguo reapareció '+JSON.stringify(obsolete));
+      await waitFor(()=>evaluate('(() => {const n=document.querySelector("[data-pdf-mobile-navigation]");const a=n?.querySelector("button[aria-current=page]");return !!a && a.textContent.includes("Resumen")})()'),'summary after tour '+name,35);
+      const reader = await evaluate('(() => {const r=Array.from(document.querySelectorAll("[role=region]")).find(n=>n.getAttribute("aria-label")==="Contenido de estudio"&&n.getBoundingClientRect().width>0);return !!r})()');
+      if(!reader) failures.push(name+': summary reader unavailable after tour');
     }
   }
   // La guía también debe caber en escritorio/tablet: esta regresión se produjo
