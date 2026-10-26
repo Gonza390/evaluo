@@ -115,16 +115,16 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
   return (
     <aside
       className={`hidden border-r border-slate-200/80 bg-white transition-[width,top] duration-200 md:fixed md:bottom-0 md:left-0 md:z-20 md:block ${
-        compact ? 'md:top-[56px]' : 'md:top-[81px]'
-      } ${collapsed ? (compact ? 'w-[60px]' : 'w-[76px]') : (compact ? 'w-[192px]' : 'w-[248px]')}`}
+        compact ? 'md:top-[52px]' : 'md:top-[81px]'
+      } ${collapsed ? (compact ? 'w-[56px]' : 'w-[76px]') : (compact ? 'w-[176px]' : 'w-[248px]')}`}
       onClick={collapsed ? onToggleCollapsed : undefined}
     >
       <div className="flex h-full min-h-0 flex-col">
-        <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-3" : "px-3 py-4"}`}>
+        <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
           <nav className={`space-y-1 ${compact ? "pt-1" : "pt-2"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
-                collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_36px]' : 'grid-cols-[minmax(0,1fr)_40px]'
+                collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
               }`}
             >
               <NavItem
@@ -142,7 +142,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   onClick={onToggleCollapsed}
                   aria-label="Ocultar barra lateral"
                   title="Ocultar barra lateral"
-                  className={`flex h-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800 ${compact ? 'w-9' : 'w-10'}`}
+                  className={`flex h-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800 ${compact ? 'w-8' : 'w-10'}`}
                 >
                   <ToggleIcon className="h-4 w-4" />
                 </button>
