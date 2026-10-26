@@ -489,7 +489,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     ? 'flex min-h-0 flex-col overflow-hidden bg-white p-0 pb-[calc(4.25rem+env(safe-area-inset-bottom))] has-[[data-pdf-mobile-navigation]]:pb-0 md:pb-0'
                     : isExploreExperienceRoute
                       ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
-                      : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
+                      : isCompactAppRoute
+                        ? 'bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0'
+                        : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
             {children}
