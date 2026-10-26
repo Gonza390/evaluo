@@ -50,6 +50,54 @@ for (const width of [375, 1440]) {
   });
 }
 
+// Validar el recorrido capítulo -> popup -> flashcards del tema -> práctica,
+// tanto con viewport de teléfono como de escritorio. Usa el PDF público, sin Auth.
+for (const width of [375, 1440]) {
+  await check('chapter finish -> topic flashcards -> practice ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    try {
+      const response = await page.goto(baseUrl + '/demo/material-estudio?tour=0', {
+        waitUntil: 'domcontentloaded',
+        timeout: 60000,
+      });
+      assert.equal(response?.status(), 200);
+      await page.locator('[data-onboarding-study-panel]:visible').first().waitFor(wait);
+      const region = page.getByRole('region', { name: 'Contenido de estudio' }).first();
+      await region.locator('[data-summary-reading-section="1"]').scrollIntoViewIfNeeded();
+      const chapterPopup = page.locator('[data-summary-chapter-finish="0"]');
+      await chapterPopup.waitFor({ timeout: 24000 });
+      assert.equal(await chapterPopup.getByText('Lectura finalizada').count(), 1);
+      const flashcards = chapterPopup.locator('[data-summary-topic-flashcards="0"]');
+      assert.equal(await flashcards.isEnabled(), true, 'El primer tema debe ofrecer tarjetas');
+      await page.screenshot({ path: folder + '/capitulo-final-' + width + '.png', animations: 'disabled' });
+      await flashcards.click();
+      await page.getByRole('button', { name: 'Mostrar respuesta' }).waitFor(wait);
+      const result = page.locator('[data-topic-flashcards-result]:visible');
+      let completed = false;
+      for (let i = 0; i < 80; i++) {
+        if (await result.isVisible().catch(() => false)) {
+          completed = true;
+          break;
+        }
+        await page.getByRole('button', { name: 'Mostrar respuesta' }).click();
+        await page.getByRole('button', { name: 'Lo sabía', exact: true }).click();
+      }
+      assert.equal(completed, true, 'La tanda de flashcards del tema debe finalizar');
+      const practiceButton = result.locator('[data-topic-flashcards-primary]');
+      await practiceButton.click();
+      await page.locator('article:visible').first().waitFor(wait);
+      assert.equal(await page.getByRole('button', { name: 'Empezar práctica' }).count(), 0,
+        'Desde flashcards se debe iniciar la práctica por tema sin pantalla intermedia');
+      await page.screenshot({ path: folder + '/flashcards-a-practica-' + width + '.png', animations: 'disabled' });
+    } catch (error) {
+      await page.screenshot({ path: folder + '/failed-capitulo-flashcards-' + width + '.png', animations: 'disabled' }).catch(() => {});
+      throw error;
+    } finally {
+      await page.close();
+    }
+  });
+}
+
 for (const width of widths) {
   await check('progreso layout ' + width, async () => {
     const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
