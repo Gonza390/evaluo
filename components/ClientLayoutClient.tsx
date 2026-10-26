@@ -272,7 +272,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               <>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
                   <div className="hidden lg:block">
-                    <EstimatedStudyActivity />
+                    <EstimatedStudyActivity compact={isDashboardHomeRoute} />
                   </div>
                   <NotificationBell />
                   <button
