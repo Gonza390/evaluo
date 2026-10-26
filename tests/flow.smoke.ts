@@ -734,7 +734,9 @@ const topicSupportView = readFileSync('components/study/topic-study-support.tsx'
 assert.ok(flashcardView.includes('data-topic-flashcards-result'));
 assert.ok(flashcardView.includes('max-w-[640px] rounded-xl border px-4 py-4'));
 assert.ok(flashcardView.includes('data-flashcard-card'));
-assert.ok(flashcardView.includes('onClick={() => setFlipped((value) => !value)}'));
+assert.ok(flashcardView.includes('onClick={flipCard}'), 'La tarjeta debe usar el manejador animado actual.');
+assert.ok(flashcardView.includes('data-flashcard-flipping={isFlipping}'));
+assert.ok(flashcardView.includes("isFlipping && 'animate-flashcard-turn'"));
 assert.ok(practiceView.includes('max-w-[1240px] px-1 py-2'));
 assert.ok(practiceView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(practiceView.includes('max-w-[640px] px-2 py-3'));
