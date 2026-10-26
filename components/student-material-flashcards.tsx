@@ -384,7 +384,7 @@ export function StudentMaterialFlashcards({
 
   const displayFront = currentCard ? resolveFlashcardFront(currentCard) : '';
 
-  if (cards.length === 0) {
+  if (scopedIndices.length === 0) {
     return (
       <div className="border-border bg-muted rounded-2xl border px-5 py-8 text-center">
         <p className="text-foreground font-semibold">No encontramos conceptos suficientes</p>
@@ -405,11 +405,11 @@ export function StudentMaterialFlashcards({
           Listo para aprender con flashcards
         </h3>
         <p className="text-muted-foreground mx-auto mt-2 max-w-lg text-sm leading-6">
-          Vas a practicar {cards.length} conceptos del PDF con recuperación activa. Intentá
+          Vas a practicar {scopedIndices.length} conceptos {allowedCardIndices ? 'de este tema' : 'del PDF'} con recuperación activa. Intentá
           responder antes de voltear cada tarjeta.
         </p>
         <Button type="button" onClick={startSession} className="mt-5 rounded-2xl px-6">
-          Generar flashcards
+          Comenzar repaso
         </Button>
       </div>
     );
