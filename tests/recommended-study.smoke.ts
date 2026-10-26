@@ -465,6 +465,21 @@ assert.doesNotMatch(diagnosticSource, /<FirstStudyErrorOnboardingPrompt/, 'El di
 // El lector de Progreso tiene que respetar el formato académico real,
 // sin mostrar las marcas Markdown como texto plano ni crear objetivos con IA.
 const topicReaderSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+// El refuerzo debe centrarse en la dificultad activa; el índice y el panel
+// de aprendizaje sólo se muestran mientras se exploran los temas.
+assert.match(topicReaderSource, /data-reinforcement-focus=\{reviewOpen \? 'true' : undefined\}/,
+  'La vista de refuerzo debe contar con un modo explícito de concentración.');
+assert.match(topicReaderSource, /reviewOpen\s*\?\s*'mx-auto mt-5 w-full max-w-\[980px\] min-w-0'/,
+  'El refuerzo debe ocupar un área centrada sin columnas laterales.');
+assert.match(topicReaderSource, /\{!reviewOpen && \(\s*<aside\s+className="border-border bg-card hidden/,
+  'El índice lateral debe desaparecer al entrar en refuerzo.');
+assert.match(topicReaderSource, /\{!reviewOpen && \(\s*<aside\s+className="hidden min-w-0 xl:sticky/,
+  'El panel lateral de aprendizaje debe desaparecer durante el refuerzo.');
+assert.doesNotMatch(topicReaderSource, />\s*Volver al tema\s*<\/button>/,
+  'Eliminar el enlace azul Volver al tema durante el refuerzo.');
+assert.match(topicReaderSource, /onFinish=\{\(\) => setReviewOpen\(false\)\}/,
+  'Al terminar el refuerzo debe volver a la navegación habitual.');
+
 const richTextSource = readFileSync('components/study-rich-text.tsx', 'utf8');
 assert.match(
   topicReaderSource,
