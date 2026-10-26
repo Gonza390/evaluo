@@ -10,6 +10,7 @@ import {
   summarizeExtractedText,
 } from '../lib/student-materials/text.ts';
 import { buildStudentMaterialGlossary } from '../lib/student-materials/glossary.ts';
+import { buildGroundedErrorContrast } from '../lib/student-materials/error-contrast.ts';
 import {
   cleanRepeatedPageChrome,
   extractTextFromPdfBuffer,
@@ -1377,6 +1378,38 @@ assert.ok(longBank.questions
   .every((question) => question.explanation.includes(question.answer)),
   'El feedback de conceptos debe explicar el contenido correcto y no sólo decir que el PDF lo respalda.'
 );
+// Las explicaciones predeterminadas deben enseñar el criterio y evitar
+// muletillas sobre el soporte del estudiante o afirmaciones circulares.
+assert.ok(
+  longBank.questions.every((question) =>
+    !/seg[uú]n (?:el|la) (?:pdf|material)|en el material|la relaci[oó]n presentada en el pdf|las dem[aá]s opciones expresan|el pdf asocia/i.test(question.explanation)
+  ),
+  'Las nuevas explicaciones no deben justificar respuestas diciendo sólo que están en el PDF.'
+);
+assert.ok(
+  longBank.questions.filter((question) => question.kind === 'relationship').every((question) =>
+    question.explanation.includes(question.answer)
+  ),
+  'Las relaciones deben detallar su contenido real en lugar de justificar su presencia en el PDF.'
+);
+const contrastGlossary = [
+  { term: 'Demográfica', definition: 'Edad, ingresos y lugar de residencia.', context: '', importance: 'alta' as const },
+  { term: 'Psicográfica', definition: 'Intereses, valores y estilos de vida.', context: '', importance: 'alta' as const },
+];
+const groundedExplanation = buildGroundedErrorContrast(
+  'Edad, ingresos y lugar de residencia.',
+  'Intereses, valores y estilos de vida.',
+  contrastGlossary
+);
+assert.match(groundedExplanation ?? '', /Demogr[aá]fica/);
+assert.match(groundedExplanation ?? '', /Psicogr[aá]fica/);
+assert.ok(!/en el material|seg[uú]n el pdf/i.test(groundedExplanation ?? ''));
+assert.equal(buildGroundedErrorContrast('Otra alternativa',
+  'Intereses, valores y estilos de vida.', contrastGlossary), null,
+  'Sin una atribución inequívoca del distractor no se debe inventar el motivo del error.');
+assert.equal(buildGroundedErrorContrast('Edad, ingresos y lugar de residencia.',
+  'Intereses, valores y estilos de vida.', [...contrastGlossary, contrastGlossary[0]!]), null,
+  'Dos definiciones idénticas en el glosario no autorizan un contraste supuesto.');
 const longPages = longBank.questions
   .map((item) => item.reference.pageStart)
   .filter((page): page is number => page !== null);

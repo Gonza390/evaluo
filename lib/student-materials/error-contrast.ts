@@ -25,5 +25,6 @@ export function buildGroundedErrorContrast(
   const wrong = uniqueMatchingConcept(chosen, glossary);
   const right = uniqueMatchingConcept(expected, glossary);
   if (!wrong || !right || norm(wrong.term) === norm(right.term)) return null;
-  return `Elegiste una definición de “${wrong.term}”, que en el material significa: ${wrong.definition}. La respuesta corresponde a “${right.term}”: ${right.definition}. El punto a recordar es que son conceptos distintos, aunque pertenezcan al mismo tema.`;
+  const withoutFinalStop = (value: string) => value.trim().replace(/[.!?]+$/u, '');
+  return `Elegiste la definición de “${wrong.term}”: ${withoutFinalStop(wrong.definition)}. La respuesta corresponde a “${right.term}”: ${withoutFinalStop(right.definition)}. Compará qué característica define cada uno.`;
 }

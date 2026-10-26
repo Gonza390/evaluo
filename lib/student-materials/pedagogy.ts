@@ -77,6 +77,11 @@ function dedupeQuestions(items: StudyQuestion[]) {
   });
 }
 
+function finishSentence(text: string) {
+  const value = cleanLine(text);
+  return /[.!?…]$/u.test(value) ? value : `${value}.`;
+}
+
 function truncateAtWord(text: string, limit: number) {
   const cleaned = cleanLine(text);
   if (cleaned.length <= limit) return cleaned;
@@ -1079,8 +1084,8 @@ function buildFallbackMultipleChoice(
         answer: correctAnswer,
         explanation:
           level === 'recordar'
-            ? `La opción correcta conserva la definición que el PDF asigna a ${concept.term}.`
-            : `La opción correcta mantiene la idea central y el contexto con el que el PDF explica ${concept.term}.`,
+            ? `“${concept.term}” se refiere a: ${finishSentence(correctAnswer)}`
+            : `“${concept.term}” se caracteriza por: ${finishSentence(correctAnswer)}`,
         reference: findReference(
           concept.term,
           chunks,
@@ -1091,6 +1096,29 @@ function buildFallbackMultipleChoice(
     .filter((question) => question.options.length >= 3);
 }
 
+function buildConceptFeedback(
+  term: string,
+  definition: string,
+  pages: number[] | undefined,
+  model: CanonicalPedagogicalModel,
+  chunks: PedagogicalChunk[]
+) {
+  // Sólo ampliar la definición si el mismo material aporta una relación
+  // independiente y localizable en las páginas del concepto.
+  const pageSet = new Set((pages ?? []).filter((page) => page > 0));
+  const related = model.relationships.find((relation) =>
+    normalizeForDedupe(relation.source) === normalizeForDedupe(term) &&
+    relation.target.trim() &&
+    relation.description.trim().length >= 24 &&
+    normalizeForDedupe(relation.description) !== normalizeForDedupe(definition) &&
+    (relation.pageReferences ?? []).some((page) => pageSet.has(page)) &&
+    !hasSourceContradictedCausalDirection(relation, chunks)
+  );
+  if (related) {
+    return `“${term}” significa: ${finishSentence(definition)} También se relaciona con “${related.target}”: ${finishSentence(truncateAtWord(related.description, 190))}`;
+  }
+  return `“${term}” se caracteriza por: ${finishSentence(definition)}`;
+}
 function buildCanonicalConceptQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[],
@@ -1133,7 +1161,7 @@ function buildCanonicalConceptQuestions(
                 : `¿Cómo se describe “${concept.term}”?`,
         options,
         answer: correct,
-        explanation: `En el material, “${concept.term}” se define como: ${correct}. Las demás opciones expresan definiciones de otros conceptos, no de éste.`,
+        explanation: buildConceptFeedback(concept.term, correct, concept.pageReferences, model, chunks),
         reference: referenceFromPages(
           concept.pageReferences,
           concept.term,
@@ -1195,7 +1223,7 @@ function buildCanonicalRelationshipQuestions(
                 : `¿Cuál es el vínculo entre “${item.source}” y “${item.target}”?`,
         options,
         answer: correct,
-        explanation: `La relación presentada en el PDF es: ${correct}. Se vincula específicamente “${item.source}” con “${item.target}”.`,
+        explanation: `Entre “${item.source}” y “${item.target}” se da esta relación: ${finishSentence(correct)}`,
         reference: referenceFromPages(
           item.pageReferences,
           `${item.source} ${item.target}`,
@@ -1290,7 +1318,7 @@ function buildCanonicalClassificationQuestions(
           : `En el tema “${classification.title}”, ¿qué nombre recibe la categoría caracterizada por “${truncateAtWord(caseText, 130)}”?`,
         options,
         answer: correct.label,
-        explanation: `La característica “${truncateAtWord(caseText, 130)}” corresponde a “${correct.label}”. Para distinguir las demás categorías, compará los criterios originales de la clasificación.`,
+        explanation: `“${correct.label}” se identifica por esta característica: ${finishSentence(truncateAtWord(correct.detail, 190))}`,
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -1357,7 +1385,7 @@ function buildCanonicalProcessQuestions(
         prompt: prompts[index % prompts.length]!,
         options,
         answer: process.title,
-        explanation: `La secuencia de acciones identifica “${process.title}”. El material lo organiza en estos pasos: ${truncateAtWord(process.steps.join(' → '), 260)}.`,
+        explanation: `Es “${process.title}” porque las etapas siguen este orden: ${finishSentence(truncateAtWord(process.steps.join(' → '), 260))}`,
         reference: referenceFromPages(
           process.pageReferences,
           process.title,
@@ -1395,7 +1423,7 @@ function buildCanonicalFormulaQuestions(
           prompt: `Una solución tiene [H+] = 10⁻${exponent}. Aplicando “${formula.expression}”, ¿qué valor de pH corresponde?`,
           options: placeCorrectOption(correct, distractors, (index + 1) % 4),
           answer: correct,
-          explanation: `La expresión del PDF define el pH como el logaritmo negativo de la concentración de H+. Para 10⁻${exponent}, el resultado es ${exponent}.`,
+          explanation: `El pH se obtiene tomando el logaritmo negativo de [H+]. Como [H+] = 10⁻${exponent}, entonces pH = −log(10⁻${exponent}) = ${exponent}.`,
           reference: referenceFromPages(
             formula.pageReferences,
             formula.expression,
@@ -1426,7 +1454,7 @@ function buildCanonicalFormulaQuestions(
         prompt: `¿A qué expresión o magnitud corresponde esta descripción: “${truncateAtWord(formula.description, 170)}”?`,
         options,
         answer: formula.expression,
-        explanation: `La descripción es la que el PDF asocia con “${formula.expression}”.`,
+        explanation: `La expresión “${formula.expression}” corresponde a esta descripción: ${finishSentence(truncateAtWord(formula.description, 190))}`,
         reference: referenceFromPages(
           formula.pageReferences,
           formula.expression,
@@ -1478,7 +1506,7 @@ function buildCanonicalComparisonQuestions(
         options: [],
         answer,
         explanation:
-          'Una respuesta sólida debe definir ambos elementos, marcar una diferencia concreta y respaldarla con el criterio presentado en el PDF.',
+          `La diferencia entre “${pair.left}” y “${pair.right}” debe identificarse con un criterio concreto; revisá en la respuesta modelo cómo se caracteriza cada uno.`,
         reference,
       };
     })
@@ -1514,7 +1542,7 @@ function buildCanonicalConfusionQuestions(
       options: [],
       answer,
       explanation:
-        'Una respuesta sólida debe identificar qué interpretación es incorrecta y explicar la distinción correcta con apoyo en el PDF.',
+        'Para corregir la confusión, identificá la interpretación equivocada y contrastala con la explicación de la respuesta modelo.',
       reference,
     };
   }).filter((question): question is StudyQuestion => Boolean(question));
@@ -1579,7 +1607,7 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     prompt: prompts[index % prompts.length]!,
     options: [],
     answer: grounded.answer,
-    explanation: 'La respuesta modelo presenta una idea y su desarrollo, extraídos del mismo apartado del PDF. Contrastá ambas partes con la fuente.',
+    explanation: `Para evaluar tu respuesta sobre “${grounded.focus}”, comprobá que incluya la idea principal y su desarrollo, no sólo palabras aisladas.`,
     reference,
   };
   // Evitar crear una pregunta de proceso que explique solamente su primer paso.
@@ -1738,7 +1766,7 @@ function anchorAndCompleteChapterQuestions(
         topic: concept.term,
         chapterTitle: chapter.title,
         prompt, options, answer: correct,
-        explanation: `“${concept.term}” se define como: ${correct}. Las otras opciones describen conceptos diferentes.`,
+        explanation: buildConceptFeedback(concept.term, correct, concept.pageReferences, model, chunks),
         reference,
       });
     }
