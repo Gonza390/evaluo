@@ -1653,7 +1653,7 @@ function anchorAndCompleteChapterQuestions(
   const counts = chapters.map(() => 0);
   for (const question of valid) {
     const chapterIndex = findSummarySectionForQuestion(question, chapters);
-    if (chapterIndex >= 0) counts[chapterIndex] += 1;
+    if (chapterIndex >= 0) counts[chapterIndex] = (counts[chapterIndex] ?? 0) + 1;
   }
   const usedConcepts = new Set(
     anchored.filter((item) => item.kind === 'concept' && item.type === 'multiple_choice')
@@ -1663,9 +1663,9 @@ function anchorAndCompleteChapterQuestions(
     anchored.filter((item) => item.kind === 'relationship' && item.type === 'multiple_choice')
       .map((item) => normalizeForDedupe(item.topic ?? ''))
   );
-  const relationshipPool = buildCanonicalRelationshipQuestions(
-    model, chunks, Math.min(120, model.relationships.length)
-  );
+  const relationshipPool = counts.some((count) => count < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS)
+    ? buildCanonicalRelationshipQuestions(model, chunks, Math.min(120, model.relationships.length))
+    : [];
 
 
   for (let index = 0; index < chapters.length; index += 1) {
@@ -1677,7 +1677,7 @@ function anchorAndCompleteChapterQuestions(
       if (usedPrompts.has(key) || !isReliableTopicQuestion(candidate)) return false;
       usedPrompts.add(key);
       anchored.push(candidate);
-      counts[index] += 1;
+      counts[index] = (counts[index] ?? 0) + 1;
       if (candidate.kind === 'concept') usedConcepts.add(normalizeForDedupe(candidate.topic ?? ''));
       if (candidate.kind === 'relationship') usedRelationships.add(normalizeForDedupe(candidate.topic ?? ''));
       return true;
