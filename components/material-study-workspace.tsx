@@ -1629,21 +1629,21 @@ export function MaterialStudyWorkspace({
     const index = tab === 'tarjetas' ? flashcardTopicIndex : glossaryTopicIndex;
     if (index === null) return null;
     return (
-      <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-4 flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-3 flex flex-col gap-2.5 rounded-xl border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
-          <p className="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">
+          <p className="text-primary text-[10.5px] font-bold uppercase tracking-[0.12em]">
             {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
           </p>
-          <p className="text-foreground mt-1 text-sm font-semibold break-words">
+          <p className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.03em] break-words">
             {summaryChapters[index]?.displayTitle}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" className="min-h-10 rounded-lg"
+          <Button type="button" variant="outline" size="sm" className="min-h-10 rounded-lg text-[13px]"
             onClick={() => returnToSummaryTopic(index)}>
             <ChevronLeft aria-hidden className="h-4 w-4" /> Volver al tema
           </Button>
-          <Button type="button" size="sm" className="min-h-10 rounded-lg"
+          <Button type="button" size="sm" className="min-h-10 rounded-lg text-[13px]"
             disabled={!topicQuestionCounts[index]} onClick={() => startChapterEvaluation(index)}>
             Practicar este tema <ChevronRight aria-hidden className="h-4 w-4" />
           </Button>
@@ -2082,15 +2082,24 @@ export function MaterialStudyWorkspace({
       </TabsContent>
 
       <TabsContent data-demo-focus="study-section" value="glosario" className="animate-tab-panel">
-        <div className="px-1 py-1 sm:px-2 sm:py-2">
-          {renderTopicResourceHeader('glosario')}
+        <div data-study-glossary className="mx-auto w-full max-w-[1240px] px-1 py-1 sm:px-2 sm:py-1.5">
+          {glossaryTopicIndex === null ? (
+            <header className="border-border mb-3 border-b pb-3 sm:pb-4">
+              <h2 className="text-foreground text-[19px] leading-[1.25] font-bold tracking-[-0.04em] sm:text-[20px]">
+                Glosario
+              </h2>
+              <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
+                Conceptos clave para repasar tu material.
+              </p>
+            </header>
+          ) : renderTopicResourceHeader('glosario')}
           {glossaryItemsToShow.length > 0 ? (
-            <div>
-              <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-5 border-b px-2 py-3 md:grid">
-                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
+            <div className="w-full max-w-[1040px]">
+              <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-4 border-b px-2 py-2.5 md:grid">
+                <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.13em] uppercase">
                   Término
                 </p>
-                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.13em] uppercase">
                   Definición
                 </p>
               </div>
@@ -2104,21 +2113,21 @@ export function MaterialStudyWorkspace({
                   return (
                     <article
                       key={item.term}
-                      className="border-border bg-card grid gap-2 rounded-xl border p-3 md:grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] md:gap-5 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3"
+                      className="border-border bg-card grid gap-1.5 rounded-xl border p-3 md:grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3"
                     >
-                      <div className="space-y-1.5">
-                        <h3 className="text-foreground text-[13px] font-semibold tracking-[-0.025em] md:text-[14px]">
+                      <div className="min-w-0 space-y-1">
+                        <h3 className="text-foreground text-[14px] leading-5 font-semibold tracking-[-0.025em] [overflow-wrap:anywhere]">
                           {item.term}
                         </h3>
                         {englishTerm ? (
-                          <p className="text-muted-foreground text-[12px] font-medium italic">
+                          <p className="text-muted-foreground text-[12px] leading-5 font-medium italic [overflow-wrap:anywhere]">
                             {englishTerm}
                           </p>
                         ) : null}
                       </div>
 
-                      <div className="space-y-1.5">
-                        <p className="text-foreground text-[13px] leading-5 md:text-[14px] md:leading-6">
+                      <div className="min-w-0">
+                        <p className="text-foreground text-[13px] leading-[1.65] sm:text-[13.5px] [overflow-wrap:anywhere]">
                           {item.definition}
                         </p>
                       </div>
@@ -2128,7 +2137,7 @@ export function MaterialStudyWorkspace({
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground px-2 py-4 text-[14px] leading-6">
+            <p className="text-muted-foreground px-2 py-3 text-[13px] leading-5">
               Todavía no pudimos detectar un glosario claro a partir de este PDF.
             </p>
           )}
