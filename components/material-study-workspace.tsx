@@ -433,6 +433,7 @@ export function MaterialStudyWorkspace({
   const scrollFirstChapterSmoothlyRef = useRef(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
+  const [flashcardTopicIndex, setFlashcardTopicIndex] = useState<number | null>(null);
   const promptedChapterFinishesRef = useRef(new Set<number>());
   const chapterFinishNavigationPauseRef = useRef(0);
   const studyGuideArrivalHandledRef = useRef<string | null>(null);
@@ -906,6 +907,13 @@ export function MaterialStudyWorkspace({
       getTopicStudyResources(studySummary.sections, usefulGlossary, studyArtifacts.flashcards, index)),
     [summaryChapters, studySummary.sections, usefulGlossary, studyArtifacts.flashcards]
   );
+
+  const flashcardTopicIndices = useMemo(() => {
+    if (flashcardTopicIndex === null) return undefined;
+    const cards = topicStudyResources[flashcardTopicIndex]?.flashcards ?? [];
+    const allowed = new Set(cards);
+    return studyArtifacts.flashcards.flatMap((card, index) => allowed.has(card) ? [index] : []);
+  }, [flashcardTopicIndex, topicStudyResources, studyArtifacts.flashcards]);
 
   // Mantener sincronizado el índice «Contenido» con el capítulo realmente visible.
   // Funciona con scroll interno del lector y con scroll de página (demo).
@@ -1485,6 +1493,7 @@ export function MaterialStudyWorkspace({
 
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
     setProgressOpen(false);
+    if (value === 'tarjetas' && entry !== 'summary_chapter') setFlashcardTopicIndex(null);
     const nextTab = value as StudyTabId;
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
       entry === 'summary_chapter' ? 'tema' : nextTab);
@@ -2056,7 +2065,9 @@ export function MaterialStudyWorkspace({
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
             <StudentMaterialFlashcards
+              key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
               cards={studyArtifacts.flashcards}
+              allowedCardIndices={flashcardTopicIndices}
               materialId={materialId}
               onComplete={demo ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}
@@ -2435,6 +2446,12 @@ export function MaterialStudyWorkspace({
             const index = chapterFinishIndex;
             setChapterFinishIndex(null);
             startChapterEvaluation(index);
+          }}
+          onFlashcards={() => {
+            const index = chapterFinishIndex;
+            setChapterFinishIndex(null);
+            setFlashcardTopicIndex(index);
+            handleStudyTabChange('tarjetas', 'summary_chapter');
           }}
           onContinue={() => continueAfterChapter(chapterFinishIndex)}
           onClose={() => setChapterFinishIndex(null)}
