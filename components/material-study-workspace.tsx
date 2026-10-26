@@ -240,19 +240,6 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
   ),
 });
 
-function WorkspaceCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={cn(
-        'surface-card border-border/80 bg-card rounded-2xl border p-4 shadow-none sm:p-[1.05rem]',
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
 function StudyDocumentShell({
   title,
   description,
