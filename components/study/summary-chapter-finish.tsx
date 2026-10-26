@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 
-type ReviewMode = 'flashcards' | 'glossary' | null;
+type ReviewMode = 'glossary' | null;
 
 /** Una sola invitación compacta al terminar la lectura del capítulo. */
 export function SummaryChapterFinish({
@@ -19,6 +19,7 @@ export function SummaryChapterFinish({
   canEvaluate,
   hasNextChapter,
   onEvaluate,
+  onFlashcards,
   onContinue,
   onClose,
 }: {
@@ -30,19 +31,15 @@ export function SummaryChapterFinish({
   canEvaluate: boolean;
   hasNextChapter: boolean;
   onEvaluate: () => void;
+  onFlashcards: () => void;
   onContinue: () => void;
   onClose: () => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [reviewMode, setReviewMode] = useState<ReviewMode>(null);
-  const [cardIndex, setCardIndex] = useState(0);
-  const [answerVisible, setAnswerVisible] = useState(false);
-  const card = flashcards[cardIndex];
 
   const toggleReview = (mode: Exclude<ReviewMode, null>) => {
     setReviewMode((current) => current === mode ? null : mode);
-    setCardIndex(0);
-    setAnswerVisible(false);
   };
 
   return (
@@ -101,10 +98,8 @@ export function SummaryChapterFinish({
                 data-summary-topic-flashcards={chapterIndex}
                 size="sm"
                 variant="outline"
-                aria-expanded={reviewMode === 'flashcards'}
-                aria-controls={`topic-flashcards-${chapterIndex}`}
                 disabled={flashcards.length === 0}
-                onClick={() => toggleReview('flashcards')}
+                onClick={onFlashcards}
                 className="h-9 rounded-lg px-3 text-xs font-medium"
               >
                 <Layers3 aria-hidden className="mr-1.5 h-3.5 w-3.5" /> Flashcards
@@ -125,30 +120,6 @@ export function SummaryChapterFinish({
             </div>
           </div>
 
-          {reviewMode === 'flashcards' && card ? (
-            <div id={`topic-flashcards-${chapterIndex}`} className="border-border bg-muted/30 mt-4 rounded-xl border p-4">
-              <p className="text-muted-foreground text-[11px] font-semibold">Tarjeta {cardIndex + 1} de {flashcards.length}</p>
-              <p className="text-foreground mt-3 text-sm font-medium leading-6">{card.front}</p>
-              {answerVisible ? (
-                <p className="text-muted-foreground mt-3 border-t pt-3 text-sm leading-6 whitespace-pre-line">{card.back}</p>
-              ) : null}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setAnswerVisible((visible) => !visible)}>
-                  {answerVisible ? 'Ocultar respuesta' : 'Mostrar respuesta'}
-                </Button>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" size="sm" disabled={cardIndex === 0}
-                    onClick={() => { setCardIndex((index) => index - 1); setAnswerVisible(false); }}>
-                    Anterior
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" disabled={cardIndex === flashcards.length - 1}
-                    onClick={() => { setCardIndex((index) => index + 1); setAnswerVisible(false); }}>
-                    Siguiente
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : null}
           {reviewMode === 'glossary' && concepts.length > 0 ? (
             <div id={`topic-glossary-${chapterIndex}`} className="border-border bg-muted/30 mt-4 max-h-72 overflow-y-auto rounded-xl border px-4">
               <dl className="divide-border divide-y">
