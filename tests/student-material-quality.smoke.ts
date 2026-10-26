@@ -1418,6 +1418,77 @@ assert.ok(chapterBank.questions.filter((question) => question.chapterTitle).ever
 ), 'La asociación de capítulo requiere evidencia localizada, no inferencias sin fuente.');
 assert.ok(chapterBank.questions.length <= 120);
 
+// Completado real: el generador debe recuperar conceptos canónicos no elegidos
+// inicialmente y llegar a seis por capítulo sin clonar preguntas.
+const completedChapterSummary = {
+  ...canonicalGuideFallback,
+  sections: ['A', 'B', 'C'].map((letter) => ({
+    title: `Unidad académica ${letter}`,
+    body: Array.from({ length: 8 }, (_, i) =>
+      `Principio ${letter} ${i + 1} describe un criterio de estudio distintivo en esta unidad.`
+    ).join(' '),
+  })),
+};
+const enoughTopicModel: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  topics: [],
+  concepts: ['A', 'B', 'C'].flatMap((letter, chapterIndex) =>
+    Array.from({ length: 8 }, (_, i) => ({
+      term: `Principio ${letter} ${i + 1}`,
+      detail: `El principio ${letter} ${i + 1} establece un criterio académico particular con consecuencias diferentes en el aprendizaje y la evaluación del contenido.`,
+      kind: 'definicion' as const,
+      pageReferences: [chapterIndex * 8 + i + 1],
+    }))
+  ),
+  relationships: [],
+  classifications: [],
+  processes: [],
+  formulas: [],
+  examRelevantClaims: [],
+  confusions: [],
+};
+const enoughTopicBank = buildPedagogicalArtifacts({
+  summary: completedChapterSummary,
+  glossary: [],
+  canonicalModel: enoughTopicModel,
+  pageCount: 24,
+});
+const enoughTopicCoverage = analyzeQuestionBankCoverage(
+  enoughTopicBank.questions, completedChapterSummary.sections, 24
+);
+assert.deepEqual(enoughTopicCoverage.chaptersBelowMinimum, [],
+  'Seis o más conceptos independientes y localizados deben permitir seis preguntas por unidad.');
+assert.ok(enoughTopicCoverage.chapterAssessments.every((chapter) =>
+  chapter.validAutoCorrectable >= 6 && chapter.distinctConcepts >= 6
+), 'No se debe completar una unidad reiterando el mismo concepto.');
+assert.equal(
+  new Set(enoughTopicBank.questions.map((question) => question.id)).size,
+  enoughTopicBank.questions.length,
+  'Las preguntas suplementarias conservan IDs únicos.');
+assert.deepEqual(
+  buildPedagogicalArtifacts({
+    summary: completedChapterSummary, glossary: [], canonicalModel: enoughTopicModel, pageCount: 24,
+  }).questions.map((question) => question.id),
+  enoughTopicBank.questions.map((question) => question.id),
+  'El completado debe ser determinista para el mismo material.');
+const sparseTopicModel: CanonicalPedagogicalModel = {
+  ...enoughTopicModel,
+  concepts: enoughTopicModel.concepts.filter((concept) =>
+    concept.term.startsWith('Principio A ') ||
+    concept.term === 'Principio B 1' || concept.term === 'Principio B 2'
+  ),
+};
+const sparseTopicBank = buildPedagogicalArtifacts({
+  summary: completedChapterSummary, glossary: [], canonicalModel: sparseTopicModel, pageCount: 24,
+});
+const sparseTopicCoverage = analyzeQuestionBankCoverage(
+  sparseTopicBank.questions, completedChapterSummary.sections, 24
+);
+assert.ok(sparseTopicCoverage.chaptersBelowMinimum.includes('Unidad académica B'));
+assert.ok(sparseTopicCoverage.chaptersBelowMinimum.includes('Unidad académica C'),
+  'Si falta evidencia para las unidades B y C, no se inventan preguntas para alcanzar seis.');
+assert.ok(sparseTopicCoverage.chapterAssessments[1]!.validAutoCorrectable <= 2,
+  'Dos conceptos no se deben transformar en seis preguntas equivalentes.');
 // Selección por tema: asegurar primero seis preguntas confiables de cada unidad,
  // sin permitir que una unidad abundante monopolice el banco global.
 const quotaSections = [
