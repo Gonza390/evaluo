@@ -4,7 +4,6 @@ import { notFound, redirect } from 'next/navigation';
 import { BookOpen, Sparkles, Target } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { createPublicClient } from '@/lib/supabase-public';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildPregunteroSearchTitle } from '@/lib/seo-search-copy';
@@ -33,17 +32,10 @@ interface PregunteroData {
   totalPreguntas: number;
   resumenesCount: number;
   preguntasPorParcial: Array<{ parcial: number; count: number }>;
-  samplePreguntas: Array<{
-    id: string;
-    enunciado: string;
-    parcial: number;
-    opcionesCount: number;
-  }>;
 }
 
 const loadPregunteroData = unstable_cache(
   async (materiaId: string): Promise<PregunteroData | null> => {
-    const client = createPublicClient();
     const bootstrap = await getMateriaBootstrap({ materiaId });
 
     if (bootstrap.materiaFound === false) {
@@ -51,15 +43,8 @@ const loadPregunteroData = unstable_cache(
     }
 
     try {
-      const [stats, sampleRows] = await Promise.all([
-        getPregunteroMateriaStats(materiaId),
-        client
-          .from('preguntas_banco_public')
-          .select('id, enunciado, opciones, parcial')
-          .eq('materia_id', materiaId)
-          .order('creado_at', { ascending: false })
-          .limit(6),
-      ]);
+      // Reusar las muestras que ya trae la página del parcial (caché de 10 min).
+      const stats = await getPregunteroMateriaStats(materiaId);
 
       return {
         materiaNombre: bootstrap.materiaNombre,
@@ -69,19 +54,6 @@ const loadPregunteroData = unstable_cache(
         totalPreguntas: stats.totalPreguntas,
         resumenesCount: bootstrap.initialResumenes.length,
         preguntasPorParcial: stats.preguntasPorParcial,
-        samplePreguntas: (
-          (sampleRows.data ?? []) as Array<{
-            id: string;
-            enunciado: string;
-            opciones: unknown;
-            parcial: number | null;
-          }>
-        ).map((row) => ({
-          id: row.id,
-          enunciado: row.enunciado,
-          parcial: row.parcial ?? 1,
-          opcionesCount: Array.isArray(row.opciones) ? row.opciones.length : 0,
-        })),
       };
     } catch {
       return {
@@ -92,7 +64,6 @@ const loadPregunteroData = unstable_cache(
         totalPreguntas: 0,
         resumenesCount: bootstrap.initialResumenes.length,
         preguntasPorParcial: [],
-        samplePreguntas: [],
       };
     }
   },
@@ -246,14 +217,14 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
             <h2 className="text-foreground text-2xl font-bold tracking-[-0.04em]">
               Preguntas de muestra
             </h2>
-            {data.samplePreguntas.length === 0 ? (
+            {(practiceData?.samplePreguntas.length ?? 0) === 0 ? (
               <p className="text-muted-foreground mt-5 text-sm leading-7">
                 Todavía estamos cargando el banco de preguntas de esta materia. Entrá al espacio de
                 la materia para ver el Preguntero.
               </p>
             ) : (
               <ul className="mt-5 space-y-4">
-                {data.samplePreguntas.map((question) => (
+                {(practiceData?.samplePreguntas ?? []).map((question) => (
                   <li
                     key={question.id}
                     className="border-border bg-card rounded-2xl border px-4 py-4"
