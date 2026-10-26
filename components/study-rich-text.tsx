@@ -513,7 +513,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
       className={cn(
         'text-pretty',
         compact
-          ? 'space-y-3 [&_h4]:text-[16px] [&_h5]:text-[14px] [&_p]:text-[14px] [&_p]:leading-6'
+          ? 'space-y-2.5 [&_h4]:text-[14.5px] [&_h4]:leading-5 [&_h5]:text-[13px] [&_p]:text-[13px] [&_p]:leading-[1.6]'
           : 'space-y-4'
       )}
     >

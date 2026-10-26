@@ -386,6 +386,7 @@ export function MaterialStudyWorkspace({
       ...getGuideMetadata(), action,
     });
   };
+  const [summaryIntroExpanded, setSummaryIntroExpanded] = useState(false);
   const [localProgressOpen, setLocalProgressOpen] = useState(initialProgressOpen);
   const progressContent = demo?.progress ?? progress;
   const hasProgress = Boolean(progressContent || (progressConfig && isOwner && !demo));
@@ -1734,7 +1735,7 @@ export function MaterialStudyWorkspace({
   const tabHeader = (
     <div
       className={cn(
-        'border-border shrink-0 flex-col gap-1.5 border-b px-2.5 py-2 sm:px-3 sm:py-2.5',
+        'border-border shrink-0 flex-col gap-1 border-b px-2.5 py-1.5 sm:px-3 sm:py-2',
         'hidden md:flex'
       )}
     >
@@ -1808,13 +1809,13 @@ export function MaterialStudyWorkspace({
       </TabsList>
 
       {activeTab === 'resumen' && !progressOpen ? (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5 sm:gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 pt-0 sm:gap-1.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setIsViewerVisible((current) => !current)}
-            className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
+            className="border-border bg-card text-foreground hover:bg-muted h-7 rounded-lg px-2.5 text-[12px] shadow-none sm:h-8 sm:rounded-lg sm:px-3 sm:text-[12px]"
           >
             {isViewerVisible ? (
               <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1961,7 +1962,7 @@ export function MaterialStudyWorkspace({
       data-onboarding-transitioning={(recommendedActive && onboardingFading) || undefined}
       tabIndex={0}
       className={cn(
-        'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
+        'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-3 sm:pb-3',
         demo && 'h-full min-h-0 overflow-y-auto',
         recommendedActive && 'transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
         recommendedActive && onboardingFading && 'pointer-events-none translate-y-1 opacity-40'
@@ -1979,18 +1980,34 @@ export function MaterialStudyWorkspace({
         value="resumen"
         className="animate-tab-panel outline-none"
       >
-        <div className="mx-auto w-full max-w-[1180px] py-1 sm:py-2">
-          <header className="border-border border-b pb-7 sm:pb-8">
-            <h2 className="text-foreground max-w-[820px] text-[22px] leading-tight font-bold tracking-[-0.05em] sm:text-[24px]">
+        <div className="mx-auto w-full max-w-[1240px] py-1 sm:py-1.5">
+          <header className="border-border border-b pb-4 sm:pb-5">
+            <h2 className="text-foreground max-w-[1040px] text-[19px] leading-[1.25] font-bold tracking-[-0.04em] sm:text-[20px]">
               {title}
             </h2>
 
-            <p className="text-muted-foreground mt-3 max-w-[780px] text-[14px] leading-6">
+            <p
+              data-study-summary-intro
+              className={cn(
+                'text-muted-foreground mt-2 max-w-[1040px] text-[13px] leading-[1.65]',
+                !summaryIntroExpanded && 'line-clamp-4 sm:line-clamp-none'
+              )}
+            >
               {studySummary.shortSummary}
             </p>
+            {studySummary.shortSummary.length > 220 ? (
+              <button
+                type="button"
+                aria-expanded={summaryIntroExpanded}
+                onClick={() => setSummaryIntroExpanded((value) => !value)}
+                className="text-primary mt-1 text-[12px] font-semibold hover:underline sm:hidden"
+              >
+                {summaryIntroExpanded ? 'Ver menos' : 'Leer introducción completa'}
+              </button>
+            ) : null}
 
             {diagnosticReviewTopics.length > 0 ? (
-              <div className="border-primary mt-6 border-l-2 pl-3.5">
+              <div className="border-primary mt-3 border-l-2 pl-3">
                 <p className="text-primary text-[10.5px] font-bold tracking-[0.14em] uppercase">
                   Según tu diagnóstico
                 </p>
@@ -2002,7 +2019,7 @@ export function MaterialStudyWorkspace({
           </header>
 
           {summaryChapters.length > 0 ? (
-            <details className="group border-border bg-muted/55 mt-5 rounded-[16px] border px-4 py-3 xl:hidden">
+            <details className="group border-border bg-muted/55 mt-3 rounded-xl border px-3 py-2.5 xl:hidden">
               <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold">
                 <span className="inline-flex items-center gap-2">
                   <ListTree className="text-primary h-4 w-4" />
@@ -2046,11 +2063,11 @@ export function MaterialStudyWorkspace({
             </details>
           ) : null}
 
-          <div className="mt-5 xl:grid xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start xl:gap-6 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-8">
+          <div className="mt-3 xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:items-start xl:gap-5 2xl:grid-cols-[220px_minmax(0,1fr)] 2xl:gap-6">
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
-                <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-4">
-                  <p className="text-muted-foreground mb-3 shrink-0 text-[10.5px] font-extrabold tracking-[0.16em] uppercase">
+                <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
+                  <p className="text-muted-foreground mb-2 shrink-0 text-[10px] font-extrabold tracking-[0.16em] uppercase">
                     Contenido
                   </p>
                   <nav
@@ -2068,7 +2085,7 @@ export function MaterialStudyWorkspace({
                             data-active-chapter={activeSummaryChapterIndex === index || undefined}
                             aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                             className={cn(
-                              'group flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[12.5px] leading-5 transition-colors',
+                              'group flex items-start gap-2 rounded-lg border-l-[3px] px-2 py-1.5 text-[12px] leading-[1.45] transition-colors',
                               activeSummaryChapterIndex === index
                                 ? 'border-primary bg-primary/10 text-primary font-semibold'
                                 : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
@@ -2090,7 +2107,7 @@ export function MaterialStudyWorkspace({
               </aside>
             ) : null}
 
-            <main className="max-w-[800px] min-w-0">
+            <main className="max-w-[940px] min-w-0">
               {summaryChapters.length > 0 ? (
                 <div>
                   {summaryChapters.map((section, index) => (
@@ -2099,13 +2116,13 @@ export function MaterialStudyWorkspace({
                       key={`${section.title}:${section.body}`}
                       data-summary-reading-section={index}
                       tabIndex={index === 0 ? -1 : undefined}
-                      className="border-border scroll-mt-6 border-b py-6 first:pt-0 last:border-b-0 last:pb-2 sm:py-7"
+                      className="border-border scroll-mt-5 border-b py-4 first:pt-0 last:border-b-0 last:pb-2 sm:py-5"
                     >
-                      <header className="mb-3 sm:mb-4">
+                      <header className="mb-2.5 sm:mb-3">
                         <p className="text-primary text-[10px] font-extrabold tracking-[0.18em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="text-foreground mt-1.5 text-[18px] leading-6 font-bold tracking-[-0.04em]">
+                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-bold tracking-[-0.035em]">
                           {section.displayTitle}
                         </h3>
                       </header>
@@ -2116,7 +2133,7 @@ export function MaterialStudyWorkspace({
                         <div
                           data-summary-check-trigger={index}
                           aria-hidden="true"
-                          className="mt-7 h-px w-full"
+                          className="mt-5 h-px w-full"
                         />
                       ) : null}
 
@@ -2124,7 +2141,7 @@ export function MaterialStudyWorkspace({
                     </section>
                   ))}
 
-                  <div ref={summaryEndRef} aria-hidden="true" className="h-8 w-full" />
+                  <div ref={summaryEndRef} aria-hidden="true" className="h-4 w-full" />
                 </div>
               ) : (
                 <p className="text-muted-foreground text-[14px] leading-6">
@@ -2671,7 +2688,7 @@ export function MaterialStudyWorkspace({
         />
       ) : null}
       <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
-        <div className={`mx-auto flex w-full items-center gap-4 px-4 py-2 sm:px-6 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
+        <div className={`mx-auto flex w-full items-center gap-3 px-4 py-1.5 sm:px-5 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
@@ -2682,7 +2699,7 @@ export function MaterialStudyWorkspace({
             </Link>
 
             <div className="mt-0.5 flex min-w-0 items-baseline gap-3">
-              <h1 className="text-foreground min-w-0 truncate text-[1.05rem] font-bold tracking-[-0.035em] sm:text-[1.12rem]">
+              <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-bold tracking-[-0.03em] sm:text-[1.06rem]">
                 {title}
               </h1>
             </div>
@@ -2747,7 +2764,7 @@ export function MaterialStudyWorkspace({
         <div aria-hidden="true" data-onboarding-guide-space className="h-28 shrink-0 md:h-2" />
       ) : null}
 
-      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
+      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-1.5 sm:px-3 xl:pb-2 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
           <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
