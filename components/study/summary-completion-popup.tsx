@@ -46,9 +46,9 @@ export function SummaryCompletionPopup({
         aria-describedby={undefined}
         aria-labelledby="summary-completion-title"
         overlayClassName="z-[125] bg-foreground/45 backdrop-blur"
-        className="border-border bg-background top-auto bottom-3 z-[125] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[540px] translate-y-0 overflow-y-auto overscroll-contain rounded-2xl p-0 [overflow-wrap:anywhere] sm:top-1/2 sm:bottom-auto sm:max-w-[540px] sm:-translate-y-1/2"
+        className="border-border bg-background top-auto bottom-3 z-[125] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[540px] translate-y-0 overflow-y-auto overscroll-contain rounded-xl p-0 [overflow-wrap:anywhere] sm:top-1/2 sm:bottom-auto sm:max-w-[540px] sm:-translate-y-1/2"
       >
-        <div className="px-5 py-5 sm:px-6 sm:py-6">
+        <div className="px-4 py-4 sm:px-5 sm:py-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-primary text-[10.5px] font-extrabold tracking-[0.15em] uppercase">
@@ -57,12 +57,12 @@ export function SummaryCompletionPopup({
               <DialogTitle asChild>
                 <h2
                   id="summary-completion-title"
-                  className="text-foreground mt-1.5 text-[18px] leading-6 font-bold tracking-[-0.04em] sm:text-[18px]"
+                  className="text-foreground mt-1.5 text-[20px] leading-6 font-bold tracking-[-0.04em] sm:text-[20px]"
                 >
                   Terminaste el resumen
                 </h2>
               </DialogTitle>
-              <p className="text-muted-foreground mt-2 text-[13.5px] leading-6">
+              <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
                 Ya recorriste los temas principales de este PDF. Comprobá cuánto aprendiste con
                 preguntas generadas a partir del material que acabás de estudiar.
               </p>
@@ -78,13 +78,13 @@ export function SummaryCompletionPopup({
             </button>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 sm:p-5 dark:border-indigo-400/25 dark:bg-indigo-950/25">
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3.5 sm:p-4 dark:border-indigo-400/25 dark:bg-indigo-950/25">
             <div className="flex items-start gap-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300">
                 <ClipboardCheck className="size-5" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-foreground text-[15px] font-bold">Practicá con tu PDF</h3>
+                <h3 className="text-foreground text-[16px] font-bold">Practicá con tu PDF</h3>
                 <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                   Respondé ejercicios creados a partir de este mismo material y descubrí qué conceptos conviene reforzar.
                 </p>
@@ -94,7 +94,7 @@ export function SummaryCompletionPopup({
               type="button"
               data-summary-practice-cta
               onClick={onPractice}
-              className="bg-primary hover:bg-primary/90 focus-visible:ring-ring mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="bg-primary hover:bg-primary/90 focus-visible:ring-ring mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-semibold text-white transition focus-visible:ring-2 focus-visible:ring-offset-2"
             >
               Comenzar práctica
               <ClipboardCheck className="size-4" aria-hidden="true" />
