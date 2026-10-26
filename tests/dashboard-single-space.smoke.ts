@@ -73,12 +73,22 @@ assert.match(activitySource, /compact = false/);
 assert.match(activitySource, /compact \? 'h-9 px-3 text-\[12px\]' : 'h-10 px-3\.5 text-sm'/);
 assert.match(appChromeSource, /isDashboardHomeRoute \? 'min-h-14 py-1\.5 sm:min-h-14 sm:py-1\.5' : 'min-h-18 py-3 sm:min-h-20'/);
 assert.match(appChromeSource, /<Navbar collapsed=\{sidebarCollapsed\} onToggleCollapsed=\{handleSidebarToggle\} compact=\{isDashboardHomeRoute\} \/>/);
-assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[64px\]' : 'md:ml-\[216px\]'/);
+assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[60px\]' : 'md:ml-\[192px\]'/);
 assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[76px\]' : 'md:ml-\[248px\]'/);
 assert.match(navbarSource, /compact \? 'md:top-\[56px\]' : 'md:top-\[81px\]'/);
-assert.match(navbarSource, /compact \? 'w-\[64px\]' : 'w-\[76px\]'/);
-assert.match(navbarSource, /compact \? 'w-\[216px\]' : 'w-\[248px\]'/);
-assert.match(navbarSource, /compact \? 'gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
+assert.match(navbarSource, /compact \? 'w-\[60px\]' : 'w-\[76px\]'/);
+assert.match(navbarSource, /compact \? 'w-\[192px\]' : 'w-\[248px\]'/);
+assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
+
+// El botón de plegado comparte la fila superior, sin separar "Mi espacio"
+// ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
+assert.match(navbarSource, /compact \? 'grid-cols-\[minmax\(0,1fr\)_36px\]' : 'grid-cols-\[minmax\(0,1fr\)_40px\]'/);
+assert.match(navbarSource, /compact \? 'gap-1' : 'gap-2'/);
+assert.match(navbarSource, /compact \? 'w-9' : 'w-10'/);
+assert.match(navbarSource, /<ReferralPortalNavLink collapsed=\{collapsed\} pathname=\{pathname\} compact=\{compact\} \/>/);
+const referralNavSource = readFileSync(resolve('components/referrals/ReferralPortalNavLink.tsx'), 'utf8');
+assert.match(referralNavSource, /compact = false/);
+assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
 
 for (const source of [dashboardSource, dashboardHeroSource, dashboardMaterialsSource]) {
   assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
