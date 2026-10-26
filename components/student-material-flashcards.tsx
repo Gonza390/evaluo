@@ -26,6 +26,7 @@ import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 type RecallResult = 'known' | 'unknown';
+type SessionRecallResult = RecallResult | 'learning';
 type QualityVote = 'up' | 'down';
 
 function shuffledIndexes(length: number) {
@@ -77,7 +78,6 @@ export function StudentMaterialFlashcards({
   demoMode = false,
   allowedCardIndices,
   topicTitle,
-  onReturnToTopic,
   onPracticeTopic,
 }: {
   cards: StudyFlashcard[];
@@ -86,7 +86,6 @@ export function StudentMaterialFlashcards({
   demoMode?: boolean;
   allowedCardIndices?: number[];
   topicTitle?: string;
-  onReturnToTopic?: () => void;
   onPracticeTopic?: () => void;
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
@@ -100,7 +99,7 @@ export function StudentMaterialFlashcards({
   const [flipped, setFlipped] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
-  const [sessionRecall, setSessionRecall] = useState<Record<number, RecallResult>>({});
+  const [sessionRecall, setSessionRecall] = useState<Record<number, SessionRecallResult>>({});
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
@@ -116,14 +115,15 @@ export function StudentMaterialFlashcards({
   const currentCard = cards[currentCardIndex];
   const knownCount = Object.values(sessionRecall).filter((result) => result === 'known').length;
   const unknownCount = Object.values(sessionRecall).filter((result) => result === 'unknown').length;
-  const reviewedCount = knownCount + unknownCount;
+  const learningCount = Object.values(sessionRecall).filter((result) => result === 'learning').length;
+  const needsReviewCount = unknownCount + learningCount;
+  const reviewedCount = knownCount + needsReviewCount;
   const progress = order.length > 0 ? Math.round((reviewedCount / order.length) * 100) : 0;
-  const currentRecall = sessionRecall[currentCardIndex];
   const currentVote = voteByCard[currentCardIndex];
   const allReviewed = started && order.length > 0 && reviewedCount >= order.length;
   const reviewTopics = useMemo(() => {
     const unknownIndexes = Object.entries(sessionRecall)
-      .filter(([, result]) => result === 'unknown')
+      .filter(([, result]) => result !== 'known')
       .map(([index]) => Number(index))
       .filter((index) => index >= 0 && index < cards.length);
 
@@ -184,7 +184,7 @@ export function StudentMaterialFlashcards({
 
   const reviewDifficult = useCallback(() => {
     const unknownIndexes = Object.entries(sessionRecall)
-      .filter(([, result]) => result === 'unknown')
+      .filter(([, result]) => result !== 'known')
       .map(([index]) => Number(index))
       .filter((index) => index >= 0 && index < cards.length);
 
@@ -327,10 +327,10 @@ export function StudentMaterialFlashcards({
   }, []);
 
   const markRecall = useCallback(
-    (result: RecallResult) => {
+    (result: SessionRecallResult) => {
       if (!flipped || !currentCard) return;
 
-      setRecallByCard((current) => ({ ...current, [currentCardIndex]: result }));
+      setRecallByCard((current) => ({ ...current, [currentCardIndex]: result === 'known' ? 'known' : 'unknown' }));
       setSessionRecall((current) => ({ ...current, [currentCardIndex]: result }));
 
       if (!demoMode) {
@@ -344,7 +344,7 @@ export function StudentMaterialFlashcards({
           prompt: currentCard.front,
           explanation: currentCard.back,
           correctAnswer: currentCard.back,
-          selectedAnswer: result === 'known' ? currentCard.back : 'No lo sabía',
+          selectedAnswer: result === 'known' ? currentCard.back : result === 'learning' ? 'Aprendiendo' : 'No lo sabía',
           reference: currentCard.reference,
         });
       }
@@ -425,63 +425,34 @@ export function StudentMaterialFlashcards({
 
   if (allReviewed && allowedCardIndices !== undefined) {
     return (
-      <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-2xl rounded-2xl border px-5 py-6 text-center sm:px-8 sm:py-8">
-        <div className="bg-emerald-50 mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-emerald-600">
-          <Check className="h-6 w-6" />
-        </div>
-        {topicTitle ? <p className="text-muted-foreground mt-4 text-xs font-semibold">{topicTitle}</p> : null}
-        <h3 className="text-foreground mt-2 text-xl font-bold tracking-tight">
-          {unknownCount === 0 ? '¡Recordaste todas las tarjetas de este tema!' : '¡Terminaste las flashcards!'}
-        </h3>
-        <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-6">
-          {unknownCount === 0
-            ? onPracticeTopic
-              ? 'Recordaste los conceptos del tema. Ahora comprobá cuánto aprendiste con una práctica.'
-              : 'Completaste este repaso. Podés volver al tema y seguir estudiando.'
-            : 'Ya identificaste qué recordás de este tema y qué necesitás practicar un poco más.'}
-        </p>
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="bg-muted/50 rounded-xl px-3 py-4">
-            <p className="text-2xl font-bold tabular-nums text-emerald-600">{knownCount}</p>
-            <p className="text-muted-foreground mt-1 text-xs">Lo sabía</p>
+      <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-[640px] rounded-2xl border px-5 py-6 text-center sm:px-8">
+        <div className="bg-emerald-50 mx-auto flex size-11 items-center justify-center rounded-xl text-emerald-600"><Check className="size-5" /></div>
+        {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-semibold">{topicTitle}</p> : null}
+        <h3 className="text-foreground mt-2 text-xl font-bold">¡Terminaste de repasar este tema!</h3>
+        <p className="text-muted-foreground mt-2 text-sm">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
+        <div className="mt-5 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
+          <div className="rounded-xl border border-red-100 bg-red-50/60 px-2 py-3">
+            <p className="text-xl font-bold text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
           </div>
-          <div className="bg-muted/50 rounded-xl px-3 py-4">
-            <p className="text-foreground text-2xl font-bold tabular-nums">{unknownCount}</p>
-            <p className="text-muted-foreground mt-1 text-xs">No lo sabía</p>
+          <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-2 py-3">
+            <p className="text-xl font-bold text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
+          </div>
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3">
+            <p className="text-xl font-bold text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
           </div>
         </div>
-        {unknownCount > 0 ? (
-          <div className="mt-6 text-left">
-            <h4 className="text-foreground text-base font-bold">Fortalecé lo que aprendiste</h4>
-            <p className="text-muted-foreground mt-2 text-sm leading-6">
-              Tenés {unknownCount} {unknownCount === 1 ? 'tarjeta pendiente' : 'tarjetas pendientes'} para volver a practicar.
-              Repasalas ahora y comprobá cuánto mejoraste.
-            </p>
-          </div>
-        ) : null}
-        <Button
-          type="button"
-          data-topic-flashcards-primary
-          onClick={unknownCount > 0 ? reviewDifficult : onPracticeTopic ?? onReturnToTopic ?? finishSession}
-          className="mt-5 min-h-11 w-full rounded-xl"
-        >
-          {unknownCount > 0
-            ? 'Repasar lo que me costó'
-            : onPracticeTopic
-              ? 'Comprobar cuánto aprendí'
-              : 'Continuar estudiando'}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-        {onReturnToTopic ? (
-          <Button type="button" variant="ghost" onClick={onReturnToTopic} className="mt-2 min-h-10">
-            Volver al tema
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">
+          <Button data-topic-flashcards-primary type="button" onClick={onPracticeTopic} disabled={!onPracticeTopic} className="min-h-11 w-full rounded-xl">
+            Practicar este tema <ArrowRight aria-hidden="true" className="ml-2 size-4" />
           </Button>
-        ) : null}
-        {!demoMode && progressSyncError ? (
-          <p role="status" className="mt-3 text-xs text-amber-700">
-            El progreso sigue guardado en este navegador, pero aún no pudimos sincronizarlo.
-          </p>
-        ) : null}
+          {needsReviewCount > 0 ? (
+            <Button data-topic-flashcards-review type="button" variant="outline" onClick={reviewDifficult} className="min-h-11 w-full rounded-xl">
+              <RotateCcw aria-hidden="true" className="mr-2 size-4" /> Repasar tarjetas ({needsReviewCount})
+            </Button>
+          ) : null}
+        </div>
+        {!onPracticeTopic ? <p className="text-muted-foreground mt-3 text-xs" role="status">Este tema todavía no tiene preguntas disponibles para practicar.</p> : null}
+        {!demoMode && progressSyncError ? <p className="mt-3 text-xs text-amber-700" role="status">El progreso sigue guardado en este navegador, pero aún no pudimos sincronizarlo.</p> : null}
       </div>
     );
   }
@@ -595,31 +566,19 @@ export function StudentMaterialFlashcards({
 
   if (!currentCard) return null;
 
+  const topicMode = allowedCardIndices !== undefined;
   const recallControls = (
-    <div className="grid grid-cols-2 gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        disabled={!flipped}
-        onClick={() => markRecall('unknown')}
-        className={cn(
-          'border-destructive/20 min-h-11 rounded-xl',
-          currentRecall === 'unknown' && 'border-destructive bg-destructive/5 text-destructive'
-        )}
-      >
-        No lo sabía
+    <div className={cn('grid gap-2', topicMode ? 'grid-cols-3' : 'grid-cols-2')}>
+      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped} onClick={() => markRecall('unknown')} className="min-h-11 rounded-xl border-red-200 px-2 text-red-700 hover:bg-red-50">
+        {topicMode ? 'Mal' : 'No lo sabía'}
       </Button>
-      <Button
-        type="button"
-        variant="outline"
-        disabled={!flipped}
-        onClick={() => markRecall('known')}
-        className={cn(
-          'min-h-11 rounded-xl border-emerald-200',
-          currentRecall === 'known' && 'border-emerald-400 bg-emerald-50 text-emerald-700'
-        )}
-      >
-        Lo sabía
+      {topicMode ? (
+        <Button type="button" variant="outline" data-flashcard-grade="learning" disabled={!flipped} onClick={() => markRecall('learning')} className="min-h-11 rounded-xl border-amber-200 px-2 text-amber-700 hover:bg-amber-50">
+          Aprendiendo
+        </Button>
+      ) : null}
+      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped} onClick={() => markRecall('known')} className="min-h-11 rounded-xl border-emerald-200 px-2 text-emerald-700 hover:bg-emerald-50">
+        {topicMode ? 'Bien' : 'Lo sabía'}
       </Button>
     </div>
   );
@@ -628,7 +587,7 @@ export function StudentMaterialFlashcards({
     <>
       <div
         className={cn(
-          demoMode ? 'space-y-3' : 'space-y-4',
+          demoMode || topicMode ? 'space-y-3' : 'space-y-4',
           isFullscreen && 'mx-auto flex h-full w-full max-w-5xl flex-col justify-center'
         )}
       >
@@ -637,13 +596,18 @@ export function StudentMaterialFlashcards({
             <p className="text-foreground hidden text-sm font-semibold md:block">
               Tarjeta {position + 1} de {order.length}
             </p>
-            <p className={cn('mt-0.5 gap-4 text-sm font-semibold', demoMode ? 'hidden' : 'flex')}>
-              <span className="text-emerald-700">
-                <Check className="mr-1 inline h-4 w-4" />
-                {knownCount} lo sabía
-              </span>
-              <span className="text-destructive">{unknownCount} no lo sabía</span>
-            </p>
+            {topicMode ? (
+              <div className="mt-1 flex flex-wrap gap-2 text-xs font-semibold" aria-label="Estado de las tarjetas">
+                <span data-flashcards-bad className="rounded-full border border-red-200 px-3 py-1 text-red-600">{unknownCount} Mal</span>
+                <span data-flashcards-learning className="rounded-full border border-amber-200 px-3 py-1 text-amber-600">{learningCount} Aprendiendo</span>
+                <span data-flashcards-good className="rounded-full border border-emerald-200 px-3 py-1 text-emerald-600">{knownCount} Bien</span>
+              </div>
+            ) : !demoMode ? (
+              <p className="mt-0.5 flex gap-4 text-sm font-semibold">
+                <span className="text-emerald-700"><Check className="mr-1 inline size-4" />{knownCount} lo sabía</span>
+                <span className="text-destructive">{unknownCount} no lo sabía</span>
+              </p>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             {!demoMode && (
@@ -691,14 +655,15 @@ export function StudentMaterialFlashcards({
 
         <div
           className={cn(
-            'group block w-full [perspective:1200px]',
-            !demoMode && 'min-h-[220px] sm:min-h-[260px]'
+            'group mx-auto block w-full [perspective:1200px]',
+            topicMode && 'max-w-[760px]',
+            !demoMode && (topicMode ? 'min-h-[190px] sm:min-h-[215px]' : 'min-h-[220px] sm:min-h-[260px]')
           )}
         >
           <div
             className={cn(
               'relative grid w-full transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none',
-              demoMode ? 'grid min-h-[180px]' : 'min-h-[220px] sm:min-h-[260px]',
+              demoMode ? 'grid min-h-[180px]' : topicMode ? 'min-h-[190px] sm:min-h-[215px]' : 'min-h-[220px] sm:min-h-[260px]',
               flipped && '[transform:rotateY(180deg)]'
             )}
           >
@@ -716,8 +681,11 @@ export function StudentMaterialFlashcards({
                 type="button"
                 onClick={() => setFlipped(true)}
                 aria-label="Mostrar respuesta"
-                className="focus-visible:outline-ring absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="focus-visible:outline-ring absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
               />
+              {topicMode && topicTitle ? (
+                <p data-flashcard-topic className="text-muted-foreground pointer-events-none mb-3 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium break-words">{topicTitle}</p>
+              ) : null}
               <p className="text-primary pointer-events-none text-xs font-semibold tracking-[0.16em] uppercase">
                 Pregunta
               </p>
@@ -747,20 +715,23 @@ export function StudentMaterialFlashcards({
                 type="button"
                 onClick={() => setFlipped(false)}
                 aria-label="Mostrar pregunta"
-                className="focus-visible:outline-ring absolute inset-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="focus-visible:outline-ring absolute inset-0 z-0 cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2"
               />
-              <p className="text-primary text-xs font-semibold tracking-[0.16em] uppercase">
+              {topicMode && topicTitle ? (
+                <p data-flashcard-topic className="text-muted-foreground pointer-events-none relative z-10 mb-3 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium break-words">{topicTitle}</p>
+              ) : null}
+              <p className="text-primary pointer-events-none relative z-10 text-xs font-semibold tracking-[0.16em] uppercase">
                 Respuesta
               </p>
-              <p className={cn('text-foreground max-w-3xl', 'mt-3 text-[14px] leading-6')}>
+              <p className={cn('text-foreground pointer-events-none relative z-10 max-w-3xl', 'mt-3 text-[14px] leading-6')}>
                 {currentCard.back}
               </p>
-              <div className="relative mt-4 w-full max-w-sm md:hidden">{recallControls}</div>
+              <div className="relative z-20 mt-4 w-full max-w-md md:hidden">{recallControls}</div>
             </div>
           </div>
         </div>
 
-        <div className="hidden md:block">{recallControls}</div>
+        <div className={cn("mx-auto hidden w-full md:block", topicMode && "max-w-[760px]")}>{recallControls}</div>
 
         <div className="flex items-center justify-center gap-3 md:hidden">
           <Button
