@@ -2200,13 +2200,11 @@ export function MaterialStudyWorkspace({
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
-            {renderTopicResourceHeader('tarjetas')}
             <StudentMaterialFlashcards
               key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
               cards={studyArtifacts.flashcards}
               allowedCardIndices={flashcardTopicIndices}
               topicTitle={flashcardTopicIndex === null ? undefined : summaryChapters[flashcardTopicIndex]?.displayTitle}
-              onReturnToTopic={flashcardTopicIndex === null ? undefined : () => returnToSummaryTopic(flashcardTopicIndex)}
               onPracticeTopic={
                 flashcardTopicIndex !== null && topicQuestionCounts[flashcardTopicIndex] > 0
                   ? () => startChapterEvaluation(flashcardTopicIndex)
