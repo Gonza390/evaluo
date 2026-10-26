@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const popup = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
+const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
+const cards = readFileSync('components/student-material-flashcards.tsx', 'utf8');
+
+assert.match(popup, /onClick=\{onFlashcards\}/);
+assert.match(popup, /onClick=\{onGlossary\}/);
+assert.doesNotMatch(popup, /reviewMode === 'glossary'/,
+  'No debe repetirse el glosario dentro del popup.');
+assert.match(workspace, /getTopicStudyResources\(studySummary\.sections, usefulGlossary, studyArtifacts\.flashcards, index\)/,
+  'Los recursos deben pertenecer al tema con evidencia verificable.');
+assert.match(workspace, /setFlashcardTopicIndex\(index\)/);
+assert.match(workspace, /setGlossaryTopicIndex\(index\)/);
+assert.match(workspace, /handleStudyTabChange\('tarjetas', 'summary_chapter'\)/);
+assert.match(workspace, /handleStudyTabChange\('glosario', 'summary_chapter'\)/);
+assert.match(workspace, /glossaryItemsToShow\.map\(\(item\)/);
+assert.match(workspace, /renderTopicResourceHeader\('tarjetas'\)/);
+assert.match(workspace, /renderTopicResourceHeader\('glosario'\)/);
+assert.match(workspace, /onClick=\{\(\) => returnToSummaryTopic\(index\)\}/);
+assert.match(workspace, /onClick=\{\(\) => startChapterEvaluation\(index\)\}/);
+assert.match(workspace, /setSummaryReturnIndex\(index\)/);
+assert.match(workspace, /if \(value === 'tarjetas' && entry !== 'summary_chapter'\) setFlashcardTopicIndex\(null\)/,
+  'Entrar a Flashcards por pestaña debe mostrar todo el PDF.');
+assert.match(workspace, /if \(value === 'glosario' && entry !== 'summary_chapter'\) setGlossaryTopicIndex\(null\)/,
+  'Entrar al Glosario por pestaña debe mostrar todo el PDF.');
+assert.match(workspace, /allowedCardIndices=\{flashcardTopicIndices\}/,
+  'Filtrar tarjetas por índices globales, sin mezclar progreso guardado.');
+assert.match(cards, /useState\(demoMode \|\| allowedCardIndices !== undefined\)/,
+  'El recorrido desde un tema debe mostrar directamente las tarjetas.');
+assert.match(cards, /const allowed = new Set\(scopedIndices\)/);
+assert.match(cards, /itemKey: `flashcard:\$\{currentCardIndex\}`/,
+  'Guardar con índices originales del PDF.');
+assert.match(cards, /if \(allReviewed\)/,
+  'El resultado final queda para un rediseño posterior.');
