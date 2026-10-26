@@ -30,4 +30,11 @@ assert.match(styles, /h-8 flex-none shrink-0 rounded-lg border px-2\.5 text-\[12
 assert.doesNotMatch(workspace, /transform:scale\(|zoom:/,
   'No usar zoom que distorsione los popups, controles o interacción.');
 
+// La acción de Práctica debe ir después de las opciones, no taparlas en móvil.
+assert.match(styles, /bg-card mt-4 flex justify-end border-t py-3/);
+assert.doesNotMatch(styles, /sticky bottom-0/, 'Evitar un CTA flotante sobre las respuestas.');
+const exam = readFileSync('components/student-material-exam.tsx', 'utf8');
+assert.match(exam, /data-pdf-question-actions/);
+assert.match(exam, /text-\[13px\] font-medium">{topicTitle}/);
+
 console.log('Compact material study layout smoke: OK.');
