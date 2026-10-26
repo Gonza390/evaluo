@@ -121,7 +121,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
     >
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
-          <nav className={`space-y-1 ${compact ? "pt-1" : "pt-2"}`}>
+          <nav className={`space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
