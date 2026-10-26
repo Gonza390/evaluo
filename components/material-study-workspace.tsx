@@ -2131,6 +2131,8 @@ export function MaterialStudyWorkspace({
               key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
               cards={studyArtifacts.flashcards}
               allowedCardIndices={flashcardTopicIndices}
+              topicTitle={flashcardTopicIndex === null ? undefined : summaryChapters[flashcardTopicIndex]?.displayTitle}
+              onReturnToTopic={flashcardTopicIndex === null ? undefined : () => returnToSummaryTopic(flashcardTopicIndex)}
               materialId={materialId}
               onComplete={demo || flashcardTopicIndex !== null ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}
