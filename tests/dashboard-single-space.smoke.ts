@@ -49,4 +49,27 @@ assert.match(proxySource, /canonicalizeLegacyMiEspacioPath/);
 assert.match(proxySource, /signupUrl\.searchParams\.set\('next', '\/dashboard\?openUpload=1'\)/);
 assert.match(proxySource, /loginUrl\.searchParams\.set\('next', canonicalNext\)/);
 
+// Ajuste visual específico de Mi espacio: tamaños reales, sin zoom global ni
+// cambios sobre la landing, el lector del PDF ni otras rutas internas.
+const dashboardChromeSource = readFileSync(resolve('components/dashboard/maeve-dashboard-chrome.tsx'), 'utf8');
+const dashboardMaterialsSource = readFileSync(resolve('components/dashboard/student-materials-workspace.tsx'), 'utf8');
+const appChromeSource = readFileSync(resolve('components/ClientLayoutClient.tsx'), 'utf8');
+
+assert.match(dashboardSource, /max-w-\[1240px\]/);
+assert.match(dashboardSource, /px-3 py-3 sm:px-4 sm:py-4/);
+assert.match(dashboardHeroSource, /text-\[20px\].*sm:text-\[22px\]/);
+assert.match(dashboardHeroSource, /h-11 min-h-11.*text-\[13px\]/);
+assert.match(dashboardHeroSource, /nextStudyAction\?\.href \?\? primaryMaterialHref/);
+assert.match(dashboardHeroSource, /onClick=\{onUploadClick\}/);
+assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
+assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
+assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
+assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
+assert.match(dashboardMaterialsSource, /min-h-10 min-w-10/);
+assert.match(appChromeSource, /isDashboardHomeRoute = pathname === '\/dashboard'/);
+assert.match(appChromeSource, /isDashboardHomeRoute \? 'min-h-14 py-2 sm:min-h-16 sm:py-2' : 'min-h-18 py-3 sm:min-h-20'/);
+for (const source of [dashboardSource, dashboardHeroSource, dashboardMaterialsSource]) {
+  assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
+}
+
 console.log('Dashboard single Mi espacio smoke tests passed.');
