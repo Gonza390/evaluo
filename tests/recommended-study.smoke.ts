@@ -287,6 +287,18 @@ assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(false\)/,
   'Salir del onboarding no debe saltar al capítulo hasta pulsar Leer el tema 1.');
 const studyStartGuideSource = readFileSync('components/study/pdf-study-start-guide.tsx', 'utf8');
 const summaryChapterFinishSource = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
+const flashcardsSource = readFileSync('components/student-material-flashcards.tsx', 'utf8');
+assert.match(flashcardsSource, /unknownCount > 0 \? reviewDifficult : onPracticeTopic \?\? onReturnToTopic \?\? finishSession/,
+  'Si recuerda todas las flashcards de un tema, el CTA principal debe abrir la práctica.');
+assert.match(flashcardsSource, /onPracticeTopic\s*\? 'Comprobar cuánto aprendí'/,
+  'El CTA de Flashcards sin pendientes debe anunciar el destino a la práctica.');
+assert.match(flashcardsSource, /unknownCount > 0\s*\? 'Repasar lo que me costó'/,
+  'Si quedan flashcards pendientes, debe priorizarse reforzar esas tarjetas.');
+assert.match(materialWorkspaceSource, /onPracticeTopic=\{[\s\S]*?flashcardTopicIndex !== null && topicQuestionCounts\[flashcardTopicIndex\] > 0[\s\S]*?startChapterEvaluation\(flashcardTopicIndex\)/,
+  'Flashcards por tema sólo deben llevar a la práctica filtrada cuando existan preguntas.');
+assert.match(flashcardsSource, /onPracticeTopic \?\? onReturnToTopic \?\? finishSession/,
+  'Sin preguntas del tema, el CTA debe conservar el regreso a la lectura.');
+
 assert.ok(materialWorkspaceSource.includes('data-summary-chapter-end={index}'),
   'Cada capítulo debe marcar su final para abrir el popup al terminar la lectura.');
 assert.ok(materialWorkspaceSource.includes('promptedChapterFinishesRef'),
