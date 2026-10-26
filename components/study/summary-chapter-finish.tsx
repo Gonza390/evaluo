@@ -1,13 +1,11 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { ArrowRight, BookOpen, CheckCircle2, Layers3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
-
-type ReviewMode = 'glossary' | null;
 
 /** Una sola invitación compacta al terminar la lectura del capítulo. */
 export function SummaryChapterFinish({
@@ -20,6 +18,7 @@ export function SummaryChapterFinish({
   hasNextChapter,
   onEvaluate,
   onFlashcards,
+  onGlossary,
   onContinue,
   onClose,
 }: {
@@ -32,15 +31,11 @@ export function SummaryChapterFinish({
   hasNextChapter: boolean;
   onEvaluate: () => void;
   onFlashcards: () => void;
+  onGlossary: () => void;
   onContinue: () => void;
   onClose: () => void;
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const [reviewMode, setReviewMode] = useState<ReviewMode>(null);
-
-  const toggleReview = (mode: Exclude<ReviewMode, null>) => {
-    setReviewMode((current) => current === mode ? null : mode);
-  };
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
@@ -109,29 +104,14 @@ export function SummaryChapterFinish({
                 data-summary-topic-glossary={chapterIndex}
                 size="sm"
                 variant="outline"
-                aria-expanded={reviewMode === 'glossary'}
-                aria-controls={`topic-glossary-${chapterIndex}`}
                 disabled={concepts.length === 0}
-                onClick={() => toggleReview('glossary')}
+                onClick={onGlossary}
                 className="h-9 rounded-lg px-3 text-xs font-medium"
               >
                 <BookOpen aria-hidden className="mr-1.5 h-3.5 w-3.5" /> Glosario
               </Button>
             </div>
           </div>
-
-          {reviewMode === 'glossary' && concepts.length > 0 ? (
-            <div id={`topic-glossary-${chapterIndex}`} className="border-border bg-muted/30 mt-4 max-h-72 overflow-y-auto rounded-xl border px-4">
-              <dl className="divide-border divide-y">
-                {concepts.map((concept, index) => (
-                  <div key={`${concept.term}-${index}`} className="py-3">
-                    <dt className="text-foreground text-sm font-semibold">{concept.term}</dt>
-                    <dd className="text-muted-foreground mt-1 text-[13px] leading-5">{concept.definition}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          ) : null}
 
           {hasNextChapter ? (
             <div className="mt-4 text-center">
