@@ -84,15 +84,13 @@ export async function GET(request: Request) {
       const qaAccount = isQaAccount(user);
       const deviceType = detectDeviceType(request.headers.get('user-agent') ?? '');
 
-      if (analyticsSessionKey && isAdminClientConfigured()) {
+      // QA no inserta eventos de autenticación. Tampoco borra sesiones: la clave
+      // analytics_session proviene de una URL y no acredita propiedad sobre registros.
+      if (analyticsSessionKey && isAdminClientConfigured() && !qaAccount) {
         try {
           const admin = createAdminClient();
 
-          if (qaAccount) {
-            // El inicio de sesión QA no debe contabilizarse como adquisición real.
-            await admin.from('analytics_events').delete().eq('session_key', analyticsSessionKey);
-          } else {
-            await admin.from('analytics_events').insert([
+          await admin.from('analytics_events').insert([
             {
               event_name: 'auth_completed',
               user_id: user.id,
@@ -116,8 +114,7 @@ export async function GET(request: Request) {
                 ? { provider, location: 'auth_callback', destination: nextPath }
                 : { source_path: nextPath },
             },
-            ]);
-          }
+          ]);
         } catch {
           // La analítica nunca debe bloquear el callback de autenticación.
         }
