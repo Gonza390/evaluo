@@ -1597,8 +1597,8 @@ function buildOpenSectionQuestions(
 }
 
 /**
- * Reservar una pregunta corregible por capítulo siempre que un concepto
- * canónico esté presente de forma inequívoca en ese capítulo del resumen.
+ * Completar hasta seis preguntas por capítulo siempre que un concepto
+ * o relación canónica pertenezca de forma inequívoca al resumen del tema.
  *
  * La pertenencia sólo se asigna con coincidencia explícita y única del término
  * en el resumen; si el PDF no permite hacerlo con seguridad, el capítulo
@@ -1623,11 +1623,29 @@ function anchorAndCompleteChapterQuestions(
     );
     return matches.length === 1 ? matches[0] : -1;
   };
+  const normalizedTermInBody = (term: string, body: string) => {
+    const normalized = normalizeForDedupe(term);
+    return normalized.length >= 5 && body.includes(` ${normalized} `);
+  };
+  const uniqueChapterForRelation = (source: string, target: string) => {
+    const matches = chapterTexts.flatMap((body, chapterIndex) =>
+      normalizedTermInBody(source, body) && normalizedTermInBody(target, body)
+        ? [chapterIndex] : []
+    );
+    return matches.length === 1 ? matches[0]! : -1;
+  };
+  const relationshipModel = new Map(model.relationships.map((relation) =>
+    [normalizeForDedupe(`${relation.source} ↔ ${relation.target}`), relation] as const
+  ));
   const usedPrompts = new Set(questions.map((question) => normalizeForDedupe(question.prompt)));
   const anchored = questions.map((question) => {
-    if (question.kind !== 'concept' || question.type !== 'multiple_choice' || !question.topic)
-      return question;
-    const index = uniqueChapterForConcept(question.topic);
+    if (question.type !== 'multiple_choice' || !question.topic) return question;
+    let index = -1;
+    if (question.kind === 'concept') index = uniqueChapterForConcept(question.topic);
+    if (question.kind === 'relationship') {
+      const relation = relationshipModel.get(normalizeForDedupe(question.topic));
+      if (relation) index = uniqueChapterForRelation(relation.source, relation.target);
+    }
     return index < 0 ? question : { ...question, chapterTitle: chapters[index]!.title };
   });
   // Contar sólo preguntas únicas, autocorregibles y con evidencia localizada.
@@ -1645,23 +1663,10 @@ function anchorAndCompleteChapterQuestions(
     anchored.filter((item) => item.kind === 'relationship' && item.type === 'multiple_choice')
       .map((item) => normalizeForDedupe(item.topic ?? ''))
   );
-  const normalizedTermInBody = (term: string, body: string) => {
-    const normalized = normalizeForDedupe(term);
-    return normalized.length >= 5 && body.includes(` ${normalized} `);
-  };
-  const uniqueChapterForRelation = (source: string, target: string) => {
-    const matches = chapterTexts.flatMap((body, chapterIndex) =>
-      normalizedTermInBody(source, body) && normalizedTermInBody(target, body)
-        ? [chapterIndex] : []
-    );
-    return matches.length === 1 ? matches[0]! : -1;
-  };
   const relationshipPool = buildCanonicalRelationshipQuestions(
     model, chunks, Math.min(120, model.relationships.length)
   );
-  const relationshipModel = new Map(model.relationships.map((relation) =>
-    [normalizeForDedupe(`${relation.source} ↔ ${relation.target}`), relation] as const
-  ));
+
 
   for (let index = 0; index < chapters.length; index += 1) {
     if (counts[index]! >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) continue;
