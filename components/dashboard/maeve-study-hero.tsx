@@ -65,56 +65,56 @@ export function MaeveStudyHero({
       ref={heroRef}
       className={
         isFirstPdfState
-          ? 'rounded-[1.5rem] border border-blue-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.12),transparent_28%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] px-4 py-7 shadow-[0_18px_52px_rgba(79,70,229,0.08)] sm:px-8 sm:py-9'
-          : 'rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-6 sm:px-6 sm:py-7'
+          ? 'rounded-[1.25rem] border border-blue-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] px-4 py-4 shadow-[0_8px_24px_rgba(79,70,229,0.05)] sm:px-5 sm:py-5'
+          : 'rounded-[1.25rem] border border-slate-200/80 bg-white px-4 py-4 sm:px-5 sm:py-5'
       }
     >
-      <div className={isFirstPdfState ? 'mx-auto max-w-2xl text-center' : 'mx-auto max-w-xl text-center'}>
+      <div className={isFirstPdfState ? 'mx-auto max-w-[760px] text-center' : 'mx-auto max-w-[760px] text-center'}>
         <p
           className={
             isFirstPdfState
-              ? 'text-[11px] font-bold tracking-[0.16em] text-blue-600 uppercase'
-              : 'text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase'
+              ? 'text-[10px] font-bold tracking-[0.14em] text-blue-600 uppercase'
+              : 'text-[10px] font-semibold tracking-[0.14em] text-slate-400 uppercase'
           }
         >
           {isFirstPdfState ? 'Primer material' : 'Tu espacio'}
         </p>
-        <h1 className="mt-2 text-[1.65rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2rem]">
+        <h1 className="mt-1.5 text-[20px] leading-[1.3] font-bold tracking-[-0.045em] text-slate-950 sm:text-[22px]">
           {isFirstPdfState ? 'Prepará tu primer material' : personalized}
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-[13.5px] leading-5 text-slate-500 sm:text-[14.5px] sm:leading-6">
+        <p className="mx-auto mt-1.5 max-w-2xl text-[12.5px] leading-5 text-slate-500 sm:text-[13px]">
           {isFirstPdfState
             ? 'Subí el PDF que tenés que estudiar y Evaluo te ayuda a entenderlo, practicar y detectar qué necesitás reforzar.'
             : nextStudyAction?.title ?? 'Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.'}
         </p>
         {!isFirstPdfState && nextStudyAction ? (
-          <p className="mx-auto mt-1.5 max-w-lg text-[12.5px] leading-5 text-slate-400">
+          <p className="mx-auto mt-1 max-w-2xl text-[12px] leading-[1.5] text-slate-400">
             {nextStudyAction.description}
           </p>
         ) : null}
 
         {isFirstPdfState ? (
-          <div className="mx-auto mt-6 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mx-auto mt-3 grid max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
             {FIRST_PDF_STEPS.map((step, index) => (
               <div
                 key={step}
-                className="flex items-center gap-2 rounded-xl border border-blue-100/80 bg-white/80 px-3 py-2.5 text-left shadow-[0_6px_18px_rgba(15,23,42,0.03)]"
+                className="flex items-center gap-2 rounded-lg border border-blue-100/80 bg-white/80 px-2.5 py-2 text-left"
               >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">
                   {index + 1}
                 </span>
-                <span className="text-[12px] font-semibold text-slate-700">{step}</span>
+                <span className="text-[11.5px] font-semibold text-slate-700">{step}</span>
               </div>
             ))}
           </div>
         ) : null}
 
-        <div className={isFirstPdfState ? 'mt-6 flex flex-col items-center gap-3' : 'mt-5 flex flex-col items-center gap-3'}>
+        <div className={isFirstPdfState ? 'mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2' : 'mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2'}>
           {materialsCount > 0 && primaryMaterialHref ? (
             <>
               <Button
                 asChild
-                className="h-12 w-full max-w-xs rounded-2xl px-6 text-[15px] font-semibold sm:w-auto"
+                className="h-11 min-h-11 w-full max-w-xs rounded-lg px-4 text-[13px] font-semibold sm:w-auto"
               >
                 <Link
                   href={nextStudyAction?.href ?? primaryMaterialHref}
@@ -142,7 +142,7 @@ export function MaeveStudyHero({
                       destination: '/dashboard/explicaciones',
                     })
                   }
-                  className="inline-flex min-h-10 items-center gap-2 px-3 text-sm font-semibold text-blue-700 transition hover:text-blue-900"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[12.5px] font-semibold text-blue-700 transition hover:text-blue-900"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Tenés {pendingReinforcementCount}{' '}
@@ -153,7 +153,7 @@ export function MaeveStudyHero({
               <button
                 type="button"
                 onClick={onUploadClick}
-                className="inline-flex min-h-10 items-center gap-2 px-3 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[12.5px] font-semibold text-slate-500 transition hover:text-slate-900"
               >
                 <Upload className="h-4 w-4" />
                 Subir otro PDF
@@ -164,7 +164,7 @@ export function MaeveStudyHero({
               type="button"
               data-first-pdf-cta="dashboard_empty"
               onClick={onUploadClick}
-              className="h-12 w-full max-w-xs rounded-2xl px-6 text-[15px] font-semibold sm:w-auto"
+              className="h-11 min-h-11 w-full max-w-xs rounded-lg px-4 text-[13px] font-semibold sm:w-auto"
             >
               Subir mi PDF
               <Upload className="h-4 w-4" />
