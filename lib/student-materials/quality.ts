@@ -277,6 +277,13 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   if (pedagogicalDepthScore < 55) {
     issues.push('pedagogical_depth_low');
   }
+  // Un tema sin suficientes ejercicios no debe figurar como práctica completa.
+  if (practiceCoverage.chaptersBelowMinimum.length > 0) {
+    issues.push('topic_practice_below_minimum');
+  }
+  if (practiceCoverage.chaptersWithLowDiversity.length > 0) {
+    issues.push('topic_practice_low_diversity');
+  }
   if (
     quoteSourceAudit?.literalQuoteRatio !== null &&
     quoteSourceAudit?.literalQuoteRatio !== undefined &&

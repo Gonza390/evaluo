@@ -272,6 +272,8 @@ assert.equal(sanitizedLevels.flashcards[0]?.level, 'recordar');
 assert.equal(sanitizedLevels.flashcards.length, 1);
 assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Cuál de estas afirmaciones representa mejor Epistemología?' }), true);
 assert.equal(isRecognitionPresentedAsHigherOrder(safeConcept), false);
+assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Qué caracteriza mejor a “Epistemología”?' }), true,
+  'Variar la redacción no debe elevar una pregunta de reconocimiento a comprensión.');
 assert.match(
   explainWrongOption(safeConcept, 'Conocimiento institucionalizado.', artifacts),
   /corresponde|definición de “Ciencia”/

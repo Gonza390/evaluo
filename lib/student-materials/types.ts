@@ -223,6 +223,17 @@ export type StudentMaterialPedagogicalQualityReport = {
     pageReferenceRatio: number | null;
     quartersWithReferencedQuestions: number;
     status: 'unknown' | 'limited' | 'distributed';
+    minimumAutoCorrectablePerChapter?: number;
+    chaptersMeetingMinimum?: number;
+    chaptersBelowMinimum?: string[];
+    chaptersWithLowDiversity?: string[];
+    chapterAssessments?: Array<{
+      title: string;
+      validAutoCorrectable: number;
+      distinctKinds: number;
+      distinctConcepts: number;
+      sourceBacked: number;
+    }>;
   };
   practiceSourceAudit?: {
     questionsWithPageReference: number;
