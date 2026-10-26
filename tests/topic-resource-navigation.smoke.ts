@@ -43,12 +43,13 @@ assert.doesNotMatch(cards, /data-flashcard-grade="learning"/, 'Aprendiendo es el
 assert.match(cards, /data-flashcard-card/, 'Toda la tarjeta debe ser clicable.');
 assert.match(cards, /data-flashcard-ready=\{flipReady\}/, 'La tarjeta sólo se habilita después de hidratar sus eventos.');
 assert.match(cards, /disabled=\{!flipReady\}/, 'Mientras React hidrata, no debe parecer interactiva.');
-assert.match(cards, /Preparando tarjeta…/, 'La espera de hidratación debe comunicarse.');
+assert.doesNotMatch(cards, /Preparando tarjeta…/, 'La pregunta no debe quedar tapada por una pantalla de carga.');
+assert.match(cards, /\{flipped \? \(/, 'La pregunta debe renderizarse desde el inicio.');
 assert.ok(cards.includes('onClick={() => setFlipped((value) => !value)}'), 'Un único manejador alterna las dos caras.');
 assert.match(cards, /data-flashcard-face="front"/);
 assert.match(cards, /data-flashcard-face="back"/);
 assert.match(cards, /const learningCount = allowedCardIndices !== undefined/, 'Aprendiendo debe representar la tarjeta actual.');
-assert.match(cards, /topicMode && 'max-w-\[610px\]'/, 'Las calificaciones generales también deben seguir visibles en móvil.');
+assert.match(cards, /topicMode \? 'max-w-\[610px\]' : 'max-w-\[720px\]'/, 'Las calificaciones se mantienen centradas en ambos modos y en móvil.');
 assert.match(cards, /data-topic-flashcards-review/);
 assert.match(cards, /data-topic-flashcards-primary/);
 assert.doesNotMatch(cards, /onReturnToTopic/, 'El cierre no regresa al Resumen.');
