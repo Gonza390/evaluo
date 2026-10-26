@@ -78,11 +78,11 @@ export function ProfileSettingsForm({
         event.preventDefault();
         void handleSave();
       }}
-      className="border-border bg-card space-y-6 rounded-xl border p-4 sm:p-5"
+      className="border-border bg-card space-y-4 rounded-xl border p-3.5 sm:p-4"
       aria-label="Datos de tu perfil"
     >
       <h2 className="text-foreground text-[15px] font-semibold">Datos personales</h2>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="nombre" className="text-foreground text-[13px] font-medium">
             Nombre
@@ -116,7 +116,7 @@ export function ProfileSettingsForm({
           <h2 className="text-foreground text-sm font-bold">Contacto</h2>
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="pais" className="text-foreground text-[13px] font-medium">
               País
@@ -153,13 +153,13 @@ export function ProfileSettingsForm({
       </div>
 
       <section
-        className="border-border space-y-4 border-t pt-5"
+        className="border-border space-y-3 border-t pt-4"
         aria-labelledby="academic-settings-title"
       >
         <h2 id="academic-settings-title" className="text-foreground text-[15px] font-semibold">
           Tu formación
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="universidad-search" className="text-foreground text-[13px] font-medium">
               Universidad
