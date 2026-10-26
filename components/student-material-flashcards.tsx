@@ -84,9 +84,11 @@ export function StudentMaterialFlashcards({
   allowedCardIndices?: number[];
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
-  const [started, setStarted] = useState(demoMode);
+  // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
+  // Los índices siguen siendo los del PDF completo para conservar su progreso.
+  const [started, setStarted] = useState(demoMode || allowedCardIndices !== undefined);
   const [order, setOrder] = useState<number[]>(() =>
-    demoMode ? (allowedCardIndices ?? cards.map((_, index) => index)) : []
+    allowedCardIndices ?? (demoMode ? cards.map((_, index) => index) : [])
   );
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
