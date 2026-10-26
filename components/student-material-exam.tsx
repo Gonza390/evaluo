@@ -1440,17 +1440,8 @@ export function StudentMaterialExam({
     <>
       <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
         {topicSectionIndex !== undefined && (
-          <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-3">
-            <p className="text-muted-foreground text-sm!">{topicTitle}</p>
-            {onReturnToTopic && (
-              <button
-                type="button"
-                onClick={() => onReturnToTopic(false)}
-                className="text-primary min-h-11 text-sm font-semibold"
-              >
-                Volver al tema
-              </button>
-            )}
+          <div className="border-border border-b pb-3">
+            <p className="text-muted-foreground text-[13px] font-medium">{topicTitle}</p>
           </div>
         )}
         {contextUnavailable && (
