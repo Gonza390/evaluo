@@ -61,12 +61,17 @@ function resolveFlashcardFront(card: StudyFlashcard) {
   return front;
 }
 
-function buildSessionOrder(recall: Record<number, RecallResult>, length: number) {
+function buildSessionOrder(recall: Record<number, RecallResult>, eligibleIndexes: readonly number[]) {
+  // Mantener los índices originales del PDF también en las sesiones por tema:
+  // los resultados guardados en Supabase/localStorage están indexados por tarjeta global.
+  const eligible = new Set(eligibleIndexes);
   const difficult = Object.entries(recall)
     .filter(([, result]) => result === 'unknown')
     .map(([index]) => Number(index))
-    .filter((index) => index >= 0 && index < length);
-  const remaining = shuffledIndexes(length).filter((index) => !difficult.includes(index));
+    .filter((index) => eligible.has(index));
+  const remaining = shuffledIndexes(eligibleIndexes.length)
+    .map((index) => eligibleIndexes[index]!)
+    .filter((index) => !difficult.includes(index));
   return [...shuffledIndexes(difficult.length).map((index) => difficult[index]!), ...remaining];
 }
 
@@ -75,15 +80,23 @@ export function StudentMaterialFlashcards({
   materialId,
   onComplete,
   demoMode = false,
+  cardIndexes,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
   onComplete?: () => void;
   demoMode?: boolean;
+  /** Subconjunto por tema expresado con índices de la baraja ORIGINAL del PDF. */
+  cardIndexes?: number[];
 }) {
-  const [started, setStarted] = useState(demoMode);
+  const eligibleIndexes = useMemo(
+    () => cardIndexes ?? cards.map((_, index) => index),
+    [cardIndexes, cards]
+  );
+  // Desde un tema empezar directamente con sus tarjetas, sin el inicio del mazo global.
+  const [started, setStarted] = useState(demoMode || cardIndexes !== undefined);
   const [order, setOrder] = useState<number[]>(() =>
-    demoMode ? cards.map((_, index) => index) : []
+    cardIndexes ?? (demoMode ? cards.map((_, index) => index) : [])
   );
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -145,16 +158,17 @@ export function StudentMaterialFlashcards({
   }, []);
 
   const startSession = useCallback(() => {
-    beginSession(buildSessionOrder(recallByCard, cards.length));
+    beginSession(buildSessionOrder(recallByCard, eligibleIndexes));
     if (!demoMode)
       void trackClientAnalyticsEvent({
         eventName: 'student_material_flashcards_started',
         metadata: {
           material_id: materialId,
-          card_count: cards.length,
+          card_count: eligibleIndexes.length,
+          practice_scope: cardIndexes === undefined ? 'general' : 'topic',
         },
       });
-  }, [beginSession, cards.length, demoMode, materialId, recallByCard]);
+  }, [beginSession, cardIndexes, demoMode, eligibleIndexes, materialId, recallByCard]);
 
   const finishSession = useCallback(() => {
     setStarted(false);
@@ -379,7 +393,7 @@ export function StudentMaterialFlashcards({
 
   const displayFront = currentCard ? resolveFlashcardFront(currentCard) : '';
 
-  if (cards.length === 0) {
+  if (eligibleIndexes.length === 0) {
     return (
       <div className="border-border bg-muted rounded-2xl border px-5 py-8 text-center">
         <p className="text-foreground font-semibold">No encontramos conceptos suficientes</p>
@@ -400,7 +414,7 @@ export function StudentMaterialFlashcards({
           Listo para aprender con flashcards
         </h3>
         <p className="text-muted-foreground mx-auto mt-2 max-w-lg text-sm leading-6">
-          Vas a practicar {cards.length} conceptos del PDF con recuperación activa. Intentá
+          Vas a practicar {eligibleIndexes.length} conceptos del PDF con recuperación activa. Intentá
           responder antes de voltear cada tarjeta.
         </p>
         <Button type="button" onClick={startSession} className="mt-5 rounded-2xl px-6">
