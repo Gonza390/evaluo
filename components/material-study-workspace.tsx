@@ -2128,7 +2128,7 @@ export function MaterialStudyWorkspace({
           <div className="px-1 py-1 sm:px-2 sm:py-2">
             {renderTopicResourceHeader('tarjetas')}
             <StudentMaterialFlashcards
-              key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`
+              key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
               cards={studyArtifacts.flashcards}
               allowedCardIndices={flashcardTopicIndices}
               materialId={materialId}
