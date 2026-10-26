@@ -591,8 +591,9 @@ export function StudentMaterialFlashcards({
     <>
       <div
         className={cn(
-          demoMode || topicMode ? 'space-y-2' : 'space-y-4',
-          isFullscreen && 'mx-auto flex h-full w-full max-w-5xl flex-col justify-center'
+          'mx-auto w-full',
+          topicMode ? 'max-w-[640px] space-y-2.5' : 'max-w-[720px] space-y-3',
+          isFullscreen && 'flex min-h-full flex-col justify-center'
         )}
       >
         <div className={cn('flex flex-wrap items-center justify-between', topicMode ? 'gap-1' : 'gap-3')}>
@@ -657,7 +658,7 @@ export function StudentMaterialFlashcards({
           />
         </div>
 
-        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-none')}>
+        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[720px]')}>
           {/* Una única superficie clicable y una sola cara visible.
               No dependemos de overlays transparentes ni de backface-visibility. */}
           <button
@@ -670,14 +671,10 @@ export function StudentMaterialFlashcards({
             onClick={() => setFlipped((value) => !value)}
             className={cn(
               'block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-              topicMode ? 'h-[196px] sm:h-[210px]' : demoMode ? 'h-[180px]' : 'h-[230px] sm:h-[260px]'
+              topicMode ? 'h-[190px] sm:h-[205px]' : 'h-[188px] sm:h-[210px]'
             )}
           >
-            {!flipReady ? (
-              <span className="border-border bg-card text-muted-foreground flex h-full w-full items-center justify-center rounded-2xl border text-sm" role="status">
-                Preparando tarjeta…
-              </span>
-            ) : flipped ? (
+            {flipped ? (
               <span
                 data-flashcard-face="back"
                 className="border-primary/20 bg-primary/5 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border px-4 py-3 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:px-5"
@@ -705,7 +702,7 @@ export function StudentMaterialFlashcards({
           </button>
         </div>
 
-        <div className={cn('mx-auto w-full', topicMode && 'max-w-[610px]')}>{recallControls}</div>
+        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[720px]')}>{recallControls}</div>
 
         <div className={cn('items-center justify-center gap-3 md:hidden', topicMode ? 'hidden' : 'flex')}>
           <Button
