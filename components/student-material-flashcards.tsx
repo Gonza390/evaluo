@@ -403,9 +403,9 @@ export function StudentMaterialFlashcards({
 
   if (scopedIndices.length === 0) {
     return (
-      <div className="border-border bg-muted rounded-2xl border px-5 py-8 text-center">
+      <div className="border-border bg-muted rounded-xl border px-4 py-5 text-center">
         <p className="text-foreground font-semibold">No encontramos conceptos suficientes</p>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
+        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5 leading-6">
           Regenerá el resumen y el glosario para intentar construir tarjetas útiles.
         </p>
       </div>
@@ -414,18 +414,18 @@ export function StudentMaterialFlashcards({
 
   if (!started) {
     return (
-      <div className="border-primary/20 bg-card rounded-2xl border px-4 py-5 text-center sm:px-5">
+      <div className="border-primary/20 bg-card rounded-xl border px-4 py-4 text-center sm:px-5">
         <div className="bg-primary mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-none">
           <RotateCcw className="h-5 w-5" />
         </div>
-        <h3 className="text-foreground mt-3 text-[18px] font-bold tracking-[-0.04em]">
+        <h3 className="text-foreground mt-2 text-[18px] font-bold tracking-[-0.04em]">
           Listo para aprender con flashcards
         </h3>
-        <p className="text-muted-foreground mx-auto mt-2 max-w-lg text-sm leading-6">
+        <p className="text-muted-foreground mx-auto mt-1.5 max-w-lg text-[13px] leading-5">
           Vas a practicar {scopedIndices.length} conceptos {allowedCardIndices ? 'de este tema' : 'del PDF'} con recuperación activa. Intentá
           responder antes de voltear cada tarjeta.
         </p>
-        <Button type="button" onClick={startSession} className="mt-5 rounded-2xl px-6">
+        <Button type="button" onClick={startSession} className="mt-4 min-h-11 rounded-lg px-4 text-[13px]">
           Comenzar repaso
         </Button>
       </div>
@@ -434,28 +434,28 @@ export function StudentMaterialFlashcards({
 
   if (allReviewed && allowedCardIndices !== undefined) {
     return (
-      <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-[640px] rounded-2xl border px-5 py-6 text-center sm:px-8">
+      <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-[640px] rounded-xl border px-4 py-4 text-center sm:px-6 sm:py-5">
         <div className="bg-emerald-50 mx-auto flex size-11 items-center justify-center rounded-xl text-emerald-600"><Check className="size-5" /></div>
         {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-semibold">{topicTitle}</p> : null}
-        <h3 className="text-foreground mt-2 text-xl font-bold">¡Terminaste de repasar este tema!</h3>
-        <p className="text-muted-foreground mt-2 text-sm">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
-        <div className="mt-5 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
+        <h3 className="text-foreground mt-2 text-[20px] leading-[1.3] font-bold">¡Terminaste de repasar este tema!</h3>
+        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
+        <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
           <div className="rounded-xl border border-red-100 bg-red-50/60 px-2 py-3">
-            <p className="text-xl font-bold text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
+            <p className="text-[20px] font-bold text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
           </div>
           <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-2 py-3">
-            <p className="text-xl font-bold text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
+            <p className="text-[20px] font-bold text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3">
-            <p className="text-xl font-bold text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
+            <p className="text-[20px] font-bold text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
           </div>
         </div>
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">
-          <Button data-topic-flashcards-primary type="button" onClick={onPracticeTopic} disabled={!onPracticeTopic} className="min-h-11 w-full rounded-xl">
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
+          <Button data-topic-flashcards-primary type="button" onClick={onPracticeTopic} disabled={!onPracticeTopic} className="min-h-11 w-full rounded-lg text-[13px]">
             Practicar este tema <ArrowRight aria-hidden="true" className="ml-2 size-4" />
           </Button>
           {needsReviewCount > 0 ? (
-            <Button data-topic-flashcards-review type="button" variant="outline" onClick={reviewDifficult} className="min-h-11 w-full rounded-xl">
+            <Button data-topic-flashcards-review type="button" variant="outline" onClick={reviewDifficult} className="min-h-11 w-full rounded-lg text-[13px]">
               <RotateCcw aria-hidden="true" className="mr-2 size-4" /> Repasar tarjetas ({needsReviewCount})
             </Button>
           ) : null}
@@ -469,11 +469,11 @@ export function StudentMaterialFlashcards({
   if (allReviewed) {
     return (
       <>
-        <div className="bg-card rounded-2xl border border-emerald-200 px-4 py-5 text-center sm:px-5">
+        <div className="bg-card rounded-xl border border-emerald-200 px-4 py-4 text-center sm:px-5">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-none">
             <Check className="h-5 w-5" />
           </div>
-          <h3 className="text-foreground mt-3 text-[18px] font-bold tracking-[-0.04em]">
+          <h3 className="text-foreground mt-2 text-[18px] font-bold tracking-[-0.04em]">
             ¡Terminaste esta sesión!
           </h3>
           <p className="text-foreground mt-2 text-sm font-semibold">
@@ -523,7 +523,7 @@ export function StudentMaterialFlashcards({
                     type="button"
                     onClick={scheduleTomorrowReminder}
                     disabled={isSchedulingReminder || reminderScheduled}
-                    className="rounded-2xl px-6"
+                    className="rounded-lg px-4 text-[13px]"
                   >
                     <Bell className="h-4 w-4" />
                     {isSchedulingReminder
@@ -537,7 +537,7 @@ export function StudentMaterialFlashcards({
                   type="button"
                   variant="outline"
                   onClick={reviewDifficult}
-                  className="rounded-2xl px-6"
+                  className="rounded-lg px-4 text-[13px]"
                 >
                   <RotateCcw className="h-4 w-4" /> Repasar ahora
                 </Button>
@@ -547,7 +547,7 @@ export function StudentMaterialFlashcards({
               type="button"
               variant="ghost"
               onClick={finishSession}
-              className="rounded-2xl px-6"
+              className="rounded-lg px-4 text-[13px]"
             >
               <Check className="h-4 w-4" /> Finalizar sesión
             </Button>
@@ -578,10 +578,10 @@ export function StudentMaterialFlashcards({
   const topicMode = allowedCardIndices !== undefined;
   const recallControls = (
     <div className="grid grid-cols-2 gap-2">
-      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped} onClick={() => markRecall('unknown')} className="min-h-10 rounded-xl border-red-200 px-2 text-red-700 hover:bg-red-50">
+      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped} onClick={() => markRecall('unknown')} className="min-h-11 rounded-lg border-red-200 px-2 text-[13px] text-red-700 hover:bg-red-50">
         {topicMode ? 'Mal' : 'No lo sabía'}
       </Button>
-      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped} onClick={() => markRecall('known')} className="min-h-10 rounded-xl border-emerald-200 px-2 text-emerald-700 hover:bg-emerald-50">
+      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped} onClick={() => markRecall('known')} className="min-h-11 rounded-lg border-emerald-200 px-2 text-[13px] text-emerald-700 hover:bg-emerald-50">
         {topicMode ? 'Bien' : 'Lo sabía'}
       </Button>
     </div>
@@ -678,7 +678,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="back"
                 data-flashcard-content
-                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
+                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
@@ -691,7 +691,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="front"
                 data-flashcard-content
-                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
+                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
