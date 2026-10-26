@@ -539,3 +539,24 @@ body:has([data-progress-open='true']) [data-student-material-share-control] {
     animation: none;
   }
 }
+
+/* Giro real de Flashcards sin caras superpuestas: la tarjeta se pone de perfil
+   en el centro y la pregunta/respuesta cambia sólo durante ese instante. */
+@keyframes evaluo-flashcard-turn {
+  0% { transform: perspective(1100px) rotateY(0deg); }
+  49.9% { transform: perspective(1100px) rotateY(90deg); }
+  50% { transform: perspective(1100px) rotateY(-90deg); }
+  100% { transform: perspective(1100px) rotateY(0deg); }
+}
+
+.animate-flashcard-turn {
+  animation: evaluo-flashcard-turn 420ms cubic-bezier(0.42, 0, 0.58, 1) both;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flashcard-turn {
+    animation: none;
+  }
+}
