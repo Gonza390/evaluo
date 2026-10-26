@@ -94,16 +94,12 @@ for (const width of widths) {
       }
       const nav = page.getByRole('navigation', { name: 'Índice de temas' });
       const learning = page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]');
-      assert.equal(await nav.isVisible(), width >= 1024, 'Topic index responsive breakpoint');
+      assert.equal(await nav.isVisible(), false, 'El detalle de un tema no debe mostrar el índice lateral');
       assert.equal(await learning.isVisible(), width >= 1280, 'Learning rail responsive breakpoint');
-      if (width >= 1024) {
-        await nav.getByRole('button').nth(1).click();
-        await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
-        assert.match((await page.locator('[id^="real-detail-title"]:visible').first().textContent()) ?? '', /machine learning|deep learning/i, 'Second topic navigation');
-      } else {
-        await page.getByRole('button', { name: 'Volver a los temas' }).click();
-        await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
-      }
+      await page.getByRole('button', { name: 'Volver a los temas' }).click();
+      await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
+      await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
+      assert.match((await page.locator('[id^="real-detail-title"]:visible').first().textContent()) ?? '', /machine learning|deep learning/i, 'Second topic navigation');
       await page.waitForTimeout(350);
       await page.screenshot({ path: folder + '/progreso-' + width + '.png', fullPage: false, animations: 'disabled' });
     } catch (error) {
@@ -123,8 +119,8 @@ await check('topic practice -> result -> return to same topic', async () => {
     await page.waitForLoadState('load');
     await page.waitForTimeout(500);
     await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
-    const nav = page.getByRole('navigation', { name: 'Índice de temas' });
-    await nav.getByRole('button').nth(1).click();
+    await page.getByRole('button', { name: 'Volver a los temas' }).click();
+    await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
     const titleBefore = (await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim();
     await page.getByRole('button', { name: 'Practicar este tema', exact: true }).click();
     await page.locator('article').first().waitFor(wait);
