@@ -66,13 +66,20 @@ assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
 assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
 assert.match(dashboardMaterialsSource, /min-h-10 min-w-10/);
-assert.match(appChromeSource, /isDashboardHomeRoute = pathname === '\/dashboard'/);
-assert.match(appChromeSource, /<EstimatedStudyActivity compact=\{isDashboardHomeRoute\} \/>/);
+assert.match(appChromeSource, /const isCompactAppRoute =/);
+assert.match(appChromeSource, /Boolean\(user\)/);
+for (const privatePath of ['/dashboard/', '/calendario', '/configuracion', '/referidos', '/materiales/']) {
+  assert.ok(appChromeSource.includes(privatePath), 'La escala interna debe incluir '+privatePath);
+}
+assert.match(appChromeSource, /data-private-compact=\{isCompactAppRoute \? 'true' : undefined\}/);
+assert.match(appChromeSource, /<PublicBrandLink \/>/);
+assert.match(appChromeSource, /isExploreExperienceRoute/);
+assert.match(appChromeSource, /<EstimatedStudyActivity compact=\{isCompactAppRoute\} \/>/);
 const activitySource = readFileSync(resolve('components/estimated-study-activity.tsx'), 'utf8');
 assert.match(activitySource, /compact = false/);
 assert.match(activitySource, /compact \? 'h-9 px-3 text-\[12px\]' : 'h-10 px-3\.5 text-sm'/);
-assert.match(appChromeSource, /isDashboardHomeRoute \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/);
-assert.match(appChromeSource, /<Navbar collapsed=\{sidebarCollapsed\} onToggleCollapsed=\{handleSidebarToggle\} compact=\{isDashboardHomeRoute\} \/>/);
+assert.match(appChromeSource, /isCompactAppRoute \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/);
+assert.match(appChromeSource, /<Navbar collapsed=\{sidebarCollapsed\} onToggleCollapsed=\{handleSidebarToggle\} compact=\{isCompactAppRoute\} \/>/);
 assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
 assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[76px\]' : 'md:ml-\[248px\]'/);
 assert.match(navbarSource, /compact \? 'md:top-\[52px\]' : 'md:top-\[81px\]'/);
@@ -93,7 +100,7 @@ assert.match(referralNavSource, /compact = false/);
 assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
 
 const notificationSource = readFileSync(resolve('components/notifications/notification-bell.tsx'), 'utf8');
-assert.match(appChromeSource, /<NotificationBell compact=\{isDashboardHomeRoute\} \/>/);
+assert.match(appChromeSource, /<NotificationBell compact=\{isCompactAppRoute\} \/>/);
 assert.match(notificationSource, /compact = false/);
 assert.match(notificationSource, /compact \? "h-9 w-9" : "h-11 w-11"/);
 // El modo estándar mantiene los anchos originales y las páginas públicas intactas.
