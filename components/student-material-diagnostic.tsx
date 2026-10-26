@@ -123,7 +123,7 @@ export function StudentMaterialDiagnostic({
 
   if (questions.length < 3) {
     return (
-      <div className="mx-auto max-w-3xl px-1 py-6 sm:px-2">
+      <div className="mx-auto w-full max-w-[940px] px-1 py-3 sm:px-2">
         <p className="text-foreground text-sm font-semibold">
           Todavía no hay preguntas suficientes para un diagnóstico útil.
         </p>
@@ -141,7 +141,7 @@ export function StudentMaterialDiagnostic({
     return (
       <div
         data-recommended-result={guided || undefined}
-        className="mx-auto max-w-3xl px-1 py-3 sm:px-2 sm:py-5"
+        className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3"
       >
         <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
           {guided ? 'Práctica completada' : 'Diagnóstico listo'}
@@ -149,7 +149,7 @@ export function StudentMaterialDiagnostic({
         <h2
           ref={resultHeading}
           tabIndex={-1}
-          className="text-foreground mt-2 text-[22px] font-bold tracking-[-0.05em] outline-none"
+          className="text-foreground mt-2 text-[20px] leading-[1.3] font-bold tracking-[-0.05em] outline-none"
         >
           {guided
             ? result.reviewTopics.length > 0
@@ -158,11 +158,11 @@ export function StudentMaterialDiagnostic({
             : 'Ya sabemos por dónde empezar'}
         </h2>
 
-        <div className="border-border mt-5 border-y py-4">
-          <p className="text-foreground text-3xl font-bold tracking-[-0.055em]">
+        <div className="border-border mt-4 border-y py-3">
+          <p className="text-foreground text-[26px] font-bold tracking-[-0.055em]">
             {result.correct}/{questions.length}
           </p>
-          <p className="text-muted-foreground mt-1 text-sm">respuestas correctas</p>
+          <p className="text-muted-foreground mt-1 text-[13px]">respuestas correctas</p>
         </div>
 
         <div className="mt-5">
@@ -173,7 +173,7 @@ export function StudentMaterialDiagnostic({
                   ? `${result.reviewTopics.length} ${result.reviewTopics.length === 1 ? 'tema para reforzar' : 'temas para reforzar'} de este PDF`
                   : 'Te conviene repasar primero'}
               </p>
-              <p className="text-muted-foreground mt-1 text-sm leading-6">
+              <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                 {result.reviewTopics.slice(0, 3).join(', ')}.
               </p>
               {guided && (
@@ -187,7 +187,7 @@ export function StudentMaterialDiagnostic({
           ) : (
             <>
               <p className="text-foreground text-sm font-semibold">Buen dominio inicial</p>
-              <p className="text-muted-foreground mt-1 text-sm leading-6">
+              <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                 {guided
                   ? `Respondiste correctamente estas ${questions.length} preguntas. Podés seguir practicando con este material.`
                   : 'No detectamos un tema claramente débil en estas preguntas.'}
@@ -204,7 +204,7 @@ export function StudentMaterialDiagnostic({
                 ? onReinforce()
                 : onReviewTopics(result.reviewTopics)
             }
-            className="h-11 w-full rounded-lg"
+            className="h-11 w-full rounded-lg text-[13px]"
           >
             {guided && result.reviewTopics.length > 0
               ? 'Reforzar mis temas'
@@ -288,7 +288,7 @@ export function StudentMaterialDiagnostic({
 
   return (
     <>
-      <div className="mx-auto max-w-3xl px-1 py-3 sm:px-2 sm:py-5">
+      <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
@@ -303,7 +303,7 @@ export function StudentMaterialDiagnostic({
           </span>
         </div>
 
-        <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
           <div
             className="bg-primary h-full rounded-full transition-[width] duration-300"
             style={{ width: `${progress}%` }}
@@ -318,7 +318,7 @@ export function StudentMaterialDiagnostic({
             ref={questionHeading}
             tabIndex={-1}
             data-guided-question={guided || undefined}
-            className="text-foreground mt-2 text-[16px] leading-6 font-bold tracking-[-0.03em] outline-none sm:text-[18px]"
+            className="text-foreground mt-2 text-[16px] leading-6 font-bold tracking-[-0.03em] outline-none sm:text-[16px]"
           >
             {current.prompt}
           </h2>
@@ -358,7 +358,7 @@ export function StudentMaterialDiagnostic({
             type="button"
             disabled={!selectedAnswer || isRecordingError}
             onClick={() => void goNext()}
-            className="h-11 rounded-lg px-5"
+            className="h-11 rounded-lg px-4 text-[13px]"
           >
             {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
           </Button>
