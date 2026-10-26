@@ -239,12 +239,13 @@ export function StudyErrorsClient({
   return (
     <>
       <div
-        className="text-foreground mx-auto w-full max-w-[1180px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+        className="text-foreground mx-auto w-full max-w-[1240px] min-w-0 px-3 py-3 text-[13px] sm:px-4 sm:py-4 lg:px-6 lg:py-5"
         style={!materialId ? { maxWidth: '960px' } : undefined}
       >
         <div ref={pageIntro} tabIndex={-1} className="scroll-mt-24 outline-none">
           <AppPageHeader
             eyebrow="Progreso"
+            size="compact"
             title="Progreso"
             description={<span role="status">{headerDescription}</span>}
           />
@@ -258,7 +259,7 @@ export function StudyErrorsClient({
           </p>
         )}
         {!materialId ? (
-          <section aria-labelledby="choose-pdf" className="mt-5">
+          <section aria-labelledby="choose-pdf" className="mt-3">
             <h2 id="choose-pdf" className="sr-only">
               Elegir material para repasar
             </h2>
@@ -273,7 +274,7 @@ export function StudyErrorsClient({
                 return (
                   <button
                     key={pdf.id}
-                    className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-5 text-left transition focus-visible:outline-2 sm:px-2"
+                    className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-3.5 text-left transition focus-visible:outline-2 sm:px-2"
                     onClick={() => chooseMaterial(pdf.id)}
                   >
                     <FileText
@@ -333,7 +334,7 @@ export function StudyErrorsClient({
               })}
               {unlinked.length > 0 && (
                 <button
-                  className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-5 text-left transition focus-visible:outline-2 sm:px-2"
+                  className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-3.5 text-left transition focus-visible:outline-2 sm:px-2"
                   onClick={() => chooseMaterial(unlinkedId)}
                 >
                   <FileQuestion
@@ -444,7 +445,7 @@ export function StudyErrorsClient({
                 <ChevronDown className={`h-4 w-4 shrink-0 ${mobileListOpen ? 'rotate-180' : ''}`} />
               </button>
             </div>
-            <div className="grid min-w-0 gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-8">
+            <div className="grid min-w-0 gap-4 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-5">
               <aside
                 id="mobile-errors"
                 aria-label="Errores de este PDF"
