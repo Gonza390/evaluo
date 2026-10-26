@@ -295,6 +295,18 @@ assert.ok(materialWorkspaceSource.includes('chapterFinishNavigationPauseRef'),
   'Al pasar al próximo capítulo no debe dispararse el popup inmediatamente.');
 assert.ok(materialWorkspaceSource.includes('visibleEndIndex()'),
   'La apertura debe depender de alcanzar el final del capítulo.');
+assert.match(materialWorkspaceSource, /const readingIndexAtTop = \(\) =>/,
+  'Detectar el capítulo que alcanza la línea de lectura incluso si su marcador final pasó de largo.');
+assert.match(materialWorkspaceSource, /movedForward &&\s*readingIndex > lastReadingIndex/,
+  'Al pasar por scroll al capítulo siguiente debe mostrarse el popup del capítulo previo.');
+assert.match(materialWorkspaceSource, /setChapterFinishIndex\(lastReadingIndex\)/,
+  'Al cruzar capítulos debe recomendarse la práctica del capítulo recién terminado.');
+assert.match(materialWorkspaceSource, /index === activeSummaryChapterIndex \+ 1/,
+  'El salto al capítulo inmediato desde el índice debe cerrar el capítulo anterior.');
+assert.match(materialWorkspaceSource, /setChapterFinishIndex\(activeSummaryChapterIndex\)/,
+  'El clic en el siguiente capítulo debe activar el popup antes de avanzar.');
+assert.match(materialWorkspaceSource, /promptedChapterFinishesRef\.current\.add\(lastReadingIndex\)/,
+  'La transición entre capítulos no debe volver a mostrar un popup ya ofrecido.');
 assert.ok(materialWorkspaceSource.includes('frame = window.requestAnimationFrame(checkReadingPosition)'),
   'Los capítulos cortos deben poder activar la detección sin depender de un scroll.');
 assert.ok(materialWorkspaceSource.includes('dwellWithoutScroll'),
