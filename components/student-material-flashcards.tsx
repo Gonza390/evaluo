@@ -96,6 +96,8 @@ export function StudentMaterialFlashcards({
   );
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const flipTimersRef = useRef<number[]>([]);
   const [flipReady, setFlipReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
@@ -110,6 +112,25 @@ export function StudentMaterialFlashcards({
   const [reminderError, setReminderError] = useState<string | null>(null);
   const completionHandledRef = useRef(false);
   const storageKey = `evaluo:flashcards:${materialId}`;
+
+  // Un solo panel dibuja cada cara. Gira hacia el canto, cambiamos el texto
+  // cuando queda de perfil y termina el giro sin superponer capas.
+  const flipCard = useCallback(() => {
+    if (!flipReady || isFlipping) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setFlipped((current) => !current);
+      return;
+    }
+    setIsFlipping(true);
+    flipTimersRef.current = [
+      window.setTimeout(() => setFlipped((current) => !current), 210),
+      window.setTimeout(() => setIsFlipping(false), 440),
+    ];
+  }, [flipReady, isFlipping]);
+
+  useEffect(() => () => {
+    flipTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
 
   // Durante la hidratación de Next.js el HTML es visible, pero los manejadores
   // de React todavía no están conectados. Mostrar carga hasta ser interactivo.
@@ -578,10 +599,10 @@ export function StudentMaterialFlashcards({
   const topicMode = allowedCardIndices !== undefined;
   const recallControls = (
     <div className="grid grid-cols-2 gap-2">
-      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped} onClick={() => markRecall('unknown')} className="min-h-11 rounded-lg border-red-200 px-2 text-[13px] text-red-700 hover:bg-red-50">
+      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping} onClick={() => markRecall('unknown')} className="min-h-11 rounded-lg border-red-200 px-2 text-[13px] text-red-700 hover:bg-red-50">
         {topicMode ? 'Mal' : 'No lo sabía'}
       </Button>
-      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped} onClick={() => markRecall('known')} className="min-h-11 rounded-lg border-emerald-200 px-2 text-[13px] text-emerald-700 hover:bg-emerald-50">
+      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping} onClick={() => markRecall('known')} className="min-h-11 rounded-lg border-emerald-200 px-2 text-[13px] text-emerald-700 hover:bg-emerald-50">
         {topicMode ? 'Bien' : 'Lo sabía'}
       </Button>
     </div>
@@ -659,19 +680,21 @@ export function StudentMaterialFlashcards({
         </div>
 
         <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[720px]')}>
-          {/* Una única superficie clicable y una sola cara visible.
-              No dependemos de overlays transparentes ni de backface-visibility. */}
+          {/* Un solo panel animado: sin caras superpuestas que puedan tapar el texto. */}
           <button
             type="button"
             data-flashcard-card
             aria-label={flipped ? 'Mostrar pregunta' : 'Mostrar respuesta'}
             aria-pressed={flipped}
+            aria-busy={isFlipping}
+            data-flashcard-flipping={isFlipping}
             data-flashcard-ready={flipReady}
             disabled={!flipReady}
-            onClick={() => setFlipped((value) => !value)}
+            onClick={flipCard}
             className={cn(
               'relative isolate block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-              topicMode ? 'h-[190px] sm:h-[205px]' : 'h-[188px] sm:h-[210px]'
+              topicMode ? 'h-[190px] sm:h-[205px]' : 'h-[188px] sm:h-[210px]',
+              isFlipping && 'animate-flashcard-turn'
             )}
           >
             {flipped ? (

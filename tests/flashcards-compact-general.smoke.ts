@@ -18,7 +18,7 @@ assert.match(cards, /data-flashcard-face="front"/);
 assert.match(cards, /data-flashcard-face="back"/);
 assert.match(cards, /\{displayFront\}/);
 assert.match(cards, /\{currentCard\.back\}/);
-assert.ok(cards.includes('onClick={() => setFlipped((value) => !value)}'));
+assert.ok(cards.includes('onClick={flipCard}'));
 assert.match(cards, /topicMode \? 'max-w-\[610px\]' : 'max-w-\[720px\]'\)\}>\{recallControls\}<\/div>/,
   'Las dos calificaciones deben mantenerse visibles bajo la tarjeta.');
 console.log('Flashcards general compact and visible smoke: OK.');

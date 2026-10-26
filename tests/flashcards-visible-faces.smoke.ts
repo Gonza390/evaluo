@@ -12,7 +12,7 @@ assert.doesNotMatch(source, /motion-safe:animate-in|motion-safe:fade-in|motion-s
   'No debe haber animaciones de entrada que oculten el texto.');
 assert.match(source, /border-slate-200 bg-white px-4 py-3 text-center text-slate-950/,
   'La tarjeta debe tener fondo blanco y texto oscuro.');
-assert.match(source, /onClick=\{\(\) => setFlipped\(\(value\) => !value\)\}/,
+assert.match(source, /onClick=\{flipCard\}/,
   'Un único control alterna pregunta y respuesta.');
 assert.match(source, /\{displayFront\}/);
 assert.match(source, /\{currentCard\.back\}/);
