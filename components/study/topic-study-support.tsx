@@ -17,17 +17,17 @@ export function TopicStudySupport({
   const card = flashcards[cardIndex];
   return (
     <div className="divide-border border-border mt-6 divide-y border-t">
-      <section className="py-5" aria-label="Conceptos importantes de este tema">
-        <h3 className="text-base font-semibold">2 · Conceptos importantes</h3>
-        <p className="text-muted-foreground mt-2 text-sm leading-6">
+      <section className="py-3" aria-label="Conceptos importantes de este tema">
+        <h3 className="text-[16px] font-semibold">2 · Conceptos importantes</h3>
+        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
           Revisá estas definiciones del glosario antes de continuar.
         </p>
         {concepts.length ? (
           <dl className="divide-border mt-3 divide-y">
             {concepts.map((concept, index) => (
-              <div key={`${concept.term}-${index}`} className="py-4">
-                <dt className="text-foreground text-sm font-semibold">{concept.term}</dt>
-                <dd className="text-foreground mt-2 max-w-prose text-sm leading-6 whitespace-pre-line">
+              <div key={`${concept.term}-${index}`} className="py-3">
+                <dt className="text-foreground text-[14px] font-semibold">{concept.term}</dt>
+                <dd className="text-foreground mt-1.5 max-w-prose text-[13.5px] leading-6 whitespace-pre-line">
                   {concept.definition}
                 </dd>
               </div>
@@ -48,12 +48,12 @@ export function TopicStudySupport({
             <p className="text-muted-foreground mb-3 text-xs">
               Tarjeta {cardIndex + 1} de {flashcards.length} · Intentá responder antes de mirar.
             </p>
-            <p className="text-foreground text-base leading-7 font-medium">{card.front}</p>
+            <p className="text-foreground text-[16px] leading-6 font-medium">{card.front}</p>
             <details className="mt-4">
               <summary className="text-primary min-h-11 cursor-pointer py-3 text-sm font-semibold">
                 Mostrar respuesta
               </summary>
-              <p className="text-foreground py-3 text-sm leading-6 whitespace-pre-line">
+              <p className="text-foreground py-2 text-[13.5px] leading-6 whitespace-pre-line">
                 {card.back}
               </p>
               {Number.isInteger(card.reference.pageStart) &&
@@ -84,7 +84,7 @@ export function TopicStudySupport({
                 type="button"
                 disabled={cardIndex === 0}
                 onClick={() => setCardIndex((index) => index - 1)}
-                className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-sm disabled:opacity-40"
+                className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-[13px] disabled:opacity-40"
               >
                 Anterior
               </button>
@@ -92,7 +92,7 @@ export function TopicStudySupport({
                 type="button"
                 disabled={cardIndex === flashcards.length - 1}
                 onClick={() => setCardIndex((index) => index + 1)}
-                className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-sm disabled:opacity-40"
+                className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-[13px] disabled:opacity-40"
               >
                 Siguiente tarjeta
               </button>
