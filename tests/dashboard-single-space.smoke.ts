@@ -71,7 +71,15 @@ assert.match(appChromeSource, /<EstimatedStudyActivity compact=\{isDashboardHome
 const activitySource = readFileSync(resolve('components/estimated-study-activity.tsx'), 'utf8');
 assert.match(activitySource, /compact = false/);
 assert.match(activitySource, /compact \? 'h-9 px-3 text-\[12px\]' : 'h-10 px-3\.5 text-sm'/);
-assert.match(appChromeSource, /isDashboardHomeRoute \? 'min-h-14 py-2 sm:min-h-16 sm:py-2' : 'min-h-18 py-3 sm:min-h-20'/);
+assert.match(appChromeSource, /isDashboardHomeRoute \? 'min-h-14 py-1\.5 sm:min-h-14 sm:py-1\.5' : 'min-h-18 py-3 sm:min-h-20'/);
+assert.match(appChromeSource, /<Navbar collapsed=\{sidebarCollapsed\} onToggleCollapsed=\{handleSidebarToggle\} compact=\{isDashboardHomeRoute\} \/>/);
+assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[64px\]' : 'md:ml-\[216px\]'/);
+assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[76px\]' : 'md:ml-\[248px\]'/);
+assert.match(navbarSource, /compact \? 'md:top-\[56px\]' : 'md:top-\[81px\]'/);
+assert.match(navbarSource, /compact \? 'w-\[64px\]' : 'w-\[76px\]'/);
+assert.match(navbarSource, /compact \? 'w-\[216px\]' : 'w-\[248px\]'/);
+assert.match(navbarSource, /compact \? 'gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
+
 for (const source of [dashboardSource, dashboardHeroSource, dashboardMaterialsSource]) {
   assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
 }
