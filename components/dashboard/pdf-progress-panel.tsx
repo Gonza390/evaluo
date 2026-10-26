@@ -318,7 +318,7 @@ export function PdfProgressPanel({
               className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
               aria-label="Tu próxima actividad"
             >
-              <h3 className="text-base font-semibold">Tu próxima actividad</h3>
+              <h3 className="text-[16px] font-semibold">Tu próxima actividad</h3>
               {lastOutcome && (
                 <p className="text-foreground mt-2 text-sm!">
                   Última tanda: {lastOutcome.total}{' '}
@@ -451,7 +451,7 @@ export function PdfProgressPanel({
             className="border-border mt-6 scroll-mt-4 border-t pt-5"
             aria-label="Contenido de este tema"
           >
-            <h3 className="text-base font-semibold">1 · Leé el resumen del tema</h3>
+            <h3 className="text-[16px] font-semibold">1 · Leé el resumen del tema</h3>
             {summaryBody && focusConcepts.length > 0 && (
               <div
                 className="border-border bg-muted/30 mt-4 rounded-xl border p-4"
@@ -508,7 +508,7 @@ export function PdfProgressPanel({
               className="border-border border-t py-5"
               aria-label="Cómo continuar con tu estudio"
             >
-              <h3 className="text-base font-semibold">3 · Tu próximo paso</h3>
+              <h3 className="text-[16px] font-semibold">3 · Tu próximo paso</h3>
               <p className="text-muted-foreground mt-2 text-sm!">
                 {topicPending.length > 0
                   ? 'Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.'
@@ -731,7 +731,7 @@ export function PdfProgressPanel({
 
   return (
     <div
-      className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto w-full max-w-none px-1 py-3 sm:px-3 sm:py-4'} min-w-0 [&_p]:leading-5!`}
+      className={`${embedded ? 'w-full py-2 sm:py-3' : 'mx-auto w-full max-w-[1240px] px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
     >
       {!embedded && !simulation && (
         <PdfMobileNavigation
@@ -779,7 +779,7 @@ export function PdfProgressPanel({
       <h2
         id={`${panelId}-heading`}
         tabIndex={-1}
-        className={`${embedded ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} mt-2 font-semibold tracking-tight ${reviewOpen ? 'sr-only' : ''}`}
+        className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-bold tracking-[-0.04em] ${reviewOpen ? 'sr-only' : ''}`}
       >
         Tu progreso
       </h2>
@@ -850,17 +850,17 @@ export function PdfProgressPanel({
               className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
               aria-label="Aprendizaje y próxima actividad del tema"
             >
-              <div className="border-border bg-card space-y-4 rounded-xl border p-4">
+              <div className="border-border bg-card space-y-3 rounded-xl border p-3.5">
                 <div>
-                  <h3 className="text-sm font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
+                  <h3 className="text-[13px] font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {currentTopic?.title ?? 'Conceptos pendientes'}
                   </p>
                 </div>
                 {!reviewOpen && lastOutcome && (
-                  <div className="border-border border-b pb-4">
+                  <div className="border-border border-b pb-3">
                     <p className="text-muted-foreground text-xs">Última práctica</p>
-                    <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    <p className="mt-1 text-[20px] font-semibold tabular-nums">
                       {lastOutcome.correct}/{lastOutcome.total}
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
@@ -870,9 +870,9 @@ export function PdfProgressPanel({
                   </div>
                 )}
                 {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
-                  <div className="border-border border-b pb-4">
+                  <div className="border-border border-b pb-3">
                     <p className="text-muted-foreground text-xs">Respuestas registradas</p>
-                    <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    <p className="mt-1 text-[20px] font-semibold tabular-nums">
                       {currentCorrect}/{currentAnswered}
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
@@ -896,8 +896,8 @@ export function PdfProgressPanel({
                     Revisá la explicación y comprobá lo aprendido con una pregunta diferente.
                   </p>
                 ) : (
-                <div className="border-border border-t pt-4">
-                  <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
+                <div className="border-border border-t pt-3">
+                  <h4 className="text-[13px] font-semibold">Tu próxima actividad</h4>
                   <p className="text-muted-foreground mt-2 text-[13px] leading-5">
                     {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
                   </p>
@@ -954,7 +954,7 @@ export function PdfProgressPanel({
                 especialmente en pantallas móviles; después vuelve la actividad recomendada. */}
             {recommendedTopic && !showOnboardingExample && (
               <section
-                className="border-primary/20 bg-primary/5 rounded-2xl border p-5 sm:p-6 lg:sticky lg:top-2"
+                className="border-primary/20 bg-primary/5 rounded-xl border p-4 sm:p-4 lg:sticky lg:top-2"
                 aria-label="Actividad recomendada"
               >
                 <p className="text-primary text-xs font-semibold">
@@ -964,7 +964,7 @@ export function PdfProgressPanel({
                       ? 'Empezá por este tema'
                       : 'Tu próxima actividad'}
                 </p>
-                <h2 className="mt-2 text-lg font-semibold break-words">{recommendedTopic.title}</h2>
+                <h2 className="mt-2 text-[16px] leading-[1.4] font-semibold break-words">{recommendedTopic.title}</h2>
                 <p className="text-muted-foreground mt-2 text-sm!">
                   {next
                     ? 'Retomá una dificultad con tu material y comprobá lo aprendido.'
@@ -981,11 +981,11 @@ export function PdfProgressPanel({
             )}
             <section
               data-recommended-topics
-              className="border-border bg-card overflow-hidden rounded-2xl border"
+              className="border-border bg-card overflow-hidden rounded-xl border"
               aria-labelledby={`real-topics-title-${panelId}`}
             >
               <div className="p-4 pb-2">
-                <h2 id={`real-topics-title-${panelId}`} className="text-base font-semibold">
+                <h2 id={`real-topics-title-${panelId}`} className="text-[16px] font-semibold">
                   {showOnboardingExample ? 'Así vas a ver tu progreso' : 'Contenido de tu PDF'}
                 </h2>
                 {showOnboardingExample && (
@@ -994,7 +994,7 @@ export function PdfProgressPanel({
                   </p>
                 )}
                 {!showOnboardingExample && topics.length >= 8 && (
-                  <label className="mt-4 block text-sm">
+                  <label className="mt-3 block text-[13px]">
                     <span className="text-muted-foreground">Buscar tema</span>
                     <input
                       type="search"
