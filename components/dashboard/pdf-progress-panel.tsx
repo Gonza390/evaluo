@@ -309,14 +309,6 @@ export function PdfProgressPanel({
           >
             Volver a los temas
           </button>
-        ) : selected?.status !== 'resolved' ? (
-          <button
-            type="button"
-            onClick={() => setReviewOpen(false)}
-            className="text-primary min-h-10 rounded-lg px-2 text-xs font-semibold"
-          >
-            Volver al tema
-          </button>
         ) : null}
       </div>
       {!reviewOpen && (
@@ -844,7 +836,15 @@ export function PdfProgressPanel({
         </p>
       )}
       {topicId ? (
-        <div className="mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_260px] 2xl:grid-cols-[248px_minmax(0,1fr)_288px] 2xl:gap-7">
+        <div
+          data-reinforcement-focus={reviewOpen ? 'true' : undefined}
+          className={
+            reviewOpen
+              ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
+              : 'mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_260px] 2xl:grid-cols-[248px_minmax(0,1fr)_288px] 2xl:gap-7'
+          }
+        >
+          {!reviewOpen && (
           <aside
             className="border-border bg-card hidden min-w-0 rounded-xl border p-3 lg:sticky lg:top-2 lg:block lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto"
             aria-label="Navegación entre temas del PDF"
@@ -924,7 +924,9 @@ export function PdfProgressPanel({
               )}
             </nav>
           </aside>
+          )}
           <div className="min-w-0">{topicDetail}</div>
+          {!reviewOpen && (
           <aside
             className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
             aria-label="Aprendizaje y próxima actividad del tema"
@@ -1020,6 +1022,7 @@ export function PdfProgressPanel({
               )}
             </div>
           </aside>
+          )}
         </div>
       ) : (
         <div className="mt-5">
