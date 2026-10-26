@@ -459,6 +459,7 @@ export function MaterialStudyWorkspace({
   const [pendingStudyErrorCount, setPendingStudyErrorCount] = useState(0);
   const [summaryCompletionOpen, setSummaryCompletionOpen] = useState(false);
   const summaryEndRef = useRef<HTMLDivElement | null>(null);
+  const [activeSummaryChapterIndex, setActiveSummaryChapterIndex] = useState(0);
   const summaryCompletionPromptedRef = useRef(false);
   const summaryCompletionTimerRef = useRef<number | null>(null);
   const summaryReadingStartedTrackedRef = useRef(false);
@@ -847,6 +848,56 @@ export function MaterialStudyWorkspace({
     [fullSummarySections]
   );
 
+
+  // Scrollspy del resumen: el índice sigue el capítulo que ocupa la zona de lectura
+  // del panel interno, no el scroll global del navegador.
+  useEffect(() => {
+    if (activeTab !== 'resumen' || progressOpen || summaryChapters.length === 0) return;
+
+    const readers = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[data-onboarding-study-panel] [role="region"][aria-label="Contenido de estudio"]'
+      )
+    );
+    let frame = 0;
+    const updateActiveChapter = () => {
+      frame = 0;
+      for (const reader of readers) {
+        const rect = reader.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) continue;
+        const sections = Array.from(
+          reader.querySelectorAll<HTMLElement>('[data-summary-reading-section]')
+        ).filter((section) => section.getBoundingClientRect().height > 0);
+        if (sections.length === 0) continue;
+
+        // Al desplazarse, el capítulo activo es el último que llegó a la
+        // franja superior de lectura; funciona incluso con capítulos largos.
+        const readingLine = rect.top + Math.min(110, rect.height * 0.22);
+        let activeIndex = Number(sections[0].dataset.summaryReadingSection) || 0;
+        for (const section of sections) {
+          if (section.getBoundingClientRect().top > readingLine) break;
+          const index = Number(section.dataset.summaryReadingSection);
+          if (Number.isInteger(index)) activeIndex = index;
+        }
+        setActiveSummaryChapterIndex((previous) =>
+          previous === activeIndex ? previous : activeIndex
+        );
+        return;
+      }
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveChapter);
+    };
+    readers.forEach((reader) => reader.addEventListener('scroll', scheduleUpdate, { passive: true }));
+    window.addEventListener('resize', scheduleUpdate);
+    scheduleUpdate();
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      readers.forEach((reader) => reader.removeEventListener('scroll', scheduleUpdate));
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, [activeTab, progressOpen, summaryChapters]);
+
   const summaryCheckPlan = useMemo(
     () => buildSummaryCheckPlan(fullSummarySections, studyArtifacts),
     [fullSummarySections, studyArtifacts]
@@ -1206,6 +1257,8 @@ export function MaterialStudyWorkspace({
       ?.querySelector<HTMLElement>(`#${CSS.escape(anchor)}`);
     if (!chapter) return;
     event.preventDefault();
+    const chapterIndex = summaryChapters.findIndex((item) => item.anchor === anchor);
+    if (chapterIndex >= 0) setActiveSummaryChapterIndex(chapterIndex);
     chapter.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
@@ -1602,7 +1655,13 @@ export function MaterialStudyWorkspace({
                       <a
                         href={`#${chapter.anchor}`}
                         onClick={(event) => handleSummaryChapterNavigation(event, chapter.anchor)}
-                        className="text-muted-foreground hover:text-primary flex items-start gap-2.5 rounded-lg px-1 py-1.5 text-[12.5px] leading-5 transition"
+                        aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
+                        className={cn(
+                          'flex items-start gap-2.5 rounded-lg px-1 py-1.5 text-[12.5px] leading-5 transition',
+                          activeSummaryChapterIndex === index
+                            ? 'bg-blue-50 font-semibold text-blue-700'
+                            : 'text-muted-foreground hover:text-primary'
+                        )}
                       >
                         <span className="text-muted-foreground mt-0.5 min-w-5 font-bold tabular-nums">
                           {String(index + 1).padStart(2, '0')}
@@ -1635,9 +1694,18 @@ export function MaterialStudyWorkspace({
                             onClick={(event) =>
                               handleSummaryChapterNavigation(event, chapter.anchor)
                             }
-                            className="group text-muted-foreground hover:text-primary flex items-start gap-2.5 text-[12.5px] leading-5 transition"
+                            aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
+                            className={cn(
+                              'group flex items-start gap-2.5 rounded-lg px-2 py-1.5 text-[12.5px] leading-5 transition',
+                              activeSummaryChapterIndex === index
+                                ? 'bg-blue-50 font-semibold text-blue-700'
+                                : 'text-muted-foreground hover:text-primary'
+                            )}
                           >
-                            <span className="group-hover:text-primary min-w-5 font-bold text-slate-300 tabular-nums transition">
+                            <span className={cn(
+                              'group-hover:text-primary min-w-5 font-bold tabular-nums transition',
+                              activeSummaryChapterIndex === index ? 'text-blue-700' : 'text-slate-400'
+                            )}>
                               {String(index + 1).padStart(2, '0')}
                             </span>
                             <span>{chapter.displayTitle}</span>
