@@ -75,15 +75,18 @@ export function StudentMaterialFlashcards({
   materialId,
   onComplete,
   demoMode = false,
+  allowedCardIndices,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
   onComplete?: () => void;
   demoMode?: boolean;
+  allowedCardIndices?: number[];
 }) {
+  const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
   const [started, setStarted] = useState(demoMode);
   const [order, setOrder] = useState<number[]>(() =>
-    demoMode ? cards.map((_, index) => index) : []
+    demoMode ? (allowedCardIndices ?? cards.map((_, index) => index)) : []
   );
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -145,16 +148,18 @@ export function StudentMaterialFlashcards({
   }, []);
 
   const startSession = useCallback(() => {
-    beginSession(buildSessionOrder(recallByCard, cards.length));
+    const fullOrder = buildSessionOrder(recallByCard, cards.length);
+    const allowed = new Set(scopedIndices);
+    beginSession(fullOrder.filter((index) => allowed.has(index)));
     if (!demoMode)
       void trackClientAnalyticsEvent({
         eventName: 'student_material_flashcards_started',
         metadata: {
           material_id: materialId,
-          card_count: cards.length,
+          card_count: scopedIndices.length,
         },
       });
-  }, [beginSession, cards.length, demoMode, materialId, recallByCard]);
+  }, [beginSession, cards.length, demoMode, materialId, recallByCard, scopedIndices]);
 
   const finishSession = useCallback(() => {
     setStarted(false);
