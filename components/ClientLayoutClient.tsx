@@ -461,7 +461,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${
             showSidebar
               ? isDashboardHomeRoute
-                ? sidebarCollapsed ? 'md:ml-[64px]' : 'md:ml-[216px]'
+                ? sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-[192px]'
                 : sidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]'
               : ''
           }`}
