@@ -47,7 +47,7 @@ export function MaeveDashboardChrome({
   };
 
   return (
-    <div className="min-w-0 space-y-4 overflow-x-clip">
+    <div className="min-w-0 space-y-3 overflow-x-clip">
       <MaeveStudyHero
         heroRef={heroRef as RefObject<HTMLElement | null>}
         materialsCount={materialsCount}
