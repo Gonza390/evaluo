@@ -1034,6 +1034,25 @@ export function MaterialStudyWorkspace({
       region.querySelectorAll<HTMLElement>('[data-summary-chapter-end]')
     );
     if (endings.length === 0) return;
+    const readingSections = Array.from(
+      region.querySelectorAll<HTMLElement>('[data-summary-reading-section]')
+    ).filter((section) => section.getBoundingClientRect().height > 0);
+    if (readingSections.length === 0) return;
+
+    // El marcador del final puede pasar de largo entre dos eventos de scroll.
+    // Identificar también el capítulo que alcanzó la línea de lectura.
+    const readingIndexAtTop = () => {
+      const readerRect = region.getBoundingClientRect();
+      const visibleTop = Math.max(0, readerRect.top);
+      const visibleBottom = Math.min(window.innerHeight, readerRect.bottom);
+      const readingLine = visibleTop + Math.min(100, Math.max(35, (visibleBottom - visibleTop) * 0.23));
+      let index = Number(readingSections[0]?.dataset.summaryReadingSection ?? 0);
+      for (const section of readingSections) {
+        if (section.getBoundingClientRect().top > readingLine) break;
+        index = Number(section.dataset.summaryReadingSection);
+      }
+      return index;
+    };
 
     let frame = 0;
     let promptTimer = 0;
@@ -1043,6 +1062,7 @@ export function MaterialStudyWorkspace({
     let hasUserScrolled = false;
     let lastReaderScroll = region.scrollTop;
     let lastPageScroll = window.scrollY;
+    let lastReadingIndex = readingIndexAtTop();
     const mountedAt = Date.now();
 
     const clearPending = () => {
@@ -1116,11 +1136,28 @@ export function MaterialStudyWorkspace({
         Math.abs(readerPosition - lastReaderScroll) < 2 &&
         Math.abs(pagePosition - lastPageScroll) < 2
       ) return;
+      const movedForward = readerPosition > lastReaderScroll + 1 ||
+        pagePosition > lastPageScroll + 1;
       lastReaderScroll = readerPosition;
       lastPageScroll = pagePosition;
+      const readingIndex = readingIndexAtTop();
       if (Date.now() >= chapterFinishNavigationPauseRef.current) {
         hasUserScrolled = true;
+        // Al cruzar al siguiente capítulo, el final anterior ya no tiene
+        // por qué seguir visible. Mostrar su popup inmediatamente.
+        if (
+          movedForward &&
+          readingIndex > lastReadingIndex &&
+          !promptedChapterFinishesRef.current.has(lastReadingIndex)
+        ) {
+          clearPending();
+          promptedChapterFinishesRef.current.add(lastReadingIndex);
+          setChapterFinishIndex(lastReadingIndex);
+          lastReadingIndex = readingIndex;
+          return;
+        }
       }
+      lastReadingIndex = readingIndex;
       if (!frame) frame = window.requestAnimationFrame(checkReadingPosition);
     };
 
@@ -1470,6 +1507,18 @@ export function MaterialStudyWorkspace({
   };
 
   function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string, index: number) {
+    // Pasar al capítulo inmediato desde el índice también concluye el actual.
+    // Saltar a uno lejano no implica haber leído los intermedios.
+    if (
+      index === activeSummaryChapterIndex + 1 &&
+      !recommendedActive && !studyStartGuideOpen && !progressOpen &&
+      !promptedChapterFinishesRef.current.has(activeSummaryChapterIndex)
+    ) {
+      event.preventDefault();
+      promptedChapterFinishesRef.current.add(activeSummaryChapterIndex);
+      setChapterFinishIndex(activeSummaryChapterIndex);
+      return;
+    }
     // Las vistas responsive comparten contenido: buscar dentro del panel que recibió el clic.
     chapterFinishNavigationPauseRef.current = Date.now() + 2000;
     const chapter = event.currentTarget
