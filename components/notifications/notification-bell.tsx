@@ -19,7 +19,7 @@ function daysRemainingLabel(days: number) {
   return `En ${days} días`;
 }
 
-export function NotificationBell() {
+export function NotificationBell({ compact = false }: { compact?: boolean } = {}) {
   const { user, loading: userLoading } = useUser();
   const { isPremium, premiumLoading } = usePremium();
   const [reminders, setReminders] = useState<ExamReminderItem[]>([]);
@@ -85,7 +85,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-white"
+        className={`relative inline-flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 ${compact ? "h-9 w-9" : "h-11 w-11"}`}
         aria-label="Notificaciones"
       >
         <Bell className="h-4 w-4" />
