@@ -148,7 +148,7 @@ assert.ok(demoFourStepSource.includes('onTopicFinished={setDemoTopicFinished}'),
 assert.ok(demoFourStepSource.includes('onStudyNextTopic={(index) => {') &&
           demoFourStepSource.includes('onViewAllTopics={() => {'),
   'La demo también debe resolver sus acciones de continuidad.');
-assert.match(demoFourStepSource, /const openTopicPractice = \(index: number\) => \{[\s\S]*?setDemoTopicIndex\(index\);[\s\S]*?setProgressOpen\(false\);[\s\S]*?setActiveTab\('ejercicios'\);/,
+assert.match(demoFourStepSource, /const openTopicPractice = \(index: number \| null\) => \{[\s\S]*?setDemoTopicIndex\(index\);[\s\S]*?setProgressOpen\(false\);[\s\S]*?setActiveTab\('ejercicios'\);/,
   'Elegir practicar un tema en la demo debe entrar en la tanda específica del tema.');
 assert.match(demoFourStepSource, /progress: \(\{ showOnboardingExample, showOnboardingTopic \}\) => \([\s\S]*?onPracticeTopic=\{openTopicPractice\}/,
   'La vista de Progreso de la demo debe pasar el callback para practicar por tema, sin volver a la práctica general.');
