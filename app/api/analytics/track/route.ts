@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
 import { isAdminActor } from '@/lib/admin-users';
+import { isQaAccount } from '@/lib/qa-account';
 import { createClientServer } from '@/lib/supabase-server';
 import { isAllowedAnalyticsEventName, type AnalyticsEventName } from '@/lib/analytics-events';
 import { isLikelyBotUserAgent, sanitizeAnalyticsMetadata } from '@/lib/analytics-metadata';
@@ -103,10 +104,10 @@ export async function POST(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (await isAdminActor(user)) {
+    if (isQaAccount(user) || await isAdminActor(user)) {
       const sessionKeys = Array.from(new Set(rows.map((row) => row.session_key)));
       await admin.from('analytics_events').delete().in('session_key', sessionKeys);
-      return NextResponse.json({ ok: true, skipped: 'admin_user' }, { status: 202 });
+      return NextResponse.json({ ok: true, skipped: isQaAccount(user) ? 'qa_user' : 'admin_user' }, { status: 202 });
     }
 
     for (const row of rows) {
