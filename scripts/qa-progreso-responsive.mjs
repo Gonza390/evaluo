@@ -153,17 +153,20 @@ await check('topic practice -> result -> return to same topic', async () => {
       await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
     }
     assert.ok(finished, 'Practice should finish within thirty questions');
-    const hasWrongAnswers = await page.getByRole('button', { name: 'Entender mis errores' }).isVisible().catch(() => false);
-    const back = page.getByRole('button', { name: hasWrongAnswers ? 'Entender mis errores' : 'Volver al tema' });
-    await back.click();
-    await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
-    assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Back to same topic');
-    // Una tanda incorrecta debe llevar a la explicación, no sólo a la vista de Progreso.
+    const hasWrongAnswers = await page.getByRole('button', { name: 'Reforzar mis errores' }).isVisible().catch(() => false);
     if (hasWrongAnswers) {
+      // Una tanda incorrecta vuelve al MISMO tema y abre el refuerzo.
+      await page.getByRole('button', { name: 'Reforzar mis errores' }).click();
+      await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
+      assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Reinforcement stays on same topic');
       await page.locator('[data-topic-reinforcement]:visible').first().waitFor(wait);
       await page.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
     } else {
-      await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]:visible h4').first().waitFor(wait);
+      // Una tanda correcta prioriza el TEMA SIGUIENTE; no existe «Volver al tema».
+      await page.getByRole('button', { name: 'Seguir al siguiente tema' }).click();
+      await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
+      const nextTitle = (await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim();
+      assert.notEqual(nextTitle, titleBefore, 'After a perfect round, navigate to the next topic');
     }
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
   } catch (error) {
@@ -286,7 +289,8 @@ for (const width of [355, 433]) {
       await review.waitFor(wait);
       await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
       await review.getByRole('button', { name: 'Comprobar lo aprendido' }).waitFor(wait);
-      assert.equal(await page.getByRole('button', { name: 'Volver al tema', exact: true }).count(), 1);
+      assert.equal(await page.getByRole('button', { name: 'Volver a los temas', exact: true }).count(), 0,
+        'Mientras está abierto el refuerzo no debe aparecer la navegación de la ficha del tema.');
       const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(horizontal <= 1, 'Mobile reinforcement must not overflow horizontally: ' + horizontal);
       await page.screenshot({ path: folder + '/refuerzo-' + width + '.png', animations: 'disabled' });
