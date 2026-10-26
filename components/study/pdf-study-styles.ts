@@ -1,6 +1,6 @@
 /** Convenciones compartidas del espacio de estudio de un PDF. */
 export const pdfStudyQuestionActionsClassName =
-  'border-border bg-card sticky bottom-0 z-20 mt-5 flex justify-end border-t py-3 md:static md:pt-5 md:pb-0 [&>button]:min-h-11 [&>button]:w-full md:[&>button]:w-auto';
+  'border-border bg-card mt-4 flex justify-end border-t py-3 md:pt-5 md:pb-0 [&>button]:min-h-11 [&>button]:w-full md:[&>button]:w-auto';
 
 export const pdfStudyTabClassName =
   'border-border bg-card text-muted-foreground hover:bg-muted h-8 flex-none shrink-0 rounded-lg border px-2.5 text-[12px] font-medium shadow-none data-[state=active]:border-primary/30 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none';
