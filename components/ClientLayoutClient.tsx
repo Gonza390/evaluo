@@ -231,7 +231,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur">
           <div
             className={`relative flex items-center justify-between gap-3 ${
-              isDashboardHomeRoute ? 'min-h-14 py-2 sm:min-h-16 sm:py-2' : 'min-h-18 py-3 sm:min-h-20'
+              isDashboardHomeRoute ? 'min-h-14 py-1.5 sm:min-h-14 sm:py-1.5' : 'min-h-18 py-3 sm:min-h-20'
             } ${
               user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
@@ -249,7 +249,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   width={40}
                   height={40}
                   priority
-                  className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isDashboardHomeRoute ? 'sm:h-8 sm:w-8' : 'sm:h-9 sm:w-9'}`}
+                  className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isDashboardHomeRoute ? 'sm:h-7 sm:w-7' : 'sm:h-9 sm:w-9'}`}
                 />
                 <div className="min-w-0">
                   <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isDashboardHomeRoute ? 'text-[15px] sm:text-[16px]' : 'text-[1.05rem] sm:text-lg'}`}>
@@ -280,7 +280,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     onClick={() => setShowStreakDialog(true)}
                     className="inline-flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5"
                   >
-                    <Avatar className={`flex h-8 w-8 shrink-0 ${isDashboardHomeRoute ? 'sm:h-8 sm:w-8' : 'sm:h-9 sm:w-9'}`}>
+                    <Avatar className={`flex h-8 w-8 shrink-0 ${isDashboardHomeRoute ? 'sm:h-7 sm:w-7' : 'sm:h-9 sm:w-9'}`}>
                       <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -455,11 +455,15 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       ) : null}
       <div className="flex min-h-0 flex-1">
         {showSidebar ? (
-          <Navbar collapsed={sidebarCollapsed} onToggleCollapsed={handleSidebarToggle} />
+          <Navbar collapsed={sidebarCollapsed} onToggleCollapsed={handleSidebarToggle} compact={isDashboardHomeRoute} />
         ) : null}
         <div
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${
-            showSidebar ? (sidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]') : ''
+            showSidebar
+              ? isDashboardHomeRoute
+                ? sidebarCollapsed ? 'md:ml-[64px]' : 'md:ml-[216px]'
+                : sidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]'
+              : ''
           }`}
         >
           <main
