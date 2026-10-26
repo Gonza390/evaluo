@@ -670,7 +670,7 @@ assert.match(flashcardsResultSource, /onClick=\{onPracticeTopic\}/,
 assert.match(flashcardsResultSource, /Practicar este tema/,
   'La acción principal es practicar el mismo tema.');
 assert.match(flashcardsResultSource, /onClick=\{reviewDifficult\}/,
-  'Las tarjetas Mal y Aprendiendo se pueden repasar.');
+  'Las tarjetas marcadas Mal se pueden repasar; Aprendiendo es un indicador automático.');
 
 assert.match(materialWorkspaceSource, /flashcardTopicIndex !== null && topicQuestionCounts\[flashcardTopicIndex\] > 0/,
   'El desvío de Flashcards sólo puede iniciar práctica si hay preguntas de ese tema.');
