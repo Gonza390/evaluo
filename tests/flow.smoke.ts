@@ -722,4 +722,32 @@ for (const snippet of ['<details', '<summary', 'Privacidad y cuenta', 'Eliminar 
 }
 assert.equal(privacyControls.includes('Zona sensible'), false);
 
+// La escala compacta se aplica a las pantallas de estudio, no sólo al menú.
+const flashcardView = readFileSync('components/student-material-flashcards.tsx', 'utf8');
+const practiceView = readFileSync('components/student-material-exam.tsx', 'utf8');
+const diagnosticView = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
+const errorReviewView = readFileSync('components/dashboard/study-error-detail.tsx', 'utf8');
+const chapterFinishView = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
+const topicCheckView = readFileSync('components/study/summary-topic-check-popup.tsx', 'utf8');
+const summaryCompletionView = readFileSync('components/study/summary-completion-popup.tsx', 'utf8');
+const topicSupportView = readFileSync('components/study/topic-study-support.tsx', 'utf8');
+assert.ok(flashcardView.includes('data-topic-flashcards-result'));
+assert.ok(flashcardView.includes('max-w-[640px] rounded-xl border px-4 py-4'));
+assert.ok(flashcardView.includes('data-flashcard-card'));
+assert.ok(flashcardView.includes('onClick={() => setFlipped((value) => !value)}'));
+assert.ok(practiceView.includes('max-w-[1240px] px-1 py-2'));
+assert.ok(practiceView.includes('max-w-[940px] px-1 py-2'));
+assert.ok(practiceView.includes('max-w-[640px] px-2 py-3'));
+assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-semibold'));
+assert.ok(diagnosticView.includes('max-w-[940px] px-1 py-2'));
+assert.ok(pdfProgressDetail.includes('text-[20px] sm:text-[22px]'));
+assert.ok(errorReviewView.includes('text-[13.5px] leading-6 break-words'));
+assert.ok(chapterFinishView.includes('mt-3 min-h-11 w-full rounded-lg text-[13px]'));
+assert.ok(topicCheckView.includes('text-[20px] leading-6 font-bold'));
+assert.ok(summaryCompletionView.includes('text-[20px] leading-6 font-bold'));
+assert.ok(topicSupportView.includes('text-[13.5px] leading-6'));
+for (const src of [flashcardView, practiceView, diagnosticView, errorReviewView]) {
+  assert.ok(!src.includes('transform: scale('), 'Compactar componentes sin zoom CSS');
+}
+
 console.log('Flow smoke tests passed.');
