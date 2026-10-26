@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
+import { isQaAccount } from '@/lib/qa-account';
 
 type SessionCookie = { name: string; value: string; options?: CookieOptions };
 function redirectWithSessionCookies(url: string, sessionCookies: SessionCookie[]) {
@@ -80,13 +81,18 @@ export async function GET(request: Request) {
       const provider =
         String(user.app_metadata?.provider ?? user.user_metadata?.provider ?? '').trim() ||
         'google';
+      const qaAccount = isQaAccount(user);
       const deviceType = detectDeviceType(request.headers.get('user-agent') ?? '');
 
       if (analyticsSessionKey && isAdminClientConfigured()) {
         try {
           const admin = createAdminClient();
 
-          await admin.from('analytics_events').insert([
+          if (qaAccount) {
+            // El inicio de sesión QA no debe contabilizarse como adquisición real.
+            await admin.from('analytics_events').delete().eq('session_key', analyticsSessionKey);
+          } else {
+            await admin.from('analytics_events').insert([
             {
               event_name: 'auth_completed',
               user_id: user.id,
@@ -110,7 +116,8 @@ export async function GET(request: Request) {
                 ? { provider, location: 'auth_callback', destination: nextPath }
                 : { source_path: nextPath },
             },
-          ]);
+            ]);
+          }
         } catch {
           // La analítica nunca debe bloquear el callback de autenticación.
         }
@@ -121,7 +128,7 @@ export async function GET(request: Request) {
         updated_at: new Date().toISOString(),
       });
 
-      if (isNewUser && nextPath === '/dashboard') {
+      if ((isNewUser || qaAccount) && nextPath === '/dashboard') {
         const { count: materialCount, error: materialCountError } = await supabase
           .from('student_materials')
           .select('id', { count: 'exact', head: true })
