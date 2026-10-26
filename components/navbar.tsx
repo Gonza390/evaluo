@@ -31,6 +31,7 @@ import { supabase } from '@/lib/supabase-client';
 type NavbarProps = {
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  compact?: boolean;
 };
 
 type NavConfigItem = {
@@ -63,6 +64,7 @@ function NavItem({
   disabled,
   icon: Icon,
   dataTourAttr,
+  compact = false,
 }: {
   href: string;
   label: string;
@@ -71,12 +73,13 @@ function NavItem({
   disabled?: boolean;
   icon: typeof Home;
   dataTourAttr?: string;
+  compact?: boolean;
 }) {
-  const baseClass = `group flex items-center rounded-lg text-[13px] font-medium transition-colors duration-150 ${
+  const baseClass = `group flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
     active
       ? 'bg-primary/5 text-primary'
       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'gap-2.5 px-3 py-2.5'}`;
+  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
 
   if (disabled) {
     return (
@@ -104,21 +107,21 @@ function NavItem({
   );
 }
 
-export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
+export function Navbar({ collapsed, onToggleCollapsed, compact = false }: NavbarProps) {
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
   return (
     <aside
-      className={`hidden border-r border-slate-200/80 bg-white transition-[width] duration-200 md:fixed md:top-[81px] md:bottom-0 md:left-0 md:z-20 md:block ${
-        collapsed ? 'w-[76px]' : 'w-[248px]'
-      }`}
+      className={`hidden border-r border-slate-200/80 bg-white transition-[width,top] duration-200 md:fixed md:bottom-0 md:left-0 md:z-20 md:block ${
+        compact ? 'md:top-[56px]' : 'md:top-[81px]'
+      } ${collapsed ? (compact ? 'w-[64px]' : 'w-[76px]') : (compact ? 'w-[216px]' : 'w-[248px]')}`}
       onClick={collapsed ? onToggleCollapsed : undefined}
     >
       <div className="flex h-full min-h-0 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
-          <nav className="space-y-1 pt-2">
+        <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-3" : "px-3 py-4"}`}>
+          <nav className={`space-y-1 ${compact ? "pt-1" : "pt-2"}`}>
             <div
               className={`grid items-center gap-2 ${
                 collapsed ? 'grid-cols-1 justify-items-center' : 'grid-cols-[minmax(0,1fr)_40px]'
@@ -130,6 +133,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 icon={navItems[0].icon}
                 disabled={navItems[0].disabled}
                 collapsed={collapsed}
+                compact={compact}
                 active={isNavItemActive(pathname, navItems[0].href)}
               />
               {!collapsed ? (
@@ -153,6 +157,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 icon={item.icon}
                 disabled={item.disabled}
                 collapsed={collapsed}
+                compact={compact}
                 active={!item.disabled && isNavItemActive(pathname, item.href)}
                 dataTourAttr={
                   item.href === '/dashboard/explicaciones' ? 'data-recommended-errors' : undefined
@@ -172,12 +177,12 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : 'w-full gap-2.5 px-3 py-2.5'
+                      : compact ? 'w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
                   }`}
                 >
                   <Crown className="h-4 w-4 shrink-0" />
                   {!collapsed ? (
-                    <p className="text-sm font-semibold">Planes y suscripción</p>
+                    <p className={compact ? "text-[12px] font-semibold" : "text-sm font-semibold"}>Planes y suscripción</p>
                   ) : null}
                 </Link>
 
@@ -191,11 +196,11 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : 'w-full gap-2.5 px-3 py-2.5'
+                      : compact ? 'w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
                   }`}
                 >
                   <CircleHelp className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className="text-sm font-medium">Ayuda</p> : null}
+                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>Ayuda</p> : null}
                 </button>
 
                 <DropdownMenu>
@@ -203,7 +208,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                     className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                       collapsed
                         ? 'mx-auto h-11 w-11 justify-center px-0 py-0'
-                        : 'w-full gap-2.5 px-3 py-2.5'
+                        : compact ? 'w-full gap-2 px-2.5 py-2' : 'w-full gap-2.5 px-3 py-2.5'
                     }`}
                   >
                     <Avatar className="h-8 w-8">
@@ -216,7 +221,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                     </Avatar>
                     {!collapsed ? (
                       <div className="min-w-0 flex-1 overflow-hidden">
-                        <p className="truncate text-sm font-semibold text-slate-900">
+                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-sm"}`}>
                           {getUserName()}
                         </p>
                         <p className="truncate text-[11px] text-slate-400">Tu perfil</p>
