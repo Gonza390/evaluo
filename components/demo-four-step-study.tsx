@@ -154,7 +154,11 @@ export function DemoFourStepStudy({
     setActiveTab('ejercicios');
   };
 
-  const openTopicPractice = (index: number) => {
+  const openTopicPractice = (index: number | null) => {
+    if (index === null) {
+      openPractice();
+      return;
+    }
     setDemoTopicFinished(null);
     setDemoProgressTopicIndex(null);
     setDemoTopicIndex(index);
