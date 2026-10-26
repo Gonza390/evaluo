@@ -142,7 +142,7 @@ function getNextCount(current: number, target: number, dailyPeak: number) {
   return Math.max(MIN_STUDENTS, Math.min(dailyPeak, current + delta));
 }
 
-export function EstimatedStudyActivity() {
+export function EstimatedStudyActivity({ compact = false }: { compact?: boolean } = {}) {
   const [count, setCount] = useState<number | null>(null);
   const [universities, setUniversities] = useState<UniversityCount[]>([]);
   const timerRef = useRef<number | null>(null);
@@ -201,7 +201,7 @@ export function EstimatedStudyActivity() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-3.5 text-sm font-semibold text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:border-emerald-300 hover:bg-emerald-50"
+          className={`inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 font-semibold text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:border-emerald-300 hover:bg-emerald-50 ${compact ? 'h-9 px-3 text-[12px]' : 'h-10 px-3.5 text-sm'}`}
           aria-label={`${count} estudiantes estudiando`}
         >
           <span className="relative flex h-2.5 w-2.5 shrink-0">
