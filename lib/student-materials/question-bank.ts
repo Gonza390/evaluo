@@ -8,7 +8,7 @@ type QuestionBankContext = { pageCount?: number | null; topicCount: number };
 export const MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS = 6;
 
 /** No contar preguntas con opciones duplicadas o sin respaldo verificable. */
-function isReliableTopicQuestion(question: StudyQuestion) {
+export function isReliableTopicQuestion(question: StudyQuestion) {
   if (question.type !== 'multiple_choice' || !isEligibleExamQuestion(question)) return false;
   const options = question.options.map((option) =>
     normalizeAnswer(option).replace(/[^a-z0-9\s]/g, '').trim()

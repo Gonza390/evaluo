@@ -9,10 +9,14 @@ import type {
 } from '@/lib/student-materials/types';
 import {
   resolveTopicAwareQuestionBankTarget,
+  MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS,
+  isReliableTopicQuestion,
   resolveQuestionCategoryFactor,
   selectBalancedQuestionBank,
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
+import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
+import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
 
 export const PEDAGOGICAL_ARTIFACTS_VERSION = 15;
 
@@ -1593,8 +1597,8 @@ function buildOpenSectionQuestions(
 }
 
 /**
- * Reservar una pregunta corregible por capítulo siempre que un concepto
- * canónico esté presente de forma inequívoca en ese capítulo del resumen.
+ * Completar hasta seis preguntas por capítulo siempre que un concepto
+ * o relación canónica pertenezca de forma inequívoca al resumen del tema.
  *
  * La pertenencia sólo se asigna con coincidencia explícita y única del término
  * en el resumen; si el PDF no permite hacerlo con seguridad, el capítulo
@@ -1613,76 +1617,133 @@ function anchorAndCompleteChapterQuestions(
   );
   const uniqueChapterForConcept = (term: string) => {
     const normalized = normalizeForDedupe(term);
-    if (normalized.length < 7 || normalized.split(/\\s+/).length > 7) return -1;
+    if (normalized.length < 7 || normalized.split(/\s+/).length > 7) return -1;
     const matches = chapterTexts.flatMap((body, index) =>
       body.includes(` ${normalized} `) ? [index] : []
     );
     return matches.length === 1 ? matches[0] : -1;
   };
+  const normalizedTermInBody = (term: string, body: string) => {
+    const normalized = normalizeForDedupe(term);
+    return normalized.length >= 5 && body.includes(` ${normalized} `);
+  };
+  const uniqueChapterForRelation = (source: string, target: string) => {
+    const matches = chapterTexts.flatMap((body, chapterIndex) =>
+      normalizedTermInBody(source, body) && normalizedTermInBody(target, body)
+        ? [chapterIndex] : []
+    );
+    return matches.length === 1 ? matches[0]! : -1;
+  };
+  const relationshipModel = new Map(model.relationships.map((relation) =>
+    [normalizeForDedupe(`${relation.source} ↔ ${relation.target}`), relation] as const
+  ));
   const usedPrompts = new Set(questions.map((question) => normalizeForDedupe(question.prompt)));
   const anchored = questions.map((question) => {
-    if (question.kind !== 'concept' || question.type !== 'multiple_choice' || !question.topic)
-      return question;
-    const index = uniqueChapterForConcept(question.topic);
+    if (question.type !== 'multiple_choice' || !question.topic) return question;
+    let index = -1;
+    if (question.kind === 'concept') index = uniqueChapterForConcept(question.topic);
+    if (question.kind === 'relationship') {
+      const relation = relationshipModel.get(normalizeForDedupe(question.topic));
+      if (relation) index = uniqueChapterForRelation(relation.source, relation.target);
+    }
     return index < 0 ? question : { ...question, chapterTitle: chapters[index]!.title };
   });
-  const covered = new Set(
-    anchored.filter((item) => item.chapterTitle && item.type === 'multiple_choice')
-      .map((item) => item.chapterTitle)
+  // Contar sólo preguntas únicas, autocorregibles y con evidencia localizada.
+  const valid = getDistinctEligibleExamQuestions(anchored.filter(isReliableTopicQuestion));
+  const counts = chapters.map(() => 0);
+  for (const question of valid) {
+    const chapterIndex = findSummarySectionForQuestion(question, chapters);
+    if (chapterIndex >= 0) counts[chapterIndex] = (counts[chapterIndex] ?? 0) + 1;
+  }
+  const usedAnswers = new Set(valid.map((item) => normalizeForDedupe(item.answer)));
+  const usedConcepts = new Set(
+    anchored.filter((item) => item.kind === 'concept' && item.type === 'multiple_choice')
+      .map((item) => normalizeForDedupe(item.topic ?? ''))
   );
+  const usedRelationships = new Set(
+    anchored.filter((item) => item.kind === 'relationship' && item.type === 'multiple_choice')
+      .map((item) => normalizeForDedupe(item.topic ?? ''))
+  );
+  const relationshipPool = counts.some((count) => count < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS)
+    ? buildCanonicalRelationshipQuestions(model, chunks, Math.min(120, model.relationships.length))
+    : [];
+
 
   for (let index = 0; index < chapters.length; index += 1) {
+    if (counts[index]! >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) continue;
     const chapter = chapters[index]!;
-    if (covered.has(chapter.title)) continue;
+    const tryAdd = (candidate: StudyQuestion) => {
+      if (counts[index]! >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) return false;
+      const key = normalizeForDedupe(candidate.prompt);
+      if (usedPrompts.has(key) || usedAnswers.has(normalizeForDedupe(candidate.answer)) ||
+          !isReliableTopicQuestion(candidate)) return false;
+      usedPrompts.add(key);
+      usedAnswers.add(normalizeForDedupe(candidate.answer));
+      anchored.push(candidate);
+      counts[index] = (counts[index] ?? 0) + 1;
+      if (candidate.kind === 'concept') usedConcepts.add(normalizeForDedupe(candidate.topic ?? ''));
+      if (candidate.kind === 'relationship') usedRelationships.add(normalizeForDedupe(candidate.topic ?? ''));
+      return true;
+    };
+    const addRelationships = (limit: number) => {
+      let added = 0;
+      for (const [candidateIndex, question] of relationshipPool.entries()) {
+        if (counts[index]! >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS || added >= limit) break;
+        const relation = relationshipModel.get(normalizeForDedupe(question.topic ?? ''));
+        if (!relation || uniqueChapterForRelation(relation.source, relation.target) !== index) continue;
+        if (usedRelationships.has(normalizeForDedupe(question.topic ?? ''))) continue;
+        if (tryAdd({
+          ...question,
+          id: `chapter-relationship-${index + 1}-${candidateIndex + 1}`,
+          chapterTitle: chapter.title,
+        })) added += 1;
+      }
+    };
+    // Dar cabida a relaciones antes de completar el resto con definiciones.
+    addRelationships(2);
     const candidates = model.concepts.filter((concept) =>
       cleanLine(concept.term).length >= 7 &&
       cleanLine(concept.detail).length >= 30 &&
       (concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) &&
       uniqueChapterForConcept(concept.term) === index
     );
-
-    for (const concept of candidates) {
+    for (const [candidateIndex, concept] of candidates.entries()) {
+      if (counts[index]! >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) break;
+      const conceptKey = normalizeForDedupe(concept.term);
+      if (usedConcepts.has(conceptKey)) continue;
       const correct = truncateAtWord(concept.detail, 210);
       const distractors = rankSemanticItems(
-        `${concept.term} ${concept.detail}`,
-        concept.pageReferences,
-        model.concepts.filter((item) => item !== concept),
+        `${concept.term} ${concept.detail}`, concept.pageReferences,
+        model.concepts.filter((item) =>
+          item !== concept && normalizeForDedupe(item.detail) !== normalizeForDedupe(concept.detail)
+        ),
         (item) => `${item.term} ${item.detail}`,
         (item) => item.pageReferences,
-        3
+        5
       ).map((item) => truncateAtWord(item.detail, 210));
-      const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
-      if (options.length < 3) continue;
+      const options = placeCorrectOption(correct, distractors, candidateIndex % 4).slice(0, 4);
       const prompts = [
-        `¿Cuál de las opciones define mejor “${concept.term}”?`,
-        `¿Cómo se define “${concept.term}”?`,
-        `¿Qué característica describe “${concept.term}”?`,
+        `¿Qué significa “${concept.term}”?`,
+        `¿Cuál de estas opciones define “${concept.term}”?`,
+        `¿Qué característica define “${concept.term}”?`,
+        `¿Cómo se describe “${concept.term}”?`,
       ];
-      const prompt = prompts[index % prompts.length]!;
-      if (usedPrompts.has(normalizeForDedupe(prompt))) continue;
-
-      // También la pregunta de cobertura hereda una referencia verificable.
-      const reference = referenceFromPages(
-        concept.pageReferences, concept.term, concept.detail, chunks
-      );
-      if (reference.pageStart === null) continue;
-      anchored.push({
-        id: `chapter-concept-${index + 1}`,
+      const prompt = prompts[candidateIndex % prompts.length]!;
+      const reference = referenceFromPages(concept.pageReferences, concept.term, concept.detail, chunks);
+      tryAdd({
+        id: `chapter-concept-${index + 1}-${candidateIndex + 1}`,
         type: 'multiple_choice',
         level: 'recordar',
         kind: 'concept',
         topic: concept.term,
         chapterTitle: chapter.title,
-        prompt,
-        options,
-        answer: correct,
-        explanation: `Según el PDF, “${concept.term}” significa: ${correct}. Las demás opciones describen otros conceptos del material.`,
+        prompt, options, answer: correct,
+        explanation: `“${concept.term}” se define como: ${correct}. Las otras opciones describen conceptos diferentes.`,
         reference,
       });
-      usedPrompts.add(normalizeForDedupe(prompt));
-      covered.add(chapter.title);
-      break;
     }
+    // Si el capítulo dispone de otras relaciones independientes, usarlas.
+    addRelationships(MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS);
   }
   return anchored;
 }
