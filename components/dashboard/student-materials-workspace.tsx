@@ -76,10 +76,11 @@ export function StudentMaterialsWorkspace({
 
   return (
     <>
-      <section className="rounded-[1.6rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.05)] sm:p-5">
+      <section className="rounded-[1.25rem] border border-slate-200/80 bg-white p-3.5 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-4">
         <AppPageHeader
           as="h2"
           size="compact"
+          className="gap-3 pb-3 sm:pb-3 [&_h2]:text-[19px] sm:[&_h2]:text-[20px] [&_h2]:tracking-[-0.04em]"
           eyebrow="Tu estudio"
           title="Tus PDFs"
           description={
@@ -88,14 +89,14 @@ export function StudentMaterialsWorkspace({
               : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
           }
           actions={
-            <Button type="button" size="sm" variant="outline">
+            <Button type="button" size="sm" variant="outline" className="min-h-10 rounded-lg px-3 text-[12.5px]">
               <Upload className="h-4 w-4" />
               Subí tu PDF
             </Button>
           }
         />
 
-        <div className="mt-4 space-y-2.5">
+        <div className="mt-3 space-y-2">
           {initialMaterials.length === 0 ? (
             <StudyStatePanel
               icon={FileText}
@@ -116,16 +117,16 @@ export function StudentMaterialsWorkspace({
                 <article
                   key={material.id}
                   onClick={() => router.push(getStudentMaterialRoute(material.id))}
-                  className="flex cursor-pointer flex-col gap-3 rounded-[1.25rem] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3.5 py-3.5 transition hover:border-slate-300 hover:shadow-[0_10px_28px_rgba(15,23,42,0.06)] sm:px-4"
+                  className="flex cursor-pointer flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
                 >
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-slate-950">
+                        <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
                           {material.title}
                         </h3>
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold ${
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                             isShared
                               ? 'bg-emerald-50 text-emerald-700'
                               : 'bg-white text-slate-600'
@@ -139,28 +140,28 @@ export function StudentMaterialsWorkspace({
                           {isShared ? 'Compartido' : 'Privado'}
                         </span>
                         {isFailed ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[12px] font-semibold text-red-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
                             <CircleAlert className="h-3.5 w-3.5" />
                             Necesita revisión
                           </span>
                         ) : material.processing_status !== 'ready' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             Procesando
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1.5 text-[13px] break-all text-slate-500">
+                      <p className="mt-1 text-[12px] break-all text-slate-500">
                         {material.file_name}
                       </p>
-                      <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1.5 text-[12px] font-medium text-slate-500">
+                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
                         <span>{formatDate(material.created_at)}</span>
                         {material.page_count ? <span>{material.page_count} páginas</span> : null}
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Button asChild size="sm" onClick={(event) => event.stopPropagation()}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button asChild size="sm" className="min-h-10 rounded-lg px-3 text-[12.5px]" onClick={(event) => event.stopPropagation()}>
                         <Link href={getStudentMaterialRoute(material.id)}>
                           <Eye className="h-4 w-4" />
                           {material.processing_status === 'ready'
@@ -174,7 +175,7 @@ export function StudentMaterialsWorkspace({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        className="min-h-10 min-w-10 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
                         onClick={(event) => {
                           event.stopPropagation();
                           setMaterialToDelete(material);
