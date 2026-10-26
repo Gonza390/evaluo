@@ -69,17 +69,17 @@ export function ExplanationsHistoryClient({
   };
 
   return (
-    <div className="animate-page-enter min-h-screen bg-gradient-to-br from-background/95 via-white/80 to-indigo-50/20 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="animate-page-enter min-h-screen bg-gradient-to-br from-background/95 via-white/80 to-indigo-50/20 px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+      <div className="mx-auto w-full max-w-[1240px]">
         <div className="mb-5">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
             Premium
           </div>
-          <h1 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+          <h1 className="mt-2 text-[20px] leading-[1.3] font-bold tracking-[-0.04em] text-slate-950 sm:text-[22px]">
             Historial de explicaciones
           </h1>
-          <p className="mt-1.5 text-sm text-slate-500">
+          <p className="mt-1 text-[13px] leading-5 text-slate-500">
             Volvé a revisar las explicaciones de tus errores para fijar cada concepto.
           </p>
         </div>
@@ -91,13 +91,13 @@ export function ExplanationsHistoryClient({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar por materia o contenido..."
-              className="h-11 rounded-xl border-slate-200 bg-white pl-10 text-sm"
+              className="h-10 rounded-lg border-slate-200 bg-white pl-10 text-[13px]"
             />
           </div>
         </div>
 
         {groups.length === 0 ? (
-          <div className="surface-panel flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
+          <div className="surface-panel flex flex-col items-center justify-center gap-2 px-4 py-9 text-center">
             <Sparkles className="h-10 w-10 text-slate-300" />
             <h3 className="text-lg font-semibold text-slate-900">
               {initialHistory.length === 0
@@ -111,11 +111,11 @@ export function ExplanationsHistoryClient({
             </p>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3">
             {groups.map(([materiaNombre, items]) => (
               <section
                 key={materiaNombre}
-                className="surface-panel overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90"
+                className="surface-panel overflow-hidden rounded-xl border border-slate-200/80 bg-white/90"
               >
                 <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                   <div className="flex items-center gap-2">
