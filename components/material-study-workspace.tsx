@@ -2133,6 +2133,11 @@ export function MaterialStudyWorkspace({
               allowedCardIndices={flashcardTopicIndices}
               topicTitle={flashcardTopicIndex === null ? undefined : summaryChapters[flashcardTopicIndex]?.displayTitle}
               onReturnToTopic={flashcardTopicIndex === null ? undefined : () => returnToSummaryTopic(flashcardTopicIndex)}
+              onPracticeTopic={
+                flashcardTopicIndex !== null && topicQuestionCounts[flashcardTopicIndex] > 0
+                  ? () => startChapterEvaluation(flashcardTopicIndex)
+                  : undefined
+              }
               materialId={materialId}
               onComplete={demo || flashcardTopicIndex !== null ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}
