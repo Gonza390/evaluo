@@ -2004,7 +2004,7 @@ export function MaterialStudyWorkspace({
               >
                 {summaryIntroExpanded ? 'Ver menos' : 'Leer introducción completa'}
               </button>
-            ) : null
+            ) : null}
 
             {diagnosticReviewTopics.length > 0 ? (
               <div className="border-primary mt-3 border-l-2 pl-3">
