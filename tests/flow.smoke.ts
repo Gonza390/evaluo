@@ -684,4 +684,23 @@ assert.match(accountSettings, /confirmation\.trim\(\)\.toUpperCase\(\) !== 'ELIM
 assert.match(accountSettings, /role="alert"/);
 assert.doesNotMatch(accountSettings, /Zona sensible/);
 
+// Estudio de un tema: el detalle prioriza el contenido y el aprendizaje,
+// sin volver a mostrar el índice lateral de todos los temas.
+const topicProgressPanel = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+assert.doesNotMatch(topicProgressPanel, /Navegación entre temas del PDF/);
+assert.doesNotMatch(topicProgressPanel, /Temas del PDF/);
+assert.match(topicProgressPanel, /Aprendizaje y próxima actividad del tema/);
+assert.match(topicProgressPanel, /xl:grid-cols-\[minmax\(0,1fr\)_260px\]/);
+
+// El índice de Resumen sigue el capítulo visible durante el scroll interno.
+const studyWorkspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
+assert.match(studyWorkspace, /activeSummaryChapterIndex/);
+assert.match(studyWorkspace, /data-summary-reading-section/);
+assert.match(studyWorkspace, /addEventListener\('scroll', scheduleUpdate/);
+assert.match(studyWorkspace, /aria-current=\{activeSummaryChapterIndex === index \? 'location' : undefined\}/);
+
+// Compartir continúa disponible fuera de Progreso, pero no invade esta vista.
+const studyStyles = readFileSync('app/globals.css', 'utf8');
+assert.match(studyStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
+
 console.log('Flow smoke tests passed.');
