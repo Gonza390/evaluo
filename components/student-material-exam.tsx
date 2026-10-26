@@ -434,7 +434,7 @@ export function StudentMaterialExam({
 
   if (!started && topicSectionIndex !== undefined) {
     return (
-      <div className="mx-auto max-w-4xl space-y-5 px-1 py-4 sm:px-2">
+      <div className="mx-auto w-full max-w-[940px] space-y-3 px-1 py-2 sm:px-2">
         {onReturnToTopic && (
           <button
             type="button"
@@ -476,7 +476,7 @@ export function StudentMaterialExam({
 
   if (!started) {
     return (
-      <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+      <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
         {topicSectionIndex !== undefined && onReturnToTopic && (
           <button
             type="button"
@@ -715,25 +715,25 @@ export function StudentMaterialExam({
       };
 
       return (
-        <div ref={finalResultRef} className="mx-auto w-full max-w-xl px-2 py-5 sm:px-4 sm:py-9">
-          <div className="border-border bg-card rounded-2xl border px-5 py-7 sm:px-9 sm:py-10">
+        <div ref={finalResultRef} className="mx-auto w-full max-w-[640px] px-2 py-3 sm:px-3 sm:py-4">
+          <div className="border-border bg-card rounded-xl border px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-col items-center text-center">
               <p className="text-primary text-[11px] font-bold tracking-[0.13em] uppercase">
                 Práctica finalizada{topicTitle ? ` · ${topicTitle}` : ''}
               </p>
               <h2
-                className="text-foreground mt-5 text-5xl font-bold tracking-[-0.06em] sm:text-6xl"
+                className="text-foreground mt-3 text-[30px] font-bold tracking-[-0.06em] sm:text-[34px]"
                 aria-label={`Resultado: ${result.correct} de ${result.total}`}
               >
                 {result.correct} de {result.total}
               </h2>
             </div>
 
-            <div className="border-border mt-7 border-t pt-7 text-center">
-              <h3 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
+            <div className="border-border mt-4 border-t pt-4 text-center">
+              <h3 className="text-foreground text-[19px] leading-[1.3] font-bold tracking-tight sm:text-[20px]">
                 {hasErrors ? 'Detectamos qué necesitás reforzar' : '¡Excelente! Respondiste todo correctamente'}
               </h3>
-              <p className="text-muted-foreground mx-auto mt-3 max-w-md text-sm leading-6">
+              <p className="text-muted-foreground mx-auto mt-2 max-w-md text-[13px] leading-5">
                 {hasErrors
                   ? result.wrong.length === 1
                     ? 'Encontramos una dificultad en tus respuestas. Vamos a trabajarla para comprobar si la superaste.'
@@ -742,10 +742,10 @@ export function StudentMaterialExam({
               </p>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3">
+            <div className="mt-4 flex flex-col gap-2">
               <Button
                 type="button"
-                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+                className="min-h-11 w-full rounded-lg text-[13px] font-semibold"
                 onClick={() => handleResultAction(primaryAction)}
               >
                 {actionLabel[primaryAction]} <ArrowRight className="ml-1 h-4 w-4" />
@@ -753,7 +753,7 @@ export function StudentMaterialExam({
               <Button
                 type="button"
                 variant="outline"
-                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+                className="min-h-11 w-full rounded-lg text-[13px] font-semibold"
                 onClick={() => handleResultAction(secondaryAction)}
               >
                 {secondaryAction === 'retry' ? <RotateCcw className="mr-1 h-4 w-4" /> : null}
@@ -815,13 +815,13 @@ export function StudentMaterialExam({
           : openAssessments[question.id] === 'got_it';
 
       return (
-        <div ref={finalResultRef} className="@container/practice-result mx-auto w-full max-w-[1440px] px-1 py-2 sm:px-3 sm:py-4">
+        <div ref={finalResultRef} className="@container/practice-result mx-auto w-full max-w-[1240px] px-1 py-2 sm:px-2 sm:py-3">
           <div className="grid min-w-0 grid-cols-1 gap-3 @min-[660px]/practice-result:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] @min-[1040px]/practice-result:grid-cols-[minmax(165px,0.7fr)_minmax(0,1.2fr)_minmax(290px,1fr)] @min-[1040px]/practice-result:gap-4">
-          <header className="border-border bg-card flex min-w-0 flex-col items-center justify-center rounded-2xl border px-4 py-5 text-center @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto @min-[1040px]/practice-result:min-h-[260px]">
+          <header className="border-border bg-card flex min-w-0 flex-col items-center justify-center rounded-xl border px-3 py-4 text-center @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto @min-[1040px]/practice-result:min-h-[210px]">
             <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
               Práctica terminada
             </p>
-            <h2 className="text-foreground mt-4 text-5xl font-bold tracking-[-0.07em] sm:text-6xl">
+            <h2 className="text-foreground mt-3 text-[30px] font-bold tracking-[-0.07em] sm:text-[34px]">
               {result.correct} <span className="text-muted-foreground/45">/ {result.total}</span>
             </h2>
             <p className="text-muted-foreground mt-2 text-sm">
@@ -829,7 +829,7 @@ export function StudentMaterialExam({
             </p>
           </header>
 
-          <section className="border-border bg-card min-w-0 rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto">
+          <section className="border-border bg-card min-w-0 rounded-xl border p-3.5 sm:p-4 @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto">
             <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="text-foreground text-sm font-semibold">Así te fue por tema</h3>
               <span className="text-muted-foreground text-xs">
@@ -898,7 +898,7 @@ export function StudentMaterialExam({
             </Link>
           </section>
 
-          <div className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-2 @min-[660px]/practice-result:row-span-2 @min-[660px]/practice-result:row-start-1 @min-[1040px]/practice-result:col-start-3 @min-[1040px]/practice-result:row-span-1">
+          <div className="border-border bg-card flex min-w-0 flex-col rounded-xl border p-3.5 sm:p-4 @min-[660px]/practice-result:col-start-2 @min-[660px]/practice-result:row-span-2 @min-[660px]/practice-result:row-start-1 @min-[1040px]/practice-result:col-start-3 @min-[1040px]/practice-result:row-span-1">
           <section aria-live="polite">
             <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
               Tu próximo paso
@@ -909,7 +909,7 @@ export function StudentMaterialExam({
               </p>
             ) : objectiveStatus === 'saved' && nextObjective ? (
               <>
-                <h3 className="text-foreground mt-2 text-xl font-semibold tracking-tight">
+                <h3 className="text-foreground mt-2 text-[18px] leading-[1.35] font-semibold tracking-tight">
                   {nextStepTitle}
                 </h3>
                 <p className="text-muted-foreground mt-2 text-sm">
@@ -944,7 +944,7 @@ export function StudentMaterialExam({
                     metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'study_errors' },
                   });
                 }}
-                className="bg-primary text-primary-foreground inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+                className="bg-primary text-primary-foreground inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-semibold transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
               >
                 Continuar ahora <ArrowRight className="h-4 w-4" />
               </Link>
@@ -968,7 +968,7 @@ export function StudentMaterialExam({
                     resetExam();
                   }
                 }}
-                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+                className="min-h-11 w-full rounded-lg text-[13px] font-semibold"
               >
                 Continuar ahora <ArrowRight className="h-4 w-4" />
               </Button>
@@ -978,7 +978,7 @@ export function StudentMaterialExam({
               variant="outline"
               disabled={objectiveStatus !== 'saved' || tomorrowStatus === 'saving'}
               onClick={() => void continueTomorrow()}
-              className="min-h-12 w-full rounded-xl text-sm font-semibold"
+              className="min-h-11 w-full rounded-lg text-[13px] font-semibold"
             >
               {tomorrowStatus === 'saving' ? 'Guardando para mañana…' : 'Continuar mañana'}
             </Button>
@@ -994,7 +994,7 @@ export function StudentMaterialExam({
 
           </div>
           </div>
-          <details className="group border-border bg-card mt-3 rounded-2xl border px-4 py-1 sm:px-5">
+          <details className="group border-border bg-card mt-3 rounded-xl border px-3 py-1 sm:px-4">
             <summary className="text-muted-foreground hover:text-foreground flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold">
               Ver todos los detalles
               <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
@@ -1131,7 +1131,7 @@ export function StudentMaterialExam({
     }
 
     return (
-      <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+      <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
         <header className="border-border border-b pb-6">
           <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
             Práctica completada{topicTitle ? ` · ${topicTitle}` : ''}
@@ -1492,8 +1492,8 @@ export function StudentMaterialExam({
           />
         </div>
 
-        <article className="border-border border-t pt-6">
-          <h2 className="text-foreground text-[16px] leading-6 font-bold tracking-[-0.035em] sm:text-[18px]">
+        <article className="border-border border-t pt-4">
+          <h2 className="text-foreground text-[16px] leading-6 font-bold tracking-[-0.035em] sm:text-[16px]">
             {current.prompt}
           </h2>
 
@@ -1514,7 +1514,7 @@ export function StudentMaterialExam({
                       setSelectedAnswers((answers) => ({ ...answers, [current.id]: option }))
                     }
                     className={cn(
-                      'flex min-h-11 w-full items-start gap-3 rounded-lg border px-3.5 py-3 text-left transition sm:px-4',
+                      'flex min-h-11 w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition sm:px-3.5',
                       !isRevealed && selected && 'border-primary bg-primary/5',
                       !isRevealed &&
                         !selected &&
@@ -1542,7 +1542,7 @@ export function StudentMaterialExam({
                         String.fromCharCode(65 + index)
                       )}
                     </span>
-                    <span className="text-foreground pt-0.5 text-[13.5px] leading-5 sm:text-sm sm:leading-6">
+                    <span className="text-foreground pt-0.5 text-[13px] leading-5 sm:text-[13.5px] sm:leading-5">
                       {option}
                     </span>
                   </button>
@@ -1562,7 +1562,7 @@ export function StudentMaterialExam({
           )}
 
           {isRevealed ? (
-            <div className="border-border mt-5 space-y-4 border-t pt-5">
+            <div className="border-border mt-4 space-y-3 border-t pt-4">
               <section
                 ref={correctionRef}
                 className={cn(
@@ -1610,7 +1610,7 @@ export function StudentMaterialExam({
                         setOpenAssessments((items) => ({ ...items, [current.id]: 'got_it' }))
                       }
                       className={cn(
-                        'min-h-10 rounded-lg border px-3 py-2 text-sm font-semibold transition',
+                        'min-h-11 rounded-lg border px-3 py-2 text-[13px] font-semibold transition',
                         openAssessment === 'got_it'
                           ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
                           : 'border-border bg-card text-foreground hover:border-emerald-300'
@@ -1624,7 +1624,7 @@ export function StudentMaterialExam({
                         setOpenAssessments((items) => ({ ...items, [current.id]: 'review' }))
                       }
                       className={cn(
-                        'min-h-10 rounded-lg border px-3 py-2 text-sm font-semibold transition',
+                        'min-h-11 rounded-lg border px-3 py-2 text-[13px] font-semibold transition',
                         openAssessment === 'review'
                           ? 'border-amber-400 bg-amber-50 text-amber-800'
                           : 'border-border bg-card text-foreground hover:border-amber-300'
