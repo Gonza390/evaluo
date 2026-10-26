@@ -76,12 +76,16 @@ export function StudentMaterialFlashcards({
   onComplete,
   demoMode = false,
   allowedCardIndices,
+  topicTitle,
+  onReturnToTopic,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
   onComplete?: () => void;
   demoMode?: boolean;
   allowedCardIndices?: number[];
+  topicTitle?: string;
+  onReturnToTopic?: () => void;
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
   // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
@@ -413,6 +417,63 @@ export function StudentMaterialFlashcards({
         <Button type="button" onClick={startSession} className="mt-5 rounded-2xl px-6">
           Comenzar repaso
         </Button>
+      </div>
+    );
+  }
+
+  if (allReviewed && allowedCardIndices !== undefined) {
+    return (
+      <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-2xl rounded-2xl border px-5 py-6 text-center sm:px-8 sm:py-8">
+        <div className="bg-emerald-50 mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-emerald-600">
+          <Check className="h-6 w-6" />
+        </div>
+        {topicTitle ? <p className="text-muted-foreground mt-4 text-xs font-semibold">{topicTitle}</p> : null}
+        <h3 className="text-foreground mt-2 text-xl font-bold tracking-tight">
+          {unknownCount === 0 ? '¡Recordaste todas las tarjetas de este tema!' : '¡Terminaste las flashcards!'}
+        </h3>
+        <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-6">
+          {unknownCount === 0
+            ? 'Completaste este repaso. Podés volver al tema y seguir estudiando.'
+            : 'Ya identificaste qué recordás de este tema y qué necesitás practicar un poco más.'}
+        </p>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <div className="bg-muted/50 rounded-xl px-3 py-4">
+            <p className="text-2xl font-bold tabular-nums text-emerald-600">{knownCount}</p>
+            <p className="text-muted-foreground mt-1 text-xs">Lo sabía</p>
+          </div>
+          <div className="bg-muted/50 rounded-xl px-3 py-4">
+            <p className="text-foreground text-2xl font-bold tabular-nums">{unknownCount}</p>
+            <p className="text-muted-foreground mt-1 text-xs">No lo sabía</p>
+          </div>
+        </div>
+        {unknownCount > 0 ? (
+          <div className="mt-6 text-left">
+            <h4 className="text-foreground text-base font-bold">Fortalecé lo que aprendiste</h4>
+            <p className="text-muted-foreground mt-2 text-sm leading-6">
+              Tenés {unknownCount} {unknownCount === 1 ? 'tarjeta pendiente' : 'tarjetas pendientes'} para volver a practicar.
+              Repasalas ahora y comprobá cuánto mejoraste.
+            </p>
+          </div>
+        ) : null}
+        <Button
+          type="button"
+          data-topic-flashcards-primary
+          onClick={unknownCount > 0 ? reviewDifficult : onReturnToTopic ?? finishSession}
+          className="mt-5 min-h-11 w-full rounded-xl"
+        >
+          {unknownCount > 0 ? 'Repasar lo que me costó' : 'Continuar estudiando'}
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+        {onReturnToTopic ? (
+          <Button type="button" variant="ghost" onClick={onReturnToTopic} className="mt-2 min-h-10">
+            Volver al tema
+          </Button>
+        ) : null}
+        {!demoMode && progressSyncError ? (
+          <p role="status" className="mt-3 text-xs text-amber-700">
+            El progreso sigue guardado en este navegador, pero aún no pudimos sincronizarlo.
+          </p>
+        ) : null}
       </div>
     );
   }
