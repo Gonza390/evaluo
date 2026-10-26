@@ -672,4 +672,22 @@ for (const count of [7, 31]) {
   assert.equal(new Set(selected.map((item) => item.id)).size, selected.length, 'Sin repetidos.');
 }
 
+// El detalle de Progreso concentra el estudio sin duplicar la lista lateral.
+// Conservar la rama de refuerzo y el panel derecho mientras se elimina el índice.
+const pdfProgressDetail = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+assert.doesNotMatch(pdfProgressDetail, /Navegación entre temas del PDF|Temas del PDF/);
+assert.match(pdfProgressDetail, /xl:grid-cols-\[minmax\(0,1fr\)_260px\]/);
+assert.match(pdfProgressDetail, /data-reinforcement-focus=\{reviewOpen/);
+assert.match(pdfProgressDetail, /Aprendizaje y próxima actividad del tema/);
+assert.match(pdfProgressDetail, /Volver a los temas/);
+
+// Las mejoras posteriores de main no se reemplazan por versiones de master:
+// índice del resumen con seguimiento del scroll y compartir oculto en Progreso.
+const pdfStudyWorkspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
+assert.match(pdfStudyWorkspace, /region\.addEventListener\('scroll', scheduleSync/);
+assert.match(pdfStudyWorkspace, /aria-current=\{activeSummaryChapterIndex === index \? 'location' : undefined\}/);
+assert.match(pdfStudyWorkspace, /data-active-chapter=\{activeSummaryChapterIndex === index/);
+const appStyles = readFileSync('app/globals.css', 'utf8');
+assert.match(appStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
+
 console.log('Flow smoke tests passed.');
