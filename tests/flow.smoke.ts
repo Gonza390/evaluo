@@ -12,7 +12,7 @@ import {
   publicReviewQuestion,
   isCompleteReviewHelp,
 } from '../lib/study-error-review-contract.ts';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   MAX_TOPIC_PRACTICE_QUESTIONS,
   topicPracticeQuestionCount,
@@ -689,5 +689,25 @@ assert.match(pdfStudyWorkspace, /aria-current=\{activeSummaryChapterIndex === in
 assert.match(pdfStudyWorkspace, /data-active-chapter=\{activeSummaryChapterIndex === index/);
 const appStyles = readFileSync('app/globals.css', 'utf8');
 assert.match(appStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
+
+
+// Portabilidad master → main: la imagen de vista previa real desplaza al OG anterior.
+const homepageShareMeta = readFileSync('app/page.tsx', 'utf8');
+const layoutShareMeta = readFileSync('app/layout.tsx', 'utf8');
+assert.ok(homepageShareMeta.includes('/evaluo-whatsapp-progreso.png'));
+assert.ok(layoutShareMeta.includes('/evaluo-whatsapp-progreso.png'));
+assert.ok(homepageShareMeta.includes('No estudies todo por igual'));
+assert.equal(existsSync('app/opengraph-image.tsx'), false);
+const shareImage = readFileSync('public/evaluo-whatsapp-progreso.png');
+assert.equal(shareImage.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+assert.equal(shareImage.readUInt32BE(16), 1200);
+assert.equal(shareImage.readUInt32BE(20), 630);
+
+// El desplegable conserva las salvaguardas de eliminación y el flujo de Mercado Pago.
+const privacyControls = readFileSync('components/settings/delete-account-section.tsx', 'utf8');
+for (const snippet of ['<details', '<summary', 'Privacidad y cuenta', 'Eliminar mi cuenta', 'Ver detalles', "fetch('/api/account/delete'", "confirmation.trim().toUpperCase() !== 'ELIMINAR'", 'role="alert"', 'subscription_provider_error', 'storage_cleanup_failed']) {
+  assert.ok(privacyControls.includes(snippet), 'Falta protección o navegación de privacidad: ' + snippet);
+}
+assert.equal(privacyControls.includes('Zona sensible'), false);
 
 console.log('Flow smoke tests passed.');
