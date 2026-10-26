@@ -77,6 +77,11 @@ function dedupeQuestions(items: StudyQuestion[]) {
   });
 }
 
+function finishSentence(text: string) {
+  const value = cleanLine(text);
+  return /[.!?…]$/u.test(value) ? value : `${value}.`;
+}
+
 function truncateAtWord(text: string, limit: number) {
   const cleaned = cleanLine(text);
   if (cleaned.length <= limit) return cleaned;
@@ -1079,8 +1084,8 @@ function buildFallbackMultipleChoice(
         answer: correctAnswer,
         explanation:
           level === 'recordar'
-            ? `“${concept.term}” se refiere a: ${correctAnswer}.`
-            : `“${concept.term}” se caracteriza por: ${correctAnswer}.`,
+            ? `“${concept.term}” se refiere a: ${finishSentence(correctAnswer)}`
+            : `“${concept.term}” se caracteriza por: ${finishSentence(correctAnswer)}`,
         reference: findReference(
           concept.term,
           chunks,
@@ -1110,9 +1115,9 @@ function buildConceptFeedback(
     !hasSourceContradictedCausalDirection(relation, chunks)
   );
   if (related) {
-    return `“${term}” significa: ${definition}. También se relaciona con “${related.target}”: ${truncateAtWord(related.description, 190)}.`;
+    return `“${term}” significa: ${finishSentence(definition)} También se relaciona con “${related.target}”: ${finishSentence(truncateAtWord(related.description, 190))}`;
   }
-  return `“${term}” se caracteriza por: ${definition}.`;
+  return `“${term}” se caracteriza por: ${finishSentence(definition)}`;
 }
 function buildCanonicalConceptQuestions(
   model: CanonicalPedagogicalModel,
@@ -1218,7 +1223,7 @@ function buildCanonicalRelationshipQuestions(
                 : `¿Cuál es el vínculo entre “${item.source}” y “${item.target}”?`,
         options,
         answer: correct,
-        explanation: `Entre “${item.source}” y “${item.target}” se da esta relación: ${correct}.`,
+        explanation: `Entre “${item.source}” y “${item.target}” se da esta relación: ${finishSentence(correct)}`,
         reference: referenceFromPages(
           item.pageReferences,
           `${item.source} ${item.target}`,
@@ -1313,7 +1318,7 @@ function buildCanonicalClassificationQuestions(
           : `En el tema “${classification.title}”, ¿qué nombre recibe la categoría caracterizada por “${truncateAtWord(caseText, 130)}”?`,
         options,
         answer: correct.label,
-        explanation: `“${correct.label}” se identifica por esta característica: ${truncateAtWord(correct.detail, 190)}.`,
+        explanation: `“${correct.label}” se identifica por esta característica: ${finishSentence(truncateAtWord(correct.detail, 190))}`,
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -1380,7 +1385,7 @@ function buildCanonicalProcessQuestions(
         prompt: prompts[index % prompts.length]!,
         options,
         answer: process.title,
-        explanation: `Es “${process.title}” porque las etapas siguen este orden: ${truncateAtWord(process.steps.join(' → '), 260)}.`,
+        explanation: `Es “${process.title}” porque las etapas siguen este orden: ${finishSentence(truncateAtWord(process.steps.join(' → '), 260))}`,
         reference: referenceFromPages(
           process.pageReferences,
           process.title,
@@ -1449,7 +1454,7 @@ function buildCanonicalFormulaQuestions(
         prompt: `¿A qué expresión o magnitud corresponde esta descripción: “${truncateAtWord(formula.description, 170)}”?`,
         options,
         answer: formula.expression,
-        explanation: `La expresión “${formula.expression}” corresponde a esta descripción: ${truncateAtWord(formula.description, 190)}.`,
+        explanation: `La expresión “${formula.expression}” corresponde a esta descripción: ${finishSentence(truncateAtWord(formula.description, 190))}`,
         reference: referenceFromPages(
           formula.pageReferences,
           formula.expression,
