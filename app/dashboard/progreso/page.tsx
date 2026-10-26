@@ -40,17 +40,17 @@ export default async function PdfProgressPage({
   if (materialId && !material) notFound();
   if (!material)
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="text-3xl font-semibold">Tu progreso</h1>
-        <p className="text-muted-foreground mt-3">
+      <div className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+        <h1 className="text-[20px] font-bold leading-[1.3] tracking-[-0.04em] sm:text-[22px]">Tu progreso</h1>
+        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
           Elegí un PDF para ver sus temas y los errores que registraste.
         </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {materials?.map((item) => (
             <Link
               key={item.id}
               href={`/dashboard/progreso?material=${item.id}`}
-              className="border-border bg-card hover:border-primary focus-visible:outline-ring flex min-w-0 items-center gap-4 rounded-2xl border p-5 transition focus-visible:outline-2"
+              className="border-border bg-card hover:border-primary focus-visible:outline-ring flex min-w-0 items-center gap-3 rounded-xl border p-3.5 text-[13px] transition focus-visible:outline-2"
             >
               <FileText className="text-primary shrink-0" size={22} />
               <span className="min-w-0 flex-1 font-medium break-words">{item.title}</span>
@@ -59,7 +59,7 @@ export default async function PdfProgressPage({
           ))}
         </div>
         {!materials?.length && (
-          <div className="border-border mt-8 rounded-2xl border p-6">
+          <div className="border-border mt-4 rounded-xl border p-4 text-[13px]">
             <p>Todavía no tenés PDFs procesados.</p>
             <Link
               href="/dashboard/materiales?openUpload=1"
