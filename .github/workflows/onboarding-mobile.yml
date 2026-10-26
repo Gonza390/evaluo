@@ -1,7 +1,13 @@
 name: Onboarding mobile visual QA
 on:
   push:
-    branches: [master, "codex/**"]
+    branches: [main]
+    paths:
+      - 'components/study/**'
+      - 'components/material-study-workspace.tsx'
+      - 'app/globals.css'
+      - 'scripts/audit-onboarding-mobile.mjs'
+      - '.github/workflows/onboarding-mobile.yml'
   pull_request:
     paths:
       - 'components/study/recommended-study-guide.tsx'
@@ -22,6 +28,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Select Chrome binary
+        run: |
+          if [ -x /usr/bin/google-chrome ]; then
+            echo "CHROME_BIN=/usr/bin/google-chrome" >> "$GITHUB_ENV"
+          elif [ -x /usr/bin/chromium ]; then
+            echo "CHROME_BIN=/usr/bin/chromium" >> "$GITHUB_ENV"
+          else
+            echo "Chrome is unavailable"; exit 1
+          fi
       - name: Inspect onboarding at 4 mobile viewport sizes
         run: node scripts/audit-onboarding-mobile.mjs
       - name: Upload screenshots
