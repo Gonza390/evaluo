@@ -655,4 +655,35 @@ assert.match(
   'La decisión posterior al resumen debe quedar medida.'
 );
 
+// Guardias para consolidar los cambios de los PR #275, #276, #284 y #285.
+const demoFlowSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
+const flashcardsResultSource = readFileSync('components/student-material-flashcards.tsx', 'utf8');
+const examPromptSource = readFileSync('components/exam-date-plan-prompt.tsx', 'utf8');
+assert.match(demoFlowSource, /const openTopicPractice = \(index: number \| null\)/,
+  'La demo debe admitir el tema explícito y la práctica general desde el mismo manejador.');
+assert.match(demoFlowSource, /onPracticeTopic=\{openTopicPractice\}/,
+  'El detalle de Progreso de la demo debe llevar a la práctica específica del tema.');
+assert.match(demoFlowSource, /onPracticeTopic: openTopicPractice/,
+  'El resumen de la demo y Progreso deben compartir la misma selección de tema.');
+assert.match(flashcardsResultSource, /onPracticeTopic \?\? onReturnToTopic \?\? finishSession/,
+  'Si recordó todo, el botón de Flashcards debe llevar a practicar el mismo tema.');
+assert.match(flashcardsResultSource, /onPracticeTopic\s*\? 'Comprobar cuánto aprendí'/,
+  'Las Flashcards por tema deben identificar la salida hacia práctica.');
+assert.match(flashcardsResultSource, /unknownCount > 0\s*\? 'Repasar lo que me costó'/,
+  'Cuando quedan tarjetas pendientes, debe mantenerse la opción de refuerzo.');
+assert.match(materialWorkspaceSource, /flashcardTopicIndex !== null && topicQuestionCounts\[flashcardTopicIndex\] > 0/,
+  'El desvío de Flashcards sólo puede iniciar práctica si hay preguntas de ese tema.');
+assert.doesNotMatch(examPromptSource, /8_000|setTimeout\(\(\) =>\s*\{\s*void checkAndOpen\(false\)/,
+  'El calendario no debe interrumpir al alumno por un temporizador.');
+assert.match(examPromptSource, /¿Cuándo rendís este examen\?/,
+  'El calendario no debe usar nombres largos como título principal.');
+assert.match(examPromptSource, /max-h-\[calc\(100dvh-1rem\)\]/,
+  'El calendario debe caber en pantallas móviles.');
+assert.match(materialWorkspaceSource, /previouslyBelowViewport/,
+  'El lector debe registrar finales de capítulo cruzados con scroll veloz.');
+assert.match(materialWorkspaceSource, /pendingIndex !== null && isEndReached\(pendingIndex\)/,
+  'El final sigue alcanzado aunque el marcador salga del viewport.');
+assert.match(materialWorkspaceSource, /!isEndReached\(index\)/,
+  'El temporizador no debe perder el popup cuando el final ya pasó por la pantalla.');
+
 console.log('Recommended study smoke tests passed.');
