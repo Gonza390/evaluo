@@ -67,6 +67,10 @@ assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
 assert.match(dashboardMaterialsSource, /min-h-10 min-w-10/);
 assert.match(appChromeSource, /isDashboardHomeRoute = pathname === '\/dashboard'/);
+assert.match(appChromeSource, /<EstimatedStudyActivity compact=\{isDashboardHomeRoute\} \/>/);
+const activitySource = readFileSync(resolve('components/estimated-study-activity.tsx'), 'utf8');
+assert.match(activitySource, /compact = false/);
+assert.match(activitySource, /compact \? 'h-9 px-3 text-\[12px\]' : 'h-10 px-3\.5 text-sm'/);
 assert.match(appChromeSource, /isDashboardHomeRoute \? 'min-h-14 py-2 sm:min-h-16 sm:py-2' : 'min-h-18 py-3 sm:min-h-20'/);
 for (const source of [dashboardSource, dashboardHeroSource, dashboardMaterialsSource]) {
   assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
