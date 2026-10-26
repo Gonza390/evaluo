@@ -433,6 +433,12 @@ export function MaterialStudyWorkspace({
   const scrollFirstChapterSmoothlyRef = useRef(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
+  // El acceso desde el popup conserva el tema. Entrar desde la pestaña normal es modo general.
+  const [topicResource, setTopicResource] = useState<{
+    index: number;
+    tab: 'tarjetas' | 'glosario';
+  } | null>(null);
+  const [summaryReturnIndex, setSummaryReturnIndex] = useState<number | null>(null);
   const promptedChapterFinishesRef = useRef(new Set<number>());
   const chapterFinishNavigationPauseRef = useRef(0);
   const studyGuideArrivalHandledRef = useRef<string | null>(null);
@@ -906,6 +912,32 @@ export function MaterialStudyWorkspace({
       getTopicStudyResources(studySummary.sections, usefulGlossary, studyArtifacts.flashcards, index)),
     [summaryChapters, studySummary.sections, usefulGlossary, studyArtifacts.flashcards]
   );
+  const topicCardIndexes = useMemo(() => {
+    if (topicResource?.tab !== 'tarjetas') return undefined;
+    // Pasar índices ORIGINALES; filtrar el array antes de guardarlo corrompería el progreso.
+    const matching = new Set(topicStudyResources[topicResource.index]?.flashcards ?? []);
+    return studyArtifacts.flashcards.flatMap((card, index) => matching.has(card) ? [index] : []);
+  }, [topicResource, topicStudyResources, studyArtifacts.flashcards]);
+  const glossaryItemsToShow = topicResource?.tab === 'glosario'
+    ? topicStudyResources[topicResource.index]?.concepts ?? []
+    : usefulGlossary;
+
+  // Regresar a la lectura del capítulo correcto después del cambio de pestaña,
+  // tanto en el lector móvil como en el escritorio.
+  useEffect(() => {
+    if (summaryReturnIndex === null || activeTab !== 'resumen' || progressOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      const anchor = summaryChapters[summaryReturnIndex]?.anchor;
+      if (anchor) {
+        const target = Array.from(
+          document.querySelectorAll<HTMLElement>(`#${CSS.escape(anchor)}`)
+        ).find((node) => node.getBoundingClientRect().width > 0);
+        target?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      }
+      setSummaryReturnIndex(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [summaryReturnIndex, activeTab, progressOpen, summaryChapters]);
 
   // Mantener sincronizado el índice «Contenido» con el capítulo realmente visible.
   // Funciona con scroll interno del lector y con scroll de página (demo).
@@ -1486,6 +1518,9 @@ export function MaterialStudyWorkspace({
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
+    // Navegar manualmente entre pestañas abandona el modo por tema.
+    // Se vuelve a activar exclusivamente desde el popup de ese capítulo.
+    setTopicResource(null);
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
       entry === 'summary_chapter' ? 'tema' : nextTab);
     if (nextTab === 'ejercicios') {
@@ -1528,6 +1563,57 @@ export function MaterialStudyWorkspace({
       setIsViewerVisible(false);
       setCommentsOpen(false);
     }
+  };
+
+  const openTopicResource = (index: number, tab: 'tarjetas' | 'glosario') => {
+    const resources = topicStudyResources[index];
+    if (!resources || (tab === 'tarjetas' ? resources.flashcards.length === 0 : resources.concepts.length === 0)) return;
+    setChapterFinishIndex(null);
+    handleStudyTabChange(tab);
+    setTopicResource({ index, tab });
+    if (isOwner && !demo) {
+      trackMarketingEvent('cta_click', {
+        location: 'summary_chapter_finish',
+        cta_name: tab === 'tarjetas' ? 'topic_flashcards' : 'topic_glossary',
+        material_id: materialId,
+        section_index: index,
+      });
+    }
+  };
+
+  const returnToSummaryTopic = (index: number) => {
+    setChapterFinishIndex(null);
+    setSummaryReturnIndex(index);
+    setActiveSummaryChapterIndex(index);
+    chapterFinishNavigationPauseRef.current = Date.now() + 3500;
+    handleStudyTabChange('resumen');
+  };
+
+  const renderTopicResourceHeader = (tab: 'tarjetas' | 'glosario') => {
+    if (topicResource?.tab !== tab) return null;
+    const index = topicResource.index;
+    return (
+      <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-4 flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">
+            {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
+          </p>
+          <p className="text-foreground mt-1 text-sm font-semibold break-words">
+            {summaryChapters[index]?.displayTitle}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" className="min-h-10 rounded-lg"
+            onClick={() => returnToSummaryTopic(index)}>
+            <ChevronLeft aria-hidden className="h-4 w-4" /> Volver al tema
+          </Button>
+          <Button type="button" size="sm" className="min-h-10 rounded-lg"
+            disabled={!topicQuestionCounts[index]} onClick={() => startChapterEvaluation(index)}>
+            Practicar este tema <ChevronRight aria-hidden className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -1995,7 +2081,8 @@ export function MaterialStudyWorkspace({
 
       <TabsContent data-demo-focus="study-section" value="glosario" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
-          {usefulGlossary.length > 0 ? (
+          {renderTopicResourceHeader('glosario')}
+          {glossaryItemsToShow.length > 0 ? (
             <div>
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-5 border-b px-2 py-3 md:grid">
                 <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
@@ -2006,7 +2093,7 @@ export function MaterialStudyWorkspace({
                 </p>
               </div>
               <div className="space-y-2 md:space-y-0 md:divide-y md:divide-slate-200/80">
-                {usefulGlossary.map((item) => {
+                {glossaryItemsToShow.map((item) => {
                   const englishTerm =
                     item.englishTerm && item.englishTerm.trim().toLowerCase() !== 'svg'
                       ? item.englishTerm
@@ -2055,10 +2142,13 @@ export function MaterialStudyWorkspace({
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
+            {renderTopicResourceHeader('tarjetas')}
             <StudentMaterialFlashcards
+              key={topicResource?.tab === 'tarjetas' ? `topic-${topicResource.index}` : 'all'}
               cards={studyArtifacts.flashcards}
+              cardIndexes={topicCardIndexes}
               materialId={materialId}
-              onComplete={demo ? undefined : requestExamDatePrompt}
+              onComplete={demo || topicResource?.tab === 'tarjetas' ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}
             />
           </div>
@@ -2437,6 +2527,7 @@ export function MaterialStudyWorkspace({
             startChapterEvaluation(index);
           }}
           onContinue={() => continueAfterChapter(chapterFinishIndex)}
+          onOpenResource={(tab) => openTopicResource(chapterFinishIndex, tab)}
           onClose={() => setChapterFinishIndex(null)}
         />
       ) : null}
