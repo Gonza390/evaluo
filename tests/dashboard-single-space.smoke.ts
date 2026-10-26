@@ -111,4 +111,32 @@ for (const source of [dashboardSource, dashboardHeroSource, dashboardMaterialsSo
   assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
 }
 
+// Escala privada compartida: todas las vistas autenticadas mantienen el
+// mismo shell que Mi espacio, sin convertir las páginas SEO en modo compacto.
+assert.match(appChromeSource, /isCompactAppRoute \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1'/);
+assert.match(appChromeSource, /compact=\{isCompactAppRoute\}/);
+assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
+assert.match(appChromeSource, /isCompactAppRoute\s*\?\s*'bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0'/);
+assert.match(appChromeSource, /isExploreExperienceRoute/);
+assert.match(appChromeSource, /<PublicGuestActions trackingLocation="discovery_header" \/>/);
+const compactCalendar = readFileSync(resolve('app/calendario/page.tsx'), 'utf8');
+const compactSettings = readFileSync(resolve('app/configuracion/page.tsx'), 'utf8');
+const compactProfile = readFileSync(resolve('components/settings/profile-settings-form.tsx'), 'utf8');
+const compactProgress = readFileSync(resolve('components/dashboard/study-errors-client.tsx'), 'utf8');
+const compactProgressList = readFileSync(resolve('app/dashboard/progreso/page.tsx'), 'utf8');
+const compactHistory = readFileSync(resolve('components/dashboard/explanations-history-client.tsx'), 'utf8');
+const compactReferrals = readFileSync(resolve('app/referidos/page.tsx'), 'utf8');
+const compactHeader = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
+for (const page of [compactCalendar, compactSettings, compactProgressList, compactHistory, compactReferrals]) {
+  assert.match(page, /text-\[20px\]|size="compact"/);
+}
+assert.match(compactCalendar, /max-w-\[1240px\]/);
+assert.match(compactSettings, /max-w-\[1240px\]/);
+assert.match(compactProgress, /size="compact"/);
+assert.match(compactProgress, /grid-cols-\[236px_minmax\(0,1fr\)\]/);
+assert.match(compactProfile, /space-y-4 rounded-xl border p-3\.5 sm:p-4/);
+assert.match(compactReferrals, /max-w-\[1240px\]/);
+assert.match(compactHeader, /size === 'compact' && 'gap-3 pb-3 sm:pb-4'/);
+assert.match(compactHeader, /'text-\[20px\] leading-\[1\.3\] sm:text-\[22px\]'/);
+
 console.log('Dashboard single Mi espacio smoke tests passed.');
