@@ -690,4 +690,16 @@ assert.match(pdfStudyWorkspace, /data-active-chapter=\{activeSummaryChapterIndex
 const appStyles = readFileSync('app/globals.css', 'utf8');
 assert.match(appStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
 
+// Protección que existía en master: lectura centrada en el tema y navegación
+// sincronizada, adaptada al scrollspy actual de main sin reemplazar su UX.
+const topicProgressPanel = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+assert.doesNotMatch(topicProgressPanel, /Navegación entre temas del PDF/);
+assert.match(topicProgressPanel, /Aprendizaje y próxima actividad del tema/);
+const topicSummaryWorkspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
+assert.match(topicSummaryWorkspace, /activeSummaryChapterIndex/);
+assert.match(topicSummaryWorkspace, /data-summary-reading-section/);
+assert.match(topicSummaryWorkspace, /addEventListener\('scroll', scheduleSync/);
+assert.match(topicSummaryWorkspace, /aria-current=\{activeSummaryChapterIndex === index \? 'location' : undefined\}/);
+const shareStyles = readFileSync('app/globals.css', 'utf8');
+assert.match(shareStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
 console.log('Flow smoke tests passed.');
