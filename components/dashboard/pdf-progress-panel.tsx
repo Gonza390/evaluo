@@ -309,14 +309,6 @@ export function PdfProgressPanel({
           >
             Volver a los temas
           </button>
-        ) : selected?.status !== 'resolved' ? (
-          <button
-            type="button"
-            onClick={() => setReviewOpen(false)}
-            className="text-primary min-h-10 rounded-lg px-2 text-xs font-semibold"
-          >
-            Volver al tema
-          </button>
         ) : null}
       </div>
       {!reviewOpen && (
@@ -844,182 +836,193 @@ export function PdfProgressPanel({
         </p>
       )}
       {topicId ? (
-        <div className="mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_260px] 2xl:grid-cols-[248px_minmax(0,1fr)_288px] 2xl:gap-7">
-          <aside
-            className="border-border bg-card hidden min-w-0 rounded-xl border p-3 lg:sticky lg:top-2 lg:block lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto"
-            aria-label="Navegación entre temas del PDF"
-          >
-            <div className="border-border mb-3 flex items-center justify-between gap-2 border-b pb-3">
-              <h3 className="text-sm font-semibold">Temas del PDF</h3>
-              <span className="text-muted-foreground text-xs">{topics.length}</span>
-            </div>
-            {topics.length >= 8 && (
-              <label className="mb-3 block">
-                <span className="sr-only">Buscar tema</span>
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar tema"
-                  className="border-border bg-background focus-visible:outline-ring min-h-10 w-full rounded-lg border px-3 text-xs"
-                />
-              </label>
-            )}
-            <nav aria-label="Índice de temas">
-              <ul className="space-y-1">
-                {topics
-                  .filter((topic) =>
-                    topic.title
-                      .normalize('NFD')
-                      .replace(/[\u0300-\u036f]/g, '')
-                      .toLowerCase()
-                      .includes(
-                        search
-                          .normalize('NFD')
-                          .replace(/[\u0300-\u036f]/g, '')
-                          .toLowerCase()
-                          .trim()
-                      )
-                  )
-                  .map((topic) => {
-                    const state = topicStatus(topic);
-                    const isActive = topic.id === topicId;
-                    return (
-                      <li key={topic.id}>
-                        <button
-                          type="button"
-                          aria-current={isActive ? 'page' : undefined}
-                          onClick={() => openTopic(topic.id)}
-                          className={`focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition focus-visible:outline-2 ${isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/70'}`}
-                        >
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] leading-5 font-medium break-words">
-                              {topic.title}
-                            </span>
-                            <span className="text-muted-foreground mt-1 block text-[11px]">
-                              {state.label}
-                            </span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-              </ul>
-              {!topics.some((topic) =>
-                topic.title
-                  .normalize('NFD')
-                  .replace(/[\u0300-\u036f]/g, '')
-                  .toLowerCase()
-                  .includes(
-                    search
-                      .normalize('NFD')
-                      .replace(/[\u0300-\u036f]/g, '')
-                      .toLowerCase()
-                      .trim()
-                  )
-              ) && (
-                <p className="text-muted-foreground px-2 py-3 text-xs">
-                  No encontramos temas con ese nombre.
-                </p>
-              )}
-            </nav>
-          </aside>
-          <div className="min-w-0">{topicDetail}</div>
-          <aside
-            className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
-            aria-label="Aprendizaje y próxima actividad del tema"
-          >
-            <div className="border-border bg-card space-y-4 rounded-xl border p-4">
-              <div>
-                <h3 className="text-sm font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  {currentTopic?.title ?? 'Conceptos pendientes'}
-                </p>
+        <div
+          data-reinforcement-focus={reviewOpen ? 'true' : undefined}
+          className={
+            reviewOpen
+              ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
+              : 'mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_260px] 2xl:grid-cols-[248px_minmax(0,1fr)_288px] 2xl:gap-7'
+          }
+        >
+          {!reviewOpen && (
+            <aside
+              className="border-border bg-card hidden min-w-0 rounded-xl border p-3 lg:sticky lg:top-2 lg:block lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto"
+              aria-label="Navegación entre temas del PDF"
+            >
+              <div className="border-border mb-3 flex items-center justify-between gap-2 border-b pb-3">
+                <h3 className="text-sm font-semibold">Temas del PDF</h3>
+                <span className="text-muted-foreground text-xs">{topics.length}</span>
               </div>
-              {!reviewOpen && lastOutcome && (
-                <div className="border-border border-b pb-4">
-                  <p className="text-muted-foreground text-xs">Última práctica</p>
-                  <p className="mt-1 text-2xl font-semibold tabular-nums">
-                    {lastOutcome.correct}/{lastOutcome.total}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {lastOutcome.incorrect}{' '}
-                    {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
-                  </p>
-                </div>
+              {topics.length >= 8 && (
+                <label className="mb-3 block">
+                  <span className="sr-only">Buscar tema</span>
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Buscar tema"
+                    className="border-border bg-background focus-visible:outline-ring min-h-10 w-full rounded-lg border px-3 text-xs"
+                  />
+                </label>
               )}
-              {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
-                <div className="border-border border-b pb-4">
-                  <p className="text-muted-foreground text-xs">Respuestas registradas</p>
-                  <p className="mt-1 text-2xl font-semibold tabular-nums">
-                    {currentCorrect}/{currentAnswered}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Acumuladas, no una medición de dominio.
-                  </p>
-                </div>
-              )}
-              {!reviewOpen && assessmentData?.loadError && (
-                <p role="status" className="text-muted-foreground text-xs">
-                  No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.
-                </p>
-              )}
-              {topicPending.length > 0 && (
-                <p className="text-sm font-medium">
-                  {topicPending.length}{' '}
-                  {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
-                </p>
-              )}
-              {reviewOpen ? (
-                <p className="border-border text-muted-foreground border-t pt-3 text-xs leading-5">
-                  Revisá la explicación y comprobá lo aprendido con una pregunta diferente.
-                </p>
-              ) : (
-              <div className="border-border border-t pt-4">
-                <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
-                <p className="text-muted-foreground mt-2 text-[13px] leading-5">
-                  {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
-                </p>
-                {topicPending.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextError =
-                        topicPending.find((error) =>
-                          lastOutcome?.incorrectPrompts.includes(error.prompt)
-                        ) ?? topicPending[0];
-                      setErrorId(nextError.id);
-                      setReviewOpen(true);
-                    }}
-                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
-                  >
-                    Reforzar dificultades <ArrowRight size={16} />
-                  </button>
-                ) : nextStudyTopic && currentAnswered > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => openTopic(nextStudyTopic.id)}
-                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
-                  >
-                    Seguir con el siguiente tema <ArrowRight size={16} />
-                  </button>
-                ) : canPracticeTopic ? (
-                  <button
-                    type="button"
-                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
-                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
-                  >
-                    Practicar este tema <ArrowRight size={16} />
-                  </button>
-                ) : (
-                  <p className="text-muted-foreground mt-3 text-xs">
-                    Podés continuar leyendo aunque no haya preguntas de este tema.
+              <nav aria-label="Índice de temas">
+                <ul className="space-y-1">
+                  {topics
+                    .filter((topic) =>
+                      topic.title
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase()
+                        .includes(
+                          search
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .toLowerCase()
+                            .trim()
+                        )
+                    )
+                    .map((topic) => {
+                      const state = topicStatus(topic);
+                      const isActive = topic.id === topicId;
+                      return (
+                        <li key={topic.id}>
+                          <button
+                            type="button"
+                            aria-current={isActive ? 'page' : undefined}
+                            onClick={() => openTopic(topic.id)}
+                            className={`focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition focus-visible:outline-2 ${isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/70'}`}
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-[13px] leading-5 font-medium break-words">
+                                {topic.title}
+                              </span>
+                              <span className="text-muted-foreground mt-1 block text-[11px]">
+                                {state.label}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                </ul>
+                {!topics.some((topic) =>
+                  topic.title
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .includes(
+                      search
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase()
+                        .trim()
+                    )
+                ) && (
+                  <p className="text-muted-foreground px-2 py-3 text-xs">
+                    No encontramos temas con ese nombre.
                   </p>
                 )}
+              </nav>
+            </aside>
+          )}
+          <div className="min-w-0">{topicDetail}</div>
+          {!reviewOpen && (
+            <aside
+              className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
+              aria-label="Aprendizaje y próxima actividad del tema"
+            >
+              <div className="border-border bg-card space-y-4 rounded-xl border p-4">
+                <div>
+                  <h3 className="text-sm font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {currentTopic?.title ?? 'Conceptos pendientes'}
+                  </p>
+                </div>
+                {!reviewOpen && lastOutcome && (
+                  <div className="border-border border-b pb-4">
+                    <p className="text-muted-foreground text-xs">Última práctica</p>
+                    <p className="mt-1 text-2xl font-semibold tabular-nums">
+                      {lastOutcome.correct}/{lastOutcome.total}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {lastOutcome.incorrect}{' '}
+                      {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
+                    </p>
+                  </div>
+                )}
+                {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
+                  <div className="border-border border-b pb-4">
+                    <p className="text-muted-foreground text-xs">Respuestas registradas</p>
+                    <p className="mt-1 text-2xl font-semibold tabular-nums">
+                      {currentCorrect}/{currentAnswered}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Acumuladas, no una medición de dominio.
+                    </p>
+                  </div>
+                )}
+                {!reviewOpen && assessmentData?.loadError && (
+                  <p role="status" className="text-muted-foreground text-xs">
+                    No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.
+                  </p>
+                )}
+                {topicPending.length > 0 && (
+                  <p className="text-sm font-medium">
+                    {topicPending.length}{' '}
+                    {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
+                  </p>
+                )}
+                {reviewOpen ? (
+                  <p className="border-border text-muted-foreground border-t pt-3 text-xs leading-5">
+                    Revisá la explicación y comprobá lo aprendido con una pregunta diferente.
+                  </p>
+                ) : (
+                <div className="border-border border-t pt-4">
+                  <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
+                  <p className="text-muted-foreground mt-2 text-[13px] leading-5">
+                    {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
+                  </p>
+                  {topicPending.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextError =
+                          topicPending.find((error) =>
+                            lastOutcome?.incorrectPrompts.includes(error.prompt)
+                          ) ?? topicPending[0];
+                        setErrorId(nextError.id);
+                        setReviewOpen(true);
+                      }}
+                      className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                    >
+                      Reforzar dificultades <ArrowRight size={16} />
+                    </button>
+                  ) : nextStudyTopic && currentAnswered > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => openTopic(nextStudyTopic.id)}
+                      className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                    >
+                      Seguir con el siguiente tema <ArrowRight size={16} />
+                    </button>
+                  ) : canPracticeTopic ? (
+                    <button
+                      type="button"
+                      onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                      className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                    >
+                      Practicar este tema <ArrowRight size={16} />
+                    </button>
+                  ) : (
+                    <p className="text-muted-foreground mt-3 text-xs">
+                      Podés continuar leyendo aunque no haya preguntas de este tema.
+                    </p>
+                  )}
+                </div>
+                )}
               </div>
-              )}
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
       ) : (
         <div className="mt-5">
