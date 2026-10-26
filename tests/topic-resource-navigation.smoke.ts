@@ -45,7 +45,7 @@ assert.match(cards, /data-flashcard-ready=\{flipReady\}/, 'La tarjeta sólo se h
 assert.match(cards, /disabled=\{!flipReady\}/, 'Mientras React hidrata, no debe parecer interactiva.');
 assert.doesNotMatch(cards, /Preparando tarjeta…/, 'La pregunta no debe quedar tapada por una pantalla de carga.');
 assert.match(cards, /\{flipped \? \(/, 'La pregunta debe renderizarse desde el inicio.');
-assert.ok(cards.includes('onClick={() => setFlipped((value) => !value)}'), 'Un único manejador alterna las dos caras.');
+assert.ok(cards.includes('onClick={flipCard}'), 'Un único manejador alterna las dos caras.');
 assert.match(cards, /data-flashcard-face="front"/);
 assert.match(cards, /data-flashcard-face="back"/);
 assert.match(cards, /const learningCount = allowedCardIndices !== undefined/, 'Aprendiendo debe representar la tarjeta actual.');
