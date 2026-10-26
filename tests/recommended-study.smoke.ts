@@ -665,12 +665,13 @@ assert.match(demoFlowSource, /onPracticeTopic=\{openTopicPractice\}/,
   'El detalle de Progreso de la demo debe llevar a la práctica específica del tema.');
 assert.match(demoFlowSource, /onPracticeTopic: openTopicPractice/,
   'El resumen de la demo y Progreso deben compartir la misma selección de tema.');
-assert.match(flashcardsResultSource, /onPracticeTopic \?\? onReturnToTopic \?\? finishSession/,
-  'Si recordó todo, el botón de Flashcards debe llevar a practicar el mismo tema.');
-assert.match(flashcardsResultSource, /onPracticeTopic\s*\? 'Comprobar cuánto aprendí'/,
-  'Las Flashcards por tema deben identificar la salida hacia práctica.');
-assert.match(flashcardsResultSource, /unknownCount > 0\s*\? 'Repasar lo que me costó'/,
-  'Cuando quedan tarjetas pendientes, debe mantenerse la opción de refuerzo.');
+assert.match(flashcardsResultSource, /onClick=\{onPracticeTopic\}/,
+  'Al terminar Flashcards por tema debe priorizar la práctica.');
+assert.match(flashcardsResultSource, /Practicar este tema/,
+  'La acción principal es practicar el mismo tema.');
+assert.match(flashcardsResultSource, /onClick=\{reviewDifficult\}/,
+  'Las tarjetas Mal y Aprendiendo se pueden repasar.');
+
 assert.match(materialWorkspaceSource, /flashcardTopicIndex !== null && topicQuestionCounts\[flashcardTopicIndex\] > 0/,
   'El desvío de Flashcards sólo puede iniciar práctica si hay preguntas de ese tema.');
 assert.doesNotMatch(examPromptSource, /8_000|setTimeout\(\(\) =>\s*\{\s*void checkAndOpen\(false\)/,
