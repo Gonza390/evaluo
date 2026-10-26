@@ -96,6 +96,7 @@ export function StudentMaterialFlashcards({
   );
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [flipReady, setFlipReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
   const [sessionRecall, setSessionRecall] = useState<Record<number, RecallResult>>({});
@@ -109,6 +110,13 @@ export function StudentMaterialFlashcards({
   const [reminderError, setReminderError] = useState<string | null>(null);
   const completionHandledRef = useRef(false);
   const storageKey = `evaluo:flashcards:${materialId}`;
+
+  // Durante la hidratación de Next.js el HTML es visible, pero los manejadores
+  // de React todavía no están conectados. Mostrar carga hasta ser interactivo.
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setFlipReady(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const currentCardIndex = order[position] ?? 0;
   const currentCard = cards[currentCardIndex];
@@ -657,13 +665,19 @@ export function StudentMaterialFlashcards({
             data-flashcard-card
             aria-label={flipped ? 'Mostrar pregunta' : 'Mostrar respuesta'}
             aria-pressed={flipped}
+            data-flashcard-ready={flipReady}
+            disabled={!flipReady}
             onClick={() => setFlipped((value) => !value)}
             className={cn(
-              'block w-full cursor-pointer rounded-2xl text-center outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+              'block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
               topicMode ? 'h-[196px] sm:h-[210px]' : demoMode ? 'h-[180px]' : 'h-[230px] sm:h-[260px]'
             )}
           >
-            {flipped ? (
+            {!flipReady ? (
+              <span className="border-border bg-card text-muted-foreground flex h-full w-full items-center justify-center rounded-2xl border text-sm" role="status">
+                Preparando tarjeta…
+              </span>
+            ) : flipped ? (
               <span
                 data-flashcard-face="back"
                 className="border-primary/20 bg-primary/5 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border px-4 py-3 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:px-5"
