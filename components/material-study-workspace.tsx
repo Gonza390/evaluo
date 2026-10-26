@@ -702,7 +702,6 @@ export function MaterialStudyWorkspace({
     setActiveTab(tab);
     demo?.onTabChange(tab);
     setIsViewerVisible(false);
-    setCommentsOpen(false);
   };
   const closeRecommendedTour = useCallback(
     (outcome: 'completed' | 'skipped' = 'skipped') => {
@@ -1613,7 +1612,6 @@ export function MaterialStudyWorkspace({
 
     if (nextTab !== 'resumen') {
       setIsViewerVisible(false);
-      setCommentsOpen(false);
     }
   };
 
