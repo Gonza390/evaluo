@@ -434,6 +434,8 @@ export function MaterialStudyWorkspace({
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
   const [flashcardTopicIndex, setFlashcardTopicIndex] = useState<number | null>(null);
+  const [glossaryTopicIndex, setGlossaryTopicIndex] = useState<number | null>(null);
+  const [summaryReturnIndex, setSummaryReturnIndex] = useState<number | null>(null);
   const promptedChapterFinishesRef = useRef(new Set<number>());
   const chapterFinishNavigationPauseRef = useRef(0);
   const studyGuideArrivalHandledRef = useRef<string | null>(null);
@@ -914,6 +916,27 @@ export function MaterialStudyWorkspace({
     const allowed = new Set(cards);
     return studyArtifacts.flashcards.flatMap((card, index) => allowed.has(card) ? [index] : []);
   }, [flashcardTopicIndex, topicStudyResources, studyArtifacts.flashcards]);
+
+  // Un acceso desde el popup muestra solamente los conceptos del capítulo asociado.
+  const glossaryItemsToShow = glossaryTopicIndex === null
+    ? usefulGlossary
+    : topicStudyResources[glossaryTopicIndex]?.concepts ?? [];
+
+  // Restaurar la posición real de lectura al regresar de los recursos de un tema.
+  useEffect(() => {
+    if (summaryReturnIndex === null || activeTab !== 'resumen' || progressOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      const anchor = summaryChapters[summaryReturnIndex]?.anchor;
+      if (anchor) {
+        const target = Array.from(
+          document.querySelectorAll<HTMLElement>(`#${CSS.escape(anchor)}`)
+        ).find((node) => node.getBoundingClientRect().width > 0);
+        target?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      }
+      setSummaryReturnIndex(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [summaryReturnIndex, activeTab, progressOpen, summaryChapters]);
 
   // Mantener sincronizado el índice «Contenido» con el capítulo realmente visible.
   // Funciona con scroll interno del lector y con scroll de página (demo).
@@ -1494,6 +1517,7 @@ export function MaterialStudyWorkspace({
   const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
     setProgressOpen(false);
     if (value === 'tarjetas' && entry !== 'summary_chapter') setFlashcardTopicIndex(null);
+    if (value === 'glosario' && entry !== 'summary_chapter') setGlossaryTopicIndex(null);
     const nextTab = value as StudyTabId;
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
       entry === 'summary_chapter' ? 'tema' : nextTab);
@@ -1537,6 +1561,43 @@ export function MaterialStudyWorkspace({
       setIsViewerVisible(false);
       setCommentsOpen(false);
     }
+  };
+
+  const returnToSummaryTopic = (index: number) => {
+    setChapterFinishIndex(null);
+    setFlashcardTopicIndex(null);
+    setGlossaryTopicIndex(null);
+    setSummaryReturnIndex(index);
+    setActiveSummaryChapterIndex(index);
+    chapterFinishNavigationPauseRef.current = Date.now() + 3500;
+    handleStudyTabChange('resumen');
+  };
+
+  const renderTopicResourceHeader = (tab: 'tarjetas' | 'glosario') => {
+    const index = tab === 'tarjetas' ? flashcardTopicIndex : glossaryTopicIndex;
+    if (index === null) return null;
+    return (
+      <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-4 flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">
+            {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
+          </p>
+          <p className="text-foreground mt-1 text-sm font-semibold break-words">
+            {summaryChapters[index]?.displayTitle}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" className="min-h-10 rounded-lg"
+            onClick={() => returnToSummaryTopic(index)}>
+            <ChevronLeft aria-hidden className="h-4 w-4" /> Volver al tema
+          </Button>
+          <Button type="button" size="sm" className="min-h-10 rounded-lg"
+            disabled={!topicQuestionCounts[index]} onClick={() => startChapterEvaluation(index)}>
+            Practicar este tema <ChevronRight aria-hidden className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -2004,7 +2065,8 @@ export function MaterialStudyWorkspace({
 
       <TabsContent data-demo-focus="study-section" value="glosario" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
-          {usefulGlossary.length > 0 ? (
+          {renderTopicResourceHeader('glosario')}
+          {glossaryItemsToShow.length > 0 ? (
             <div>
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-5 border-b px-2 py-3 md:grid">
                 <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
@@ -2015,7 +2077,7 @@ export function MaterialStudyWorkspace({
                 </p>
               </div>
               <div className="space-y-2 md:space-y-0 md:divide-y md:divide-slate-200/80">
-                {usefulGlossary.map((item) => {
+                {glossaryItemsToShow.map((item) => {
                   const englishTerm =
                     item.englishTerm && item.englishTerm.trim().toLowerCase() !== 'svg'
                       ? item.englishTerm
@@ -2064,12 +2126,13 @@ export function MaterialStudyWorkspace({
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
+            {renderTopicResourceHeader('tarjetas')}
             <StudentMaterialFlashcards
-              key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
+              key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`
               cards={studyArtifacts.flashcards}
               allowedCardIndices={flashcardTopicIndices}
               materialId={materialId}
-              onComplete={demo ? undefined : requestExamDatePrompt}
+              onComplete={demo || flashcardTopicIndex !== null ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}
             />
           </div>
@@ -2452,6 +2515,12 @@ export function MaterialStudyWorkspace({
             setChapterFinishIndex(null);
             setFlashcardTopicIndex(index);
             handleStudyTabChange('tarjetas', 'summary_chapter');
+          }}
+          onGlossary={() => {
+            const index = chapterFinishIndex;
+            setChapterFinishIndex(null);
+            setGlossaryTopicIndex(index);
+            handleStudyTabChange('glosario', 'summary_chapter');
           }}
           onContinue={() => continueAfterChapter(chapterFinishIndex)}
           onClose={() => setChapterFinishIndex(null)}
