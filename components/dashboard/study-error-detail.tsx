@@ -314,7 +314,7 @@ export function StudyErrorDetail({
     <div className="w-full min-w-0">
       {topicReinforcement && !question ? (
         <div className="space-y-6" data-topic-reinforcement>
-          <section data-study-error-tour="error" className="border-border bg-card rounded-2xl border p-4 sm:p-6" aria-labelledby="reinforcement-difficulty-heading">
+          <section data-study-error-tour="error" className="border-border bg-card rounded-xl border p-3.5 sm:p-4" aria-labelledby="reinforcement-difficulty-heading">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 id="reinforcement-difficulty-heading" className="text-primary text-xs font-bold tracking-wide uppercase">
                 La pregunta que te costó
@@ -325,21 +325,21 @@ export function StudyErrorDetail({
                   : `${item.failureCount} ${item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad'}`}
               </span>
             </div>
-            <h2 ref={heading} tabIndex={-1} className="text-foreground mt-4 text-lg font-semibold leading-7 break-words outline-none">
+            <h2 ref={heading} tabIndex={-1} className="text-foreground mt-3 text-[16px] font-semibold leading-6 break-words outline-none">
               {item.prompt}
             </h2>
             {(item.selectedAnswer || item.correctAnswer) && (
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {item.selectedAnswer && (
-                  <div className="border-destructive/20 bg-destructive/5 rounded-xl border p-4">
+                  <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3">
                     <p className="text-destructive text-xs font-semibold">Tu respuesta anterior</p>
-                    <p className="text-foreground mt-2 text-sm leading-6 break-words">{item.selectedAnswer}</p>
+                    <p className="text-foreground mt-1.5 text-[13px] leading-5 break-words">{item.selectedAnswer}</p>
                   </div>
                 )}
                 {item.correctAnswer && (
-                  <div className="border-primary/20 bg-primary/5 rounded-xl border p-4">
+                  <div className="border-primary/20 bg-primary/5 rounded-lg border p-3">
                     <p className="text-primary text-xs font-semibold">Respuesta correcta</p>
-                    <p className="text-foreground mt-2 text-sm leading-6 break-words">{item.correctAnswer}</p>
+                    <p className="text-foreground mt-1.5 text-[13px] leading-5 break-words">{item.correctAnswer}</p>
                   </div>
                 )}
               </div>
@@ -347,7 +347,7 @@ export function StudyErrorDetail({
           </section>
           <div ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
             <div>
-              <h3 id="reinforcement-explanation-heading" className="text-lg font-semibold">
+              <h3 id="reinforcement-explanation-heading" className="text-[16px] font-semibold">
                 Entendamos por qué
               </h3>
               <p className="text-muted-foreground mt-1 text-sm leading-6">
@@ -355,16 +355,16 @@ export function StudyErrorDetail({
               </p>
             </div>
             {groundedContrast && (
-              <div className="border-primary/20 bg-primary/5 rounded-xl border p-4 sm:p-5">
+              <div className="border-primary/20 bg-primary/5 rounded-lg border p-3 sm:p-5">
                 <p className="text-primary mb-2 text-xs font-semibold">Por qué tu elección era diferente</p>
-                <p className="text-foreground max-w-[72ch] text-base leading-7 break-words">
+                <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words">
                   {groundedContrast}
                 </p>
               </div>
             )}
             {originalExplanation ? (
-              <div className="border-border bg-muted/30 rounded-xl border p-4 sm:p-5">
-                <p className="text-foreground max-w-[72ch] text-base leading-7 break-words whitespace-pre-line">
+              <div className="border-border bg-muted/30 rounded-lg border p-3 sm:p-4">
+                <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words whitespace-pre-line">
                   {originalExplanation}
                 </p>
               </div>
@@ -374,11 +374,11 @@ export function StudyErrorDetail({
               </p>
             )}
             {messages.map((message) => (
-              <div key={message.kind} className="border-border rounded-xl border p-4 sm:p-5">
+              <div key={message.kind} className="border-border rounded-lg border p-3 sm:p-4">
                 <p className="text-primary mb-2 text-xs font-semibold">
                   {message.kind === 'simpler' ? 'Explicación más simple' : message.kind === 'example' ? 'Un ejemplo para entenderlo' : 'Explicación adicional'}
                 </p>
-                <p className="text-foreground max-w-[72ch] text-base leading-7 break-words whitespace-pre-line">{message.text}</p>
+                <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words whitespace-pre-line">{message.text}</p>
               </div>
             ))}
             {pendingHelp && (
@@ -431,7 +431,7 @@ export function StudyErrorDetail({
           </div>
           {resolved ? (
             <section className="border-primary/20 bg-primary/5 rounded-xl border p-5">
-              <h3 className="text-lg font-semibold">Esta dificultad ya fue reforzada</h3>
+              <h3 className="text-[16px] font-semibold">Esta dificultad ya fue reforzada</h3>
               <p className="text-muted-foreground mt-2 text-sm leading-6">
                 Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.
               </p>
@@ -448,7 +448,7 @@ export function StudyErrorDetail({
             </section>
           ) : (
             <section className="border-border border-t pt-5" data-study-error-tour="practice">
-              <h3 className="text-lg font-semibold">¿Lo entendiste? Comprobémoslo.</h3>
+              <h3 className="text-[16px] font-semibold">¿Lo entendiste? Comprobémoslo.</h3>
               <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-6">
                 Respondé una situación distinta, sin consultar la explicación. Un acierto resuelve esta dificultad, pero no demuestra dominio de todo el tema.
               </p>
@@ -471,20 +471,20 @@ export function StudyErrorDetail({
           <h2
             ref={heading}
             tabIndex={-1}
-            className="scroll-mt-24 text-xl font-black tracking-tighter outline-none sm:text-2xl"
+            className="scroll-mt-24 text-[20px] font-bold tracking-[-0.04em] outline-none sm:text-[22px]"
           >
             Comprobá lo aprendido
           </h2>
           <p className="!text-muted-foreground mt-2 !text-sm">
             Mismo concepto, una situación diferente. Respondé sin consultar la explicación.
           </p>
-          <p className="!text-foreground mt-6 !text-lg">{question.question}</p>
+          <p className="!text-foreground mt-3 !text-[16px]">{question.question}</p>
           <fieldset className="mt-6 space-y-3" disabled={Boolean(result) || Boolean(busy)}>
             <legend className="sr-only">Elegí una respuesta</legend>
             {question.options.map((option, index) => (
               <label
                 key={index}
-                className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-4 ${result && !result.correct && answer === index ? 'border-destructive bg-destructive/5' : result?.correctIndex === index ? 'border-emerald-500 bg-emerald-50' : !result && answer === index ? 'border-primary bg-primary/5' : 'border-border'}`}
+                className={`flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-3 ${result && !result.correct && answer === index ? 'border-destructive bg-destructive/5' : result?.correctIndex === index ? 'border-emerald-500 bg-emerald-50' : !result && answer === index ? 'border-primary bg-primary/5' : 'border-border'}`}
               >
                 <input
                   type="radio"
@@ -531,7 +531,7 @@ export function StudyErrorDetail({
               <h3
                 ref={resultHeading}
                 tabIndex={-1}
-                className="flex items-center gap-2 text-xl font-bold outline-none"
+                className="flex items-center gap-2 text-[20px] font-bold outline-none"
               >
                 {result.correct ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-700" />
@@ -817,7 +817,7 @@ export function StudyErrorDetail({
       )}
       {(question || (!helpNotice && !sourceNotice && noticeAction !== 'check')) && inlineNotice}
       {!question && resolved && (
-        <div className="border-border mt-7 flex flex-wrap gap-3 border-t pt-5">
+        <div className="border-border mt-4 flex flex-wrap gap-2 border-t pt-3">
           <button
             className={reviewSecondaryButton}
             disabled={Boolean(busy) || pendingCount <= (resolved ? 0 : 1)}
