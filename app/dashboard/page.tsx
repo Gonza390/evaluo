@@ -123,11 +123,11 @@ export default async function DashboardPage({
       : null;
 
     return (
-      <div className="animate-page-enter min-h-screen bg-white px-4 py-6 sm:px-6 lg:px-8">
+      <div className="animate-page-enter min-h-screen bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
         <ReferralPortalDashboardShortcut />
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-[1240px]">
           {isQaAccount(user) ? (
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[12.5px]">
               <span className="font-semibold text-indigo-900">Cuenta de pruebas de Evaluo</span>
               <Link href="/qa" className="font-bold text-indigo-700 underline underline-offset-2">
                 Reiniciar onboarding
@@ -135,7 +135,7 @@ export default async function DashboardPage({
             </div>
           ) : null}
           {isSucesorioPlan ? (
-            <section className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4 sm:px-6">
+            <section className="mb-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 sm:px-4">
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
                   <Sparkles className="h-5 w-5" aria-hidden="true" />
@@ -144,10 +144,10 @@ export default async function DashboardPage({
                   <p className="text-[10px] font-black tracking-[0.13em] text-blue-700 uppercase">
                     Plan de estudio · Derecho Sucesorio · Parcial 2
                   </p>
-                  <h1 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">
+                  <h1 className="mt-1 text-[16px] font-bold tracking-[-0.035em] text-slate-950">
                     Subí tus apuntes para empezar con el plan que armaste
                   </h1>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                  <p className="mt-1 text-[13px] leading-5 text-slate-600">
                     La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, tarjetas y práctica.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
