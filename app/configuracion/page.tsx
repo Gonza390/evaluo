@@ -344,9 +344,9 @@ export default function ConfiguracionPage() {
   if (!user) return null;
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5">
+    <div className="mx-auto w-full max-w-[1240px] space-y-3 px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
       <header className="space-y-1">
-        <h1 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
+        <h1 className="text-foreground text-[20px] leading-[1.3] font-bold tracking-[-0.04em] sm:text-[22px]">
           Configuración
         </h1>
         <p className="text-muted-foreground text-[13px] leading-5">
