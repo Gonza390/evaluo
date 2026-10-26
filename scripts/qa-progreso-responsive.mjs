@@ -258,6 +258,16 @@ for (const width of [355, 433]) {
       await page.getByRole('button', { name: 'Practicar este tema', exact: true }).click();
       await page.locator('article:visible').first().waitFor(wait);
       assert.equal(await page.getByRole('button', { name: 'Empezar práctica' }).count(), 0);
+      assert.equal(
+        await page.locator('[data-pdf-question-actions]:visible').first().evaluate((element) => getComputedStyle(element).position),
+        'static',
+        'Los botones de práctica deben ir después de las opciones sin cubrirlas en móvil.'
+      );
+      assert.equal(
+        await page.locator('button:visible').filter({ hasText: 'Volver al tema' }).count(),
+        0,
+        'No debe reaparecer el botón redundante Volver al tema en práctica por tema.'
+      );
       const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(horizontal <= 1, 'Mobile practice must not overflow horizontally: ' + horizontal);
       await page.screenshot({ path: folder + '/practica-' + width + '.png', animations: 'disabled' });
