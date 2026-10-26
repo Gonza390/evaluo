@@ -670,14 +670,15 @@ export function StudentMaterialFlashcards({
             disabled={!flipReady}
             onClick={() => setFlipped((value) => !value)}
             className={cn(
-              'block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+              'relative isolate block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
               topicMode ? 'h-[190px] sm:h-[205px]' : 'h-[188px] sm:h-[210px]'
             )}
           >
             {flipped ? (
               <span
                 data-flashcard-face="back"
-                className="border-primary/20 bg-primary/5 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border px-4 py-3 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:px-5"
+                data-flashcard-content
+                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
@@ -689,7 +690,8 @@ export function StudentMaterialFlashcards({
             ) : (
               <span
                 data-flashcard-face="front"
-                className="border-border bg-card flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border px-4 py-3 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200 sm:px-5"
+                data-flashcard-content
+                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
