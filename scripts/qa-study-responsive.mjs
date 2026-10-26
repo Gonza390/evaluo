@@ -80,7 +80,8 @@ async function saveState(page, name, width, errors) {
 async function visit(page, path, ready) {
   const result = await page.goto(baseUrl + path, { waitUntil: 'domcontentloaded', timeout: 60000 });
   assert.equal(result?.status(), 200, 'Preview must respond 200: ' + path);
-  await page.locator(ready).first().waitFor({ state: 'visible', timeout: 30000 });
+  // Activity conserva pestañas ocultas montadas: siempre seleccionar la instancia visible.
+  await page.locator(ready + ':visible').first().waitFor({ state: 'visible', timeout: 20000 });
 }
 
 async function selectTab(page, value, mobile) {
