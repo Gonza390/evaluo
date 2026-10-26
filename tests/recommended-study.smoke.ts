@@ -477,14 +477,14 @@ assert.doesNotMatch(diagnosticSource, /<FirstStudyErrorOnboardingPrompt/, 'El di
 // El lector de Progreso tiene que respetar el formato académico real,
 // sin mostrar las marcas Markdown como texto plano ni crear objetivos con IA.
 const topicReaderSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
-// El refuerzo debe centrarse en la dificultad activa; el índice y el panel
-// de aprendizaje sólo se muestran mientras se exploran los temas.
+// El refuerzo debe centrarse en la dificultad activa. El índice lateral de temas
+// se eliminó del detalle y el panel de aprendizaje queda fuera del modo refuerzo.
 assert.match(topicReaderSource, /data-reinforcement-focus=\{reviewOpen \? 'true' : undefined\}/,
   'La vista de refuerzo debe contar con un modo explícito de concentración.');
 assert.match(topicReaderSource, /reviewOpen\s*\?\s*'mx-auto mt-5 w-full max-w-\[980px\] min-w-0'/,
   'El refuerzo debe ocupar un área centrada sin columnas laterales.');
-assert.match(topicReaderSource, /\{!reviewOpen && \(\s*<aside\s+className="border-border bg-card hidden/,
-  'El índice lateral debe desaparecer al entrar en refuerzo.');
+assert.doesNotMatch(topicReaderSource, /Navegación entre temas del PDF|Temas del PDF/,
+  'La navegación lateral redundante no debe aparecer en ningún modo del detalle.');
 assert.match(topicReaderSource, /\{!reviewOpen && \(\s*<aside\s+className="hidden min-w-0 xl:sticky/,
   'El panel lateral de aprendizaje debe desaparecer durante el refuerzo.');
 assert.doesNotMatch(topicReaderSource, />\s*Volver al tema\s*<\/button>/,
