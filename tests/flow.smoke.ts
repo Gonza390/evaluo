@@ -687,6 +687,18 @@ const pdfStudyWorkspace = readFileSync('components/material-study-workspace.tsx'
 assert.match(pdfStudyWorkspace, /region\.addEventListener\('scroll', scheduleSync/);
 assert.match(pdfStudyWorkspace, /aria-current=\{activeSummaryChapterIndex === index \? 'location' : undefined\}/);
 assert.match(pdfStudyWorkspace, /data-active-chapter=\{activeSummaryChapterIndex === index/);
+// Glosario comparte con Resumen la anchura, jerarquía y tamaño de lectura.
+// El filtro por tema conserva el vínculo con el capítulo activo.
+assert.match(pdfStudyWorkspace, /data-study-glossary className="mx-auto w-full max-w-\[1240px\]/);
+assert.match(pdfStudyWorkspace, /<div className="w-full max-w-\[1040px\]">/);
+assert.match(pdfStudyWorkspace, /text-\[19px\].*sm:text-\[20px\]/);
+assert.match(pdfStudyWorkspace, /text-\[14px\] leading-5 font-semibold/);
+assert.match(pdfStudyWorkspace, /text-\[13px\] leading-\[1\.65\] sm:text-\[13\.5px\]/);
+assert.match(pdfStudyWorkspace, /glossaryTopicIndex === null \?/);
+assert.match(pdfStudyWorkspace, /renderTopicResourceHeader\('glosario'\)/);
+assert.match(pdfStudyWorkspace, /getTopicStudyResources\(studySummary\.sections, usefulGlossary, studyArtifacts\.flashcards, index\)/);
+assert.match(pdfStudyWorkspace, /className="min-h-10 rounded-lg text-\[13px\]"/);
+
 const appStyles = readFileSync('app/globals.css', 'utf8');
 assert.match(appStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
 
