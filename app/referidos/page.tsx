@@ -43,9 +43,9 @@ export default async function ReferidosPage() {
   const portal = await getReferralPortalData(user).catch(() => null);
   if (!portal) {
     return (
-      <section className="mx-auto w-full max-w-5xl px-2 py-6 sm:px-0 sm:py-10">
+      <section className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Referidos</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+        <h1 className="mt-2 text-[20px] leading-[1.3] font-bold tracking-[-0.04em] text-slate-950 sm:text-[22px]">
           No hay un programa asociado a esta cuenta
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
@@ -53,7 +53,7 @@ export default async function ReferidosPage() {
         </p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-flex h-11 items-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white"
+          className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-slate-950 px-3 text-[13px] font-semibold text-white"
         >
           Volver al inicio
         </Link>
@@ -97,12 +97,12 @@ export default async function ReferidosPage() {
   ];
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-2 py-6 sm:px-0 sm:py-8">
-      <div className="border-b border-slate-200 pb-6">
+    <section className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+      <div className="border-b border-slate-200 pb-4">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Programa de referidos</p>
         <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+            <h1 className="text-[20px] leading-[1.3] font-bold tracking-[-0.04em] text-slate-950 sm:text-[22px]">
               {primaryPartner?.brandName ?? 'Tus referidos'}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
@@ -141,7 +141,7 @@ export default async function ReferidosPage() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-y-6 border-b border-slate-200 py-6 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-y-4 border-b border-slate-200 py-4 md:grid-cols-5">
         {metrics.map(({ label, value, icon: Icon, help }) => (
           <div
             key={label}
@@ -151,28 +151,28 @@ export default async function ReferidosPage() {
               <Icon className="h-4 w-4" />
               <p className="text-xs font-semibold">{label}</p>
             </div>
-            <p className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">{value}</p>
+            <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">{value}</p>
             <MetricTooltip>{help}</MetricTooltip>
           </div>
         ))}
         <div className="group relative cursor-help border-l border-slate-200 pl-4">
           <p className="text-xs font-semibold text-slate-500">Conversión</p>
-          <p className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">{percent(conversionRate)}</p>
+          <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">{percent(conversionRate)}</p>
           <MetricTooltip>Conversiones sobre usuarios atribuidos.</MetricTooltip>
         </div>
       </div>
 
-      <div className="grid gap-6 border-b border-slate-200 py-6 sm:grid-cols-2">
+      <div className="grid gap-4 border-b border-slate-200 py-4 sm:grid-cols-2">
         <div>
           <p className="text-xs font-semibold text-slate-500">Facturación atribuida</p>
-          <p className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">
+          <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">
             {currency.format(portal.summary.revenueArs)}
           </p>
           <p className="mt-1 text-xs leading-5 text-slate-500">Pagos efectivamente aprobados por Mercado Pago.</p>
         </div>
         <div>
           <p className="text-xs font-semibold text-slate-500">Descuentos otorgados</p>
-          <p className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">
+          <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">
             {currency.format(portal.summary.discountsArs)}
           </p>
           <p className="mt-1 text-xs leading-5 text-slate-500">Beneficio comercial aplicado a tus conversiones.</p>
