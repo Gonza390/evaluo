@@ -39,8 +39,13 @@ assert.match(cards, /data-flashcard-topic/, 'El tema aparece dentro de la tarjet
 assert.match(cards, /data-flashcards-bad/);
 assert.match(cards, /data-flashcards-learning/);
 assert.match(cards, /data-flashcards-good/);
-assert.match(cards, /data-flashcard-grade="learning"/);
-assert.match(cards, /z-10 cursor-pointer rounded-2xl/, 'El botón de giro cubre todo el frente.');
+assert.doesNotMatch(cards, /data-flashcard-grade="learning"/, 'Aprendiendo es el estado de la tarjeta actual, no un botón de calificación.');
+assert.match(cards, /data-flashcard-card/, 'Toda la tarjeta debe ser clicable.');
+assert.ok(cards.includes('onClick={() => setFlipped((value) => !value)}'), 'Un único manejador alterna las dos caras.');
+assert.match(cards, /data-flashcard-face="front"/);
+assert.match(cards, /data-flashcard-face="back"/);
+assert.match(cards, /const learningCount = allowedCardIndices !== undefined/, 'Aprendiendo debe representar la tarjeta actual.');
+assert.match(cards, /topicMode && 'max-w-\[610px\]'/, 'Las calificaciones generales también deben seguir visibles en móvil.');
 assert.match(cards, /data-topic-flashcards-review/);
 assert.match(cards, /data-topic-flashcards-primary/);
 assert.doesNotMatch(cards, /onReturnToTopic/, 'El cierre no regresa al Resumen.');
