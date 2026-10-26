@@ -188,7 +188,19 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
   const isMaterialStudyRoute = pathname.startsWith('/materiales/');
-  const isDashboardHomeRoute = pathname === '/dashboard';
+  // Una misma escala para la aplicación privada; el sitio público y el área
+  // de SEO mantienen su composición. El lector de PDFs conserva su UI interna.
+  const isCompactAppRoute =
+    Boolean(user) &&
+    (pathname === '/dashboard' ||
+      pathname.startsWith('/dashboard/') ||
+      pathname === '/calendario' ||
+      pathname.startsWith('/calendario/') ||
+      pathname === '/configuracion' ||
+      pathname.startsWith('/configuracion/') ||
+      pathname === '/referidos' ||
+      pathname.startsWith('/referidos/') ||
+      pathname.startsWith('/materiales/'));
   const isExploreExperienceRoute =
     pathname === '/explorar' ||
     pathname.startsWith('/universidad/') ||
@@ -223,15 +235,16 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
 
   const shell = (
     <div
+      data-private-compact={isCompactAppRoute ? 'true' : undefined}
       className={`bg-background flex flex-col ${
         isMaterialStudyRoute ? 'h-dvh min-h-0 overflow-hidden' : 'min-h-screen'
       }`}
     >
       {showTopBar ? (
-        <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+        <header data-app-topbar className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur">
           <div
             className={`relative flex items-center justify-between gap-3 ${
-              isDashboardHomeRoute ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
+              isCompactAppRoute ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
             } ${
               user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
@@ -241,7 +254,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/dashboard"
-                className={`group flex min-w-0 items-center transition hover:opacity-90 ${isDashboardHomeRoute ? 'gap-1.5' : 'gap-2.5'}`}
+                className={`group flex min-w-0 items-center transition hover:opacity-90 ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
               >
                 <Image
                   src="/evaluo-logo-icono.svg"
@@ -249,13 +262,13 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   width={40}
                   height={40}
                   priority
-                  className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isDashboardHomeRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}
+                  className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}
                 />
                 <div className="min-w-0">
-                  <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isDashboardHomeRoute ? 'text-[14px] sm:text-[15px]' : 'text-[1.05rem] sm:text-lg'}`}>
+                  <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isCompactAppRoute ? 'text-[14px] sm:text-[15px]' : 'text-[1.05rem] sm:text-lg'}`}>
                     Evaluo
                   </div>
-                  <p className={`mt-0.5 hidden font-medium text-slate-400 sm:block ${isDashboardHomeRoute ? 'text-[9.5px]' : 'text-[11px]'}`}>
+                  <p className={`mt-0.5 hidden font-medium text-slate-400 sm:block ${isCompactAppRoute ? 'text-[9.5px]' : 'text-[11px]'}`}>
                     Tu espacio académico
                   </p>
                 </div>
@@ -272,15 +285,15 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               <>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
                   <div className="hidden lg:block">
-                    <EstimatedStudyActivity compact={isDashboardHomeRoute} />
+                    <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  <NotificationBell compact={isDashboardHomeRoute} />
+                  <NotificationBell compact={isCompactAppRoute} />
                   <button
                     type="button"
                     onClick={() => setShowStreakDialog(true)}
                     className="inline-flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5"
                   >
-                    <Avatar className={`flex h-8 w-8 shrink-0 ${isDashboardHomeRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}>
+                    <Avatar className={`flex h-8 w-8 shrink-0 ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}>
                       <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -290,7 +303,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     </Avatar>
 
                     <div className="hidden min-w-0 flex-1 sm:block">
-                      <p className={`truncate font-semibold tracking-[-0.01em] text-slate-900 ${isDashboardHomeRoute ? 'text-[12.5px]' : 'text-[0.88rem]'}`}>
+                      <p className={`truncate font-semibold tracking-[-0.01em] text-slate-900 ${isCompactAppRoute ? 'text-[12.5px]' : 'text-[0.88rem]'}`}>
                         {getUserName()}
                       </p>
                       <p className="mt-0.5 max-w-[250px] truncate text-[11px] text-slate-400">
@@ -455,12 +468,12 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       ) : null}
       <div className="flex min-h-0 flex-1">
         {showSidebar ? (
-          <Navbar collapsed={sidebarCollapsed} onToggleCollapsed={handleSidebarToggle} compact={isDashboardHomeRoute} />
+          <Navbar collapsed={sidebarCollapsed} onToggleCollapsed={handleSidebarToggle} compact={isCompactAppRoute} />
         ) : null}
         <div
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${
             showSidebar
-              ? isDashboardHomeRoute
+              ? isCompactAppRoute
                 ? sidebarCollapsed ? 'md:ml-[56px]' : 'md:ml-[176px]'
                 : sidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]'
               : ''
