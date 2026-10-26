@@ -16,7 +16,7 @@ assert.match(workspace, /setGlossaryTopicIndex\(index\)/);
 assert.match(workspace, /handleStudyTabChange\('tarjetas', 'summary_chapter'\)/);
 assert.match(workspace, /handleStudyTabChange\('glosario', 'summary_chapter'\)/);
 assert.match(workspace, /glossaryItemsToShow\.map\(\(item\)/);
-assert.match(workspace, /renderTopicResourceHeader\('tarjetas'\)/);
+assert.doesNotMatch(workspace, /renderTopicResourceHeader\('tarjetas'\)/, 'No mostrar encabezado duplicado en Flashcards por tema.');
 assert.match(workspace, /renderTopicResourceHeader\('glosario'\)/);
 assert.match(workspace, /onClick=\{\(\) => returnToSummaryTopic\(index\)\}/);
 assert.match(workspace, /onClick=\{\(\) => startChapterEvaluation\(index\)\}/);
@@ -34,3 +34,13 @@ assert.match(cards, /itemKey: `flashcard:\$\{currentCardIndex\}`/,
   'Guardar con índices originales del PDF.');
 assert.match(cards, /if \(allReviewed\)/,
   'El resultado final queda para un rediseño posterior.');
+
+assert.match(cards, /data-flashcard-topic/, 'El tema aparece dentro de la tarjeta.');
+assert.match(cards, /data-flashcards-bad/);
+assert.match(cards, /data-flashcards-learning/);
+assert.match(cards, /data-flashcards-good/);
+assert.match(cards, /data-flashcard-grade="learning"/);
+assert.match(cards, /z-10 cursor-pointer rounded-2xl/, 'El botón de giro cubre todo el frente.');
+assert.match(cards, /data-topic-flashcards-review/);
+assert.match(cards, /data-topic-flashcards-primary/);
+assert.doesNotMatch(cards, /onReturnToTopic/, 'El cierre no regresa al Resumen.');
