@@ -84,6 +84,8 @@ assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5
 // ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
 assert.match(navbarSource, /compact \? 'grid-cols-\[minmax\(0,1fr\)_32px\]' : 'grid-cols-\[minmax\(0,1fr\)_40px\]'/);
 assert.match(navbarSource, /compact \? 'gap-1' : 'gap-2'/);
+// El grupo superior se separa 16 px más del encabezado solo en Mi espacio.
+assert.match(navbarSource, /compact \? "pt-5" : "pt-2"/);
 assert.match(navbarSource, /compact \? 'w-8' : 'w-10'/);
 assert.match(navbarSource, /<ReferralPortalNavLink collapsed=\{collapsed\} pathname=\{pathname\} compact=\{compact\} \/>/);
 const referralNavSource = readFileSync(resolve('components/referrals/ReferralPortalNavLink.tsx'), 'utf8');
