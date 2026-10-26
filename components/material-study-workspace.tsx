@@ -23,15 +23,12 @@ import {
   CircleAlert,
   ChevronLeft,
   ChevronRight,
-  FileText,
   ListTree,
   Loader2,
   Map as MapIcon,
-  MessageSquare,
   Sparkles,
   SquareLibrary,
 } from 'lucide-react';
-import { MaterialFeedback } from '@/components/material-feedback';
 import { StudyRichText } from '@/components/study-rich-text';
 import {
   StudentMaterialDiagnostic,
@@ -478,7 +475,6 @@ export function MaterialStudyWorkspace({
   const displayedProgressContent = typeof progressContent === 'function'
     ? progressContent({ showOnboardingExample, showOnboardingTopic })
     : progressContent;
-  const [commentsOpen, setCommentsOpen] = useState(false);
   const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
   const [summaryEndPendingCount, setSummaryEndPendingCount] = useState<number | null>(null);
   const [pendingStudyErrorCount, setPendingStudyErrorCount] = useState(0);
@@ -1510,10 +1506,6 @@ export function MaterialStudyWorkspace({
     summaryCheckPolicy,
   ]);
 
-  const handleComments = () => {
-    setCommentsOpen((current) => !current);
-  };
-
   const startFirstTopic = () => {
     chapterFinishNavigationPauseRef.current = Date.now() + 2000;
     setStudyStartGuideOpen(false);
@@ -1735,11 +1727,10 @@ export function MaterialStudyWorkspace({
   const tabHeader = (
     <div
       className={cn(
-        'border-border shrink-0 flex-col gap-1 border-b px-2.5 py-1.5 sm:px-3 sm:py-2',
-        'hidden md:flex'
+        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-2.5 py-1.5 sm:px-3 sm:py-2 md:flex'
       )}
     >
-      <TabsList className="hidden h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
+      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
         {STUDY_TABS.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -1808,62 +1799,19 @@ export function MaterialStudyWorkspace({
         ) : null}
       </TabsList>
 
-      {activeTab === 'resumen' && !progressOpen ? (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0 sm:gap-1.5">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsViewerVisible((current) => !current)}
-            className="border-border bg-card text-foreground hover:bg-muted h-7 rounded-lg px-2.5 text-[12px] shadow-none sm:h-8 sm:rounded-lg sm:px-3 sm:text-[12px]"
-          >
-            {isViewerVisible ? (
-              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            )}
-            {isViewerVisible ? 'Ocultar PDF' : 'Mostrar PDF'}
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
-          >
-            <a href={viewerUrl} target="_blank" rel="noreferrer">
-              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              PDF
-            </a>
-          </Button>
-
-          {!demo && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleComments}
-              className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
-            >
-              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Calificar
-            </Button>
-          )}
-
-          {canRegenerate ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerate}
-              disabled={isRegenerating}
-              className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
-            >
-              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {isRegenerating ? 'Regenerando...' : 'Regenerar'}
-            </Button>
-          ) : null}
-        </div>
+      {canRegenerate && activeTab === 'resumen' && !progressOpen ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={handleRegenerate}
+          disabled={isRegenerating}
+          title="Regenerar material"
+          aria-label="Regenerar material"
+          className="text-muted-foreground hover:text-foreground h-8 w-8 shrink-0 rounded-lg"
+        >
+          <Sparkles className="h-4 w-4" aria-hidden="true" />
+        </Button>
       ) : null}
     </div>
   );
@@ -1968,12 +1916,6 @@ export function MaterialStudyWorkspace({
         recommendedActive && onboardingFading && 'pointer-events-none translate-y-1 opacity-40'
       )}
     >
-      {commentsOpen && activeTab === 'resumen' ? (
-        <WorkspaceCard className="border-primary/20 bg-card mb-3">
-          <MaterialFeedback materialId={materialId} />
-        </WorkspaceCard>
-      ) : null}
-
       <TabsContent
         data-demo-focus="study-section"
         data-recommended-summary
