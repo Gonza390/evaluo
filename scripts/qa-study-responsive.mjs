@@ -85,6 +85,21 @@ async function visit(page, path, ready) {
 }
 
 async function selectTab(page, value, mobile) {
+  // Un capítulo finalizado puede mostrar un diálogo legítimo encima del lector.
+  // Registrar el estado y cerrarlo antes de navegar, sin ignorar otros bloqueos.
+  const chapterClose = page.getByRole('button', { name: 'Cerrar y volver al resumen', exact: true });
+  if (await chapterClose.isVisible().catch(() => false)) {
+    const width = page.viewportSize()?.width ?? 'unknown';
+    const dialog = page.getByRole('dialog');
+    await dialog.screenshot({ path: outputDir + '/popup-fin-capitulo-' + width + '.png', animations: 'disabled' });
+    const modalFit = await dialog.evaluate((el) => {
+      const rect = el.getBoundingClientRect();
+      return rect.left >= -2 && rect.right <= window.innerWidth + 2 &&
+        rect.top >= -2 && rect.bottom <= window.innerHeight + 2;
+    });
+    assert.ok(modalFit, 'El popup de final de capítulo debe caber en el viewport.');
+    await chapterClose.click();
+  }
   if (mobile && ['resumen', 'tarjetas', 'ejercicios', 'progreso'].includes(value)) {
     const label = { resumen: 'Resumen', tarjetas: 'Flashcards', ejercicios: 'Práctica', progreso: 'Progreso' }[value];
     await page.locator('[data-pdf-mobile-navigation] button').filter({ hasText: label }).first().click();
