@@ -2281,6 +2281,7 @@ export function MaterialStudyWorkspace({
                 }
                 artifacts={studyArtifacts}
                 sections={studySummary.sections}
+                glossary={studyGlossary}
                 materialId={materialId}
                 onComplete={practiceSectionIndex === undefined ? requestExamDatePrompt : undefined}
               />
