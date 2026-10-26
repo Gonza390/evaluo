@@ -1071,6 +1071,10 @@ export function MaterialStudyWorkspace({
       pendingIndex = null;
     };
 
+    // Preservar finales atravesados por scroll veloz, incluso si el marcador
+    // sale del viewport antes del popup (por ejemplo, al terminar el último capítulo).
+    const previouslyBelowViewport = new Set<number>();
+
     const visibleEndIndex = () => {
       if (document.visibilityState !== 'visible') return null;
       const readerRect = region.getBoundingClientRect();
@@ -1078,15 +1082,34 @@ export function MaterialStudyWorkspace({
       const visibleBottom = Math.min(window.innerHeight, readerRect.bottom);
       if (visibleBottom - visibleTop <= 120) return null;
 
-      // Basta con que el final haya entrado en el área visible de lectura.
-      // Un límite del 78 % hacía que el popup no se abriera en temas cortos.
+      let visibleIndex: number | null = null;
+      let crossedIndex: number | null = null;
       for (const marker of endings) {
         const index = Number(marker.dataset.summaryChapterEnd);
         if (!Number.isInteger(index) || promptedChapterFinishesRef.current.has(index)) continue;
         const top = marker.getBoundingClientRect().top;
-        if (top >= visibleTop - 64 && top <= visibleBottom - 20) return index;
+        if (top > visibleBottom - 20) {
+          previouslyBelowViewport.add(index);
+          continue;
+        }
+        if (previouslyBelowViewport.delete(index) && hasUserScrolled && crossedIndex === null) {
+          crossedIndex = index;
+        }
+        if (top >= visibleTop - 64 && visibleIndex === null) visibleIndex = index;
       }
-      return null;
+      return visibleIndex ?? crossedIndex;
+    };
+
+    const isEndReached = (index: number) => {
+      if (document.visibilityState !== 'visible') return false;
+      const marker = endings.find((ending) => Number(ending.dataset.summaryChapterEnd) === index);
+      const readerRect = region.getBoundingClientRect();
+      return Boolean(
+        marker &&
+        readerRect.width > 0 &&
+        readerRect.height > 0 &&
+        marker.getBoundingClientRect().top <= Math.min(window.innerHeight, readerRect.bottom) - 20
+      );
     };
 
     const checkReadingPosition = () => {
@@ -1099,7 +1122,9 @@ export function MaterialStudyWorkspace({
         resumeTimer = window.setTimeout(checkReadingPosition, pause + 30);
         return;
       }
-      const index = visibleEndIndex();
+      const index = pendingIndex !== null && isEndReached(pendingIndex)
+        ? pendingIndex
+        : visibleEndIndex();
       if (index === null) {
         clearPending();
         return;
@@ -1121,7 +1146,7 @@ export function MaterialStudyWorkspace({
         pendingIndex = null;
         if (
           Date.now() < chapterFinishNavigationPauseRef.current ||
-          visibleEndIndex() !== index ||
+          !isEndReached(index) ||
           promptedChapterFinishesRef.current.has(index)
         ) return;
         promptedChapterFinishesRef.current.add(index);
@@ -2182,6 +2207,11 @@ export function MaterialStudyWorkspace({
               allowedCardIndices={flashcardTopicIndices}
               topicTitle={flashcardTopicIndex === null ? undefined : summaryChapters[flashcardTopicIndex]?.displayTitle}
               onReturnToTopic={flashcardTopicIndex === null ? undefined : () => returnToSummaryTopic(flashcardTopicIndex)}
+              onPracticeTopic={
+                flashcardTopicIndex !== null && topicQuestionCounts[flashcardTopicIndex] > 0
+                  ? () => startChapterEvaluation(flashcardTopicIndex)
+                  : undefined
+              }
               materialId={materialId}
               onComplete={demo || flashcardTopicIndex !== null ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}

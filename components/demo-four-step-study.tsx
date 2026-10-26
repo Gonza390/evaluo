@@ -154,6 +154,18 @@ export function DemoFourStepStudy({
     setActiveTab('ejercicios');
   };
 
+  const openTopicPractice = (index: number | null) => {
+    if (index === null) {
+      openPractice();
+      return;
+    }
+    setDemoTopicFinished(null);
+    setDemoProgressTopicIndex(null);
+    setDemoTopicIndex(index);
+    setProgressOpen(false);
+    setActiveTab('ejercicios');
+  };
+
   return (
     <MaterialStudyWorkspace
       backHref="/"
@@ -174,11 +186,7 @@ export function DemoFourStepStudy({
       demo={{
         activeTab,
         onTabChange: setActiveTab,
-        onPracticeTopic: (index) => {
-          setDemoTopicFinished(null);
-          setDemoProgressTopicIndex(null);
-          setDemoTopicIndex(index);
-        },
+        onPracticeTopic: openTopicPractice,
         viewerVisible,
         onViewerChange: setViewerVisible,
         practice: demoTopicIndex !== null ? (
@@ -280,6 +288,7 @@ export function DemoFourStepStudy({
             showOnboardingExample={showOnboardingExample}
             showOnboardingTopic={showOnboardingTopic}
             onPractice={openPractice}
+            onPracticeTopic={openTopicPractice}
           />
         ),
         progressOpen,
