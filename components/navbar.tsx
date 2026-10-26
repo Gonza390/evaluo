@@ -79,7 +79,7 @@ function NavItem({
     active
       ? 'bg-primary/5 text-primary'
       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
+  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
 
   if (disabled) {
     return (
@@ -116,15 +116,15 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
     <aside
       className={`hidden border-r border-slate-200/80 bg-white transition-[width,top] duration-200 md:fixed md:bottom-0 md:left-0 md:z-20 md:block ${
         compact ? 'md:top-[56px]' : 'md:top-[81px]'
-      } ${collapsed ? (compact ? 'w-[64px]' : 'w-[76px]') : (compact ? 'w-[216px]' : 'w-[248px]')}`}
+      } ${collapsed ? (compact ? 'w-[60px]' : 'w-[76px]') : (compact ? 'w-[192px]' : 'w-[248px]')}`}
       onClick={collapsed ? onToggleCollapsed : undefined}
     >
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-3" : "px-3 py-4"}`}>
           <nav className={`space-y-1 ${compact ? "pt-1" : "pt-2"}`}>
             <div
-              className={`grid items-center gap-2 ${
-                collapsed ? 'grid-cols-1 justify-items-center' : 'grid-cols-[minmax(0,1fr)_40px]'
+              className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
+                collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_36px]' : 'grid-cols-[minmax(0,1fr)_40px]'
               }`}
             >
               <NavItem
@@ -142,7 +142,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   onClick={onToggleCollapsed}
                   aria-label="Ocultar barra lateral"
                   title="Ocultar barra lateral"
-                  className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                  className={`flex h-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800 ${compact ? 'w-9' : 'w-10'}`}
                 >
                   <ToggleIcon className="h-4 w-4" />
                 </button>
@@ -165,7 +165,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               />
             ))}
 
-            {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} /> : null}
+            {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} compact={compact} /> : null}
           </nav>
 
           <div className="mt-auto border-t border-slate-200/80 pt-3">
@@ -177,12 +177,12 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
+                      : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
                   }`}
                 >
                   <Crown className="h-4 w-4 shrink-0" />
                   {!collapsed ? (
-                    <p className={compact ? "text-[12px] font-semibold" : "text-sm font-semibold"}>Planes y suscripción</p>
+                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>Planes y suscripción</p>
                   ) : null}
                 </Link>
 
@@ -196,7 +196,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
+                      : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
                   }`}
                 >
                   <CircleHelp className="h-4 w-4 shrink-0" />
@@ -208,10 +208,10 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                       collapsed
                         ? 'mx-auto h-11 w-11 justify-center px-0 py-0'
-                        : compact ? 'w-full gap-2 px-2.5 py-2' : 'w-full gap-2.5 px-3 py-2.5'
+                        : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2' : 'w-full gap-2.5 px-3 py-2.5'
                     }`}
                   >
-                    <Avatar className="h-8 w-8">
+                    <Avatar className={compact ? 'h-7 w-7 shrink-0' : 'h-8 w-8'}>
                       <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
