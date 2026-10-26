@@ -239,7 +239,7 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
         prompt,
         options,
         answer: correct,
-        explanation: `Según el material: ${clean(card.back)}`,
+        explanation: `La idea que debés reconocer es: ${clean(card.back)}`,
         topic:
           rawFront
             .replace(/^¿Qué significa\s*/i, '')
@@ -287,7 +287,7 @@ function buildSummaryFallbackCandidates(sections: StudySummarySection[]): Candid
           prompt,
           options,
           answer,
-          explanation: `Esta idea aparece en el resumen del tema “${section.title}”.`,
+          explanation: `El concepto central de “${section.title}” se expresa así: ${truncate(answer, 200)}.`,
           topic: section.title,
           reference: {
             pageStart: null,
