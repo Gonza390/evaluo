@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { isQaAccount } from '@/lib/qa-account';
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { LazyAcademicProfileReminder } from '@/components/dashboard/lazy-academic-profile-reminder';
@@ -124,6 +126,14 @@ export default async function DashboardPage({
       <div className="animate-page-enter min-h-screen bg-white px-4 py-6 sm:px-6 lg:px-8">
         <ReferralPortalDashboardShortcut />
         <div className="mx-auto max-w-6xl">
+          {isQaAccount(user) ? (
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm">
+              <span className="font-semibold text-indigo-900">Cuenta de pruebas de Evaluo</span>
+              <Link href="/qa" className="font-bold text-indigo-700 underline underline-offset-2">
+                Reiniciar onboarding
+              </Link>
+            </div>
+          ) : null}
           {isSucesorioPlan ? (
             <section className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4 sm:px-6">
               <div className="flex items-start gap-3">

@@ -14,6 +14,7 @@ import { StudentMaterialProcessingRefresh } from '@/components/student-material-
 import { StudentMaterialShareControl } from '@/components/student-material-share-control';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { isQaAccount } from '@/lib/qa-account';
 import { hasPremiumAccess } from '@/lib/premium';
 import { getMateriaRoute } from '@/lib/routes';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
@@ -435,6 +436,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     // One onboarding per NEW account, not per URL, PDF or entry point.
     // A skipped tour is intentionally eligible again until explicitly completed.
     const completedAt = user?.app_metadata?.[FIRST_PDF_ONBOARDING_COMPLETED_KEY];
+    const qaAccount = isQaAccount(user);
     const eligibleByAccount = Boolean(
       isOwner && user && !completedAt &&
       shouldAutoStartFirstPdfOnboarding({
@@ -443,10 +445,13 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
         previouslyCompleted: false,
         isOwner,
         materialReady: material.processing_status === 'ready',
+        isQaAccount: qaAccount,
       })
     );
     let previouslyCompleted = false;
-    if (eligibleByAccount && user) {
+    // QA puede repetir la guía tras reiniciarla: eventos antiguos no la bloquean.
+    // Para estudiantes reales se mantiene la comprobación histórica.
+    if (eligibleByAccount && user && !qaAccount) {
       // Backwards compatibility: a real completed tour before this change
       // also counts, but legacy 'skipped' events never count as completion.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

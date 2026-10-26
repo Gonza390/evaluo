@@ -8,11 +8,13 @@ export function shouldAutoStartFirstPdfOnboarding(input: {
   previouslyCompleted: boolean;
   isOwner: boolean;
   materialReady: boolean;
+  isQaAccount?: boolean;
 }) {
   const createdAt = Date.parse(input.accountCreatedAt ?? '');
-  if (!Number.isFinite(createdAt)) return false;
+  const dateEligible = Number.isFinite(createdAt) &&
+    createdAt >= Date.parse(FIRST_PDF_ONBOARDING_ROLLOUT_AT);
   return (
-    createdAt >= Date.parse(FIRST_PDF_ONBOARDING_ROLLOUT_AT) &&
+    (dateEligible || input.isQaAccount === true) &&
     input.isOwner &&
     input.materialReady &&
     !input.completedAt &&
