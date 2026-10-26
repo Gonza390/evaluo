@@ -1655,6 +1655,7 @@ function anchorAndCompleteChapterQuestions(
     const chapterIndex = findSummarySectionForQuestion(question, chapters);
     if (chapterIndex >= 0) counts[chapterIndex] = (counts[chapterIndex] ?? 0) + 1;
   }
+  const usedAnswers = new Set(valid.map((item) => normalizeForDedupe(item.answer)));
   const usedConcepts = new Set(
     anchored.filter((item) => item.kind === 'concept' && item.type === 'multiple_choice')
       .map((item) => normalizeForDedupe(item.topic ?? ''))
@@ -1674,8 +1675,10 @@ function anchorAndCompleteChapterQuestions(
     const tryAdd = (candidate: StudyQuestion) => {
       if (counts[index]! >= MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) return false;
       const key = normalizeForDedupe(candidate.prompt);
-      if (usedPrompts.has(key) || !isReliableTopicQuestion(candidate)) return false;
+      if (usedPrompts.has(key) || usedAnswers.has(normalizeForDedupe(candidate.answer)) ||
+          !isReliableTopicQuestion(candidate)) return false;
       usedPrompts.add(key);
+      usedAnswers.add(normalizeForDedupe(candidate.answer));
       anchored.push(candidate);
       counts[index] = (counts[index] ?? 0) + 1;
       if (candidate.kind === 'concept') usedConcepts.add(normalizeForDedupe(candidate.topic ?? ''));
