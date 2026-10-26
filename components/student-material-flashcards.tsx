@@ -78,6 +78,7 @@ export function StudentMaterialFlashcards({
   allowedCardIndices,
   topicTitle,
   onReturnToTopic,
+  onPracticeTopic,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
@@ -86,6 +87,7 @@ export function StudentMaterialFlashcards({
   allowedCardIndices?: number[];
   topicTitle?: string;
   onReturnToTopic?: () => void;
+  onPracticeTopic?: () => void;
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
   // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
@@ -433,7 +435,9 @@ export function StudentMaterialFlashcards({
         </h3>
         <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm leading-6">
           {unknownCount === 0
-            ? 'Completaste este repaso. Podés volver al tema y seguir estudiando.'
+            ? onPracticeTopic
+              ? 'Recordaste los conceptos del tema. Ahora comprobá cuánto aprendiste con una práctica.'
+              : 'Completaste este repaso. Podés volver al tema y seguir estudiando.'
             : 'Ya identificaste qué recordás de este tema y qué necesitás practicar un poco más.'}
         </p>
         <div className="mt-6 grid grid-cols-2 gap-3">
@@ -458,10 +462,14 @@ export function StudentMaterialFlashcards({
         <Button
           type="button"
           data-topic-flashcards-primary
-          onClick={unknownCount > 0 ? reviewDifficult : onReturnToTopic ?? finishSession}
+          onClick={unknownCount > 0 ? reviewDifficult : onPracticeTopic ?? onReturnToTopic ?? finishSession}
           className="mt-5 min-h-11 w-full rounded-xl"
         >
-          {unknownCount > 0 ? 'Repasar lo que me costó' : 'Continuar estudiando'}
+          {unknownCount > 0
+            ? 'Repasar lo que me costó'
+            : onPracticeTopic
+              ? 'Comprobar cuánto aprendí'
+              : 'Continuar estudiando'}
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
         {onReturnToTopic ? (
