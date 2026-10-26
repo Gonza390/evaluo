@@ -104,10 +104,15 @@ export async function POST(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (isQaAccount(user) || await isAdminActor(user)) {
+    if (isQaAccount(user)) {
+      // Un usuario QA nunca debe poder borrar eventos asociados a session_key enviados por cliente.
+      return NextResponse.json({ ok: true, skipped: 'qa_user' }, { status: 202 });
+    }
+
+    if (await isAdminActor(user)) {
       const sessionKeys = Array.from(new Set(rows.map((row) => row.session_key)));
       await admin.from('analytics_events').delete().in('session_key', sessionKeys);
-      return NextResponse.json({ ok: true, skipped: isQaAccount(user) ? 'qa_user' : 'admin_user' }, { status: 202 });
+      return NextResponse.json({ ok: true, skipped: 'admin_user' }, { status: 202 });
     }
 
     for (const row of rows) {
