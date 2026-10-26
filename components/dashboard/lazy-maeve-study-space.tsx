@@ -9,9 +9,9 @@ const MaeveStudySpaceLazy = dynamic(
     import('@/components/dashboard/maeve-study-space').then((module) => module.MaeveStudySpace),
   {
     loading: () => (
-      <div className="mx-auto max-w-xl space-y-4" aria-busy="true">
-        <div className="min-h-[180px] animate-pulse rounded-[1.35rem] border border-slate-200/80 bg-slate-50" />
-        <div className="min-h-[240px] animate-pulse rounded-2xl border border-slate-200/80 bg-slate-50" />
+      <div className="mx-auto max-w-[760px] space-y-3" aria-busy="true">
+        <div className="min-h-[160px] animate-pulse rounded-[1.25rem] border border-slate-200/80 bg-slate-50" />
+        <div className="min-h-[180px] animate-pulse rounded-xl border border-slate-200/80 bg-slate-50" />
       </div>
     ),
   }
