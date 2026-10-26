@@ -33,7 +33,8 @@ import {
   type TopicPracticeContext,
 } from '@/lib/student-materials/topic-practice';
 import { getStudentMaterialPracticeContextAction } from '@/lib/actions/student-material-practice';
-import type { StudySummarySection } from '@/lib/student-materials/types';
+import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-materials/types';
+import { buildGroundedErrorContrast } from '@/lib/student-materials/error-contrast';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
 import {
   buildPracticeTopicResults,
@@ -66,6 +67,7 @@ type StudentMaterialExamProps = {
   onViewAllTopics?: () => void;
   onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
   sections?: StudySummarySection[];
+  glossary?: StudyGlossaryItem[];
   topicSectionIndex?: number;
   simulation?: {
     context: TopicPracticeContext;
@@ -88,6 +90,7 @@ export function StudentMaterialExam({
   onViewAllTopics,
   onReturnToTopic,
   sections = [],
+  glossary = [],
   simulation,
   topicSectionIndex,
 }: StudentMaterialExamProps) {
@@ -1304,6 +1307,9 @@ export function StudentMaterialExam({
   const isCorrect =
     current.type === 'multiple_choice' &&
     normalizeAnswer(selectedAnswer) === normalizeAnswer(current.answer);
+  const groundedMistakeContrast = current.type === 'multiple_choice' && !isCorrect && isRevealed
+    ? buildGroundedErrorContrast(selectedAnswer, current.answer, glossary)
+    : null;
   const openAssessment = openAssessments[current.id];
   const canAdvance =
     current.type === 'multiple_choice' ? isRevealed : isRevealed && Boolean(openAssessment);
@@ -1578,6 +1584,12 @@ export function StudentMaterialExam({
                 <p className="text-foreground mt-2 text-[13.5px] leading-6">
                   <span className="font-semibold">Respuesta:</span> {current.answer}
                 </p>
+                {groundedMistakeContrast ? (
+                  <div className="border-primary/15 bg-primary/5 mt-3 rounded-lg border px-3 py-3">
+                    <p className="text-foreground text-[12px] font-semibold">Por qué esa opción no era la correcta</p>
+                    <p className="text-foreground mt-1.5 text-[13px] leading-5">{groundedMistakeContrast}</p>
+                  </div>
+                ) : null}
                 <p className="text-muted-foreground mt-2 text-[13px] leading-5">
                   {current.explanation}
                 </p>
