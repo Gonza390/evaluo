@@ -110,7 +110,20 @@ async function selectTab(page, value, mobile) {
     await page.getByRole('menuitem', { name: /Glosario/ }).click();
     return;
   }
-  await page.locator('[data-pdf-study-tab][data-recommended-tab="' + value + '"]').first().click();
+  // El header aparece duplicado por los paneles responsive de React Activity.
+  // Seleccionar la instancia visible y, si un popup aparece mientras hacemos
+  // clic, cerrarlo y repetir la navegación sin forzar controles ocultos.
+  const tab = page.locator('[data-pdf-study-tab][data-recommended-tab="' + value + '"]:visible').first();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await tab.click({ timeout: 5000 });
+      return;
+    } catch (error) {
+      if (!(await chapterClose.isVisible().catch(() => false))) throw error;
+      await chapterClose.click();
+    }
+  }
+  throw new Error('No se pudo abrir la pestaña visible ' + value);
 }
 
 for (const width of viewports) {
