@@ -1,6 +1,16 @@
 name: Progreso responsive QA
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'components/dashboard/pdf-progress-panel.tsx'
+      - 'components/dashboard/study-error-detail.tsx'
+      - 'components/student-material-exam.tsx'
+      - 'components/student-material-flashcards.tsx'
+      - 'components/material-study-workspace.tsx'
+      - 'scripts/qa-progreso-responsive.mjs'
+      - '.github/workflows/progreso-responsive-qa.yml'
   pull_request:
     paths:
       - 'components/dashboard/pdf-progress-panel.tsx'
