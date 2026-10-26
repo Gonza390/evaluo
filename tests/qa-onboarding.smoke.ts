@@ -37,7 +37,12 @@ assert.ok(!restartAction.includes('deleteUser('));
 assert.ok(testPage.includes('if (!isQaAccount(user)) notFound()'));
 assert.ok(materialPage.includes('isQaAccount: qaAccount'));
 assert.ok(materialPage.includes('eligibleByAccount && user && !qaAccount'));
-assert.ok(analytics.includes('isQaAccount(user) || await isAdminActor(user)'));
+assert.ok(analytics.includes('if (isQaAccount(user)) {'));
+assert.ok(analytics.includes("skipped: 'qa_user'"));
+assert.ok(analytics.indexOf('if (isQaAccount(user)) {') < analytics.indexOf("delete().in('session_key'"),
+  'QA bypass must happen before any session deletion.');
+assert.ok(callback.includes('isAdminClientConfigured() && !qaAccount'));
+assert.ok(!callback.includes(".delete().eq('session_key'"), 'QA login must never delete arbitrary analytics sessions.');
 assert.ok(callback.includes("(isNewUser || qaAccount) && nextPath === '/dashboard'"));
 
 console.log('QA account authorization and safe onboarding replay smoke tests passed.');
