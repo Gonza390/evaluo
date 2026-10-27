@@ -52,4 +52,5 @@ assert.match(cards, /const learningCount = allowedCardIndices !== undefined/, 'A
 assert.match(cards, /topicMode \? 'max-w-\[610px\]' : 'max-w-\[720px\]'/, 'Las calificaciones se mantienen centradas en ambos modos y en móvil.');
 assert.match(cards, /data-topic-flashcards-review/);
 assert.match(cards, /data-topic-flashcards-primary/);
-assert.doesNotMatch(cards, /onReturnToTopic/, 'El cierre no regresa al Resumen.');
+assert.match(cards, /onClick=\{onPracticeTopic \?\? onReturnToTopic\}/, 'Priorizar la práctica y permitir regresar si el tema no tiene preguntas.');
+assert.match(workspace, /onReturnToTopic=\{/, 'El regreso debe conservar el capítulo seleccionado.');
