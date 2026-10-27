@@ -768,7 +768,7 @@ for (const formSource of [activeLoginForm, fallbackLoginForm]) {
   assert.match(formSource, /getEmailSignupDestination/);
   assert.match(formSource, /auth_kind: 'signup'/);
   assert.match(formSource, /window.location.href = signupDestination/);
-  assert.match(formSource, /Registro exitoso\\. Revisá tu correo para confirmar/);
+  assert.ok(formSource.includes('Registro exitoso. Revisá tu correo para confirmar'));
 }
 assert.doesNotMatch(activeLoginForm, /data.session && reason === 'shared-pdf'/);
 
