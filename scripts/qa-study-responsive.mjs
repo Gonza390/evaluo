@@ -72,6 +72,7 @@ async function saveState(page, name, width, errors) {
     fullPage: false,
   });
   assert.ok(metrics.rootOverflow <= 2, 'Horizontal root overflow: ' + JSON.stringify(metrics));
+  assert.equal(metrics.visibleOffscreen.length, 0, 'Visible components extend beyond viewport: ' + JSON.stringify(metrics));
   assert.equal(errors.length, 0, 'Runtime errors: ' + errors.join('; '));
   outcomes.push({ name, width, metrics, errors });
   console.log('PASS ' + name + ' ' + width + ' ' + JSON.stringify(metrics));
