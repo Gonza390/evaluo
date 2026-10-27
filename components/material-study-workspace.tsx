@@ -2163,6 +2163,11 @@ export function MaterialStudyWorkspace({
                   ? () => startChapterEvaluation(flashcardTopicIndex)
                   : undefined
               }
+              onReturnToTopic={
+                flashcardTopicIndex !== null
+                  ? () => returnToSummaryTopic(flashcardTopicIndex)
+                  : undefined
+              }
               materialId={materialId}
               onComplete={demo || flashcardTopicIndex !== null ? undefined : requestExamDatePrompt}
               demoMode={Boolean(demo)}
