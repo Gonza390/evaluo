@@ -119,7 +119,7 @@ export function SummaryChapterFinish({
                 type="button"
                 data-summary-topic-continue={chapterIndex}
                 onClick={onContinue}
-                className="text-muted-foreground hover:text-foreground min-min-h-10 rounded-lg px-3 text-[12px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="text-muted-foreground hover:text-foreground min-h-10 rounded-lg px-3 text-[12px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Seguir leyendo
               </button>
