@@ -94,6 +94,18 @@ export function tagGlossaryChapters(
   });
 }
 
+/**
+ * La invitación adicional es sólo para glosarios largos consultados desde un tema.
+ * No se muestra en el glosario general ni sin preguntas fiables disponibles.
+ */
+export function shouldOfferTopicGlossaryPractice(
+  topicIndex: number | null,
+  conceptCount: number,
+  availableQuestions: number
+): boolean {
+  return topicIndex !== null && conceptCount > 10 && availableQuestions > 0;
+}
+
 /** No repartir conceptos por posición ni usar similitud vaga como asociación académica. */
 export function getTopicStudyResources(
   sections: StudySummarySection[],

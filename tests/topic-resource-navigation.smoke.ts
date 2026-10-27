@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { shouldOfferTopicGlossaryPractice } from '../lib/student-materials/topic-study-resources.ts';
 
 const popup = readFileSync('components/study/summary-chapter-finish.tsx', 'utf8');
 const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
@@ -54,3 +55,31 @@ assert.match(cards, /data-topic-flashcards-review/);
 assert.match(cards, /data-topic-flashcards-primary/);
 assert.match(cards, /onClick=\{onPracticeTopic \?\? onReturnToTopic\}/, 'Priorizar la práctica y permitir regresar si el tema no tiene preguntas.');
 assert.match(workspace, /onReturnToTopic=\{/, 'El regreso debe conservar el capítulo seleccionado.');
+
+assert.equal(shouldOfferTopicGlossaryPractice(0, 10, 6), false,
+  'Con 10 conceptos no debe agregarse una invitación al final.');
+assert.equal(shouldOfferTopicGlossaryPractice(0, 11, 6), true,
+  'Con 11 conceptos del mismo tema sí debe aparecer.');
+assert.equal(shouldOfferTopicGlossaryPractice(null, 30, 6), false,
+  'El glosario general nunca debe añadir la invitación.');
+assert.equal(shouldOfferTopicGlossaryPractice(0, 20, 0), false,
+  'No ofrecer un enlace a práctica sin preguntas fiables.');
+assert.equal(shouldOfferTopicGlossaryPractice(1, 25, 3), true,
+  'La decisión aplica a cualquier capítulo, no solo al primero.');
+assert.match(workspace, /const showLongTopicGlossaryPracticeCta = shouldOfferTopicGlossaryPractice\(/,
+  'La condición por longitud debe controlar el CTA.');
+assert.match(workspace, /showLongTopicGlossaryPracticeCta && glossaryTopicIndex !== null/,
+  'El footer de práctica requiere el contexto de un tema.');
+assert.match(workspace, /data-topic-glossary-practice-cta/,
+  'Debe existir un footer accesible de continuación.');
+assert.match(workspace, /onClick=\{\(\) => startChapterEvaluation\(glossaryTopicIndex\)\}/,
+  'El footer debe abrir la práctica de ese mismo tema.');
+const glossaryListPosition = workspace.indexOf('glossaryItemsToShow.map((item)');
+const glossaryFooterPosition = workspace.indexOf('data-topic-glossary-practice-cta');
+const flashcardsTabPosition = workspace.indexOf('value="tarjetas"', glossaryFooterPosition);
+assert.ok(glossaryListPosition >= 0 &&
+  glossaryFooterPosition > glossaryListPosition &&
+  flashcardsTabPosition > glossaryFooterPosition,
+  'La invitación debe aparecer debajo de los términos, sin afectar Flashcards.');
+
+
