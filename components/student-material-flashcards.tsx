@@ -78,6 +78,7 @@ export function StudentMaterialFlashcards({
   allowedCardIndices,
   topicTitle,
   onPracticeTopic,
+  onReturnToTopic,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
@@ -86,6 +87,7 @@ export function StudentMaterialFlashcards({
   allowedCardIndices?: number[];
   topicTitle?: string;
   onPracticeTopic?: () => void;
+  onReturnToTopic?: () => void;
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
   // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
@@ -472,8 +474,8 @@ export function StudentMaterialFlashcards({
           </div>
         </div>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
-          <Button data-topic-flashcards-primary type="button" onClick={onPracticeTopic} disabled={!onPracticeTopic} className="min-h-11 w-full rounded-lg text-[13px]">
-            Practicar este tema <ArrowRight aria-hidden="true" className="ml-2 size-4" />
+          <Button data-topic-flashcards-primary type="button" onClick={onPracticeTopic ?? onReturnToTopic} disabled={!onPracticeTopic && !onReturnToTopic} className="min-h-11 w-full rounded-lg text-[13px]">
+            {onPracticeTopic ? 'Practicar este tema' : 'Volver al tema'} <ArrowRight aria-hidden="true" className="ml-2 size-4" />
           </Button>
           {needsReviewCount > 0 ? (
             <Button data-topic-flashcards-review type="button" variant="outline" onClick={reviewDifficult} className="min-h-11 w-full rounded-lg text-[13px]">
