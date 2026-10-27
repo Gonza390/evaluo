@@ -665,8 +665,10 @@ assert.match(demoFlowSource, /onPracticeTopic=\{openTopicPractice\}/,
   'El detalle de Progreso de la demo debe llevar a la práctica específica del tema.');
 assert.match(demoFlowSource, /onPracticeTopic: openTopicPractice/,
   'El resumen de la demo y Progreso deben compartir la misma selección de tema.');
-assert.match(flashcardsResultSource, /onClick=\{onPracticeTopic\}/,
-  'Al terminar Flashcards por tema debe priorizar la práctica.');
+assert.match(flashcardsResultSource, /onClick=\{onPracticeTopic \?\? onReturnToTopic\}/,
+  'Al terminar Flashcards por tema debe haber una acción: practicar, o regresar al capítulo sin preguntas.');
+assert.match(materialWorkspaceSource, /onReturnToTopic=\{/,
+  'El regreso desde Flashcards sin práctica debe volver al tema correspondiente.');
 assert.match(flashcardsResultSource, /Practicar este tema/,
   'La acción principal es practicar el mismo tema.');
 assert.match(flashcardsResultSource, /onClick=\{reviewDifficult\}/,
