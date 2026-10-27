@@ -51,7 +51,10 @@ import { StudentMaterialExam } from '@/components/student-material-exam';
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
 import { SummaryChapterFinish } from '@/components/study/summary-chapter-finish';
 import { getFirstTopicResourceInfo } from '@/lib/student-materials/first-topic-resources';
-import { getTopicStudyResources } from '@/lib/student-materials/topic-study-resources';
+import {
+  getTopicStudyResources,
+  shouldOfferTopicGlossaryPractice,
+} from '@/lib/student-materials/topic-study-resources';
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
@@ -904,6 +907,11 @@ export function MaterialStudyWorkspace({
   const glossaryItemsToShow = glossaryTopicIndex === null
     ? usefulGlossary
     : topicStudyResources[glossaryTopicIndex]?.concepts ?? [];
+  const showLongTopicGlossaryPracticeCta = shouldOfferTopicGlossaryPractice(
+    glossaryTopicIndex,
+    glossaryItemsToShow.length,
+    glossaryTopicIndex === null ? 0 : (topicQuestionCounts[glossaryTopicIndex] ?? 0)
+  );
 
   // Restaurar la posición real de lectura al regresar de los recursos de un tema.
   useEffect(() => {
@@ -2135,6 +2143,26 @@ export function MaterialStudyWorkspace({
                   );
                 })}
               </div>
+              {showLongTopicGlossaryPracticeCta && glossaryTopicIndex !== null ? (
+                <div
+                  data-topic-glossary-practice-cta
+                  className="border-border mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="text-foreground text-[13px] font-semibold">¿Seguimos con la práctica?</p>
+                    <p className="text-muted-foreground mt-1 text-[12px] leading-5">
+                      Comprobá cuánto aprendiste de este tema.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    className="min-h-10 self-start rounded-lg px-3 text-[12px] sm:shrink-0"
+                    onClick={() => startChapterEvaluation(glossaryTopicIndex)}
+                  >
+                    Practicar este tema <ChevronRight aria-hidden className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="text-muted-foreground px-2 py-3 text-[13px] leading-5">
