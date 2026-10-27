@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase-client';
+import { getEmailSignupDestination } from '@/lib/email-signup-destination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -173,7 +174,7 @@ export default function LoginForm() {
 
     try {
       if (isSignUp) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
         });
@@ -192,6 +193,19 @@ export default function LoginForm() {
           location,
           provider: 'email',
         });
+        const signupDestination = getEmailSignupDestination(signUpData.session, nextPath);
+        if (signupDestination) {
+          trackMarketingEvent('auth_completed', {
+            location,
+            provider: 'email',
+            auth_kind: 'signup',
+            destination: signupDestination,
+          });
+          window.location.href = signupDestination;
+          return;
+        }
+
+        // Cuando Supabase exige verificar el correo no existe una sesión activa.
         setError('Registro exitoso. Revisá tu correo para confirmar tu cuenta.');
         return;
       }
