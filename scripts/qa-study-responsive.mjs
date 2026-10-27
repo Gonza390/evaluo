@@ -83,6 +83,10 @@ async function visit(page, path, ready) {
   assert.equal(result?.status(), 200, 'Preview must respond 200: ' + path);
   // Activity conserva pestañas ocultas montadas: siempre seleccionar la instancia visible.
   await page.locator(ready + ':visible').first().waitFor({ state: 'visible', timeout: 20000 });
+  // La vista puede estar visible desde SSR antes de que React hidrate los
+  // handlers de navegación: esperar a la carga y a un breve asentamiento.
+  await page.waitForLoadState('load');
+  await page.waitForTimeout(450);
 }
 
 async function selectTab(page, value, mobile) {
@@ -103,13 +107,23 @@ async function selectTab(page, value, mobile) {
   }
   if (mobile && ['resumen', 'tarjetas', 'ejercicios', 'progreso'].includes(value)) {
     const label = { resumen: 'Resumen', tarjetas: 'Flashcards', ejercicios: 'Práctica', progreso: 'Progreso' }[value];
-    await page.locator('[data-pdf-mobile-navigation] button').filter({ hasText: label }).first().click();
+    await page.locator('[data-pdf-mobile-navigation]:visible').first().getByRole('button', { name: label, exact: true }).click();
     return;
   }
   if (mobile && value === 'glosario') {
-    await page.getByRole('button', { name: /Más herramientas/ }).last().click();
-    await page.getByRole('menuitem', { name: /Glosario/ }).click();
-    return;
+    const nav = page.locator('[data-pdf-mobile-navigation]:visible').first();
+    const more = nav.getByRole('button', { name: /Más herramientas/ });
+    const glossary = page.getByRole('menuitem', { name: /Glosario/ });
+    // Evitar instancias ocultas de React Activity. Reintentar el menú visible
+    // cuando el portal de opciones todavía no terminó de montarse.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (!(await glossary.isVisible().catch(() => false))) await more.click({ timeout: 6000 });
+      if (await glossary.isVisible().catch(() => false)) {
+        await glossary.click({ timeout: 6000 });
+        return;
+      }
+    }
+    throw new Error('No se abrió Glosario desde Más herramientas');
   }
   // El header aparece duplicado por los paneles responsive de React Activity.
   // Seleccionar la instancia visible y, si un popup aparece mientras hacemos
@@ -150,7 +164,7 @@ for (const width of viewports) {
   try {
     await visit(page, '/preview/progreso-pdf', '[data-study-summary-intro]');
     await selectTab(page, 'glosario', mobile);
-    await page.locator('[data-study-glossary]:visible').first().waitFor({ timeout: 20000 });
+    await page.locator('[data-study-glossary]:visible').first().waitFor({ timeout: 35000 });
     await saveState(page, 'glosario', width, errors);
 
     await selectTab(page, 'tarjetas', mobile);
