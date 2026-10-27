@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronDown, Eye, EyeOff, FileText, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
+import { getEmailSignupDestination } from '@/lib/email-signup-destination';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { getPdfFirstDraftMeta } from '@/lib/pdf-first-draft';
 import { isPdfFirstActivationPath } from '@/lib/profile-completion';
@@ -284,10 +285,19 @@ export default function LoginFormGoogleFirst() {
           },
           data.user?.id ?? null
         );
-        if (data.session && reason === 'shared-pdf' && nextPath.startsWith('/materiales/')) {
-          window.location.href = nextPath;
+        const signupDestination = getEmailSignupDestination(data.session, nextPath);
+        if (signupDestination) {
+          trackMarketingEvent('auth_completed', {
+            location,
+            provider: 'email',
+            auth_kind: 'signup',
+            destination: signupDestination,
+          });
+          window.location.href = signupDestination;
           return;
         }
+
+        // Solo esperamos correo cuando Supabase NO devolvió una sesión.
         setMessage(
           reason === 'shared-pdf'
             ? 'Registro exitoso. Revisá tu correo para confirmar la cuenta y acceder al PDF compartido.'

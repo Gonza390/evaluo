@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { getEmailSignupDestination } from '../lib/email-signup-destination.ts';
 import './study-error-navigation.smoke.ts';
 import './study-error-review-prompt.smoke.ts';
 import {
@@ -751,5 +752,24 @@ assert.ok(topicSupportView.includes('text-[13.5px] leading-6'));
 for (const src of [flashcardView, practiceView, diagnosticView, errorReviewView]) {
   assert.ok(!src.includes('transform: scale('), 'Compactar componentes sin zoom CSS');
 }
+
+
+// Registro por correo: sesión activa = acceso directo; sesión ausente = verificación.
+assert.equal(getEmailSignupDestination(null, '/dashboard'), null);
+assert.equal(getEmailSignupDestination({}, '/dashboard'), null);
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/dashboard'), '/dashboard?openUpload=1&source=signup-direct');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/materiales/pdf-123?tab=resumen'), '/materiales/pdf-123?tab=resumen');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/simulador?materia=1'), '/simulador?materia=1');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, 'https://evil.example/'), '/dashboard?openUpload=1&source=signup-direct');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '//evil.example/'), '/dashboard?openUpload=1&source=signup-direct');
+const activeLoginForm = readFileSync('components/LoginFormGoogleFirst.tsx', 'utf8');
+const fallbackLoginForm = readFileSync('components/LoginForm.tsx', 'utf8');
+for (const formSource of [activeLoginForm, fallbackLoginForm]) {
+  assert.match(formSource, /getEmailSignupDestination/);
+  assert.match(formSource, /auth_kind: 'signup'/);
+  assert.match(formSource, /window.location.href = signupDestination/);
+  assert.ok(formSource.includes('Registro exitoso. Revisá tu correo para confirmar'));
+}
+assert.doesNotMatch(activeLoginForm, /data.session && reason === 'shared-pdf'/);
 
 console.log('Flow smoke tests passed.');
