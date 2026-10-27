@@ -230,9 +230,18 @@ for (const width of [375, 1440]) {
     assert.equal(await page.locator('[data-topic-flashcards-primary]:visible').count(), 1,
       'El cierre por tema debe llevar a practicar');
     await saveState(page, 'flashcards-por-tema-resultado', width, errors);
-    await page.locator('[data-topic-flashcards-primary]:visible').first().click();
-    await page.locator('[data-recommended-practice]:visible').first().waitFor({ timeout: 12000 });
-    await saveState(page, 'flashcards-por-tema-a-practica', width, errors);
+    const nextAction = page.locator('[data-topic-flashcards-primary]:visible').first();
+    assert.equal(await nextAction.isEnabled(), true, 'El estudiante nunca debe quedar con CTA deshabilitado');
+    const nextCopy = (await nextAction.textContent()) ?? '';
+    await nextAction.click();
+    if (/Practicar este tema/.test(nextCopy)) {
+      await page.locator('[data-recommended-practice]:visible').first().waitFor({ timeout: 12000 });
+      await saveState(page, 'flashcards-por-tema-a-practica', width, errors);
+    } else {
+      assert.match(nextCopy, /Volver al tema/, 'Sin preguntas fiables debe poder regresar al capítulo');
+      await page.locator('[data-study-summary-intro]:visible').first().waitFor({ timeout: 12000 });
+      await saveState(page, 'flashcards-por-tema-vuelta-al-resumen', width, errors);
+    }
   } catch (error) {
     failures.push('flashcards-por-tema/' + width + ': ' + String(error));
     await page.screenshot({
