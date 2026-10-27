@@ -177,6 +177,71 @@ for (const width of viewports) {
   }
 }
 
+
+// Recorrido de tarjetas por tema: la misma tarjeta, sin pantalla de inicio,
+// con el tema visible, dos calificaciones y destino a la práctica de ese tema.
+for (const width of [375, 1440]) {
+  const page = await browser.newPage({ viewport: { width, height: width < 768 ? 740 : 900 } });
+  const errors = captureErrors(page);
+  try {
+    await visit(page, '/preview/progreso-pdf', '[data-study-summary-intro]');
+    const region = page.locator('[role="region"][aria-label="Contenido de estudio"]:visible').first();
+    const chapterOne = region.locator('[data-summary-reading-section="1"]').first();
+    await chapterOne.evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await page.waitForTimeout(350);
+    // Disparar un scroll normal si el salto anterior no cruzó el umbral de lectura.
+    if (!(await page.locator('[data-summary-chapter-finish]:visible').first().isVisible().catch(() => false))) {
+      await region.evaluate((element) => {
+        element.scrollTop = Math.min(element.scrollHeight - element.clientHeight, element.scrollTop + 150);
+        element.dispatchEvent(new Event('scroll'));
+      });
+    }
+    const finish = page.locator('[data-summary-chapter-finish]:visible').first();
+    await finish.waitFor({ state: 'visible', timeout: 12000 });
+    const flashcards = finish.locator('[data-summary-topic-flashcards]');
+    assert.equal(await flashcards.isEnabled(), true, 'Tema debe tener tarjetas para repasar');
+    await saveState(page, 'fin-capitulo-antes-flashcards', width, errors);
+    await flashcards.click();
+    const card = page.locator('[data-flashcard-card]:visible').first();
+    await card.waitFor({ state: 'visible', timeout: 15000 });
+    await page.locator('[data-flashcard-topic]:visible').first().waitFor();
+    assert.equal(await page.getByRole('button', { name: 'Comenzar repaso' }).isVisible().catch(() => false), false,
+      'Flashcards de tema empiezan directamente');
+    assert.equal(await page.locator('[data-flashcard-grade]:visible').count(), 2,
+      'Sólo Mal y Bien son calificaciones, Aprendiendo es estado');
+    await saveState(page, 'flashcards-por-tema', width, errors);
+
+    let finished = false;
+    for (let n = 0; n < 30; n++) {
+      if (await page.locator('[data-topic-flashcards-result]:visible').count() > 0) {
+        finished = true;
+        break;
+      }
+      const current = page.locator('[data-flashcard-card]:visible').first();
+      await current.waitFor({ state: 'visible', timeout: 8000 });
+      await current.click();
+      await page.waitForTimeout(510);
+      assert.equal(await current.locator('[data-flashcard-face]').getAttribute('data-flashcard-face'), 'back',
+        'Tarjeta por tema debe girar hasta la respuesta');
+      await page.locator('[data-flashcard-grade="good"]:visible').first().click();
+    }
+    assert.ok(finished, 'La sesión por tema debe terminar dentro de 30 tarjetas');
+    assert.equal(await page.locator('[data-topic-flashcards-primary]:visible').count(), 1,
+      'El cierre por tema debe llevar a practicar');
+    await saveState(page, 'flashcards-por-tema-resultado', width, errors);
+    await page.locator('[data-topic-flashcards-primary]:visible').first().click();
+    await page.locator('[data-recommended-practice]:visible').first().waitFor({ timeout: 12000 });
+    await saveState(page, 'flashcards-por-tema-a-practica', width, errors);
+  } catch (error) {
+    failures.push('flashcards-por-tema/' + width + ': ' + String(error));
+    await page.screenshot({
+      path: outputDir + '/FAILED-flashcards-por-tema-' + width + '.png', animations: 'disabled',
+    }).catch(() => {});
+  } finally {
+    await page.close();
+  }
+}
+
 await browser.close();
 await writeFile(outputDir + '/results.json', JSON.stringify({ results: outcomes, failures }, null, 2));
 if (failures.length) {
