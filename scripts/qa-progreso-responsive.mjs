@@ -178,7 +178,7 @@ await check('topic reinforcement: saved explanation -> optional help -> independ
     await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
     await page.getByRole('button', { name: /Continuar estudiando|Comenzar a estudiar/ }).first().click();
-    await page.getByRole('button', { name: 'Reforzar dificultades', exact: true }).first().click();
+    await page.getByRole('button', { name: /Reforzar (?:las )?dificultades/i }).first().click();
     const review = page.locator('[data-topic-reinforcement]:visible').first();
     await review.waitFor(wait);
     await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
