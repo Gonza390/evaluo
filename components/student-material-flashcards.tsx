@@ -426,7 +426,7 @@ export function StudentMaterialFlashcards({
     return (
       <div className="border-border bg-muted rounded-xl border px-4 py-5 text-center">
         <p className="text-foreground font-semibold">No encontramos conceptos suficientes</p>
-        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5 leading-6">
+        <p className="text-muted-foreground mt-1.5 text-[13px] leading-6">
           Regenerá el resumen y el glosario para intentar construir tarjetas útiles.
         </p>
       </div>
