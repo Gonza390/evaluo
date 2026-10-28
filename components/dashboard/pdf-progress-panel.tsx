@@ -298,7 +298,7 @@ export function PdfProgressPanel({
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id={`real-detail-title-${panelId}`} className="text-xl font-semibold break-words">
+        <h2 id={`real-detail-title-${panelId}`} className="text-[16px] leading-[1.4] font-semibold break-words">
           {currentTopic?.title ?? 'Otros conceptos'}
         </h2>
         {!reviewOpen ? (
@@ -478,7 +478,7 @@ export function PdfProgressPanel({
               </div>
             )}
             {summaryBody ? (
-              <div className="mt-5 min-w-0 max-w-[78ch] [&_p]:text-base! [&_p]:leading-7!">
+              <div className="mt-5 min-w-0 max-w-[78ch] [&_p]:text-[14px]! sm:[&_p]:text-[13px]! [&_p]:leading-5!">
                 <StudyRichText body={summaryBody} />
               </div>
             ) : (
