@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { logError } from '@/lib/observability';
 import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
 
 async function SimuladorContent({
@@ -18,6 +19,7 @@ async function SimuladorContent({
 
   const demoMode = !user;
   let materiaId = sParams.materiaId as string;
+  let fallbackLookupFailed = false;
   const parcialParam = sParams.parcial as string;
   const parcial = parcialParam ? parseInt(parcialParam, 10) : 1;
   const universidadId = sParams.universidad_id as string;
@@ -26,13 +28,18 @@ async function SimuladorContent({
   if (!materiaId) {
     // Fallback: si llegan sin materia, elegimos una que ya tenga preguntas cargadas.
     const admin = createAdminClient();
-    const { data: fallbackRows } = await admin
+    const { data: fallbackRows, error: fallbackError } = await admin
       .from('preguntas_banco')
       .select('materia_id')
       .not('materia_id', 'is', null)
-      .order('created_at', { ascending: false })
+      .order('creado_at', { ascending: false })
       .limit(1);
-    materiaId = (fallbackRows?.[0]?.materia_id as string | undefined) ?? '';
+    if (fallbackError) {
+      logError('simulador.defaultMateria', fallbackError, { flow: 'public_simulator' });
+      fallbackLookupFailed = true;
+    } else {
+      materiaId = (fallbackRows?.[0]?.materia_id as string | undefined) ?? '';
+    }
   }
 
   if (!materiaId) {
@@ -43,16 +50,29 @@ async function SimuladorContent({
             Práctica no disponible
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
-            No pudimos iniciar la práctica
+            {fallbackLookupFailed ? 'No pudimos consultar las materias' : 'No pudimos iniciar la práctica'}
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            No encontramos una materia con preguntas disponible para iniciar automáticamente.
-            Elegí una materia para ver sus prácticas o volvé a tu espacio de estudio.
+            {fallbackLookupFailed
+              ? 'Hubo un problema temporal al buscar una materia. Volvé a intentarlo o elegí una desde Explorar.'
+              : 'No encontramos una materia con preguntas disponible para iniciar automáticamente. Elegí una materia para ver sus prácticas o volvé a tu espacio de estudio.'}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {fallbackLookupFailed ? (
+              <Link
+                href="/simulador"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
+                Reintentar
+              </Link>
+            ) : null}
             <Link
               href="/explorar"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              className={`inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                fallbackLookupFailed
+                  ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
               Explorar materias
             </Link>
