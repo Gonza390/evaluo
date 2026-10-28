@@ -26,6 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/ia-para-estudiantes`,
     },
     {
+      url: `${baseUrl}/comparar/evaluo-vs-notebooklm`,
+    },
+    {
+      url: `${baseUrl}/convertir-pdf-en-preguntas`,
+    },
+    {
       url: `${baseUrl}/como-estudiar-ingreso-unlam`,
       lastModified: new Date('2026-10-20'),
     },
