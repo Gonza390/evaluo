@@ -2,6 +2,7 @@
 // LCP from a source trace that painted the candidate much earlier. Applied
 // Chrome throttling measures the actual delayed load and preserves all budgets.
 // All other pages retain the regular simulated profile in lighthouserc.cjs.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const baseline = require('./lighthouserc.cjs');
 
 module.exports = {
