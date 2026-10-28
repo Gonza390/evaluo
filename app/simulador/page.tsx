@@ -58,11 +58,23 @@ async function SimuladorContent({
               : 'No encontramos una materia con preguntas disponible para iniciar automáticamente. Elegí una materia para ver sus prácticas o volvé a tu espacio de estudio.'}
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {fallbackLookupFailed ? (
+              <Link
+                href="/simulador"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
+                Reintentar
+              </Link>
+            ) : null}
             <Link
-              href={fallbackLookupFailed ? '/simulador' : '/explorar'}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              href="/explorar"
+              className={`inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                fallbackLookupFailed
+                  ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
             >
-              {fallbackLookupFailed ? 'Reintentar' : 'Explorar materias'}
+              Explorar materias
             </Link>
             <Link
               href={user ? '/dashboard' : '/'}
