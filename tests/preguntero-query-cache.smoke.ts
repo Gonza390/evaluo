@@ -19,7 +19,9 @@ assert.ok(simulatorLanding.includes(".order('creado_at', { ascending: false })")
 assert.ok(!simulatorLanding.includes(".order('created_at', { ascending: false })"));
 assert.ok(simulatorLanding.includes('if (fallbackError)'));
 assert.ok(simulatorLanding.includes("logError('simulador.defaultMateria'"));
-assert.ok(simulatorLanding.includes("fallbackLookupFailed ? 'Reintentar'"));
+assert.ok(simulatorLanding.includes('fallbackLookupFailed ? ('));
+assert.ok(simulatorLanding.includes('href="/simulador"'));
+assert.ok(simulatorLanding.includes('href="/explorar"'));
 assert.ok(simulatorDetail.includes('isTransientSimulatorCatalogError(error)'));
 assert.ok(simulatorDetail.includes('queryPublicMateriaExists(materiaId, 2500)'));
 assert.ok(simulatorDetail.includes("['public-simulator-materia-exists-v2']"));
