@@ -63,15 +63,20 @@ jobs:
       - name: Performance budget
         run: npm run performance:budget
 
-      - name: Lighthouse CI
+      - name: Lighthouse CI — standard routes (simulated)
         run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
+
+      - name: Lighthouse CI — Explorar (applied throttling)
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.explorar.cjs
 
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
-          path: .lighthouseci/reports
+          path: |
+            .lighthouseci/reports
+            .lighthouseci/explorar-reports
           if-no-files-found: ignore
           retention-days: 14
 
