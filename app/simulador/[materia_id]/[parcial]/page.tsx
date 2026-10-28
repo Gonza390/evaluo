@@ -6,6 +6,7 @@ import { createPublicClient } from '@/lib/supabase-public';
 import { isUuid } from '@/lib/uuid';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
+import { isTransientSimulatorCatalogError } from '@/lib/simulator-catalog-retry';
 
 import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
 
@@ -42,19 +43,29 @@ const getPublicMateriaMetadata = unstable_cache(
   { revalidate: 600 },
 );
 
+async function queryPublicMateriaExists(materiaId: string, timeoutMs: number): Promise<boolean> {
+  const client = createPublicClient();
+  const { data, error } = await client
+    .from('materias')
+    .select('id')
+    .eq('id', materiaId)
+    .abortSignal(AbortSignal.timeout(timeoutMs))
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
+
 const publicMateriaExists = unstable_cache(
   async (materiaId: string) => {
-    const client = createPublicClient();
-    const { data, error } = await client
-      .from('materias')
-      .select('id')
-      .eq('id', materiaId)
-      .abortSignal(AbortSignal.timeout(8000))
-      .maybeSingle();
-    if (error) throw error;
-    return Boolean(data);
+    try {
+      return await queryPublicMateriaExists(materiaId, 8000);
+    } catch (error) {
+      // Reintento único, corto y solo para fallos transitorios; nunca para 4xx.
+      if (!isTransientSimulatorCatalogError(error)) throw error;
+      return queryPublicMateriaExists(materiaId, 2500);
+    }
   },
-  ['public-simulator-materia-exists-v1'],
+  ['public-simulator-materia-exists-v2'],
   { revalidate: 600 },
 );
 
