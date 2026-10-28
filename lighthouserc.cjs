@@ -18,6 +18,9 @@ module.exports = {
       ],
       settings: {
         chromeFlags: '--headless=new --no-sandbox',
+        // Measure under applied network and CPU throttling rather than extrapolating
+        // Lighthouse's unthrottled trace; keep the original 4.2 s LCP budget.
+        throttlingMethod: 'devtools',
       },
     },
     assert: {
