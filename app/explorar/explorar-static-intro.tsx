@@ -9,7 +9,7 @@ export function ExplorarStaticIntro() {
           Encontrá tu materia
         </h1>
         <p className="mt-3 max-w-2xl text-[13px] leading-6 text-slate-500 sm:text-base sm:leading-7">
-          Buscá tu universidad o carrera para llegar al material, el Preguntero y el Simulador de la materia que estás preparando.
+          Buscá tu universidad o carrera y empezá a estudiar.
         </p>
       </div>
     </section>
