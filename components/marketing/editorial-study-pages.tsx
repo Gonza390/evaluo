@@ -1,18 +1,12 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { FooterHome } from '@/components/footer-home';
 import './editorial-study-pages.css';
 
 const signup = '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
 
-function Header() {
-  return <header className="es-header"><div className="es-shell es-header-inner">
-    <Link href="/" className="es-brand"><Image src="/evaluo-logo-icono.svg" alt="" width={27} height={27} />Evaluo</Link>
-    <nav aria-label="Navegación"><Link href="/estudiar-pdf-con-ia">Cómo funciona</Link><Link href="/pricing">Precios</Link><Link href="/login?mode=login">Ingresar</Link></nav>
-  </div></header>;
-}
-function Footer() {
-  return <footer className="es-footer"><div className="es-shell"><Link href="/">Evaluo</Link><span>Estudiá con tus propios apuntes.</span><Link href="/pricing">Ver planes</Link></div></footer>;
-}
+function Header() { return <div className="es-header"><div className="es-shell"><PublicSiteHeader primaryHref={signup} trackingLocation="seo_comparison_header" /></div></div>; }
+function Footer() { return <FooterHome />; }
 function Action({children = 'Empezar con mi PDF'}:{children?:string}) {
   return <Link className="es-action" href={signup}>{children}<span aria-hidden="true">↗</span></Link>;
 }
