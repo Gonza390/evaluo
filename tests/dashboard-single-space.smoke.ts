@@ -63,6 +63,11 @@ assert.match(dashboardHeroSource, /nextStudyAction\?\.href \?\? primaryMaterialH
 assert.match(dashboardHeroSource, /onClick=\{onUploadClick\}/);
 assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
 assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
+assert.match(dashboardMaterialsSource, /title="Tus PDFs"\s+visuallyHiddenTitle/,
+  'Keep an accessible section label without repeating Tus PDFs visually.');
+const appPageHeaderSource = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
+assert.match(appPageHeaderSource, /visuallyHiddenTitle && 'sr-only'/,
+  'The section heading must be visually hidden, not left as a blank row.');
 assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
 assert.doesNotMatch(dashboardMaterialsSource, /material\.file_name/,
@@ -84,6 +89,11 @@ assert.match(dashboardHeroSource, /Subir otro PDF/,
 assert.match(dashboardMaterialsSource, /min-h-10 min-w-10/);
 assert.match(appChromeSource, /const isCompactAppRoute =/);
 assert.match(appChromeSource, /Boolean\(user\)/);
+assert.match(appChromeSource, /data-app-footer/);
+assert.match(appChromeSource, /className=\{isCompactAppRoute \? 'hidden md:block' : undefined\}/,
+  'Mobile private pages must not display the large site footer, while desktop and public routes retain it.');
+assert.match(appChromeSource, /\{showBottomNav \? <BottomNav \/> : null\}/,
+  'Do not remove the useful mobile bottom navigation while hiding the scroll-producing footer.');
 for (const privatePath of ['/dashboard/', '/calendario', '/configuracion', '/referidos', '/materiales/']) {
   assert.ok(appChromeSource.includes(privatePath), 'La escala interna debe incluir '+privatePath);
 }
