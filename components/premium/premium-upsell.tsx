@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import { isPremiumFunnelDismissReturn } from '@/lib/premium/funnel-return';
+import { isPremiumFunnelDismissReturn } from '@/lib/premium-funnel-return';
 
 interface PremiumUpsellProps {
   title: string;
