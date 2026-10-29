@@ -2,6 +2,82 @@
 @import 'tw-animate-css';
 @source '../components/preview';
 
+/* Evaluo motion system: subtle, composited effects for private app screens. */
+:root {
+  --evaluo-motion-fast: 140ms;
+  --evaluo-motion-normal: 190ms;
+  --evaluo-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes evaluo-route-enter {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes evaluo-surface-enter {
+  from { opacity: 0; transform: translate3d(0, 5px, 0) scale(0.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+[data-evaluo-route-enter] {
+  animation: evaluo-route-enter var(--evaluo-motion-normal) var(--evaluo-motion-ease) both;
+}
+[data-evaluo-motion-card] {
+  transition: transform var(--evaluo-motion-fast) var(--evaluo-motion-ease),
+              box-shadow var(--evaluo-motion-normal) var(--evaluo-motion-ease),
+              border-color var(--evaluo-motion-normal) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-evaluo-motion-card]:hover {
+    transform: translate3d(0, -2px, 0);
+    box-shadow: 0 12px 24px -14px rgb(15 23 42 / 0.20);
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  [data-evaluo-motion-card]:active { transform: scale(0.989); }
+}
+[data-evaluo-mobile-nav-item] {
+  position: relative;
+  transition: color var(--evaluo-motion-fast) ease,
+              background-color var(--evaluo-motion-fast) ease;
+}
+[data-evaluo-mobile-nav-item]::after {
+  content: '';
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--brand);
+  transform: scaleX(0);
+  opacity: 0;
+  transition: transform var(--evaluo-motion-normal) var(--evaluo-motion-ease),
+              opacity var(--evaluo-motion-fast) ease;
+}
+[data-evaluo-mobile-nav-item][aria-current='page']::after {
+  transform: scaleX(1);
+  opacity: 1;
+}
+[data-evaluo-sidebar-indicator] {
+  transition: transform 210ms var(--evaluo-motion-ease),
+              width 210ms var(--evaluo-motion-ease),
+              height 210ms var(--evaluo-motion-ease),
+              opacity var(--evaluo-motion-fast) ease;
+}
+[data-slot='dialog-overlay'], [data-slot='drawer-overlay'] {
+  transition: opacity var(--evaluo-motion-normal) ease,
+              backdrop-filter var(--evaluo-motion-normal) ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-evaluo-route-enter], [data-evaluo-motion-card],
+  [data-evaluo-mobile-nav-item], [data-evaluo-mobile-nav-item]::after,
+  [data-evaluo-sidebar-indicator], [data-slot='dialog-overlay'],
+  [data-slot='drawer-overlay'] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  [data-evaluo-sidebar-indicator] { display: none; }
+}
+
 /* Dentro de un PDF, la navegación de estudio reemplaza la navegación general. */
 @media (width < 768px) {
   body:has([data-pdf-mobile-navigation]) [data-tour-nav-mobile] {
