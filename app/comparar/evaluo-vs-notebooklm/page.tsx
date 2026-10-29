@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Evaluo vs. NotebookLM: estudio y práctica con PDFs',
+    title: "Alternativa a NotebookLM para estudiar PDF | Evaluo",
     description: 'Comparación actualizada: ambos permiten practicar; elegí según tu necesidad de explorar fuentes o estudiar tema por tema.',
     url: toAbsoluteUrl(path),
   },
