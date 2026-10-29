@@ -42,7 +42,7 @@ export function PdfFirstLandingUploader({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const resolvedSource = normalizeSource(sourceKey ?? params.get('source') ?? params.get('utm_source'));
+    const resolvedSource = normalizeSource(params.get('source') ?? sourceKey ?? params.get('utm_source'));
     setSource(resolvedSource);
 
     trackMarketingEvent('pdf_first_landing_viewed', {
