@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
  */
 export default function DashboardLoading() {
   return (
-    <main aria-busy="true" aria-label="Cargando Mi espacio" className="min-h-full bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+    <div aria-busy="true" aria-label="Cargando Mi espacio" className="min-h-full bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
       <span className="sr-only" role="status">Cargando materiales y progreso</span>
       <div className="mx-auto w-full max-w-[1240px] space-y-3">
         <section className="rounded-[1.25rem] border border-slate-100 bg-white px-4 py-5 sm:px-5" aria-hidden="true">
@@ -27,6 +27,6 @@ export default function DashboardLoading() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
