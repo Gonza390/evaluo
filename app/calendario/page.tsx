@@ -792,7 +792,7 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     onClick={() => openComposerForDate(selectedDate)}
-                    className="h-8 min-w-0 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3 text-white shadow-[0_12px_28px_rgba(37,99,235,0.24)] hover:opacity-95 sm:px-4"
+                    className="h-8 min-w-0 rounded-xl bg-gradient-to-r from-brand to-brand-2 px-3 text-white shadow-[0_12px_28px_rgba(37,99,235,0.24)] hover:opacity-95 sm:px-4"
                   >
                     <CalendarPlus className="h-4 w-4" />
                     <span className="truncate">Agregar evento</span>
@@ -834,7 +834,7 @@ export default function CalendarioPage() {
                       type="button"
                       onClick={() => openComposerForDate(date)}
                       className={`group flex min-h-[58px] min-w-0 flex-col gap-1 border-r border-b px-1 py-1.5 text-left transition last:border-r-0 hover:bg-white min-[380px]:min-h-[64px] min-[380px]:px-1.5 sm:min-h-[74px] sm:gap-1.5 sm:px-2.5 sm:py-2 lg:min-h-[86px] ${
-                        !isCurrentMonth ? 'text-slate-300' : 'text-slate-900'
+                        !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
                       style={{
                         borderRightColor: 'var(--border)',
@@ -851,14 +851,14 @@ export default function CalendarioPage() {
                           className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-semibold"
                           style={{
                             backgroundColor: isToday
-                              ? '#2563EB'
+                              ? 'var(--brand)'
                               : isSelected
-                                ? 'color-mix(in oklch, #dce8ff 55%, var(--background))'
+                                ? 'color-mix(in oklch, var(--brand) 12%, var(--background))'
                                 : 'transparent',
                             color: isToday
-                              ? '#ffffff'
+                              ? 'var(--primary-foreground)'
                               : isSelected
-                                ? 'color-mix(in oklch, #2563EB 75%, var(--foreground))'
+                                ? 'color-mix(in oklch, var(--brand) 75%, var(--foreground))'
                                 : undefined,
                           }}
                         >
@@ -875,15 +875,15 @@ export default function CalendarioPage() {
                               backgroundColor:
                                 event.type === 'exam'
                                   ? 'color-mix(in oklch, #fff4df 62%, var(--background))'
-                                  : 'color-mix(in oklch, #edf4ff 62%, var(--background))',
+                                  : 'color-mix(in oklch, var(--brand) 9%, var(--background))',
                               borderColor:
                                 event.type === 'exam'
                                   ? 'color-mix(in oklch, #f6ddb0 52%, var(--border))'
-                                  : 'color-mix(in oklch, #d5e4ff 52%, var(--border))',
+                                  : 'color-mix(in oklch, var(--brand) 15%, var(--border))',
                               color:
                                 event.type === 'exam'
                                   ? 'color-mix(in oklch, #b7791f 72%, var(--foreground))'
-                                  : 'color-mix(in oklch, #2563EB 72%, var(--foreground))',
+                                  : 'color-mix(in oklch, var(--brand) 72%, var(--foreground))',
                             }}
                           >
                             {event.title}
@@ -909,7 +909,7 @@ export default function CalendarioPage() {
           <div className="relative h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
-                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-[#050B2C]">
+                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-heading">
                   Agregar fecha
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
@@ -924,7 +924,7 @@ export default function CalendarioPage() {
                     variant="ghost"
                     className={`h-9 rounded-[12px] text-[13px] font-semibold ${
                       formState.type === 'exam'
-                        ? 'bg-white text-[#2563EB] shadow-sm hover:bg-white'
+                        ? 'bg-white text-brand shadow-sm hover:bg-white'
                         : 'text-slate-600 hover:bg-white'
                     }`}
                     onClick={() =>
@@ -943,7 +943,7 @@ export default function CalendarioPage() {
                     variant="ghost"
                     className={`h-9 rounded-[12px] text-[13px] font-semibold ${
                       formState.type === 'assignment'
-                        ? 'bg-white text-[#2563EB] shadow-sm hover:bg-white'
+                        ? 'bg-white text-brand shadow-sm hover:bg-white'
                         : 'text-slate-600 hover:bg-white'
                     }`}
                     onClick={() =>
@@ -999,7 +999,7 @@ export default function CalendarioPage() {
                                 variant="outline"
                                 className={`h-9 rounded-xl px-2 text-[13px] ${
                                   formState.examInstance === examInstance
-                                    ? 'border-[#CFE0FF] bg-[#EEF4FF] text-[#2563EB] hover:bg-[#EEF4FF]'
+                                    ? 'border-blue-200 bg-blue-50 text-brand hover:bg-blue-50'
                                     : 'border-slate-200 bg-white text-slate-700 hover:bg-white'
                                 }`}
                                 onClick={() =>
@@ -1214,7 +1214,7 @@ export default function CalendarioPage() {
                     Cancelar
                   </Button>
                   <Button
-                    className="h-9 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3.5 text-[13px] text-white hover:opacity-95"
+                    className="h-9 rounded-xl bg-gradient-to-r from-brand to-brand-2 px-3.5 text-[13px] text-white hover:opacity-95"
                     onClick={handleCreateEvent}
                     disabled={isSavingEvent}
                   >
