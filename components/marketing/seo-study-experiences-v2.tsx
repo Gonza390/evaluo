@@ -116,7 +116,7 @@ function RelatedSection({ title, links }: { title: string; links: RelatedLink[] 
     <section className="border-t border-slate-100 bg-slate-50/50 py-16 sm:py-20">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
         <h2 className="max-w-2xl text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">{title}</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {links.map((item) => (
             <Link
               key={item.href}
@@ -554,6 +554,18 @@ export function IaParaEstudiantesExperience() {
               description: 'Visualizá temas, subtemas y relaciones sin salir del mismo material.',
               cta: 'Cómo crear un mapa mental con IA',
             },
+                      {
+              href: '/convertir-pdf-en-preguntas',
+              title: 'Convertir apuntes en preguntas de examen',
+              description: 'Pasá de comprender un capítulo a responder preguntas sobre el propio PDF.',
+              cta: 'Cómo generar preguntas desde PDF',
+            },
+            {
+              href: '/funciones/practicar-por-tema',
+              title: 'Practicar por tema con IA',
+              description: 'Comprobá qué sabés de una unidad y volvé a sus conceptos cuando tengas dudas.',
+              cta: 'Cómo practicar y reforzar un tema',
+            },
           ]}
         />
 
@@ -726,6 +738,18 @@ export function EstudiarPdfExperience() {
               title: 'IA para estudiantes',
               description: 'Conocé el enfoque completo para trabajar apuntes y PDFs con IA.',
               cta: 'Ver cómo usar IA para estudiar',
+            },
+                      {
+              href: '/convertir-pdf-en-preguntas',
+              title: 'Crear preguntas desde tu PDF',
+              description: 'Comprobá lo aprendido con ejercicios basados en el material que acabás de estudiar.',
+              cta: 'Generar preguntas desde un PDF',
+            },
+            {
+              href: '/funciones/simulacro-examen-con-ia',
+              title: 'Preparar un simulacro de examen con IA',
+              description: 'Probá tus conocimientos antes del parcial y usá los errores para planificar el repaso.',
+              cta: 'Cómo preparar un simulacro',
             },
           ]}
         />
@@ -1000,6 +1024,18 @@ export function ResumirPdfExperience() {
               description: 'Conocé cómo encajan resumen, organización, recuerdo y práctica en un mismo flujo.',
               cta: 'Ver el método de estudio con IA',
             },
+                      {
+              href: '/funciones/practicar-por-tema',
+              title: 'Practicar el tema que acabás de resumir',
+              description: 'Pasá del resumen a preguntas sobre un capítulo y revisá en qué conceptos necesitás más práctica.',
+              cta: 'Practicar por tema con IA',
+            },
+            {
+              href: '/convertir-pdf-en-preguntas',
+              title: 'Convertir el PDF en preguntas',
+              description: 'Usá preguntas de comprensión y aplicación para comprobar si entendiste el resumen.',
+              cta: 'Cómo generar preguntas con IA',
+            },
           ]}
         />
 
@@ -1203,6 +1239,18 @@ export function FlashcardsPdfExperience() {
               title: 'IA para estudiantes',
               description: 'Conocé cómo encajan flashcards, resumen, organización y práctica.',
               cta: 'Ver el método de estudio con IA',
+            },
+                      {
+              href: '/funciones/practicar-por-tema',
+              title: 'Después de las tarjetas: practicar el tema',
+              description: 'Aplicá los conceptos de tus flashcards en ejercicios y revisá los errores.',
+              cta: 'Practicar preguntas por tema',
+            },
+            {
+              href: '/funciones/simulacro-examen-con-ia',
+              title: 'Evaluarte antes del examen',
+              description: 'Combiná el repaso de tarjetas con una práctica más amplia del parcial o final.',
+              cta: 'Preparar un simulacro con IA',
             },
           ]}
         />
