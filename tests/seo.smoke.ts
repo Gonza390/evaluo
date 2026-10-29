@@ -771,3 +771,75 @@ assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'La inscripción al segundo parcial fue del 5 al 6 de octubre',
   'OFFICIAL_CALENDAR',
 ]);
+
+// SEO study-guide editorial cluster: one language hub, eight substantial
+// published articles, no synthetic English variants until they are localized.
+assertIncludesAll('app/es/guias/page.tsx', [
+  'generateMetadata',
+].filter(Boolean).map((x) => x === 'generateMetadata' ? 'export const metadata' : x));
+assertIncludesAll('app/es/guias/page.tsx', [
+  "const path = '/es/guias'",
+  'STUDY_GUIDES.filter(',
+  'buildBreadcrumbJsonLd',
+  'Estudiar mis apuntes en PDF',
+  "'guia-hub'",
+  'guide.slug',
+  'FooterHome',
+]);
+assertIncludesAll('app/es/guias/[slug]/page.tsx', [
+  'export const dynamicParams = false;',
+  'generateStaticParams()',
+  'generateMetadata',
+  "getStudyGuide(slug)",
+  'alternates: { canonical: toAbsoluteUrl(path) }',
+  'buildBreadcrumbJsonLd',
+  "'@type': 'Article'",
+  'guide.steps.map',
+  'guide.pitfalls.map',
+  'guide.faq.map',
+  "location: 'es_study_guide_after_article'",
+  'guide_slug: guide.slug',
+  'FooterHome',
+]);
+assertIncludesAll('app/sitemap.ts', [
+  '`${baseUrl}/es/guias`',
+  '`${baseUrl}/es/guias/${guide.slug}`',
+  'STUDY_GUIDES',
+]);
+assertIncludesAll('components/footer-home.tsx', ['href="/es/guias"']);
+assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  "market === 'es'",
+  'href="/es/guias"',
+]);
+assertIncludesAll('lib/analytics-client.ts', ["return 'seo-study-guides';"]);
+
+const guideSource = source('lib/es-study-guides.ts');
+const guideJson = guideSource.match(/export const STUDY_GUIDES: StudyGuide\[\] = (\[[\s\S]*?\]);\n\nexport function/);
+assert.ok(guideJson, 'Study guides must be a data-backed editorial list');
+const guideRows = JSON.parse(guideJson![1]) as Array<{
+  slug: string;
+  opening: string;
+  focus: string;
+  steps: Array<{ title: string; detail: string }>;
+  exampleTasks: string[];
+  pitfalls: Array<{ title: string; detail: string }>;
+  faq: Array<{ q: string; a: string }>;
+  category: string;
+  review: string;
+}>;
+assert.equal(guideRows.length, 8, 'Publish exactly eight original guides');
+assert.equal(new Set(guideRows.map((guide) => guide.slug)).size, 8, 'SEO slugs must be unique');
+for (const guide of guideRows) {
+  const prose = [
+    guide.opening, guide.focus, guide.review,
+    ...guide.steps.map((step) => step.detail),
+    ...guide.pitfalls.map((pitfall) => pitfall.detail),
+    ...guide.faq.map((item) => item.a),
+  ].join(' ');
+  assert.ok(prose.split(/\s+/).length >= 260, guide.slug + ' needs substantive information');
+  assert.ok(guide.steps.length >= 4, guide.slug + ' needs practical instructions');
+  assert.ok(guide.exampleTasks.length >= 3, guide.slug + ' needs a worked example');
+  assert.ok(guide.pitfalls.length >= 3, guide.slug + ' needs pitfalls');
+  assert.ok(guide.faq.length >= 2, guide.slug + ' needs user questions');
+  assert.ok(!guide.slug.startsWith('en-'), 'Do not auto-publish English-language variants');
+}
