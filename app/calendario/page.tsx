@@ -840,7 +840,7 @@ export default function CalendarioPage() {
                         borderRightColor: 'var(--border)',
                         borderBottomColor: 'var(--border)',
                         backgroundColor: isSelected
-                          ? 'color-mix(in oklch, var(--primary) 14%, var(--background))'
+                          ? 'var(--calendar-selected-bg)'
                           : isCurrentMonth
                             ? 'var(--background)'
                             : 'color-mix(in oklch, var(--muted) 55%, var(--background))',
@@ -853,12 +853,12 @@ export default function CalendarioPage() {
                             backgroundColor: isToday
                               ? 'var(--brand)'
                               : isSelected
-                                ? 'color-mix(in oklch, var(--brand) 12%, var(--background))'
+                                ? 'var(--calendar-selected-bg)'
                                 : 'transparent',
                             color: isToday
                               ? 'var(--primary-foreground)'
                               : isSelected
-                                ? 'color-mix(in oklch, var(--brand) 75%, var(--foreground))'
+                                ? 'var(--calendar-selected-text)'
                                 : undefined,
                           }}
                         >
@@ -874,16 +874,16 @@ export default function CalendarioPage() {
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
-                                  ? 'color-mix(in oklch, #fff4df 62%, var(--background))'
-                                  : 'color-mix(in oklch, var(--brand) 9%, var(--background))',
+                                  ? 'var(--calendar-exam-bg)'
+                                  : 'var(--calendar-assignment-bg)',
                               borderColor:
                                 event.type === 'exam'
-                                  ? 'color-mix(in oklch, #f6ddb0 52%, var(--border))'
-                                  : 'color-mix(in oklch, var(--brand) 15%, var(--border))',
+                                  ? 'var(--calendar-exam-border)'
+                                  : 'var(--calendar-assignment-border)',
                               color:
                                 event.type === 'exam'
-                                  ? 'color-mix(in oklch, #b7791f 72%, var(--foreground))'
-                                  : 'color-mix(in oklch, var(--brand) 72%, var(--foreground))',
+                                  ? 'var(--calendar-exam-text)'
+                                  : 'var(--calendar-assignment-text)',
                             }}
                           >
                             {event.title}
@@ -999,7 +999,7 @@ export default function CalendarioPage() {
                                 variant="outline"
                                 className={`h-9 rounded-xl px-2 text-[13px] ${
                                   formState.examInstance === examInstance
-                                    ? 'border-blue-200 bg-blue-50 text-brand hover:bg-blue-50'
+                                    ? 'border-brand/25 bg-brand/10 text-brand hover:bg-brand/10'
                                     : 'border-slate-200 bg-white text-slate-700 hover:bg-white'
                                 }`}
                                 onClick={() =>
