@@ -53,9 +53,9 @@ assert.match(page, /initialRecommendedStudy=\{shouldShowFirstPdfGuide\}/);
 assert.match(page, /initialProgressOpen=\{isOwner && query\.tab === 'progreso' && !shouldShowFirstPdfGuide\}/);
 assert.match(page, /initialDiagnostic=\{isOwner && query\.diagnostico === '1' && !shouldShowFirstPdfGuide\}/);
 assert.match(page, /recommendedStudyAvailable=\{isOwner && material.processing_status === 'ready'\}/);
-assert.match(page, /initialGuideManuallyRequested=\{manuallyRequestedGuide\}/);
+
 assert.match(page, /user\?\.app_metadata\?\.\[FIRST_PDF_ONBOARDING_SKIPPED_KEY\]/);
-assert.match(page, /manuallyRequestedGuide \|\| \(eligibleByAccount && !previouslyCompleted\)/);
+assert.match(page, /const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted/);
 assert.match(workspace, /await completeFirstPdfOnboardingAction\(\)/,
   'The finish CTA must persist completion before closing.');
 assert.match(workspace, /if \(!result\.success\)/);
