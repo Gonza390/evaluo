@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Practicar por tema con IA desde tus apuntes | Evaluo',
+    title: "Practicar por tema con IA: preguntas desde PDF | Evaluo",
     description: 'Estudiá tema por tema, resolvé preguntas y revisá qué conceptos necesitás reforzar.',
     url: toAbsoluteUrl(path),
   },
