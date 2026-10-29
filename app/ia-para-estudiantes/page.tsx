@@ -5,9 +5,8 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/ia-para-estudiantes';
 
 export const metadata: Metadata = {
-  title: 'IA para estudiantes: estudiar PDFs y preparar exámenes',
-  description:
-    'IA para estudiantes universitarios: convertí tus PDFs en resúmenes, mapas mentales y flashcards, practicá preguntas y prepará parciales con tus apuntes.',
+  title: "IA para estudiantes: estudiá apuntes y practicá",
+  description: "IA para estudiantes universitarios: estudiá apuntes, resumí PDF y prepará parciales con preguntas, flashcards y práctica por tema en Evaluo.", mapas mentales y flashcards, practicá preguntas y prepará parciales con tus apuntes.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
