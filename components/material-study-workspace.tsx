@@ -46,7 +46,10 @@ import {
 } from '@/lib/student-materials/practice-entry';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
-import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
+import {
+  completeFirstPdfOnboardingAction,
+  skipFirstPdfOnboardingAction,
+} from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
 import { SummaryChapterFinish } from '@/components/study/summary-chapter-finish';
@@ -186,6 +189,7 @@ type MaterialStudyWorkspaceProps = {
   initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
+  initialGuideManuallyRequested?: boolean;
   /** Mostrar la guía de estudio al llegar al Resumen desde un PDF recién procesado. */
   initialStudyStartGuideRequested?: boolean;
   /** Solo para la demo pública: habilita enlaces a una etapa sin forzar onboarding real. */
@@ -342,6 +346,7 @@ export function MaterialStudyWorkspace({
   initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
+  initialGuideManuallyRequested = false,
   initialStudyStartGuideRequested = false,
   initialTab,
   initialPdfPage = null,
@@ -416,7 +421,7 @@ export function MaterialStudyWorkspace({
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   const skippedTourSessionKey = 'evaluo:first-pdf-guide:skipped-session';
   useEffect(() => {
-    if (!initialRecommendedStudy) return;
+    if (!initialRecommendedStudy || initialGuideManuallyRequested) return;
     try {
       if (window.sessionStorage.getItem(skippedTourSessionKey) === '1') {
         setRecommendedActive(false);
@@ -425,7 +430,7 @@ export function MaterialStudyWorkspace({
     } catch {
       // Sin almacenamiento, el estudiante puede cerrar la guía normalmente.
     }
-  }, [initialRecommendedStudy]);
+  }, [initialRecommendedStudy, initialGuideManuallyRequested]);
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
@@ -741,6 +746,22 @@ export function MaterialStudyWorkspace({
           } catch {
             // El cierre actual no depende del almacenamiento.
           }
+          // Close immediately; the server saves the preference independently.
+          void skipFirstPdfOnboardingAction().then((result) => {
+            if (!result.success) {
+              toast({
+                title: 'No pudimos guardar tu preferencia',
+                description: result.message,
+                variant: 'destructive',
+              });
+            }
+          }).catch(() => {
+            toast({
+              title: 'No pudimos guardar tu preferencia',
+              description: 'La guía se cerró, pero podría aparecer en otra sesión.',
+              variant: 'destructive',
+            });
+          });
         }
       }
       clearRecommendedStudyQuery();
@@ -776,6 +797,7 @@ export function MaterialStudyWorkspace({
       materialId,
       recommendedStudyAvailable,
       recommendedTourStep,
+      toast,
     ]
   );
   const finishRecommendedTour = async () => {
@@ -2703,6 +2725,26 @@ export function MaterialStudyWorkspace({
             </div>
           </div>
 
+          {isOwner && !demo && !recommendedActive ? (
+            <button
+              type="button"
+              data-reopen-first-pdf-guide
+              onClick={() => {
+                guideRunIdRef.current = null;
+                guideStartedTrackedRef.current = false;
+                trackedGuideStepsRef.current.clear();
+                setStudyStartGuideOpen(false);
+                setProgressOpen(false);
+                changeRecommendedTab('resumen');
+                setRecommendedTourStep('summary');
+                setRecommendedActive(true);
+              }}
+              className="text-primary hover:bg-muted inline-flex min-h-9 shrink-0 items-center rounded-lg px-2 text-[11.5px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label="Volver a ver la guía de cuatro pasos"
+            >
+              Ver guía
+            </button>
+          ) : null}
           <MaterialMetadata
             carreraName={carreraName}
             universidadName={universidadName}
