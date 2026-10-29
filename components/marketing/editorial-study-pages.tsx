@@ -87,8 +87,8 @@ export function PdfPracticePage(){
  return <div className="es-page"><Header/><main>
   <section className="es-shell es-hero es-hero-practice"><div className="es-practice-intro">
     <span className="es-kicker">GUÍA PRÁCTICA / ESTUDIAR CON IA</span>
-    <h1>Convertir PDF en preguntas con IA para estudiar y practicar por tema</h1>
-    <p className="es-lede">Transformá tus apuntes en preguntas para practicar, detectar qué no entendiste y volver a estudiar lo que realmente te cuesta.</p>
+    <h1>Generar preguntas a partir de PDF con IA para estudiar y practicar</h1>
+    <p className="es-lede">Convertí tu PDF en preguntas de examen con IA para comprobar qué aprendiste. Practicá un tema, revisá las explicaciones y volvé a los conceptos que todavía te cuestan.</p>
     <div className="es-hero-links"><QuestionsCta>Generar preguntas desde mi PDF</QuestionsCta><a href="#metodo" className="es-subtle-link">Conocer el método ↓</a></div>
     <p className="es-tiny">Empezá gratis · Sin tarjeta</p>
   </div><DocumentPreview/></section>
