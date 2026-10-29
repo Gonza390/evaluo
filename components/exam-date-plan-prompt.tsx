@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, Check, Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useModalFocusTrap } from '@/hooks/use-modal-focus-trap';
 import { isNewExamDatePromptSignal, type ExamDatePromptSignal } from '@/lib/exam-date-prompt-trigger';
 import {
   dismissExamDatePromptAction,
@@ -162,6 +163,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
     setVisible(false);
     void dismissExamDatePromptAction(materialId).catch(() => undefined);
   };
+  const modalRef = useModalFocusTrap<HTMLElement>(visible, close);
 
   const save = async () => {
     if (!examDate || saving) return;
@@ -199,9 +201,12 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
       <div className="fixed inset-0 z-[90] bg-[#08132A]/55 backdrop-blur-[2px]" aria-hidden="true" />
       <div className="fixed inset-0 z-[91] flex items-end justify-center sm:items-center sm:p-6">
         <section
+          ref={modalRef}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-labelledby="exam-date-prompt-title"
+          aria-describedby="exam-date-prompt-description"
           className="relative max-h-[calc(100dvh-1rem)] w-full min-w-0 max-w-[520px] overflow-x-hidden overflow-y-auto rounded-t-[28px] border border-white/60 bg-white shadow-[0_30px_100px_rgba(2,12,35,0.35)] sm:rounded-[28px]"
         >
           <button
@@ -233,7 +238,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 Material: {fileName}
               </p>
 
-              <p className="mt-4 text-[15px] leading-6 text-slate-600">
+              <p id="exam-date-prompt-description" className="mt-4 text-[15px] leading-6 text-slate-600">
                 Cargá la fecha y Evaluo organiza tus repasos hasta el examen para ayudarte a llegar con los temas importantes reforzados.
               </p>
 
@@ -289,7 +294,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 Listo. Rendís el {formatDate(examDate)}.
               </h2>
 
-              <p className="mt-3 text-[15px] leading-6 text-slate-600">
+              <p id="exam-date-prompt-description" className="mt-3 text-[15px] leading-6 text-slate-600">
                 Evaluo va a usar esta fecha para ayudarte a organizar tus repasos.
               </p>
               <p className="mt-2 line-clamp-2 min-w-0 break-all text-[12px] leading-5 text-slate-500" title={fileName}>

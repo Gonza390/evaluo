@@ -365,8 +365,10 @@ assert.match(firstUploadSource, /\?inicio=1/,
   'La carga normal debe solicitar la guía para el PDF nuevo.');
 assert.match(quickUploadSource, /\?inicio=1/,
   'La carga rápida debe solicitar la guía para el PDF nuevo.');
-assert.match(materialWorkspaceSource, /if \(demo \|\| isOwner\) \{/,
-  'Completar o saltar el recorrido debe abrir la guía directamente.');
+assert.match(materialWorkspaceSource, /if \(outcome === 'completed' && \(demo \|\| isOwner\)\) \{/,
+  'Completar el recorrido puede abrir la guía de estudio.');
+assert.match(materialWorkspaceSource, /setStudyStartGuideOpen\(false\);/,
+  'Saltar el recorrido debe continuar sin encadenar otro modal.');
 assert.doesNotMatch(materialWorkspaceSource, /PdfPriorStudyPopup|priorStudyOpen|choosePriorStudy|savePriorStudyChoice|readPriorStudyChoice|setPriorStudyOpen/,
   'La pregunta de si ya estudió y su almacenamiento no deben continuar en el flujo.');
 assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,

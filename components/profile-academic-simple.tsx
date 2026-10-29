@@ -264,11 +264,11 @@ export function AcademicProfileSimpleForm({
       {loading ? <p className="mt-4 text-sm text-slate-500">Cargando universidades y carreras…</p> : null}
       {error ? <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
-      <div className="mt-7 flex items-center justify-between gap-3">
-        <Button type="button" variant="ghost" onClick={() => { if (onLater) onLater(); else router.replace(nextPath); }} disabled={busy}>
+      <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" onClick={() => { if (onLater) onLater(); else router.replace(nextPath); }} disabled={busy}>
           Ahora no
         </Button>
-        <Button type="button" onClick={() => void save()} disabled={loading || busy || !universityId || !careerId}>
+        <Button type="button" className="min-h-11 w-full whitespace-normal text-center sm:w-auto" onClick={() => void save()} disabled={loading || busy || !universityId || !careerId}>
           {busy ? 'Guardando…' : 'Guardar y continuar'}
         </Button>
       </div>

@@ -49,9 +49,13 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    if (window.sessionStorage.getItem(getSessionKey('dismissed', materialId)) === '1') {
-      setDismissed(true);
-      return undefined;
+    try {
+      if (window.sessionStorage.getItem(getSessionKey('dismissed', materialId)) === '1') {
+        setDismissed(true);
+        return undefined;
+      }
+    } catch {
+      // El cierre funciona aun si el almacenamiento está deshabilitado.
     }
 
     const disconnectIntersectionObserver = () => {
@@ -86,10 +90,13 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
           if (!isNearEnd) return;
 
           const viewedKey = getSessionKey('viewed', materialId);
-          if (window.sessionStorage.getItem(viewedKey) === '1') return;
-
-          window.sessionStorage.setItem(viewedKey, '1');
-          void trackMaterialFeedbackPromptViewedAction(materialId);
+          try {
+            if (window.sessionStorage.getItem(viewedKey) === '1') return;
+            window.sessionStorage.setItem(viewedKey, '1');
+          } catch {
+            // No bloquear el feedback por restricciones de almacenamiento.
+          }
+          void trackMaterialFeedbackPromptViewedAction(materialId).catch(() => undefined);
         },
         {
           root,
@@ -102,6 +109,7 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
     };
 
     void (async () => {
+      try {
       const supabase = getSupabaseBrowserClient();
       const {
         data: { user },
@@ -122,6 +130,9 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
         });
         mutationObserverRef.current.observe(document.body, { childList: true, subtree: true });
       }
+      } catch {
+        // No interrumpir el estudio por errores de conectividad.
+      }
     })();
 
     const handleResize = () => {
@@ -141,7 +152,11 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
   }, [materialId]);
 
   const close = () => {
-    window.sessionStorage.setItem(getSessionKey('dismissed', materialId), '1');
+    try {
+      window.sessionStorage.setItem(getSessionKey('dismissed', materialId), '1');
+    } catch {
+      // El cierre no depende de sessionStorage.
+    }
     setDismissed(true);
     setVisible(false);
   };
@@ -150,21 +165,24 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
     if (saving) return;
 
     setSaving(true);
-    const result = await submitMaterialFeedbackAction({
-      materialId,
-      rating,
-      source: 'contextual_prompt',
-    });
-    setSaving(false);
-
-    if (!result.success) {
-      toast({ description: result.message, variant: 'destructive' });
-      return;
+    try {
+      const result = await submitMaterialFeedbackAction({
+        materialId,
+        rating,
+        source: 'contextual_prompt',
+      });
+      if (!result.success) {
+        toast({ description: result.message, variant: 'destructive' });
+        return;
+      }
+      setSavedRating(rating);
+      toast({ description: result.message });
+      window.setTimeout(close, 900);
+    } catch {
+      toast({ description: 'No pudimos enviar tu opinión. Intentá nuevamente.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-
-    setSavedRating(rating);
-    toast({ description: result.message });
-    window.setTimeout(close, 900);
   };
 
   if (!eligible || !visible || dismissed) return null;
@@ -173,7 +191,7 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
     <div
       role="dialog"
       aria-label="Calificar material"
-      className="fixed right-3 bottom-20 left-3 z-50 rounded-[18px] border border-slate-200 bg-white p-3.5 shadow-[0_18px_50px_rgba(15,23,42,0.16)] sm:right-5 sm:bottom-5 sm:left-auto sm:w-[350px]"
+      className="fixed right-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-3 z-[60] rounded-[18px] border border-slate-200 bg-white p-3.5 shadow-[0_18px_50px_rgba(15,23,42,0.16)] sm:right-5 sm:bottom-5 sm:left-auto sm:w-[350px]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

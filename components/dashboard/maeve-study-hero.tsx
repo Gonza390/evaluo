@@ -73,8 +73,8 @@ export function MaeveStudyHero({
         <p
           className={
             isFirstPdfState
-              ? 'text-[10px] font-bold tracking-[0.14em] text-blue-600 uppercase'
-              : 'text-[10px] font-semibold tracking-[0.14em] text-slate-400 uppercase'
+              ? 'text-xs font-bold tracking-[0.10em] text-blue-700 uppercase'
+              : 'text-xs font-semibold tracking-[0.10em] text-slate-600 uppercase'
           }
         >
           {isFirstPdfState ? 'Primer material' : 'Tu espacio'}
@@ -88,7 +88,7 @@ export function MaeveStudyHero({
             : nextStudyAction?.title ?? 'Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.'}
         </p>
         {!isFirstPdfState && nextStudyAction ? (
-          <p className="mx-auto mt-1 max-w-2xl text-[12px] leading-[1.5] text-slate-400">
+          <p className="mx-auto mt-1 max-w-2xl text-[13px] leading-[1.5] text-slate-600">
             {nextStudyAction.description}
           </p>
         ) : null}
@@ -100,10 +100,10 @@ export function MaeveStudyHero({
                 key={step}
                 className="flex items-center gap-2 rounded-lg border border-blue-100/80 bg-white/80 px-2.5 py-2 text-left"
               >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
                   {index + 1}
                 </span>
-                <span className="text-[11.5px] font-semibold text-slate-700">{step}</span>
+                <span className="text-xs font-semibold text-slate-700">{step}</span>
               </div>
             ))}
           </div>

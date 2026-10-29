@@ -414,6 +414,18 @@ export function MaterialStudyWorkspace({
   } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
+  const skippedTourSessionKey = 'evaluo:first-pdf-guide:skipped-session';
+  useEffect(() => {
+    if (!initialRecommendedStudy) return;
+    try {
+      if (window.sessionStorage.getItem(skippedTourSessionKey) === '1') {
+        setRecommendedActive(false);
+        setRecommendedTourStep(null);
+      }
+    } catch {
+      // Sin almacenamiento, el estudiante puede cerrar la guía normalmente.
+    }
+  }, [initialRecommendedStudy]);
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
@@ -504,6 +516,11 @@ export function MaterialStudyWorkspace({
       studyGuideArrivalHandledRef.current === materialId
     ) {
       return;
+    }
+    try {
+      if (window.sessionStorage.getItem(skippedTourSessionKey) === '1') return;
+    } catch {
+      // La guía explícitamente solicitada sigue disponible.
     }
     studyGuideArrivalHandledRef.current = materialId;
     setStudyStartGuideOpen(true);
@@ -716,7 +733,15 @@ export function MaterialStudyWorkspace({
             ...(outcome === 'skipped' && recommendedTourStep ? { step: recommendedTourStep } : {}),
           }
         );
-        if (outcome === 'completed') guideCompletedRef.current = true;
+        if (outcome === 'completed') {
+          guideCompletedRef.current = true;
+        } else {
+          try {
+            window.sessionStorage.setItem(skippedTourSessionKey, '1');
+          } catch {
+            // El cierre actual no depende del almacenamiento.
+          }
+        }
       }
       clearRecommendedStudyQuery();
       if (onboardingTransitionRef.current !== null) {
@@ -728,9 +753,13 @@ export function MaterialStudyWorkspace({
       setRecommendedActive(false);
       // Una sola guía práctica sobre Resumen, sin selección "ya estudié".
       // La demo permite comprobar el flujo sin escribir datos del usuario.
-      if (demo || isOwner) {
+      if (outcome === 'completed' && (demo || isOwner)) {
         studyGuideArrivalHandledRef.current = materialId;
         setStudyStartGuideOpen(true);
+      } else {
+        // Saltar significa continuar leyendo, no abrir otra guía inmediatamente.
+        studyGuideArrivalHandledRef.current = materialId;
+        setStudyStartGuideOpen(false);
       }
       // El capítulo 1 se enfoca sólo al pulsar "Leer el tema 1".
       setFocusFirstChapterOnExit(false);

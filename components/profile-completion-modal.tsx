@@ -592,7 +592,7 @@ export function ProfileCompletionModal({
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose?.()}>
         <DialogContent
           overlayClassName="bg-white/18 backdrop-blur-[10px]"
-          className="overflow-hidden border-none bg-white/98 p-0 shadow-[0_34px_120px_rgba(15,23,42,0.22)] backdrop-blur-md sm:max-w-[540px]"
+          className="max-h-[calc(100dvh-1rem)] overflow-x-hidden overflow-y-auto overscroll-contain border-none bg-white/98 p-0 shadow-[0_34px_120px_rgba(15,23,42,0.22)] backdrop-blur-md sm:max-w-[540px]"
         >
           <div className="flex flex-col items-center justify-center px-6 py-16">
             <Spinner size="lg" />
@@ -618,21 +618,21 @@ export function ProfileCompletionModal({
     >
       <DialogContent
         overlayClassName="bg-white/18 backdrop-blur-[10px]"
-        className={`overflow-hidden border-none bg-white/98 p-0 shadow-[0_34px_120px_rgba(15,23,42,0.22)] backdrop-blur-md sm:max-w-[580px] ${
+        className={`max-h-[calc(100dvh-1rem)] overflow-x-hidden overflow-y-auto overscroll-contain border-none bg-white/98 p-0 shadow-[0_34px_120px_rgba(15,23,42,0.22)] backdrop-blur-md sm:max-w-[580px] ${
           allowSkip || onClose ? '' : '[&>button]:hidden'
         }`}
       >
         {/* ---- Progress bar ---- */}
         <div className="px-5 pt-5 sm:px-8 sm:pt-6">
           <div className="flex items-center justify-between">
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400">
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-600">
               Paso {step} de {TOTAL_STEPS}
             </p>
             {step < TOTAL_STEPS && allowSkip && onClose ? (
               <button
                 type="button"
                 onClick={onClose}
-                className="text-[12px] font-semibold text-slate-400 transition hover:text-slate-600"
+                className="text-[12px] font-semibold text-slate-600 transition hover:text-slate-900"
               >
                 Saltar
               </button>
@@ -954,7 +954,7 @@ export function ProfileCompletionModal({
                     en <span className="font-bold text-[#2563EB]">{universidadNombre}</span>
                   </p>
                   {carreraNombre && (
-                    <p className="mt-1 text-xs text-slate-400">Carrera: {carreraNombre}</p>
+                    <p className="mt-1 text-xs text-slate-600">Carrera: {carreraNombre}</p>
                   )}
                 </div>
 

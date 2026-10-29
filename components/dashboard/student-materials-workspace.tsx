@@ -116,14 +116,19 @@ export function StudentMaterialsWorkspace({
               return (
                 <article
                   key={material.id}
-                  onClick={() => router.push(getStudentMaterialRoute(material.id))}
-                  className="flex cursor-pointer flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
+                  className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
-                          {material.title}
+                          <Link
+                            href={getStudentMaterialRoute(material.id)}
+                            className="rounded-sm before:absolute before:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                            aria-label={`Abrir material ${material.title}`}
+                          >
+                            {material.title}
+                          </Link>
                         </h3>
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -160,7 +165,7 @@ export function StudentMaterialsWorkspace({
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative z-10 flex flex-wrap items-center gap-2">
                       <Button asChild size="sm" className="min-h-10 rounded-lg px-3 text-[12.5px]" onClick={(event) => event.stopPropagation()}>
                         <Link href={getStudentMaterialRoute(material.id)}>
                           <Eye className="h-4 w-4" />
