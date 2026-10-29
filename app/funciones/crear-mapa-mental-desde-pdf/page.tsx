@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Crear mapa mental desde PDF con IA | Evaluo',
+    title: "Crear mapa mental desde PDF con IA | Evaluo",
     description:
       'Organizá visualmente los conceptos de tu PDF y conectalos con el resto de tu recorrido de estudio.',
     url: toAbsoluteUrl(path),
