@@ -74,7 +74,7 @@ assertIncludesAll('app/sitemap.ts', [
 ]);
 assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', [
   'PdfPracticePage',
-  'Generar preguntas desde PDF con IA',
+  'Generar preguntas a partir de PDF con IA',
   'canonical:toAbsoluteUrl(path)',
 ]);
 for (const [pagePath, experience] of [
@@ -104,7 +104,7 @@ assertIncludesAll('components/marketing/seo-practice-tools-landings.tsx', [
 assertIncludesAll('components/marketing/editorial-study-pages.tsx', [
   'QuestionsCta',
   'id="elegir-pdf-preguntas"',
-  'Convertir PDF en preguntas con IA',
+  'Generar preguntas a partir de PDF con IA',
   'href="/funciones/simulacro-examen-con-ia"',
   'href="/funciones/practicar-por-tema"',
 ]);
