@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/convertir-pdf-en-preguntas`,
     },
     {
+      url: `${baseUrl}/funciones/simulacro-examen-con-ia`,
+    },
+    {
+      url: `${baseUrl}/funciones/practicar-por-tema`,
+    },
+    {
       url: `${baseUrl}/como-estudiar-ingreso-unlam`,
       lastModified: new Date('2026-10-20'),
     },
