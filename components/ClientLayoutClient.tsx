@@ -94,6 +94,17 @@ function getNextStreakMilestone(streakDays: number) {
 function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
+  const [pendingDestination, setPendingDestination] = useState<{
+    fromPath: string;
+    href: string;
+  } | null>(null);
+  const pendingHref = pendingDestination?.fromPath === pathname ? pendingDestination.href : null;
+  useEffect(() => {
+    // Clear an optimistic selection once a route resolves (including browser Back).
+    // Scheduling it avoids a synchronous state update during an effect.
+    const frame = window.requestAnimationFrame(() => setPendingDestination(null));
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
@@ -121,8 +132,9 @@ function BottomNav() {
       <div className="grid grid-cols-4 items-stretch gap-1 px-2 py-1.5">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            item.href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso'
+          const isActive = pendingHref !== null
+            ? pendingHref === item.href
+            : item.href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso'
               ? true
               : item.href === '/' || item.href === '/dashboard'
                 ? pathname === item.href
@@ -132,6 +144,9 @@ function BottomNav() {
             <Link
               key={`${item.label}-${item.href}`}
               href={item.href}
+              onClick={() => setPendingDestination({ href: item.href, fromPath: pathname })}
+              data-evaluo-mobile-nav-item="true"
+              aria-current={isActive ? 'page' : undefined}
               data-recommended-errors={
                 item.href === '/dashboard/explicaciones' ? 'true' : undefined
               }
@@ -497,7 +512,11 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
-            {children}
+            {isCompactAppRoute && !isMaterialStudyRoute ? (
+              <div key={pathname} data-evaluo-route-enter className="min-h-full w-full">
+                {children}
+              </div>
+            ) : children}
           </main>
           {showBottomNav ? <BottomNav /> : null}
           {!isLegalRoute && !isAdministradorRoute && !isMaterialStudyRoute ? (

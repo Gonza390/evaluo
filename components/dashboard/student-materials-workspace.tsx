@@ -111,6 +111,7 @@ export function StudentMaterialsWorkspace({
 
               return (
                 <article
+                  data-evaluo-motion-card
                   key={material.id}
                   className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
                 >

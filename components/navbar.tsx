@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -75,9 +75,9 @@ function NavItem({
   dataTourAttr?: string;
   compact?: boolean;
 }) {
-  const baseClass = `group flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
+  const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
     active
-      ? 'bg-primary/5 text-primary'
+      ? 'text-primary'
       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
   } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
 
@@ -97,6 +97,8 @@ function NavItem({
   return (
     <Link
       href={href}
+      aria-current={active ? 'page' : undefined}
+      data-evaluo-sidebar-link={active ? 'active' : undefined}
       title={collapsed ? label : undefined}
       className={baseClass}
       {...(dataTourAttr ? { [dataTourAttr]: 'true' } : {})}
@@ -111,6 +113,53 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const navRef = useRef<HTMLElement | null>(null);
+  const [activeIndicator, setActiveIndicator] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const syncPosition = () => {
+      const active = nav.querySelector<HTMLElement>('[data-evaluo-sidebar-link="active"]');
+      if (!active) {
+        setActiveIndicator(null);
+        return;
+      }
+      const navBounds = nav.getBoundingClientRect();
+      const bounds = active.getBoundingClientRect();
+      const next = {
+        top: bounds.top - navBounds.top,
+        left: bounds.left - navBounds.left,
+        width: bounds.width,
+        height: bounds.height,
+      };
+      setActiveIndicator(previous =>
+        previous &&
+        previous.top === next.top &&
+        previous.left === next.left &&
+        previous.width === next.width &&
+        previous.height === next.height
+          ? previous
+          : next
+      );
+    };
+    syncPosition();
+    const observer = new ResizeObserver(syncPosition);
+    observer.observe(nav);
+    const active = nav.querySelector<HTMLElement>('[data-evaluo-sidebar-link="active"]');
+    if (active) observer.observe(active);
+    window.addEventListener('resize', syncPosition);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', syncPosition);
+    };
+  }, [pathname, collapsed, compact]);
+
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
   return (
     <aside
@@ -121,7 +170,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
     >
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
-          <nav className={`space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
+          <nav ref={navRef} className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
@@ -166,6 +215,18 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
             ))}
 
             {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} compact={compact} /> : null}
+            {activeIndicator ? (
+              <span
+                data-evaluo-sidebar-indicator
+                aria-hidden="true"
+                className="pointer-events-none absolute top-0 left-0 !m-0 rounded-lg bg-primary/7"
+                style={{
+                  width: activeIndicator.width,
+                  height: activeIndicator.height,
+                  transform: `translate3d(${activeIndicator.left}px, ${activeIndicator.top}px, 0)`,
+                }}
+              />
+            ) : null}
           </nav>
 
           <div className="mt-auto border-t border-slate-200/80 pt-3">

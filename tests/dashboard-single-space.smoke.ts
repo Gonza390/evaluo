@@ -165,4 +165,31 @@ assert.match(compactReferrals, /max-w-\[1240px\]/);
 assert.match(compactHeader, /size === 'compact' && 'gap-3 pb-3 sm:pb-4'/);
 assert.match(compactHeader, /'text-\[20px\] leading-\[1\.3\] sm:text-\[22px\]'/);
 
+// Las microinteracciones no deben romper navegación, contenido o accesibilidad.
+const motionStyles = readFileSync(resolve('app/globals.css'), 'utf8');
+const dashboardLoadingSource = readFileSync(resolve('app/dashboard/loading.tsx'), 'utf8');
+const calendarLoadingSource = readFileSync(resolve('app/calendario/loading.tsx'), 'utf8');
+const progressLoadingSource = readFileSync(resolve('app/dashboard/explicaciones/loading.tsx'), 'utf8');
+const drawerSource = readFileSync(resolve('components/ui/drawer.tsx'), 'utf8');
+const dialogSource = readFileSync(resolve('components/ui/dialog.tsx'), 'utf8');
+assert.match(appChromeSource, /data-evaluo-mobile-nav-item="true"/);
+assert.match(appChromeSource, /setPendingDestination\(\{ href: item.href, fromPath: pathname \}\)/);
+assert.match(appChromeSource, /aria-current=\{isActive \? 'page' : undefined\}/);
+assert.match(appChromeSource, /key=\{pathname\} data-evaluo-route-enter/);
+assert.match(navbarSource, /data-evaluo-sidebar-indicator/);
+assert.match(navbarSource, /new ResizeObserver\(syncPosition\)/);
+assert.match(dashboardHeroSource, /data-evaluo-motion-card/);
+assert.match(dashboardMaterialsSource, /data-evaluo-motion-card/);
+assert.match(motionStyles, /prefers-reduced-motion: reduce/);
+assert.match(motionStyles, /\[data-evaluo-route-enter\]/);
+assert.match(motionStyles, /\[data-evaluo-motion-card\]/);
+assert.match(dialogSource, /backdrop-blur-\[2px\]/);
+assert.match(drawerSource, /backdrop-blur-\[2px\]/);
+for (const loading of [dashboardLoadingSource, calendarLoadingSource, progressLoadingSource]) {
+  assert.match(loading, /Skeleton/, 'Show real layout skeletons during route loading.');
+  assert.match(loading, /sr-only/, 'Loading must still have accessible text.');
+}
+assert.doesNotMatch(appChromeSource, /prefers-reduced-motion.*document.startViewTransition/,
+  'Route motion must not rely on a browser-specific View Transitions API.');
+
 console.log('Dashboard single Mi espacio smoke tests passed.');

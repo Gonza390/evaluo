@@ -62,6 +62,7 @@ export function MaeveStudyHero({
 
   return (
     <section
+      data-evaluo-motion-card
       ref={heroRef}
       className={
         isFirstPdfState
