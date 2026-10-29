@@ -267,6 +267,29 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
           </div>
         </section>
 
+        {market === 'es' ? (
+          <section className="border-y border-blue-100 bg-blue-50/40 py-12 sm:py-14" aria-labelledby="guias-estudio-es">
+            <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-4 sm:px-8 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Más formas de aprender</p>
+                <h2 id="guias-estudio-es" className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                  Guías para estudiar materias y preparar exámenes
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+                  Anatomía, psicología, derecho, economía, exámenes tipo test y repaso de errores:
+                  métodos paso a paso con ejemplos para aplicarlos a tus propios apuntes.
+                </p>
+              </div>
+              <Link
+                href="/es/guias"
+                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-blue-200 bg-white px-5 text-sm font-bold text-blue-700 transition hover:border-blue-400"
+              >
+                Explorar las guías <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+          </section>
+        ) : null}
+
         <section className="py-16 sm:py-20" aria-labelledby="preguntas-frecuentes">
           <div className="mx-auto grid w-full max-w-[1080px] gap-8 px-4 sm:px-8 md:grid-cols-[0.8fr_1.2fr]">
             <div>

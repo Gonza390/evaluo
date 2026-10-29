@@ -127,6 +127,12 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
                 Estudiar PDF con IA
               </Link>
               <Link
+                href="/es/guias"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
+                Guías de estudio universitario
+              </Link>
+              <Link
                 href="/es/estudiar-pdf-con-ia"
                 className="text-xs text-white/80 transition hover:text-white"
               >
