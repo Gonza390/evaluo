@@ -619,7 +619,7 @@ export function ProfileCompletionModal({
       <DialogContent
         overlayClassName="bg-white/18 backdrop-blur-[10px]"
         className={`overflow-hidden border-none bg-white/98 p-0 shadow-[0_34px_120px_rgba(15,23,42,0.22)] backdrop-blur-md sm:max-w-[580px] ${
-          allowSkip ? '' : '[&>button]:hidden'
+          allowSkip || onClose ? '' : '[&>button]:hidden'
         }`}
       >
         {/* ---- Progress bar ---- */}
@@ -628,13 +628,21 @@ export function ProfileCompletionModal({
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400">
               Paso {step} de {TOTAL_STEPS}
             </p>
-            {step < TOTAL_STEPS && allowSkip ? (
+            {step < TOTAL_STEPS && allowSkip && onClose ? (
               <button
                 type="button"
-                onClick={() => onClose?.()}
+                onClick={onClose}
                 className="text-[12px] font-semibold text-slate-400 transition hover:text-slate-600"
               >
                 Saltar
+              </button>
+            ) : !allowSkip && onClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-[12px] font-semibold text-slate-500 transition hover:text-slate-700"
+              >
+                Salir del simulador
               </button>
             ) : null}
           </div>
