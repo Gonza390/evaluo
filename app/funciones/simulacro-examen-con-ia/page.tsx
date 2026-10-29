@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Simulacro de examen con IA desde tu PDF | Evaluo',
+    title: "Simulacro de examen con IA desde tus apuntes | Evaluo",
     description: 'Practicá con tus apuntes, interpretá los resultados y reforzá los temas que todavía te cuestan.',
     url: toAbsoluteUrl(path),
   },
