@@ -7,6 +7,12 @@ type Guide = {
   guideTitle: string;
   guideIntro: string;
   steps: GuideStep[];
+  appliedExample: {
+    title: string;
+    context: string;
+    tasks: string[];
+    result: string;
+  };
   mistakesTitle: string;
   mistakes: GuideStep[];
   selfCheckTitle: string;
@@ -26,6 +32,16 @@ export const REGIONAL_STUDY_GUIDES: Record<StudyMarket, Guide> = {
       { title: 'Recuerda sin consultar', description: 'Oculta el material e intenta explicar dos conceptos con tus palabras. Después utiliza tarjetas o preguntas para poner a prueba lo que recuerdas.' },
       { title: 'Corrige y repite más adelante', description: 'Cuando una respuesta falle, identifica el apartado que debes revisar y programa otra sesión breve de práctica. Volver a intentarlo permite comprobar si entendiste el tema.' },
     ],
+    appliedExample: {
+      title: "Ejemplo guiado: estudiar un capítulo de biología en PDF",
+      context: "Imagina un PDF de fotosíntesis que incluye la función de la luz, el dióxido de carbono y la temperatura. No hace falta convertir todo el archivo en un único resumen.",
+      tasks: [
+        "Delimita una sola sección y extrae las relaciones entre luz, energía y velocidad de fotosíntesis.",
+        "Recuerda sin consultar qué sucede cuando falta luz y justifica tu respuesta con los apuntes.",
+        "Revisa cualquier error en el capítulo y formula otra pregunta que cambie una de las condiciones.",
+      ],
+      result: "Al terminar tendrás un tema concreto para volver a practicar, no solo un resumen para releer.",
+    },
     mistakesTitle: 'Errores habituales al estudiar archivos PDF',
     mistakes: [
       { title: 'Confiar solo en un resumen', description: 'Puedes reconocer una explicación al leerla y aun así no ser capaz de responder una pregunta sobre ella. Combina la lectura con preguntas sin mirar.' },
@@ -47,6 +63,16 @@ export const REGIONAL_STUDY_GUIDES: Record<StudyMarket, Guide> = {
       { title: 'Transforma la guía en preguntas', description: 'Utiliza tarjetas para recordar ideas y ejercicios para aplicar los conceptos a situaciones nuevas. Una pregunta de aplicación revela dudas que una simple relectura no muestra.' },
       { title: 'Prioriza lo que necesitas reforzar', description: 'Después de responder, revisa el contenido en el que fallaste y vuelve a practicarlo. No necesitas empezar de cero con toda la materia cada vez.' },
     ],
+    appliedExample: {
+      title: "Ejemplo de guía de estudio con IA para un examen de administración",
+      context: "Tienes un PDF con las unidades de planeación estratégica, objetivos e indicadores. Tu profesor confirmó que entran dos unidades en el examen.",
+      tasks: [
+        "Separa en tu guía únicamente las dos unidades que entran en el examen y anota sus conceptos fundamentales.",
+        "Convierte la relación entre objetivos e indicadores en una pregunta de aplicación, no solo en una definición.",
+        "Responde sin ver los apuntes, consulta la explicación y marca qué parte de tu guía debes repasar.",
+      ],
+      result: "Tu guía deja de ser una lista de conceptos y se convierte en una preparación con preguntas y repaso dirigido.",
+    },
     mistakesTitle: 'Qué conviene evitar al preparar una guía de estudio',
     mistakes: [
       { title: 'Memorizar conceptos sin ejemplos', description: 'Conocer una definición no garantiza poder utilizarla. Para cada unidad, intenta resolver al menos una situación que requiera aplicar el tema.' },
@@ -68,6 +94,16 @@ export const REGIONAL_STUDY_GUIDES: Record<StudyMarket, Guide> = {
       { title: 'Contrasta los errores con el PDF', description: 'No te quedes en acertar o fallar. Revisa la explicación y comprueba el apartado del documento que la sustenta, especialmente cuando haya cifras o conceptos técnicos.' },
       { title: 'Refuerza primero los temas difíciles', description: 'Después de practicar, dedica el siguiente repaso a los conceptos con errores. Vuelve a responder preguntas para comprobar si pudiste corregirlos.' },
     ],
+    appliedExample: {
+      title: "Ejemplo: simulacro de parcial de economía con tus apuntes",
+      context: "Supón que el parcial incluye oferta, demanda y precio de equilibrio. Dispones de un PDF del curso con gráficos y ejemplos.",
+      tasks: [
+        "Organiza las unidades del PDF y responde primero una pregunta sobre cambios de la demanda.",
+        "Explica qué sucede con el precio de equilibrio y contrasta tu respuesta con el gráfico original.",
+        "Si te equivocas al interpretar el desplazamiento, repasa ese apartado y realiza otra pregunta distinta.",
+      ],
+      result: "El objetivo no es adivinar el parcial: es identificar qué concepto del material aún no dominas.",
+    },
     mistakesTitle: 'Tres errores que pueden hacerte perder tiempo antes de un parcial',
     mistakes: [
       { title: 'Estudiar solo lo que resulta familiar', description: 'Los temas conocidos producen sensación de avance. Reserva tiempo para responder preguntas de las unidades que todavía cuestan.' },
@@ -89,6 +125,16 @@ export const REGIONAL_STUDY_GUIDES: Record<StudyMarket, Guide> = {
       { title: 'Responde preguntas sin consultar', description: 'Pon a prueba lo que recuerdas; si hay opciones de respuesta, justifica también por qué descartas las alternativas. No te limites a reconocer palabras del temario.' },
       { title: 'Revisa los fallos y repite', description: 'Anota qué concepto explica el error y vuelve a él con el documento original. Practica de nuevo en otra sesión, sin confiar en que leer la solución equivale a aprenderla.' },
     ],
+    appliedExample: {
+      title: "Ejemplo de test de práctica desde un temario universitario",
+      context: "Tienes un PDF sobre memoria de trabajo y memoria a largo plazo. El examen de tu asignatura incluye preguntas tipo test.",
+      tasks: [
+        "Divide el temario en ambos conceptos e identifica las diferencias que podrían confundirse.",
+        "Responde una pregunta que describa una situación real y elige la opción que mejor la explique.",
+        "Justifica por qué descartas las otras respuestas, comprueba la teoría y repasa los errores antes de otro intento.",
+      ],
+      result: "Habrás practicado el razonamiento que exige un tipo test sin confundir los ejercicios generados con el examen oficial.",
+    },
     mistakesTitle: 'Errores frecuentes al estudiar para una prueba tipo test',
     mistakes: [
       { title: 'Memorizar solo la opción correcta', description: 'Es fácil recordar la forma de una respuesta y fallar si cambia el enunciado. Intenta explicar el concepto y reconocerlo en otra situación.' },

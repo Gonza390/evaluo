@@ -47,6 +47,10 @@ const FAQ = [
     a: 'No. Son ejemplos históricos de formatos de consigna. Las actividades de Evaluo son originales y no equivalen a exámenes oficiales ni anticipan lo que se evaluará.'
   },
   {
+    q: '¿Sigue abierta la inscripción a la segunda instancia del ingreso UNLaM 2027?',
+    a: 'No. El calendario publicado por UNLaM fijó el cierre de la preinscripción y de la entrega de documentación el 26 de octubre de 2026. Si ya te anotaste, consultá el Sistema de Ingresantes para confirmar tu situación y las fechas de cursada.'
+  },
+  {
     q: '¿Necesito un manual oficial para utilizar Evaluo?',
     a: 'La fuente de estudio debe ser tu programa y manual vigente. Podés elegir tu PDF antes de registrarte y generar materiales de práctica; verificá las explicaciones con el texto de la cátedra.'
   },
@@ -91,6 +95,16 @@ export function UnlamEditorialGuide() {
                 <p className="mt-5 max-w-2xl text-[15px] leading-7 text-slate-600 sm:text-base sm:leading-8">
                   Consultá las materias según tu carrera, las fechas oficiales de 2027 y una guía para preparar el manual. Además, podés resolver ejercicios gratuitos y continuar practicando con tus propios apuntes en Evaluo.
                 </p>
+                <div className="mt-6 max-w-2xl rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-slate-800">
+                  <p className="font-bold text-amber-950">Inscripción a la segunda instancia 2027: plazo finalizado</p>
+                  <p className="mt-1">
+                    Según el calendario oficial de UNLaM, la preinscripción y la entrega de documentación
+                    cerraron el 26 de octubre de 2026. Si ya te inscribiste, podés usar esta guía para
+                    preparar la cursada intensiva del 1 de febrero al 6 de marzo de 2027 y los exámenes
+                    previstos del 8 al 12 de marzo. Verificá tu situación en el
+                    {' '}<OfficialLink href={officialSources.ingreso}>Sistema de Ingresantes</OfficialLink>.
+                  </p>
+                </div>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <TrackedLink
                     href="#practica-ingreso"
@@ -117,7 +131,7 @@ export function UnlamEditorialGuide() {
                 </a>
                 <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-blue-100 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> Guía y práctica interactiva</span>
-                  <span>Revisado el 20 de octubre de 2026</span>
+                  <span>Revisado el 29 de octubre de 2026</span>
                   <span>Equipo Evaluo</span>
                 </div>
               </div>
@@ -196,7 +210,7 @@ export function UnlamEditorialGuide() {
               Fuentes oficiales del Curso de Ingreso
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
-              Revisado el 20 de octubre de 2026. UNLaM es la autoridad para inscripciones, horarios,
+              Revisado el 29 de octubre de 2026. UNLaM es la autoridad para inscripciones, horarios,
               evaluación, recuperatorios y cambios en el calendario. Los modelos externos de años
               anteriores se identifican en su sección correspondiente.
             </p>
