@@ -346,7 +346,7 @@ assertIncludesAll('components/marketing/seo-study-experiences-v2.tsx', [
   'app o página para estudiar con IA',
   'Estudiá un PDF con IA:',
   'Resumí un PDF con IA',
-  'Creá flashcards con IA',
+  'Creá flashcards a partir de un PDF',
   '/demo/material-estudio',
   '/ia-para-estudiantes',
   '/estudiar-pdf-con-ia',
