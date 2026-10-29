@@ -469,11 +469,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       if (priorCompletionError) throw priorCompletionError;
       previouslyCompleted = Boolean(priorCompletion);
     }
-    // An explicit request is never blocked by a previous skip/completion.
-    const manuallyRequestedGuide =
-      isOwner && material.processing_status === 'ready' && query.recorrido === '1';
-    const shouldShowFirstPdfGuide =
-      manuallyRequestedGuide || (eligibleByAccount && !previouslyCompleted);
+    // The tour begins automatically only for eligible accounts.
+    // Students can voluntarily re-open it from the PDF header at any time.
+    const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
 
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
@@ -538,7 +536,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           }
           recommendedStudyAvailable={isOwner && material.processing_status === 'ready'}
           initialRecommendedStudy={shouldShowFirstPdfGuide}
-          initialGuideManuallyRequested={manuallyRequestedGuide}
           initialStudyStartGuideRequested={isOwner && material.processing_status === 'ready' && query.inicio === '1'}
           initialTab={shouldShowFirstPdfGuide ? 'resumen' : (
             query.tab === 'tarjetas' ||
