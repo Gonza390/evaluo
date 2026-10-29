@@ -4,6 +4,20 @@ import { readFileSync } from 'node:fs';
 const source = (path: string) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 
 const workspace = source('components/material-study-workspace.tsx');
+const pickerShell = source('components/dashboard/pdf-first-upload-shell.tsx');
+const materials = source('components/dashboard/student-materials-workspace.tsx');
+const dashboardChrome = source('components/dashboard/maeve-dashboard-chrome.tsx');
+assert.doesNotMatch(pickerShell, /isUploadTriggerLabel|button\.textContent/,
+  'The upload flow must not depend on the visible CTA label.');
+assert.match(pickerShell, /PdfUploadTriggerContext.Provider value=\{openUploadPicker\}/);
+assert.match(materials, /onPrimaryAction=\{\(\) => openUploadPicker\(/);
+assert.match(dashboardChrome, /usePdfUploadTrigger\(\)/);
+const calendar = source('app/calendario/page.tsx');
+const calendarStyles = source('app/calendario/calendar-clean.css');
+assert.match(calendar, /var\(--calendar-exam-text\)/);
+assert.match(calendar, /var\(--calendar-assignment-text\)/);
+assert.match(calendarStyles, /--calendar-exam-text: #92400e/);
+assert.match(calendar, /text-slate-500' : 'text-slate-900'/);
 assert.match(workspace, /if \(outcome === 'completed' && \(demo \|\| isOwner\)\)/,
   'Finishing can transition into the study guide, skipping cannot.');
 assert.match(workspace, /setStudyStartGuideOpen\(false\);/,
