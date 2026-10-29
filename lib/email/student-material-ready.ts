@@ -1,4 +1,5 @@
 import 'server-only';
+import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -27,7 +28,7 @@ export function buildStudentMaterialReadyMessage(input: {
   materialFileName: string | null;
   materialId: string;
 }) {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
+  const baseUrl = SITE_URL.replace(/\/$/, '');
   const url = new URL(`/materiales/${input.materialId}`, baseUrl);
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
@@ -52,7 +53,7 @@ export function buildStudentMaterialReadyMessage(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="margin-bottom:28px;"><img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
+                <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
 
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">Tu PDF ya está listo para estudiar</h1>
@@ -65,7 +66,7 @@ export function buildStudentMaterialReadyMessage(input: {
 
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
-                  <img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
+                  <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
             </tr>
