@@ -707,3 +707,36 @@ assertIncludesAll('components/marketing/seo-comparison-landings.tsx', [
   'Si buscás una alternativa a ChatGPT',
   'Si buscás una alternativa a Quizlet',
 ]);
+
+// Argentina acquisition: curated crawlable subject links and a secondary path
+// from pregunteros to the PDF-first study flow without changing canonical URLs.
+assertIncludesAll('app/pregunteros/page.tsx', [
+  'FEATURED_SIGLO21_MATERIA_IDS',
+  'featuredMateriaPriority(a.materiaId)',
+  'Pregunteros Siglo 21 por materia y parcial',
+  '/estudiar-pdf-con-ia?source=pregunteros-siglo21',
+  "location: 'pregunteros_hub_after_catalog'",
+  'Los ejercicios son para practicar: no son exámenes oficiales',
+  'TrackedLink',
+]);
+assertIncludesAll('app/pregunteros/[materia]/page.tsx', [
+  'PregunteroPracticeHero',
+  'href={`/estudiar-pdf-con-ia?source=preguntero-materia&materiaId=${encodeURIComponent(data.materiaId)}`}',
+  "location: 'preguntero_materia_after_questions'",
+  "materia_id: data.materiaId",
+  'Estudiar con mi PDF',
+]);
+assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
+  "normalizeSource(params.get('source') ?? sourceKey ?? params.get('utm_source'))",
+  "const requestedMateriaId = new URLSearchParams(window.location.search).get('materiaId');",
+  "if (isUuid(requestedMateriaId)) nextParams.set('materiaId', requestedMateriaId!);",
+  "const nextPath = `/dashboard?${nextParams.toString()}`;",
+  'savePdfFirstDraft(file, source)',
+  "'pdf_selected'",
+  "'create_material_clicked'",
+]);
+assertIncludesAll('components/simulador/SimulatorFinishedResult.tsx', [
+  'simulator_result_primary_pdf_activation',
+  'simulator_result_pdf_activation',
+  'Subir mis apuntes',
+]);
