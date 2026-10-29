@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { BadgePercent, CreditCard, MousePointerClick, UsersRound } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { getReferralPortalData } from '@/lib/referral-portal';
+import { SITE_URL } from '@/lib/site';
 import { PartnerReferralActions } from '@/components/referrals/PartnerReferralActions';
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -67,7 +68,7 @@ export default async function ReferidosPage() {
   const conversionRate = portal.summary.attributedUsers
     ? (portal.summary.approvedCheckouts / portal.summary.attributedUsers) * 100
     : 0;
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://evaluo.com.ar').replace(/\/$/, '');
+  const siteUrl = SITE_URL.replace(/\/$/, '');
 
   const metrics = [
     {

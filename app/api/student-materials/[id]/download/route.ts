@@ -4,6 +4,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/rate-limit';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { isUuid } from '@/lib/uuid';
+import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
 
 export const runtime = 'nodejs';
 
@@ -305,7 +306,7 @@ async function addEvaluoCover({
     font: regular,
     color: SLATE_400,
   });
-  cover.drawText('evaluo.com.ar', {
+  cover.drawText(new URL(SITE_URL).hostname, {
     x: 48,
     y: 42,
     size: 10,
@@ -382,7 +383,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     }
 
     const materialSegment = buildSeoEntitySlug(material.title, material.id);
-    const materialUrl = `https://evaluo.com.ar/materiales/${materialSegment}`;
+    const materialUrl = toAbsoluteUrl(`/materiales/${materialSegment}`);
     const brandedBytes = await addEvaluoCover({
       originalBytes: await downloadResult.data.arrayBuffer(),
       title: material.title,

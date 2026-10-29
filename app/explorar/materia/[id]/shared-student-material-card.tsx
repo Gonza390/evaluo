@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { SharedStudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
+import { toAbsoluteUrl } from '@/lib/site';
 import { pushRecentResource } from '@/lib/dashboard-client';
 import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
 import {
@@ -55,7 +56,7 @@ function formatBytes(bytes: number | null) {
 }
 
 function getPublicMaterialUrl(materialHref: string) {
-  return new URL(materialHref, 'https://evaluo.com.ar').toString();
+  return toAbsoluteUrl(materialHref);
 }
 
 async function copyText(value: string) {

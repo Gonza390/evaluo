@@ -1,4 +1,5 @@
 import 'server-only';
+import { SITE_URL } from '@/lib/site';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -140,7 +141,7 @@ ${topicsHtml}`;
 }
 
 function buildTrackedUrl(path: string, days: ReminderDays, content: string) {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
+  const baseUrl = SITE_URL.replace(/\/$/, '');
   const url = new URL(path, baseUrl);
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');

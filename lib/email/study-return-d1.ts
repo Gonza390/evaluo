@@ -1,4 +1,5 @@
 import 'server-only';
+import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { getDashboardNextStudyAction, type DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
@@ -97,7 +98,7 @@ function materialTitle(material: StudentMaterial) {
 }
 
 function buildTrackedReturnUrl(action: DashboardNextStudyAction) {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
+  const baseUrl = SITE_URL.replace(/\/$/, '');
   const url = new URL(action.href, baseUrl);
   url.searchParams.set('utm_source', 'sender');
   url.searchParams.set('utm_medium', 'email');
@@ -166,7 +167,7 @@ export function buildStudyReturnD1Message(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="margin-bottom:28px;"><img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
+                <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeTitle}</p>
@@ -176,7 +177,7 @@ export function buildStudyReturnD1Message(input: {
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
-                  <img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
+                  <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
             </tr>

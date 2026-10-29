@@ -5,6 +5,7 @@ import { Check, Link2, Loader2, Share2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { updateStudentMaterialVisibilityAction } from '@/app/dashboard/materiales/actions';
 import { useToast } from '@/components/ui/use-toast';
+import { toAbsoluteUrl } from '@/lib/site';
 import {
   buildStudentMaterialShareImagePath,
   prepareStudentMaterialShareImage,
@@ -40,7 +41,7 @@ export function StudentMaterialShareControl({
     void prepareStudentMaterialShareImage(shareImagePath, title);
   }, [shareImagePath, title]);
 
-  const shareUrl = () => new URL(sharePath, 'https://evaluo.com.ar').toString();
+  const shareUrl = () => toAbsoluteUrl(sharePath);
 
   const copyLink = async (url: string) => {
     if (navigator.clipboard?.writeText) {

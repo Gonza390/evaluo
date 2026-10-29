@@ -1,4 +1,5 @@
 import 'server-only';
+import { SITE_URL } from '@/lib/site';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -27,7 +28,7 @@ function firstName(value: string | null | undefined) {
 }
 
 function buildReviewUrl(materialId: string) {
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
+  const baseUrl = SITE_URL.replace(/\/$/, '');
   const url = new URL(`/materiales/${materialId}`, baseUrl);
   url.searchParams.set('tab', 'tarjetas');
   url.searchParams.set('utm_source', 'sender');

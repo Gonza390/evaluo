@@ -434,11 +434,40 @@ for (const path of [
   assertIncludesAll(path, ['index: false', 'follow: true']);
 }
 
-assertIncludesAll('vercel.json', [
-  '"www.evaluo.com.ar"',
-  '"https://evaluo.com.ar/:path*"',
-  '"permanent": true',
-]);
+// The public old-domain URLs move in one hop; keep API webhooks, cron callbacks
+// and legacy OAuth callbacks on their original host during the transition.
+const domainMigrationRedirects = JSON.parse(source('vercel.json')).redirects as Array<{
+  source: string;
+  destination: string;
+  statusCode?: number;
+  has?: Array<{ type: string; value: string }>;
+}>;
+for (const hostname of ['evaluo.com.ar', 'www.evaluo.com.ar']) {
+  const rule = domainMigrationRedirects.find((redirect) =>
+    redirect.has?.some((condition) => condition.type === 'host' && condition.value === hostname)
+  );
+  assert.ok(rule, `Missing old-domain redirect for ${hostname}`);
+  assert.equal(rule.destination, 'https://evaluoapp.com/:path');
+  assert.equal(rule.statusCode, 301);
+  assert.equal(rule.source, '/:path((?!api/|api$|auth/callback|_next/|_next$|_vercel/|_vercel$|\\.well-known/).*)');
+}
+const publicDomainRedirectPath = /^\/(?!api\/|api$|auth\/callback|_next\/|_next$|_vercel\/|_vercel$|\.well-known\/).*$/;
+for (const path of ['/', '/estudiar-pdf-con-ia', '/es-mx/estudiar-pdf-con-ia']) {
+  assert.ok(publicDomainRedirectPath.test(path), `Public path must redirect: ${path}`);
+}
+for (const path of ['/api', '/api/internal/exam-reminders', '/api/webhooks/mercadopago', '/auth/callback', '/_next/static/chunk.js', '/_vercel/insights', '/.well-known/security.txt']) {
+  assert.ok(!publicDomainRedirectPath.test(path), `Sensitive path must not redirect: ${path}`);
+}
+assertIncludesAll('lib/site.ts', [`'https://evaluoapp.com'`]);
+for (const path of [
+  'lib/email/evaluo-email.ts',
+  'lib/email/study-return-d1.ts',
+  'lib/email/study-return-48h.ts',
+  'lib/email/student-material-ready.ts',
+  'lib/email/reactivation-next-subject.ts',
+]) {
+  assert.ok(!source(path).includes('https://evaluo.com.ar/evaluo-logo-landing-email.png'), `${path} must resolve its email image from SITE_URL`);
+}
 
 const homeHeroSource = source('components/marketing/home-hero-v2.tsx');
 assert.ok(
