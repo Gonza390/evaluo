@@ -72,6 +72,7 @@ export function getAnalyticsPageType(pathname: string) {
   ) {
     return 'seo-international-study-pdf';
   }
+  if (pathname.startsWith('/comparar/evaluo-vs-')) return 'seo-comparison';
   if (pathname === '/convertir-pdf-en-preguntas') return 'seo-pdf-questions';
   if (pathname === '/funciones/simulacro-examen-con-ia') return 'seo-mock-exam';
   if (pathname === '/funciones/practicar-por-tema') return 'seo-topic-practice';

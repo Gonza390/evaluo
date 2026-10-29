@@ -105,6 +105,15 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               <Link href="/#producto" className="text-xs text-white/80 transition hover:text-white">
                 Producto
               </Link>
+              <Link href="/comparar/evaluo-vs-notebooklm" className="text-xs text-white/80 transition hover:text-white">
+                Evaluo vs. NotebookLM
+              </Link>
+              <Link href="/comparar/evaluo-vs-chatgpt" className="text-xs text-white/80 transition hover:text-white">
+                Evaluo vs. ChatGPT
+              </Link>
+              <Link href="/comparar/evaluo-vs-quizlet" className="text-xs text-white/80 transition hover:text-white">
+                Evaluo vs. Quizlet
+              </Link>
               <Link
                 href="/ia-para-estudiantes"
                 className="text-xs text-white/80 transition hover:text-white"
