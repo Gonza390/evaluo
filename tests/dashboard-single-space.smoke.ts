@@ -65,6 +65,14 @@ assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
 assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
 assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
+assert.doesNotMatch(dashboardMaterialsSource, /dashboard_materials_header/,
+  'Tus PDFs must not display a redundant upload CTA in the section header.');
+assert.match(dashboardMaterialsSource, /primaryActionLabel="Subí tu PDF"/,
+  'The empty materials state must keep the PDF upload CTA.');
+assert.match(dashboardMaterialsSource, /onPrimaryAction=\{\(\) => openUploadPicker\('dashboard_empty_materials'\)\}/,
+  'The empty-state upload CTA must still explicitly open the picker.');
+assert.match(dashboardHeroSource, /Subir otro PDF/,
+  'The dashboard hero must keep its upload action for students with existing PDFs.');
 assert.match(dashboardMaterialsSource, /min-h-10 min-w-10/);
 assert.match(appChromeSource, /const isCompactAppRoute =/);
 assert.match(appChromeSource, /Boolean\(user\)/);
