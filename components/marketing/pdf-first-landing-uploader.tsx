@@ -5,6 +5,7 @@ import { CheckCircle2, FileText, Loader2, ShieldCheck, UploadCloud, X } from 'lu
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { isUuid } from '@/lib/uuid';
 
 function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) return '';
@@ -106,7 +107,12 @@ export function PdfFirstLandingUploader({
         market,
       });
 
-      const nextPath = `/dashboard?openUpload=1&source=${encodeURIComponent(source)}`;
+      const nextParams = new URLSearchParams({ openUpload: '1', source });
+      // Preserve the source subject after signing up; the dashboard validates the
+      // subject and uses it for conversion attribution, not automatic selection.
+      const requestedMateriaId = new URLSearchParams(window.location.search).get('materiaId');
+      if (isUuid(requestedMateriaId)) nextParams.set('materiaId', requestedMateriaId!);
+      const nextPath = `/dashboard?${nextParams.toString()}`;
       const login = new URL('/login', window.location.origin);
       login.searchParams.set('mode', 'signup');
       login.searchParams.set('reason', 'pdf-first');
