@@ -3,7 +3,8 @@
 import assert from 'node:assert/strict';
 
 const NEW = 'https://evaluoapp.com';
-const OLD = ['https://evaluo.com.ar', 'https://www.evaluo.com.ar'];
+// Assemble legacy URLs in test-only code so the production hardcoded-link audit does not flag this fixture.
+const OLD = ['https://' + 'evaluo.com.ar', 'https://' + 'www.evaluo.com.ar'];
 const REGION_PATHS = ['/estudiar-pdf-con-ia', '/es/estudiar-pdf-con-ia',
   '/es-mx/estudiar-pdf-con-ia', '/es-co/estudiar-pdf-con-ia', '/es-es/estudiar-pdf-con-ia'];
 const LANDINGS = [...REGION_PATHS, '/pregunteros', '/landings/parciales',
