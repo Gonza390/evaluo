@@ -81,7 +81,7 @@ export default function CrearMapaMentalDesdePdfPage() {
                 </span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Elegí un PDF de tus apuntes y organizá sus temas, subtemas y conceptos en un mapa mental con IA. Visualizá relaciones entre ideas y después volvé al documento o seguí practicando en Evaluo.
+                Si querés convertir un PDF en mapa mental con IA, elegí tus apuntes y organizá sus temas, subtemas y conceptos. Visualizá las relaciones entre ideas y después volvé al documento o seguí practicando en Evaluo.
               </p>
               <div className="mt-8">
                 <TrackedLink
