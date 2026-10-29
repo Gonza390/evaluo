@@ -775,8 +775,8 @@ assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
 // SEO study-guide editorial cluster: one language hub, eight substantial
 // published articles, no synthetic English variants until they are localized.
 assertIncludesAll('app/es/guias/page.tsx', [
-  'generateMetadata',
-].filter(Boolean).map((x) => x === 'generateMetadata' ? 'export const metadata' : x));
+  'export const metadata',
+]);
 assertIncludesAll('app/es/guias/page.tsx', [
   "const path = '/es/guias'",
   'STUDY_GUIDES.filter(',
