@@ -45,11 +45,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/como-estudiar-ingreso-unlam`,
-      lastModified: new Date('2026-10-20'),
+      lastModified: new Date('2026-10-29'),
     },
     {
       url: `${baseUrl}/uba-xxi/parciales`,
-      lastModified: new Date('2026-10-20'),
+      lastModified: new Date('2026-10-29'),
     },
     {
       url: `${baseUrl}/blog/tecnicas-de-estudio-efectivas`,
