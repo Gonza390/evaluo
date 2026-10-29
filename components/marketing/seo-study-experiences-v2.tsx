@@ -592,7 +592,7 @@ export function EstudiarPdfExperience() {
                 Estudiá un PDF con IA: <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">resumen, conceptos, flashcards y práctica</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Para estudiar un PDF con inteligencia artificial, primero seleccioná tus apuntes. Evaluo organiza el documento en resumen, glosario y mapa mental, y te permite repasar con flashcards y practicar ejercicios del mismo contenido. Elegís el archivo antes de registrarte.
+                Para estudiar un PDF con IA, primero seleccioná tus apuntes. Evaluo organiza el documento por temas: podés leer el resumen, consultar el glosario, repasar con flashcards y practicar preguntas sobre cada apartado. Elegís el archivo antes de registrarte.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
@@ -820,7 +820,7 @@ export function ResumirPdfExperience() {
                 Resumí un PDF con IA <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">para estudiar y seguir practicando</span>
               </h1>
               <p className="mx-auto mt-5 max-w-3xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Convertí un PDF largo en una estructura de estudio con ideas centrales y conceptos relacionados. Después podés volver al material, llevar esos conceptos a flashcards o continuar con ejercicios sobre la misma fuente.
+                Si buscás una IA para resumir PDF, empezá por seleccionar tus apuntes. Evaluo organiza las ideas principales y los conceptos del material en un resumen de estudio. Podés comprobar el resultado en la demo, volver al PDF y continuar con flashcards o preguntas sobre la misma fuente.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a href="#elegir-pdf-para-resumir" className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)]">
@@ -1076,10 +1076,10 @@ export function FlashcardsPdfExperience() {
                 <Layers3 className="h-3.5 w-3.5" aria-hidden="true" /> Tarjetas desde tus propios apuntes
               </span>
               <h1 className="mt-5 text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[64px]">
-                Creá flashcards con IA <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">desde tu PDF y tus apuntes</span>
+                Creá flashcards a partir de un PDF <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">con IA para repasar tus apuntes</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Convertí conceptos del documento en tarjetas de preguntas y respuestas para repasar. Cada flashcard parte del material que estás preparando y puede volver a conectarte con el tema cuando necesitás contexto.
+                Para crear flashcards a partir de un PDF, seleccioná tus apuntes y repasá los conceptos con tarjetas de preguntas y respuestas. Podés ver un ejemplo navegable y después pasar de las tarjetas a preguntas por tema sin perder el contexto del material.
               </p>
               <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
                 <PrimaryCta label="Crear flashcards desde mi PDF" trackingPrefix="seo_flashcards_pdf_v2" location="hero" />
