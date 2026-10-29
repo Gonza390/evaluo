@@ -16,7 +16,7 @@ export function parseSimulatorLandingEntry(params: Pick<URLSearchParams, 'get'>)
 }
 
 export function buildSimulatorLandingHref(href: string, questionId: string, option: string) {
-  const url = new URL(href, 'https://evaluo.com.ar');
+  const url = new URL(href, 'https://evaluo.local');
   url.searchParams.set('entry_question', questionId);
   url.searchParams.set('entry_option', option);
   return `${url.pathname}${url.search}${url.hash}`;

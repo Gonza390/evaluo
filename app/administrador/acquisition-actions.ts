@@ -157,7 +157,7 @@ function sourceFromReferrer(value: unknown): AcquisitionSourceKey | null {
   try {
     const host = new URL(referrer).hostname.toLowerCase().replace(/^www\./, '');
 
-    if (host === 'evaluo.com.ar' || host.endsWith('.evaluo.com.ar')) return null;
+    if (host === 'evaluo.com.ar' || host.endsWith('.evaluo.com.ar') || host === 'evaluoapp.com' || host.endsWith('.evaluoapp.com')) return null;
     if (host === 'accounts.google.com') return null;
     if (host === 'google.com' || /^google\.[a-z.]+$/.test(host)) return 'google';
     if (host === 'instagram.com' || host.endsWith('.instagram.com')) return 'instagram';
@@ -178,7 +178,7 @@ function sourceFromLanding(value: unknown): AcquisitionSourceKey | null {
   if (!landing) return null;
 
   try {
-    const url = new URL(landing, 'https://evaluo.com.ar');
+    const url = new URL(landing, 'https://evaluo.local');
     return normalizeSource(url.searchParams.get('utm_source'));
   } catch {
     return null;
@@ -205,7 +205,7 @@ function normalizeLanding(value: string | null) {
   if (!value) return '/';
 
   try {
-    return new URL(value, 'https://evaluo.com.ar').pathname || '/';
+    return new URL(value, 'https://evaluo.local').pathname || '/';
   } catch {
     return value.split('?')[0] || '/';
   }
