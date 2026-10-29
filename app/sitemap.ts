@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
+import { STUDY_GUIDES } from '@/lib/es-study-guides';
 import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
 
@@ -89,6 +90,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/landings/resumenes`,
     },
   ];
+
+  routes.push({ url: `${baseUrl}/es/guias`, lastModified: new Date('2026-10-29') });
+  for (const guide of STUDY_GUIDES) {
+    routes.push({
+      url: `${baseUrl}/es/guias/${guide.slug}`,
+      lastModified: new Date('2026-10-29'),
+    });
+  }
 
   const client = createPublicClient();
   const fetchAllQuestionFreshness = async () => {
