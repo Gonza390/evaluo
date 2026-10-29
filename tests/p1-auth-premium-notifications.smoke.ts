@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import {
   isPremiumFunnelDismissReturn,
   withPremiumDismissMarker,
-} from '../lib/premium/funnel-return.ts';
+} from '../lib/premium-funnel-return.ts';
 
 // Returned gates remain dismissed even if sessionStorage is blocked.
 const origin = '/materiales/123?tab=mapa&studyTopic=2#resumen';
