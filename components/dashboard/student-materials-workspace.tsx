@@ -83,6 +83,7 @@ export function StudentMaterialsWorkspace({
           className="gap-3 pb-3 sm:pb-3 [&_h2]:text-[19px] sm:[&_h2]:text-[20px] [&_h2]:tracking-[-0.04em]"
           eyebrow="Tu estudio"
           title="Tus PDFs"
+          visuallyHiddenTitle
           description={
             initialMaterials.length === 0
               ? 'Subí tu primer material y empezá a estudiar desde la misma fuente.'
