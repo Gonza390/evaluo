@@ -5,8 +5,8 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/comparar/evaluo-vs-notebooklm';
 
 export const metadata: Metadata = {
-  title: 'Evaluo vs. NotebookLM: cuál elegir para estudiar PDF',
-  description: 'Compará Evaluo y NotebookLM/Gemini Notebook: fuentes, resúmenes, audio, flashcards, quizzes, práctica por tema, seguimiento y precios.',
+  title: "Alternativa a NotebookLM para estudiar PDF",
+  description: "¿Buscás una alternativa a NotebookLM para estudiar? Compará fuentes, flashcards, cuestionarios y práctica por tema con PDFs en Evaluo.",
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
