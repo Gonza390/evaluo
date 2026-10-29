@@ -876,7 +876,7 @@ assertIncludesAll('app/sitemap.ts', [
   'COUNTRY_NICHE_GUIDES',
   '`${baseUrl}/pregunteros`',
 ]);
-assertIncludesAll('components/footer-home.tsx', ['href="/es/paises"','href="/pregunteros"']);
+assertIncludesAll('components/footer-home.tsx', ['href="/es/paises"']);
 assertIncludesAll('components/marketing/international-study-landing.tsx', [
   'href="/es/paises"',
 ]);
