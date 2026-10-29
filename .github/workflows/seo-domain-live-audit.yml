@@ -1,0 +1,25 @@
+name: Live SEO domain migration audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/seo-domain-live-audit.yml'
+      - 'scripts/audit-live-domain-migration.mjs'
+
+jobs:
+  public-migration:
+    name: Public redirects, canonicals, sitemap and hreflang
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify audit syntax
+        run: node --check scripts/audit-live-domain-migration.mjs
+      - name: Audit live public URLs without modifying production
+        run: node scripts/audit-live-domain-migration.mjs

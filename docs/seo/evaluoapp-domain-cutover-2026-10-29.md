@@ -1,6 +1,6 @@
 # Migración Evaluo: evaluo.com.ar → evaluoapp.com (2026-10-29)
 
-**Estado:** preparación técnica. **No fusionar esta rama ni activar redirecciones sin aprobar el cambio coordinado.**
+**Estado actualizado (29/10/2026): migración publicada en producción desde `main` (PR #329).** Este documento conserva el checklist original del corte como historial; sus avisos de «no fusionar» y tareas previas corresponden a la preparación inicial, no al estado actual. La verificación HTTP posterior está registrada en [`evaluoapp-domain-live-audit-2026-10-29.md`](./evaluoapp-domain-live-audit-2026-10-29.md): **87/87 controles aprobados**. La inspección de indexación y el cambio de dirección en Google Search Console siguen siendo pasos externos por confirmar.
 
 ## Objetivo y alcance
 
