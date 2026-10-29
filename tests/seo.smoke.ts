@@ -20,6 +20,59 @@ assertIncludesAll('app/layout.tsx', [
   'lang="es-AR"',
 ]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
+
+assertIncludesAll('app/sitemap.ts', [
+  '/convertir-pdf-en-preguntas',
+  '/funciones/simulacro-examen-con-ia',
+  '/funciones/practicar-por-tema',
+]);
+assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', [
+  'PdfPracticePage',
+  'Generar preguntas desde PDF con IA',
+  'canonical:toAbsoluteUrl(path)',
+]);
+for (const [pagePath, experience] of [
+  ['app/funciones/simulacro-examen-con-ia/page.tsx', 'SimulacroExamenIaLanding'],
+  ['app/funciones/practicar-por-tema/page.tsx', 'PracticarPorTemaLanding'],
+] as const) {
+  assertIncludesAll(pagePath, [
+    experience,
+    'canonical: toAbsoluteUrl(path)',
+    'index: true',
+    'follow: true',
+    'openGraph',
+  ]);
+}
+assertIncludesAll('components/marketing/seo-practice-tools-landings.tsx', [
+  'SimulacroExamenIaLanding',
+  'PracticarPorTemaLanding',
+  'PdfFirstLandingUploader',
+  'buildBreadcrumbJsonLd',
+  'TrackedLink',
+  'FooterHome',
+  '/convertir-pdf-en-preguntas',
+  '/funciones/simulacro-examen-con-ia',
+  '/funciones/practicar-por-tema',
+  'Ejemplo educativo',
+]);
+assertIncludesAll('components/marketing/editorial-study-pages.tsx', [
+  'QuestionsCta',
+  'id="elegir-pdf-preguntas"',
+  'Convertir PDF en preguntas con IA',
+  'href="/funciones/simulacro-examen-con-ia"',
+  'href="/funciones/practicar-por-tema"',
+]);
+assertIncludesAll('components/footer-home.tsx', [
+  'href="/convertir-pdf-en-preguntas"',
+  'href="/funciones/simulacro-examen-con-ia"',
+  'href="/funciones/practicar-por-tema"',
+]);
+assertIncludesAll('lib/analytics-client.ts', [
+  "return 'seo-pdf-questions';",
+  "return 'seo-mock-exam';",
+  "return 'seo-topic-practice';",
+]);
+
 assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI landing must be covered by Lighthouse CI');
 assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
 assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
