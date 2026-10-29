@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase-client';
 import { getEmailSignupDestination } from '@/lib/email-signup-destination';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { getPdfFirstDraftMeta } from '@/lib/pdf-first-draft';
-import { isPdfFirstActivationPath } from '@/lib/profile-completion';
 import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 
@@ -183,25 +182,6 @@ export default function LoginFormGoogleFirst() {
           : 'login';
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
-  const resolvePostLoginPath = async (userId: string) => {
-    if (
-      reason === 'preguntero' ||
-      (reason === 'shared-pdf' && nextPath.startsWith('/materiales/')) ||
-      isPdfFirstActivationPath(nextPath)
-    ) return nextPath;
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('universidad_id, carrera_id')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (!String(data?.universidad_id ?? '').trim() || !String(data?.carrera_id ?? '').trim()) {
-      return `/completar-perfil?next=${encodeURIComponent(nextPath)}`;
-    }
-
-    return nextPath;
-  };
 
   const validateLegal = () => {
     if (!isSignUp || acceptLegal) return true;
@@ -306,9 +286,11 @@ export default function LoginFormGoogleFirst() {
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
-      const redirectPath = await resolvePostLoginPath(data.user.id);
+      // El perfil académico es opcional y se solicita después del primer PDF,
+      // igual que en el callback de Google. No desviar a /completar-perfil.
+      const redirectPath = nextPath;
       trackMarketingEvent('auth_completed', {
         location,
         provider: 'email',

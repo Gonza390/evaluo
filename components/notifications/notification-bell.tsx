@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bell, X } from 'lucide-react';
+import { Bell, Loader2, X } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { dismissExamReminderAction, getExamReminders } from '@/lib/actions/calendario';
 import { usePremium } from '@/hooks/usePremium';
 import { useUser } from '@/hooks/useUser';
@@ -21,9 +22,12 @@ function daysRemainingLabel(days: number) {
 
 export function NotificationBell({ compact = false }: { compact?: boolean } = {}) {
   const { user, loading: userLoading } = useUser();
+  const { toast } = useToast();
   const { isPremium, premiumLoading } = usePremium();
   const [reminders, setReminders] = useState<ExamReminderItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [dismissingIds, setDismissingIds] = useState<Set<string>>(() => new Set());
+  const dismissingRef = useRef(new Set<string>());
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -70,12 +74,36 @@ export function NotificationBell({ compact = false }: { compact?: boolean } = {}
   if (!user || !isPremium) return null;
 
   const handleDismiss = async (reminder: ExamReminderItem) => {
-    setReminders((current) => current.filter((item) => item.id !== reminder.id));
-    trackMarketingEvent('reminder_dismissed', {
-      event_id: reminder.eventId,
-      days_before: reminder.daysBefore,
-    });
-    await dismissExamReminderAction(reminder.id);
+    if (dismissingRef.current.has(reminder.id)) return;
+    dismissingRef.current.add(reminder.id);
+    setDismissingIds((current) => new Set(current).add(reminder.id));
+
+    try {
+      const result = await dismissExamReminderAction(reminder.id);
+      if (!result.success) {
+        throw new Error('El servidor no pudo descartar el recordatorio.');
+      }
+
+      // Only remove from the UI after persistence has succeeded.
+      setReminders((current) => current.filter((item) => item.id !== reminder.id));
+      trackMarketingEvent('reminder_dismissed', {
+        event_id: reminder.eventId,
+        days_before: reminder.daysBefore,
+      });
+    } catch {
+      toast({
+        title: 'No pudimos descartar el recordatorio',
+        description: 'Sigue disponible. Revisá tu conexión e intentá nuevamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      dismissingRef.current.delete(reminder.id);
+      setDismissingIds((current) => {
+        const next = new Set(current);
+        next.delete(reminder.id);
+        return next;
+      });
+    }
   };
 
   const count = reminders.length;
@@ -135,10 +163,11 @@ export function NotificationBell({ compact = false }: { compact?: boolean } = {}
                   <button
                     type="button"
                     onClick={() => void handleDismiss(reminder)}
-                    className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-600"
+                    disabled={dismissingIds.has(reminder.id)}
+                    className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-600 disabled:cursor-wait disabled:opacity-60"
                     aria-label="Descartar recordatorio"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    {dismissingIds.has(reminder.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               ))
