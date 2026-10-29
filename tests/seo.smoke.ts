@@ -21,6 +21,52 @@ assertIncludesAll('app/layout.tsx', [
 ]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
 
+for (const [page, experience] of [
+  ['app/comparar/evaluo-vs-notebooklm/page.tsx', 'EvaluoVsNotebooklmPage'],
+  ['app/comparar/evaluo-vs-chatgpt/page.tsx', 'EvaluoVsChatgptPage'],
+  ['app/comparar/evaluo-vs-quizlet/page.tsx', 'EvaluoVsQuizletPage'],
+] as const) {
+  assertIncludesAll(page, [
+    experience,
+    'SeoComparisonLanding',
+    'canonical: toAbsoluteUrl(path)',
+    'index: true',
+    'follow: true',
+    'openGraph',
+  ]);
+}
+assertIncludesAll('components/marketing/seo-comparison-landings.tsx', [
+  'notebooklm:',
+  'chatgpt:',
+  'quizlet:',
+  'NotebookLM también tiene cuestionarios',
+  'ChatGPT tiene Modo de estudio',
+  'Quizlet no es solo un creador manual',
+  'PdfFirstLandingUploader',
+  'buildBreadcrumbJsonLd',
+  'MarketingAnalyticsSlot',
+  'FooterHome',
+  'href={uploaderAnchor}',
+  '/comparar/evaluo-vs-notebooklm',
+  '/comparar/evaluo-vs-chatgpt',
+  '/comparar/evaluo-vs-quizlet',
+  '/funciones/practicar-por-tema',
+]);
+assertIncludesAll('app/sitemap.ts', [
+  '/comparar/evaluo-vs-notebooklm',
+  '/comparar/evaluo-vs-chatgpt',
+  '/comparar/evaluo-vs-quizlet',
+]);
+assertIncludesAll('components/footer-home.tsx', [
+  'href="/comparar/evaluo-vs-notebooklm"',
+  'href="/comparar/evaluo-vs-chatgpt"',
+  'href="/comparar/evaluo-vs-quizlet"',
+]);
+assertIncludesAll('lib/analytics-client.ts', [
+  "return 'seo-comparison';",
+]);
+
+
 assertIncludesAll('app/sitemap.ts', [
   '/convertir-pdf-en-preguntas',
   '/funciones/simulacro-examen-con-ia',
