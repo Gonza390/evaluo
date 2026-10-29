@@ -843,3 +843,73 @@ for (const guide of guideRows) {
   assert.ok(guide.faq.length >= 2, guide.slug + ' needs user questions');
   assert.ok(!guide.slug.startsWith('en-'), 'Do not auto-publish English-language variants');
 }
+
+// Hispanic-market expansion: do not weaken Argentina, rewrite established
+// international URLs, or generate 20 thin same-language country clones.
+assertIncludesAll('app/es/paises/page.tsx', [
+  "const path = '/es/paises'",
+  'buildBreadcrumbJsonLd',
+  'COUNTRY_NICHE_GUIDES',
+  'SPANISH_MARKETS',
+  'rest.map(',
+  'Ver recursos generales',
+  'href="/es/estudiar-pdf-con-ia?source=es-paises"',
+]);
+assertIncludesAll('app/es/paises/[slug]/page.tsx', [
+  'export const dynamicParams = false;',
+  'generateStaticParams()',
+  'generateMetadata',
+  'getCountryNicheGuide(slug)',
+  'alternates: {canonical:toAbsoluteUrl(path)}',
+  "robots: {index:true,follow:true}",
+  "'@type':'Article'",
+  'guide.steps.map',
+  'guide.pitfalls.map',
+  'guide.faq.map',
+  'guide.sourceUrl',
+  "location:'hispanic_country_guide_after_article'",
+  'guide_slug:guide.slug',
+]);
+assertIncludesAll('app/sitemap.ts', [
+  '`${baseUrl}/es/paises`',
+  '`${baseUrl}/es/paises/${guide.slug}`',
+  'COUNTRY_NICHE_GUIDES',
+  '`${baseUrl}/pregunteros`',
+]);
+assertIncludesAll('components/footer-home.tsx', ['href="/es/paises"','href="/pregunteros"']);
+assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  'href="/es/paises"',
+]);
+assertIncludesAll('lib/analytics-client.ts', ["return 'seo-international-country-guides';"]);
+
+const countryData = source('lib/es-country-niche-guides.ts');
+const countryMatch = countryData.match(/COUNTRY_NICHE_GUIDES: CountryNicheGuide\[\] = (\[[\s\S]*?\]);\nexport function/);
+assert.ok(countryMatch, 'Country guides must be a fixed, editorially reviewed list');
+const countries = JSON.parse(countryMatch![1]) as Array<{
+  slug: string; title: string; sourceUrl: string; focus: string; example: string;
+  steps: Array<[string,string]>; pitfalls: Array<[string,string]>; faq: Array<[string,string]>;
+}>;
+assert.equal(countries.length, 4, 'Four substantiated niche guides, not 20 thin variants');
+assert.equal(new Set(countries.map(g=>g.slug)).size, 4);
+for (const guide of countries) {
+  assert.ok(guide.sourceUrl.startsWith('https://'));
+  assert.ok(guide.steps.length>=4 && guide.faq.length>=3 && guide.pitfalls.length>=3);
+  const prose = [guide.focus,guide.example,...guide.steps.flat(),...guide.pitfalls.flat(),...guide.faq.flat()].join(' ');
+  assert.ok(prose.split(/\s+/).length >= 320, guide.slug + ' must have substantial original text');
+}
+const countryIndex = source('lib/spanish-markets.ts');
+const indexMatch = countryIndex.match(/SPANISH_MARKETS: SpanishMarket\[\] = (\[[\s\S]*?\]);/);
+assert.ok(indexMatch, 'Country index must be an editorially controlled list');
+const indexMarkets = JSON.parse(indexMatch![1]) as Array<{country:string;code:string;href:string;status:string}>;
+assert.equal(indexMarkets.length,22,'Cover 20 sovereign Spanish-speaking countries plus Puerto Rico and US Spanish');
+assert.equal(new Set(indexMarkets.map(m=>m.code)).size,22);
+assert.ok(indexMarkets.some(m=>m.code==='AR'&&m.href==='/pregunteros'));
+for(const m of indexMarkets){
+  assert.ok(m.href.startsWith('/'), 'Only internal, known routes in country directory');
+  if (m.status==='en investigación') {
+    assert.ok(!m.href.startsWith('/es/paises/'), 'Do not invent unsupported country pages');
+  }
+}
+assertIncludesAll('lib/international-study-landings.ts', [
+  "'es-MX':", "'es-CO':", "'es-ES':", "'es-AR':", "'x-default':"
+]);
