@@ -1965,15 +1965,15 @@ export function MaterialStudyWorkspace({
         className="animate-tab-panel outline-none"
       >
         <div className="mx-auto w-full max-w-[1240px] py-1 sm:py-1.5">
-          <header className="border-border border-b pb-4 sm:pb-5">
-            <h2 className="text-foreground max-w-[1040px] text-[19px] leading-[1.25] font-bold tracking-[-0.04em] sm:text-[20px]">
+          <header className="border-border border-b pb-3 md:pb-5">
+            <h2 className="text-foreground hidden max-w-[1040px] text-[19px] leading-[1.25] font-bold tracking-[-0.04em] md:block md:text-[20px]">
               {title}
             </h2>
 
             <p
               data-study-summary-intro
               className={cn(
-                'text-muted-foreground mt-2 max-w-[1040px] text-[13px] leading-[1.65]',
+                'text-muted-foreground mt-0 max-w-[1040px] text-[13px] leading-[1.65] md:mt-2',
                 !summaryIntroExpanded && 'line-clamp-4 sm:line-clamp-none'
               )}
             >
