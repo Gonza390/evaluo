@@ -308,6 +308,41 @@ export default function ParcialesUbaXxiPage() {
           </p>
         </section>
 
+        <section aria-labelledby="uba-xxi-calendario" className="border-t border-slate-100 bg-blue-50/50 py-10 sm:py-12">
+          <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-8">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
+                Fechas oficiales · Segundo cuatrimestre 2026
+              </p>
+              <h2 id="uba-xxi-calendario" className="mt-3 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                Cómo organizar el repaso para tus parciales y finales de UBA XXI
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                El calendario oficial indica que el segundo cuatrimestre de 2026 termina el
+                11 de noviembre. La inscripción al segundo parcial fue del 5 al 6 de octubre:
+                no confundas ese trámite con el día en que rendís. Consultá la fecha,
+                sede y modalidad que corresponden a tu materia en los canales oficiales.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[
+                  ['Antes de rendir', 'Ubicá en el campus tu programa y bibliografía de IPC o ICSE.'],
+                  ['Durante el repaso', 'Usá un modelo anterior para reconocer consignas; practicá otras nuevas.'],
+                  ['Después de practicar', 'Volvé a tu PDF, corregí errores y repetí sin mirar las respuestas.'],
+                ].map(([title, body]) => (
+                  <div key={title} className="rounded-2xl border border-blue-100 bg-white p-4">
+                    <h3 className="text-sm font-bold text-slate-950">{title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
+                  </div>
+                ))}
+              </div>
+              <a href={OFFICIAL_CALENDAR} target="_blank" rel="noopener noreferrer"
+                className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-blue-700 underline underline-offset-4">
+                Ver calendario oficial de UBA XXI <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+        </section>
+
         <section aria-labelledby="analisis-examen-ipc" className="border-t border-slate-100 bg-white py-14 sm:py-20">
           <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-8">
             <div className="max-w-3xl">
