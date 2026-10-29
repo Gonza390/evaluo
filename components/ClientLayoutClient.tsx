@@ -99,6 +99,12 @@ function BottomNav() {
     href: string;
   } | null>(null);
   const pendingHref = pendingDestination?.fromPath === pathname ? pendingDestination.href : null;
+  useEffect(() => {
+    // Clear an optimistic selection once a route resolves (including browser Back).
+    // Scheduling it avoids a synchronous state update during an effect.
+    const frame = window.requestAnimationFrame(() => setPendingDestination(null));
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
