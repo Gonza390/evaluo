@@ -8,15 +8,26 @@
   },
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/:path((?!api/|api$|auth/callback).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "evaluo.com.ar"
+        }
+      ],
+      "destination": "https://evaluoapp.com/:path",
+      "statusCode": 301
+    },
+    {
+      "source": "/:path((?!api/|api$|auth/callback).*)",
       "has": [
         {
           "type": "host",
           "value": "www.evaluo.com.ar"
         }
       ],
-      "destination": "https://evaluo.com.ar/:path*",
-      "permanent": true
+      "destination": "https://evaluoapp.com/:path",
+      "statusCode": 301
     }
   ],
   "crons": [

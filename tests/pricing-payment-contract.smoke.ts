@@ -89,14 +89,14 @@ try {
     attemptId: 'monthly-amount-smoke',
     email: 'test_buyer@example.com',
     amount: PREMIUM_MONTHLY_PRICE_ARS,
-    backUrl: 'https://evaluo.com.ar/pricing/resultado',
+    backUrl: 'https://evaluoapp.com/pricing/resultado',
   });
   await createMercadoPagoOneTimePreference({
     attemptId: 'semester-amount-smoke',
     email: 'test_buyer@example.com',
     amount: PREMIUM_SEMESTER_PRICE_ARS,
-    backUrl: 'https://evaluo.com.ar/pricing/resultado',
-    notificationUrl: 'https://evaluo.com.ar/api/webhooks/mercadopago',
+    backUrl: 'https://evaluoapp.com/pricing/resultado',
+    notificationUrl: 'https://evaluoapp.com/api/webhooks/mercadopago',
   });
 
   assert.equal(intercepted.length, 2);
