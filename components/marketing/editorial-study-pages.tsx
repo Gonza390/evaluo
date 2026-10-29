@@ -71,13 +71,25 @@ export function NotebookComparisonPage(){
  </main><Footer/></div>;
 }
 const steps=[['01','Delimitá un tema','Elegí un capítulo o apartado concreto. Practicar un documento entero de una vez puede ocultar qué parte todavía te cuesta.'],['02','Comprendé antes de responder','Leé el resumen y contrastá las ideas importantes con el PDF original.'],['03','Intentá recordar sin mirar','Respondé preguntas sobre el tema. Equivocarte te da información sobre qué revisar.'],['04','Revisá el error y volvé','Leé la explicación, reforzá el concepto y repetí la práctica para comprobar si lo entendiste.']];
+function QuestionsCta({ children = 'Elegir PDF para generar preguntas' }: { children?: string }) {
+  return (
+    <TrackedLink
+      href="#elegir-pdf-preguntas"
+      eventName="cta_click"
+      payload={{ location: 'seo_convertir_pdf_preguntas_cta', cta_name: 'elegir_pdf', destination: '#elegir-pdf-preguntas' }}
+      className="es-action from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)]"
+    >
+      <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />{children}<ArrowRight className="h-4 w-4" aria-hidden="true" />
+    </TrackedLink>
+  );
+}
 export function PdfPracticePage(){
  return <div className="es-page"><Header/><main>
   <section className="es-shell es-hero es-hero-practice"><div className="es-practice-intro">
     <span className="es-kicker">GUÍA PRÁCTICA / ESTUDIAR CON IA</span>
-    <h1>Tu PDF no tiene que terminar en un resumen.</h1>
+    <h1>Convertir PDF en preguntas con IA para estudiar y practicar por tema</h1>
     <p className="es-lede">Transformá tus apuntes en preguntas para practicar, detectar qué no entendiste y volver a estudiar lo que realmente te cuesta.</p>
-    <div className="es-hero-links"><Action>Crear práctica desde mi PDF</Action><a href="#metodo" className="es-subtle-link">Conocer el método ↓</a></div>
+    <div className="es-hero-links"><QuestionsCta>Generar preguntas desde mi PDF</QuestionsCta><a href="#metodo" className="es-subtle-link">Conocer el método ↓</a></div>
     <p className="es-tiny">Empezá gratis · Sin tarjeta</p>
   </div><DocumentPreview/></section>
   <section id="metodo" className="es-section es-shell"><div className="es-section-head"><span className="es-index">01 / EL MÉTODO</span><h2>De leer a comprobar<br/>qué aprendiste.</h2></div>
@@ -88,7 +100,15 @@ export function PdfPracticePage(){
    <p>Una práctica útil alterna conceptos y aplicación. Si una respuesta sale mal, el próximo paso no es generar otro resumen: es volver al punto específico que todavía no dominás.</p>
    <Link className="es-text-link" href="/estudiar-pdf-con-ia">Ver todas las herramientas de estudio ↗</Link>
   </div></section>
-  <section className="es-shell es-section"><div className="es-section-head"><span className="es-index">03 / PREGUNTAS FRECUENTES</span><h2>Antes de empezar.</h2></div>
+  <section className="es-shell es-section" aria-labelledby="elegir-tipo-practica">
+  <div className="es-section-head"><span className="es-index">GUÍA DE ESTUDIO</span><h2 id="elegir-tipo-practica">¿Qué tipo de preguntas necesitás practicar?</h2></div>
+  <p className="es-long-copy">No siempre conviene estudiar de la misma forma. Si recién terminaste un capítulo, probá preguntas de ese tema. Si estás por rendir, combiná conceptos y ejercicios que te obliguen a recordar sin mirar los apuntes.</p>
+  <div className="es-two">
+    <article><h3>Practicar un tema específico</h3><p>Concentrate en una unidad, descubrí qué confundís y revisá las explicaciones de los errores antes de pasar al siguiente tema.</p><Link href="/funciones/practicar-por-tema">Cómo practicar por tema con IA →</Link></article>
+    <article><h3>Preparar un simulacro de examen</h3><p>Probá lo que recordás de la materia como entrenamiento previo al parcial. Usá el resultado para organizar el último repaso; no representa una nota oficial.</p><Link href="/funciones/simulacro-examen-con-ia">Cómo hacer un simulacro con IA →</Link></article>
+  </div>
+</section>
+<section className="es-shell es-section"><div className="es-section-head"><span className="es-index">03 / PREGUNTAS FRECUENTES</span><h2>Antes de empezar.</h2></div>
   <div className="es-faq"><details><summary>¿Las preguntas salen de mi propio PDF?</summary><p>Sí. Evaluo toma tu material como fuente para crear una experiencia de estudio. Revisá siempre los datos importantes contra el documento original: las herramientas de IA pueden cometer errores.</p></details><details><summary>¿Puedo practicar por tema?</summary><p>Sí. El recorrido de Evaluo permite trabajar por tema y decidir qué reforzar después de practicar.</p></details><details><summary>¿Qué preguntas puedo crear a partir de mis apuntes?</summary><p>Podés practicar ideas principales, relaciones entre conceptos y aplicaciones. Conviene combinar formatos y comprobar que cada respuesta esté fundamentada en el material.</p></details><details><summary>¿Qué pasa si el PDF tiene imágenes o tablas?</summary><p>Revisá que los elementos visuales importantes se interpreten correctamente. Una fórmula, una tabla o un esquema mal leído puede afectar el sentido de la pregunta y su explicación.</p></details><details><summary>¿Necesito estudiar primero el resumen?</summary><p>No necesariamente. Si ya conocés el tema, podés empezar por la práctica para detectar qué te falta. Si recién comenzás, el resumen y el glosario pueden ayudarte a orientarte.</p></details></div>
   </section>
 <section className="es-shell es-section es-content-depth"><div className="es-section-head"><span className="es-index">04 / TIPOS DE PREGUNTAS</span><h2>Qué preguntas conviene generar desde un PDF</h2></div>
@@ -96,7 +116,7 @@ export function PdfPracticePage(){
 <div className="es-article-block"><h3>Cómo reconocer una buena pregunta de práctica</h3><p>Una pregunta útil debe tener un objetivo claro, basarse en conceptos presentes en el material y permitir revisar la respuesta con una explicación. No todas tienen que ser difíciles: alternar definiciones, relaciones y aplicaciones ayuda a detectar distintos tipos de errores.</p><p>Si un cuestionario repite la misma definición con otras palabras, probablemente necesites más variedad. Si una respuesta depende de información que no está en tu PDF, revisá esa pregunta contra la bibliografía de la materia antes de confiar en ella.</p></div>
 </section>
 <section className="es-band"><div className="es-shell es-text-section"><span className="es-index">05 / DESPUÉS DE RESPONDER</span><h2>Qué hacer cuando te equivocás</h2><p>Primero identificá si el error fue por no recordar un dato, confundir conceptos o no saber aplicarlos. Después consultá la explicación y el fragmento correspondiente de tus apuntes. Por último, intentá responder otra pregunta del mismo tema sin mirar la respuesta anterior.</p><p>Esto evita que la práctica se convierta en una simple colección de aciertos y errores. El objetivo no es completar muchas preguntas, sino mejorar lo que podés recuperar y explicar por tu cuenta.</p><p>Si el PDF contiene gráficos, fórmulas o tablas, verificá que la conversión del documento conserve los elementos necesarios: una pregunta puede quedar mal planteada si falta contexto visual.</p></div></section>
-<section className="es-shell es-section"><div className="es-section-head"><span className="es-index">06 / EMPEZÁ CON TUS APUNTES</span><h2>Elegí un PDF y empezá a estudiar</h2></div><p className="es-long-copy">Podés seleccionar el archivo antes de crear tu cuenta. Evaluo mantiene tus herramientas de estudio conectadas al material para que puedas pasar de leer a practicar por tema.</p><div className="es-upload"><PdfFirstLandingUploader trackingLocation="seo_convertir_pdf_preguntas" sourceKey="convertir-pdf-en-preguntas" /></div><p className="es-small-source">Elegir el archivo no requiere registrarte; se solicita una cuenta cuando decidís crear tu material.</p></section>
-  <section className="es-shell es-close"><span className="es-index">EMPEZÁ POR UN TEMA</span><h2>Leé menos en automático.<br/>Practicá con intención.</h2><Action>Crear mi primera práctica</Action></section>
+<section className="es-shell es-section"><div className="es-section-head"><span className="es-index">06 / EMPEZÁ CON TUS APUNTES</span><h2>Elegí un PDF y empezá a estudiar</h2></div><p className="es-long-copy">Podés seleccionar el archivo antes de crear tu cuenta. Evaluo mantiene tus herramientas de estudio conectadas al material para que puedas pasar de leer a practicar por tema.</p><div id="elegir-pdf-preguntas" className="es-upload"><PdfFirstLandingUploader trackingLocation="seo_convertir_pdf_preguntas" sourceKey="convertir-pdf-en-preguntas" /></div><p className="es-small-source">Elegir el archivo no requiere registrarte; se solicita una cuenta cuando decidís crear tu material.</p></section>
+  <section className="es-shell es-close"><span className="es-index">EMPEZÁ POR UN TEMA</span><h2>Leé menos en automático.<br/>Practicá con intención.</h2><QuestionsCta>Crear preguntas con mis apuntes</QuestionsCta></section>
  </main><Footer/></div>;
 }

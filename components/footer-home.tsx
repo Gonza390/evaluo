@@ -129,6 +129,15 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Resumir PDF con IA
               </Link>
+              <Link href="/convertir-pdf-en-preguntas" className="text-xs text-white/80 transition hover:text-white">
+                Generar preguntas desde PDF
+              </Link>
+              <Link href="/funciones/simulacro-examen-con-ia" className="text-xs text-white/80 transition hover:text-white">
+                Simulacros de examen con IA
+              </Link>
+              <Link href="/funciones/practicar-por-tema" className="text-xs text-white/80 transition hover:text-white">
+                Practicar por tema con IA
+              </Link>
               <Link
                 href="/funciones/crear-flashcards-desde-pdf"
                 className="text-xs text-white/80 transition hover:text-white"

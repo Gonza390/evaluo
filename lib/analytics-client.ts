@@ -72,6 +72,9 @@ export function getAnalyticsPageType(pathname: string) {
   ) {
     return 'seo-international-study-pdf';
   }
+  if (pathname === '/convertir-pdf-en-preguntas') return 'seo-pdf-questions';
+  if (pathname === '/funciones/simulacro-examen-con-ia') return 'seo-mock-exam';
+  if (pathname === '/funciones/practicar-por-tema') return 'seo-topic-practice';
   if (pathname === '/uba-xxi/parciales') return 'seo-uba-xxi-parciales';
   if (pathname === '/como-estudiar-ingreso-unlam') return 'seo-unlam-ingreso-2027';
   if (pathname.startsWith('/universidad/')) return 'universidad';
