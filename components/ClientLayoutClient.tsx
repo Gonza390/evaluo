@@ -241,7 +241,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       }`}
     >
       {showTopBar ? (
-        <header data-app-topbar className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+        <header
+          data-app-topbar
+          className={`sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur ${isMaterialStudyRoute ? 'hidden md:block' : ''}`}
+        >
           <div
             className={`relative flex items-center justify-between gap-3 ${
               isCompactAppRoute ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
