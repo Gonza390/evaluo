@@ -17,6 +17,7 @@ type Source = { title: string; href: string };
 type Comparison = {
   path: string;
   name: string;
+  pricingHref: string;
   kicker: string;
   highlight: string;
   intro: string;
@@ -37,6 +38,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
   notebooklm: {
     path: '/comparar/evaluo-vs-notebooklm',
     name: 'NotebookLM',
+    pricingHref: 'https://support.google.com/gemininotebook/?hl=es-419',
     kicker: 'Comparación para estudiantes universitarios',
     highlight: 'investigar fuentes o seguir un recorrido de estudio',
     intro: 'NotebookLM (ahora presentado también como Gemini Notebook) y Evaluo ayudan a estudiar con tus materiales. Ambos ofrecen herramientas para practicar; la diferencia principal está en si priorizás explorar varias fuentes o avanzar por los temas de un PDF con resultados y refuerzo.',
@@ -78,6 +80,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
   chatgpt: {
     path: '/comparar/evaluo-vs-chatgpt',
     name: 'ChatGPT',
+    pricingHref: 'https://chatgpt.com/pricing',
     kicker: 'Dos formas de usar IA para estudiar',
     highlight: 'conversar con una IA o practicar por tema',
     intro: 'ChatGPT es un asistente general que también ofrece Modo de estudio, admite PDFs y puede hacer preguntas, dar pistas y explicar errores. Evaluo está diseñado como un recorrido específico para estudiar un PDF, practicar por temas y decidir qué reforzar.',
@@ -119,6 +122,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
   quizlet: {
     path: '/comparar/evaluo-vs-quizlet',
     name: 'Quizlet',
+    pricingHref: 'https://quizlet.com/upgrade',
     kicker: 'Herramientas para repasar y rendir',
     highlight: 'tarjetas, tests o un recorrido desde tu PDF',
     intro: 'Quizlet ofrece flashcards, modos de aprendizaje, pruebas y herramientas de IA que también procesan apuntes y PDFs. Evaluo parte de un PDF de estudio y conecta sus temas con preguntas, resultados y refuerzo. Las dos herramientas permiten practicar; cambian los recorridos.',
@@ -276,7 +280,7 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
           <div className="mx-auto grid w-full max-w-[1120px] gap-9 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
             <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">04 / Acceso y planes</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">¿Cuál es gratis y qué cambia al pagar?</h2></div>
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-5"><h3 className="font-bold text-slate-950">{c.name}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.otherPricing}</p><a href={c.sources[0].href} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Consultar la información oficial</a></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-5"><h3 className="font-bold text-slate-950">{c.name}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.otherPricing}</p><a href={c.pricingHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Ver acceso y precios oficiales</a></div>
               <div className="rounded-xl border border-blue-200 bg-white p-5"><h3 className="font-bold text-slate-950">Evaluo</h3><p className="mt-2 text-sm leading-7 text-slate-600">Podés comenzar gratis y pasar a Premium para ampliar las funciones de estudio. El precio vigente se muestra en la página de planes; evitamos mostrar un importe fijo desactualizado.</p><Link href="/pricing" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Ver planes y precios de Evaluo</Link></div>
             </div>
           </div>
