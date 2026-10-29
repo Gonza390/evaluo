@@ -286,7 +286,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
             El preguntero te ayuda a comprobar qué recordás. Con tu PDF podés estudiar los temas de tu material, crear flashcards y practicar ejercicios antes de rendir.
           </p>
           <TrackedLink
-            href="/estudiar-pdf-con-ia?source=preguntero-materia"
+            href={`/estudiar-pdf-con-ia?source=preguntero-materia&materiaId=${encodeURIComponent(data.materiaId)}`}
             eventName="cta_click"
             payload={{
               location: 'preguntero_materia_after_questions',
