@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ListChecks, Target } from 'lucide-react';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
+import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
@@ -11,6 +12,25 @@ import { PregunteroHubClient } from './preguntero-hub-client';
 import { loadPregunteroHubData, summarizePregunteroHubData } from './data';
 
 export const revalidate = 600;
+/** Materias con visibilidad orgánica en Search Console (28/09–25/10/2026).
+ * Ordenar solo materias del catálogo público con preguntas; no crear URLs ficticias.
+ */
+const FEATURED_SIGLO21_MATERIA_IDS = [
+  'eb923481-2207-4895-9ae4-2a0b984d9b99', // Aprender en el Siglo 21
+  '50da9d59-a6ad-4784-b964-6553fa6814f8', // Administración y Gestión Inmobiliaria
+  'dd732df7-c046-4256-bccc-fd9dd27e41ec', // Informática Jurídica
+  '95a4dbc2-e426-4bb5-92a6-b0c59cd260eb', // Concursos y Quiebras
+  'b8417139-a4dd-44ca-ba51-7d346d66c888', // Teoría de la Argumentación Jurídica
+  'ad0bbb49-20b8-4886-911e-7290226c85a2', // Derecho Penal Parte General
+  '555d3d0a-206e-42e2-adf8-08f1063448e6', // Derecho Sucesorio
+  'ef1c75fb-74b0-4531-8640-18a120a8e19c', // Derecho Penal Económico
+] as const;
+
+function featuredMateriaPriority(materiaId: string) {
+  const position = FEATURED_SIGLO21_MATERIA_IDS.findIndex((id) => id === materiaId);
+  return position < 0 ? Number.MAX_SAFE_INTEGER : position;
+}
+
 
 export const metadata: Metadata = {
   title: 'Pregunteros Siglo 21: parciales y práctica',
@@ -51,7 +71,12 @@ export default async function PregunteroHubPage() {
         .flatMap((carrera) => carrera.materias)
         .map((materia) => [materia.materiaId, materia] as const)
     ).values()
-  ).slice(0, 12);
+  )
+    .sort((a, b) =>
+      featuredMateriaPriority(a.materiaId) - featuredMateriaPriority(b.materiaId) ||
+      a.materiaNombre.localeCompare(b.materiaNombre, 'es')
+    )
+    .slice(0, 12);
 
   return (
     <>
@@ -125,6 +150,30 @@ export default async function PregunteroHubPage() {
                 <p className="mt-2 text-sm leading-7 text-slate-600">
                   Es un banco de preguntas de práctica asociado a una materia y a una instancia de parcial. En Evaluo podés responderlas en un Preguntero y revisar tus errores al terminar.
                 </p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
+                  Los ejercicios son para practicar: no son exámenes oficiales ni garantizan las preguntas que van a tomar.
+                </p>
+                <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+                  <h3 className="text-base font-bold text-slate-950">
+                    ¿Tu parcial incluye temas que no aparecen en el preguntero?
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                    Elegí el PDF de tus propios apuntes y usá Evaluo para resumir, practicar preguntas por tema y reforzar lo que te cuesta.
+                  </p>
+                  <TrackedLink
+                    href="/estudiar-pdf-con-ia?source=pregunteros-siglo21"
+                    eventName="cta_click"
+                    payload={{
+                      location: 'pregunteros_hub_after_catalog',
+                      cta_name: 'estudiar_pdf_propio',
+                      source: 'pregunteros-siglo21',
+                      destination: '/estudiar-pdf-con-ia',
+                    }}
+                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-800"
+                  >
+                    Estudiar con mi propio PDF
+                  </TrackedLink>
+                </div>
               </div>
             </div>
           </div>
