@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { isPremiumFunnelDismissReturn } from '@/lib/premium/funnel-return';
 
 interface PremiumUpsellProps {
   title: string;
@@ -63,6 +64,13 @@ export function PremiumUpsell({
     });
 
     if (!flow) return;
+
+    // Primary close handshake: the funnel returns with an explicit URL marker,
+    // even when sessionStorage is blocked or browser history is unreliable.
+    if (isPremiumFunnelDismissReturn(window.location.search, source)) {
+      setFlowDismissed(true);
+      return;
+    }
 
     try {
       const dismissedOnce = window.sessionStorage.getItem(flow.dismissKey) === '1';
