@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   FIRST_PDF_ONBOARDING_COMPLETED_KEY,
+  FIRST_PDF_ONBOARDING_SKIPPED_KEY,
   FIRST_PDF_ONBOARDING_ROLLOUT_AT,
   shouldAutoStartFirstPdfOnboarding,
 } from '../lib/first-pdf-onboarding.ts';
@@ -10,6 +11,7 @@ const t = Date.parse(FIRST_PDF_ONBOARDING_ROLLOUT_AT);
 const eligible = {
   accountCreatedAt: new Date(t + 1000).toISOString(),
   completedAt: null,
+  skippedAt: null,
   previouslyCompleted: false,
   isOwner: true,
   materialReady: true,
@@ -27,8 +29,10 @@ assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible, isOwner: false }),
 assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible, materialReady: false }),
   false, 'A pending PDF cannot host the four-step guide.');
 assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible, accountCreatedAt: '' }), false);
+assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible, skippedAt: new Date().toISOString() }), false,
+  'Skipping must suppress the automatic guide in later sessions.');
 assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible }), true,
-  'Skipping without completion must not permanently dismiss the guide.');
+  'New eligible accounts must still receive the guide.');
 
 const action = readFileSync('app/materiales/[id]/onboarding-actions.ts','utf8');
 const page = readFileSync('app/materiales/[id]/page.tsx','utf8');
@@ -48,11 +52,19 @@ assert.match(page, /user\?\.app_metadata\?\.\[FIRST_PDF_ONBOARDING_COMPLETED_KEY
 assert.match(page, /initialRecommendedStudy=\{shouldShowFirstPdfGuide\}/);
 assert.match(page, /initialProgressOpen=\{isOwner && query\.tab === 'progreso' && !shouldShowFirstPdfGuide\}/);
 assert.match(page, /initialDiagnostic=\{isOwner && query\.diagnostico === '1' && !shouldShowFirstPdfGuide\}/);
-assert.match(page, /recommendedStudyAvailable=\{eligibleByAccount\}/);
+assert.match(page, /recommendedStudyAvailable=\{isOwner && material.processing_status === 'ready'\}/);
+
+assert.match(page, /user\?\.app_metadata\?\.\[FIRST_PDF_ONBOARDING_SKIPPED_KEY\]/);
+assert.match(page, /const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted/);
 assert.match(workspace, /await completeFirstPdfOnboardingAction\(\)/,
   'The finish CTA must persist completion before closing.');
 assert.match(workspace, /if \(!result\.success\)/);
 assert.match(workspace, /closeRecommendedTour\('completed'\)/);
 assert.match(workspace, /closeRecommendedTour\('skipped'\)/);
+assert.match(workspace, /skipFirstPdfOnboardingAction\(\)/);
+assert.match(workspace, /data-reopen-first-pdf-guide/);
+assert.match(action, /export async function skipFirstPdfOnboardingAction/);
+assert.match(action, /\[FIRST_PDF_ONBOARDING_SKIPPED_KEY\]: new Date\(\)\.toISOString\(\)/);
 assert.ok(FIRST_PDF_ONBOARDING_COMPLETED_KEY.startsWith('evaluo_'));
+assert.ok(FIRST_PDF_ONBOARDING_SKIPPED_KEY.startsWith('evaluo_'));
 console.log('first-pdf-onboarding-activation.smoke passed');

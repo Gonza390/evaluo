@@ -32,6 +32,7 @@ assert.ok(restartAction.includes('supabase.auth.getUser()'));
 assert.ok(restartAction.includes('isQaAccount(user)'));
 assert.ok(restartAction.includes('isQaAccount(current.user)'));
 assert.ok(restartAction.includes('delete metadata[FIRST_PDF_ONBOARDING_COMPLETED_KEY]'));
+assert.ok(restartAction.includes('delete metadata[FIRST_PDF_ONBOARDING_SKIPPED_KEY]'));
 assert.ok(!restartAction.includes('reset_test_user_data'), 'QA restart must not call destructive legacy RPC.');
 assert.ok(!restartAction.includes('deleteUser('));
 assert.ok(testPage.includes('if (!isQaAccount(user)) notFound()'));

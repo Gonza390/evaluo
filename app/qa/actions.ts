@@ -4,7 +4,10 @@ import { redirect } from 'next/navigation';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { isQaAccount } from '@/lib/qa-account';
-import { FIRST_PDF_ONBOARDING_COMPLETED_KEY } from '@/lib/first-pdf-onboarding';
+import {
+  FIRST_PDF_ONBOARDING_COMPLETED_KEY,
+  FIRST_PDF_ONBOARDING_SKIPPED_KEY,
+} from '@/lib/first-pdf-onboarding';
 
 /**
  * Reinicio NO destructivo para la cuenta QA: conserva los PDFs y el historial.
@@ -34,6 +37,7 @@ export async function restartQaFirstPdfOnboardingAction() {
   // No modificamos fecha de alta, rol, proveedores OAuth ni otras marcas de Auth.
   const metadata = { ...(current.user!.app_metadata ?? {}) };
   delete metadata[FIRST_PDF_ONBOARDING_COMPLETED_KEY];
+  delete metadata[FIRST_PDF_ONBOARDING_SKIPPED_KEY];
   const { error: updateError } = await admin.auth.admin.updateUserById(user!.id, {
     app_metadata: metadata,
   });

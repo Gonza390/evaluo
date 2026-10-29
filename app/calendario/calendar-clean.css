@@ -1,6 +1,15 @@
 .calendar-editorial {
   min-height: 100%;
   background: var(--background);
+  /* Calendar-specific semantic values build on Evaluo's shared color tokens. */
+  --calendar-selected-bg: color-mix(in srgb, var(--brand) 11%, var(--background));
+  --calendar-selected-text: color-mix(in srgb, var(--brand) 70%, var(--heading));
+  --calendar-exam-bg: #fffbeb;
+  --calendar-exam-border: #fcd34d;
+  --calendar-exam-text: #92400e;
+  --calendar-assignment-bg: color-mix(in srgb, var(--brand) 9%, var(--background));
+  --calendar-assignment-border: color-mix(in srgb, var(--brand) 24%, var(--border));
+  --calendar-assignment-text: color-mix(in srgb, var(--brand) 77%, var(--heading));
 }
 
 .calendar-editorial .surface-panel,
