@@ -6,7 +6,7 @@ const path = '/ia-para-estudiantes';
 
 export const metadata: Metadata = {
   title: "IA para estudiantes: estudiá apuntes y practicá",
-  description: "IA para estudiantes universitarios: estudiá apuntes, resumí PDF y prepará parciales con preguntas, flashcards y práctica por tema en Evaluo.", mapas mentales y flashcards, practicá preguntas y prepará parciales con tus apuntes.',
+  description: "IA para estudiantes universitarios: estudiá apuntes, resumí PDF y prepará parciales con preguntas, flashcards y práctica por tema en Evaluo.",
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
