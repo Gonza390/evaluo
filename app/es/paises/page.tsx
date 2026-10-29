@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, BookOpenCheck, FileText, Globe2, GraduationCap, Search } from 'lucide-react';
+import { ArrowRight, FileText, Globe2, GraduationCap } from 'lucide-react';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { FooterHome } from '@/components/footer-home';
