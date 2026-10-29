@@ -9,6 +9,7 @@ import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildPregunteroSearchTitle } from '@/lib/seo-search-copy';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { PregunteroPracticeHero } from '@/components/marketing/preguntero-practice-hero';
+import { TrackedLink } from '@/components/marketing/tracked-link';
 import { getPregunteroParcialData, getPregunteroMateriaStats } from '@/lib/data/preguntero';
 import { buildShareCardPath } from '@/lib/share-card';
 
@@ -276,6 +277,28 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
               </div>
             ) : null}
           </div>
+        </div>
+        <div className="mt-8 rounded-[24px] border border-blue-100 bg-blue-50/50 px-6 py-6 sm:px-8">
+          <h2 className="text-xl font-bold tracking-tight text-slate-950">
+            ¿Querés practicar con los apuntes de tu materia?
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+            El preguntero te ayuda a comprobar qué recordás. Con tu PDF podés estudiar los temas de tu material, crear flashcards y practicar ejercicios antes de rendir.
+          </p>
+          <TrackedLink
+            href="/estudiar-pdf-con-ia?source=preguntero-materia"
+            eventName="cta_click"
+            payload={{
+              location: 'preguntero_materia_after_questions',
+              cta_name: 'estudiar_pdf_propio',
+              source: 'preguntero-materia',
+              materia_id: data.materiaId,
+              destination: '/estudiar-pdf-con-ia',
+            }}
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-800"
+          >
+            Estudiar con mi PDF
+          </TrackedLink>
         </div>
       </section>
     </main>
