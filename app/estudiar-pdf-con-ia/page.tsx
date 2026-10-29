@@ -7,7 +7,7 @@ const path = '/estudiar-pdf-con-ia';
 
 export const metadata: Metadata = {
   title: "Estudiar PDF con IA: resumen y práctica por tema",
-  description: "Estudiá un PDF con IA desde tus apuntes: leé un resumen, repasá con flashcards y practicá preguntas por tema sin perder el documento original.", creá resumen, mapa mental y flashcards y practicá ejercicios sobre el mismo documento en Evaluo.',
+  description: "Estudiá un PDF con IA desde tus apuntes: leé un resumen, repasá con flashcards y practicá preguntas por tema sin perder el documento original.",
   alternates: { canonical: toAbsoluteUrl(path), languages: STUDY_HREFLANG },
   robots: { index: true, follow: true },
   openGraph: {
