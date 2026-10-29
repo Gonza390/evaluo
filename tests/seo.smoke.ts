@@ -660,8 +660,8 @@ for (const [path, expectedTitle] of acquisitionSeoTitles) {
   const head = content.slice(content.indexOf('export const metadata'), content.indexOf('openGraph:'));
   assert.ok(head.includes(expectedTitle), path + ' needs the intended keyword in the primary title');
   assert.ok(!/title:\s*['"][^'"\n]*\|\s*Evaluo/.test(head), path + ' must not duplicate the root title suffix');
-  assert.ok(content.includes('canonical: toAbsoluteUrl(path)'), path + ' must preserve its canonical');
-  assert.ok(content.includes('index: true'), path + ' must remain indexable');
+  assert.ok(/canonical:\s*toAbsoluteUrl\(path\)/.test(content), path + ' must preserve its canonical');
+  assert.ok(/index:\s*true/.test(content), path + ' must remain indexable');
   assert.ok(!content.includes('| Evaluo | Evaluo'), path + ' must have no duplicate brand in social metadata');
 }
 assertIncludesAll('components/marketing/seo-study-experiences-v2.tsx', [
