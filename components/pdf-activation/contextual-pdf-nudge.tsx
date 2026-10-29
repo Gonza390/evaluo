@@ -6,9 +6,29 @@ import { usePathname } from 'next/navigation';
 import { FileUp, Sparkles, X } from 'lucide-react';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { useModalFocusTrap } from '@/hooks/use-modal-focus-trap';
 
 const UUID_AT_END = /([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;
 const MATERIA_NUDGE_SESSION_KEY = 'evaluo:pdf-materia-nudge-shown-v1';
+const DASHBOARD_NUDGE_CLOSED_KEY = 'evaluo:pdf-dashboard-nudge-closed-session';
+// In-memory fallback when storage is blocked, so navigating does not revive the notice.
+const dismissedNotices = new Set<string>();
+function wasNoticeDismissed(key: string) {
+  if (dismissedNotices.has(key)) return true;
+  try {
+    return window.sessionStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+function rememberNoticeDismissed(key: string) {
+  dismissedNotices.add(key);
+  try {
+    window.sessionStorage.setItem(key, '1');
+  } catch {
+    // The in-memory fallback still prevents another interruption this visit.
+  }
+}
 const MATERIA_IDLE_DELAY_MS = 8_000;
 
 function getMateriaIdFromPath(pathname: string) {
@@ -28,21 +48,23 @@ export function ContextualPdfNudge() {
   const materiaId = useMemo(() => getMateriaIdFromPath(pathname), [pathname]);
   const isMateria = Boolean(materiaId);
 
-  useEffect(() => {
-    setDismissed(false);
+  const activeNoticeKey = isMateria ? MATERIA_NUDGE_SESSION_KEY : DASHBOARD_NUDGE_CLOSED_KEY;
+  const closeNudge = () => {
+    rememberNoticeDismissed(activeNoticeKey);
+    setDismissed(true);
     setMateriaNudgeVisible(false);
-  }, [pathname]);
+  };
+  const modalRef = useModalFocusTrap<HTMLElement>(isMateria && materiaNudgeVisible && !dismissed, closeNudge);
+
+  useEffect(() => {
+    setDismissed(wasNoticeDismissed(activeNoticeKey));
+    setMateriaNudgeVisible(false);
+  }, [pathname, activeNoticeKey]);
 
   useEffect(() => {
     if (!isMateria || !materiaId || dismissed || materiaNudgeVisible) return undefined;
 
-    try {
-      if (window.sessionStorage.getItem(MATERIA_NUDGE_SESSION_KEY) === '1') {
-        return undefined;
-      }
-    } catch {
-      // If storage is unavailable, the idle timer still works for this page view.
-    }
+    if (wasNoticeDismissed(MATERIA_NUDGE_SESSION_KEY)) return undefined;
 
     const clearIdleTimer = () => {
       if (idleTimerRef.current !== null) {
@@ -57,11 +79,7 @@ export function ContextualPdfNudge() {
         return;
       }
 
-      try {
-        window.sessionStorage.setItem(MATERIA_NUDGE_SESSION_KEY, '1');
-      } catch {
-        // Non-critical: the nudge can still be shown.
-      }
+      rememberNoticeDismissed(MATERIA_NUDGE_SESSION_KEY);
       setMateriaNudgeVisible(true);
     };
 
@@ -177,24 +195,26 @@ export function ContextualPdfNudge() {
       {isMateria ? (
         <div
           aria-hidden="true"
-          className="fixed inset-0 z-40 bg-slate-950/25 backdrop-blur-[3px]"
+          className="fixed inset-0 z-[90] bg-slate-950/25 backdrop-blur-[3px]"
         />
       ) : null}
 
       <aside
+        ref={modalRef}
+        tabIndex={isMateria ? -1 : undefined}
         role={isMateria ? 'dialog' : undefined}
         aria-modal={isMateria ? true : undefined}
         aria-label="Preparar material propio"
         className={`fixed max-w-md border bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] ${
           isMateria
-            ? 'top-1/2 left-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-[26px] border-white/80 p-5 sm:w-[440px] sm:p-6'
-            : 'inset-x-3 bottom-3 z-40 mx-auto rounded-2xl border-blue-100 bg-white/95 p-4 backdrop-blur sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]'
+            ? 'top-1/2 left-1/2 z-[91] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-[26px] border-white/80 p-5 sm:w-[440px] sm:p-6'
+            : 'inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-[60] mx-auto rounded-2xl border-blue-100 bg-white/95 p-4 backdrop-blur sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]'
         }`}
       >
         <button
           type="button"
           aria-label="Cerrar sugerencia"
-          onClick={() => setDismissed(true)}
+          onClick={closeNudge}
           className="absolute top-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
         >
           <X className="h-4 w-4" />
