@@ -171,18 +171,6 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
           <nav ref={navRef} className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
-            {activeIndicator ? (
-              <span
-                data-evaluo-sidebar-indicator
-                aria-hidden="true"
-                className="pointer-events-none absolute top-0 left-0 rounded-lg bg-primary/7"
-                style={{
-                  width: activeIndicator.width,
-                  height: activeIndicator.height,
-                  transform: `translate3d(${activeIndicator.left}px, ${activeIndicator.top}px, 0)`,
-                }}
-              />
-            ) : null}
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
@@ -227,6 +215,18 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
             ))}
 
             {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} compact={compact} /> : null}
+            {activeIndicator ? (
+              <span
+                data-evaluo-sidebar-indicator
+                aria-hidden="true"
+                className="pointer-events-none absolute top-0 left-0 !m-0 rounded-lg bg-primary/7"
+                style={{
+                  width: activeIndicator.width,
+                  height: activeIndicator.height,
+                  transform: `translate3d(${activeIndicator.left}px, ${activeIndicator.top}px, 0)`,
+                }}
+              />
+            ) : null}
           </nav>
 
           <div className="mt-auto border-t border-slate-200/80 pt-3">
