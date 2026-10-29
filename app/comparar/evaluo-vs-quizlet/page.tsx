@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Evaluo vs. Quizlet: flashcards y práctica desde PDF',
+    title: 'Alternativa a Quizlet: flashcards y exámenes desde PDF | Evaluo',
     description: 'Descubrí las diferencias entre Quizlet y Evaluo para estudiar con tus apuntes y preparar exámenes.',
     url: toAbsoluteUrl(path),
   },
