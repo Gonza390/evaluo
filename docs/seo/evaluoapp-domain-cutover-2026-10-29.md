@@ -19,8 +19,10 @@
 
 ## Gate de publicación: verificar ANTES de fusionar/desplegar
 
+- [x] GitHub Actions PR #329: security, quality, Lighthouse SEO y CI required completaron con resultado exitoso el 2026-10-29.
+
 - [ ] Confirmar en Vercel que la rama de producción efectiva sea `main` (el panel mencionó `master`). Revisar el ajuste `git.deploymentEnabled=false` antes de confiar en deploys automáticos.
-- [ ] Probar autenticación de Google en `https://evaluoapp.com`, de comienzo a fin, en móvil y escritorio. Comprobar que la sesión finalice en el nuevo host.
+- [x] Probar inicio de sesión de Google en `https://evaluoapp.com`: el dueño confirmó que termina autenticado en `/dashboard` del nuevo dominio el 2026-10-29. Pendiente QA móvil complementario.
 - [ ] Verificar que Supabase → Authentication → URL Configuration incluya `https://evaluoapp.com/**` y preserve el callback del dominio antiguo; cambiar `Site URL` al nuevo **solo durante el corte**.
 - [ ] Probar registro y login con contraseña, recuperar un usuario existente, carga y procesamiento de PDF, práctica y panel de usuario; no usar cuentas reales para QA.
 - [ ] Verificar retorno y webhook de Mercado Pago desde el dominio nuevo, con prueba en sandbox/test; no modificar credenciales de producción para probar.
