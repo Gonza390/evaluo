@@ -125,13 +125,13 @@ assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('
 assertIncludesAll('app/como-estudiar-ingreso-unlam/page.tsx', [
   'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
   'canonical: toAbsoluteUrl(path)',
-  "const modifiedAt = '2026-10-20';",
+  "const modifiedAt = '2026-10-29';",
   'UnlamEditorialGuide',
 ]);
 assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
   'UnlamIngresoToolkit',
   '/estudiar-pdf-con-ia?source=ingreso-unlam-2027',
-  'Revisado el 20 de octubre de 2026',
+  'Revisado el 29 de octubre de 2026',
 ]);
 assertIncludesAll('components/marketing/unlam-ingreso-toolkit.tsx', [
   'Profesorado en Educación Física',
@@ -154,7 +154,7 @@ assertIncludesAll('lib/analytics-events.ts', [
   'seo_unlam_practice_answered',
   'seo_unlam_practice_completed',
 ]);
-assert.ok(source('app/sitemap.ts').includes("new Date('2026-10-20')"), 'Updated UNLaM guide must have recent sitemap modification date');
+assert.ok(source('app/sitemap.ts').includes("new Date('2026-10-29')"), 'Updated UNLaM guide must have recent sitemap modification date');
 assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)',
   'Parciales UBA XXI: exámenes anteriores y práctica',
@@ -739,4 +739,35 @@ assertIncludesAll('components/simulador/SimulatorFinishedResult.tsx', [
   'simulator_result_primary_pdf_activation',
   'simulator_result_pdf_activation',
   'Subir mis apuntes',
+]);
+
+// Regional optimization regression: substantial worked examples, distinct markets,
+// preserved canonical/hreflang, and current university calendar information.
+assertIncludesAll('lib/regional-study-guides.ts', [
+  'appliedExample:',
+  'Ejemplo guiado: estudiar un capítulo de biología en PDF',
+  'Ejemplo de guía de estudio con IA para un examen de administración',
+  'Ejemplo: simulacro de parcial de economía con tus apuntes',
+  'Ejemplo de test de práctica desde un temario universitario',
+  'result:',
+]);
+assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  'guide.appliedExample.title',
+  'guide.appliedExample.context',
+  'guide.appliedExample.tasks.map',
+  'guide.appliedExample.result',
+  'seleccionar_pdf_desde_ejemplo',
+  'href="#seleccionar-pdf"',
+]);
+assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
+  'Inscripción a la segunda instancia 2027: plazo finalizado',
+  '26 de octubre de 2026',
+  '1 de febrero al 6 de marzo de 2027',
+  'Sistema de Ingresantes',
+]);
+assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
+  'id="uba-xxi-calendario"',
+  '11 de noviembre',
+  'La inscripción al segundo parcial fue del 5 al 6 de octubre',
+  'OFFICIAL_CALENDAR',
 ]);
