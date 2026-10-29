@@ -21,14 +21,23 @@
 
 - [x] GitHub Actions PR #329: security, quality, Lighthouse SEO y CI required completaron con resultado exitoso el 2026-10-29.
 
-- [ ] Confirmar en Vercel que la rama de producción efectiva sea `main` (el panel mencionó `master`). Revisar el ajuste `git.deploymentEnabled=false` antes de confiar en deploys automáticos.
+- [x] Vercel confirma despliegues **production** recientes desde `main`, y el despliegue de prueba de la rama de migración es `READY` sin asignación a los dominios públicos. Mantener la observación de `git.deploymentEnabled=false` y validar los triggers antes del corte.
 - [x] Probar inicio de sesión de Google en `https://evaluoapp.com`: el dueño confirmó que termina autenticado en `/dashboard` del nuevo dominio el 2026-10-29. Pendiente QA móvil complementario.
 - [ ] Verificar que Supabase → Authentication → URL Configuration incluya `https://evaluoapp.com/**` y preserve el callback del dominio antiguo; cambiar `Site URL` al nuevo **solo durante el corte**.
-- [ ] Probar registro y login con contraseña, recuperar un usuario existente, carga y procesamiento de PDF, práctica y panel de usuario; no usar cuentas reales para QA.
+- [x] Registro e inicio de sesión con contraseña, acceso con Google, carga y procesamiento de PDF, resumen, práctica por tema y resultado validados manualmente por el dueño en `evaluoapp.com` (2026-10-29). La recuperación de contraseña todavía no está implementada en el producto; no es prueba de migración.
 - [ ] Verificar retorno y webhook de Mercado Pago desde el dominio nuevo, con prueba en sandbox/test; no modificar credenciales de producción para probar.
 - [ ] Revisar todos los workflows/plantillas activas en Sender por URLs antiguas y segmentar el cambio. Actualmente el único dominio remitente verificado es `evaluo.com.ar`: NO cambiar `SENDER_FROM_EMAIL` a `@evaluoapp.com` sin SPF, DKIM, DMARC y verificación en Sender.
-- [ ] Revisar Search Console actual, rastreabilidad y rutas SEO críticas de Argentina, España, México y Colombia. Inventariar las URLs indexadas y sus nuevas equivalencias. Evitar cambios de contenido simultáneos.
-- [ ] Guardar referencias y métricas previas de indexación, clics y tráfico, con fecha.
+- [x] El dueño confirmó la verificación de la propiedad `evaluoapp.com` en Google Search Console (2026-10-29). Las landings internacionales usan `SITE_URL` para canonical/hreflang. La propiedad nueva todavía no aparece en el conector Windsor.ai (solo `sc-domain:evaluo.com.ar`). Mantener comparación de rutas y contenido al publicar.
+- [x] Línea base de Search Console guardada en `docs/seo/evaluoapp-search-console-baseline-2026-10-29.md` (01–25/10: 242 clics y 5.455 impresiones por fecha).
+
+## Verificaciones adicionales de la rama
+
+- [x] GitHub Actions CI: seguridad, typecheck/lint, tests, compilación, Lighthouse SEO y prueba de auditoría de dominio completaron con éxito para el último commit verificado de la rama (2026-10-29).
+- [x] GitHub Actions QA responsive de flujos de estudio en móvil y escritorio completó con éxito (2026-10-29).
+- [x] Se auditaron alrededor de 705 archivos de código y recursos; se corrigieron 7 referencias adicionales a URLs antiguas (PDF compartidos, portada de descarga, referidos, analítica, simulador).
+- [x] Despliegue de prueba Vercel `dpl_E8wbabRbmZzeywrqJa7hyDawJMAa` en estado READY; no es un despliegue production.
+- [x] Sender: único dominio remitente autenticado `evaluo.com.ar`; seis correos en un workflow activo todavía usan links antiguos; sin campañas SCHEDULED. Conservar el remitente durante la migración, y coordinar la actualización de los 6 enlaces y sus recursos al activar el dominio nuevo.
+- [ ] Confirmar que un flujo de compra de prueba y sus notificaciones funcionan con el dominio nuevo; si no hay sandbox habilitado, dejar pagos fuera de la certificación y controlar que `/api/webhooks/*` siga operativo en el dominio antiguo.
 
 ## Secuencia propuesta para el corte coordinado
 
