@@ -94,8 +94,11 @@ function getNextStreakMilestone(streakDays: number) {
 function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
-  const [pendingDestination, setPendingDestination] = useState<string | null>(null);
-  useEffect(() => setPendingDestination(null), [pathname]);
+  const [pendingDestination, setPendingDestination] = useState<{
+    fromPath: string;
+    href: string;
+  } | null>(null);
+  const pendingHref = pendingDestination?.fromPath === pathname ? pendingDestination.href : null;
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
@@ -123,8 +126,8 @@ function BottomNav() {
       <div className="grid grid-cols-4 items-stretch gap-1 px-2 py-1.5">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pendingDestination !== null
-            ? pendingDestination === item.href
+          const isActive = pendingHref !== null
+            ? pendingHref === item.href
             : item.href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso'
               ? true
               : item.href === '/' || item.href === '/dashboard'
@@ -135,7 +138,7 @@ function BottomNav() {
             <Link
               key={`${item.label}-${item.href}`}
               href={item.href}
-              onClick={() => setPendingDestination(item.href)}
+              onClick={() => setPendingDestination({ href: item.href, fromPath: pathname })}
               data-evaluo-mobile-nav-item="true"
               aria-current={isActive ? 'page' : undefined}
               data-recommended-errors={
