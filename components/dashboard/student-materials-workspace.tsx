@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
 
 interface StudentMaterialsWorkspaceProps {
   initialMaterials: StudentMaterial[];
@@ -42,14 +43,15 @@ function formatDate(value: string) {
 
 /**
  * Personal study materials.
- * Upload creation is owned by PdfFirstUploadShell, which wraps every current consumer
- * and captures the "Subí tu PDF" trigger below.
+ * Upload creation is owned by PdfFirstUploadShell; each CTA invokes its
+ * explicit action rather than relying on the button's visible text.
  */
 export function StudentMaterialsWorkspace({
   initialMaterials,
 }: StudentMaterialsWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const openUploadPicker = usePdfUploadTrigger();
   const [isPending, startTransition] = useTransition();
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
 
@@ -89,7 +91,7 @@ export function StudentMaterialsWorkspace({
               : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
           }
           actions={
-            <Button type="button" size="sm" variant="outline" className="min-h-10 rounded-lg px-3 text-[12.5px]">
+            <Button type="button" size="sm" variant="outline" onClick={() => openUploadPicker('dashboard_materials_header')} className="min-h-10 rounded-lg px-3 text-[12.5px]">
               <Upload className="h-4 w-4" />
               Subí tu PDF
             </Button>
@@ -104,6 +106,7 @@ export function StudentMaterialsWorkspace({
               title="Todavía no subiste un PDF"
               description="Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá."
               primaryActionLabel="Subí tu PDF"
+              onPrimaryAction={() => openUploadPicker('dashboard_empty_materials')}
               secondaryActionLabel="Ver cómo funciona con un PDF de ejemplo"
               secondaryActionHref="/preview/primer-pdf?source=dashboard_empty"
               className="border-dashed"

@@ -1,12 +1,13 @@
 'use client';
 
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type MouseEvent,
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -76,15 +77,16 @@ function isTransientProcessingFailure(message: string | null | undefined) {
   );
 }
 
-function isUploadTriggerLabel(label: string) {
-  const normalized = label
-    .toLocaleLowerCase('es-AR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const hasUploadVerb = /\bsubi(?:r)?\b/u.test(normalized);
-  return hasUploadVerb && (normalized.includes('pdf') || normalized.includes('material'));
+/**
+ * Explicit upload command shared by dashboard CTAs. Copy changes never alter
+ * the behavior of another button, and nested buttons retain their own onClick.
+ */
+const PdfUploadTriggerContext = createContext<((location?: string) => void) | null>(null);
+
+export function usePdfUploadTrigger() {
+  const trigger = useContext(PdfUploadTriggerContext);
+  if (!trigger) throw new Error('usePdfUploadTrigger requires PdfFirstUploadShell');
+  return trigger;
 }
 
 export function PdfFirstUploadShell({
@@ -373,29 +375,22 @@ export function PdfFirstUploadShell({
     if (shouldRefresh) router.refresh();
   }, [processing, reset, router, uploading]);
 
-  const handleCapturedClick = (event: MouseEvent<HTMLDivElement>) => {
-    const element = event.target as HTMLElement | null;
-    const button = element?.closest('button');
-    if (!button || !isUploadTriggerLabel(button.textContent ?? '')) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    const firstPdfLocation = button.dataset.firstPdfCta;
-    if (firstPdfLocation) {
+  const openUploadPicker = useCallback((location?: string) => {
+    if (uploading) return;
+    if (location === 'dashboard_empty' || location === 'dashboard_empty_materials') {
       trackMarketingEvent('first_pdf_cta_clicked', {
-        location: firstPdfLocation,
+        location,
         source: initialSource || 'dashboard',
       });
     }
     trackMarketingEvent('pdf_picker_opened', {
-      location: firstPdfLocation || 'dashboard_upload',
+      location: location || 'dashboard_upload',
       source: initialSource || 'dashboard',
     });
 
     setOpen(true);
     pickerRef.current?.click();
-  };
+  }, [initialSource, uploading]);
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
@@ -777,6 +772,7 @@ export function PdfFirstUploadShell({
   const universitySelectValue = requestingUniversity ? MISSING_UNIVERSITY_VALUE : universityId;
 
   return (
+    <PdfUploadTriggerContext.Provider value={openUploadPicker}>
     <div className="relative">
       <input
         ref={pickerRef}
@@ -789,7 +785,6 @@ export function PdfFirstUploadShell({
         }}
       />
       <div
-        onClickCapture={handleCapturedClick}
         className={`transition duration-200 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
         aria-hidden={open}
       >
@@ -1252,5 +1247,6 @@ export function PdfFirstUploadShell({
         </Dialog>
       ) : null}
     </div>
+    </PdfUploadTriggerContext.Provider>
   );
 }

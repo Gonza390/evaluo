@@ -2,7 +2,7 @@
 
 import type { ReactNode, RefObject } from 'react';
 import { useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
 import { MaeveStudyHero } from '@/components/dashboard/maeve-study-hero';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 
@@ -16,8 +16,8 @@ type Props = {
 };
 
 /**
- * Study-first dashboard chrome. Upload triggers are delegated to PdfFirstUploadShell
- * through the shared ?openUpload=1 entry point.
+ * Study-first dashboard chrome. The hero calls the explicit upload command
+ * owned by PdfFirstUploadShell; deep links still use ?openUpload=1.
  */
 export function MaeveDashboardChrome({
   children,
@@ -28,23 +28,8 @@ export function MaeveDashboardChrome({
   nextStudyAction,
 }: Props) {
   const heroRef = useRef<HTMLElement | null>(null);
-  const router = useRouter();
-
-  const openUpload = () => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('openUpload') === '1') {
-      url.searchParams.delete('openUpload');
-      router.replace(`${url.pathname}${url.search}` || url.pathname);
-      window.setTimeout(() => {
-        const next = new URL(window.location.href);
-        next.searchParams.set('openUpload', '1');
-        router.replace(`${next.pathname}?${next.searchParams.toString()}`);
-      }, 0);
-      return;
-    }
-    url.searchParams.set('openUpload', '1');
-    router.replace(`${url.pathname}?${url.searchParams.toString()}`);
-  };
+  const openUploadPicker = usePdfUploadTrigger();
+  const openUpload = () => openUploadPicker(materialsCount === 0 ? 'dashboard_empty' : 'dashboard_hero');
 
   return (
     <div className="min-w-0 space-y-3 overflow-x-clip">

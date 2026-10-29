@@ -4,6 +4,7 @@ import './study-error-navigation.smoke.ts';
 import './exam-date-prompt-simulator-skip.smoke.ts';
 import './p1-auth-premium-notifications.smoke.ts';
 import './ux-a11y-priorities.smoke.ts';
+import './upload-trigger-calendar-tokens.smoke.ts';
 import './study-error-review-prompt.smoke.ts';
 import {
   buildSimulatorLandingHref,
