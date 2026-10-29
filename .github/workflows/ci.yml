@@ -57,6 +57,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Domain migration URL audit
+        run: node scripts/audit-domain-migration.mjs
+
       - name: Build
         run: npm run build
 
