@@ -9,7 +9,6 @@ import {
   FileText,
   Globe,
   Loader2,
-  Lock,
   Trash2,
 } from 'lucide-react';
 import { deleteStudentMaterialAction } from '@/app/dashboard/materiales/actions';
@@ -126,20 +125,12 @@ export function StudentMaterialsWorkspace({
                             {material.title}
                           </Link>
                         </h3>
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                            isShared
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-white text-slate-600'
-                          }`}
-                        >
-                          {isShared ? (
+                        {isShared ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                             <Globe className="h-3.5 w-3.5" />
-                          ) : (
-                            <Lock className="h-3.5 w-3.5" />
-                          )}
-                          {isShared ? 'Compartido' : 'Privado'}
-                        </span>
+                            Compartido
+                          </span>
+                        ) : null}
                         {isFailed ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
                             <CircleAlert className="h-3.5 w-3.5" />
@@ -152,9 +143,6 @@ export function StudentMaterialsWorkspace({
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-1 text-[12px] break-all text-slate-500">
-                        {material.file_name}
-                      </p>
                       <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
                         <span>{formatDate(material.created_at)}</span>
                         {material.page_count ? <span>{material.page_count} páginas</span> : null}
