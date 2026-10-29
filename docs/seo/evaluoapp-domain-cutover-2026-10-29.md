@@ -14,7 +14,7 @@
 1. Fallback de `lib/site.ts` actualizado a `https://evaluoapp.com`; para el dominio real prevalece `NEXT_PUBLIC_SITE_URL`.
 2. Imágenes de los correos transaccionales relativas a `SITE_URL`, en vez de un enlace antiguo codificado.
 3. Links de recordatorios de estudio/examen centralizados con `SITE_URL`; conservan sus parámetros UTM.
-4. Redirecciones 301 públicas de ambos hosts antiguos al nuevo, preservando ruta y query string de origen. Excluimos `/api` y `/auth/callback` para no romper cron jobs, webhooks de pago ni callbacks OAuth antiguos.
+4. Redirecciones 301 públicas de ambos hosts antiguos al nuevo, preservando ruta y query string de origen. Excluimos `/api`, `/auth/callback`, `/_next`, `/_vercel` y `/.well-known` para no romper cron jobs, webhooks de pago, callbacks OAuth antiguos ni recursos y verificaciones de clientes anteriores.
 5. Pruebas SEO de reglas de migración y fixtures de URL de checkout actualizadas.
 
 ## Gate de publicación: verificar ANTES de fusionar/desplegar

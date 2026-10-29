@@ -449,13 +449,13 @@ for (const hostname of ['evaluo.com.ar', 'www.evaluo.com.ar']) {
   assert.ok(rule, `Missing old-domain redirect for ${hostname}`);
   assert.equal(rule.destination, 'https://evaluoapp.com/:path');
   assert.equal(rule.statusCode, 301);
-  assert.equal(rule.source, '/:path((?!api/|api$|auth/callback).*)');
+  assert.equal(rule.source, '/:path((?!api/|api$|auth/callback|_next/|_next$|_vercel/|_vercel$|\\.well-known/).*)');
 }
-const publicDomainRedirectPath = /^\/(?!api\/|api$|auth\/callback).*$/;
+const publicDomainRedirectPath = /^\/(?!api\/|api$|auth\/callback|_next\/|_next$|_vercel\/|_vercel$|\.well-known\/).*$/;
 for (const path of ['/', '/estudiar-pdf-con-ia', '/es-mx/estudiar-pdf-con-ia']) {
   assert.ok(publicDomainRedirectPath.test(path), `Public path must redirect: ${path}`);
 }
-for (const path of ['/api', '/api/internal/exam-reminders', '/api/webhooks/mercadopago', '/auth/callback']) {
+for (const path of ['/api', '/api/internal/exam-reminders', '/api/webhooks/mercadopago', '/auth/callback', '/_next/static/chunk.js', '/_vercel/insights', '/.well-known/security.txt']) {
   assert.ok(!publicDomainRedirectPath.test(path), `Sensitive path must not redirect: ${path}`);
 }
 assertIncludesAll('lib/site.ts', [`'https://evaluoapp.com'`]);

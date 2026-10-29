@@ -8,7 +8,7 @@
   },
   "redirects": [
     {
-      "source": "/:path((?!api/|api$|auth/callback).*)",
+      "source": "/:path((?!api/|api$|auth/callback|_next/|_next$|_vercel/|_vercel$|\\.well-known/).*)",
       "has": [
         {
           "type": "host",
@@ -19,7 +19,7 @@
       "statusCode": 301
     },
     {
-      "source": "/:path((?!api/|api$|auth/callback).*)",
+      "source": "/:path((?!api/|api$|auth/callback|_next/|_next$|_vercel/|_vercel$|\\.well-known/).*)",
       "has": [
         {
           "type": "host",
