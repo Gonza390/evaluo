@@ -189,7 +189,6 @@ type MaterialStudyWorkspaceProps = {
   initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
-  initialGuideManuallyRequested?: boolean;
   /** Mostrar la guía de estudio al llegar al Resumen desde un PDF recién procesado. */
   initialStudyStartGuideRequested?: boolean;
   /** Solo para la demo pública: habilita enlaces a una etapa sin forzar onboarding real. */
@@ -346,7 +345,6 @@ export function MaterialStudyWorkspace({
   initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
-  initialGuideManuallyRequested = false,
   initialStudyStartGuideRequested = false,
   initialTab,
   initialPdfPage = null,
@@ -421,7 +419,7 @@ export function MaterialStudyWorkspace({
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   const skippedTourSessionKey = 'evaluo:first-pdf-guide:skipped-session';
   useEffect(() => {
-    if (!initialRecommendedStudy || initialGuideManuallyRequested) return;
+    if (!initialRecommendedStudy) return;
     try {
       if (window.sessionStorage.getItem(skippedTourSessionKey) === '1') {
         setRecommendedActive(false);
@@ -430,7 +428,7 @@ export function MaterialStudyWorkspace({
     } catch {
       // Sin almacenamiento, el estudiante puede cerrar la guía normalmente.
     }
-  }, [initialRecommendedStudy, initialGuideManuallyRequested]);
+  }, [initialRecommendedStudy]);
   const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
