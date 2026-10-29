@@ -11,7 +11,6 @@ import {
   Loader2,
   Lock,
   Trash2,
-  Upload,
 } from 'lucide-react';
 import { deleteStudentMaterialAction } from '@/app/dashboard/materiales/actions';
 import type { StudentMaterial } from '@/lib/data/student-materials';
@@ -89,12 +88,6 @@ export function StudentMaterialsWorkspace({
             initialMaterials.length === 0
               ? 'Subí tu primer material y empezá a estudiar desde la misma fuente.'
               : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
-          }
-          actions={
-            <Button type="button" size="sm" variant="outline" onClick={() => openUploadPicker('dashboard_materials_header')} className="min-h-10 rounded-lg px-3 text-[12.5px]">
-              <Upload className="h-4 w-4" />
-              Subí tu PDF
-            </Button>
           }
         />
 

@@ -31,7 +31,8 @@ assert.doesNotMatch(chrome, /router\.replace\(/,
   'Buttons should no longer reload the dashboard via query-string toggling.');
 assert.match(hero, /onClick=\{onUploadClick\}/,
   'Both hero CTAs must retain explicit click handlers.');
-assert.match(materials, /onClick=\{\(\) => openUploadPicker\('dashboard_materials_header'\)\}/);
+assert.doesNotMatch(materials, /dashboard_materials_header/,
+  'Do not render a second PDF upload CTA in Tus PDFs; use the hero action instead.');
 assert.match(materials, /onPrimaryAction=\{\(\) => openUploadPicker\('dashboard_empty_materials'\)\}/);
 assert.match(panel, /onClick=\{onPrimaryAction\}/,
   'Empty-state primary action must remain a functional button.');
