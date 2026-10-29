@@ -65,6 +65,14 @@ assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
 assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
 assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
+assert.doesNotMatch(dashboardMaterialsSource, /material\.file_name/,
+  'PDF cards should not repeat the uploaded filename below the title.');
+assert.doesNotMatch(dashboardMaterialsSource, />Privado<|: 'Privado'/,
+  'Private PDFs are the default and should not display a redundant visibility tag.');
+assert.match(dashboardMaterialsSource, /\{isShared \? \(/,
+  'Shared PDFs should still show their meaningful visibility state.');
+assert.match(dashboardMaterialsSource, /\{formatDate\(material\.created_at\)\}/,
+  'PDF cards must retain their upload date.');
 assert.doesNotMatch(dashboardMaterialsSource, /dashboard_materials_header/,
   'Tus PDFs must not display a redundant upload CTA in the section header.');
 assert.match(dashboardMaterialsSource, /primaryActionLabel="Subí tu PDF"/,
