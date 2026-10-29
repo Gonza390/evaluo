@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { withPremiumDismissMarker } from '@/lib/premium/funnel-return';
 import {
   PREMIUM_MONTHLY_PRICE_ARS,
   PREMIUM_SEMESTER_PRICE_ARS,
@@ -203,11 +204,9 @@ export function ErroresPremiumFunnel({
       funnel_step: visibleStep,
     });
 
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push('/dashboard');
+    // Return to the actual gated feature with an explicit close signal.
+    // Browser history and sessionStorage may be unavailable or unrelated.
+    router.replace(withPremiumDismissMarker(returnTo, SOURCE, '/dashboard'));
   }
 
   async function startCheckout() {
