@@ -5,8 +5,8 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/comparar/evaluo-vs-quizlet';
 
 export const metadata: Metadata = {
-  title: 'Evaluo vs. Quizlet: flashcards, tests y estudio con IA',
-  description: 'Compará Evaluo y Quizlet: flashcards, tests, resúmenes de PDF, IA para estudiar, práctica por tema, seguimiento y precios.',
+  title: "Alternativa a Quizlet: flashcards y exámenes desde PDF",
+  description: "¿Buscás una alternativa a Quizlet? Compará tarjetas, tests y funciones con IA para preparar parciales desde tus apuntes PDF en Evaluo.",
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
