@@ -127,6 +127,12 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
                 Estudiar PDF con IA
               </Link>
               <Link
+                href="/es/paises"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
+                Guías de estudio por país
+              </Link>
+              <Link
                 href="/es/guias"
                 className="text-xs text-white/80 transition hover:text-white"
               >

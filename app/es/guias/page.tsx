@@ -47,6 +47,9 @@ export default function GuiasDeEstudioPage() {
               Cada guía incluye un procedimiento, un ejemplo y preguntas que puedes aplicar a tus propios apuntes.
               No necesitas seguir una técnica idéntica para todas las asignaturas.
             </p>
+            <Link href="/es/paises" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
+              Ver guías de estudio por país <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
             <div className="mt-7 flex flex-wrap gap-3">
               <TrackedLink
                 href="/es/estudiar-pdf-con-ia?source=guia-hub"
