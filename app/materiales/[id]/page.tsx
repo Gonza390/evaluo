@@ -27,6 +27,7 @@ import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-ped
 import { createClientServer } from '@/lib/supabase-server';
 import {
   FIRST_PDF_ONBOARDING_COMPLETED_KEY,
+  FIRST_PDF_ONBOARDING_SKIPPED_KEY,
   shouldAutoStartFirstPdfOnboarding,
 } from '@/lib/first-pdf-onboarding';
 import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
@@ -435,14 +436,16 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     const visibility = normalizeMaterialVisibility(material.visibility);
 
     // One onboarding per NEW account, not per URL, PDF or entry point.
-    // A skipped tour is intentionally eligible again until explicitly completed.
+    // Completion and skipping are stored independently for each student.
     const completedAt = user?.app_metadata?.[FIRST_PDF_ONBOARDING_COMPLETED_KEY];
+    const skippedAt = user?.app_metadata?.[FIRST_PDF_ONBOARDING_SKIPPED_KEY];
     const qaAccount = isQaAccount(user);
     const eligibleByAccount = Boolean(
-      isOwner && user && !completedAt &&
+      isOwner && user && !completedAt && !skippedAt &&
       shouldAutoStartFirstPdfOnboarding({
         accountCreatedAt: user.created_at,
         completedAt,
+        skippedAt,
         previouslyCompleted: false,
         isOwner,
         materialReady: material.processing_status === 'ready',
@@ -466,7 +469,11 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       if (priorCompletionError) throw priorCompletionError;
       previouslyCompleted = Boolean(priorCompletion);
     }
-    const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
+    // An explicit request is never blocked by a previous skip/completion.
+    const manuallyRequestedGuide =
+      isOwner && material.processing_status === 'ready' && query.recorrido === '1';
+    const shouldShowFirstPdfGuide =
+      manuallyRequestedGuide || (eligibleByAccount && !previouslyCompleted);
 
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
@@ -529,8 +536,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
               ? Number(query.studyTopic)
               : undefined
           }
-          recommendedStudyAvailable={eligibleByAccount}
+          recommendedStudyAvailable={isOwner && material.processing_status === 'ready'}
           initialRecommendedStudy={shouldShowFirstPdfGuide}
+          initialGuideManuallyRequested={manuallyRequestedGuide}
           initialStudyStartGuideRequested={isOwner && material.processing_status === 'ready' && query.inicio === '1'}
           initialTab={shouldShowFirstPdfGuide ? 'resumen' : (
             query.tab === 'tarjetas' ||
