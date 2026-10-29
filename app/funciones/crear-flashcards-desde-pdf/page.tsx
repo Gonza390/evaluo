@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Crear flashcards a partir de PDF con IA | Evaluo',
+    title: "Crear flashcards a partir de PDF con IA | Evaluo",
     description:
       'Convertí tu PDF en tarjetas de preguntas y respuestas con IA para repasar conceptos y volver al material que estás estudiando.',
     url: toAbsoluteUrl(path),
