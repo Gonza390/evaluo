@@ -5,13 +5,13 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/funciones/practicar-por-tema';
 
 export const metadata: Metadata = {
-  title: 'Practicar por tema con IA desde tus apuntes | Evaluo',
-  description: 'Practicá cada tema de tu PDF con preguntas de IA. Detectá lo que sabés, revisá errores y reforzá conceptos antes de pasar al siguiente tema.',
+  title: "Practicar por tema con IA: preguntas desde PDF",
+  description: "Practicá por tema con IA desde tus apuntes en PDF: respondé preguntas de un capítulo, revisá errores y decidí cuándo avanzar al siguiente.",
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Practicar por tema con IA desde tus apuntes | Evaluo',
+    title: "Practicar por tema con IA: preguntas desde PDF | Evaluo",
     description: 'Estudiá tema por tema, resolvé preguntas y revisá qué conceptos necesitás reforzar.',
     url: toAbsoluteUrl(path),
   },

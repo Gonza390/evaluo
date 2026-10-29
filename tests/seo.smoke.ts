@@ -74,7 +74,7 @@ assertIncludesAll('app/sitemap.ts', [
 ]);
 assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', [
   'PdfPracticePage',
-  'Generar preguntas desde PDF con IA',
+  'Generar preguntas a partir de PDF con IA',
   'canonical:toAbsoluteUrl(path)',
 ]);
 for (const [pagePath, experience] of [
@@ -104,7 +104,7 @@ assertIncludesAll('components/marketing/seo-practice-tools-landings.tsx', [
 assertIncludesAll('components/marketing/editorial-study-pages.tsx', [
   'QuestionsCta',
   'id="elegir-pdf-preguntas"',
-  'Convertir PDF en preguntas con IA',
+  'Generar preguntas a partir de PDF con IA',
   'href="/funciones/simulacro-examen-con-ia"',
   'href="/funciones/practicar-por-tema"',
 ]);
@@ -346,7 +346,7 @@ assertIncludesAll('components/marketing/seo-study-experiences-v2.tsx', [
   'app o página para estudiar con IA',
   'Estudiá un PDF con IA:',
   'Resumí un PDF con IA',
-  'Creá flashcards con IA',
+  'Creá flashcards a partir de un PDF',
   '/demo/material-estudio',
   '/ia-para-estudiantes',
   '/estudiar-pdf-con-ia',
@@ -638,3 +638,43 @@ assertIncludesAll('.github/workflows/ci.yml', [
 ]);
 assertIncludesAll('app/robots.ts', ["'/dashboard'", "'/login'", "'/administrador'"]);
 assertIncludesAll('app/demo/material-estudio/page.tsx', ['index: false', 'follow: false']);
+
+
+/* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
+const acquisitionSeoTitles: Array<[string, string]> = [
+  ['app/ia-para-estudiantes/page.tsx', 'IA para estudiantes: estudiá apuntes y practicá'],
+  ['app/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen y práctica por tema'],
+  ['app/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: resumen útil para estudiar'],
+  ['app/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de PDF con IA'],
+  ['app/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde PDF con IA'],
+  ['app/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de PDF con IA'],
+  ['app/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA desde tus apuntes'],
+  ['app/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde PDF'],
+  ['app/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar PDF'],
+  ['app/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar PDF y practicar'],
+  ['app/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet: flashcards y exámenes desde PDF'],
+];
+assert.equal(new Set(acquisitionSeoTitles.map(([, title]) => title.toLowerCase())).size, acquisitionSeoTitles.length, 'Each acquisition page needs its own distinct title');
+for (const [path, expectedTitle] of acquisitionSeoTitles) {
+  const content = source(path);
+  const head = content.slice(content.indexOf('export const metadata'), content.indexOf('openGraph:'));
+  assert.ok(head.includes(expectedTitle), path + ' needs the intended keyword in the primary title');
+  assert.ok(!/title:\s*['"][^'"\n]*\|\s*Evaluo/.test(head), path + ' must not duplicate the root title suffix');
+  assert.ok(/canonical:\s*toAbsoluteUrl\(path\)/.test(content), path + ' must preserve its canonical');
+  assert.ok(/index:\s*true/.test(content), path + ' must remain indexable');
+  assert.ok(!content.includes('| Evaluo | Evaluo'), path + ' must have no duplicate brand in social metadata');
+}
+assertIncludesAll('components/marketing/seo-study-experiences-v2.tsx', [
+  'Si buscás una IA para resumir PDF',
+  'Creá flashcards a partir de un PDF',
+  'Para estudiar un PDF con IA',
+]);
+assertIncludesAll('components/marketing/seo-practice-tools-landings.tsx', [
+  'simulacro de examen con IA a partir de tus apuntes PDF',
+  'practicar preguntas de un tema con IA',
+]);
+assertIncludesAll('components/marketing/seo-comparison-landings.tsx', [
+  'Si buscás una alternativa a NotebookLM',
+  'Si buscás una alternativa a ChatGPT',
+  'Si buscás una alternativa a Quizlet',
+]);

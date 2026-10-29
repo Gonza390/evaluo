@@ -21,14 +21,13 @@ const path = '/funciones/crear-mapa-mental-desde-pdf';
 const uploadHref = '/estudiar-pdf-con-ia?source=seo-mapa-mental-pdf';
 
 export const metadata: Metadata = {
-  title: 'Crear mapa mental desde PDF con IA | Evaluo',
-  description:
-    'Creá un mapa mental desde PDF con IA. Elegí tus apuntes, visualizá temas, ramas y conceptos, y seguí repasando con el mismo documento en Evaluo.',
+  title: "Crear mapa mental desde PDF con IA",
+  description: "Creá un mapa mental desde un PDF con IA: organizá temas, subtemas y relaciones entre conceptos de tus apuntes y continuá repasando el mismo material.",
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Crear mapa mental desde PDF con IA | Evaluo',
+    title: "Crear mapa mental desde PDF con IA | Evaluo",
     description:
       'Organizá visualmente los conceptos de tu PDF y conectalos con el resto de tu recorrido de estudio.',
     url: toAbsoluteUrl(path),
@@ -82,7 +81,7 @@ export default function CrearMapaMentalDesdePdfPage() {
                 </span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Elegí un PDF de tus apuntes y organizá sus temas, subtemas y conceptos en un mapa mental con IA. Visualizá relaciones entre ideas y después volvé al documento o seguí practicando en Evaluo.
+                Si querés convertir un PDF en mapa mental con IA, elegí tus apuntes y organizá sus temas, subtemas y conceptos. Visualizá las relaciones entre ideas y después volvé al documento o seguí practicando en Evaluo.
               </p>
               <div className="mt-8">
                 <TrackedLink
