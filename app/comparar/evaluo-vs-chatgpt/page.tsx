@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Evaluo vs. ChatGPT: estudiar y practicar desde PDF',
+    title: "Alternativa a ChatGPT para estudiar PDF y practicar | Evaluo",
     description: 'Una comparación equilibrada entre el Modo de estudio de ChatGPT y la práctica por temas de Evaluo.',
     url: toAbsoluteUrl(path),
   },
