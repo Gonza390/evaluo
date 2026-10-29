@@ -21,7 +21,7 @@ import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 
-const uploadHref = '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1';
+const uploadHref = '/estudiar-pdf-con-ia?source=seo-study-landings';
 const demoHref = '/demo/material-estudio';
 
 type ShellProps = {
@@ -1077,6 +1077,42 @@ export function FlashcardsPdfExperience() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="como-crear-flashcards-pdf" className="border-b border-slate-100 bg-white py-16 sm:py-20">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Guía paso a paso</p>
+            <h2 id="como-crear-flashcards-pdf" className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Cómo crear flashcards a partir de un PDF con IA
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+              Para repasar con tarjetas no alcanza con copiar definiciones. Partí de los apuntes de tu materia, elegí un tema concreto y usá las preguntas para comprobar qué recordás sin mirar.
+            </p>
+            <ol className="mt-8 grid gap-4 md:grid-cols-3">
+              {[
+                { number: '01', title: 'Elegí tu PDF', description: 'Seleccioná el apunte o capítulo que necesitás estudiar. El archivo sigue siendo la referencia para verificar las respuestas.' },
+                { number: '02', title: 'Repasá las tarjetas del tema', description: 'Creá el material en Evaluo, abrí las flashcards y tratá de contestar cada pregunta antes de ver la respuesta.' },
+                { number: '03', title: 'Volvé a practicar', description: 'Cuando una tarjeta te cueste, revisá el concepto en el PDF y después resolvé ejercicios del mismo tema para comprobarlo.' },
+              ].map((step) => (
+                <li key={step.number} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-6">
+                  <span className="text-xs font-black tracking-wide text-blue-700">{step.number}</span>
+                  <h3 className="mt-3 text-base font-bold text-slate-950">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{step.description}</p>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-6 max-w-3xl text-sm leading-7 text-slate-600">
+              Ejemplo: en vez de memorizar una tarjeta que solo diga «segmentación», intentá responder «¿qué criterios se usan para segmentar un mercado y para qué sirve hacerlo?». Si no podés explicarlo, repasá el apartado de origen antes de seguir.
+            </p>
+            <TrackedLink
+              href={uploadHref}
+              eventName="cta_click"
+              payload={{ location: 'seo_flashcards_pdf_v2_steps', cta_name: 'elegir_pdf', destination: uploadHref }}
+              className="from-brand to-brand-2 mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            >
+              Elegir mi PDF para crear flashcards <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </TrackedLink>
           </div>
         </section>
 
