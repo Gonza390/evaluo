@@ -6,6 +6,7 @@ import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landin
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { SeoComparisonProductDemo } from '@/components/marketing/seo-comparison-product-demo';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
@@ -61,7 +62,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
       { title: 'Mantener un siguiente paso', description: 'Continuá desde un tema hacia la práctica, el refuerzo o el siguiente apartado del material.' },
     ],
     exampleOther: 'Subí una lectura, una clase y un artículo complementario para contrastar sus explicaciones sobre segmentación. Pedí un cuestionario con un nivel de dificultad adecuado y revisá sus fuentes.',
-    exampleEvaluo: 'Subí el PDF de Marketing I, repasá el tema Segmentación y resolvé preguntas. Si confundís criterios de segmentación con mercados objetivo, volvé a ese contenido y repetí la práctica.',
+    exampleEvaluo: 'Abrí el PDF de muestra «IA y nuevas tecnologías»: podés leer sus ocho apartados, consultar el glosario y contestar ejercicios en el espacio real de Evaluo. El panel de progreso responde a tus respuestas dentro de la demostración.',
     practicalTip: 'Para una materia con muchas lecturas, NotebookLM puede resultar más conveniente para explorar fuentes. Para seguir un recorrido de práctica por tema sobre tu PDF, podés probar Evaluo. También se pueden complementar.',
     limitations: 'Las funciones y límites de NotebookLM cambian según el plan y el despliegue de Google. No todas las modalidades de estudio equivalen a una evaluación académica oficial.',
     otherPricing: 'NotebookLM/Gemini Notebook ofrece acceso sin costo y opciones superiores con límites ampliados. Consultá las condiciones de Google para tu cuenta y país.',
@@ -103,7 +104,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
       { title: 'Elegir qué estudiar después', description: 'La experiencia conecta resultados, refuerzo y avance hacia los siguientes temas.' },
     ],
     exampleOther: 'Subí un apunte de Marketing I al Modo de estudio y pedile: «Haceme una pregunta sobre segmentación, esperá mi respuesta y corregime con una explicación». Podés pedir otra pregunta si la primera fue sencilla.',
-    exampleEvaluo: 'Seleccioná tu PDF, revisá Segmentación en el resumen y pasá a la práctica del tema. Después de responder, revisá lo que te costó y usá las opciones de refuerzo.',
+    exampleEvaluo: 'Abrí el PDF de muestra «IA y nuevas tecnologías»: podés leer sus ocho apartados, consultar el glosario y contestar ejercicios en el espacio real de Evaluo. El panel de progreso responde a tus respuestas dentro de la demostración.',
     practicalTip: 'Para una duda puntual, una explicación o un ejercicio personalizado, ChatGPT es muy flexible. Para sostener un recorrido estructurado a través de tus apuntes, Evaluo puede reducir el trabajo de organizar cada sesión.',
     limitations: 'Las respuestas generadas por IA pueden cometer errores en ambos casos. ChatGPT tiene límites diferentes según el plan, y el uso de archivos depende de las funciones habilitadas.',
     otherPricing: 'ChatGPT dispone de una opción gratuita y planes pagos con límites ampliados. Verificá el precio y disponibilidad de cada plan en la página oficial.',
@@ -145,7 +146,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
       { title: 'Continuar hacia el siguiente tema', description: 'Pasá de la comprensión a la práctica y al refuerzo sin separar cada etapa del documento.' },
     ],
     exampleOther: 'Creá un set de términos de segmentación o subí tus notas para generar materiales. Practicá con Learn o un test y revisá en qué conceptos fallaste.',
-    exampleEvaluo: 'Subí el PDF de Marketing I, elegí Segmentación y usá resumen, flashcards y preguntas. Cuando una respuesta no alcance, reforzá el tema antes de continuar.',
+    exampleEvaluo: 'Abrí el PDF de muestra «IA y nuevas tecnologías»: podés leer sus ocho apartados, consultar el glosario y contestar ejercicios en el espacio real de Evaluo. El panel de progreso responde a tus respuestas dentro de la demostración.',
     practicalTip: 'Si tu objetivo principal es repasar sets o memorizar definiciones con distintos modos, Quizlet es una opción sólida. Si preferís recorrer tu PDF desde un tema hasta la corrección de la práctica, probá Evaluo.',
     limitations: 'Quizlet ofrece distintas modalidades y disponibilidad por plan, país, idioma y tipo de cuenta. Es importante revisar las condiciones locales antes de contratar.',
     otherPricing: 'Quizlet permite comenzar gratis y ofrece suscripciones Plus. Las funciones incluidas y los precios pueden variar según país, plataforma y período de facturación.',
@@ -265,8 +266,8 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
         <section className="border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">03 / Ejemplo universitario</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Preparar un parcial de Marketing I con cada herramienta</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">Ejemplo didáctico, no un resultado de una evaluación real. Supongamos que tenés que estudiar segmentación de mercados.</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Cómo preparar una materia: orientación y prueba de producto</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">Los escenarios con otras plataformas son orientativos. Debajo podés probar un PDF de muestra de Evaluo con las mismas pantallas que usamos para estudiar.</p>
             <div className="mt-8 grid gap-4 md:grid-cols-2">
               <article className="rounded-2xl border border-slate-200 bg-white p-6"><Layers3 className="h-5 w-5 text-slate-600" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-slate-950">Con {c.name}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{c.exampleOther}</p></article>
               <article className="rounded-2xl border border-blue-200 bg-blue-50/30 p-6"><Target className="h-5 w-5 text-blue-700" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-slate-950">Con Evaluo</h3><p className="mt-3 text-sm leading-7 text-slate-600">{c.exampleEvaluo}</p></article>
@@ -276,9 +277,11 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
           </div>
         </section>
 
+        <SeoComparisonProductDemo comparison={comparison} />
+
         <section className="border-b border-slate-100 bg-slate-50/60 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] gap-9 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">04 / Acceso y planes</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">¿Cuál es gratis y qué cambia al pagar?</h2></div>
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">05 / Acceso y planes</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">¿Cuál es gratis y qué cambia al pagar?</h2></div>
             <div className="space-y-4">
               <div className="rounded-xl border border-slate-200 bg-white p-5"><h3 className="font-bold text-slate-950">{c.name}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.otherPricing}</p><a href={c.pricingHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Ver acceso y precios oficiales</a></div>
               <div className="rounded-xl border border-blue-200 bg-white p-5"><h3 className="font-bold text-slate-950">Evaluo</h3><p className="mt-2 text-sm leading-7 text-slate-600">Podés comenzar gratis y pasar a Premium para ampliar las funciones de estudio. El precio vigente se muestra en la página de planes; evitamos mostrar un importe fijo desactualizado.</p><Link href="/pricing" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Ver planes y precios de Evaluo</Link></div>
@@ -288,14 +291,14 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
 
         <section id="elegir-pdf-comparacion" className="scroll-mt-24 border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">05 / Probá con tu archivo</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Elegí un PDF para estudiar en Evaluo</h2><p className="mt-4 text-sm leading-7 text-slate-600">Seleccioná tus apuntes antes de registrarte. Después creá el material y empezá a trabajar sus temas, preguntas y resultados con las funciones disponibles en tu plan.</p><p className="mt-5 flex items-center gap-2 text-xs text-slate-600"><CheckCircle2 className="h-4 w-4 text-blue-600" aria-hidden="true" />No necesitás registrarte para elegir el archivo.</p></div>
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">06 / Probá con tu archivo</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Elegí un PDF para estudiar en Evaluo</h2><p className="mt-4 text-sm leading-7 text-slate-600">Seleccioná tus apuntes antes de registrarte. Después creá el material y empezá a trabajar sus temas, preguntas y resultados con las funciones disponibles en tu plan.</p><p className="mt-5 flex items-center gap-2 text-xs text-slate-600"><CheckCircle2 className="h-4 w-4 text-blue-600" aria-hidden="true" />No necesitás registrarte para elegir el archivo.</p></div>
             <PdfFirstLandingUploader trackingLocation={tracking} sourceKey={'compare-' + comparison} />
           </div>
         </section>
 
         <section className="border-b border-slate-100 bg-slate-50/40 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] gap-9 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">06 / Dudas habituales</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Preguntas sobre Evaluo y {c.name}</h2></div>
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">07 / Dudas habituales</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Preguntas sobre Evaluo y {c.name}</h2></div>
             <div className="divide-y divide-slate-200 border-y border-slate-200">
               {c.faqs.map((faq) => <details key={faq.question} className="py-5"><summary className="cursor-pointer text-sm font-bold text-slate-950">{faq.question}</summary><p className="mt-3 text-sm leading-7 text-slate-600">{faq.answer}</p></details>)}
             </div>
@@ -304,7 +307,7 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
 
         <section className="border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">07 / Fuentes y transparencia</p>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">08 / Fuentes y transparencia</p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Cómo verificamos esta comparación</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">Esta guía editorial se elaboró a partir de documentación pública de {c.name} y las funciones documentadas de Evaluo. No es una prueba controlada de calidad ni una certificación de ninguna de las dos plataformas. Revisada el 29 de octubre de 2026.</p>
             <ul className="mt-5 space-y-2 text-sm text-blue-700">

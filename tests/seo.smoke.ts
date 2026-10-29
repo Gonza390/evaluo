@@ -574,3 +574,67 @@ assertIncludesAll('lib/analytics-metadata.ts', [
   "'latest_landing_market'",
   "pdf_first_landing_viewed:",
 ]);
+
+
+/* Acquisition SEO: transparent demos, contextual internal links and audit coverage. */
+const studySeoSource = source('components/marketing/seo-study-experiences-v2.tsx');
+for (const link of [
+  '/convertir-pdf-en-preguntas',
+  '/funciones/simulacro-examen-con-ia',
+  '/funciones/practicar-por-tema',
+]) {
+  assert.ok(studySeoSource.includes("href: '" + link + "'"), 'Study pages must link contextually to ' + link);
+}
+assert.ok(
+  (studySeoSource.match(/<RelatedSection/g) ?? []).length === 4,
+  'Keep contextual related links on the four main study landings',
+);
+assertIncludesAll('components/marketing/seo-comparison-landings.tsx', [
+  'SeoComparisonProductDemo',
+  '<SeoComparisonProductDemo comparison={comparison} />',
+  'Cómo preparar una materia: orientación y prueba de producto',
+  'IA y nuevas tecnologías',
+]);
+assertIncludesAll('components/marketing/seo-comparison-product-demo.tsx', [
+  "import demoArtifacts from '@/public/material-general-prueba.study.json'",
+  'demoArtifacts.summary.sections',
+  'demoArtifacts.glossary',
+  'Probar los ejercicios reales de la demo',
+  'start=ejercicios',
+  'tour=0',
+  'no modifican tu historial académico',
+  'material-general-prueba.study.json',
+]);
+assertIncludesAll('app/demo/material-estudio/page.tsx', [
+  "import demoArtifacts from '@/public/material-general-prueba.study.json'",
+  'DemoFourStepStudy',
+  "start === 'ejercicios'",
+]);
+const seoLandingLighthouseConfig = source('lighthouserc.seo.cjs');
+for (const route of [
+  '/ia-para-estudiantes',
+  '/estudiar-pdf-con-ia',
+  '/funciones/resumir-pdf-con-ia',
+  '/funciones/crear-flashcards-desde-pdf',
+  '/funciones/crear-mapa-mental-desde-pdf',
+  '/convertir-pdf-en-preguntas',
+  '/funciones/simulacro-examen-con-ia',
+  '/funciones/practicar-por-tema',
+  '/comparar/evaluo-vs-notebooklm',
+  '/comparar/evaluo-vs-chatgpt',
+  '/comparar/evaluo-vs-quizlet',
+]) {
+  assert.ok(seoLandingLighthouseConfig.includes('http://localhost:3000' + route + "'"), 'Dedicated Lighthouse must audit ' + route);
+}
+assertIncludesAll('lighthouserc.seo.cjs', [
+  "'categories:seo': ['error', { minScore: 0.9 }]",
+  'numberOfRuns: 1',
+]);
+assertIncludesAll('.github/workflows/ci.yml', [
+  'seo-lighthouse:',
+  'lighthouserc.seo.cjs',
+  'SEO_LIGHTHOUSE_RESULT',
+  'seo-acquisition-lighthouse-reports',
+]);
+assertIncludesAll('app/robots.ts', ["'/dashboard'", "'/login'", "'/administrador'"]);
+assertIncludesAll('app/demo/material-estudio/page.tsx', ['index: false', 'follow: false']);

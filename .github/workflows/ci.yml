@@ -80,19 +80,50 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  seo-lighthouse:
+    name: SEO landing Lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build app
+        run: npm run build
+      - name: Lighthouse — SEO acquisition landings
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.seo.cjs
+      - name: Upload SEO Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-acquisition-lighthouse-reports
+          path: .lighthouseci/seo-reports
+          if-no-files-found: ignore
+          retention-days: 14
   release-gate:
     name: CI required
     if: always()
-    needs: [security, quality]
+    needs: [security, quality, seo-lighthouse]
     runs-on: ubuntu-latest
     steps:
       - name: Require security and quality
         env:
           SECURITY_RESULT: ${{ needs.security.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
+          SEO_LIGHTHOUSE_RESULT: ${{ needs.seo-lighthouse.result }}
         run: |
           test "$SECURITY_RESULT" = "success"
           test "$QUALITY_RESULT" = "success"
+          test "$SEO_LIGHTHOUSE_RESULT" = "success"
 
 # Nota: el repositorio todavía no contiene un baseline inicial reproducible de
 # Supabase. Las migraciones históricas más antiguas asumen tablas preexistentes
