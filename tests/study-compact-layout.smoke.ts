@@ -4,6 +4,19 @@ import { readFileSync } from 'node:fs';
 const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
 const richText = readFileSync('components/study-rich-text.tsx', 'utf8');
 const styles = readFileSync('components/study/pdf-study-styles.ts', 'utf8');
+const appLayout = readFileSync('components/ClientLayoutClient.tsx', 'utf8');
+
+assert.match(appLayout, /isMaterialStudyRoute \? 'hidden md:block' : ''/,
+  'On PDF routes the global Evaluo header should disappear only on mobile.');
+assert.match(appLayout, /const isMaterialStudyRoute = pathname.startsWith\('\/materiales\/'\)/,
+  'The mobile topbar exception must be restricted to PDF study routes.');
+assert.match(workspace, /<h1 className="text-foreground min-w-0 truncate/,
+  'Keep the primary PDF title in the reader navigation alongside Volver and Ver guía.');
+assert.match(workspace, /<h2 className="text-foreground hidden max-w-\[1040px\].*md:block/,
+  'Do not show the same PDF title again in the mobile summary.');
+assert.match(workspace, /data-study-summary-intro/,
+  'Hiding the duplicate title must not remove the introductory summary.');
+
 
 assert.match(workspace, /data-study-summary-intro/,
   'El texto introductorio debe estar identificado para medir y controlar su altura.');
