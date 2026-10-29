@@ -29,6 +29,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/comparar/evaluo-vs-notebooklm`,
     },
     {
+      url: `${baseUrl}/comparar/evaluo-vs-chatgpt`,
+    },
+    {
+      url: `${baseUrl}/comparar/evaluo-vs-quizlet`,
+    },
+    {
       url: `${baseUrl}/convertir-pdf-en-preguntas`,
     },
     {
