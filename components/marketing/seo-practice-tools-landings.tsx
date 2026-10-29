@@ -47,7 +47,7 @@ const MOCK: PageContent = {
   titlePrefix: 'Simulacro de examen con IA:',
   titleAccent: 'poné a prueba lo que estudiaste',
   intro:
-    'Prepará un parcial o final con preguntas basadas en tu PDF. En Evaluo podés estudiar los temas de tus apuntes, practicar y revisar resultados y errores para decidir qué reforzar antes de rendir.',
+    'Prepará un simulacro de examen con IA a partir de tus apuntes PDF. En Evaluo podés estudiar los temas, responder preguntas para practicar un parcial o final y revisar resultados y errores para decidir qué reforzar. La práctica no reemplaza una evaluación oficial.',
   heroFacts: ['Trabajá con tus propios apuntes', 'Respondé sin mirar la solución', 'Revisá errores y temas a reforzar'],
   exampleLabel: 'Ejemplo ilustrativo · Marketing I',
   exampleContext: 'Preparación de un parcial · Segmentación',
@@ -100,7 +100,7 @@ const TOPIC: PageContent = {
   titlePrefix: 'Practicar por tema con IA:',
   titleAccent: 'enfocate en lo que te cuesta',
   intro:
-    'No hace falta repetir un PDF entero cuando la dificultad está en un solo capítulo. Evaluo organiza el estudio por temas y te ayuda a practicar preguntas, revisar explicaciones y reforzar lo que todavía no dominás.',
+    'Si necesitás practicar preguntas de un tema con IA, no hace falta repetir el PDF entero. Elegí el capítulo de tus apuntes que querés trabajar: Evaluo te ayuda a responder ejercicios, revisar explicaciones y reforzar lo que todavía no dominás.',
   heroFacts: ['Elegí un tema concreto', 'Respondé preguntas de ese tema', 'Reforzá tus errores y continuá'],
   exampleLabel: 'Ejemplo ilustrativo · Marketing I',
   exampleContext: 'Tema 02 · Segmentación de mercados',
