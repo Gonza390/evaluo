@@ -501,7 +501,12 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
           </main>
           {showBottomNav ? <BottomNav /> : null}
           {!isLegalRoute && !isAdministradorRoute && !isMaterialStudyRoute ? (
-            <DeferredFooter />
+            <div
+              data-app-footer
+              className={isCompactAppRoute ? 'hidden md:block' : undefined}
+            >
+              <DeferredFooter />
+            </div>
           ) : null}
         </div>
       </div>
