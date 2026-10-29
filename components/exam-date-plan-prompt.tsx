@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, Check, Loader2, X } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { isNewExamDatePromptSignal, type ExamDatePromptSignal } from '@/lib/exam-date-prompt-trigger';
 import {
   dismissExamDatePromptAction,
   getExamDatePromptEligibilityAction,
@@ -48,9 +50,11 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
   const [examDate, setExamDate] = useState('');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   const hasShownRef = useRef(false);
+  const checkInFlightRef = useRef(false);
+  const lastCheckedTriggerRef = useRef<ExamDatePromptSignal | null>(null);
 
   const minDate = useMemo(() => addDays(argentinaTodayKey(), 1), []);
 
@@ -101,31 +105,53 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
 
   const checkAndOpen = useCallback(
     async (forceCurrentSignal: boolean) => {
-      if (hasShownRef.current || visible || saved || checking || !canOpenInSession()) return;
+      if (hasShownRef.current || visible || saved || checkInFlightRef.current || !canOpenInSession()) return;
 
-      setChecking(true);
-      const result = await getExamDatePromptEligibilityAction({
-        materialId,
-        forceCurrentSignal,
-      });
-      setChecking(false);
+      checkInFlightRef.current = true;
+      try {
+        const result = await getExamDatePromptEligibilityAction({
+          materialId,
+          forceCurrentSignal,
+        });
 
-      if (!result.success || !result.eligible) return;
+        if (!result.success) {
+          toast({
+            title: 'No pudimos comprobar la fecha del examen',
+            description: 'Revisá tu conexión e intentá de nuevo al terminar otra actividad.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        if (!result.eligible) return;
 
-      hasShownRef.current = true;
-      await trackExamDatePromptViewedAction(materialId);
-      setVisible(true);
+        hasShownRef.current = true;
+        setVisible(true);
+        // La analítica es secundaria: si falla, el estudiante puede seguir.
+        void trackExamDatePromptViewedAction(materialId).catch(() => undefined);
+      } catch {
+        toast({
+          title: 'No pudimos comprobar la fecha del examen',
+          description: 'Revisá tu conexión e intentá de nuevo al terminar otra actividad.',
+          variant: 'destructive',
+        });
+      } finally {
+        checkInFlightRef.current = false;
+      }
     },
-    [canOpenInSession, checking, materialId, saved, visible]
+    [canOpenInSession, materialId, saved, toast, visible]
   );
 
   // Sólo mostrar este formulario cuando el estudiante termina una actividad
   // que solicita la fecha explícitamente; nunca interrumpir la lectura por tiempo.
 
   useEffect(() => {
-    if (triggerNonce <= 0) return;
+    const signal = { materialId, nonce: triggerNonce };
+    if (!isNewExamDatePromptSignal(lastCheckedTriggerRef.current, signal)) return;
+
+    // Consumir la señal antes de consultar: cambios de estado no pueden reactivarla.
+    lastCheckedTriggerRef.current = signal;
     void checkAndOpen(true);
-  }, [checkAndOpen, triggerNonce]);
+  }, [checkAndOpen, materialId, triggerNonce]);
 
   const close = () => {
     try {
@@ -134,7 +160,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
       // El cierre sigue funcionando aunque sessionStorage esté bloqueado.
     }
     setVisible(false);
-    void dismissExamDatePromptAction(materialId);
+    void dismissExamDatePromptAction(materialId).catch(() => undefined);
   };
 
   const save = async () => {
@@ -142,23 +168,28 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
 
     setSaving(true);
     setError(null);
-    const result = await saveStudentMaterialExamDateAction({
-      materialId,
-      examDate,
-    });
-    setSaving(false);
-
-    if (!result.success) {
-      setError(result.message);
-      return;
-    }
-
     try {
-      window.sessionStorage.setItem(sessionKey(materialId), '1');
+      const result = await saveStudentMaterialExamDateAction({
+        materialId,
+        examDate,
+      });
+
+      if (!result.success) {
+        setError(result.message || 'No pudimos guardar la fecha. Intentá de nuevo.');
+        return;
+      }
+
+      try {
+        window.sessionStorage.setItem(sessionKey(materialId), '1');
+      } catch {
+        // La fecha ya quedó persistida en servidor.
+      }
+      setSaved(true);
     } catch {
-      // La fecha ya quedó persistida en servidor.
+      setError('No pudimos guardar la fecha. Revisá tu conexión e intentá de nuevo.');
+    } finally {
+      setSaving(false);
     }
-    setSaved(true);
   };
 
   if (!visible) return null;

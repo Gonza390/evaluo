@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { getEmailSignupDestination } from '../lib/email-signup-destination.ts';
 import './study-error-navigation.smoke.ts';
+import './exam-date-prompt-simulator-skip.smoke.ts';
 import './study-error-review-prompt.smoke.ts';
 import {
   buildSimulatorLandingHref,

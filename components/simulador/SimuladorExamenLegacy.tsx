@@ -1899,7 +1899,13 @@ export default function SimuladorExamen({
   if (estado === 'profile_incomplete') {
     return (
       <div className="flex min-h-[600px] items-center justify-center p-6">
-        <ProfileCompletionModal userId={userId!} isOpen={true} onComplete={reiniciarSimulador} />
+        <ProfileCompletionModal
+          userId={userId!}
+          isOpen={true}
+          allowSkip={false}
+          onClose={() => window.location.assign(`/explorar/materia/${materiaId}`)}
+          onComplete={reiniciarSimulador}
+        />
         <div className="text-center">
           <Spinner size="lg" className="mx-auto mb-4 text-emerald-500" />
           <p className="text-xl font-medium text-emerald-600">Completando tu perfil...</p>
