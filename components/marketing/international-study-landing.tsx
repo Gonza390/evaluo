@@ -162,6 +162,43 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
               ))}
             </ol>
 
+            <div className="mt-10 rounded-[26px] border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
+                Ejemplo de uso · {copy.country}
+              </p>
+              <h3 className="mt-3 max-w-3xl text-2xl font-bold tracking-tight text-slate-950">
+                {guide.appliedExample.title}
+              </h3>
+              <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
+                {guide.appliedExample.context}
+              </p>
+              <ol className="mt-6 grid gap-4 md:grid-cols-3">
+                {guide.appliedExample.tasks.map((task, index) => (
+                  <li key={task} className="rounded-2xl border border-blue-100 bg-white px-5 py-5">
+                    <span className="text-xs font-bold text-blue-700">Actividad {index + 1}</span>
+                    <p className="mt-2 text-sm leading-7 text-slate-700">{task}</p>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-5 max-w-3xl text-sm font-semibold leading-7 text-slate-800">
+                {guide.appliedExample.result}
+              </p>
+              <TrackedLink
+                href="#seleccionar-pdf"
+                eventName="cta_click"
+                payload={{
+                  location: `international_${market}_regional_example`,
+                  cta_name: 'seleccionar_pdf_desde_ejemplo',
+                  source,
+                  market,
+                  destination: '#seleccionar-pdf',
+                }}
+                className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-700 px-5 py-2 text-sm font-bold text-white transition hover:bg-blue-800"
+              >
+                Probarlo con mis propios apuntes <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </TrackedLink>
+            </div>
+
             <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_0.9fr]">
               <div>
                 <h3 className="text-2xl font-bold tracking-tight text-slate-900">{guide.mistakesTitle}</h3>
