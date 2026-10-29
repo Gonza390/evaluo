@@ -158,7 +158,7 @@ function Landing({ page }: { page: PageContent }) {
       <MarketingAnalyticsSlot />
       <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Evaluo', path: '/' }, { name: page.titlePrefix.replace(':', ''), path: page.path }])} />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader primaryHref="#elegir-pdf" trackingLocation={page.tracking + '_header'} />
+        <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={page.tracking + '_header'} />
       </div>
       <main>
         <section className="border-b border-slate-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.15),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
