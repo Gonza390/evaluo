@@ -190,7 +190,7 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
       setEmail(storedEmail);
       setEmailExpanded(true);
     }
-  }, []);
+  }, [english]);
 
   const isSignUp = mode === 'signup';
   const location =
