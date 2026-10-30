@@ -545,8 +545,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
-            {isCompactAppRoute && !isMaterialStudyRoute ? (
-              <div key={pathname} data-evaluo-route-enter className="min-h-full w-full">
+            {isCompactAppRoute ? (
+              <div key={pathname} data-evaluo-route-enter className={isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : 'min-h-full w-full'}>
                 {children}
               </div>
             ) : children}
