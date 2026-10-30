@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FileText } from 'lucide-react';
+import { BookOpenText, ChartNoAxesColumnIncreasing, FileText, Layers3, Network, BookOpen } from 'lucide-react';
 import { readReadingProgress } from '@/lib/reading-progress';
 
 type Material = { id: string; title: string; chapterCount: number };
-export function StudyReadingCards({ materials }: { materials: Material[] }) {
+export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materials: Material[]; lastOpenedMaterialId: string | null }) {
   const [progress, setProgress] = useState<Record<string, number>>({});
   useEffect(() => {
     const refresh = () => setProgress(Object.fromEntries(
@@ -23,6 +23,15 @@ export function StudyReadingCards({ materials }: { materials: Material[] }) {
       window.removeEventListener('pageshow', refresh);
     };
   }, [materials]);
+
+  const activeMaterial = materials.find((material) => material.id === lastOpenedMaterialId) ?? materials[0] ?? null;
+  const tools = [
+    { title: 'Resumen', description: 'Repasá lo esencial.', icon: BookOpenText, tab: 'resumen', color: 'text-blue-700', background: 'bg-blue-50' },
+    { title: 'Flashcards', description: 'Memorizá con tarjetas.', icon: Layers3, tab: 'tarjetas', color: 'text-violet-700', background: 'bg-violet-50' },
+    { title: 'Glosario', description: 'Entendé los conceptos.', icon: BookOpen, tab: 'glosario', color: 'text-cyan-800', background: 'bg-cyan-50' },
+    { title: 'Mapa mental', description: 'Conectá las ideas.', icon: Network, tab: 'mapa', color: 'text-emerald-800', background: 'bg-emerald-50' },
+    { title: 'Progreso', description: 'Revisá tu aprendizaje.', icon: ChartNoAxesColumnIncreasing, tab: 'progreso', color: 'text-amber-800', background: 'bg-amber-50' },
+  ] as const;
 
   return (
     <section aria-label="Tus PDFs para estudiar" className="mx-auto w-full max-w-[1240px] px-3 py-4 sm:px-5 lg:px-6">
@@ -57,6 +66,33 @@ export function StudyReadingCards({ materials }: { materials: Material[] }) {
           Todavía no tenés PDFs listos para estudiar. Subí uno desde Mi espacio.
         </div>
       )}
+      <div className="mt-8 border-t border-slate-100 pt-5">
+        <h2 className="text-base font-bold tracking-tight text-slate-900">Herramientas de estudio</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          {activeMaterial ? `Continuá con ${activeMaterial.title}` : 'Subí un PDF desde Mi espacio para empezar.'}
+        </p>
+        <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-3 sm:gap-3 xl:grid xl:grid-cols-5 xl:overflow-visible">
+          {tools.map((tool) => {
+            const Icon = tool.icon;
+            const className = `flex min-h-[166px] w-[158px] min-w-[158px] snap-start flex-col rounded-2xl border border-transparent p-3.5 text-left transition hover:border-blue-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
+            const content = (
+              <>
+                <Icon className="h-6 w-6" aria-hidden="true" />
+                <span className="mt-auto text-sm font-bold">{tool.title}</span>
+                <span className="mt-1 text-xs leading-4 opacity-85">{tool.description}</span>
+                <span className="mt-2 text-xs font-semibold">{activeMaterial ? 'Abrir →' : 'Elegí un PDF'}</span>
+              </>
+            );
+            return activeMaterial ? (
+              <Link key={tool.tab} href={`/materiales/${activeMaterial.id}?tab=${tool.tab}`} className={className} aria-label={`${tool.title} de ${activeMaterial.title}`}>
+                {content}
+              </Link>
+            ) : (
+              <div key={tool.tab} className={className}>{content}</div>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }
