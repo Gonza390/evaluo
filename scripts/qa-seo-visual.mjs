@@ -2,12 +2,12 @@
 // and desktop widths. Screenshot the top and footer, check horizontal overflow,
 // and report headings with inadequate computed foreground/background contrast.
 import { chromium } from 'playwright';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const BASE = process.env.QA_BASE_URL ?? 'http://localhost:3100';
 const OUT = process.env.QA_ARTIFACTS_DIR ?? 'qa-artifacts/seo-visual';
 const WIDTHS = [375, 1440];
-const ROUTES = [
+const CORE_ROUTES = [
   '/en',
   '/en/pdf-to-quiz',
   '/en/pdf-to-flashcards',
@@ -37,7 +37,54 @@ const ROUTES = [
   '/uba-xxi/parciales',
   '/como-estudiar-ingreso-unlam',
 ];
-const report = { date: new Date().toISOString(), routes: [], failures: [], scope: 'Public SEO templates, not all generated academic URLs' };
+// Keep the audit in sync with fixed indexable landing URLs and editorial guides.
+async function staticSitemapRoutes() {
+  const source = await readFile('app/sitemap.ts', 'utf8');
+  const routes = [...source.matchAll(/url:\s*`\$\{baseUrl\}(\/[^\x60$]*)\x60/g)].map(x => x[1]);
+  if (routes.length < 15) throw new Error('Static sitemap route inventory unexpectedly small');
+  return routes;
+}
+async function guideRoutes(file, prefix) {
+  const source = await readFile(file, 'utf8');
+  const slugs = [...source.matchAll(/["']slug["']\s*:\s*["']([^"']+)["']/g)].map(x => x[1]);
+  if (!slugs.length) throw new Error('No editorial guides found in ' + file);
+  return slugs.map(slug => prefix + slug);
+}
+const ROUTES = [...new Set([
+  '/', '/explorar', '/pricing', '/blog/tecnicas-de-estudio-efectivas',
+  ...CORE_ROUTES,
+  ...await staticSitemapRoutes(),
+  ...await guideRoutes('lib/es-study-guides.ts', '/es/guias/'),
+  ...await guideRoutes('lib/es-country-niche-guides.ts', '/es/paises/'),
+])];
+
+// Academic pages are database-generated; test a real indexed example per
+// template, rather than claiming the entire database was screenshot-reviewed.
+const DYNAMIC_TEMPLATES = [
+  ['university', /^\/universidad\/[^/]+$/],
+  ['explore-subject', /^\/explorar\/materia\/[^/]+$/],
+  ['question-bank', /^\/pregunteros\/[^/]+$/],
+  ['question-bank-exam', /^\/pregunteros\/[^/]+\/parcial\/[^/]+$/],
+  ['summaries', /^\/resumenes\/[^/]+$/],
+  ['subject-study', /^\/landings\/estudiar\/[^/]+$/],
+  ['degree-study', /^\/estudiar\/[^/]+\/[^/]+$/],
+  ['exam-simulator', /^\/simulador-parcial\/[^/]+$/],
+];
+const report = { date:new Date().toISOString(), baseUrl:BASE, routes:[], failures:[], warnings:[], fixedRoutes:ROUTES.length, sampledDynamicTemplates:[], scope:'All fixed sitemap pages and editorial guides; sampled dynamic academic templates' };
+async function dynamicSamples() {
+  const result = await fetch(BASE.replace(/\/$/, '') + '/sitemap.xml', {signal:AbortSignal.timeout(25000)});
+  if (!result.ok) throw Error('Sitemap HTTP ' + result.status);
+  const xml = await result.text();
+  const paths = [...xml.matchAll(/<loc>\s*([^<]+)\s*<\/loc>/g)].map(match => {
+    try { return new URL(match[1].replace(/&amp;/g, '&')).pathname; } catch { return null; }
+  }).filter(Boolean);
+  if (!paths.length) throw Error('Sitemap has no indexed URLs');
+  return DYNAMIC_TEMPLATES.flatMap(([template, pattern]) => {
+    const path = paths.find(p => pattern.test(p));
+    if (!path) { report.warnings.push('No indexed URL for template: ' + template); return []; }
+    return [{template,path}];
+  });
+}
 await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
 
@@ -94,8 +141,14 @@ async function analyze(page) {
   });
 }
 
+let samples=[];
+try { samples=await dynamicSamples(); }
+catch(e) { report.warnings.push('Dynamic samples unavailable: '+String(e)); }
+report.sampledDynamicTemplates=samples;
+const routesToAudit=[...new Set([...ROUTES,...samples.map(x=>x.path)])];
+console.log('SEO visual QA: '+routesToAudit.length+' pages, widths='+WIDTHS.join(','));
 try {
-  for (const path of ROUTES) {
+  for (const path of routesToAudit) {
     for (const width of WIDTHS) {
       const context = await browser.newContext({ viewport: { width, height: width===375? 812 : 900 }, deviceScaleFactor: 1, reducedMotion:'reduce' });
       const page = await context.newPage();
@@ -108,11 +161,12 @@ try {
         await page.evaluate(()=>document.fonts.ready).catch(()=>{});
         await page.waitForTimeout(220);
         item.metrics=await analyze(page);
-        await page.screenshot({path:OUT+'/'+key+'-top.png',animations:'disabled',timeout:30000});
+        await page.screenshot({path:OUT+'/'+key+'-full.png',fullPage:true,animations:'disabled',timeout:30000});
         await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
         await page.waitForTimeout(100);
         await page.screenshot({path:OUT+'/'+key+'-bottom.png',animations:'disabled',timeout:30000});
         if(item.status!==200)item.issues.push('Non-200 response '+item.status);
+        if(!item.metrics.h1)item.issues.push('Missing main H1');
         if(item.metrics.overflow>4)item.issues.push('Horizontal overflow: '+item.metrics.overflow+'px '+JSON.stringify(item.metrics.offscreen));
         if(item.metrics.lowContrast.length)item.issues.push('Low contrast heading(s): '+JSON.stringify(item.metrics.lowContrast.slice(0,5)));
         if(item.metrics.missingAlt)item.issues.push('Missing img alt: '+item.metrics.missingAlt);
