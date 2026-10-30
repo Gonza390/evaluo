@@ -1,6 +1,10 @@
 name: Submit changed public SEO URLs to IndexNow
 
 on:
+  pull_request:
+    paths:
+      - 'scripts/submit-indexnow.mjs'
+      - '.github/workflows/indexnow-notify.yml'
   workflow_dispatch:
     inputs:
       urls:
@@ -26,6 +30,7 @@ jobs:
       - name: Check publisher syntax
         run: node --check scripts/submit-indexnow.mjs
       - name: Submit validated, changed URLs
+        if: github.event_name == 'workflow_dispatch'
         run: node scripts/submit-indexnow.mjs
         env:
           INDEXNOW_URLS: ${{ inputs.urls }}
