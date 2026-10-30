@@ -28,7 +28,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
  const buildSteps=(index:number):Step[]=>{
   const t=topicActivities[index];
   const all:Step[]=[
-   {id:'reading',label:`Leer: ${t.title || `Tema ${index+1}`}`,detail:'Contenido del tema',href:`/materiales/${materialId}?tab=resumen`,minutes:t.readingMinutes??1,icon:BookOpen},
+   {id:'reading',label:`Leer: ${t.title || `Tema ${index+1}`}`,detail:'Contenido del tema',href:`/materiales/${materialId}?tab=resumen&studyTopic=${index}`,minutes:t.readingMinutes??1,icon:BookOpen},
    {id:'questions',label:`Practicar: ${t.title || `Tema ${index+1}`}`,detail:'Preguntas del tema',href:`/materiales/${materialId}?tab=ejercicios&studyTopic=${index}`,minutes:t.questionsMinutes??1,icon:ListChecks},
    {id:'flashcards',label:'Repasar flashcards',detail:`Tarjetas del tema ${index+1}`,href:`/materiales/${materialId}?tab=tarjetas&studyTopic=${index}`,minutes:t.flashcardsMinutes??1,icon:Layers3},
    {id:'glossary',label:'Revisar glosario',detail:`Conceptos del tema ${index+1}`,href:`/materiales/${materialId}?tab=glosario&studyTopic=${index}`,minutes:t.glossaryMinutes??1,icon:BookText}
