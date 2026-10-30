@@ -79,12 +79,18 @@ async function analyze(page) {
       if (contrast < 3) lowContrast.push({text:el.textContent.trim().slice(0,85),tag:el.tagName,contrast:+contrast.toFixed(2),foreground:css.color,background:bg.color.slice(0,3),section:el.closest('section')?.className?.toString().slice(0,120)});
     }
     const overflow = Math.max(0, document.documentElement.scrollWidth-width);
+    const offscreen = [...document.querySelectorAll('body *')].filter(el => {
+      const css = getComputedStyle(el), r = el.getBoundingClientRect();
+      return css.display !== 'none' && css.visibility !== 'hidden' &&
+        r.width > 1 && r.height > 1 && r.right > width + 2 &&
+        r.left < width && r.top < innerHeight && r.bottom > 0;
+    }).slice(0,12).map(el => ({tag:el.tagName.toLowerCase(),className:String(el.className).slice(0,90),text:el.textContent.trim().slice(0,60),right:Math.round(el.getBoundingClientRect().right)}));
     const missingAlt = [...document.querySelectorAll('main img:not([alt])')].length;
     const tinyTargets = [...document.querySelectorAll('main a,main button')].filter(el => {
       const rect=el.getBoundingClientRect(),style=getComputedStyle(el);
       return rect.width>0&&rect.height>0&&rect.height<28&&style.display!=='none'&&rect.top>=0&&rect.top<innerHeight;
     }).slice(0,4).map(el=>el.textContent.trim().slice(0,60));
-    return {title:document.title, h1:document.querySelector('main h1')?.textContent?.trim().slice(0,100)||'', overflow, lowContrast, missingAlt, tinyTargets, fullHeight:document.documentElement.scrollHeight};
+    return {title:document.title, h1:document.querySelector('main h1')?.textContent?.trim().slice(0,100)||'', overflow, offscreen, lowContrast, missingAlt, tinyTargets, fullHeight:document.documentElement.scrollHeight};
   });
 }
 
@@ -107,7 +113,7 @@ try {
         await page.waitForTimeout(100);
         await page.screenshot({path:OUT+'/'+key+'-bottom.png',animations:'disabled',timeout:30000});
         if(item.status!==200)item.issues.push('Non-200 response '+item.status);
-        if(item.metrics.overflow>4)item.issues.push('Horizontal overflow: '+item.metrics.overflow+'px');
+        if(item.metrics.overflow>4)item.issues.push('Horizontal overflow: '+item.metrics.overflow+'px '+JSON.stringify(item.metrics.offscreen));
         if(item.metrics.lowContrast.length)item.issues.push('Low contrast heading(s): '+JSON.stringify(item.metrics.lowContrast.slice(0,5)));
         if(item.metrics.missingAlt)item.issues.push('Missing img alt: '+item.metrics.missingAlt);
       }catch(error){item.issues.push('Browser error: '+String(error).slice(0,380));}
