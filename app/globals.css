@@ -568,6 +568,13 @@
   }
 }
 
+/* The floating share action stays available on desktop and outside the mobile summary. */
+@media (max-width: 767px) {
+  body:has([data-mobile-summary-active='true']) [data-student-material-share-control] {
+    display: none;
+  }
+}
+
 /* Keep the PDF progress workspace focused on study, without the floating share action. */
 body:has([data-progress-open='true']) [data-student-material-share-control] {
   display: none;

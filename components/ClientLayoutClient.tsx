@@ -203,6 +203,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
   const isMaterialStudyRoute = pathname.startsWith('/materiales/');
+  const isMobileDashboardRoute = pathname === '/dashboard';
   // Una misma escala para la aplicación privada; el sitio público y el área
   // de SEO mantienen su composición. El lector de PDFs conserva su UI interna.
   const isCompactAppRoute =
@@ -272,7 +273,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/dashboard"
-                className={`group flex min-w-0 items-center transition hover:opacity-90 ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
+                className={`group min-w-0 items-center transition hover:opacity-90 ${isMobileDashboardRoute ? 'hidden md:flex' : 'flex'} ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
               >
                 <Image
                   src="/evaluo-logo-icono.svg"
@@ -305,7 +306,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  <NotificationBell compact={isCompactAppRoute} />
+                  <div className={isMobileDashboardRoute ? 'hidden md:block' : undefined}>
+                    <NotificationBell compact={isCompactAppRoute} />
+                  </div>
                   <button
                     type="button"
                     onClick={() => setShowStreakDialog(true)}

@@ -2550,6 +2550,7 @@ export function MaterialStudyWorkspace({
   return (
     <div
       data-progress-open={progressOpen ? 'true' : undefined}
+      data-mobile-summary-active={activeTab === 'resumen' && !progressOpen ? 'true' : undefined}
       className={cn(
         'bg-card text-foreground flex flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0',
         pdfStudyControlsClassName,
@@ -2734,13 +2735,6 @@ export function MaterialStudyWorkspace({
                   <ExternalLink className="size-4" aria-hidden="true" />
                   Abrir PDF original
                 </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={backHref}>
-                  <ChevronLeft className="size-4" aria-hidden="true" />
-                  Volver
-                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
