@@ -44,7 +44,8 @@ type NavConfigItem = {
 function isNavItemActive(pathname: string, href: string) {
   if (href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso') return true;
   if (href === '/dashboard') {
-    return pathname === href;
+    // El lector de materiales es parte de Mi espacio.
+    return pathname === href || pathname.startsWith('/materiales/');
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -77,7 +78,7 @@ function NavItem({
 }) {
   const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
     active
-      ? 'text-primary'
+      ? 'text-primary font-semibold'
       : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
   } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
 
@@ -170,7 +171,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
     >
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
-          <nav ref={navRef} className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
+          <nav ref={navRef} aria-label="Navegación principal" className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
