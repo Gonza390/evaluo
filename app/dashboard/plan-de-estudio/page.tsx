@@ -6,6 +6,10 @@ import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
+import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
+import { getTopicStudyResources, tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
+import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-materials/types';
+import type { StudyQuestion, StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
@@ -19,10 +23,25 @@ export default async function StudyPlanPage() {
   );
   const first = materials[0] ?? null;
   let topicCount = 0;
+  let topicActivities: Array<{questions:boolean;flashcards:boolean;glossary:boolean}> = [];
   if (first) {
-    const { data: summary } = await supabase.from('student_material_summaries')
-      .select('summary_sections').eq('student_material_id', first.id).maybeSingle();
-    topicCount = Array.isArray(summary?.summary_sections) ? summary.summary_sections.length : 0;
+    const [summaryResult, glossaryResult, cacheResult] = await Promise.all([
+      supabase.from('student_material_summaries').select('summary_sections').eq('student_material_id', first.id).maybeSingle(),
+      supabase.from('student_material_glossaries').select('glossary_items').eq('student_material_id', first.id).maybeSingle(),
+      supabase.from('student_materials').select('pedagogical_artifacts').eq('id', first.id).maybeSingle(),
+    ]);
+    const sections = (Array.isArray(summaryResult.data?.summary_sections) ? summaryResult.data.summary_sections : []) as StudySummarySection[];
+    topicCount = sections.length;
+    const rawGlossary = glossaryResult.data?.glossary_items;
+    const glossary = tagGlossaryChapters((Array.isArray(rawGlossary) ? rawGlossary : []) as StudyGlossaryItem[], sections);
+    const artifacts = cacheResult.data?.pedagogical_artifacts as { questions?: StudyQuestion[]; flashcards?: StudyFlashcard[] } | null;
+    const questions = Array.isArray(artifacts?.questions) ? artifacts.questions : [];
+    const flashcards = Array.isArray(artifacts?.flashcards) ? artifacts.flashcards : [];
+    const counts = getTopicQuestionCounts(sections, questions);
+    topicActivities = sections.map((_, index) => {
+      const resources = getTopicStudyResources(sections, glossary, flashcards, index);
+      return { questions: counts[index] > 0, flashcards: resources.flashcards.length > 0, glossary: resources.concepts.length > 0 };
+    });
   }
 
   return (
@@ -49,7 +68,7 @@ export default async function StudyPlanPage() {
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[14px] font-bold">Tu avance</h2>
               </div>
-              {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} /> : (
+              {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} topicActivities={topicActivities} /> : (
                 <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
               )}
             </section>
