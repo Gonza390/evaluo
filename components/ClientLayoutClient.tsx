@@ -31,9 +31,6 @@ const EstimatedStudyActivity = dynamic(() =>
   import('@/components/estimated-study-activity').then((module) => module.EstimatedStudyActivity)
 );
 const Toaster = dynamic(() => import('@/components/ui/toaster').then((module) => module.Toaster));
-const NotificationBell = dynamic(() =>
-  import('@/components/notifications/notification-bell').then((module) => module.NotificationBell)
-);
 const MobileProfileMenu = dynamic(() =>
   import('@/components/mobile-profile-menu').then((module) => module.MobileProfileMenu)
 );
@@ -307,9 +304,6 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
-                  </div>
-                  <div className="hidden md:block">
-                    <NotificationBell compact={isCompactAppRoute} />
                   </div>
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
