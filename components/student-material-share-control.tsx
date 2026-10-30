@@ -120,7 +120,6 @@ export function StudentMaterialShareControl({
     window.addEventListener('evaluo:share-material', onMobileShare);
     return () => window.removeEventListener('evaluo:share-material', onMobileShare);
   // Register the latest visibility state so the mobile menu follows the same privacy flow.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [materialId, visibility, isOwner, sharePath, title]);
 
   return (

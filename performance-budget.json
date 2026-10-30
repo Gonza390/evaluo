@@ -1,12 +1,44 @@
 {
   "routes": [
-    { "label": "/", "appPath": "page", "maxGzipKb": 310 },
-    { "label": "/login", "appPath": "login/page", "maxGzipKb": 360 },
-    { "label": "/explorar", "appPath": "explorar/page", "maxGzipKb": 330 },
-    { "label": "/dashboard", "appPath": "dashboard/page", "maxGzipKb": 340 },
-    { "label": "/administrador", "appPath": "administrador/page", "maxGzipKb": 340 },
-    { "label": "/simulador", "appPath": "simulador/page", "maxGzipKb": 325 },
-    { "label": "/recursos/[id]", "appPath": "recursos/[id]/page", "maxGzipKb": 340 },
-    { "label": "/materiales/[id]", "appPath": "materiales/[id]/page", "maxGzipKb": 400 }
+    {
+      "label": "/",
+      "appPath": "(es)/page",
+      "maxGzipKb": 360
+    },
+    {
+      "label": "/login",
+      "appPath": "(es)/login/page",
+      "maxGzipKb": 360
+    },
+    {
+      "label": "/explorar",
+      "appPath": "(es)/explorar/page",
+      "maxGzipKb": 330
+    },
+    {
+      "label": "/dashboard",
+      "appPath": "(es)/dashboard/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador",
+      "appPath": "(es)/administrador/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/simulador",
+      "appPath": "(es)/simulador/page",
+      "maxGzipKb": 335
+    },
+    {
+      "label": "/recursos/[id]",
+      "appPath": "(es)/recursos/[id]/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/materiales/[id]",
+      "appPath": "(es)/materiales/[id]/page",
+      "maxGzipKb": 400
+    }
   ]
 }

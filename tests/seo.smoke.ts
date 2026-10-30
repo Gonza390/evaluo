@@ -12,19 +12,25 @@ function assertIncludesAll(path: string, required: string[]) {
   }
 }
 
-assertIncludesAll('app/layout.tsx', [
+assertIncludesAll('app/(es)/layout.tsx', [
   'metadataBase',
   'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
   'openGraph',
   'twitter',
   'lang="es"',
 ]);
+assertIncludesAll('app/(en)/layout.tsx', [
+  'metadataBase',
+  'lang="en"',
+]);
+assert.ok(!source('app/(en)/layout.tsx').includes('next/headers'), 'English HTML language must be statically rendered');
+assert.ok(!source('app/(es)/layout.tsx').includes('next/headers'), 'Spanish root layout must remain static');
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
 
 for (const [page, experience] of [
-  ['app/comparar/evaluo-vs-notebooklm/page.tsx', 'EvaluoVsNotebooklmPage'],
-  ['app/comparar/evaluo-vs-chatgpt/page.tsx', 'EvaluoVsChatgptPage'],
-  ['app/comparar/evaluo-vs-quizlet/page.tsx', 'EvaluoVsQuizletPage'],
+  ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'EvaluoVsNotebooklmPage'],
+  ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'EvaluoVsChatgptPage'],
+  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'EvaluoVsQuizletPage'],
 ] as const) {
   assertIncludesAll(page, [
     experience,
@@ -72,14 +78,14 @@ assertIncludesAll('app/sitemap.ts', [
   '/funciones/simulacro-examen-con-ia',
   '/funciones/practicar-por-tema',
 ]);
-assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', [
+assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', [
   'PdfPracticePage',
   'Generar preguntas a partir de PDF con IA',
   'canonical:toAbsoluteUrl(path)',
 ]);
 for (const [pagePath, experience] of [
-  ['app/funciones/simulacro-examen-con-ia/page.tsx', 'SimulacroExamenIaLanding'],
-  ['app/funciones/practicar-por-tema/page.tsx', 'PracticarPorTemaLanding'],
+  ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'SimulacroExamenIaLanding'],
+  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'PracticarPorTemaLanding'],
 ] as const) {
   assertIncludesAll(pagePath, [
     experience,
@@ -122,7 +128,7 @@ assertIncludesAll('lib/analytics-client.ts', [
 assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI landing must be covered by Lighthouse CI');
 assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
 assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
-assertIncludesAll('app/como-estudiar-ingreso-unlam/page.tsx', [
+assertIncludesAll('app/(es)/como-estudiar-ingreso-unlam/page.tsx', [
   'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
   'canonical: toAbsoluteUrl(path)',
   "const modifiedAt = '2026-10-29';",
@@ -155,7 +161,7 @@ assertIncludesAll('lib/analytics-events.ts', [
   'seo_unlam_practice_completed',
 ]);
 assert.ok(source('app/sitemap.ts').includes("new Date('2026-10-29')"), 'Updated UNLaM guide must have recent sitemap modification date');
-assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
+assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
   'linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)',
   'Parciales UBA XXI: exámenes anteriores y práctica',
   'canonical: toAbsoluteUrl(PATH)',
@@ -167,7 +173,7 @@ assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'UbaXxiParcialesPractice',
   '/estudiar-pdf-con-ia?source=seo-uba-xxi-parciales',
 ]);
-const ubaXxiPage = source('app/uba-xxi/parciales/page.tsx');
+const ubaXxiPage = source('app/(es)/uba-xxi/parciales/page.tsx');
 assert.ok(
   ubaXxiPage.indexOf('<section id="practica"') < ubaXxiPage.indexOf('<section aria-labelledby="anteriores"'),
   'UBA XXI practice must appear before external exam archives',
@@ -209,7 +215,7 @@ assertIncludesAll('app/sitemap.ts', [
   '/funciones/crear-mapa-mental-desde-pdf',
 ]);
 
-assertIncludesAll('app/explorar/materia/[id]/page.tsx', [
+assertIncludesAll('app/(es)/explorar/materia/[id]/page.tsx', [
   'buildSeoEntitySlug',
   'parseSeoEntitySlug',
   'canonicalHref',
@@ -222,43 +228,43 @@ assertIncludesAll('app/explorar/materia/[id]/page.tsx', [
   'MateriaPracticeLinks',
 ]);
 
-const materiaPage = source('app/explorar/materia/[id]/page.tsx');
+const materiaPage = source('app/(es)/explorar/materia/[id]/page.tsx');
 assert.ok(
   !materiaPage.includes('SeoBreadcrumbs'),
   'materia page must not render the redundant visual SEO breadcrumb'
 );
 
-assertIncludesAll('app/materias/page.tsx', [
+assertIncludesAll('app/(es)/materias/page.tsx', [
   'index: false',
   'follow: true',
   '/estudiar/${buildSeoEntitySlug',
 ]);
 
-assertIncludesAll('app/pregunteros/page.tsx', [
+assertIncludesAll('app/(es)/pregunteros/page.tsx', [
   'Pregunteros Siglo 21: materias y parciales',
   'Pregunteros Siglo 21 por materia y parcial',
   'isSiglo21University',
 ]);
 
-assertIncludesAll('app/pregunteros/[materia]/page.tsx', [
+assertIncludesAll('app/(es)/pregunteros/[materia]/page.tsx', [
   'buildPregunteroSearchTitle',
   'Todos los pregunteros',
   "{ name: 'Pregunteros', path: '/pregunteros' }",
 ]);
 
-assertIncludesAll('app/pregunteros/[materia]/parcial/[parcial]/page.tsx', [
+assertIncludesAll('app/(es)/pregunteros/[materia]/parcial/[parcial]/page.tsx', [
   'buildPregunteroParcialSearchTitle',
   'pregunteroHref',
   'PregunteroPracticeHero',
   'simuladorHref={simuladorHref}',
 ]);
 
-assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
+assertIncludesAll('app/(es)/estudiar/[universidad]/[carrera]/page.tsx', [
   'id="materias"',
   '/explorar/materia/${buildSeoEntitySlug(materia.nombre, materia.id)}',
 ]);
 
-const simulatorCareerPage = source('app/simulador-parcial/[carrera]/page.tsx');
+const simulatorCareerPage = source('app/(es)/simulador-parcial/[carrera]/page.tsx');
 assert.ok(
   !simulatorCareerPage.includes('/materias?carreraId='),
   'simulator career SEO page must not link to parameterized career catalog URLs'
@@ -268,7 +274,7 @@ assert.ok(
   'simulator career SEO page must link to canonical materia slugs'
 );
 
-assertIncludesAll('app/landings/resumenes/page.tsx', [
+assertIncludesAll('app/(es)/landings/resumenes/page.tsx', [
   'loadSummaryCatalog',
   'fetchQuestionRows',
   '.range(from, from + pageSize - 1)',
@@ -276,7 +282,7 @@ assertIncludesAll('app/landings/resumenes/page.tsx', [
   'Materias con resúmenes disponibles',
 ]);
 
-const studyLandingPath = 'app/landings/estudiar/[materia]/page.tsx';
+const studyLandingPath = 'app/(es)/landings/estudiar/[materia]/page.tsx';
 assertIncludesAll(studyLandingPath, [
   'buildSeoEntitySlug',
   'permanentRedirect',
@@ -309,10 +315,10 @@ for (const unsupportedClaim of [
 }
 
 const aiStudyPages = [
-  ['app/ia-para-estudiantes/page.tsx', 'IaParaEstudiantesExperience'],
-  ['app/estudiar-pdf-con-ia/page.tsx', 'EstudiarPdfExperience'],
-  ['app/funciones/resumir-pdf-con-ia/page.tsx', 'ResumirPdfExperience'],
-  ['app/funciones/crear-flashcards-desde-pdf/page.tsx', 'FlashcardsPdfExperience'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IaParaEstudiantesExperience'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'EstudiarPdfExperience'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'ResumirPdfExperience'],
+  ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'FlashcardsPdfExperience'],
 ] as const;
 
 for (const [pagePath, experience] of aiStudyPages) {
@@ -389,7 +395,7 @@ assertIncludesAll('components/marketing/seo-study-experiences.tsx', [
   '<details',
 ]);
 
-const mindMapPagePath = 'app/funciones/crear-mapa-mental-desde-pdf/page.tsx';
+const mindMapPagePath = 'app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx';
 assertIncludesAll(mindMapPagePath, [
   'toAbsoluteUrl(path)',
   'canonical: toAbsoluteUrl(path)',
@@ -419,17 +425,17 @@ assertIncludesAll('components/footer-home.tsx', [
   'mapas mentales',
 ]);
 
-assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
+assertIncludesAll('app/(es)/estudiar/[universidad]/[carrera]/page.tsx', [
   'officialProfile.officialUrl',
   'officialProfile.sourceName',
   'información oficial de la carrera',
 ]);
 
 for (const path of [
-  'app/demo/layout.tsx',
-  'app/pricing/resultado/layout.tsx',
-  'app/premium/mapa-mental/layout.tsx',
-  'app/empezar/layout.tsx',
+  'app/(es)/demo/layout.tsx',
+  'app/(es)/pricing/resultado/layout.tsx',
+  'app/(es)/premium/mapa-mental/layout.tsx',
+  'app/(es)/empezar/layout.tsx',
 ]) {
   assertIncludesAll(path, ['index: false', 'follow: true']);
 }
@@ -481,7 +487,7 @@ assert.ok(packageJson.includes('"tw-animate-css"'), 'tw-animate-css must remain 
 console.log('SEO smoke tests passed.');
 /* Expansión internacional: rutas estáticas, hreflang, contenidos y PDF-first. */
 for (const market of ['es', 'es-mx', 'es-co', 'es-es']) {
-  assertIncludesAll(`app/${market}/estudiar-pdf-con-ia/page.tsx`, [
+  assertIncludesAll(`app/(es)/${market}/estudiar-pdf-con-ia/page.tsx`, [
     'InternationalStudyLanding',
     'getStudyLandingMetadata',
   ]);
@@ -503,7 +509,7 @@ assertIncludesAll('lib/international-study-landings.ts', [
   'parciales',
   'tipo test',
 ]);
-assertIncludesAll('app/estudiar-pdf-con-ia/page.tsx', [
+assertIncludesAll('app/(es)/estudiar-pdf-con-ia/page.tsx', [
   'languages: STUDY_HREFLANG',
 ]);
 assertIncludesAll('components/marketing/international-study-landing.tsx', [
@@ -571,7 +577,7 @@ assertIncludesAll('components/marketing/international-practice-preview.tsx', [
   'Probar ejercicios con un PDF de muestra',
   'tour=0&start=ejercicios',
 ]);
-assertIncludesAll('app/demo/material-estudio/page.tsx', [
+assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', [
   'internationalSource',
   'initialTab',
   'uploadHref',
@@ -634,7 +640,7 @@ assertIncludesAll('components/marketing/seo-comparison-product-demo.tsx', [
   'no modifican tu historial académico',
   'material-general-prueba.study.json',
 ]);
-assertIncludesAll('app/demo/material-estudio/page.tsx', [
+assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', [
   "import demoArtifacts from '@/public/material-general-prueba.study.json'",
   'DemoFourStepStudy',
   "start === 'ejercicios'",
@@ -666,22 +672,22 @@ assertIncludesAll('.github/workflows/ci.yml', [
   'seo-acquisition-lighthouse-reports',
 ]);
 assertIncludesAll('app/robots.ts', ["'/dashboard'", "'/login'", "'/administrador'"]);
-assertIncludesAll('app/demo/material-estudio/page.tsx', ['index: false', 'follow: false']);
+assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', ['index: false', 'follow: false']);
 
 
 /* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
 const acquisitionSeoTitles: Array<[string, string]> = [
-  ['app/ia-para-estudiantes/page.tsx', 'IA para estudiantes: estudiá apuntes y practicá'],
-  ['app/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen y práctica por tema'],
-  ['app/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: resumen útil para estudiar'],
-  ['app/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de PDF con IA'],
-  ['app/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde PDF con IA'],
-  ['app/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de PDF con IA'],
-  ['app/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA desde tus apuntes'],
-  ['app/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde PDF'],
-  ['app/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar PDF'],
-  ['app/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar PDF y practicar'],
-  ['app/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet: flashcards y exámenes desde PDF'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes: estudiá apuntes y practicá'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen y práctica por tema'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: resumen útil para estudiar'],
+  ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de PDF con IA'],
+  ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde PDF con IA'],
+  ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de PDF con IA'],
+  ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA desde tus apuntes'],
+  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde PDF'],
+  ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar PDF'],
+  ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar PDF y practicar'],
+  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet: flashcards y exámenes desde PDF'],
 ];
 assert.equal(new Set(acquisitionSeoTitles.map(([, title]) => title.toLowerCase())).size, acquisitionSeoTitles.length, 'Each acquisition page needs its own distinct title');
 for (const [path, expectedTitle] of acquisitionSeoTitles) {
@@ -710,7 +716,7 @@ assertIncludesAll('components/marketing/seo-comparison-landings.tsx', [
 
 // Argentina acquisition: curated crawlable subject links and a secondary path
 // from pregunteros to the PDF-first study flow without changing canonical URLs.
-assertIncludesAll('app/pregunteros/page.tsx', [
+assertIncludesAll('app/(es)/pregunteros/page.tsx', [
   'FEATURED_SIGLO21_MATERIA_IDS',
   'featuredMateriaPriority(a.materiaId)',
   'Pregunteros Siglo 21 por materia y parcial',
@@ -719,7 +725,7 @@ assertIncludesAll('app/pregunteros/page.tsx', [
   'Los ejercicios son para practicar: no son exámenes oficiales',
   'TrackedLink',
 ]);
-assertIncludesAll('app/pregunteros/[materia]/page.tsx', [
+assertIncludesAll('app/(es)/pregunteros/[materia]/page.tsx', [
   'PregunteroPracticeHero',
   'href={`/estudiar-pdf-con-ia?source=preguntero-materia&materiaId=${encodeURIComponent(data.materiaId)}`}',
   "location: 'preguntero_materia_after_questions'",
@@ -765,7 +771,7 @@ assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
   '1 de febrero al 6 de marzo de 2027',
   'Sistema de Ingresantes',
 ]);
-assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
+assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
   'id="uba-xxi-calendario"',
   '11 de noviembre',
   'La inscripción al segundo parcial fue del 5 al 6 de octubre',
@@ -774,10 +780,10 @@ assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
 
 // SEO study-guide editorial cluster: one language hub, eight substantial
 // published articles, no synthetic English variants until they are localized.
-assertIncludesAll('app/es/guias/page.tsx', [
+assertIncludesAll('app/(es)/es/guias/page.tsx', [
   'export const metadata',
 ]);
-assertIncludesAll('app/es/guias/page.tsx', [
+assertIncludesAll('app/(es)/es/guias/page.tsx', [
   "const path = '/es/guias'",
   'STUDY_GUIDES.filter(',
   'buildBreadcrumbJsonLd',
@@ -786,7 +792,7 @@ assertIncludesAll('app/es/guias/page.tsx', [
   'guide.slug',
   'FooterHome',
 ]);
-assertIncludesAll('app/es/guias/[slug]/page.tsx', [
+assertIncludesAll('app/(es)/es/guias/[slug]/page.tsx', [
   'export const dynamicParams = false;',
   'generateStaticParams()',
   'generateMetadata',
@@ -846,7 +852,7 @@ for (const guide of guideRows) {
 
 // Hispanic-market expansion: do not weaken Argentina, rewrite established
 // international URLs, or generate 20 thin same-language country clones.
-assertIncludesAll('app/es/paises/page.tsx', [
+assertIncludesAll('app/(es)/es/paises/page.tsx', [
   "const path = '/es/paises'",
   'buildBreadcrumbJsonLd',
   'COUNTRY_NICHE_GUIDES',
@@ -855,7 +861,7 @@ assertIncludesAll('app/es/paises/page.tsx', [
   'Ver recursos generales',
   'href="/es/estudiar-pdf-con-ia?source=es-paises"',
 ]);
-assertIncludesAll('app/es/paises/[slug]/page.tsx', [
+assertIncludesAll('app/(es)/es/paises/[slug]/page.tsx', [
   'export const dynamicParams = false;',
   'generateStaticParams()',
   'generateMetadata',
@@ -936,17 +942,17 @@ assertIncludesAll('app/sitemap.ts', [
   'carrera.materiasCount === 0',
   'carrera.questionMateriasCount > 0',
 ]);
-assertIncludesAll('app/simulador-parcial/[carrera]/page.tsx', [
+assertIncludesAll('app/(es)/simulador-parcial/[carrera]/page.tsx', [
   "from('preguntas_banco_public')",
   'robots: { index: hasPublicPractice, follow: true }',
 ]);
 
 // Argentine metadata must not leak to the neutral and regional Spanish pages.
-const rootMetadata = source('app/layout.tsx');
+const rootMetadata = source('app/(es)/layout.tsx');
 assert.ok(!rootMetadata.includes("'geo.region'"), 'AR geo region should be home-only');
 assert.ok(!rootMetadata.includes("'geo.placename'"), 'AR geo city should be home-only');
 assert.ok(!rootMetadata.includes("locale: 'es_AR'"), 'Root OG should not force Argentina');
-assertIncludesAll('app/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "languages: { 'es-AR': '/' }"]);
+assertIncludesAll('app/(es)/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "languages: { 'es-AR': '/' }"]);
 assertIncludesAll('next.config.mjs', [
   "'/es-mx/:path*', 'es-MX'",
   "'/es-co/:path*', 'es-CO'",
@@ -954,19 +960,19 @@ assertIncludesAll('next.config.mjs', [
   "'/es/:path*', 'es'",
   "'Content-Language'",
 ]);
-assertIncludesAll('app/es/guias/page.tsx', ["locale: 'es'"]);
-assertIncludesAll('app/es/paises/page.tsx', ["locale: 'es'"]);
+assertIncludesAll('app/(es)/es/guias/page.tsx', ["locale: 'es'"]);
+assertIncludesAll('app/(es)/es/paises/page.tsx', ["locale: 'es'"]);
 
 // SSR language is neutral Spanish at the document root, with regional body content.
-assertIncludesAll('app/page.tsx', ['lang="es-AR"']);
+assertIncludesAll('app/(es)/page.tsx', ['lang="es-AR"']);
 assertIncludesAll('components/marketing/international-study-landing.tsx', ['lang={copy.htmlLang}']);
 
 
 // Canonicals must be page-specific; do not accidentally canonicalize unrelated
 // public routes and other sections to the homepage.
-assert.ok(!source('app/layout.tsx').includes("canonical: '/'"), 'Root layout must not define global homepage canonical');
-assertIncludesAll('app/page.tsx', ["canonical: '/'"]);
-assertIncludesAll('app/explorar/layout.tsx', ["canonical: '/explorar'"]);
+assert.ok(!source('app/(es)/layout.tsx').includes("canonical: '/'"), 'Root layout must not define global homepage canonical');
+assertIncludesAll('app/(es)/page.tsx', ["canonical: '/'"]);
+assertIncludesAll('app/(es)/explorar/layout.tsx', ["canonical: '/explorar'"]);
 
 // IndexNow only accepts explicit, validated, changed canonical pages.
 // Google Search does not support IndexNow; this supplements XML sitemaps.
@@ -997,8 +1003,8 @@ assertIncludesAll('components/seo/editorial-methodology.tsx', [
   'sourceName',
   'sourceUrl',
 ]);
-assertIncludesAll('app/es/guias/[slug]/page.tsx', ['EditorialMethodology kind="study"']);
-assertIncludesAll('app/es/paises/[slug]/page.tsx', [
+assertIncludesAll('app/(es)/es/guias/[slug]/page.tsx', ['EditorialMethodology kind="study"']);
+assertIncludesAll('app/(es)/es/paises/[slug]/page.tsx', [
   'EditorialMethodology kind="admissions"',
   'guide.officialChecks.map',
   'Qué comprobar en el organismo responsable',
@@ -1006,7 +1012,7 @@ assertIncludesAll('app/es/paises/[slug]/page.tsx', [
 
 // Career landing must never promise a public simulator when no public
 // questions are published for that career.
-assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
+assertIncludesAll('app/(es)/estudiar/[universidad]/[carrera]/page.tsx', [
   "from('preguntas_banco_public')",
   'const hasPublicPractice =',
   '{hasPublicPractice ? (',
@@ -1016,7 +1022,7 @@ assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
 
 
 // SEO content quality guardrails: no hidden paywall promises on acquisition pages.
-assertIncludesAll('app/funciones/crear-mapa-mental-desde-pdf/page.tsx', [
+assertIncludesAll('app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', [
   'El mapa mental es una función Premium',
   'Para acceder a la vista de mapa mental',
   '¿El mapa mental está incluido en el plan gratuito?',
@@ -1026,7 +1032,7 @@ assertIncludesAll('components/marketing/international-study-landing.tsx', [
   'si tienes Premium, también puedes consultar el mapa mental',
 ]);
 // Academic landing value must be tied to actual inventory, not SEO-only prose.
-assertIncludesAll('app/landings/estudiar/[materia]/page.tsx', [
+assertIncludesAll('app/(es)/landings/estudiar/[materia]/page.tsx', [
   'data.sampleQuestions.map((question)',
   'question.enunciado',
   'data.partial1Count',
@@ -1040,13 +1046,13 @@ assertIncludesAll('app/landings/estudiar/[materia]/page.tsx', [
 // Search Console (old domain, 2026-10-01 to 2026-10-28) shows distinct
 // landing intent: "pregunteros siglo 21" -> /pregunteros and
 // "parciales siglo 21" -> /landings/parciales. Keep both canonicals.
-assertIncludesAll('app/pregunteros/page.tsx', [
+assertIncludesAll('app/(es)/pregunteros/page.tsx', [
   "canonical: '/pregunteros'",
   'href="/landings/parciales"',
   'Cómo preparar parciales Siglo 21',
   'href="/funciones/simulacro-examen-con-ia"',
 ]);
-assertIncludesAll('app/landings/parciales/page.tsx', [
+assertIncludesAll('app/(es)/landings/parciales/page.tsx', [
   "canonical: '/landings/parciales'",
   'Parciales Siglo 21: práctica y simuladores por carrera',
   'loadPregunteroHubData()',
@@ -1060,10 +1066,10 @@ assertIncludesAll('app/landings/parciales/page.tsx', [
 // English organic launch: self-canonicals, real English page content, and
 // reciprocal language signals only where Spanish equivalents exist.
 for (const [route, pageKey] of [
-  ['app/en/page.tsx', 'home'],
-  ['app/en/pdf-to-quiz/page.tsx', 'pdf-to-quiz'],
-  ['app/en/pdf-to-flashcards/page.tsx', 'pdf-to-flashcards'],
-  ['app/en/study-pdf-with-ai/page.tsx', 'study-pdf-with-ai'],
+  ['app/(en)/en/page.tsx', 'home'],
+  ['app/(en)/en/pdf-to-quiz/page.tsx', 'pdf-to-quiz'],
+  ['app/(en)/en/pdf-to-flashcards/page.tsx', 'pdf-to-flashcards'],
+  ['app/(en)/en/study-pdf-with-ai/page.tsx', 'study-pdf-with-ai'],
 ] as const) {
   assertIncludesAll(route, [
     'EnglishStudyPage',
@@ -1107,8 +1113,8 @@ assertIncludesAll('next.config.mjs', ["['/en', 'en']", "['/en/:path*', 'en']"]);
 assertIncludesAll('components/footer-home.tsx', ['href="/en"', 'English study guides']);
 assertIncludesAll('components/marketing/international-study-landing.tsx', ['href="/en"', 'English']);
 assertIncludesAll('lib/international-study-landings.ts', ["en: toAbsoluteUrl('/en/study-pdf-with-ai')"]);
-assertIncludesAll('app/funciones/crear-flashcards-desde-pdf/page.tsx', ["en: toAbsoluteUrl('/en/pdf-to-flashcards')"]);
-assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', ["en:toAbsoluteUrl('/en/pdf-to-quiz')"]);
+assertIncludesAll('app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', ["en: toAbsoluteUrl('/en/pdf-to-flashcards')"]);
+assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', ["en:toAbsoluteUrl('/en/pdf-to-quiz')"]);
 
 assertIncludesAll('lighthouserc.seo.cjs', [
   'http://localhost:3000/en',
@@ -1139,7 +1145,7 @@ assertIncludesAll('.github/workflows/english-indexnow.yml', [
 
 
 // First English-product entry point is opt-in; Spanish auth stays the default.
-assertIncludesAll('app/en/login/page.tsx', [
+assertIncludesAll('app/(en)/en/login/page.tsx', [
   "robots: { index: false, follow: true }",
   '<LoginFormGoogleFirst locale="en" />',
   '<InternationalDocumentLanguage lang="en" />',

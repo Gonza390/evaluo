@@ -59,7 +59,7 @@ import {
   buildResumenKey,
   formatResumenModulesLabel,
   getModuleNumber,
-} from '../app/explorar/materia/[id]/materia-content.helpers.ts';
+} from '../app/(es)/explorar/materia/[id]/materia-content.helpers.ts';
 import { resolveProfileSettingsState } from '../lib/profile-settings.ts';
 import {
   getAcademicProfileActiveSubjectIds,
@@ -237,7 +237,7 @@ assert.equal(
   'resumen derecho::2'
 );
 
-const demoMaterialSource = readFileSync(resolve('app/demo/material-estudio/page.tsx'), 'utf8');
+const demoMaterialSource = readFileSync(resolve('app/(es)/demo/material-estudio/page.tsx'), 'utf8');
 const demoFourStepSource = readFileSync(resolve('components/demo-four-step-study.tsx'), 'utf8');
 // El único demo de material usa el recorrido público de cuatro pasos, sin permisos ni escrituras.
 assert.match(demoMaterialSource, /DemoFourStepStudy/);
@@ -279,9 +279,9 @@ assert.doesNotMatch(
   'Subir un PDF no debe ejecutar una generación dedicada de mapa mental.'
 );
 
-const simulatorLayoutSource = readFileSync(resolve('app/simulador/layout.tsx'), 'utf8');
+const simulatorLayoutSource = readFileSync(resolve('app/(es)/simulador/layout.tsx'), 'utf8');
 const examFocusSource = readFileSync(resolve('components/simulador/ExamFocusControls.tsx'), 'utf8');
-const examModeCss = readFileSync(resolve('app/simulador/exam-mode.css'), 'utf8');
+const examModeCss = readFileSync(resolve('app/(es)/simulador/exam-mode.css'), 'utf8');
 const simulatorBridgeSource = readFileSync(
   resolve('components/simulador/SimuladorExamen.tsx'),
   'utf8'
@@ -528,7 +528,7 @@ for (const anchor of ['producto', 'como-funciona', 'faq']) {
     `Se conserva el destino del footer: ${anchor}.`
   );
 }
-const homePageSource = readFileSync(resolve('app/page.tsx'), 'utf8');
+const homePageSource = readFileSync(resolve('app/(es)/page.tsx'), 'utf8');
 assert.match(
   homePageSource,
   /<FooterHome \/>/,
@@ -709,12 +709,12 @@ assert.match(appStyles, /body:has\(\[data-progress-open='true'\]\) \[data-studen
 
 
 // Portabilidad master → main: la imagen de vista previa real desplaza al OG anterior.
-const homepageShareMeta = readFileSync('app/page.tsx', 'utf8');
-const layoutShareMeta = readFileSync('app/layout.tsx', 'utf8');
+const homepageShareMeta = readFileSync('app/(es)/page.tsx', 'utf8');
+const layoutShareMeta = readFileSync('app/(es)/layout.tsx', 'utf8');
 assert.ok(homepageShareMeta.includes('/evaluo-whatsapp-progreso.png'));
 assert.ok(layoutShareMeta.includes('/evaluo-whatsapp-progreso.png'));
 assert.ok(homepageShareMeta.includes('No estudies todo por igual'));
-assert.equal(existsSync('app/opengraph-image.tsx'), false);
+assert.equal(existsSync('app/(es)/opengraph-image.tsx'), false);
 const shareImage = readFileSync('public/evaluo-whatsapp-progreso.png');
 assert.equal(shareImage.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
 assert.equal(shareImage.readUInt32BE(16), 1200);

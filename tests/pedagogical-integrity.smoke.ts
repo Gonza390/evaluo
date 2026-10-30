@@ -383,7 +383,7 @@ assert.match(
   /import \{ buildPedagogicalArtifacts \} from '@\/lib\/student-materials\/pedagogy-v2'/,
   'El procesamiento inicial debe ejecutar los controles de calidad de v12 antes de persistir.'
 );
-const processingPage = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const processingPage = readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8');
 assert.ok(
   processingPage.indexOf('if (user?.id === material.user_id') >= 0 &&
   processingPage.indexOf('if (user?.id === material.user_id') < processingPage.indexOf('recoverStaleStudentMaterialJobs(admin, materialId)'),

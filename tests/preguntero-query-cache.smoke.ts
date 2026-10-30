@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { isTransientSimulatorCatalogError } from '../lib/simulator-catalog-retry.ts';
 
 const preguntero = readFileSync('lib/data/preguntero.ts', 'utf8');
-const explorer = readFileSync('app/explorar/materia/[id]/page.tsx', 'utf8');
+const explorer = readFileSync('app/(es)/explorar/materia/[id]/page.tsx', 'utf8');
 assert.ok(preguntero.includes("['preguntero-materia-stats-v1']"));
 assert.ok(preguntero.includes('revalidate: 600'));
 assert.ok(preguntero.includes('return cachedPregunteroMateriaStats(materiaId)'));
@@ -12,8 +12,8 @@ assert.ok(!explorer.includes(".from('preguntas_banco_public')"), 'No repetir COU
 assert.ok(explorer.includes('fetchSharedStudentMaterialsByMateria'), 'No cachear la lista de PDFs compartidos.');
 
 
-const simulatorLanding = readFileSync('app/simulador/page.tsx', 'utf8');
-const simulatorDetail = readFileSync('app/simulador/[materia_id]/[parcial]/page.tsx', 'utf8');
+const simulatorLanding = readFileSync('app/(es)/simulador/page.tsx', 'utf8');
+const simulatorDetail = readFileSync('app/(es)/simulador/[materia_id]/[parcial]/page.tsx', 'utf8');
 assert.ok(simulatorLanding.includes(".from('preguntas_banco')"));
 assert.ok(simulatorLanding.includes(".order('creado_at', { ascending: false })"));
 assert.ok(!simulatorLanding.includes(".order('created_at', { ascending: false })"));

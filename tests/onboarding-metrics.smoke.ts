@@ -10,8 +10,8 @@ import {
 
 const root = (path: string) => readFileSync(path, 'utf8');
 const workspace = root('components/material-study-workspace.tsx');
-const adminActions = root('app/administrador/product-actions.ts');
-const adminPanel = root('app/administrador/product-panel.tsx');
+const adminActions = root('app/(es)/administrador/product-actions.ts');
+const adminPanel = root('app/(es)/administrador/product-panel.tsx');
 const whitelist = root('lib/analytics-metadata.ts');
 const allowed = root('lib/analytics-events.ts');
 

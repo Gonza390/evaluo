@@ -7,7 +7,7 @@ function requireAll(path: string, tokens: string[]) {
   for (const token of tokens) assert.ok(contents.includes(token), `${path} must include ${token}`);
 }
 
-const landingPath = 'app/como-estudiar-ingreso-unlam/page.tsx';
+const landingPath = 'app/(es)/como-estudiar-ingreso-unlam/page.tsx';
 const landing = source('components/marketing/unlam-editorial-guide.tsx');
 const admission = source('components/marketing/unlam-admission-guide.tsx');
 const combined = landing + '\n' + source(landingPath);
@@ -124,7 +124,7 @@ requireAll('lib/analytics-metadata.ts', [
   'seo_unlam_practice_mode_selected',
   'seo_unlam_practice_completed',
 ]);
-requireAll('app/administrador/unlam-funnel-actions.ts', [
+requireAll('app/(es)/administrador/unlam-funnel-actions.ts', [
   'getAdminAccessContext',
   'listAdminUserIds',
   "eq('path', PATH)",
@@ -133,12 +133,12 @@ requireAll('app/administrador/unlam-funnel-actions.ts', [
   'pdf_selected',
   'signup_completed',
 ]);
-requireAll('app/administrador/unlam-funnel-panel.tsx', [
+requireAll('app/(es)/administrador/unlam-funnel-panel.tsx', [
   'Ingreso UNLaM · Embudo de adquisición',
   'stats.steps.map',
   'Search Console',
 ]);
-requireAll('app/administrador/page.tsx', [
+requireAll('app/(es)/administrador/page.tsx', [
   'obtenerEmbudoUnlamAdministrador(activePeriod)',
   'UnlamFunnelPanel',
 ]);

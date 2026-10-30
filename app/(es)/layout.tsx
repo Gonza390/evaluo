@@ -4,7 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GlobalClientRuntime } from '@/components/GlobalClientRuntime';
 import { SharedPrivateShell } from '@/components/SharedPrivateShell';
 import { SITE_URL } from '@/lib/site';
-import './globals.css';
+import '../globals.css';
 
 const ROOT_INLINE_CSS = `
 :fullscreen button[aria-label='Salir de pantalla completa'] {

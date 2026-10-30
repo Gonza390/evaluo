@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const legacyActionsSource = readFileSync(
-  new URL('../app/dashboard/materiales/actions.ts', import.meta.url),
+  new URL('../app/(es)/dashboard/materiales/actions.ts', import.meta.url),
   'utf8'
 );
 const pdfFirstUploadActionsSource = readFileSync(
-  new URL('../app/dashboard/materiales/pdf-first-upload-actions.ts', import.meta.url),
+  new URL('../app/(es)/dashboard/materiales/pdf-first-upload-actions.ts', import.meta.url),
   'utf8'
 );
 const pdfFirstUploadShellSource = readFileSync(

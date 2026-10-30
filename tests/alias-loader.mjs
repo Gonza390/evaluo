@@ -21,12 +21,20 @@ export async function resolve(specifier, context, nextResolve) {
 
   if (specifier.startsWith('@/')) {
     const relative = specifier.slice(2);
-    let candidate = join(repoRoot, relative);
-    if (!existsSync(candidate)) {
-      candidate = `${candidate}.ts`;
+    const candidates = [relative];
+    // The browser-facing app routes live under two root layout groups.
+    // API routes and shared modules remain at their original app/ paths.
+    if (relative.startsWith('app/') && !relative.startsWith('app/(')) {
+      const rest = relative.slice('app/'.length);
+      candidates.push('app/' + (rest.startsWith('en/') || rest === 'en' ? '(en)/' : '(es)/') + rest);
     }
-    if (existsSync(candidate)) {
-      return nextResolve(pathToFileURL(candidate).href, context);
+    for (const path of candidates) {
+      for (const extension of ['', '.ts', '.tsx', '.mjs', '.js']) {
+        const candidate = join(repoRoot, path + extension);
+        if (existsSync(candidate)) {
+          return nextResolve(pathToFileURL(candidate).href, context);
+        }
+      }
     }
   }
   return nextResolve(specifier, context);

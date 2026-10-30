@@ -40,7 +40,7 @@ await checkFallback('json');
 await checkFallback('text');
 const studyErrorsSource = readFileSync(new URL('../lib/actions/study-errors.ts', import.meta.url), 'utf8');
 assert.match(studyErrorsSource, /if \(!user \|\| !isUuid\(materialId\)\) return \{ count: 0 \}/);
-const flashcardSource = readFileSync(new URL('../app/dashboard/materiales/actions.ts', import.meta.url), 'utf8');
+const flashcardSource = readFileSync(new URL('../app/(es)/dashboard/materiales/actions.ts', import.meta.url), 'utf8');
 assert.match(flashcardSource, /logError\('flashcard_progress_load', error, \{ materialId \}\)/);
 assert.match(flashcardSource, /logError\('flashcard_progress_save', error, \{ materialId \}\)/);
 console.log('AI fallback and production error guard regression tests passed.');

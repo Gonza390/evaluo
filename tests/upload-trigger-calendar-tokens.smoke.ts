@@ -8,7 +8,7 @@ const chrome = file('components/dashboard/maeve-dashboard-chrome.tsx');
 const hero = file('components/dashboard/maeve-study-hero.tsx');
 const materials = file('components/dashboard/student-materials-workspace.tsx');
 const panel = file('components/study-state-panel.tsx');
-const calendar = file('app/calendario/page.tsx');
+const calendar = file('app/(es)/calendario/page.tsx');
 const globals = file('app/globals.css');
 
 assert.doesNotMatch(shell, /isUploadTriggerLabel|textContent|handleCapturedClick|onClickCapture/,

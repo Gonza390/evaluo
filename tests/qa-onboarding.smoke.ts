@@ -23,11 +23,11 @@ assert.equal(shouldAutoStartFirstPdfOnboarding({ ...oldAccount, isQaAccount: tru
 assert.equal(shouldAutoStartFirstPdfOnboarding({ ...oldAccount, isQaAccount: true, isOwner: false }), false);
 assert.equal(shouldAutoStartFirstPdfOnboarding({ ...oldAccount, isQaAccount: true, materialReady: false }), false);
 
-const restartAction = readFileSync('app/qa/actions.ts', 'utf8');
-const testPage = readFileSync('app/qa/page.tsx', 'utf8');
-const materialPage = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const restartAction = readFileSync('app/(es)/qa/actions.ts', 'utf8');
+const testPage = readFileSync('app/(es)/qa/page.tsx', 'utf8');
+const materialPage = readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8');
 const analytics = readFileSync('app/api/analytics/track/route.ts', 'utf8');
-const callback = readFileSync('app/auth/callback/route.ts', 'utf8');
+const callback = readFileSync('app/(es)/auth/callback/route.ts', 'utf8');
 assert.ok(restartAction.includes('supabase.auth.getUser()'));
 assert.ok(restartAction.includes('isQaAccount(user)'));
 assert.ok(restartAction.includes('isQaAccount(current.user)'));
