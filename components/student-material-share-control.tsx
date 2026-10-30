@@ -107,6 +107,22 @@ export function StudentMaterialShareControl({
     void shareCurrentLink();
   };
 
+  useEffect(() => {
+    const onMobileShare = (event: Event) => {
+      const detail = (event as CustomEvent<{ materialId?: string }>).detail;
+      if (detail?.materialId !== materialId) return;
+      if (visibility === 'private') {
+        if (isOwner) setConfirmOpen(true);
+      } else {
+        void shareCurrentLink();
+      }
+    };
+    window.addEventListener('evaluo:share-material', onMobileShare);
+    return () => window.removeEventListener('evaluo:share-material', onMobileShare);
+  // Register the latest visibility state so the mobile menu follows the same privacy flow.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [materialId, visibility, isOwner, sharePath, title]);
+
   return (
     <div
       data-student-material-share-control
@@ -171,7 +187,7 @@ export function StudentMaterialShareControl({
           loading ? 'Preparando enlace' : copied ? 'Enlace copiado' : 'Compartir este PDF'
         }
         title={copied ? 'Enlace copiado' : 'Compartir este PDF'}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring inline-flex size-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring hidden md:inline-flex size-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60"
       >
         {loading ? (
           <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
