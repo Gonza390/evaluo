@@ -17,7 +17,19 @@ assert.doesNotMatch(materialStatus, /MaterialMetadata|carreraName|universidadNam
 assert.doesNotMatch(materialPage, /'Sin carrera'|'Sin universidad'|'Sin materia'/,
   'PDF reader must not introduce empty-context labels into any header.');
 assert.match(workspace, /data-reopen-first-pdf-guide/,
-  'Keep the voluntary Guide button.');
+  'Keep the voluntary Guide button on desktop.');
+assert.match(workspace, /data-pdf-mobile-document-header[^\n]+md:hidden/,
+  'The mobile PDF header must use the compact three-part design.');
+assert.match(workspace, /data-pdf-mobile-title-trigger/,
+  'The center pill must allow reading the complete document title.');
+assert.match(workspace, /data-pdf-mobile-more-trigger/,
+  'The three-dot control must open a functional menu.');
+assert.match(workspace, /DropdownMenuItem asChild/,
+  'Mobile dropdown menus must expose real navigation actions.');
+assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
+  'The old header and Guide remain desktop-only.');
+assert.match(workspace, /Abrir PDF original/,
+  'The menu must provide access to the original document.');
 assert.match(materialStatus, /\{title\}/,
   'Keep the material title during processing and error states.');
 
