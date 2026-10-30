@@ -48,17 +48,12 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
-      <div className="md:hidden rounded-2xl border border-slate-200 bg-white p-5">
-        <h1 className="text-xl font-bold">Plan de estudio</h1>
-        <p className="mt-2 text-sm text-slate-600">Estamos preparando esta sección para teléfonos. Por ahora podés usarla desde una computadora.</p>
-        <Link href="/dashboard/explicaciones" className="mt-4 inline-flex items-center gap-2 text-[12px] font-semibold text-blue-600">Ir a Estudiar <ArrowRight className="size-4" /></Link>
-      </div>
-      <div className="hidden md:block">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <div className="mb-4 flex items-center justify-between gap-2 sm:gap-3">
           <div>
-            <h1 className="text-[22px] font-bold tracking-[-0.035em] lg:text-[24px]">Plan de estudio</h1>
+            <h1 className="text-[20px] font-bold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
           </div>
-          <Link href="/calendario" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50">
+          <Link href="/calendario" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] sm:px-3 sm:text-[12px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50">
             <CalendarDays className="size-4" /> Ver calendario
           </Link>
         </div>
@@ -66,7 +61,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
           <div className="min-w-0 space-y-4">
             <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
-              <div className="mb-2.5 flex items-center justify-between">
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-[14px] font-bold">Tu avance</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
@@ -86,11 +81,11 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
           </div>
 
           <div className="min-w-0 space-y-4">
-            <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-6 text-[#143c85]">
+            <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-6">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
               <div className="relative">
                 <div className="flex items-center gap-2 text-xs font-semibold text-blue-700"><GraduationCap className="size-4" /> PRÓXIMO EXAMEN</div>
-                <h2 className="mt-3 max-w-[300px] text-[21px] font-bold leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
+                <h2 className="mt-3 max-w-[300px] text-[19px] sm:text-[21px] font-bold leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
                 <p className="mt-3 max-w-[330px] text-[12px] leading-5 text-[#5473a2]">Registrá la fecha en tu calendario. Después podremos distribuir los temas y repasos hasta el examen.</p>
                 <Link href="/calendario" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[12px] font-semibold text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
               </div>
@@ -100,7 +95,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-bold tracking-tight">Tus materiales</h2><span className="text-xs text-slate-400">{materials.length} PDFs</span></div>
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 {materials.length ? materials.slice(0, 6).map(material => (
-                  <Link key={material.id} href={`/materiales/${material.id}?tab=resumen`} className="flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 transition last:border-0 hover:bg-slate-50">
+                  <Link key={material.id} href={`/materiales/${material.id}?tab=resumen`} className="flex min-h-11 items-center gap-3 border-b border-slate-100 px-3 py-2.5 transition last:border-0 hover:bg-slate-50">
                     <FileText className="size-4 shrink-0 text-slate-400" />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{material.title}</span>
                     <ArrowRight className="size-4 shrink-0 text-slate-400" />
