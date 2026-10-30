@@ -115,6 +115,7 @@ try {
     sitemapUrls.every((url) => url.startsWith(NEW + '/')));
   check('sitemap contains academic URLs', sitemapUrls.some((url) => url.startsWith(NEW + '/explorar/materia/')));
   check('sitemap contains international guides', sitemapUrls.some((url) => url.startsWith(NEW + '/es/paises/')));
+  console.log('SITEMAP_CAREER_IDS ' + JSON.stringify(sitemapUrls.filter((url) => url.startsWith(NEW + '/estudiar/')).map((url) => url.split('--').at(-1))));
   for (const path of LANDINGS) {
     check('sitemap includes ' + path, sitemap.includes('<loc>' + NEW + path + '</loc>'));
   }
