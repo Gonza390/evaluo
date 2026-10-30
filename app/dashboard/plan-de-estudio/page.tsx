@@ -5,6 +5,7 @@ import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, FileText, GraduationC
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
+import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
@@ -57,32 +58,9 @@ export default async function StudyPlanPage() {
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[15px] font-bold tracking-tight">Lo que sigue</h2>
               </div>
-              <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
-                {first ? (
-                  <>
-                    <Link href={`/materiales/${first.id}?tab=resumen`} className="group flex items-center gap-3 bg-blue-50/70 px-3 py-3 transition hover:bg-blue-50">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><BookOpen className="size-5" /></span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-bold">Continuar leyendo</span>
-                        <span className="mt-0.5 block truncate text-xs text-slate-600">{first.title}</span>
-                      </span>
-                      <ArrowRight className="size-4 text-blue-700 transition group-hover:translate-x-1" />
-                    </Link>
-                    <Link href={`/materiales/${first.id}?tab=ejercicios`} className="flex items-center gap-3 border-t border-slate-100 px-3 py-3 transition hover:bg-slate-50">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><ListChecks className="size-5" /></span>
-                      <span className="flex-1"><span className="block text-[12px] font-semibold">Practicar lo aprendido</span><span className="block text-xs text-slate-500">Preguntas de tu material</span></span>
-                      <ArrowRight className="size-4 text-slate-400" />
-                    </Link>
-                    <Link href={`/materiales/${first.id}?tab=progreso`} className="flex items-center gap-3 border-t border-slate-100 px-3 py-3 transition hover:bg-slate-50">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700"><CheckCircle2 className="size-5" /></span>
-                      <span className="flex-1"><span className="block text-[12px] font-semibold">Revisar tu progreso</span><span className="block text-xs text-slate-500">Detectá qué conviene reforzar</span></span>
-                      <ArrowRight className="size-4 text-slate-400" />
-                    </Link>
-                  </>
-                ) : (
-                  <div className="p-7 text-center"><FileText className="mx-auto size-8 text-blue-500" /><p className="mt-3 text-[12px] font-semibold">Todavía no hay archivos listos</p><Link href="/dashboard?openUpload=1" className="mt-3 inline-flex rounded-xl bg-blue-600 px-4 py-2.5 text-[12px] font-semibold text-white">Subir un PDF</Link></div>
-                )}
-              </div>
+              {first ? <StudyPlanNext materialId={first.id} topicCount={topicCount} /> : (
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Subí un PDF para comenzar con el tema 1.</div>
+              )}
             </section>
           </div>
 
