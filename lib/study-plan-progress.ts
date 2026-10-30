@@ -1,4 +1,4 @@
-export type Activity = 'questions' | 'flashcards' | 'glossary';
+export type Activity = 'reading' | 'questions' | 'flashcards' | 'glossary';
 export const progressKey = (id: string) => `evaluo_study_plan_progress_v1:${id}`;
 export function markActivity(id: string, topic: number, activity: Activity) {
  if (typeof window === 'undefined' || topic < 0) return;
@@ -11,11 +11,11 @@ export function getProgress(id: string, topics: TopicActivities[]) {
  let record: Record<string, boolean>={}; let read=0;
  try {
   record=JSON.parse(localStorage.getItem(progressKey(id))||'{}');
-  read=Math.min(topicCount,Math.max(0,Number(localStorage.getItem(`evaluo_summary_reading_progress_v1:${id}`)||0)||0));
+  read=0;
  } catch { /* unavailable */ }
  let done=0; let total=0;
  for(let i=0;i<topicCount;i++) {
-  total++; if(i<read)done++;
+  total++; if(record[`${i}:reading`])done++;
   for(const activity of ['questions','flashcards','glossary'] as const) {
    if(!topics[i][activity]) continue;
    total++; if(record[`${i}:${activity}`])done++;
