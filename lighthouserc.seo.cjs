@@ -13,6 +13,10 @@ module.exports = {
       url: [
         'http://localhost:3000/ia-para-estudiantes',
         'http://localhost:3000/estudiar-pdf-con-ia',
+        'http://localhost:3000/en',
+        'http://localhost:3000/en/pdf-to-quiz',
+        'http://localhost:3000/en/pdf-to-flashcards',
+        'http://localhost:3000/en/study-pdf-with-ai',
         'http://localhost:3000/funciones/resumir-pdf-con-ia',
         'http://localhost:3000/funciones/crear-flashcards-desde-pdf',
         'http://localhost:3000/funciones/crear-mapa-mental-desde-pdf',
