@@ -60,6 +60,12 @@ function headTags(html, tagName) {
 function canonical(html) {
   return headTags(html, 'link').find((tag) => attribute(tag, 'rel').toLowerCase() === 'canonical');
 }
+function allTags(html, tagName) {
+  return html.match(new RegExp('<' + tagName + '\\b[^>]*>', 'gi')) || [];
+}
+function streamedCanonical(html) {
+  return allTags(html, 'link').find((tag) => attribute(tag, 'rel').toLowerCase() === 'canonical');
+}
 function hreflang(html) {
   const tags = headTags(html, 'link');
   const mapped = new Map();
@@ -159,14 +165,23 @@ for (const prefix of ['/universidad/', '/estudiar/', '/simulador-parcial/',
       const r = await request(url);
       check('academic HTTP 200 ' + url, r.status === 200, 'HTTP ' + r.status);
       if (r.status !== 200) continue;
-      const canonicalTag = canonical(r.text);
-      check('academic canonical ' + url,
-        canonicalTag && attribute(canonicalTag, 'href') === url,
-        canonicalTag ? attribute(canonicalTag, 'href') : '(missing)');
-      const noindex = headTags(r.text, 'meta').some((tag) =>
+      // Next.js may stream generateMetadata() into <body> for JS-capable
+      // browsers, while HTML-limited bots receive it in <head>.
+      const canonicalTag = canonical(r.text) ?? streamedCanonical(r.text);
+      const canonicalHref = canonicalTag ? attribute(canonicalTag, 'href') : '(missing)';
+      check('academic canonical in full HTML ' + url, canonicalHref === url, canonicalHref);
+      const noindex = allTags(r.text, 'meta').some((tag) =>
         attribute(tag, 'name').toLowerCase() === 'robots' &&
         /noindex/i.test(attribute(tag, 'content')));
       check('academic indexable ' + url, !noindex);
+      const htmlLimited = await request(url, {
+        headers: { 'user-agent': 'Twitterbot' },
+      });
+      const limitedCanonical = canonical(htmlLimited.text);
+      check('academic canonical in HTML-limited crawler HEAD ' + url,
+        htmlLimited.status === 200 && limitedCanonical &&
+          attribute(limitedCanonical, 'href') === url,
+        limitedCanonical ? attribute(limitedCanonical, 'href') : '(missing)');
     } catch (error) {
       check('academic request ' + url, false, String(error));
     }
