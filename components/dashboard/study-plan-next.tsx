@@ -25,7 +25,6 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
  // Empezar el siguiente tema es opcional cuando la lectura y las preguntas del actual ya están hechas.
  const canStartNext=!!done[`${firstPending}:reading`] && (!first.questions || !!done[`${firstPending}:questions`]) && firstPending+1<topicCount;
  const visibleTopics=canStartNext?[firstPending,firstPending+1]:[firstPending];
- const remainingMinutes=topicActivities.reduce((total,t,index)=>total + (!done[`${index}:reading`]?(t.readingMinutes??1):0) + (t.questions&&!done[`${index}:questions`]?(t.questionsMinutes??1):0) + (t.flashcards&&!done[`${index}:flashcards`]?(t.flashcardsMinutes??1):0) + (t.glossary&&!done[`${index}:glossary`]?(t.glossaryMinutes??1):0),0);
  const buildSteps=(index:number):Step[]=>{
   const t=topicActivities[index];
   const all:Step[]=[
@@ -37,7 +36,6 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   return all.filter(step=>step.id==='reading'||t[step.id]);
  };
  return <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
-  <div className="flex justify-end border-b border-slate-100 px-3 py-2 text-[11px] text-slate-500"><Clock3 className="mr-1 size-3.5" /> ≈ {remainingMinutes} min pendientes del PDF</div>
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
       return <div key={topic}>
