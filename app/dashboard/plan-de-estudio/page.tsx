@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, FileText, GraduationCap, ListChecks, Sparkles } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
@@ -16,6 +17,12 @@ export default async function StudyPlanPage() {
     material => material.processing_status === 'ready'
   );
   const first = materials[0] ?? null;
+  let topicCount = 0;
+  if (first) {
+    const { data: summary } = await supabase.from('student_material_summaries')
+      .select('summary_sections').eq('student_material_id', first.id).maybeSingle();
+    topicCount = Array.isArray(summary?.summary_sections) ? summary.summary_sections.length : 0;
+  }
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
@@ -40,19 +47,10 @@ export default async function StudyPlanPage() {
             <section className="rounded-[16px] border border-slate-200 bg-white p-4 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[14px] font-bold">Tu avance</h2>
-                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">Vista inicial</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="relative flex size-[66px] shrink-0 items-center justify-center rounded-full border-[6px] border-slate-100">
-                  <span className="text-[15px] font-bold tracking-tight">—</span>
-                </div>
-                <div>
-                  <h3 className="text-[14px] font-semibold">{first ? 'Tu próximo paso empieza acá' : 'Empezá con tu primer PDF'}</h3>
-                  <p className="mt-1 max-w-md text-[12px] leading-5 text-slate-500">
-                    {first ? 'Cuando creemos tu plan, acá vas a ver las sesiones completadas y las que te faltan.' : 'Subí un material para que Evaluo pueda ayudarte a organizar tus sesiones de estudio.'}
-                  </p>
-                </div>
-              </div>
+              {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} /> : (
+                <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
+              )}
             </section>
 
             <section>
