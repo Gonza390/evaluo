@@ -6,6 +6,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
+import { StudyPlanMaterialSelector } from '@/components/dashboard/study-plan-material-selector';
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { getTopicStudyResources, tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-materials/types';
@@ -13,7 +14,7 @@ import type { StudyQuestion, StudyFlashcard } from '@/lib/student-materials/peda
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
-export default async function StudyPlanPage() {
+export default async function StudyPlanPage({ searchParams }: { searchParams?: Promise<{ material?: string }> }) {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard/plan-de-estudio');
@@ -21,7 +22,8 @@ export default async function StudyPlanPage() {
   const materials = (await fetchStudentMaterialsByUser(supabase, user.id)).filter(
     material => material.processing_status === 'ready'
   );
-  const first = materials[0] ?? null;
+  const requested = (await searchParams)?.material;
+  const first = materials.find(material => material.id === requested) ?? materials[0] ?? null;
   let topicCount = 0;
   let topicActivities: Array<{questions:boolean;flashcards:boolean;glossary:boolean;readingMinutes:number;questionsMinutes:number;flashcardsMinutes:number;glossaryMinutes:number;title:string}> = [];
   if (first) {
@@ -66,6 +68,7 @@ export default async function StudyPlanPage() {
             <section className="rounded-[16px] border border-slate-200 bg-white p-4 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[14px] font-bold">Tu avance</h2>
+                {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
               {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} topicActivities={topicActivities} /> : (
                 <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
