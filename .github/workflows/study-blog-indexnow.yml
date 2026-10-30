@@ -1,0 +1,63 @@
+name: Notify IndexNow of changed bilingual study blog URLs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/study-blog-articles.ts'
+      - 'components/marketing/study-blog-view.tsx'
+      - 'app/blog/**'
+      - 'app/en/blog/**'
+      - 'app/(es)/blog/**'
+      - 'app/(en)/en/blog/**'
+      - 'app/(es)/layout.tsx'
+      - 'app/(en)/layout.tsx'
+      - 'scripts/changed-study-blog-indexnow-urls.mjs'
+      - '.github/workflows/study-blog-indexnow.yml'
+  workflow_dispatch:
+    inputs:
+      reannounce_blog:
+        description: 'Reannounce all currently published blog articles (for post-deployment recovery only)'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: study-blog-indexnow-main
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout with history to identify changed articles
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check URL selector and publisher syntax
+        run: |
+          node --check scripts/changed-study-blog-indexnow-urls.mjs
+          node --check scripts/submit-indexnow.mjs
+      - name: Determine changed blog URLs
+        id: changed
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || github.sha }}
+          INDEXNOW_ALL_BLOG: ${{ inputs.reannounce_blog && '1' || '0' }}
+        run: node scripts/changed-study-blog-indexnow-urls.mjs
+      - name: Allow published deployment and sitemap to settle
+        if: steps.changed.outputs.urls != ''
+        run: sleep 45
+      - name: Notify Bing and other IndexNow engines only after public canonical verification
+        if: steps.changed.outputs.urls != ''
+        env:
+          INDEXNOW_URLS: ${{ steps.changed.outputs.urls }}
+        run: node scripts/submit-indexnow.mjs
