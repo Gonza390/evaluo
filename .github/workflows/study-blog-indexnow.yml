@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'lib/study-blog-articles.ts'
+      - 'lib/study-blog-workshops-es.ts'
+      - 'lib/study-blog-workshops-en.ts'
+      - 'lib/study-blog-workshop-types.ts'
+      - 'components/marketing/study-blog-workshop.tsx'
       - 'components/marketing/study-blog-view.tsx'
       - 'app/blog/**'
       - 'app/en/blog/**'
