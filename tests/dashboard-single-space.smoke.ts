@@ -201,7 +201,7 @@ for (const source of [dashboardSource, dashboardHeroSource, dashboardMaterialsSo
 
 // Escala privada compartida: todas las vistas autenticadas mantienen el
 // mismo shell que Mi espacio, sin convertir las páginas SEO en modo compacto.
-assert.match(appChromeSource, /isCompactAppRoute \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1'/);
+assert.match(appChromeSource, /user \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1'/);
 assert.match(appChromeSource, /compact=\{isCompactAppRoute\}/);
 assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
 assert.match(appChromeSource, /isCompactAppRoute\s*\?\s*'bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0'/);
