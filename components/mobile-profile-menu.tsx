@@ -27,10 +27,10 @@ type MobileProfileMenuProps = {
 export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobileProfileMenuProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [weeklyPrice, setWeeklyPrice] = useState<number | null>(null);
-  const { isPremium, premiumLoading } = usePremium();
+  const { isPremium } = usePremium();
 
   const refreshPrice = () => {
-    if (isPremium || premiumLoading) return;
+    if (isPremium) return;
     void fetch('/api/payments/offer', { cache: 'no-store' })
       .then(async (response) => {
         if (!response.ok) return;
@@ -79,7 +79,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
             <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
             Sugerencias
           </DropdownMenuItem>
-          {!premiumLoading && !isPremium ? (
+          {!isPremium ? (
             <DropdownMenuItem asChild>
               <Link href="/pricing?source=mobile_profile_menu"
                 className="mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-slate-700 focus:bg-slate-100">
