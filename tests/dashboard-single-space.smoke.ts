@@ -144,10 +144,20 @@ const notificationSource = readFileSync(resolve('components/notifications/notifi
 assert.match(appChromeSource, /<NotificationBell compact=\{isCompactAppRoute\} \/>/);
 assert.match(appChromeSource, /const isMobileDashboardRoute = pathname === '\/dashboard'/,
   'Header cleanup must target Mi espacio, not all routes.');
-assert.match(appChromeSource, /isMobileDashboardRoute \? 'hidden md:flex' : 'flex'/,
-  'Hide the Evaluo brand only on mobile Mi espacio.');
-assert.match(appChromeSource, /className=\{isMobileDashboardRoute \? 'hidden md:block' : undefined\}/,
-  'Hide the notification bell only on mobile Mi espacio, preserving desktop notifications.');
+assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
+  'The Evaluo logo remains an accessible link on mobile.');
+assert.match(appChromeSource, /isMobileDashboardRoute \? 'hidden min-w-0 md:block' : 'min-w-0'/,
+  'Only the word Evaluo is hidden on mobile Mi espacio; the logo remains visible.');
+assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute \? 'hidden md:block' : undefined/,
+  'The notification bell must remain visible on mobile.');
+assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
+  'Remove Perfil from the mobile bottom navigation.');
+assert.match(appChromeSource, /user \? 'grid-cols-3' : 'grid-cols-4'/,
+  'Use three balanced bottom destinations for authenticated mobile users.');
+assert.match(appChromeSource, /href="\/configuracion"\s+aria-label="Abrir perfil"/,
+  'Keep Perfil accessible by tapping the mobile avatar.');
+assert.match(appChromeSource, /Ver racha de estudio:/,
+  'Keep the streak control independent from the avatar.');
 
 assert.match(notificationSource, /compact = false/);
 assert.match(notificationSource, /compact \? "h-9 w-9" : "h-11 w-11"/);
