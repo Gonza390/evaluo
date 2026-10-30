@@ -144,7 +144,7 @@ assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap
 const notificationSource = readFileSync(resolve('components/notifications/notification-bell.tsx'), 'utf8');
 assert.doesNotMatch(appChromeSource, /NotificationBell|notification-bell/,
   'The shared header must not render the notification bell at any viewport size.');
-assert.match(appChromeSource, /user \? 'min-h-\\[52px\\] py-1 sm:min-h-\\[52px\\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,
+assert.match(appChromeSource, /user \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,
   'All authenticated mobile routes should share the same topbar height.');
 assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
   'The Evaluo logo remains an accessible link on mobile.');
