@@ -83,8 +83,8 @@ async function analyze(page) {
       const css = getComputedStyle(el), r = el.getBoundingClientRect();
       return css.display !== 'none' && css.visibility !== 'hidden' &&
         r.width > 1 && r.height > 1 && r.right > width + 2 &&
-        r.left < width && r.top < innerHeight && r.bottom > 0;
-    }).slice(0,12).map(el => ({tag:el.tagName.toLowerCase(),className:String(el.className).slice(0,90),text:el.textContent.trim().slice(0,60),right:Math.round(el.getBoundingClientRect().right)}));
+        r.left < width;
+    }).slice(0,12).map(el => ({tag:el.tagName.toLowerCase(),className:String(el.className).slice(0,90),text:el.textContent.trim().slice(0,60),right:Math.round(el.getBoundingClientRect().right), top:Math.round(el.getBoundingClientRect().top)}));
     const missingAlt = [...document.querySelectorAll('main img:not([alt])')].length;
     const tinyTargets = [...document.querySelectorAll('main a,main button')].filter(el => {
       const rect=el.getBoundingClientRect(),style=getComputedStyle(el);
