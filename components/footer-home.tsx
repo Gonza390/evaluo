@@ -144,6 +144,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Estudiar con PDF en otros países
               </Link>
+              <Link href="/en" lang="en" className="text-xs text-white/80 transition hover:text-white">
+                English study guides
+              </Link>
               <Link
                 href="/funciones/resumir-pdf-con-ia"
                 className="text-xs text-white/80 transition hover:text-white"

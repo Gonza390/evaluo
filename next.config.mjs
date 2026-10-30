@@ -56,6 +56,8 @@ const nextConfig = {
       // <html lang> still needs a future multi-root-layout i18n refactor;
       // do not make the entire site dynamically rendered just to read a path.
       ...([
+        ['/en', 'en'],
+        ['/en/:path*', 'en'],
         ['/es-mx/:path*', 'es-MX'],
         ['/es-co/:path*', 'es-CO'],
         ['/es-es/:path*', 'es-ES'],

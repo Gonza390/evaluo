@@ -1055,3 +1055,64 @@ assertIncludesAll('app/landings/parciales/page.tsx', [
   'buildSeoEntitySlug(career.carreraNombre, career.carreraId)',
   'Los ejercicios son de práctica de Evaluo, no exámenes oficiales',
 ]);
+
+
+// English organic launch: self-canonicals, real English page content, and
+// reciprocal language signals only where Spanish equivalents exist.
+for (const [route, pageKey] of [
+  ['app/en/page.tsx', 'home'],
+  ['app/en/pdf-to-quiz/page.tsx', 'pdf-to-quiz'],
+  ['app/en/pdf-to-flashcards/page.tsx', 'pdf-to-flashcards'],
+  ['app/en/study-pdf-with-ai/page.tsx', 'study-pdf-with-ai'],
+] as const) {
+  assertIncludesAll(route, [
+    'EnglishStudyPage',
+    `getEnglishSeoMetadata('${pageKey}')`,
+    `pageKey="${pageKey}"`,
+  ]);
+}
+assertIncludesAll('lib/english-seo-metadata.ts', [
+  "alternates: { canonical: url",
+  'robots: { index: true, follow: true }',
+  "locale: 'en_US'",
+  "STUDY_HREFLANG, en: url",
+  "'/convertir-pdf-en-preguntas'",
+  "'/funciones/crear-flashcards-desde-pdf'",
+]);
+assertIncludesAll('lib/english-seo-content.ts', [
+  "path: '/en'",
+  "path: '/en/pdf-to-quiz'",
+  "path: '/en/pdf-to-flashcards'",
+  "path: '/en/study-pdf-with-ai'",
+]);
+assertIncludesAll('components/marketing/english-study-page.tsx', [
+  'not outputs from a verified Evaluo session',
+]);
+assertIncludesAll('components/marketing/english-study-page.tsx', [
+  'lang="en"',
+  '<InternationalDocumentLanguage lang="en" />',
+  "href={ENGLISH_PAGES[key].path}",
+  'The current product, including sign-in, navigation and pricing, is primarily in Spanish',
+  'Illustrative study examples',
+  'How to verify this answer',
+  'Explore the current Spanish-language app',
+]);
+assertIncludesAll('app/sitemap.ts', [
+  '${baseUrl}/en`',
+  '${baseUrl}/en/pdf-to-quiz`',
+  '${baseUrl}/en/pdf-to-flashcards`',
+  '${baseUrl}/en/study-pdf-with-ai`',
+]);
+assertIncludesAll('next.config.mjs', ["['/en', 'en']", "['/en/:path*', 'en']"]);
+assertIncludesAll('components/footer-home.tsx', ['href="/en"', 'English study guides']);
+assertIncludesAll('components/marketing/international-study-landing.tsx', ['href="/en"', 'English']);
+assertIncludesAll('lib/international-study-landings.ts', ["en: toAbsoluteUrl('/en/study-pdf-with-ai')"]);
+assertIncludesAll('app/funciones/crear-flashcards-desde-pdf/page.tsx', ["en: toAbsoluteUrl('/en/pdf-to-flashcards')"]);
+assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', ["en:toAbsoluteUrl('/en/pdf-to-quiz')"]);
+
+assertIncludesAll('lighthouserc.seo.cjs', [
+  'http://localhost:3000/en',
+  'http://localhost:3000/en/pdf-to-quiz',
+  'http://localhost:3000/en/pdf-to-flashcards',
+  'http://localhost:3000/en/study-pdf-with-ai',
+]);

@@ -7,7 +7,7 @@ const path = '/funciones/crear-flashcards-desde-pdf';
 export const metadata: Metadata = {
   title: "Crear flashcards a partir de PDF con IA",
   description: "Creá flashcards a partir de un PDF con IA: convertí tus apuntes en tarjetas de repaso, comprobá conceptos y continuá practicando por tema en Evaluo.",
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: { canonical: toAbsoluteUrl(path), languages: { es: toAbsoluteUrl(path), en: toAbsoluteUrl('/en/pdf-to-flashcards') } },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
