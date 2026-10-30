@@ -27,7 +27,6 @@ export default async function StudyPlanPage() {
       <div className="hidden md:block">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-semibold text-blue-600"><Sparkles className="size-4" /> TU ESPACIO DE ESTUDIO</div>
             <h1 className="text-[22px] font-bold tracking-[-0.035em] lg:text-[24px]">Plan de estudio</h1>
             <p className="mt-1 text-[12px] text-slate-500">Una vista clara de tus materiales y tu próximo paso para aprender.</p>
           </div>
