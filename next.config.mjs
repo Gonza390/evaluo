@@ -52,6 +52,18 @@ const nextConfig = {
     ].join('; ');
 
     return [
+      // Send the correct language in the initial HTTP response. The shared
+      // <html lang> still needs a future multi-root-layout i18n refactor;
+      // do not make the entire site dynamically rendered just to read a path.
+      ...([
+        ['/es-mx/:path*', 'es-MX'],
+        ['/es-co/:path*', 'es-CO'],
+        ['/es-es/:path*', 'es-ES'],
+        ['/es/:path*', 'es'],
+      ].map(([source, language]) => ({
+        source,
+        headers: [{ key: 'Content-Language', value: language }],
+      }))),
       {
         source: '/:path*',
         headers: [
