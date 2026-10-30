@@ -1,8 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { FileText, CheckCircle2, PlayCircle, Sparkles } from 'lucide-react';
+import { FileText, CheckCircle2, PlayCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildCollectionPageJsonLd, buildFaqJsonLd } from '@/lib/seo';
+import { loadPregunteroHubData } from '@/app/pregunteros/data';
+import { isSiglo21University } from '@/lib/seo-search-copy';
+import { buildSeoEntitySlug } from '@/lib/seo-intents';
+
+export const revalidate = 3600;
 
 const FAQ_ITEMS = [
   {
@@ -33,9 +38,9 @@ const FAQ_ITEMS = [
 ];
 
 export const metadata: Metadata = {
-  title: 'Pregunteros y práctica para parciales de Universidad Siglo 21',
+  title: 'Parciales Siglo 21: práctica y simuladores por carrera',
   description:
-    'Prepará tus parciales de Universidad Siglo 21 con pregunteros organizados por materia, primer parcial, segundo parcial e integrador. Solo mostramos contenido disponible en Evaluo.',
+    'Prepará parciales de Universidad Siglo 21: encontrá pregunteros por materia y simuladores disponibles por carrera. Practicá primer parcial, segundo parcial e integrador.',
   keywords: [
     'parciales Siglo 21',
     'pregunteros Siglo 21',
@@ -47,7 +52,7 @@ export const metadata: Metadata = {
     canonical: '/landings/parciales',
   },
   openGraph: {
-    title: 'Pregunteros y práctica para parciales de Universidad Siglo 21 | Evaluo',
+    title: 'Parciales Siglo 21: práctica y simuladores por carrera | Evaluo',
     description:
       'Encontrá pregunteros por materia y parcial y practicá con el contenido disponible en Evaluo.',
     url: '/landings/parciales',
@@ -55,13 +60,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Pregunteros para parciales de Universidad Siglo 21 | Evaluo',
+    title: 'Parciales Siglo 21: pregunteros y simuladores | Evaluo',
     description: 'Practicá por materia y parcial con los pregunteros disponibles en Evaluo.',
     images: ['/opengraph-image.png'],
   },
 };
 
-export default function ParcialesLanding() {
+export default async function ParcialesLanding() {
+  // Only include publicly published careers with questions, never speculative links.
+  // The page keeps its useful static content if the catalog is briefly unavailable.
+  const activeCareers = await loadPregunteroHubData().catch(() => []);
+  const siglo21Simulators = activeCareers
+    .filter((career) => isSiglo21University(career.universidadNombre) && career.materias.length > 0)
+    .sort((a, b) => b.materias.length - a.materias.length || a.carreraNombre.localeCompare(b.carreraNombre, 'es'))
+    .slice(0, 6);
   return (
     <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <JsonLd
@@ -105,6 +117,41 @@ export default function ParcialesLanding() {
           </div>
         </div>
       </section>
+
+      {siglo21Simulators.length > 0 ? (
+        <section aria-labelledby="simuladores-carrera-siglo21" className="border-b border-slate-100 bg-slate-50/60 py-12 sm:py-16">
+          <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">Práctica disponible por carrera</p>
+            <h2 id="simuladores-carrera-siglo21" className="mt-3 max-w-3xl text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              Simuladores de parciales Siglo 21 por carrera
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+              Si buscás un simulador de parcial de Universidad Siglo 21, elegí una carrera con materias y preguntas públicas disponibles.
+              Los ejercicios son de práctica de Evaluo, no exámenes oficiales de la universidad.
+            </p>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {siglo21Simulators.map((career) => (
+                <Link
+                  key={career.carreraId}
+                  href={`/simulador-parcial/${buildSeoEntitySlug(career.carreraNombre, career.carreraId)}`}
+                  className="group flex min-h-24 flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-blue-300 hover:shadow-sm"
+                >
+                  <strong className="text-sm leading-6 text-slate-950 group-hover:text-blue-700">{career.carreraNombre}</strong>
+                  <span className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-700">
+                    Ver simulador y materias disponibles <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+            <p className="mt-5 text-sm text-slate-600">
+              ¿No encontrás tu carrera? Consultá el{' '}
+              <Link href="/pregunteros" className="font-semibold text-blue-700 underline underline-offset-2">
+                catálogo completo de pregunteros por materia
+              </Link>.
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       <section className="py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">

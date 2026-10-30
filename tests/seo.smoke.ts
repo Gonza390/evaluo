@@ -1035,3 +1035,23 @@ assertIncludesAll('app/landings/estudiar/[materia]/page.tsx', [
   'getMateriaSeoContentSignals',
   'hasSubstantialStudyLandingContent(signals)',
 ]);
+
+
+// Search Console (old domain, 2026-10-01 to 2026-10-28) shows distinct
+// landing intent: "pregunteros siglo 21" -> /pregunteros and
+// "parciales siglo 21" -> /landings/parciales. Keep both canonicals.
+assertIncludesAll('app/pregunteros/page.tsx', [
+  "canonical: '/pregunteros'",
+  'href="/landings/parciales"',
+  'Cómo preparar parciales Siglo 21',
+  'href="/funciones/simulacro-examen-con-ia"',
+]);
+assertIncludesAll('app/landings/parciales/page.tsx', [
+  "canonical: '/landings/parciales'",
+  'Parciales Siglo 21: práctica y simuladores por carrera',
+  'loadPregunteroHubData()',
+  'isSiglo21University(career.universidadNombre)',
+  'career.materias.length > 0',
+  'buildSeoEntitySlug(career.carreraNombre, career.carreraId)',
+  'Los ejercicios son de práctica de Evaluo, no exámenes oficiales',
+]);
