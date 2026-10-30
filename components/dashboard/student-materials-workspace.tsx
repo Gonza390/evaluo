@@ -62,7 +62,7 @@ export function StudentMaterialsWorkspace({
     .trim();
   const visibleMaterials = normalizedQuery
     ? initialMaterials.filter((material) =>
-        `${material.title} ${material.file_name}`
+        material.title
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
           .toLocaleLowerCase('es-AR')
