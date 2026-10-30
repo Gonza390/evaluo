@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GlobalClientRuntime } from '@/components/GlobalClientRuntime';
+import { SharedPrivateShell } from '@/components/SharedPrivateShell';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -129,7 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-background text-foreground min-h-screen text-[0.92rem]">
         <style>{ROOT_INLINE_CSS}</style>
         <GlobalClientRuntime />
-        {children}
+        <SharedPrivateShell>{children}</SharedPrivateShell>
         <SpeedInsights />
       </body>
     </html>
