@@ -108,7 +108,7 @@ function BottomNav() {
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
-        { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
+        { label: 'Estudiar', href: '/dashboard/explicaciones', icon: CircleAlert },
       ]
     : [
         { label: 'Inicio', href: '/', icon: Home },
