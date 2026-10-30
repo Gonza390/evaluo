@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -79,6 +79,10 @@ function NavItem({
   dataTourAttr?: string;
   compact?: boolean;
 }) {
+  const pathname = usePathname();
+  const [pendingFrom, setPendingFrom] = useState<string | null>(null);
+  useEffect(() => { if (pendingFrom !== null && pathname !== pendingFrom) setPendingFrom(null); }, [pathname, pendingFrom]);
+  const pending = pendingFrom === pathname && !active;
   const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} transition-colors duration-150 ${
     active
       ? 'text-primary font-semibold'
@@ -101,13 +105,15 @@ function NavItem({
   return (
     <Link
       href={href}
+      onClick={() => { if (!active) setPendingFrom(pathname); }}
+      aria-busy={pending || undefined}
       aria-current={active ? 'page' : undefined}
       data-evaluo-sidebar-link={active ? 'active' : undefined}
       title={collapsed ? label : undefined}
       className={baseClass}
       {...(dataTourAttr ? { [dataTourAttr]: 'true' } : {})}
     >
-      <Icon className="h-4 w-4 shrink-0" />
+      <Icon className={`h-4 w-4 shrink-0 ${pending ? 'animate-pulse text-primary' : ''}`} />
       {!collapsed ? <span>{label}</span> : null}
     </Link>
   );
