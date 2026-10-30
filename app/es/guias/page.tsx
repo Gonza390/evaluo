@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
+    locale: 'es',
     title: 'Guías de estudio universitario | Evaluo',
     description: 'Métodos concretos para comprender tus apuntes, preparar exámenes y practicar por temas.',
     url: toAbsoluteUrl(path),
