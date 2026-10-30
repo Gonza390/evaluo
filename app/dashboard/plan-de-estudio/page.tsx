@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, Clock3, FileText, GraduationCap, ListChecks, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, FileText, GraduationCap, ListChecks, Sparkles } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 
@@ -58,7 +58,6 @@ export default async function StudyPlanPage() {
             <section>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[15px] font-bold tracking-tight">Lo que sigue</h2>
-                <span className="text-xs text-slate-400">Basado en tus PDFs</span>
               </div>
               <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
                 {first ? (
@@ -112,10 +111,6 @@ export default async function StudyPlanPage() {
                 )) : <p className="p-5 text-sm text-slate-500">Tus PDFs aparecerán aquí cuando estén listos.</p>}
               </div>
             </section>
-            <div className="rounded-[16px] border border-slate-200 bg-white p-3">
-              <div className="flex items-center gap-2"><Clock3 className="size-4 text-blue-600" /><span className="text-[12px] font-semibold">Próximamente: planificación por días</span></div>
-              <p className="mt-1.5 text-xs leading-5 text-slate-500">Esta primera versión permite revisar el diseño. La generación y el seguimiento automático de sesiones todavía no están activados.</p>
-            </div>
           </div>
         </div>
       </div>
