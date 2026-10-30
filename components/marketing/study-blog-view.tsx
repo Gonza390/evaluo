@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
-import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { PublicBrandLink, PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -70,7 +70,18 @@ function BlogHeader({ locale }: { locale: StudyBlogLocale }) {
     <>
       <InternationalDocumentLanguage lang={locale} />
       <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader variant="landing" trackingLocation={'study_blog_' + locale} />
+        {locale === 'es' ? (
+          <PublicSiteHeader variant="landing" trackingLocation="study_blog_es" />
+        ) : (
+          <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-slate-200 py-3">
+            <PublicBrandLink />
+            <nav aria-label="Study navigation" className="flex items-center gap-4 text-sm font-semibold text-slate-700">
+              <Link href="/en" className="min-h-11 py-3 hover:text-blue-700">Study guides</Link>
+              <Link href="/en/blog" className="min-h-11 py-3 hover:text-blue-700">Blog</Link>
+              <Link href="/en/study-pdf-with-ai" className="hidden min-h-11 rounded-xl bg-blue-700 px-4 py-3 text-white hover:bg-blue-800 sm:inline-flex">Study with AI</Link>
+            </nav>
+          </header>
+        )}
       </div>
     </>
   );
