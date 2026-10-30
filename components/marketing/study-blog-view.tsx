@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
+import { StudyBlogWorkshopView } from '@/components/marketing/study-blog-workshop';
+import { STUDY_BLOG_WORKSHOPS_ES } from '@/lib/study-blog-workshops-es';
+import { STUDY_BLOG_WORKSHOPS_EN } from '@/lib/study-blog-workshops-en';
 import { PublicBrandLink, PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -142,6 +145,9 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
   const copy = words[locale];
   const path = getStudyBlogPath(locale, article);
   const translation = getTranslation(locale, article);
+  const workshop = locale === 'es'
+    ? STUDY_BLOG_WORKSHOPS_ES[article.key]
+    : STUDY_BLOG_WORKSHOPS_EN[article.key];
   const others = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key).slice(0, 3);
   const mainIndex = locale === 'es' ? '/' : '/en';
   const blogIndex = locale === 'es' ? '/blog' : '/en/blog';
@@ -197,6 +203,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
               <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-blue-700">{copy.takeaway}</h2>
               <p className="mt-2 text-base font-medium leading-8 text-[#0F1B3D]">{article.takeaway}</p>
             </section>
+            {workshop && <StudyBlogWorkshopView locale={locale} workshop={workshop} />}
             {article.sections.map((section, index) => (
               <section className="mt-12 scroll-mt-24" id={'seccion-' + (index + 1)} key={section.heading}>
                 <h2 className="text-2xl font-bold tracking-[-0.025em] sm:text-[1.8rem]">{section.heading}</h2>
@@ -268,6 +275,9 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
                 {article.sections.map((section, i) => (
                   <a className="text-sm leading-6 text-slate-600 hover:text-blue-700" key={section.heading} href={'#seccion-' + (i+1)}>{section.heading}</a>
                 ))}
+                <a href="#guia-practica" className="text-sm font-semibold text-blue-700 hover:underline">{locale === 'es' ? 'Guía práctica completa' : 'Complete worked guide'}</a>
+                <a href="#autoevaluacion" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Ejercicios con respuestas' : 'Exercises with answers'}</a>
+                <a href="#plantilla" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Plantilla para llevarte' : 'Reusable study template'}</a>
                 <a href="#ejercicio" className="text-sm text-slate-600 hover:text-blue-700">{copy.workedExample}</a>
                 <a href="#errores" className="text-sm text-slate-600 hover:text-blue-700">{copy.mistakes}</a>
                 <a href="#preguntas" className="text-sm text-slate-600 hover:text-blue-700">{copy.faq}</a>
