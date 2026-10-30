@@ -13,7 +13,6 @@ import {
   Home,
   LogIn,
   LogOut,
-  MessageSquarePlus,
   Settings,
   Search,
 } from 'lucide-react';
@@ -25,12 +24,6 @@ import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider'
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
 
 const Navbar = dynamic(() => import('./navbar').then((module) => module.Navbar));
@@ -41,8 +34,8 @@ const Toaster = dynamic(() => import('@/components/ui/toaster').then((module) =>
 const NotificationBell = dynamic(() =>
   import('@/components/notifications/notification-bell').then((module) => module.NotificationBell)
 );
-const FeedbackDialog = dynamic(() =>
-  import('@/components/FeedbackDialog').then((module) => module.FeedbackDialog)
+const MobileProfileMenu = dynamic(() =>
+  import('@/components/mobile-profile-menu').then((module) => module.MobileProfileMenu)
 );
 const Dialog = dynamic(() => import('@/components/ui/dialog').then((module) => module.Dialog));
 const DialogContent = dynamic(() =>
@@ -203,7 +196,6 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const streakDayKeys = streak?.streakDayKeys ?? [];
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showStreakDialog, setShowStreakDialog] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const isSimuladorRoute = pathname.startsWith('/simulador');
   const isLegalRoute =
     pathname === '/copyright' ||
@@ -331,45 +323,11 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   >
                     <CalendarDays className="h-[19px] w-[19px]" aria-hidden="true" />
                   </Link>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        data-mobile-profile-menu-trigger
-                        aria-label="Abrir menú de perfil"
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
-                      >
-                        <Avatar className="h-8 w-8 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
-                            {getUserInitials()}
-                          </AvatarFallback>
-                          {user.user_metadata?.avatar_url ? (
-                            <AvatarImage src={user.user_metadata.avatar_url} />
-                          ) : null}
-                        </Avatar>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      data-mobile-profile-menu
-                      align="end"
-                      sideOffset={8}
-                      className="w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg md:hidden"
-                    >
-                      <DropdownMenuItem asChild>
-                        <Link href="/configuracion" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]">
-                          <Settings className="h-4 w-4" aria-hidden="true" />
-                          Ajustes
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]"
-                        onSelect={() => setFeedbackOpen(true)}
-                      >
-                        <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
-                        Sugerencias
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <MobileProfileMenu
+                    initials={getUserInitials()}
+                    avatarUrl={user.user_metadata?.avatar_url}
+                    sourcePath={pathname}
+                  />
                   <button
                     type="button"
                     aria-label={`Ver racha de estudio: ${streakDays} días`}
@@ -412,10 +370,6 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     </span>
                   </button>
                 </div>
-
-                {feedbackOpen ? (
-                  <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} sourcePath={pathname} />
-                ) : null}
 
                 {showStreakDialog ? (
                   <Dialog open onOpenChange={setShowStreakDialog}>
