@@ -152,10 +152,38 @@ assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute \? 'hidden md:block
   'The notification bell must remain visible on mobile.');
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
-assert.match(appChromeSource, /user \? 'grid-cols-3' : 'grid-cols-4'/,
-  'Use three balanced bottom destinations for authenticated mobile users.');
-assert.match(appChromeSource, /href="\/configuracion"\s+aria-label="Abrir perfil"/,
-  'Keep Perfil accessible by tapping the mobile avatar.');
+assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
+  'Use two balanced bottom destinations for authenticated mobile users.');
+const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
+assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
+  'Keep Mi espacio in the bottom navigation.');
+assert.match(bottomNavSource, /label: 'Progreso', href: '\/dashboard\/explicaciones'/,
+  'Keep Progreso in the bottom navigation.');
+assert.doesNotMatch(bottomNavSource, /label: 'Calendario'|label: 'Perfil'/,
+  'Move Calendario out of the bottom bar and keep Perfil in the avatar menu.');
+assert.match(appChromeSource, /data-mobile-calendar-link/,
+  'Calendar belongs in the mobile top bar beside the profile avatar.');
+assert.match(appChromeSource, /href="\/calendario"\s+data-mobile-calendar-link/,
+  'The top calendar icon must navigate to the actual Calendar route.');
+assert.match(appChromeSource, /MobileProfileMenu = dynamic/,
+  'The avatar menu must be lazy-loaded to protect the global app performance budget.');
+assert.match(appChromeSource, /<MobileProfileMenu/,
+  'The profile menu must render beside the calendar in the mobile header.');
+const mobileProfileMenuSource = readFileSync(resolve('components/mobile-profile-menu.tsx'), 'utf8');
+assert.match(mobileProfileMenuSource, /data-mobile-profile-menu-trigger/,
+  'The profile avatar must open a mobile menu instead of immediately navigating.');
+assert.match(mobileProfileMenuSource, /data-mobile-profile-menu/,
+  'The menu should be identified for responsive verification.');
+assert.match(mobileProfileMenuSource, /Ajustes/,
+  'The profile menu must offer Ajustes.');
+assert.match(mobileProfileMenuSource, /Sugerencias/,
+  'The profile menu must offer Sugerencias.');
+assert.match(mobileProfileMenuSource, /href="\/configuracion"/,
+  'Ajustes must lead to the existing configuration page.');
+assert.match(mobileProfileMenuSource, /onSelect=\{\(\) => setFeedbackOpen\(true\)\}/,
+  'Sugerencias must open the existing feedback form.');
+assert.match(mobileProfileMenuSource, /<FeedbackDialog open=\{feedbackOpen\} onOpenChange=\{setFeedbackOpen\} sourcePath=\{sourcePath\} \/>/,
+  'The feedback flow must stay connected to its source path.');
 assert.match(appChromeSource, /Ver racha de estudio:/,
   'Keep the streak control independent from the avatar.');
 

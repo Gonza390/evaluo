@@ -34,6 +34,9 @@ const Toaster = dynamic(() => import('@/components/ui/toaster').then((module) =>
 const NotificationBell = dynamic(() =>
   import('@/components/notifications/notification-bell').then((module) => module.NotificationBell)
 );
+const MobileProfileMenu = dynamic(() =>
+  import('@/components/mobile-profile-menu').then((module) => module.MobileProfileMenu)
+);
 const Dialog = dynamic(() => import('@/components/ui/dialog').then((module) => module.Dialog));
 const DialogContent = dynamic(() =>
   import('@/components/ui/dialog').then((module) => module.DialogContent)
@@ -109,7 +112,6 @@ function BottomNav() {
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
         { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
-        { label: 'Calendario', href: '/calendario', icon: CalendarDays },
       ]
     : [
         { label: 'Inicio', href: '/', icon: Home },
@@ -128,7 +130,7 @@ function BottomNav() {
       data-tour-nav-mobile="true"
       className="border-border bg-background/95 pb-safe fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur md:hidden"
     >
-      <div className={`grid items-stretch gap-1 px-2 py-1.5 ${user ? 'grid-cols-3' : 'grid-cols-4'}`}>
+      <div className={`grid items-stretch gap-1 px-2 py-1.5 ${user ? 'grid-cols-2' : 'grid-cols-4'}`}>
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pendingHref !== null
@@ -307,21 +309,25 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
                   <NotificationBell compact={isCompactAppRoute} />
-                  {/* Mobile: profile stays accessible via avatar; flame continues to show streak. */}
+                  {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
-                    href="/configuracion"
-                    aria-label="Abrir perfil"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
+                    href="/calendario"
+                    data-mobile-calendar-link
+                    aria-label="Abrir calendario"
+                    aria-current={pathname === '/calendario' || pathname.startsWith('/calendario/') ? 'page' : undefined}
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
+                      pathname === '/calendario' || pathname.startsWith('/calendario/')
+                        ? 'bg-blue-50 text-brand'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
                   >
-                    <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                      {user.user_metadata?.avatar_url ? (
-                        <AvatarImage src={user.user_metadata.avatar_url} />
-                      ) : null}
-                    </Avatar>
+                    <CalendarDays className="h-[19px] w-[19px]" aria-hidden="true" />
                   </Link>
+                  <MobileProfileMenu
+                    initials={getUserInitials()}
+                    avatarUrl={user.user_metadata?.avatar_url}
+                    sourcePath={pathname}
+                  />
                   <button
                     type="button"
                     aria-label={`Ver racha de estudio: ${streakDays} días`}
