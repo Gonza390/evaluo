@@ -2687,7 +2687,7 @@ export function MaterialStudyWorkspace({
         <div data-pdf-mobile-document-header className="mx-auto flex w-full min-w-0 items-center gap-2 px-3 py-2 md:hidden">
           <Link
             href={backHref}
-            aria-label="Volver a Mi espacio"
+            aria-label="Volver"
             className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
@@ -2743,7 +2743,7 @@ export function MaterialStudyWorkspace({
               <DropdownMenuItem asChild>
                 <Link href={backHref}>
                   <ChevronLeft className="size-4" aria-hidden="true" />
-                  Volver a Mi espacio
+                  Volver
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
