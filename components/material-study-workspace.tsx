@@ -2612,22 +2612,25 @@ export function MaterialStudyWorkspace({
           hasNextChapter={chapterFinishIndex < summaryChapters.length - 1}
           onEvaluate={() => {
             const index = chapterFinishIndex;
+            if (isOwner && !demo) markActivity(materialId, index, 'reading');
             setChapterFinishIndex(null);
             startChapterEvaluation(index);
           }}
           onFlashcards={() => {
             const index = chapterFinishIndex;
+            if (isOwner && !demo) markActivity(materialId, index, 'reading');
             setChapterFinishIndex(null);
             setFlashcardTopicIndex(index);
             handleStudyTabChange('tarjetas', 'summary_chapter');
           }}
           onGlossary={() => {
             const index = chapterFinishIndex;
+            if (isOwner && !demo) markActivity(materialId, index, 'reading');
             setChapterFinishIndex(null);
             setGlossaryTopicIndex(index);
             handleStudyTabChange('glosario', 'summary_chapter');
           }}
-          onContinue={() => continueAfterChapter(chapterFinishIndex)}
+          onContinue={() => { if (isOwner && !demo) markActivity(materialId, chapterFinishIndex, 'reading'); continueAfterChapter(chapterFinishIndex); }}
           onClose={() => setChapterFinishIndex(null)}
         />
       ) : null}
