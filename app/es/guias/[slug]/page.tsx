@@ -6,6 +6,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { EditorialMethodology } from '@/components/seo/editorial-methodology';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 import { STUDY_GUIDES, getStudyGuide } from '@/lib/es-study-guides';
@@ -194,6 +195,7 @@ export default async function GuiaDeEstudio({ params }: Props) {
               </TrackedLink>
               <p className="mt-3 text-xs text-slate-500">Primero eliges el PDF; para procesarlo necesitas crear una cuenta.</p>
             </section>
+            <EditorialMethodology kind="study" />
             <p className="mt-8 text-xs leading-6 text-slate-500">
               Recurso educativo de Evaluo · Actualizado el 29 de octubre de 2026.
               La práctica de recuperación y el repaso distribuido tienen apoyo en investigación educativa.
