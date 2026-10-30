@@ -109,9 +109,9 @@ query.maybeSingle = async () => ({ data: null, error: null });
 assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
 
 // Las comprobaciones del lector deben ser respondibles, distintas y respaldadas por el material.
-const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const materialPageSource = readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
-const demoPageSource = readFileSync('app/demo/material-estudio/page.tsx', 'utf8');
+const demoPageSource = readFileSync('app/(es)/demo/material-estudio/page.tsx', 'utf8');
 const demoWorkspaceSource = readFileSync('components/demo-four-step-study.tsx', 'utf8');
 assert.doesNotMatch(demoPageSource, /start === 'eleccion'|start === 'plan'/,
   'La demo no debe ofrecer etapas de inicio eliminadas.');
@@ -458,7 +458,7 @@ assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder an
 assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegación guiada debe transicionar entre las pantallas reales.');
 assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La animación debe respetar las preferencias de accesibilidad.');
 assert.match(materialWorkspaceSource, /data-onboarding-transitioning/, 'El contenido debe suavizar el cambio de etapa.');
-const materialStudyCss = readFileSync('app/materiales/[id]/material-study.css', 'utf8');
+const materialStudyCss = readFileSync('app/(es)/materiales/[id]/material-study.css', 'utf8');
 assert.match(materialStudyCss, /evaluo-onboarding-copy-appear/, 'El cambio de texto debe ser suave.');
 assert.match(materialStudyCss, /260ms cubic-bezier/, 'La copia debe aparecer con una transición suave.');
 assert.match(materialStudyCss, /prefers-reduced-motion: reduce/, 'La animación de la guía debe desactivarse cuando corresponda.');

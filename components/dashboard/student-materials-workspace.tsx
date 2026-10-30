@@ -212,6 +212,16 @@ export function StudentMaterialsWorkspace({
                       </div>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setMaterialToDelete(material)}
+                      disabled={isPending}
+                      aria-label={`Eliminar material ${material.title}`}
+                      title="Eliminar PDF"
+                      className="relative z-10 inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 sm:self-center xl:self-end"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
                   </div>
                 </article>
               );

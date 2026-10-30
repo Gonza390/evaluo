@@ -32,15 +32,15 @@ if (added.has('.github/workflows/english-indexnow.yml')) {
   'lib/english-seo-content.ts',
   'lib/english-seo-metadata.ts',
   'components/marketing/english-study-page.tsx',
-  'app/en/layout.tsx',
+  'app/(en)/layout.tsx',
 ].some(path => changed.has(path))) {
   all.forEach(url => routes.add(url));
 } else {
   const mapping = [
-    ['app/en/page.tsx', all[0]],
-    ['app/en/pdf-to-quiz/', all[1]],
-    ['app/en/pdf-to-flashcards/', all[2]],
-    ['app/en/study-pdf-with-ai/', all[3]],
+    ['app/(en)/en/page.tsx', all[0]],
+    ['app/(en)/en/pdf-to-quiz/', all[1]],
+    ['app/(en)/en/pdf-to-flashcards/', all[2]],
+    ['app/(en)/en/study-pdf-with-ai/', all[3]],
   ];
   for (const file of changed) {
     for (const [path, url] of mapping) {

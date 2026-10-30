@@ -34,8 +34,8 @@ assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible, skippedAt: new Dat
 assert.equal(shouldAutoStartFirstPdfOnboarding({ ...eligible }), true,
   'New eligible accounts must still receive the guide.');
 
-const action = readFileSync('app/materiales/[id]/onboarding-actions.ts','utf8');
-const page = readFileSync('app/materiales/[id]/page.tsx','utf8');
+const action = readFileSync('app/(es)/materiales/[id]/onboarding-actions.ts','utf8');
+const page = readFileSync('app/(es)/materiales/[id]/page.tsx','utf8');
 const workspace = readFileSync('components/material-study-workspace.tsx','utf8');
 assert.match(action, /'use server'/);
 assert.match(action, /supabase\.auth\.getUser\(\)/);

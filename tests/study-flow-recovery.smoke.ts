@@ -31,7 +31,7 @@ assert.doesNotMatch(richText, /dangerouslySetInnerHTML/);
 const exam = readFileSync('components/student-material-exam.tsx', 'utf8');
 const progress = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
 const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
-const page = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const page = readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8');
 
 assert.match(exam, /Tu respuesta está guardada en este navegador|Tu respuesta está guardada/);
 assert.match(exam, /window\.localStorage\.setItem\(draftStorageKey, JSON\.stringify\(draft\)\)/);

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const dashboard = readFileSync('app/dashboard/page.tsx', 'utf8');
+const dashboard = readFileSync('app/(es)/dashboard/page.tsx', 'utf8');
 const shell = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
-const academicAction = readFileSync('app/dashboard/materiales/academic-options-actions.ts', 'utf8');
-const upload = readFileSync('app/dashboard/materiales/pdf-first-upload-actions.ts', 'utf8');
+const academicAction = readFileSync('app/(es)/dashboard/materiales/academic-options-actions.ts', 'utf8');
+const upload = readFileSync('app/(es)/dashboard/materiales/pdf-first-upload-actions.ts', 'utf8');
 const workspace = readFileSync('components/dashboard/student-materials-workspace.tsx', 'utf8');
 const academicReminderLazy = readFileSync('components/dashboard/lazy-academic-profile-reminder.tsx', 'utf8');
 

@@ -14,7 +14,7 @@ assert.match(migration, /m\.processing_status = 'processing'/);
 assert.match(migration, /'\*\/5 \* \* \* \*'/);
 assert.doesNotMatch(migration, /update\s+public\.student_materials[^]*?set\s+processing_status\s*=\s*'ready'/);
 
-const page = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const page = readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8');
 const retry = readFileSync('components/student-material-processing-retry.tsx', 'utf8');
 const refresh = readFileSync('components/student-material-processing-refresh.tsx', 'utf8');
 assert.match(page, /material\.processing_status === 'failed'/);

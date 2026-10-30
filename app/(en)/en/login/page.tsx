@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import LoginFormGoogleFirst from '@/components/LoginFormGoogleFirst';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
-import '../../login/login-clean.css';
+import '../../../(es)/login/login-clean.css';
 
 export const metadata: Metadata = {
   title: 'Sign in or create an account | Evaluo',

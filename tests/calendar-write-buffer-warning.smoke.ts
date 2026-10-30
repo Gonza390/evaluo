@@ -47,7 +47,7 @@ assert.match(describeCalendarSaveError({ code: '23503' }), /materia o carrera/);
 assert.match(describeCalendarSaveError({ code: '42501' }), /sesión/);
 assert.doesNotMatch(describeCalendarSaveError({ code: '23514', message: 'sensitive-data' }), /sensitive-data/);
 
-const page = readFileSync('app/calendario/page.tsx', 'utf8');
+const page = readFileSync('app/(es)/calendario/page.tsx', 'utf8');
 const instrumentation = readFileSync('instrumentation.ts', 'utf8');
 const runtimeTracer = readFileSync('lib/server-runtime-warnings.ts', 'utf8');
 // El recorrido guiado del Calendario fue eliminado, no deshabilitado.

@@ -5,7 +5,7 @@ const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8'
 const richText = readFileSync('components/study-rich-text.tsx', 'utf8');
 const styles = readFileSync('components/study/pdf-study-styles.ts', 'utf8');
 const appLayout = readFileSync('components/ClientLayoutClient.tsx', 'utf8');
-const materialPage = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const materialPage = readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8');
 const materialStatus = readFileSync('components/material-study-status-workspace.tsx', 'utf8');
 
 // Header shows only Back, material title and optional Guide, regardless of

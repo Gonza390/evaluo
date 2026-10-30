@@ -64,24 +64,24 @@ assert.deepEqual(parseSeoEntitySlug('aprender-en-el-siglo-21--a37a41c2'), {
   labelSlug: 'aprender-en-el-siglo-21',
 });
 
-const materiaPageSource = readFileSync(resolve('app/explorar/materia/[id]/page.tsx'), 'utf8');
+const materiaPageSource = readFileSync(resolve('app/(es)/explorar/materia/[id]/page.tsx'), 'utf8');
 const contentSignalsSource = readFileSync(resolve('lib/seo-content-signals.ts'), 'utf8');
-const notFoundSource = readFileSync(resolve('app/not-found.tsx'), 'utf8');
-const pregunteroSource = readFileSync(resolve('app/pregunteros/[materia]/page.tsx'), 'utf8');
+const notFoundSource = readFileSync(resolve('app/(es)/not-found.tsx'), 'utf8');
+const pregunteroSource = readFileSync(resolve('app/(es)/pregunteros/[materia]/page.tsx'), 'utf8');
 const clientLayoutSource = readFileSync(resolve('components/ClientLayout.tsx'), 'utf8');
 const clientLayoutUiSource = readFileSync(resolve('components/ClientLayoutClient.tsx'), 'utf8');
 const universityRequestFormSource = readFileSync(
-  resolve('app/solicitar-universidad/request-form.tsx'),
+  resolve('app/(es)/solicitar-universidad/request-form.tsx'),
   'utf8'
 );
 const nextConfigSource = readFileSync(resolve('next.config.mjs'), 'utf8');
 const pdfRenderSource = readFileSync(resolve('lib/student-materials/pdf-render.ts'), 'utf8');
 const materialActionsSource = readFileSync(
-  resolve('app/dashboard/materiales/actions.ts'),
+  resolve('app/(es)/dashboard/materiales/actions.ts'),
   'utf8'
 );
 const materialProcessingActionsSource = readFileSync(
-  resolve('app/dashboard/materiales/processing-actions.ts'),
+  resolve('app/(es)/dashboard/materiales/processing-actions.ts'),
   'utf8'
 );
 const materialProcessingServiceSource = readFileSync(
@@ -103,34 +103,34 @@ const homeStudyPreviewSource = readFileSync(
   resolve('components/marketing/home-study-preview.tsx'),
   'utf8'
 );
-const simulatorIndexSource = readFileSync(resolve('app/simulador/page.tsx'), 'utf8');
+const simulatorIndexSource = readFileSync(resolve('app/(es)/simulador/page.tsx'), 'utf8');
 const simulatorPreviewSource = readFileSync(
-  resolve('app/preview/resultado-simulador/page.tsx'),
+  resolve('app/(es)/preview/resultado-simulador/page.tsx'),
   'utf8'
 );
 const materiaLoadingSource = readFileSync(
-  resolve('app/explorar/materia/[id]/loading.tsx'),
+  resolve('app/(es)/explorar/materia/[id]/loading.tsx'),
   'utf8'
 );
-const universityPageSource = readFileSync(resolve('app/universidad/[id]/page.tsx'), 'utf8');
+const universityPageSource = readFileSync(resolve('app/(es)/universidad/[id]/page.tsx'), 'utf8');
 const universityCareerListSource = readFileSync(
-  resolve('app/universidad/[id]/career-list-client.tsx'),
+  resolve('app/(es)/universidad/[id]/career-list-client.tsx'),
   'utf8'
 );
 const materiaListSource = readFileSync(resolve('components/materia-list.tsx'), 'utf8');
-const pricingSource = readFileSync(resolve('app/pricing/page.tsx'), 'utf8');
-const pregunteroHubSource = readFileSync(resolve('app/pregunteros/page.tsx'), 'utf8');
-const materialViewerSource = readFileSync(resolve('app/materiales/[id]/page.tsx'), 'utf8');
+const pricingSource = readFileSync(resolve('app/(es)/pricing/page.tsx'), 'utf8');
+const pregunteroHubSource = readFileSync(resolve('app/(es)/pregunteros/page.tsx'), 'utf8');
+const materialViewerSource = readFileSync(resolve('app/(es)/materiales/[id]/page.tsx'), 'utf8');
 const materialJobsSource = readFileSync(resolve('lib/student-material-jobs.ts'), 'utf8');
 const materialRetrySource = readFileSync(
   resolve('components/student-material-processing-retry.tsx'),
   'utf8'
 );
 const materiaStudyHomeSource = readFileSync(
-  resolve('app/explorar/materia/[id]/materia-study-home.tsx'),
+  resolve('app/(es)/explorar/materia/[id]/materia-study-home.tsx'),
   'utf8'
 );
-const dashboardPageSource = readFileSync(resolve('app/dashboard/page.tsx'), 'utf8');
+const dashboardPageSource = readFileSync(resolve('app/(es)/dashboard/page.tsx'), 'utf8');
 const dashboardWorkspaceSource = readFileSync(
   resolve('components/dashboard/student-materials-workspace.tsx'),
   'utf8'
@@ -139,10 +139,10 @@ const dashboardChromeSource = readFileSync(
   resolve('components/dashboard/maeve-dashboard-chrome.tsx'),
   'utf8'
 );
-const exploreClientSource = readFileSync(resolve('app/explorar/explorar-client.tsx'), 'utf8');
+const exploreClientSource = readFileSync(resolve('app/(es)/explorar/explorar-client.tsx'), 'utf8');
 const loginSource = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
 const simulatorLegacySource = readFileSync(resolve('components/simulador/SimuladorExamenLegacy.tsx'), 'utf8');
-const profileCompletionSource = readFileSync(resolve('app/completar-perfil/page.tsx'), 'utf8');
+const profileCompletionSource = readFileSync(resolve('app/(es)/completar-perfil/page.tsx'), 'utf8');
 const pdfUploadShellSource = readFileSync(resolve('components/dashboard/pdf-first-upload-shell.tsx'), 'utf8');
 const vercelConfigSource = readFileSync(resolve('vercel.json'), 'utf8');
 const visionExtractSource = readFileSync(
@@ -199,10 +199,10 @@ assert.doesNotMatch(clientLayoutSource, /getAppShellBootstrap/);
 const performanceBudget = readFileSync(resolve('performance-budget.json'), 'utf8');
 const performanceScript = readFileSync(resolve('scripts/check-performance-budget.mjs'), 'utf8');
 const ciSource = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
-const adminActionsSource = readFileSync(resolve('app/administrador/actions.ts'), 'utf8');
-const adminLoadingSource = readFileSync(resolve('app/administrador/loading.tsx'), 'utf8');
-const rootLayoutSource = readFileSync(resolve('app/layout.tsx'), 'utf8');
-const seoLandingSource = readFileSync(resolve('app/landings/estudiar/[materia]/page.tsx'), 'utf8');
+const adminActionsSource = readFileSync(resolve('app/(es)/administrador/actions.ts'), 'utf8');
+const adminLoadingSource = readFileSync(resolve('app/(es)/administrador/loading.tsx'), 'utf8');
+const rootLayoutSource = readFileSync(resolve('app/(es)/layout.tsx'), 'utf8');
+const seoLandingSource = readFileSync(resolve('app/(es)/landings/estudiar/[materia]/page.tsx'), 'utf8');
 assert.match(performanceBudget, /"\/dashboard"/);
 assert.match(performanceBudget, /"\/administrador"/);
 assert.match(performanceScript, /gzipSync/);
@@ -292,14 +292,14 @@ assert.match(materialRetrySource, /processStudentMaterialAction\(materialId\)/);
 assert.match(materialRetrySource, /Reintentar procesamiento/);
 
 // El acceso al PDF compartido requiere cuenta incluso fuera del navegador.
-const protectedPdfPage = readFileSync(resolve('app/materiales/[id]/page.tsx'), 'utf8');
+const protectedPdfPage = readFileSync(resolve('app/(es)/materiales/[id]/page.tsx'), 'utf8');
 const directPdfDownload = readFileSync(
   resolve('app/api/student-materials/[id]/download/route.ts'),
   'utf8'
 );
 const sharedPdfThumbnail = readFileSync(resolve('app/api/pdf-thumbnail/route.ts'), 'utf8');
 const materialLoginForm = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
-const oauthCallback = readFileSync(resolve('app/auth/callback/route.ts'), 'utf8');
+const oauthCallback = readFileSync(resolve('app/(es)/auth/callback/route.ts'), 'utf8');
 const securedStudyRls = readFileSync(
   resolve('supabase/migrations/20261021091000_require_auth_for_shared_student_material_content.sql'),
   'utf8'

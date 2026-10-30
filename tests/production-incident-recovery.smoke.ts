@@ -62,13 +62,13 @@ assert.match(stateRoute, /private, no-store/);
 const stateClient = readFileSync('lib/student-materials/processing-state-client.ts', 'utf8');
 assert.match(stateClient, /credentials: 'same-origin'/);
 assert.match(stateClient, /cache: 'no-store'/);
-const stateAction = readFileSync('app/dashboard/materiales/actions.ts', 'utf8');
+const stateAction = readFileSync('app/(es)/dashboard/materiales/actions.ts', 'utf8');
 assert.match(stateAction, /const user = await requireAuthenticatedUser\(\)/);
 assert.match(stateAction, /\.eq\('user_id', user.id\)/);
 
 const proxy = readFileSync('proxy.ts', 'utf8');
 const guard = readFileSync('components/SessionIdleGuard.tsx', 'utf8');
-const callback = readFileSync('app/auth/callback/route.ts', 'utf8');
+const callback = readFileSync('app/(es)/auth/callback/route.ts', 'utf8');
 assert.match(proxy, /isTerminalAuthSessionError\(authError\)/);
 assert.match(proxy, /response\.cookies\.delete/);
 assert.match(guard, /sessionCheckInFlightRef/);
