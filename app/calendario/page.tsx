@@ -747,11 +747,11 @@ export default function CalendarioPage() {
           title="Calendario"
           description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
         />
-        <section className="overflow-hidden rounded-[20px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_50%,#edf4ff_100%)] shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
           <div className="relative p-1.5 min-[380px]:p-2 sm:p-3">
-            <div className="min-w-0 overflow-hidden rounded-[16px] border border-slate-200/80 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.05)]">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div
-                className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-1.5 py-2.5 min-[380px]:px-3 sm:gap-2 sm:px-4"
+                className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-white px-1.5 py-2.5 min-[380px]:px-3 sm:gap-2 sm:px-4"
               >
                 <div className="flex min-w-0 shrink items-center gap-0 sm:gap-1">
                   <button
@@ -792,7 +792,7 @@ export default function CalendarioPage() {
                     type="button"
                     onClick={() => openComposerForDate(selectedDate)}
                     aria-label="Agregar evento"
-                    className="h-8 min-w-8 rounded-xl bg-gradient-to-r from-brand to-brand-2 px-2 text-white shadow-[0_12px_28px_rgba(37,99,235,0.24)] hover:opacity-95 sm:px-4"
+                    className="h-8 min-w-8 rounded-xl bg-primary px-2 text-white shadow-sm hover:opacity-95 sm:px-4"
                   >
                     <CalendarPlus className="h-4 w-4" />
                     <span className="hidden whitespace-nowrap sm:inline">Agregar evento</span>
@@ -801,7 +801,7 @@ export default function CalendarioPage() {
               </div>
 
               <div
-                className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#f3f7ff_100%)]"
+                className="border-b border-slate-200/80 bg-slate-50/60"
                 style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
               >
                 {WEEKDAY_LABELS.map((label) => (
@@ -1122,7 +1122,7 @@ export default function CalendarioPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
                   <p className="text-[12px] font-bold tracking-[0.18em] text-slate-500 uppercase">
                     Vista previa
                   </p>
@@ -1149,7 +1149,7 @@ export default function CalendarioPage() {
                 </div>
 
                 {formState.type === 'exam' ? (
-                  <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-blue-500" />
                       <p className="text-[12px] font-bold text-slate-800">Recordatorios</p>
