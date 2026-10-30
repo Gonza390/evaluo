@@ -158,8 +158,8 @@ assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
 const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
 assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
   'Keep Mi espacio in the bottom navigation.');
-assert.match(bottomNavSource, /label: 'Progreso', href: '\/dashboard\/explicaciones'/,
-  'Keep Progreso in the bottom navigation.');
+assert.match(bottomNavSource, /label: 'Estudiar', href: '\/dashboard\/explicaciones'/,
+  'Keep Estudiar in the bottom navigation.');
 assert.doesNotMatch(bottomNavSource, /label: 'Calendario'|label: 'Perfil'/,
   'Move Calendario out of the bottom bar and keep Perfil in the avatar menu.');
 assert.match(appChromeSource, /data-mobile-calendar-link/,
