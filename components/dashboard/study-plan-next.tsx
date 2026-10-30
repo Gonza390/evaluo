@@ -2,13 +2,14 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowRight, BookOpen, ListChecks, Layers3, BookText, CheckCircle2, Clock3 } from 'lucide-react';
-import { getProgress, type TopicActivities } from '@/lib/study-plan-progress';
+import { getProgress, syncStudyPlanProgress, type TopicActivities } from '@/lib/study-plan-progress';
 
 type Step = { id: 'reading'|'questions'|'flashcards'|'glossary'; label: string; detail: string; href: string; minutes: number; icon: typeof BookOpen };
 export function StudyPlanNext({ materialId, topicCount, topicActivities }: { materialId:string; topicCount:number; topicActivities:TopicActivities[] }) {
  const [done,setDone]=useState<Record<string,boolean>>({});
  useEffect(()=>{
   const update=()=>setDone(getProgress(materialId,topicActivities).record);
+  void syncStudyPlanProgress(materialId).then(update);
   update();window.addEventListener('focus',update);window.addEventListener('pageshow',update);
   return ()=>{window.removeEventListener('focus',update);window.removeEventListener('pageshow',update);};
  },[materialId,topicActivities]);
@@ -37,24 +38,23 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
  return <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
-   const next=steps.findIndex(step=>!done[`${topic}:${step.id}`]);
-   return <div key={topic}>
+      return <div key={topic}>
     <div className={`flex items-center justify-between px-3 py-2 text-[11px] font-semibold text-slate-500 ${groupIndex?'border-t border-slate-200 bg-slate-50/70':'border-b border-slate-100'}`}>
      <span>Tema {topic+1} de {topicCount}</span>{groupIndex>0?<span>Podés ir adelantando</span>:null}
     </div>
-    {steps.map((step,i)=>{
+    {steps.filter(step=>!done[`${topic}:${step.id}`]).map((step,i)=>{
      const Icon=step.icon;const completed=!!done[`${topic}:${step.id}`];
-     const active=groupIndex===0 && i===next;
+     const active=groupIndex===0 && i===0;
      return <Link key={step.id} href={step.href} className={`flex items-center gap-3 border-t border-slate-100 px-3 py-3 transition first:border-t-0 hover:bg-slate-50 ${active?'bg-blue-50/70':''}`}>
       <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${completed?'bg-emerald-50 text-emerald-700':active?'bg-blue-100 text-blue-700':'bg-slate-100 text-slate-500'}`}><Icon className="size-[17px]"/></span>
       <span className="min-w-0 flex-1">
        <span className="block text-[12px] font-semibold">{step.label}</span>
        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
-        <span>{completed?'Completado':step.detail}</span>
+        <span>{step.detail}</span>
         {!completed?<span className="inline-flex items-center gap-1"><Clock3 className="size-3"/>≈ {step.minutes} min</span>:null}
        </span>
       </span>
-      {completed?<CheckCircle2 className="size-4 text-emerald-600"/>:<ArrowRight className={`size-4 ${active?'text-blue-700':'text-slate-400'}`}/>}
+      <ArrowRight className={`size-4 ${active?'text-blue-700':'text-slate-400'}`}/>
      </Link>;
     })}
    </div>;
