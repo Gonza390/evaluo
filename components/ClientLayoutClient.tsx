@@ -269,7 +269,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               stablePrivateHeader ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
           >
-            {!user ? (
+            {userLoading && privateRoute ? (
+              <div aria-hidden="true" className="flex h-9 items-center gap-2"><Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} className="h-8 w-8" /><span className="hidden text-[15px] font-bold text-slate-950 md:block">Evaluo</span></div>
+            ) : !user ? (
               <PublicBrandLink />
             ) : (
               <Link
@@ -292,7 +294,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
             )}
-            {!user ? (
+            {userLoading && privateRoute ? (
+              <div aria-hidden="true" className="ml-auto flex items-center gap-2"><div className="h-8 w-8 rounded-full bg-slate-100" /><div className="hidden h-7 w-24 rounded-lg bg-slate-100 md:block" /></div>
+            ) : !user ? (
               <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                 <div className="hidden lg:block">
                   <EstimatedStudyActivity />
@@ -514,10 +518,12 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-0 flex-1">
         {showSidebar ? (
           <Navbar collapsed={sidebarCollapsed} onToggleCollapsed={handleSidebarToggle} compact={isCompactAppRoute} />
+        ) : userLoading && privateRoute ? (
+          <aside aria-hidden="true" className="fixed inset-y-[52px] left-0 hidden w-[176px] border-r border-slate-100 bg-white md:block" />
         ) : null}
         <div
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${
-            showSidebar
+            (showSidebar || (userLoading && privateRoute))
               ? isCompactAppRoute
                 ? sidebarCollapsed ? 'md:ml-[56px]' : 'md:ml-[176px]'
                 : sidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]'
