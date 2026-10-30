@@ -5,6 +5,22 @@ const workspace = readFileSync('components/material-study-workspace.tsx', 'utf8'
 const richText = readFileSync('components/study-rich-text.tsx', 'utf8');
 const styles = readFileSync('components/study/pdf-study-styles.ts', 'utf8');
 const appLayout = readFileSync('components/ClientLayoutClient.tsx', 'utf8');
+const materialPage = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const materialStatus = readFileSync('components/material-study-status-workspace.tsx', 'utf8');
+
+// Header shows only Back, material title and optional Guide, regardless of
+// whether carrera/universidad/materia metadata is populated.
+assert.doesNotMatch(workspace, /MaterialMetadata|carreraName|universidadName/,
+  'Completed PDF header must not show academic metadata.');
+assert.doesNotMatch(materialStatus, /MaterialMetadata|carreraName|universidadName|materiaName/,
+  'Processing and failed PDF headers must not show academic metadata.');
+assert.doesNotMatch(materialPage, /'Sin carrera'|'Sin universidad'|'Sin materia'/,
+  'PDF reader must not introduce empty-context labels into any header.');
+assert.match(workspace, /data-reopen-first-pdf-guide/,
+  'Keep the voluntary Guide button.');
+assert.match(materialStatus, /\{title\}/,
+  'Keep the material title during processing and error states.');
+
 
 assert.match(appLayout, /isMaterialStudyRoute \? 'hidden md:block' : ''/,
   'On PDF routes the global Evaluo header should disappear only on mobile.');
