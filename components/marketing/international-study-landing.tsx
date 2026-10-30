@@ -25,7 +25,7 @@ const studySteps = [
   {
     number: '02',
     title: 'Comprende el contenido',
-    description: 'Utiliza el resumen, el glosario y el mapa mental para organizar los conceptos.',
+    description: 'Utiliza el resumen y el glosario para organizar conceptos; si tienes Premium, también puedes consultar el mapa mental.',
     icon: BookOpenCheck,
   },
   {

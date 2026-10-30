@@ -83,6 +83,13 @@ export default function CrearMapaMentalDesdePdfPage() {
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
                 Si querés convertir un PDF en mapa mental con IA, elegí tus apuntes y organizá sus temas, subtemas y conceptos. Visualizá las relaciones entre ideas y después volvé al documento o seguí practicando en Evaluo.
               </p>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-700">
+                <strong>El mapa mental es una función Premium.</strong> Podés empezar con el resumen,
+                glosario, flashcards y práctica de tu PDF en el plan gratuito, sujeto a sus límites.
+                <Link href="/pricing" className="ml-1 font-semibold text-blue-700 underline underline-offset-2">
+                  Ver planes y límites
+                </Link>.
+              </p>
               <div className="mt-8">
                 <TrackedLink
                   href="#elegir-pdf-mapa-mental"
@@ -172,9 +179,14 @@ export default function CrearMapaMentalDesdePdfPage() {
               <ol className="mt-6 space-y-4 text-sm leading-7 text-slate-600">
                 <li><strong className="text-slate-900">1. Elegí tu PDF.</strong> Seleccioná un capítulo, apunte o material que estés estudiando.</li>
                 <li><strong className="text-slate-900">2. Creá el material.</strong> Registrate cuando decidas procesarlo y accedé a las vistas de estudio.</li>
-                <li><strong className="text-slate-900">3. Consultá el mapa mental.</strong> Ubicá el tema principal, las ramas y las relaciones; después comprobá lo aprendido con ejercicios.</li>
+                <li><strong className="text-slate-900">3. Consultá el mapa mental con Premium.</strong> Ubicá el tema principal, las ramas y las relaciones; después comprobá lo aprendido con ejercicios.</li>
               </ol>
-              <p className="mt-5 text-xs leading-6 text-slate-500">El mapa visual es parte del estudio sobre tu PDF; no reemplaza la lectura de la fuente original.</p>
+              <p className="mt-5 text-xs leading-6 text-slate-500">
+                Podés seleccionar tu PDF antes de registrarte. Para acceder a la vista de mapa mental
+                necesitás Premium; las funciones del plan gratuito tienen límites. Consultá
+                {' '}<Link href="/pricing" className="font-semibold text-blue-700 underline underline-offset-2">los planes</Link>.
+                El mapa no reemplaza la lectura de la fuente original.
+              </p>
             </div>
             <PdfFirstLandingUploader trackingLocation="seo_mapa_mental_pdf" sourceKey="mapa-mental-desde-pdf" />
           </div>
@@ -293,6 +305,7 @@ export default function CrearMapaMentalDesdePdfPage() {
             </div>
             <div className="divide-y divide-slate-200 border-y border-slate-200">
               {[
+                ['¿El mapa mental está incluido en el plan gratuito?', 'No. La creación de mapas mentales requiere Premium. Podés empezar con resúmenes, glosario, flashcards y práctica gratuita dentro de los límites del plan.'],
                 ['¿El mapa mental parte del PDF que subo?', 'Sí. La función usa el material que elegís como fuente para organizar visualmente los temas y conceptos del contenido.'],
                 ['¿Cómo crear un mapa mental desde un PDF?', 'Seleccioná el PDF en esta página, continuá con la creación del material y abrí su mapa mental para explorar las relaciones entre temas y subtemas.'],
                 ['¿El mapa mental reemplaza al resumen?', 'No. Son formas distintas de recorrer el mismo material: el resumen mantiene una lectura estructurada y el mapa mental ayuda a visualizar relaciones.'],
