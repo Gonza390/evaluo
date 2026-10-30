@@ -13,6 +13,7 @@ import {
   Home,
   LogIn,
   LogOut,
+  Settings,
   Search,
 } from 'lucide-react';
 import { UserProvider, useUser } from '@/hooks/useUser';
