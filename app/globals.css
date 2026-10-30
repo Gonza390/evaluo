@@ -337,6 +337,11 @@
   }
 }
 
+@keyframes evaluo-study-tab-enter {
+  from { opacity: 0.65; transform: translate3d(0, 3px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
 @keyframes saasGlow {
   0%,
   100% {
@@ -451,7 +456,8 @@
   }
 
   .animate-tab-panel {
-    animation: saasLiftIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* Tabs should respond immediately, without a large layout-shifting entrance. */
+    animation: evaluo-study-tab-enter 150ms var(--evaluo-motion-ease) both;
   }
 
   .animate-surface-reveal {
