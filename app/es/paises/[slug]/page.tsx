@@ -104,6 +104,15 @@ export default async function CountryStudyGuidePage({params}: Props) {
                 className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-blue-700 underline underline-offset-4">
                 {guide.sourceName} <ExternalLink className="h-4 w-4" aria-hidden="true"/>
               </a>
+              <h3 className="mt-6 text-sm font-bold text-slate-900">Qué comprobar en el organismo responsable</h3>
+              <ul className="mt-3 space-y-3 text-sm leading-7 text-slate-700">
+                {guide.officialChecks.map((check) => (
+                  <li key={check} className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-blue-700" aria-hidden="true"/>
+                    <span>{check}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
 
             <section id="metodo" className="mt-12 scroll-mt-24" aria-labelledby="metodo-pais">
