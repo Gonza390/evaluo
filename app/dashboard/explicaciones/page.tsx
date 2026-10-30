@@ -51,8 +51,25 @@ export default async function StudyErrorsPage({
         }
       }
     }
+    // Last opened study material, rather than the latest upload.
+    let lastOpenedMaterialId: string | null = null;
+    if (ids.length > 0) {
+      const { data: recentOpens } = await supabase
+        .from('analytics_events')
+        .select('metadata')
+        .eq('user_id', user.id)
+        .eq('event_name', 'student_material_study_opened')
+        .order('created_at', { ascending: false })
+        .limit(40);
+      lastOpenedMaterialId = (recentOpens ?? [])
+        .map((event) => event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)
+          ? (event.metadata as Record<string, unknown>).material_id
+          : null)
+        .find((id): id is string => typeof id === 'string' && ids.includes(id)) ?? null;
+    }
     return (
       <StudyReadingCards
+        lastOpenedMaterialId={lastOpenedMaterialId}
         materials={materials.map((material) => ({
           id: material.id,
           title: material.title,
