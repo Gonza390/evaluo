@@ -5,7 +5,6 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CircleAlert,
-  Eye,
   FileText,
   Globe,
   Loader2,
@@ -209,32 +208,7 @@ export function StudentMaterialsWorkspace({
                       </div>
                     </div>
 
-                    <div className="relative z-10 flex flex-wrap items-center gap-2 xl:mt-auto xl:pt-1">
-                      <Button asChild size="sm" className="min-h-10 rounded-lg px-3 text-[12.5px]" onClick={(event) => event.stopPropagation()}>
-                        <Link href={getStudentMaterialRoute(material.id)}>
-                          <Eye className="h-4 w-4" />
-                          {material.processing_status === 'ready'
-                            ? 'Continuar estudiando'
-                            : isFailed
-                              ? 'Revisar'
-                              : 'Ver estado'}
-                        </Link>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="min-h-10 min-w-10 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setMaterialToDelete(material);
-                        }}
-                        disabled={isPending}
-                        aria-label={`Eliminar ${material.title}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+
                   </div>
                 </article>
               );
