@@ -35,20 +35,20 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
 
   return (
     <section aria-label="Tus PDFs para estudiar" className="mx-auto w-full max-w-[1240px] px-3 py-4 sm:px-5 lg:px-6">
-      <h1 className="mb-4 text-xl font-bold tracking-tight text-slate-900">Tus archivos</h1>
+      <h1 className="mb-3 text-xl font-bold tracking-tight text-slate-900">Tus materiales</h1>
       {materials.length ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5">
           {materials.map((material) => {
             const percent = progress[material.id] ?? 0;
             return (
               <Link key={material.id} href={`/materiales/${material.id}?tab=resumen`}
-                className="flex min-h-[135px] min-w-0 flex-col items-center rounded-2xl border border-slate-200 bg-white px-2.5 pt-3 pb-2 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="flex min-h-[112px] min-w-0 flex-col items-center rounded-2xl border border-slate-200 bg-white px-2.5 pt-2.5 pb-2 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 aria-label={`Estudiar ${material.title}, ${percent}% de avance de lectura`}>
-                <FileText aria-hidden="true" className="mb-2 h-5 w-5 shrink-0 text-slate-500" />
-                <span className="line-clamp-2 min-h-[34px] w-full break-words text-center text-[11px] font-semibold leading-4 text-slate-900 sm:text-xs">
+                <FileText aria-hidden="true" className="mb-1.5 h-4 w-4 shrink-0 text-slate-500" />
+                <span className="line-clamp-2 min-h-[32px] w-full break-words text-center text-[11px] font-semibold leading-4 text-slate-900 sm:text-xs">
                   {material.title}
                 </span>
-                <span className="mt-auto pt-3 text-center text-[10px] text-slate-500">
+                <span className="mt-auto pt-1.5 text-center text-[10px] text-slate-500">
                   Lectura · <span className={percent === 100 ? 'font-bold text-emerald-600' : 'font-semibold text-slate-700'}>{percent}%</span>
                 </span>
                 <div role="progressbar" aria-label={`Lectura de ${material.title}`}
@@ -66,21 +66,21 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
           Todavía no tenés PDFs listos para estudiar. Subí uno desde Mi espacio.
         </div>
       )}
-      <div className="mt-8 border-t border-slate-100 pt-5">
+      <div className="mt-6 border-t border-slate-100 pt-4">
         <h2 className="text-base font-bold tracking-tight text-slate-900">Herramientas de estudio</h2>
         <p className="mt-1 text-xs text-slate-500">
           {activeMaterial ? `Continuá con ${activeMaterial.title}` : 'Subí un PDF desde Mi espacio para empezar.'}
         </p>
-        <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-3 sm:gap-3 xl:grid xl:grid-cols-5 xl:overflow-visible">
+        <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-3 sm:gap-3 xl:grid xl:grid-cols-5 xl:overflow-visible">
           {tools.map((tool) => {
             const Icon = tool.icon;
-            const className = `flex min-h-[166px] w-[158px] min-w-[158px] snap-start flex-col rounded-2xl border border-transparent p-3.5 text-left transition hover:border-blue-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
+            const className = `flex min-h-[142px] w-[min(74vw,240px)] min-w-[min(74vw,240px)] snap-start flex-col rounded-2xl border border-transparent p-3 text-left transition hover:border-blue-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
             const content = (
               <>
-                <Icon className="h-6 w-6" aria-hidden="true" />
+                <Icon className="h-5 w-5" aria-hidden="true" />
                 <span className="mt-auto text-sm font-bold">{tool.title}</span>
                 <span className="mt-1 text-xs leading-4 opacity-85">{tool.description}</span>
-                <span className="mt-2 text-xs font-semibold">{activeMaterial ? 'Abrir →' : 'Elegí un PDF'}</span>
+                <span className="mt-1.5 text-xs font-semibold">{activeMaterial ? 'Abrir →' : 'Elegí un PDF'}</span>
               </>
             );
             return activeMaterial ? (
