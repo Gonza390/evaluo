@@ -175,9 +175,11 @@ const MaterialProgressContent = dynamic(
     ),
   {
     loading: () => (
-      <p role="status" className="text-muted-foreground p-4 text-sm">
-        Cargando tu progreso…
-      </p>
+      <div role="status" aria-label="Cargando progreso" className="space-y-3 p-4">
+        <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+        <div className="h-20 w-full animate-pulse rounded-xl bg-slate-100" />
+        <div className="h-12 w-4/5 animate-pulse rounded-lg bg-slate-100" />
+      </div>
     ),
   }
 );
@@ -256,8 +258,13 @@ const STUDY_TABS: Array<{
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center px-4 py-16 text-sm font-medium">
-      Cargando visor del PDF...
+    <div role="status" aria-label="Cargando visor del PDF" className="flex h-full min-h-[320px] items-center justify-center rounded-xl bg-slate-50 px-4 py-16">
+      <div className="w-full max-w-[320px] space-y-3">
+        <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
+        <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+        <div className="h-3 w-5/6 animate-pulse rounded bg-slate-200" />
+        <span className="sr-only">Preparando visor del PDF</span>
+      </div>
     </div>
   ),
 });
