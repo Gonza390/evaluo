@@ -1109,3 +1109,10 @@ assertIncludesAll('components/marketing/international-study-landing.tsx', ['href
 assertIncludesAll('lib/international-study-landings.ts', ["en: toAbsoluteUrl('/en/study-pdf-with-ai')"]);
 assertIncludesAll('app/funciones/crear-flashcards-desde-pdf/page.tsx', ["en: toAbsoluteUrl('/en/pdf-to-flashcards')"]);
 assertIncludesAll('app/convertir-pdf-en-preguntas/page.tsx', ["en:toAbsoluteUrl('/en/pdf-to-quiz')"]);
+
+assertIncludesAll('lighthouserc.seo.cjs', [
+  'http://localhost:3000/en',
+  'http://localhost:3000/en/pdf-to-quiz',
+  'http://localhost:3000/en/pdf-to-flashcards',
+  'http://localhost:3000/en/study-pdf-with-ai',
+]);
