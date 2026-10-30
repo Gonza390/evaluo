@@ -25,6 +25,7 @@ const ContextualPdfNudge = dynamic(
 
 function isLightweightPublicRoute(pathname: string) {
   if (pathname === '/') return true;
+  if (pathname === '/en' || pathname.startsWith('/en/')) return true;
 
   const exactRoutes = new Set([
     '/ia-para-estudiantes',

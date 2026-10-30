@@ -1136,3 +1136,35 @@ assertIncludesAll('.github/workflows/english-indexnow.yml', [
   "INDEXNOW_URLS:",
   "node scripts/submit-indexnow.mjs",
 ]);
+
+
+// First English-product entry point is opt-in; Spanish auth stays the default.
+assertIncludesAll('app/en/login/page.tsx', [
+  "robots: { index: false, follow: true }",
+  '<LoginFormGoogleFirst locale="en" />',
+  '<InternationalDocumentLanguage lang="en" />',
+]);
+assertIncludesAll('components/LoginFormGoogleFirst.tsx', [
+  "locale = 'es'",
+  "const english = locale === 'en'",
+  "getAuthContextCopy(nextPath, reason, isSignUp, english)",
+  "Sign-in is available in English",
+  "After signing in, the current dashboard",
+  "Terms (Spanish)",
+  "Privacy Policy (Spanish)",
+  "Account created. Check your email",
+]);
+assertIncludesAll('components/marketing/english-study-page.tsx', [
+  'href="/en/login?mode=signup"',
+  'Create an account (English sign-up)',
+  'Explore the current Spanish-language app',
+]);
+assertIncludesAll('components/GlobalClientRuntime.tsx', [
+  "pathname === '/en' || pathname.startsWith('/en/')",
+]);
+assertIncludesAll('lib/analytics-client.ts', [
+  "if (pathname === '/en/login') return 'english-auth'",
+  "if (pathname === '/en' || pathname.startsWith('/en/')) return 'seo-english-study'",
+]);
+assert.ok(!source('app/sitemap.ts').includes('${baseUrl}/en/login'),
+  'Authentication must not be in the public sitemap');

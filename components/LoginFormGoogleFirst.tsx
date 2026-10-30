@@ -27,7 +27,27 @@ function getSafeInternalPath(value: string | null | undefined, fallback = '/dash
   }
 }
 
-function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean) {
+function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean, english = false) {
+  if (english) {
+    if (reason === 'pdf-first') {
+      return isSignUp
+        ? 'Create an account to continue with the PDF you selected. Your document will be waiting when you return.'
+        : 'Sign in to continue with the PDF you selected.';
+    }
+    if (reason === 'shared-pdf') {
+      return isSignUp
+        ? 'Create an account to access the shared PDF and study tools.'
+        : 'Sign in to open the shared PDF.';
+    }
+    if (reason === 'preguntero') {
+      return isSignUp
+        ? 'Create an account to save your answers and continue your practice.'
+        : 'Sign in to resume your previous practice.';
+    }
+    return isSignUp
+      ? 'Create an account to save your study materials and progress. The current study dashboard is in Spanish.'
+      : 'Welcome back. Sign in to continue studying in the current Spanish-language dashboard.';
+  }
   if (reason === 'pdf-first') {
     return isSignUp
       ? 'Creá tu cuenta para procesar el PDF que ya elegiste. Cuando vuelvas, Evaluo continúa con ese archivo automáticamente.'
@@ -96,7 +116,8 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginFormGoogleFirst() {
+export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' | 'en' }) {
+  const english = locale === 'en';
   const [mode, setMode] = useState<AuthMode>('login');
   const [emailExpanded, setEmailExpanded] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -148,9 +169,9 @@ export default function LoginFormGoogleFirst() {
       });
     }
     if (requestedReason === 'inactive') {
-      setNotice('Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
+      setNotice(english ? 'Your session ended due to inactivity. Sign in to continue.' : 'Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
     } else if (requestedReason === 'auth-expired') {
-      setNotice('Tu sesión venció o fue cerrada. Volvé a iniciar sesión para continuar donde estabas.');
+      setNotice(english ? 'Your session has expired. Sign in again to continue.' : 'Tu sesión venció o fue cerrada. Volvé a iniciar sesión para continuar donde estabas.');
     }
 
     setIntent(requestedIntent);
@@ -169,7 +190,7 @@ export default function LoginFormGoogleFirst() {
       setEmail(storedEmail);
       setEmailExpanded(true);
     }
-  }, []);
+  }, [english]);
 
   const isSignUp = mode === 'signup';
   const location =
@@ -180,12 +201,12 @@ export default function LoginFormGoogleFirst() {
         : reason === 'preguntero'
           ? 'login_preguntero'
           : 'login';
-  const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
+  const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp, english);
 
 
   const validateLegal = () => {
     if (!isSignUp || acceptLegal) return true;
-    setMessage('Aceptá los Términos y la Política de privacidad para crear tu cuenta.');
+    setMessage(english ? 'Please accept the Terms and Privacy Policy to create an account.' : 'Aceptá los Términos y la Política de privacidad para crear tu cuenta.');
     return false;
   };
 
@@ -218,7 +239,7 @@ export default function LoginFormGoogleFirst() {
 
       if (error) setMessage(error.message);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No pudimos continuar con Google.');
+      setMessage(error instanceof Error ? error.message : english ? 'We could not continue with Google.' : 'No pudimos continuar con Google.');
     } finally {
       setLoading(false);
     }
@@ -227,8 +248,8 @@ export default function LoginFormGoogleFirst() {
   const handleEmail = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!validateLegal()) return;
-    if (!email.includes('@')) return setMessage('Ingresá un correo electrónico válido.');
-    if (password.length < 6) return setMessage('La contraseña debe tener al menos 6 caracteres.');
+    if (!email.includes('@')) return setMessage(english ? 'Enter a valid email address.' : 'Ingresá un correo electrónico válido.');
+    if (password.length < 6) return setMessage(english ? 'Your password must be at least 6 characters long.' : 'La contraseña debe tener al menos 6 caracteres.');
 
     setLoading(true);
     setMessage('');
@@ -279,9 +300,13 @@ export default function LoginFormGoogleFirst() {
 
         // Solo esperamos correo cuando Supabase NO devolvió una sesión.
         setMessage(
-          reason === 'shared-pdf'
-            ? 'Registro exitoso. Revisá tu correo para confirmar la cuenta y acceder al PDF compartido.'
-            : 'Registro exitoso. Revisá tu correo para confirmar tu cuenta.'
+          english
+            ? reason === 'shared-pdf'
+              ? 'Account created. Check your email to confirm your account and access the shared PDF.'
+              : 'Account created. Check your email to confirm your account.'
+            : reason === 'shared-pdf'
+              ? 'Registro exitoso. Revisá tu correo para confirmar la cuenta y acceder al PDF compartido.'
+              : 'Registro exitoso. Revisá tu correo para confirmar tu cuenta.'
         );
         return;
       }
@@ -299,7 +324,7 @@ export default function LoginFormGoogleFirst() {
       });
       window.location.href = redirectPath;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No pudimos continuar con tu correo.');
+      setMessage(error instanceof Error ? error.message : english ? 'We could not continue with your email.' : 'No pudimos continuar con tu correo.');
     } finally {
       setLoading(false);
     }
@@ -331,17 +356,17 @@ export default function LoginFormGoogleFirst() {
     setNotice('');
   };
 
-  const success = message.toLowerCase().includes('registro exitoso');
+  const success = message.toLowerCase().includes('registro exitoso') || message.startsWith('Account created.');
 
   return (
     <section className="px-1 py-1 sm:px-2 sm:py-2">
       <div className="flex items-center justify-between gap-3">
         <Link
-          href="/"
+          href={english ? "/en" : "/"}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Inicio
+          {english ? 'English home' : 'Inicio'}
         </Link>
 
         <div className="flex items-center gap-2 text-sm font-bold tracking-tight text-slate-950">
@@ -364,9 +389,16 @@ export default function LoginFormGoogleFirst() {
         ) : null}
 
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.15rem]">
-          {isSignUp ? (reason === 'preguntero' ? 'Guardá tu progreso' : 'Creá tu cuenta') : 'Bienvenido'}
+          {english
+            ? isSignUp ? 'Create your account' : 'Welcome back'
+            : isSignUp ? (reason === 'preguntero' ? 'Guardá tu progreso' : 'Creá tu cuenta') : 'Bienvenido'}
         </h1>
         <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
+        {english ? (
+          <p className="mx-auto mt-4 max-w-[360px] rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950" role="note">
+            Sign-in is available in English. After signing in, the current dashboard, study tools, support and account emails remain primarily in Spanish.
+          </p>
+        ) : null}
 
         {notice ? (
           <div
@@ -385,7 +417,7 @@ export default function LoginFormGoogleFirst() {
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold text-slate-900">{pdfDraftMeta.name}</span>
               <span className="mt-0.5 block text-xs text-slate-500">
-                {(pdfDraftMeta.size / (1024 * 1024)).toFixed(1).replace('.', ',')} MB · listo para continuar
+                {(pdfDraftMeta.size / (1024 * 1024)).toFixed(1).replace('.', english ? '.' : ',')} MB · {english ? 'ready to continue' : 'listo para continuar'}
               </span>
             </span>
           </div>
@@ -400,13 +432,12 @@ export default function LoginFormGoogleFirst() {
               className="mt-1"
             />
             <span>
-              Acepto los{' '}
+              {english ? 'I agree to the ' : 'Acepto los '}
               <Link href="/terminos" className="font-semibold text-blue-600 hover:underline">
-                Términos
-              </Link>{' '}
-              y la{' '}
+                {english ? 'Terms (Spanish)' : 'Términos'}
+              </Link>{english ? ' and the ' : ' y la '}
               <Link href="/privacidad" className="font-semibold text-blue-600 hover:underline">
-                Política de privacidad
+                {english ? 'Privacy Policy (Spanish)' : 'Política de privacidad'}
               </Link>
               .
             </span>
@@ -421,13 +452,15 @@ export default function LoginFormGoogleFirst() {
             className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 shadow-[0_8px_22px_rgba(15,23,42,0.06)] transition hover:border-blue-300 hover:bg-blue-50/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <GoogleIcon />
-            {isSignUp && reason !== 'preguntero' ? 'Registrarme con Google' : 'Continuar con Google'}
+            {english
+              ? isSignUp ? 'Sign up with Google' : 'Continue with Google'
+              : isSignUp && reason !== 'preguntero' ? 'Registrarme con Google' : 'Continuar con Google'}
           </button>
 
           <div className="flex items-center gap-3" aria-hidden="true">
             <div className="h-px flex-1 bg-slate-200" />
             <span className="text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
-              o
+              {english ? 'or' : 'o'}
             </span>
             <div className="h-px flex-1 bg-slate-200" />
           </div>
@@ -440,11 +473,13 @@ export default function LoginFormGoogleFirst() {
           >
             <span className="flex items-center gap-2.5">
               <Mail className="h-4 w-4" />
-              {isSignUp
-                ? reason === 'preguntero'
-                  ? 'Continuar con correo'
-                  : 'Registrarme con correo'
-                : 'Usar correo y contraseña'}
+{english
+                ? isSignUp ? 'Sign up with email' : 'Use email and password'
+                : isSignUp
+                  ? reason === 'preguntero'
+                    ? 'Continuar con correo'
+                    : 'Registrarme con correo'
+                  : 'Usar correo y contraseña'}
             </span>
             <ChevronDown
               className={`h-4 w-4 transition-transform ${emailExpanded ? 'rotate-180' : ''}`}
@@ -454,7 +489,7 @@ export default function LoginFormGoogleFirst() {
           {emailExpanded ? (
             <form onSubmit={handleEmail} className="space-y-4 pt-1 text-left">
               <label className="block text-sm font-medium text-slate-700">
-                Correo electrónico
+                {english ? 'Email address' : 'Correo electrónico'}
                 <input
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -466,7 +501,7 @@ export default function LoginFormGoogleFirst() {
               </label>
 
               <label className="block text-sm font-medium text-slate-700">
-                Contraseña
+                {english ? 'Password' : 'Contraseña'}
                 <span className="relative mt-1.5 block">
                   <input
                     value={password}
@@ -480,7 +515,7 @@ export default function LoginFormGoogleFirst() {
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
                     className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition hover:text-slate-700"
-                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-label={english ? showPassword ? 'Hide password' : 'Show password' : showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -491,7 +526,9 @@ export default function LoginFormGoogleFirst() {
                 disabled={loading}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-xl text-sm font-bold shadow-[0_10px_24px_rgba(37,99,235,0.18)] transition disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSignUp ? 'Crear cuenta gratis' : 'Iniciar sesión'}
+                {english
+                  ? isSignUp ? 'Create free account' : 'Sign in'
+                  : isSignUp ? 'Crear cuenta gratis' : 'Iniciar sesión'}
               </button>
             </form>
           ) : null}
@@ -512,14 +549,18 @@ export default function LoginFormGoogleFirst() {
         </div>
 
         <p className="mt-7 text-sm text-slate-500">
-          {isSignUp ? '¿Ya tenés cuenta?' : '¿Todavía no tenés cuenta?'}{' '}
+          {english
+            ? isSignUp ? 'Already have an account?' : "Don't have an account yet?"
+            : isSignUp ? '¿Ya tenés cuenta?' : '¿Todavía no tenés cuenta?'}{' '}
           <button
             type="button"
             onClick={switchMode}
             disabled={loading}
             className="font-semibold text-blue-600 transition hover:text-blue-700 hover:underline disabled:opacity-60"
           >
-            {isSignUp ? 'Iniciar sesión' : 'Crear cuenta gratis'}
+            {english
+              ? isSignUp ? 'Sign in' : 'Create free account'
+              : isSignUp ? 'Iniciar sesión' : 'Crear cuenta gratis'}
           </button>
         </p>
       </div>

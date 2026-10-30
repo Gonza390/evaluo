@@ -59,6 +59,8 @@ export function getAnalyticsDeviceType() {
 
 export function getAnalyticsPageType(pathname: string) {
   if (pathname === '/') return 'home';
+  if (pathname === '/en/login') return 'english-auth';
+  if (pathname === '/en' || pathname.startsWith('/en/')) return 'seo-english-study';
   if (pathname.startsWith('/explorar/materia/')) return 'materia';
   if (pathname === '/explorar') return 'explorar';
   const regionalPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
