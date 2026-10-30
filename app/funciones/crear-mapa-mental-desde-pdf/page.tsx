@@ -305,6 +305,7 @@ export default function CrearMapaMentalDesdePdfPage() {
             </div>
             <div className="divide-y divide-slate-200 border-y border-slate-200">
               {[
+                ['¿El mapa mental está incluido en el plan gratuito?', 'No. La creación de mapas mentales requiere Premium. Podés empezar con resúmenes, glosario, flashcards y práctica gratuita dentro de los límites del plan.'],
                 ['¿El mapa mental parte del PDF que subo?', 'Sí. La función usa el material que elegís como fuente para organizar visualmente los temas y conceptos del contenido.'],
                 ['¿Cómo crear un mapa mental desde un PDF?', 'Seleccioná el PDF en esta página, continuá con la creación del material y abrí su mapa mental para explorar las relaciones entre temas y subtemas.'],
                 ['¿El mapa mental reemplaza al resumen?', 'No. Son formas distintas de recorrer el mismo material: el resumen mantiene una lectura estructurada y el mapa mental ayuda a visualizar relaciones.'],
