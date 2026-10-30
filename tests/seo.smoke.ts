@@ -1208,3 +1208,31 @@ assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
 ]);
 assert.ok(!source('components/marketing/pdf-first-landing-uploader.tsx').includes('absolute -inset-6 rounded-[40px]'),
   'Decorative PDF-upload glow must not create horizontal overflow on mobile.');
+
+
+// Editorial depth checks: each bilingual study article must contain its own
+// worked case, reference tables, independent questions, and source guidance.
+for (const path of ['lib/study-blog-workshops-es.ts', 'lib/study-blog-workshops-en.ts']) {
+  const editorial = source(path);
+  for (const key of ['accounting', 'oral', 'spacing', 'finals', 'pdf']) {
+    assert.ok(editorial.includes('  ' + key + ': {'), path + ' is missing the ' + key + ' workshop.');
+  }
+  assert.ok((editorial.match(/\n    secondTable: \{/g) || []).length === 5, path + ' needs five second reference tables.');
+  assert.ok((editorial.match(/\n    practice: \{/g) || []).length === 5, path + ' needs five practice banks.');
+  assert.ok((editorial.match(/\n    sources: \[/g) || []).length === 5, path + ' needs specific references.');
+  assert.ok(editorial.length > 20000, path + ' lost substantial editorial content.');
+}
+assertIncludesAll('components/marketing/study-blog-workshop.tsx', [
+  '<table',
+  '<details',
+  'workshop.walkthrough.steps.map',
+  'workshop.practice.items.map',
+  'workshop.related.map',
+  'workshop.sources.map',
+  'overflow-x-auto',
+]);
+assertIncludesAll('components/marketing/study-blog-view.tsx', [
+  '<StudyBlogWorkshopView locale={locale} workshop={workshop} />',
+  "STUDY_BLOG_WORKSHOPS_ES[article.key]",
+  "STUDY_BLOG_WORKSHOPS_EN[article.key]",
+]);
