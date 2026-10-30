@@ -49,6 +49,7 @@ import {
   type PracticeEntrySource,
 } from '@/lib/student-materials/practice-entry';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { saveReadingPosition } from '@/lib/reading-progress';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import {
   completeFirstPdfOnboardingAction,
@@ -1002,6 +1003,7 @@ export function MaterialStudyWorkspace({
       }
       if (Number.isInteger(nextIndex)) {
         setActiveSummaryChapterIndex((current) => current === nextIndex ? current : nextIndex);
+        if (isOwner && !demo) saveReadingPosition(materialId, nextIndex, summaryChapters.length);
       }
     };
     const scheduleSync = () => {
