@@ -76,10 +76,10 @@ function NavItem({
   dataTourAttr?: string;
   compact?: boolean;
 }) {
-  const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
+  const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} transition-colors duration-150 ${
     active
       ? 'text-primary font-semibold'
-      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+      : 'text-muted-foreground font-medium hover:bg-muted/50 hover:text-foreground'
   } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
 
   if (disabled) {
