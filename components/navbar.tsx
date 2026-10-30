@@ -229,7 +229,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               <span
                 data-evaluo-sidebar-indicator
                 aria-hidden="true"
-                className="pointer-events-none absolute top-0 left-0 !m-0 rounded-lg bg-primary/7"
+                className="pointer-events-none absolute top-0 left-0 !m-0 rounded-lg bg-primary/8"
                 style={{
                   width: activeIndicator.width,
                   height: activeIndicator.height,
