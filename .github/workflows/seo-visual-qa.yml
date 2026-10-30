@@ -1,6 +1,34 @@
 name: SEO Visual QA
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/qa-seo-visual.mjs'
+      - '.github/workflows/seo-visual-qa.yml'
+      - 'components/marketing/**'
+      - 'app/en/**'
+      - 'app/es/**'
+      - 'app/es-mx/**'
+      - 'app/es-co/**'
+      - 'app/es-es/**'
+      - 'app/funciones/**'
+      - 'app/ia-para-estudiantes/**'
+      - 'app/estudiar-pdf-con-ia/**'
+      - 'app/convertir-pdf-en-preguntas/**'
+      - 'app/comparar/**'
+      - 'app/landings/**'
+      - 'app/blog/**'
+      - 'app/pregunteros/**'
+      - 'app/explorar/**'
+      - 'app/pricing/**'
+      - 'app/uba-xxi/**'
+      - 'app/como-estudiar-ingreso-unlam/**'
+      - 'app/sitemap.ts'
+      - 'lib/es-study-guides.ts'
+      - 'lib/es-country-niche-guides.ts'
+      - 'app/globals.css'
+      - 'components/footer-home.tsx'
   pull_request:
     paths:
       - 'scripts/qa-seo-visual.mjs'
@@ -12,6 +40,20 @@ on:
       - 'app/es-co/**'
       - 'app/es-es/**'
       - 'app/funciones/**'
+      - 'app/ia-para-estudiantes/**'
+      - 'app/estudiar-pdf-con-ia/**'
+      - 'app/convertir-pdf-en-preguntas/**'
+      - 'app/comparar/**'
+      - 'app/landings/**'
+      - 'app/blog/**'
+      - 'app/pregunteros/**'
+      - 'app/explorar/**'
+      - 'app/pricing/**'
+      - 'app/uba-xxi/**'
+      - 'app/como-estudiar-ingreso-unlam/**'
+      - 'app/sitemap.ts'
+      - 'lib/es-study-guides.ts'
+      - 'lib/es-country-niche-guides.ts'
       - 'app/globals.css'
       - 'components/footer-home.tsx'
   workflow_dispatch:
@@ -23,7 +65,7 @@ jobs:
   public-seo-visual:
     name: SEO page screenshots, overflow and heading contrast
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -53,12 +95,20 @@ jobs:
           exit 1
       - name: Capture SEO templates and audit color contrast
         run: node scripts/qa-seo-visual.mjs
+      - name: Audit published production SEO pages
+        if: github.event_name == 'push'
+        run: node scripts/qa-seo-visual.mjs
+        env:
+          QA_BASE_URL: https://evaluoapp.com
+          QA_ARTIFACTS_DIR: qa-artifacts/seo-visual-production
       - name: Upload visual audit and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: seo-visual-audit
-          path: qa-artifacts/seo-visual/
+          path: |
+            qa-artifacts/seo-visual/
+            qa-artifacts/seo-visual-production/
           if-no-files-found: ignore
           retention-days: 14
       - name: Diagnostics
