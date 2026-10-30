@@ -913,3 +913,44 @@ for(const m of indexMarkets){
 assertIncludesAll('lib/international-study-landings.ts', [
   "'es-MX':", "'es-CO':", "'es-ES':", "'es-AR':", "'x-default':"
 ]);
+
+
+// SEO integrity: paginate all catalog relations, prevent incomplete 200-response
+// sitemap builds, and only advertise actually indexable academic destinations.
+assertIncludesAll('lib/data/catalog.ts', [
+  'fetchAllCatalogCareerMaterias',
+  ".from('carrera_materias')",
+  '.range(from, from + pageSize - 1)',
+  'fetchAllCatalogCareerMaterias(client)',
+]);
+assertIncludesAll('app/sitemap.ts', [
+  'export const revalidate = 3600;',
+  'fetchAllMaterias()',
+  'fetchAllMaterialMateriaIds',
+  '.order(\'id\', { ascending: true })',
+  '.range(from, from + pageSize - 1)',
+  "if (result.status === 'rejected') throw result.reason;",
+  'universidad.carrerasCount === 0 || universidad.materiasCount === 0',
+  'carrera.materiasCount === 0',
+  'carrera.questionMateriasCount > 0',
+]);
+assertIncludesAll('app/simulador-parcial/[carrera]/page.tsx', [
+  "from('preguntas_banco_public')",
+  'robots: { index: hasPublicPractice, follow: true }',
+]);
+
+// Argentine metadata must not leak to the neutral and regional Spanish pages.
+const rootMetadata = source('app/layout.tsx');
+assert.ok(!rootMetadata.includes("'geo.region'"), 'AR geo region should be home-only');
+assert.ok(!rootMetadata.includes("'geo.placename'"), 'AR geo city should be home-only');
+assert.ok(!rootMetadata.includes("locale: 'es_AR'"), 'Root OG should not force Argentina');
+assertIncludesAll('app/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "languages: { 'es-AR': '/' }"]);
+assertIncludesAll('next.config.mjs', [
+  "'/es-mx/:path*', 'es-MX'",
+  "'/es-co/:path*', 'es-CO'",
+  "'/es-es/:path*', 'es-ES'",
+  "'/es/:path*', 'es'",
+  "'Content-Language'",
+]);
+assertIncludesAll('app/es/guias/page.tsx', ["locale: 'es'"]);
+assertIncludesAll('app/es/paises/page.tsx', ["locale: 'es'"]);
