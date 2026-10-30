@@ -225,7 +225,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/explorar/materia/');
   const showBottomNav = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute && !isMaterialStudyRoute;
   const showTopBar = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute;
-  const showSidebar = showTopBar && Boolean(user) && !isMaterialStudyRoute;
+  const showSidebar = showTopBar && Boolean(user);
+  const effectiveSidebarCollapsed = isMaterialStudyRoute ? true : sidebarCollapsed;
   const todayKey = streak?.todayKey ?? '';
   const weekDayEntries = getWeekDayEntries(streakDayKeys, todayKey, shiftDayKey, streakDays);
   const streakMilestone = getNextStreakMilestone(streakDays);
@@ -517,16 +518,16 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       ) : null}
       <div className="flex min-h-0 flex-1">
         {showSidebar ? (
-          <Navbar collapsed={sidebarCollapsed} onToggleCollapsed={handleSidebarToggle} compact={isCompactAppRoute} />
-        ) : userLoading && privateRoute && !isMaterialStudyRoute ? (
+          <Navbar collapsed={effectiveSidebarCollapsed} onToggleCollapsed={handleSidebarToggle} compact={isCompactAppRoute} />
+        ) : userLoading && privateRoute ? (
           <aside aria-hidden="true" className="fixed inset-y-[52px] left-0 hidden w-[176px] border-r border-slate-100 bg-white md:block" />
         ) : null}
         <div
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${
             (showSidebar || (userLoading && privateRoute && !isMaterialStudyRoute))
               ? isCompactAppRoute
-                ? sidebarCollapsed ? 'md:ml-[56px]' : 'md:ml-[176px]'
-                : sidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]'
+                ? effectiveSidebarCollapsed ? 'md:ml-[56px]' : 'md:ml-[176px]'
+                : effectiveSidebarCollapsed ? 'md:ml-[76px]' : 'md:ml-[248px]'
               : ''
           }`}
         >
