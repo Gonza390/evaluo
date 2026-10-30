@@ -49,7 +49,7 @@ export async function syncStudyPlanProgress(materialId: string) {
   const remote = new Set(remoteRows.map(row=>`${row.topic_index}:${row.activity}`));
   for(const k of remote) local[k]=true;
   localStorage.setItem(key,JSON.stringify(local));
-  const pending=Object.keys(local).filter(k=>local[k] && !remote.has(k) && /^\\d+:(reading|questions|flashcards|glossary)$/.test(k));
+  const pending=Object.keys(local).filter(k=>local[k] && !remote.has(k) && /^[0-9]+:(reading|questions|flashcards|glossary)$/.test(k));
   if(pending.length) {
    const rows=pending.map(k=>{ const [topic,activity]=k.split(':'); return {user_id:user.id,material_id:materialId,topic_index:Number(topic),activity}; });
    await supabase.from('student_material_topic_activity_progress' as never)
