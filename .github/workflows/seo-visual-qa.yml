@@ -1,0 +1,66 @@
+name: SEO Visual QA
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/qa-seo-visual.mjs'
+      - '.github/workflows/seo-visual-qa.yml'
+      - 'components/marketing/**'
+      - 'app/en/**'
+      - 'app/es/**'
+      - 'app/es-mx/**'
+      - 'app/es-co/**'
+      - 'app/es-es/**'
+      - 'app/funciones/**'
+      - 'app/globals.css'
+      - 'components/footer-home.tsx'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-seo-visual:
+    name: SEO page screenshots, overflow and heading contrast
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_TELEMETRY_DISABLED: '1'
+      QA_BASE_URL: http://localhost:3100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install browser
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local Evaluo
+        run: |
+          npm run dev -- --port 3100 > /tmp/evaluo-seo-visual-next.log 2>&1 &
+          echo $! > /tmp/evaluo-seo-visual-next.pid
+          for i in $(seq 1 90); do
+            if curl --silent --fail 'http://localhost:3100/en' -o /dev/null; then exit 0; fi
+            sleep 2
+          done
+          tail -120 /tmp/evaluo-seo-visual-next.log
+          exit 1
+      - name: Capture SEO templates and audit color contrast
+        run: node scripts/qa-seo-visual.mjs
+      - name: Upload visual audit and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-visual-audit
+          path: qa-artifacts/seo-visual/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Diagnostics
+        if: failure()
+        run: tail -160 /tmp/evaluo-seo-visual-next.log || true

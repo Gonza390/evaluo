@@ -172,7 +172,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
           <div className="mx-auto max-w-6xl px-5 sm:px-8">
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-blue-200"><Globe2 className="h-4 w-4" aria-hidden="true"/> Product language</div>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight">Evaluo’s English study guides are here. The English app is coming later.</h2>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides are here. The English app is coming later.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-200">
                 The current product, including sign-in, navigation and pricing, is primarily in Spanish.
                 You can explore it now if you are comfortable using a Spanish-language interface.

@@ -126,7 +126,7 @@ export function PdfFirstLandingUploader({
 
   return (
     <div className="relative">
-      <div className="absolute -inset-6 rounded-[40px] bg-blue-100/50 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-x-0 -inset-y-6 rounded-[40px] bg-blue-100/50 blur-3xl" aria-hidden="true" />
       <div className="relative rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-6">
         <div className="flex items-center justify-between gap-3 px-1 pb-4">
           <div>

@@ -1168,3 +1168,37 @@ assertIncludesAll('lib/analytics-client.ts', [
 ]);
 assert.ok(!source('app/sitemap.ts').includes('${baseUrl}/en/login'),
   'Authentication must not be in the public sitemap');
+
+
+// Visual consistency: explicit white heading on dark English SEO panel.
+assertIncludesAll('components/marketing/english-study-page.tsx', [
+  'bg-[#101D42] py-12 text-white',
+  'text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides',
+]);
+assertIncludesAll('scripts/qa-seo-visual.mjs', [
+  "'/en/pdf-to-quiz'",
+  "'/en/pdf-to-flashcards'",
+  "'/en/study-pdf-with-ai'",
+  "'/es-mx/estudiar-pdf-con-ia'",
+  "'/es-co/estudiar-pdf-con-ia'",
+  "'/es-es/estudiar-pdf-con-ia'",
+  "'/es/guias/como-estudiar-anatomia'",
+  "'/es/paises/mexico-guia-exani-ii-pdf'",
+  "'/funciones/resumir-pdf-con-ia'",
+  "'/landings/parciales'",
+  "'/pregunteros'",
+  'lowContrast',
+  'Horizontal overflow',
+  'screenshot',
+]);
+assertIncludesAll('.github/workflows/seo-visual-qa.yml', [
+  'npm run dev -- --port 3100',
+  'node scripts/qa-seo-visual.mjs',
+  'seo-visual-audit',
+]);
+
+assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
+  'pointer-events-none absolute inset-x-0 -inset-y-6',
+]);
+assert.ok(!source('components/marketing/pdf-first-landing-uploader.tsx').includes('absolute -inset-6 rounded-[40px]'),
+  'Decorative PDF-upload glow must not create horizontal overflow on mobile.');
