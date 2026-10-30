@@ -193,6 +193,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const streakDays = streak?.streakDays ?? 0;
   const streakDayKeys = streak?.streakDayKeys ?? [];
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [pdfSidebarExpanded, setPdfSidebarExpanded] = useState(false);
   const [showStreakDialog, setShowStreakDialog] = useState(false);
   const isSimuladorRoute = pathname.startsWith('/simulador');
   const isLegalRoute =
@@ -226,7 +227,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const showBottomNav = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute && !isMaterialStudyRoute;
   const showTopBar = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute;
   const showSidebar = showTopBar && Boolean(user);
-  const effectiveSidebarCollapsed = isMaterialStudyRoute ? true : sidebarCollapsed;
+  const effectiveSidebarCollapsed = isMaterialStudyRoute ? !pdfSidebarExpanded : sidebarCollapsed;
   const todayKey = streak?.todayKey ?? '';
   const weekDayEntries = getWeekDayEntries(streakDayKeys, todayKey, shiftDayKey, streakDays);
   const streakMilestone = getNextStreakMilestone(streakDays);
@@ -241,7 +242,15 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     setSidebarCollapsed(storedValue === 'true');
   }, []);
 
+  useEffect(() => {
+    setPdfSidebarExpanded(false);
+  }, [pathname]);
+
   const handleSidebarToggle = () => {
+    if (isMaterialStudyRoute) {
+      setPdfSidebarExpanded((expanded) => !expanded);
+      return;
+    }
     setSidebarCollapsed((currentValue) => {
       const nextValue = !currentValue;
       if (typeof window !== 'undefined') {
