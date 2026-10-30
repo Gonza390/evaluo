@@ -4,6 +4,7 @@ import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
 import { STUDY_GUIDES } from '@/lib/es-study-guides';
 import { COUNTRY_NICHE_GUIDES } from '@/lib/es-country-niche-guides';
+import { STUDY_BLOG_ARTICLES, getStudyBlogPath } from '@/lib/study-blog-articles';
 import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
 
@@ -99,6 +100,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/landings/resumenes`,
     },
   ];
+
+  // Original bilingual educational articles and localized index hubs.
+  routes.push({ url: `${baseUrl}/blog`, lastModified: new Date('2026-10-30') });
+  routes.push({ url: `${baseUrl}/en/blog`, lastModified: new Date('2026-10-30') });
+  for (const locale of ['es', 'en'] as const) {
+    for (const article of STUDY_BLOG_ARTICLES[locale]) {
+      routes.push({
+        url: `${baseUrl}${getStudyBlogPath(locale, article)}`,
+        lastModified: new Date('2026-10-30'),
+      });
+    }
+  }
 
   routes.push({ url: `${baseUrl}/es/guias`, lastModified: new Date('2026-10-29') });
   for (const guide of STUDY_GUIDES) {
