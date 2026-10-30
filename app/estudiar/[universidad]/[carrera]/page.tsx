@@ -203,7 +203,9 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {hasPublicPractice
                   ? 'Podés practicar con las preguntas públicas disponibles de esta carrera y revisar tus errores.'
-                  : 'No hay preguntas públicas verificadas para ofrecerte un simulador de esta carrera ahora. Podés estudiar con tu propio PDF y generar práctica con IA.'}
+                  : publicPractice?.error
+                    ? 'No pudimos comprobar la disponibilidad de preguntas en este momento. Podés entrar a las materias o practicar con tu propio PDF.'
+                    : 'Todavía no hay preguntas públicas disponibles para un simulador de esta carrera. Podés estudiar con tu propio PDF y generar práctica con IA.'}
               </p>
             </article>
           </div>
