@@ -44,9 +44,10 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
     </div>
     {steps.filter(step=>!done[`${topic}:${step.id}`]).map((step,i)=>{
      const Icon=step.icon;const completed=!!done[`${topic}:${step.id}`];
+     const stepTone = step.id === 'reading' ? 'bg-blue-50 text-blue-700' : step.id === 'questions' ? 'bg-indigo-50 text-indigo-700' : step.id === 'flashcards' ? 'bg-violet-50 text-violet-700' : 'bg-amber-50 text-amber-700';
      const active=groupIndex===0 && i===0;
      return <Link key={step.id} href={step.href} className={`flex items-center gap-3 border-t border-slate-100 px-3 py-3 transition first:border-t-0 hover:bg-slate-50 ${active?'bg-blue-50/70':''}`}>
-      <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${completed?'bg-emerald-50 text-emerald-700':active?'bg-blue-100 text-blue-700':'bg-slate-100 text-slate-500'}`}><Icon className="size-[17px]"/></span>
+      <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${completed?'bg-emerald-50 text-emerald-700':stepTone}`}><Icon className="size-[17px]"/></span>
       <span className="min-w-0 flex-1">
        <span className="block text-[12px] font-semibold">{step.label}</span>
        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
