@@ -142,6 +142,13 @@ assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap
 
 const notificationSource = readFileSync(resolve('components/notifications/notification-bell.tsx'), 'utf8');
 assert.match(appChromeSource, /<NotificationBell compact=\{isCompactAppRoute\} \/>/);
+assert.match(appChromeSource, /const isMobileDashboardRoute = pathname === '\/dashboard'/,
+  'Header cleanup must target Mi espacio, not all routes.');
+assert.match(appChromeSource, /isMobileDashboardRoute \? 'hidden md:flex' : 'flex'/,
+  'Hide the Evaluo brand only on mobile Mi espacio.');
+assert.match(appChromeSource, /className=\{isMobileDashboardRoute \? 'hidden md:block' : undefined\}/,
+  'Hide the notification bell only on mobile Mi espacio, preserving desktop notifications.');
+
 assert.match(notificationSource, /compact = false/);
 assert.match(notificationSource, /compact \? "h-9 w-9" : "h-11 w-11"/);
 // El modo estándar mantiene los anchos originales y las páginas públicas intactas.
