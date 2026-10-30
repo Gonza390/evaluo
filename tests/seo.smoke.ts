@@ -1011,5 +1011,5 @@ assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
   'const hasPublicPractice =',
   '{hasPublicPractice ? (',
   'Crear práctica desde mi PDF',
-  'No hay preguntas públicas verificadas',
+  'Todavía no hay preguntas públicas disponibles',
 ]);
