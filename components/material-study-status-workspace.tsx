@@ -13,9 +13,6 @@ import {
 
 type MaterialStudyStatusWorkspaceProps = {
   backHref: string;
-  carreraName?: string;
-  universidadName?: string;
-  materiaName?: string;
   title: string;
   fileName: string;
   viewerUrl?: string;
@@ -33,43 +30,8 @@ const TABS = [
   { label: 'Mapa mental', icon: Map },
 ];
 
-function MaterialMetadata({
-  carreraName,
-  universidadName,
-  materiaName,
-}: Pick<
-  MaterialStudyStatusWorkspaceProps,
-  'carreraName' | 'universidadName' | 'materiaName'
->) {
-  return (
-    <div className="grid min-w-0 gap-x-7 gap-y-3 sm:grid-cols-2 lg:min-w-[560px]">
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
-        <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
-          {carreraName || 'Carrera'}
-        </p>
-      </div>
-      <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-7">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Universidad</p>
-        <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
-          {universidadName || 'Universidad'}
-        </p>
-      </div>
-      <div className="min-w-0 border-t border-slate-100 pt-3 sm:col-span-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
-        <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
-          {materiaName || 'Materia'}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export function MaterialStudyStatusWorkspace({
   backHref,
-  carreraName,
-  universidadName,
-  materiaName,
   title,
   fileName,
   viewerUrl,
@@ -99,17 +61,10 @@ export function MaterialStudyStatusWorkspace({
             Volver
           </Link>
 
-          <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(560px,1.1fr)] lg:items-end lg:gap-12">
-            <div className="min-w-0">
-              <h1 className="max-w-[720px] text-[1.9rem] font-bold leading-[1.08] tracking-[-0.055em] text-slate-950 sm:text-[2.2rem] lg:text-[2.35rem]">
-                {title}
-              </h1>
-            </div>
-            <MaterialMetadata
-              carreraName={carreraName}
-              universidadName={universidadName}
-              materiaName={materiaName}
-            />
+          <div className="mt-5 min-w-0">
+            <h1 className="max-w-[720px] text-[1.9rem] font-bold leading-[1.08] tracking-[-0.055em] text-slate-950 sm:text-[2.2rem] lg:text-[2.35rem]">
+              {title}
+            </h1>
           </div>
         </div>
       </section>
