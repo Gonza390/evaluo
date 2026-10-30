@@ -188,7 +188,7 @@ export default function ClientLayoutClient({
 
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, getUserInitials, getUserName } = useUser();
+  const { user, loading: userLoading, getUserInitials, getUserName } = useUser();
   const { profileSummary, streak } = useShellData();
   const streakDays = streak?.streakDays ?? 0;
   const streakDayKeys = streak?.streakDayKeys ?? [];
@@ -205,8 +205,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   // A single compact mobile header for all authenticated screens.
   // Una misma escala para la aplicación privada; el sitio público y el área
   // de SEO mantienen su composición. El lector de PDFs conserva su UI interna.
+  const privateRoute = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname === '/calendario' || pathname.startsWith('/calendario/') || pathname.startsWith('/materiales/') || pathname === '/configuracion' || pathname.startsWith('/configuracion/');
+  const stablePrivateHeader = Boolean(user) || (userLoading && privateRoute);
   const isCompactAppRoute =
-    Boolean(user) &&
+    stablePrivateHeader &&
     (pathname === '/dashboard' ||
       pathname.startsWith('/dashboard/') ||
       pathname === '/calendario' ||
@@ -262,12 +264,12 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
         >
           <div
             className={`relative flex items-center justify-between gap-3 ${
-              user ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
+              stablePrivateHeader ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
             } ${
-              user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
+              stablePrivateHeader ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
           >
-            {!user ? (
+            {!stablePrivateHeader ? (
               <PublicBrandLink />
             ) : (
               <Link
@@ -290,7 +292,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
             )}
-            {!user ? (
+            {!stablePrivateHeader ? (
               <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                 <div className="hidden lg:block">
                   <EstimatedStudyActivity />
