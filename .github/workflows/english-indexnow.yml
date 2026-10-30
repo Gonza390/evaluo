@@ -43,11 +43,10 @@ jobs:
         run: |
           node --check scripts/changed-english-indexnow-urls.mjs
           node --check scripts/submit-indexnow.mjs
-      - name: Identify newly published or updated pages
+      - name: Check new/changed pages for notification (PR dry-run)
         id: changed
-        if: github.event_name == 'push'
         env:
-          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || github.event.pull_request.base.sha }}
         run: node scripts/changed-english-indexnow-urls.mjs
       - name: Let production deploy settle
         if: github.event_name == 'push' && steps.changed.outputs.urls != ''
