@@ -32,7 +32,7 @@ async function persistActivity(materialId: string, topicIndex: number, activity:
   if (!user) return;
   await supabase.from('student_material_topic_activity_progress' as never).upsert({
    user_id: user.id, material_id: materialId, topic_index: topicIndex, activity
-  } as never, { onConflict: 'user_id,material_id,topic_index,activity' });
+  } as never, { onConflict: 'user_id,material_id,topic_index,activity', ignoreDuplicates: true });
  } catch { /* Keep local progress if disconnected. */ }
 }
 export async function syncStudyPlanProgress(materialId: string) {
@@ -45,15 +45,14 @@ export async function syncStudyPlanProgress(materialId: string) {
   const {data,error}=await supabase.from('student_material_topic_activity_progress' as never)
     .select('topic_index,activity').eq('user_id',user.id).eq('material_id',materialId);
   if (error) return;
-  for(const row of (data??[]) as Array<{topic_index:number;activity:Activity}>) {
-   local[`${row.topic_index}:${row.activity}`]=true;
-  }
+  const remote = new Set((data??[] as Array<{topic_index:number;activity:Activity}>).map(row=>`${row.topic_index}:${row.activity}`));
+  for(const k of remote) local[k]=true;
   localStorage.setItem(key,JSON.stringify(local));
-  // Backfill previously completed activities from this device.
-  const missing=Object.keys(local).filter(k=>local[k] && /^\\d+:(reading|questions|flashcards|glossary)$/.test(k));
-  for(const k of missing) {
-   const [topic,activity]=k.split(':');
-   await persistActivity(materialId,Number(topic),activity as Activity);
+  const pending=Object.keys(local).filter(k=>local[k] && !remote.has(k) && /^\\d+:(reading|questions|flashcards|glossary)$/.test(k));
+  if(pending.length) {
+   const rows=pending.map(k=>{ const [topic,activity]=k.split(':'); return {user_id:user.id,material_id:materialId,topic_index:Number(topic),activity}; });
+   await supabase.from('student_material_topic_activity_progress' as never)
+    .upsert(rows as never,{onConflict:'user_id,material_id,topic_index,activity',ignoreDuplicates:true});
   }
  } catch { /* Offline mode remains available. */ }
 }
