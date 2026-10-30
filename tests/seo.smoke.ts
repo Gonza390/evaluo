@@ -1013,3 +1013,25 @@ assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
   'Crear práctica desde mi PDF',
   'Todavía no hay preguntas públicas disponibles',
 ]);
+
+
+// SEO content quality guardrails: no hidden paywall promises on acquisition pages.
+assertIncludesAll('app/funciones/crear-mapa-mental-desde-pdf/page.tsx', [
+  'El mapa mental es una función Premium',
+  'Para acceder a la vista de mapa mental',
+  '¿El mapa mental está incluido en el plan gratuito?',
+  'href="/pricing"',
+]);
+assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  'si tienes Premium, también puedes consultar el mapa mental',
+]);
+// Academic landing value must be tied to actual inventory, not SEO-only prose.
+assertIncludesAll('app/landings/estudiar/[materia]/page.tsx', [
+  'data.sampleQuestions.map((question)',
+  'question.enunciado',
+  'data.partial1Count',
+  'data.partial2Count',
+  'data.questionCount',
+  'getMateriaSeoContentSignals',
+  'hasSubstantialStudyLandingContent(signals)',
+]);
