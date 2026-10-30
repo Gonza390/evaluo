@@ -1943,14 +1943,10 @@ export function MaterialStudyWorkspace({
       >
         <div className="mx-auto w-full max-w-[1240px] py-1 sm:py-1.5">
           <header className="border-border border-b pb-3 md:pb-5">
-            <h2 className="text-foreground hidden max-w-[1040px] text-[19px] leading-[1.25] font-bold tracking-[-0.04em] md:block md:text-[20px]">
-              {title}
-            </h2>
-
             <p
               data-study-summary-intro
               className={cn(
-                'text-muted-foreground mt-0 max-w-[1040px] text-[13px] leading-[1.65] md:mt-2',
+                'text-muted-foreground mt-0 max-w-[1040px] text-[13px] leading-[1.65]',
                 !summaryIntroExpanded && 'line-clamp-4 sm:line-clamp-none'
               )}
             >
@@ -2752,20 +2748,18 @@ export function MaterialStudyWorkspace({
 
         {/* Desktop keeps the current reader heading and Guide action. */}
         <div className={`mx-auto hidden w-full items-center gap-3 px-4 py-1.5 md:flex md:px-5 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
-          <div className="min-w-0 flex-1">
+          <div data-evaluo-desktop-reader-title className="flex min-w-0 flex-1 items-center gap-3">
             <Link
               href={backHref}
-              className="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-[11.5px] font-semibold transition"
+              className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-semibold transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Volver
             </Link>
-
-            <div className="mt-0.5 flex min-w-0 items-baseline gap-3">
-              <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-bold tracking-[-0.03em] sm:text-[1.06rem]">
-                {title}
-              </h1>
-            </div>
+            <span aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200" />
+            <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-bold tracking-[-0.03em] sm:text-[1.06rem]" title={title}>
+              {title}
+            </h1>
           </div>
 
           {isOwner && !demo && !recommendedActive ? (
