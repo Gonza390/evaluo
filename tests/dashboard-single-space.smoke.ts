@@ -141,8 +141,8 @@ assert.match(referralNavSource, /compact = false/);
 assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
 
 const notificationSource = readFileSync(resolve('components/notifications/notification-bell.tsx'), 'utf8');
-assert.match(appChromeSource, /<div className="hidden md:block">\s*<NotificationBell compact=\{isCompactAppRoute\} \/>\s*<\/div>/,
-  'Hide the notification bell on mobile while preserving desktop notifications.');
+assert.doesNotMatch(appChromeSource, /NotificationBell|notification-bell/,
+  'The shared header must not render the notification bell at any viewport size.');
 assert.match(appChromeSource, /const isMobileDashboardRoute = pathname === '\/dashboard'/,
   'Header cleanup must target Mi espacio, not all routes.');
 assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
@@ -150,7 +150,7 @@ assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
 assert.match(appChromeSource, /isMobileDashboardRoute \? 'hidden min-w-0 md:block' : 'min-w-0'/,
   'Only the word Evaluo is hidden on mobile Mi espacio; the logo remains visible.');
 assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute \? 'hidden md:block' : undefined/,
-  'The notification bell must remain visible on mobile.');
+  'Do not restore the old mobile-only notification wrapper.');
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
 assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
