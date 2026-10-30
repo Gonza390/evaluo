@@ -254,3 +254,14 @@ assert.doesNotMatch(appChromeSource, /prefers-reduced-motion.*document.startView
   'Route motion must not rely on a browser-specific View Transitions API.');
 
 console.log('Dashboard single Mi espacio smoke tests passed.');
+
+const studyCardsSource = readFileSync(resolve('components/dashboard/study-reading-cards.tsx'), 'utf8');
+const readingProgressSource = readFileSync(resolve('lib/reading-progress.ts'), 'utf8');
+const studyPageSource = readFileSync(resolve('app/dashboard/explicaciones/page.tsx'), 'utf8');
+const studyWorkspaceSource = readFileSync(resolve('components/material-study-workspace.tsx'), 'utf8');
+assert.match(studyPageSource, /<StudyReadingCards/);
+assert.match(studyCardsSource, /grid-cols-2/);
+assert.match(studyCardsSource, /role="progressbar"/);
+assert.match(studyCardsSource, /readReadingProgress/);
+assert.match(studyWorkspaceSource, /saveReadingPosition\(materialId, nextIndex, summaryChapters.length\)/);
+assert.match(readingProgressSource, /localStorage.setItem/);
