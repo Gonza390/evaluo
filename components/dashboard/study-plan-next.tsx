@@ -7,13 +7,11 @@ import { getProgress, type TopicActivities } from '@/lib/study-plan-progress';
 type Activity = { id: string; label: string; subtitle: string; href: string; done: boolean; icon: typeof BookOpen };
 export function StudyPlanNext({ materialId, topicCount, topicActivities }: { materialId: string; topicCount: number; topicActivities: TopicActivities[] }) {
   const [done, setDone] = useState<Record<string, boolean>>({});
-  const [read, setRead] = useState(0);
   useEffect(() => {
     const update = () => {
       try {
         setDone(getProgress(materialId, topicActivities).record);
-        setRead(getProgress(materialId, topicActivities).read);
-      } catch { setDone({}); setRead(0); }
+      } catch { setDone({}); }
     };
     update();
     window.addEventListener('focus', update);
@@ -23,11 +21,11 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   if (!topicCount) return <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Todavía no hay temas disponibles para planificar.</div>;
   let topic = 0;
   for (; topic < topicCount; topic++) {
-    if (topic >= read || (topicActivities[topic]?.questions && !done[`${topic}:questions`]) || (topicActivities[topic]?.flashcards && !done[`${topic}:flashcards`]) || (topicActivities[topic]?.glossary && !done[`${topic}:glossary`])) break;
+    if (!done[`${topic}:reading`] || (topicActivities[topic]?.questions && !done[`${topic}:questions`]) || (topicActivities[topic]?.flashcards && !done[`${topic}:flashcards`]) || (topicActivities[topic]?.glossary && !done[`${topic}:glossary`])) break;
   }
   if (topic >= topicCount) return <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[13px] font-semibold text-emerald-800"><CheckCircle2 className="size-5" /> ¡Completaste las actividades del PDF!</div>;
   const tasks: Activity[] = [
-    {id:'read',label:`Leer el tema ${topic + 1}`,subtitle:'Empezá por el contenido del tema',href:`/materiales/${materialId}?tab=resumen`,done:topic<read,icon:BookOpen},
+    {id:'read',label:`Leer el tema ${topic + 1}`,subtitle:'Empezá por el contenido del tema',href:`/materiales/${materialId}?tab=resumen`,done:!!done[`${topic}:reading`],icon:BookOpen},
     {id:'questions',label:`Practicar el tema ${topic + 1}`,subtitle:'Respondé las preguntas del tema',href:`/materiales/${materialId}?tab=ejercicios&studyTopic=${topic}`,done:!!done[`${topic}:questions`],icon:ListChecks},
     {id:'flashcards',label:`Repasar flashcards del tema ${topic + 1}`,subtitle:'Revisá las tarjetas de memoria',href:`/materiales/${materialId}?tab=tarjetas&studyTopic=${topic}`,done:!!done[`${topic}:flashcards`],icon:Layers3},
     {id:'glossary',label:`Revisar glosario del tema ${topic + 1}`,subtitle:'Repasá los conceptos importantes',href:`/materiales/${materialId}?tab=glosario&studyTopic=${topic}`,done:!!done[`${topic}:glossary`],icon:BookText},
