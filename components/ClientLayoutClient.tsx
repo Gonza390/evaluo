@@ -308,7 +308,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  <NotificationBell compact={isCompactAppRoute} />
+                  <div className="hidden md:block">
+                    <NotificationBell compact={isCompactAppRoute} />
+                  </div>
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
                     href="/calendario"
