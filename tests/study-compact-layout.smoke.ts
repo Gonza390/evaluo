@@ -40,8 +40,12 @@ assert.match(appLayout, /const isMaterialStudyRoute = pathname.startsWith\('\/ma
   'The mobile topbar exception must be restricted to PDF study routes.');
 assert.match(workspace, /<h1 className="text-foreground min-w-0 truncate/,
   'Keep the primary PDF title in the reader navigation alongside Volver and Ver guía.');
-assert.match(workspace, /<h2 className="text-foreground hidden max-w-\[1040px\].*md:block/,
-  'Do not show the same PDF title again in the mobile summary.');
+assert.doesNotMatch(workspace, /<h2 className="text-foreground hidden max-w-\[1040px\]/,
+  'The PDF title must not appear a second time in the summary on either viewport.');
+assert.match(workspace, /data-evaluo-desktop-reader-title/,
+  'Desktop reader keeps a compact title, Back action and Guide access in one row.');
+assert.match(workspace, /aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200"/,
+  'Desktop navigation controls are visually separated from the document title.');
 assert.match(workspace, /data-study-summary-intro/,
   'Hiding the duplicate title must not remove the introductory summary.');
 
