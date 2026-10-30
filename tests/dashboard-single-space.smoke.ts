@@ -119,7 +119,7 @@ assert.match(appChromeSource, /<EstimatedStudyActivity compact=\{isCompactAppRou
 const activitySource = readFileSync(resolve('components/estimated-study-activity.tsx'), 'utf8');
 assert.match(activitySource, /compact = false/);
 assert.match(activitySource, /compact \? 'h-9 px-3 text-\[12px\]' : 'h-10 px-3\.5 text-sm'/);
-assert.match(appChromeSource, /isCompactAppRoute \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/);
+assert.match(appChromeSource, /user \? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,\n  'All authenticated routes share a consistent compact topbar.');
 assert.match(appChromeSource, /<Navbar collapsed=\{sidebarCollapsed\} onToggleCollapsed=\{handleSidebarToggle\} compact=\{isCompactAppRoute\} \/>/);
 assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
 assert.match(appChromeSource, /sidebarCollapsed \? 'md:ml-\[76px\]' : 'md:ml-\[248px\]'/);
