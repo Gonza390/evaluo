@@ -169,7 +169,6 @@ const MaterialProgressContent = dynamic(
 
 type MaterialStudyWorkspaceProps = {
   backHref: string;
-  carreraName?: string;
   fileName: string;
   canRegenerate: boolean;
   isPremium: boolean;
@@ -179,7 +178,6 @@ type MaterialStudyWorkspaceProps = {
   materiaName?: string;
   pageCount: number | null;
   title: string;
-  universidadName?: string;
   viewerUrl: string;
   visibility: 'private' | 'shared';
   studyGlossary: StudyGlossaryItem[];
@@ -292,41 +290,9 @@ function buildSummaryChapterAnchor(index: number, value: string) {
   return `capitulo-${index + 1}${slug ? `-${slug}` : ''}`;
 }
 
-function MaterialMetadata({
-  carreraName,
-  universidadName,
-  materiaName,
-}: {
-  carreraName?: string;
-  universidadName?: string;
-  materiaName?: string;
-}) {
-  const items = [carreraName, universidadName, materiaName].filter((value): value is string =>
-    Boolean(value)
-  );
-  if (items.length === 0) return null;
-
-  return (
-    <div className="hidden min-w-0 items-center justify-end gap-2 overflow-hidden lg:flex">
-      {items.map((item, index) => (
-        <div key={item} className="flex min-w-0 items-center gap-2">
-          {index > 0 ? <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" /> : null}
-          <span
-            title={item}
-            className="text-muted-foreground max-w-[220px] truncate text-[11.5px] font-medium xl:max-w-[260px]"
-          >
-            {item}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export function MaterialStudyWorkspace({
   backHref,
   canRegenerate,
-  carreraName,
   fileName,
   isPremium,
   materialId,
@@ -335,7 +301,6 @@ export function MaterialStudyWorkspace({
   materiaName,
   pageCount: _pageCount,
   title,
-  universidadName,
   viewerUrl,
   visibility: _visibility,
   studyGlossary,
@@ -2743,11 +2708,6 @@ export function MaterialStudyWorkspace({
               Ver guía
             </button>
           ) : null}
-          <MaterialMetadata
-            carreraName={carreraName}
-            universidadName={universidadName}
-            materiaName={materiaName}
-          />
         </div>
       </section>
 

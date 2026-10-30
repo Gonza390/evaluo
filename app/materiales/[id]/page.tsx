@@ -320,9 +320,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       return (
         <MaterialStudyStatusWorkspace
           backHref={backHref}
-          carreraName={carrera?.nombre ?? 'Sin carrera'}
-          universidadName={universidad?.nombre ?? 'Sin universidad'}
-          materiaName={materia?.nombre ?? 'Sin materia'}
           title={material.title}
           fileName={material.file_name}
           viewerUrl={viewerUrl}
@@ -372,9 +369,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       return (
         <MaterialStudyStatusWorkspace
           backHref={backHref}
-          carreraName={carrera?.nombre ?? 'Sin carrera'}
-          universidadName={universidad?.nombre ?? 'Sin universidad'}
-          materiaName={materia?.nombre ?? 'Sin materia'}
           title={material.title}
           fileName={material.file_name}
           viewerUrl={viewerUrl}
@@ -510,16 +504,14 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           }
           backHref={backHref}
           canRegenerate={canRegenerate}
-          carreraName={carrera?.nombre ?? 'Sin carrera'}
           fileName={material.file_name}
           isPremium={isPremium}
           materialId={material.id}
           materiaId={material.materia_id ?? undefined}
           isOwner={isOwner}
-          materiaName={materia?.nombre ?? 'Sin materia'}
+          materiaName={materia?.nombre ?? undefined}
           pageCount={material.page_count}
           title={material.title}
-          universidadName={universidad?.nombre ?? 'Sin universidad'}
           viewerUrl={viewerUrl}
           visibility={visibility}
           studyGlossary={topicGlossary}
