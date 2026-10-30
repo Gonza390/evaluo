@@ -2700,7 +2700,7 @@ export function MaterialStudyWorkspace({
                 <button
                   type="button"
                   data-pdf-mobile-title-trigger
-                  aria-label={`Ver información del PDF: ${title}`}
+                  aria-label={`Seleccionar PDF: ${title}`}
                   className="flex h-10 w-full min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   <FileText className="size-3.5 shrink-0 text-slate-500" aria-hidden="true" />
@@ -2710,28 +2710,18 @@ export function MaterialStudyWorkspace({
               </DropdownMenuTrigger>
             </h1>
             <DropdownMenuContent align="center" sideOffset={8} className="max-h-[70dvh] w-[min(310px,calc(100vw-32px))] overflow-y-auto rounded-xl p-2">
-              <DropdownMenuLabel className="text-[11px] font-semibold text-slate-500">Documento actual</DropdownMenuLabel>
-              <p className="px-2 pb-2 text-[13px] font-semibold leading-5 break-words text-slate-900">{title}</p>
-              {isOwner && !demo ? (
-                <>
-                  <DropdownMenuLabel className="text-[11px] font-semibold text-slate-500">Cambiar de PDF</DropdownMenuLabel>
-                  {otherPdfOptions.length ? otherPdfOptions.map((pdf) => (
-                    <DropdownMenuItem key={pdf.id} asChild>
-                      <Link href={`/materiales/${pdf.id}?tab=resumen`} className="min-w-0">
-                        <FileText className="size-4 shrink-0" aria-hidden="true" />
-                        <span className="truncate">{pdf.title}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )) : <p className="px-2 py-1 text-xs text-slate-500">No tenés otros PDFs listos.</p>}
-                  <DropdownMenuSeparator />
-                </>
-              ) : <DropdownMenuSeparator />}
-              <DropdownMenuItem asChild>
-                <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4" aria-hidden="true" />
-                  Abrir PDF original
-                </a>
+              <DropdownMenuItem disabled>
+                <FileText className="size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">{title}</span>
               </DropdownMenuItem>
+              {isOwner && !demo && otherPdfOptions.map((pdf) => (
+                <DropdownMenuItem key={pdf.id} asChild>
+                  <Link href={`/materiales/${pdf.id}?tab=resumen`} className="min-w-0">
+                    <FileText className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{pdf.title}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -2778,17 +2768,15 @@ export function MaterialStudyWorkspace({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="max-h-[320px] w-[min(360px,calc(100vw-32px))] overflow-y-auto rounded-xl p-2">
-                  <DropdownMenuLabel>Seleccionar otro PDF</DropdownMenuLabel>
                   <DropdownMenuItem disabled><FileText className="size-4" />{title} (actual)</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {otherPdfOptions.length ? otherPdfOptions.map((pdf) => (
+                  {otherPdfOptions.map((pdf) => (
                     <DropdownMenuItem key={pdf.id} asChild>
                       <Link href={`/materiales/${pdf.id}?tab=resumen`} className="min-w-0">
                         <FileText className="size-4 shrink-0" aria-hidden="true" />
                         <span className="truncate">{pdf.title}</span>
                       </Link>
                     </DropdownMenuItem>
-                  )) : <p className="px-2 py-1 text-xs text-slate-500">No tenés otros PDFs listos.</p>}
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
