@@ -17,7 +17,7 @@ assertIncludesAll('app/layout.tsx', [
   'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
   'openGraph',
   'twitter',
-  'lang="es-AR"',
+  'lang="es"',
 ]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
 
@@ -954,3 +954,7 @@ assertIncludesAll('next.config.mjs', [
 ]);
 assertIncludesAll('app/es/guias/page.tsx', ["locale: 'es'"]);
 assertIncludesAll('app/es/paises/page.tsx', ["locale: 'es'"]);
+
+// SSR language is neutral Spanish at the document root, with regional body content.
+assertIncludesAll('app/page.tsx', ['lang="es-AR"']);
+assertIncludesAll('components/marketing/international-study-landing.tsx', ['lang={copy.htmlLang}']);
