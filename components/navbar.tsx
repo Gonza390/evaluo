@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   BookOpen,
   CalendarDays,
+  ClipboardList,
   CircleAlert,
   CircleHelp,
   Crown,
@@ -56,6 +57,7 @@ const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario', href: '/calendario', icon: CalendarDays },
   { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
+  { label: 'Plan de estudio', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
 ];
 
 function NavItem({
