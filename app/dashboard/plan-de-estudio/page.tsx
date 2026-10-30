@@ -76,7 +76,7 @@ export default async function StudyPlanPage() {
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[15px] font-bold tracking-tight">Lo que sigue</h2>
               </div>
-              {first ? <StudyPlanNext materialId={first.id} topicCount={topicCount} /> : (
+              {first ? <StudyPlanNext materialId={first.id} topicCount={topicCount} topicActivities={topicActivities} /> : (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Subí un PDF para comenzar con el tema 1.</div>
               )}
             </section>
