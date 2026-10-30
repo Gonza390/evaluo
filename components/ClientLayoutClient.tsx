@@ -287,9 +287,6 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isCompactAppRoute ? 'text-[14px] sm:text-[15px]' : 'text-[1.05rem] sm:text-lg'}`}>
                     Evaluo
                   </div>
-                  <p className={`mt-0.5 hidden font-medium text-slate-400 sm:block ${isCompactAppRoute ? 'text-[9.5px]' : 'text-[11px]'}`}>
-                    Tu espacio académico
-                  </p>
                 </div>
               </Link>
             )}
