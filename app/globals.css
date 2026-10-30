@@ -9,15 +9,15 @@
   --evaluo-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes evaluo-route-enter {
-  from { opacity: 0; transform: translate3d(0, 6px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: 0.55; }
+  to { opacity: 1; }
 }
 @keyframes evaluo-surface-enter {
   from { opacity: 0; transform: translate3d(0, 5px, 0) scale(0.99); }
   to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 [data-evaluo-route-enter] {
-  animation: evaluo-route-enter var(--evaluo-motion-normal) var(--evaluo-motion-ease) both;
+  animation: evaluo-route-enter 170ms var(--evaluo-motion-ease) both;
 }
 [data-evaluo-motion-card] {
   transition: transform var(--evaluo-motion-fast) var(--evaluo-motion-ease),
