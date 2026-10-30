@@ -11,6 +11,7 @@ import {
   parseSeoEntitySlug,
 } from '@/lib/seo-intents';
 import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
+import { createPublicClient } from '@/lib/supabase-public';
 
 export const revalidate = 600;
 
@@ -43,6 +44,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? await getUniversidadById(carrera.universidad_id)
       : null;
     const materias = await getMateriasByCarrera(carrera.id);
+    let hasPublicPractice = false;
+    if (materias.length > 0) {
+      const { data, error } = await createPublicClient()
+        .from('preguntas_banco_public')
+        .select('materia_id')
+        .in('materia_id', materias.map((materia) => materia.id))
+        .limit(1);
+      if (error) throw error;
+      hasPublicPractice = (data?.length ?? 0) > 0;
+    }
 
     const description = buildSimulatorLandingDescription({
       carreraNombre: carrera.nombre,
@@ -57,6 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title,
       description,
+      robots: { index: hasPublicPractice, follow: true },
       alternates: {
         canonical: canonicalHref,
       },

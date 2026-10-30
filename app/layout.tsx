@@ -81,13 +81,6 @@ export const metadata: Metadata = {
   publisher: 'Evaluo',
   alternates: {
     canonical: '/',
-    languages: {
-      'es-AR': '/',
-    },
-  },
-  other: {
-    'geo.region': 'AR',
-    'geo.placename': 'Argentina',
   },
   openGraph: {
     type: 'website',
@@ -96,7 +89,6 @@ export const metadata: Metadata = {
     title: 'No estudies todo por igual | Evaluo',
     description:
       'Descubrí qué sabés, qué reforzar y cómo avanzás. Practicá con tus apuntes y seguí tu progreso por tema.',
-    locale: 'es_AR',
     images: [
       {
         url: '/evaluo-whatsapp-progreso.png',
@@ -136,7 +128,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-AR" className={inter.className}>
+    <html lang="es" className={inter.className}>
       <body className="bg-background text-foreground min-h-screen text-[0.92rem]">
         <style>{ROOT_INLINE_CSS}</style>
         <GlobalClientRuntime />

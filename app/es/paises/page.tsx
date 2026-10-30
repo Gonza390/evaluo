@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
+    locale: 'es',
     type: 'website',
     title: 'Guías para estudiar en español por país | Evaluo',
     description: 'Encuentra métodos de estudio por país y practica tus propios apuntes PDF con Evaluo.',

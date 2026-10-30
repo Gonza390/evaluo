@@ -14,6 +14,11 @@ export const metadata: Metadata = {
     'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
   alternates: {
     canonical: '/',
+    languages: { 'es-AR': '/' },
+  },
+  other: {
+    'geo.region': 'AR',
+    'geo.placename': 'Argentina',
   },
   openGraph: {
     type: 'website',
@@ -42,7 +47,7 @@ const primaryHref = '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpl
 
 export default function Home() {
   return (
-    <div className="home-redesign-root">
+    <div lang="es-AR" className="home-redesign-root">
       <a href="#contenido" className="reference-skip-link">
         Saltar al contenido
       </a>

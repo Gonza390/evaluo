@@ -226,12 +226,31 @@ export async function fetchUniversidades(client: QueryClient): Promise<CatalogUn
   return (data as CatalogUniversidad[] | null) ?? [];
 }
 
+// The catalog has more than the default PostgREST 1,000-row response limit.
+// Fetch every relation in stable order so sitemap and study navigation agree.
+async function fetchAllCatalogCareerMaterias(client: QueryClient) {
+  const pageSize = 1000;
+  const rows: Array<{ carrera_id: string | null; materia_id: string | null }> = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await client
+      .from('carrera_materias')
+      .select('carrera_id, materia_id')
+      .order('carrera_id', { ascending: true })
+      .order('materia_id', { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < pageSize) break;
+  }
+  return rows;
+}
+
 export async function fetchExplorarCatalogData(client: QueryClient): Promise<ExplorarCatalogData> {
   const [universidadesResult, carrerasResult, carreraMateriasResult, contentSignals] =
     await Promise.all([
       client.from('universidades').select('id, nombre').order('nombre'),
       client.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-      client.from('carrera_materias').select('carrera_id, materia_id'),
+      fetchAllCatalogCareerMaterias(client),
       fetchCatalogContentSignals(client),
     ]);
 
@@ -243,17 +262,10 @@ export async function fetchExplorarCatalogData(client: QueryClient): Promise<Exp
     throw carrerasResult.error;
   }
 
-  if (carreraMateriasResult.error) {
-    throw carreraMateriasResult.error;
-  }
-
+  
   const universidades = (universidadesResult.data as CatalogUniversidad[] | null) ?? [];
   const carreras = (carrerasResult.data as CatalogCarrera[] | null) ?? [];
-  const carreraMaterias =
-    (carreraMateriasResult.data as Array<{
-      carrera_id: string | null;
-      materia_id: string | null;
-    }> | null) ?? [];
+  const carreraMaterias = carreraMateriasResult;
 
   const universityNameById = new Map(
     universidades.map((universidad) => [universidad.id, universidad.nombre])
