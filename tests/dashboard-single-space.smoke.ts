@@ -141,7 +141,8 @@ assert.match(referralNavSource, /compact = false/);
 assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
 
 const notificationSource = readFileSync(resolve('components/notifications/notification-bell.tsx'), 'utf8');
-assert.match(appChromeSource, /<NotificationBell compact=\{isCompactAppRoute\} \/>/);
+assert.match(appChromeSource, /<div className="hidden md:block">\s*<NotificationBell compact=\{isCompactAppRoute\} \/>\s*<\/div>/,
+  'Hide the notification bell on mobile while preserving desktop notifications.');
 assert.match(appChromeSource, /const isMobileDashboardRoute = pathname === '\/dashboard'/,
   'Header cleanup must target Mi espacio, not all routes.');
 assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
