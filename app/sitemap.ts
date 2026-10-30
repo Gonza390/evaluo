@@ -7,6 +7,10 @@ import { COUNTRY_NICHE_GUIDES } from '@/lib/es-country-niche-guides';
 import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
 
+// Keep the last successful sitemap under ISR; a transient database failure must
+// not publish an incomplete 200-response sitemap.
+export const revalidate = 3600;
+
 function isFulfilled<T>(result: PromiseSettledResult<T>): result is PromiseFulfilledResult<T> {
   return result.status === 'fulfilled';
 }
@@ -121,6 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const { data, error } = await client
         .from('preguntas_banco_public')
         .select('materia_id, parcial, creado_at')
+        .order('id', { ascending: true })
         .range(from, from + pageSize - 1);
 
       if (error) throw error;
@@ -130,21 +135,62 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return { data: rows };
   };
+  // PostgREST limits one response to 1,000 rows. Sitemap discovery must paginate.
+  const fetchAllMaterias = async () => {
+    const pageSize = 1000;
+    const rows: Array<{ id: string; nombre: string }> = [];
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await client
+        .from('materias')
+        .select('id, nombre')
+        .order('id', { ascending: true })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      rows.push(...(data ?? []));
+      if (!data || data.length < pageSize) break;
+    }
+    return { data: rows };
+  };
+  const fetchAllMaterialMateriaIds = async (table: 'resumenes' | 'recursos') => {
+    const pageSize = 1000;
+    const rows: Array<{ materia_id: string | null }> = [];
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await client
+        .from(table)
+        .select('materia_id')
+        .order('id', { ascending: true })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      rows.push(...(data ?? []));
+      if (!data || data.length < pageSize) break;
+    }
+    return { data: rows };
+  };
   const [
-    universidadesResult,
     materiasResult,
     explorarDataResult,
     frescuraResult,
     resumenesResult,
     recursosResult,
   ] = await Promise.allSettled([
-    client.from('universidades').select('id'),
-    client.from('materias').select('id, nombre'),
+    fetchAllMaterias(),
     fetchExplorarCatalogData(client),
     fetchAllQuestionFreshness(),
-    client.from('resumenes').select('materia_id').limit(10000),
-    client.from('recursos').select('materia_id').limit(10000),
+    fetchAllMaterialMateriaIds('resumenes'),
+    fetchAllMaterialMateriaIds('recursos'),
   ]);
+
+  // A partial sitemap silently dropping indexable URLs is worse than retrying
+  // a failed ISR refresh; Next can keep serving the last successful version.
+  for (const result of [
+    materiasResult,
+    explorarDataResult,
+    frescuraResult,
+    resumenesResult,
+    recursosResult,
+  ]) {
+    if (result.status === 'rejected') throw result.reason;
+  }
 
   const materiaLastModified = new Map<string, Date>();
   const materiaQuestionCount = new Map<string, number>();
@@ -189,11 +235,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  if (isFulfilled(universidadesResult)) {
-    for (const universidad of universidadesResult.value.data ?? []) {
-      routes.push({
-        url: `${baseUrl}/universidad/${universidad.id}`,
-      });
+  if (isFulfilled(explorarDataResult)) {
+    for (const universidad of explorarDataResult.value.universidades) {
+      // Match the university page's robots index rule.
+      if (universidad.carrerasCount === 0 || universidad.materiasCount === 0) continue;
+      routes.push({ url: `${baseUrl}/universidad/${universidad.id}` });
     }
   }
 
@@ -263,15 +309,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (isFulfilled(explorarDataResult)) {
     for (const carrera of explorarDataResult.value.carreras) {
-      if (!carrera.universidadId) continue;
+      if (!carrera.universidadId || carrera.materiasCount === 0) continue;
 
       routes.push({
         url: `${baseUrl}/estudiar/${buildSeoEntitySlug(carrera.universidadNombre, carrera.universidadId)}/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`,
       });
 
-      routes.push({
-        url: `${baseUrl}/simulador-parcial/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`,
-      });
+      // A simulator without public practice questions must not be advertised.
+      if (carrera.questionMateriasCount > 0) {
+        routes.push({
+          url: `${baseUrl}/simulador-parcial/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`,
+        });
+      }
     }
   }
 
