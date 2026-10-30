@@ -20,7 +20,6 @@ export function StudyPlanWheel({ materialId, title, topicCount }: { materialId: 
     </div>
     <div className="min-w-0">
       <p className="truncate text-[13px] font-semibold text-slate-900">{title}</p>
-      <p className="mt-1 text-[12px] text-slate-500">Avance general del PDF</p>
       <p className="mt-1 text-[11px] text-slate-500">{progress.done} de {progress.total} actividades completadas</p>
     </div>
   </div>;
