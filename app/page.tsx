@@ -47,7 +47,7 @@ const primaryHref = '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpl
 
 export default function Home() {
   return (
-    <div className="home-redesign-root">
+    <div lang="es-AR" className="home-redesign-root">
       <a href="#contenido" className="reference-skip-link">
         Saltar al contenido
       </a>
