@@ -269,7 +269,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               stablePrivateHeader ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
           >
-            {!stablePrivateHeader ? (
+            {!user ? (
               <PublicBrandLink />
             ) : (
               <Link
@@ -292,7 +292,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
             )}
-            {!stablePrivateHeader ? (
+            {!user ? (
               <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                 <div className="hidden lg:block">
                   <EstimatedStudyActivity />
