@@ -65,7 +65,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
           <div className="min-w-0 space-y-4">
-            <section className="rounded-[16px] border border-slate-200 bg-white p-4 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-[14px] font-bold">Tu avance</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
@@ -98,7 +98,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
             <section>
               <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-bold tracking-tight">Tus materiales</h2><span className="text-xs text-slate-400">{materials.length} PDFs</span></div>
-              <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 {materials.length ? materials.slice(0, 6).map(material => (
                   <Link key={material.id} href={`/materiales/${material.id}?tab=resumen`} className="flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 transition last:border-0 hover:bg-slate-50">
                     <FileText className="size-4 shrink-0 text-slate-400" />
