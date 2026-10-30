@@ -1,7 +1,7 @@
 export type CountryNicheGuide = {
  slug: string; country: string; flag: string; exam: string; title: string; seoTitle: string;
  description: string; summary: string; audience: string; focus: string;
- sourceName: string; sourceUrl: string; eyebrow: string;
+ sourceName: string; sourceUrl: string; officialChecks: string[]; eyebrow: string;
  steps: Array<[string,string]>; exampleTitle: string; example: string;
  pitfalls: Array<[string,string]>; faq: Array<[string,string]>;
 };
@@ -19,6 +19,10 @@ export const COUNTRY_NICHE_GUIDES: CountryNicheGuide[] = [
     "focus": "El EXANI-II es una evaluación de ingreso de Ceneval. La institución a la que aspiras puede establecer requisitos propios: comprueba siempre su convocatoria. Esta guía explica un método para estudiar el documento oficial que te corresponda, sin prometer exámenes filtrados ni usar preguntas atribuidas a Ceneval.",
     "sourceName": "Guías para el sustentante — Ceneval",
     "sourceUrl": "https://ceneval.edu.mx/instituciones-guias_ceneval/",
+    "officialChecks": [
+      "Ceneval publica una guía para el sustentante y una guía interactiva del EXANI-II; revisa la edición y el material que correspondan a tu evaluación.",
+      "La institución a la que postulas determina sus requisitos de ingreso y la comunicación de resultados; confirma su convocatoria además de consultar Ceneval."
+    ],
     "eyebrow": "Guías de estudio y EXANI-II",
     "steps": [
       [
@@ -82,6 +86,10 @@ export const COUNTRY_NICHE_GUIDES: CountryNicheGuide[] = [
     "focus": "La PAES evalúa habilidades y conocimientos que dependen de la prueba elegida. DEMRE publica temarios y materiales de referencia por proceso. Utiliza esos documentos para saber qué preparar: Evaluo puede ayudarte a estudiar los conceptos que cargues, pero no sustituye los ensayos oficiales ni predice los ítems.",
     "sourceName": "Pruebas y temarios PAES — DEMRE",
     "sourceUrl": "https://portaldemre.demre.cl/paes/factores-seleccion/pruebas-acceso-paes",
+    "officialChecks": [
+      "Para postular al sistema centralizado se requieren puntajes vigentes de Competencia Lectora, Matemática 1 y al menos una prueba electiva.",
+      "Matemática 2 (M2) es obligatoria cuando la carrera de destino la exige: comprueba ese requisito antes de elegir el temario."
+    ],
     "eyebrow": "PAES · Chile",
     "steps": [
       [
@@ -145,6 +153,10 @@ export const COUNTRY_NICHE_GUIDES: CountryNicheGuide[] = [
     "focus": "La Universidad Nacional Mayor de San Marcos publica convocatorias, reglamentos, áreas y cronogramas de admisión. La preparación debe empezar por el proceso al que vas a postular. Una pregunta generada por IA no equivale a un examen histórico ni a un simulacro oficial de San Marcos.",
     "sourceName": "Admisión UNMSM — portal oficial",
     "sourceUrl": "https://www.unmsm.edu.pe/formacion-academica/admision",
+    "officialChecks": [
+      "La UNMSM organiza el proceso de admisión y sus fechas de evaluación por áreas académicas; consulta el cronograma del proceso que te corresponde.",
+      "La institución publica los pasos de inscripción y referencias de simulacros; comprueba el material y los requisitos del proceso vigente antes de practicar."
+    ],
     "eyebrow": "Admisión universitaria · Perú",
     "steps": [
       [
@@ -208,6 +220,10 @@ export const COUNTRY_NICHE_GUIDES: CountryNicheGuide[] = [
     "focus": "La USAC explica que el proceso de ingreso incluye orientación vocacional, Pruebas de Conocimientos Básicos (PCB), pruebas específicas según carrera y trámites posteriores. Las PCB pueden incluir Lenguaje, Matemática, Biología, Química o Física. No todas las carreras requieren las mismas materias: verifica el cuadro y tu constancia.",
     "sourceName": "Guías temáticas y simulador — SUN USAC",
     "sourceUrl": "https://sun.usac.edu.gt/index.php/herramientas/",
+    "officialChecks": [
+      "El Sistema de Ubicación y Nivelación (SUN) publica guías temáticas de Biología, Física, Lenguaje, Matemática y Química para preparar las pruebas básicas (PCB).",
+      "Cada carrera solicita determinadas PCB; el SUN publica un cuadro por ciclo y proporciona un simulador para orientar el repaso."
+    ],
     "eyebrow": "Pruebas básicas USAC · Guatemala",
     "steps": [
       [

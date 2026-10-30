@@ -6,6 +6,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getOfficialCareerProfile } from '@/lib/career-profiles';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { createPublicClient } from '@/lib/supabase-public';
 import {
   buildCareerStudyDescription,
   buildSeoEntitySlug,
@@ -129,6 +130,17 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
     carreraNombre: carrera.nombre,
   });
 
+  // Only advertise a public simulator when it has practice questions.
+  // A transient query error must not result in a false "available" claim.
+  const publicPractice = materias.length > 0
+    ? await createPublicClient()
+        .from('preguntas_banco_public')
+        .select('materia_id')
+        .in('materia_id', materias.map((materia) => materia.id))
+        .limit(1)
+    : null;
+  const hasPublicPractice = Boolean(publicPractice && !publicPractice.error && publicPractice.data?.length);
+
   return (
     <main className="min-h-screen bg-white">
       <JsonLd
@@ -186,10 +198,14 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             <article className="rounded-3xl border border-slate-200 bg-white px-5 py-5">
               <Sparkles className="h-5 w-5 text-[#2563EB]" />
               <p className="mt-3 text-sm font-semibold text-slate-950">
-                Resúmenes, recursos y simuladores
+                {hasPublicPractice ? 'Preguntas públicas disponibles' : 'Herramientas para tus apuntes'}
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Usá Evaluo para estudiar con más claridad y practicar antes de rendir.
+                {hasPublicPractice
+                  ? 'Podés practicar con las preguntas públicas disponibles de esta carrera y revisar tus errores.'
+                  : publicPractice?.error
+                    ? 'No pudimos comprobar la disponibilidad de preguntas en este momento. Podés entrar a las materias o practicar con tu propio PDF.'
+                    : 'Todavía no hay preguntas públicas disponibles para un simulador de esta carrera. Podés estudiar con tu propio PDF y generar práctica con IA.'}
               </p>
             </article>
           </div>
@@ -243,12 +259,21 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
               >
                 Ver materias de {carrera.nombre}
               </Link>
-              <Link
-                href={`/simulador-parcial/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                Ir a la guía de simuladores
-              </Link>
+              {hasPublicPractice ? (
+                <Link
+                  href={`/simulador-parcial/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`}
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  Practicar con preguntas disponibles
+                </Link>
+              ) : (
+                <Link
+                  href="/estudiar-pdf-con-ia"
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  Crear práctica desde mi PDF
+                </Link>
+              )}
             </div>
           </div>
 

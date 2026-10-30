@@ -886,13 +886,15 @@ const countryData = source('lib/es-country-niche-guides.ts');
 const countryMatch = countryData.match(/COUNTRY_NICHE_GUIDES: CountryNicheGuide\[\] = (\[[\s\S]*?\]);\nexport function/);
 assert.ok(countryMatch, 'Country guides must be a fixed, editorially reviewed list');
 const countries = JSON.parse(countryMatch![1]) as Array<{
-  slug: string; title: string; sourceUrl: string; focus: string; example: string;
+  slug: string; title: string; sourceUrl: string; officialChecks: string[]; focus: string; example: string;
   steps: Array<[string,string]>; pitfalls: Array<[string,string]>; faq: Array<[string,string]>;
 }>;
 assert.equal(countries.length, 4, 'Four substantiated niche guides, not 20 thin variants');
 assert.equal(new Set(countries.map(g=>g.slug)).size, 4);
 for (const guide of countries) {
   assert.ok(guide.sourceUrl.startsWith('https://'));
+  assert.equal(guide.officialChecks.length, 2, guide.slug + ' must cite useful source-specific checkpoints');
+  assert.ok(guide.officialChecks.every(check => check.length >= 55), 'Checkpoints must provide usable information');
   assert.ok(guide.steps.length>=4 && guide.faq.length>=3 && guide.pitfalls.length>=3);
   const prose = [guide.focus,guide.example,...guide.steps.flat(),...guide.pitfalls.flat(),...guide.faq.flat()].join(' ');
   assert.ok(prose.split(/\s+/).length >= 320, guide.slug + ' must have substantial original text');
@@ -983,4 +985,31 @@ assertIncludesAll('.github/workflows/indexnow-notify.yml', [
   'INDEXNOW_URLS:',
   'node scripts/submit-indexnow.mjs',
   'permissions:',
+]);
+
+
+// Editorial trust: no fabricated reviewers, clear sourcing and independent status.
+assertIncludesAll('components/seo/editorial-methodology.tsx', [
+  'Cómo se preparó esta guía',
+  'Publicación educativa de Evaluo',
+  'no son preguntas oficiales',
+  "kind === 'admissions'",
+  'sourceName',
+  'sourceUrl',
+]);
+assertIncludesAll('app/es/guias/[slug]/page.tsx', ['EditorialMethodology kind="study"']);
+assertIncludesAll('app/es/paises/[slug]/page.tsx', [
+  'EditorialMethodology kind="admissions"',
+  'guide.officialChecks.map',
+  'Qué comprobar en el organismo responsable',
+]);
+
+// Career landing must never promise a public simulator when no public
+// questions are published for that career.
+assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
+  "from('preguntas_banco_public')",
+  'const hasPublicPractice =',
+  '{hasPublicPractice ? (',
+  'Crear práctica desde mi PDF',
+  'Todavía no hay preguntas públicas disponibles',
 ]);

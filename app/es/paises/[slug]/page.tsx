@@ -6,6 +6,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { EditorialMethodology } from '@/components/seo/editorial-methodology';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 import { COUNTRY_NICHE_GUIDES, getCountryNicheGuide } from '@/lib/es-country-niche-guides';
@@ -103,6 +104,15 @@ export default async function CountryStudyGuidePage({params}: Props) {
                 className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-blue-700 underline underline-offset-4">
                 {guide.sourceName} <ExternalLink className="h-4 w-4" aria-hidden="true"/>
               </a>
+              <h3 className="mt-6 text-sm font-bold text-slate-900">Qué comprobar en el organismo responsable</h3>
+              <ul className="mt-3 space-y-3 text-sm leading-7 text-slate-700">
+                {guide.officialChecks.map((check) => (
+                  <li key={check} className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-blue-700" aria-hidden="true"/>
+                    <span>{check}</span>
+                  </li>
+                ))}
+              </ul>
             </section>
 
             <section id="metodo" className="mt-12 scroll-mt-24" aria-labelledby="metodo-pais">
@@ -172,6 +182,7 @@ export default async function CountryStudyGuidePage({params}: Props) {
               </TrackedLink>
               <p className="mt-3 text-xs text-slate-500">Puedes elegir tu archivo antes de registrarte. El plan gratuito tiene límites de uso.</p>
             </section>
+            <EditorialMethodology kind="admissions" sourceName={guide.sourceName} sourceUrl={guide.sourceUrl} />
             <p className="mt-8 text-xs leading-6 text-slate-500">
               Publicado el 29 de octubre de 2026. Evaluo es independiente de las instituciones
               mencionadas. La fuente oficial enlazada es la referencia válida para programas y reglas de admisión.
