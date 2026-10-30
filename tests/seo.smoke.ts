@@ -1196,3 +1196,9 @@ assertIncludesAll('.github/workflows/seo-visual-qa.yml', [
   'node scripts/qa-seo-visual.mjs',
   'seo-visual-audit',
 ]);
+
+assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
+  'pointer-events-none absolute inset-x-0 -inset-y-6',
+]);
+assert.ok(!source('components/marketing/pdf-first-landing-uploader.tsx').includes('absolute -inset-6 rounded-[40px]'),
+  'Decorative PDF-upload glow must not create horizontal overflow on mobile.');
