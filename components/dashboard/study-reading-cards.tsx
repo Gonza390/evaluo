@@ -74,7 +74,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
         <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-3 sm:gap-3 xl:grid xl:grid-cols-5 xl:overflow-visible">
           {tools.map((tool) => {
             const Icon = tool.icon;
-            const className = `flex min-h-[142px] w-[min(74vw,240px)] min-w-[min(74vw,240px)] snap-start flex-col rounded-2xl border border-transparent p-3 text-left transition hover:border-blue-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
+            const className = `flex min-h-[142px] xl:min-h-[118px] w-[min(74vw,240px)] min-w-[min(74vw,240px)] snap-start flex-col rounded-2xl border border-transparent p-3 text-left transition hover:border-blue-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
             const content = (
               <>
                 <Icon className="h-5 w-5" aria-hidden="true" />
