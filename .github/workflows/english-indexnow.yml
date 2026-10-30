@@ -1,0 +1,58 @@
+name: Notify search engines of updated English SEO URLs
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/changed-english-indexnow-urls.mjs'
+      - '.github/workflows/english-indexnow.yml'
+      - 'app/en/**'
+      - 'lib/english-seo-content.ts'
+      - 'lib/english-seo-metadata.ts'
+      - 'components/marketing/english-study-page.tsx'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/english-indexnow.yml'
+      - 'app/en/**'
+      - 'lib/english-seo-content.ts'
+      - 'lib/english-seo-metadata.ts'
+      - 'components/marketing/english-study-page.tsx'
+      - 'scripts/changed-english-indexnow-urls.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: english-indexnow-main
+  cancel-in-progress: false
+
+jobs:
+  publish-updates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check safe URL selection and IndexNow publisher
+        run: |
+          node --check scripts/changed-english-indexnow-urls.mjs
+          node --check scripts/submit-indexnow.mjs
+      - name: Check new/changed pages for notification (PR dry-run)
+        id: changed
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || github.event.pull_request.base.sha }}
+        run: node scripts/changed-english-indexnow-urls.mjs
+      - name: Let production deploy settle
+        if: github.event_name == 'push' && steps.changed.outputs.urls != ''
+        run: sleep 60
+      - name: Submit only changed indexable English URLs
+        if: github.event_name == 'push' && steps.changed.outputs.urls != ''
+        env:
+          INDEXNOW_URLS: ${{ steps.changed.outputs.urls }}
+        run: node scripts/submit-indexnow.mjs
