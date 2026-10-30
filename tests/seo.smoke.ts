@@ -958,3 +958,29 @@ assertIncludesAll('app/es/paises/page.tsx', ["locale: 'es'"]);
 // SSR language is neutral Spanish at the document root, with regional body content.
 assertIncludesAll('app/page.tsx', ['lang="es-AR"']);
 assertIncludesAll('components/marketing/international-study-landing.tsx', ['lang={copy.htmlLang}']);
+
+
+// Canonicals must be page-specific; do not accidentally canonicalize unrelated
+// public routes and other sections to the homepage.
+assert.ok(!source('app/layout.tsx').includes("canonical: '/'"), 'Root layout must not define global homepage canonical');
+assertIncludesAll('app/page.tsx', ["canonical: '/'"]);
+assertIncludesAll('app/explorar/layout.tsx', ["canonical: '/explorar'"]);
+
+// IndexNow only accepts explicit, validated, changed canonical pages.
+// Google Search does not support IndexNow; this supplements XML sitemaps.
+assertIncludesAll('scripts/submit-indexnow.mjs', [
+  'INDEXNOW_URLS',
+  "https://evaluoapp.com",
+  'api.indexnow.org/indexnow',
+  'urlList: urls',
+  'hasNoindex(html)',
+  'pageCanonical(html)',
+  "sitemapXml.includes('<loc>' + url + '</loc>')",
+  'urls.length <= 20',
+]);
+assertIncludesAll('.github/workflows/indexnow-notify.yml', [
+  'workflow_dispatch:',
+  'INDEXNOW_URLS:',
+  'node scripts/submit-indexnow.mjs',
+  'permissions:',
+]);
