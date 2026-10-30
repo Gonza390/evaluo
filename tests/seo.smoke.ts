@@ -1084,6 +1084,8 @@ assertIncludesAll('lib/english-seo-content.ts', [
   "path: '/en/pdf-to-quiz'",
   "path: '/en/pdf-to-flashcards'",
   "path: '/en/study-pdf-with-ai'",
+]);
+assertIncludesAll('components/marketing/english-study-page.tsx', [
   'not outputs from a verified Evaluo session',
 ]);
 assertIncludesAll('components/marketing/english-study-page.tsx', [
