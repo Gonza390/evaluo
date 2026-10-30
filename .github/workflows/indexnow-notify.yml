@@ -1,0 +1,31 @@
+name: Submit changed public SEO URLs to IndexNow
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: '1-20 canonical public URLs that were actually added or updated, separated by commas, spaces, or newlines'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  submit-indexnow:
+    name: Validate canonical URLs and notify participating search engines
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check publisher syntax
+        run: node --check scripts/submit-indexnow.mjs
+      - name: Submit validated, changed URLs
+        run: node scripts/submit-indexnow.mjs
+        env:
+          INDEXNOW_URLS: ${{ inputs.urls }}
