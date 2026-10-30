@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  BookOpen,
   CalendarDays,
   CircleAlert,
   CircleHelp,
@@ -54,7 +55,7 @@ function isNavItemActive(pathname: string, href: string) {
 const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-  { label: 'Estudiar', href: '/dashboard/explicaciones', icon: CircleAlert },
+  { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
 ];
 
 function NavItem({
