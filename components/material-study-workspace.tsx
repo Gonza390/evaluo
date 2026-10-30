@@ -916,6 +916,24 @@ export function MaterialStudyWorkspace({
     [fullSummarySections]
   );
 
+  // Al ingresar desde Plan de estudio, mostrar directamente el tema solicitado.
+  useEffect(() => {
+    if (initialTab !== 'resumen' || initialResourceTopicIndex === undefined ||
+        initialResourceTopicIndex < 0 || initialResourceTopicIndex >= summaryChapters.length ||
+        activeTab !== 'resumen' || progressOpen) return;
+    const anchor = summaryChapters[initialResourceTopicIndex]?.anchor;
+    if (!anchor) return;
+    let frame2 = 0;
+    const frame1 = window.requestAnimationFrame(() => {
+      frame2 = window.requestAnimationFrame(() => {
+        const nodes = document.querySelectorAll<HTMLElement>(`#${CSS.escape(anchor)}`);
+        const node = Array.from(nodes).find(element => element.getBoundingClientRect().width > 0);
+        node?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      });
+    });
+    return () => { window.cancelAnimationFrame(frame1); window.cancelAnimationFrame(frame2); };
+  }, [initialTab, initialResourceTopicIndex, summaryChapters, activeTab, progressOpen]);
+
   const firstTopicResources = useMemo(
     () => getFirstTopicResourceInfo(studySummary.sections, studyArtifacts.flashcards, usefulGlossary),
     [studySummary.sections, studyArtifacts.flashcards, usefulGlossary]
