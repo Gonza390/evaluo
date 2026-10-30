@@ -14,6 +14,11 @@ export const metadata: Metadata = {
     'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
   alternates: {
     canonical: '/',
+    languages: { 'es-AR': '/' },
+  },
+  other: {
+    'geo.region': 'AR',
+    'geo.placename': 'Argentina',
   },
   openGraph: {
     type: 'website',
