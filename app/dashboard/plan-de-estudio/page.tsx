@@ -23,7 +23,7 @@ export default async function StudyPlanPage() {
   );
   const first = materials[0] ?? null;
   let topicCount = 0;
-  let topicActivities: Array<{questions:boolean;flashcards:boolean;glossary:boolean}> = [];
+  let topicActivities: Array<{questions:boolean;flashcards:boolean;glossary:boolean;readingMinutes:number;questionsMinutes:number;flashcardsMinutes:number;glossaryMinutes:number}> = [];
   if (first) {
     const [summaryResult, glossaryResult, cacheResult] = await Promise.all([
       supabase.from('student_material_summaries').select('summary_sections').eq('student_material_id', first.id).maybeSingle(),
@@ -38,9 +38,9 @@ export default async function StudyPlanPage() {
     const questions = Array.isArray(artifacts?.questions) ? artifacts.questions : [];
     const flashcards = Array.isArray(artifacts?.flashcards) ? artifacts.flashcards : [];
     const counts = getTopicQuestionCounts(sections, questions);
-    topicActivities = sections.map((_, index) => {
+    topicActivities = sections.map((section, index) => {
       const resources = getTopicStudyResources(sections, glossary, flashcards, index);
-      return { questions: counts[index] > 0, flashcards: resources.flashcards.length > 0, glossary: resources.concepts.length > 0 };
+      return { questions: counts[index] > 0, flashcards: resources.flashcards.length > 0, glossary: resources.concepts.length > 0, readingMinutes: Math.max(1, Math.ceil((section.body?.trim().split(/\\s+/u).filter(Boolean).length ?? 0) / 180)), questionsMinutes: Math.max(1, Math.ceil(counts[index] * 1.5)), flashcardsMinutes: Math.max(1, Math.ceil(resources.flashcards.length * 0.6)), glossaryMinutes: Math.max(1, Math.ceil(resources.concepts.length * 0.35)) };
     });
   }
 
