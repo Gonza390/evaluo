@@ -26,7 +26,7 @@ export function StudyReadingCards({ materials }: { materials: Material[] }) {
 
   return (
     <section aria-label="Tus PDFs para estudiar" className="mx-auto w-full max-w-[1240px] px-3 py-4 sm:px-5 lg:px-6">
-      <h1 className="mb-4 text-xl font-bold tracking-tight text-slate-900">Estudiar</h1>
+      <h1 className="mb-4 text-xl font-bold tracking-tight text-slate-900">Tus archivos</h1>
       {materials.length ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5">
           {materials.map((material) => {
