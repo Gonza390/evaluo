@@ -23,6 +23,10 @@ import {
   CircleAlert,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Ellipsis,
+  ExternalLink,
+  FileText,
   ListTree,
   Loader2,
   Map as MapIcon,
@@ -65,6 +69,14 @@ import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/processing-actions';
 import { getMaterialPendingStudyErrorTopicCountAction } from '@/lib/actions/study-errors';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
@@ -2671,7 +2683,75 @@ export function MaterialStudyWorkspace({
         />
       ) : null}
       <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
-        <div className={`mx-auto flex w-full items-center gap-3 px-4 py-1.5 sm:px-5 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
+        {/* Mobile: a compact back control, document selector and real overflow actions. */}
+        <div data-pdf-mobile-document-header className="mx-auto flex w-full min-w-0 items-center gap-2 px-3 py-2 md:hidden">
+          <Link
+            href={backHref}
+            aria-label="Volver a Mi espacio"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <ChevronLeft className="size-4" aria-hidden="true" />
+          </Link>
+
+          <DropdownMenu>
+            <h1 className="min-w-0 flex-1">
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  data-pdf-mobile-title-trigger
+                  aria-label={`Ver información del PDF: ${title}`}
+                  className="flex h-10 w-full min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <FileText className="size-3.5 shrink-0 text-slate-500" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate text-left text-[12px] font-medium">{title}</span>
+                  <ChevronDown className="size-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+                </button>
+              </DropdownMenuTrigger>
+            </h1>
+            <DropdownMenuContent align="center" sideOffset={8} className="w-[min(310px,calc(100vw-32px))] rounded-xl p-2">
+              <DropdownMenuLabel className="text-[11px] font-semibold text-slate-500">Documento actual</DropdownMenuLabel>
+              <p className="px-2 pb-2 text-[13px] font-semibold leading-5 break-words text-slate-900">{title}</p>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="size-4" aria-hidden="true" />
+                  Abrir PDF original
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                data-pdf-mobile-more-trigger
+                aria-label="Más opciones del PDF"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <Ellipsis className="size-[18px]" aria-hidden="true" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={8} className="min-w-[200px] rounded-xl p-2">
+              <DropdownMenuItem asChild>
+                <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="size-4" aria-hidden="true" />
+                  Abrir PDF original
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href={backHref}>
+                  <ChevronLeft className="size-4" aria-hidden="true" />
+                  Volver a Mi espacio
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Desktop keeps the current reader heading and Guide action. */}
+        <div className={`mx-auto hidden w-full items-center gap-3 px-4 py-1.5 md:flex md:px-5 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
