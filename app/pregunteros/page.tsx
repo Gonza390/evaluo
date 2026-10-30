@@ -174,6 +174,24 @@ export default async function PregunteroHubPage() {
                     Estudiar con mi propio PDF
                   </TrackedLink>
                 </div>
+                <div className="mt-6 border-t border-slate-100 pt-5">
+                  <p className="text-sm font-semibold text-slate-900">
+                    ¿Buscás preparar un parcial o hacer un simulacro?
+                  </p>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                    El preguntero es para elegir preguntas de una materia. Si querés organizar
+                    el repaso del examen completo, consultá la guía de parciales; si vas a
+                    practicar con tu propio PDF, conocé cómo funciona un simulacro con IA.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold">
+                    <Link href="/landings/parciales" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
+                      Cómo preparar parciales Siglo 21
+                    </Link>
+                    <Link href="/funciones/simulacro-examen-con-ia" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
+                      Simulacro de examen desde tu PDF
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
