@@ -178,9 +178,14 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
                 You can explore it now if you are comfortable using a Spanish-language interface.
                 We are not presenting the current app as fully translated or promising international checkout.
               </p>
-              <Link href="/estudiar-pdf-con-ia" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">
-                Explore the current Spanish-language app <ArrowRight className="h-4 w-4" aria-hidden="true"/>
-              </Link>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/en/login?mode=signup" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">
+                  Create an account (English sign-up) <ArrowRight className="h-4 w-4" aria-hidden="true"/>
+                </Link>
+                <Link href="/estudiar-pdf-con-ia" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                  Explore the current Spanish-language app
+                </Link>
+              </div>
             </div>
           </div>
         </section>
