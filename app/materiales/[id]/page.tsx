@@ -509,7 +509,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           materialId={material.id}
           materiaId={material.materia_id ?? undefined}
           isOwner={isOwner}
-          materiaName={materia?.nombre ?? 'Sin materia'}
+          materiaName={materia?.nombre ?? undefined}
           pageCount={material.page_count}
           title={material.title}
           viewerUrl={viewerUrl}
