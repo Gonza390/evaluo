@@ -1116,3 +1116,23 @@ assertIncludesAll('lighthouserc.seo.cjs', [
   'http://localhost:3000/en/pdf-to-flashcards',
   'http://localhost:3000/en/study-pdf-with-ai',
 ]);
+
+
+// English publication notices only genuinely changed public canonical URLs.
+assertIncludesAll('scripts/changed-english-indexnow-urls.mjs', [
+  "'https://evaluoapp.com/en'",
+  "'https://evaluoapp.com/en/pdf-to-quiz'",
+  "'https://evaluoapp.com/en/pdf-to-flashcards'",
+  "'https://evaluoapp.com/en/study-pdf-with-ai'",
+  "added.has('.github/workflows/english-indexnow.yml')",
+  "changed.has(path)",
+  "routes.add(url)",
+]);
+assertIncludesAll('.github/workflows/english-indexnow.yml', [
+  "branches: [main]",
+  "fetch-depth: 0",
+  "PR dry-run",
+  "steps.changed.outputs.urls != ''",
+  "INDEXNOW_URLS:",
+  "node scripts/submit-indexnow.mjs",
+]);
