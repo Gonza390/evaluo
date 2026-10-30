@@ -143,7 +143,7 @@ export function MaeveStudyHero({
           )}
         </div>
       </div>
-      <style jsx>{`
+      <style jsx global>{`
         .evi-float { animation: evi-float 4s ease-in-out infinite; transform-origin: center; }
         .evi-shadow { animation: evi-shadow 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
         .evi-blink { animation: evi-blink 5s infinite; transform-box: fill-box; transform-origin: center; }
