@@ -13,7 +13,6 @@ import {
   Home,
   LogIn,
   LogOut,
-  Settings,
   Search,
 } from 'lucide-react';
 import { UserProvider, useUser } from '@/hooks/useUser';
@@ -110,7 +109,6 @@ function BottomNav() {
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
         { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
         { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-        { label: 'Perfil', href: '/configuracion', icon: Settings },
       ]
     : [
         { label: 'Inicio', href: '/', icon: Home },
@@ -129,7 +127,7 @@ function BottomNav() {
       data-tour-nav-mobile="true"
       className="border-border bg-background/95 pb-safe fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur md:hidden"
     >
-      <div className="grid grid-cols-4 items-stretch gap-1 px-2 py-1.5">
+      <div className={`grid items-stretch gap-1 px-2 py-1.5 ${user ? 'grid-cols-3' : 'grid-cols-4'}`}>
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pendingHref !== null
@@ -273,7 +271,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/dashboard"
-                className={`group min-w-0 items-center transition hover:opacity-90 ${isMobileDashboardRoute ? 'hidden md:flex' : 'flex'} ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
+                aria-label="Ir a Mi espacio"
+                className={`group flex min-w-0 items-center transition hover:opacity-90 ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
               >
                 <Image
                   src="/evaluo-logo-icono.svg"
@@ -283,7 +282,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   priority
                   className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}
                 />
-                <div className="min-w-0">
+                <div className={isMobileDashboardRoute ? 'hidden min-w-0 md:block' : 'min-w-0'}>
                   <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isCompactAppRoute ? 'text-[14px] sm:text-[15px]' : 'text-[1.05rem] sm:text-lg'}`}>
                     Evaluo
                   </div>
@@ -306,13 +305,35 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  <div className={isMobileDashboardRoute ? 'hidden md:block' : undefined}>
-                    <NotificationBell compact={isCompactAppRoute} />
-                  </div>
+                  <NotificationBell compact={isCompactAppRoute} />
+                  {/* Mobile: profile stays accessible via avatar; flame continues to show streak. */}
+                  <Link
+                    href="/configuracion"
+                    aria-label="Abrir perfil"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
+                  >
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                      {user.user_metadata?.avatar_url ? (
+                        <AvatarImage src={user.user_metadata.avatar_url} />
+                      ) : null}
+                    </Avatar>
+                  </Link>
+                  <button
+                    type="button"
+                    aria-label={`Ver racha de estudio: ${streakDays} días`}
+                    onClick={() => setShowStreakDialog(true)}
+                    className="inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
+                  >
+                    <Flame className="h-4 w-4" aria-hidden="true" />
+                    <span className="text-xs font-semibold">{streakDays}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setShowStreakDialog(true)}
-                    className="inline-flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5"
+                    className="hidden min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5 md:inline-flex"
                   >
                     <Avatar className={`flex h-8 w-8 shrink-0 ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}>
                       <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
