@@ -143,14 +143,14 @@ assert.match(referralNavSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap
 const notificationSource = readFileSync(resolve('components/notifications/notification-bell.tsx'), 'utf8');
 assert.doesNotMatch(appChromeSource, /NotificationBell|notification-bell/,
   'The shared header must not render the notification bell at any viewport size.');
-assert.match(appChromeSource, /const isMobileDashboardRoute = pathname === '\/dashboard'/,
-  'Header cleanup must target Mi espacio, not all routes.');
+assert.match(appChromeSource, /user \? 'min-h-\\[52px\\] py-1 sm:min-h-\\[52px\\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,
+  'All authenticated mobile routes should share the same topbar height.');
 assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
   'The Evaluo logo remains an accessible link on mobile.');
-assert.match(appChromeSource, /isMobileDashboardRoute \? 'hidden min-w-0 md:block' : 'min-w-0'/,
-  'Only the word Evaluo is hidden on mobile Mi espacio; the logo remains visible.');
-assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute \? 'hidden md:block' : undefined/,
-  'Do not restore the old mobile-only notification wrapper.');
+assert.match(appChromeSource, /className="hidden min-w-0 md:block"/,
+  'The mobile authenticated header must consistently display only the icon.');
+assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute/,
+  'The topbar should not change its branding between dashboard and other routes.');
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
 assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
