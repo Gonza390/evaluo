@@ -202,7 +202,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
   const isMaterialStudyRoute = pathname.startsWith('/materiales/');
-  const isMobileDashboardRoute = pathname === '/dashboard';
+  // A single compact mobile header for all authenticated screens.
   // Una misma escala para la aplicación privada; el sitio público y el área
   // de SEO mantienen su composición. El lector de PDFs conserva su UI interna.
   const isCompactAppRoute =
@@ -262,7 +262,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
         >
           <div
             className={`relative flex items-center justify-between gap-3 ${
-              isCompactAppRoute ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
+              user ? 'min-h-[52px] py-1 sm:min-h-[52px] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'
             } ${
               user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
@@ -283,7 +283,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   priority
                   className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}
                 />
-                <div className={isMobileDashboardRoute ? 'hidden min-w-0 md:block' : 'min-w-0'}>
+                <div className="hidden min-w-0 md:block">
                   <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isCompactAppRoute ? 'text-[14px] sm:text-[15px]' : 'text-[1.05rem] sm:text-lg'}`}>
                     Evaluo
                   </div>
