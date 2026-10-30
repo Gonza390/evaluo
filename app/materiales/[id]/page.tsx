@@ -427,6 +427,19 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       summary: studySummary,
       glossary: topicGlossary,
     });
+    const otherPdfOptions: Array<{ id: string; title: string }> = [];
+    if (isOwner && user) {
+      const { data: ownPdfs } = await supabase
+        .from('student_materials')
+        .select('id, title')
+        .eq('user_id', user.id)
+        .eq('processing_status', 'ready')
+        .order('updated_at', { ascending: false })
+        .limit(60);
+      for (const pdf of ownPdfs ?? []) {
+        if (pdf.id !== material.id) otherPdfOptions.push({ id: pdf.id, title: pdf.title });
+      }
+    }
     const visibility = normalizeMaterialVisibility(material.visibility);
 
     // One onboarding per NEW account, not per URL, PDF or entry point.
@@ -512,6 +525,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           materiaName={materia?.nombre ?? undefined}
           pageCount={material.page_count}
           title={material.title}
+          otherPdfOptions={otherPdfOptions}
           viewerUrl={viewerUrl}
           visibility={visibility}
           studyGlossary={topicGlossary}
