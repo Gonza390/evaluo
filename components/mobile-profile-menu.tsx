@@ -2,8 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { MessageSquarePlus, Settings } from 'lucide-react';
+import { ChevronRight, Crown, MessageSquarePlus, Settings } from 'lucide-react';
 import { useState } from 'react';
+import { usePremium } from '@/hooks/usePremium';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -25,10 +26,25 @@ type MobileProfileMenuProps = {
 
 export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobileProfileMenuProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [weeklyPrice, setWeeklyPrice] = useState<number | null>(null);
+  const { isPremium, premiumLoading } = usePremium();
+
+  const refreshPrice = () => {
+    if (isPremium || premiumLoading) return;
+    void fetch('/api/payments/offer', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const offer = (await response.json()) as { monthlyPriceArs?: number };
+        if (typeof offer.monthlyPriceArs === 'number' && Number.isFinite(offer.monthlyPriceArs) && offer.monthlyPriceArs > 0) {
+          setWeeklyPrice(Math.round(offer.monthlyPriceArs * 7 / 30));
+        }
+      })
+      .catch(() => {});
+  };
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={(open) => { if (open) refreshPrice(); }}>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
@@ -48,7 +64,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
           data-mobile-profile-menu
           align="end"
           sideOffset={8}
-          className="w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg md:hidden"
+          className="w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg md:hidden"
         >
           <DropdownMenuItem asChild>
             <Link href="/configuracion" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]">
@@ -63,6 +79,23 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
             <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
             Sugerencias
           </DropdownMenuItem>
+          {!premiumLoading && !isPremium ? (
+            <DropdownMenuItem asChild>
+              <Link href="/pricing?source=mobile_profile_menu"
+                className="mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-slate-700 focus:bg-slate-100">
+                <Crown className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-medium">Pasate a Premium</span>
+                  <span className="block text-[10px] text-slate-500">
+                    {weeklyPrice !== null
+                      ? `≈ ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(weeklyPrice)} por semana · cobro mensual`
+                      : 'Consultá los planes'}
+                  </span>
+                </span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       {feedbackOpen ? (
