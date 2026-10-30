@@ -15,22 +15,22 @@ function attribute(tag, name) {
 }
 
 function pageCanonical(html) {
-  const tags = html.match(/<link\\b[^>]*>/gi) || [];
+  const tags = html.match(/<link\b[^>]*>/gi) || [];
   const canonical = tags.find((tag) => attribute(tag, 'rel').toLowerCase() === 'canonical');
   return canonical ? attribute(canonical, 'href') : '';
 }
 
 function hasNoindex(html) {
-  const tags = html.match(/<meta\\b[^>]*>/gi) || [];
+  const tags = html.match(/<meta\b[^>]*>/gi) || [];
   return tags.some((tag) =>
     attribute(tag, 'name').toLowerCase() === 'robots' &&
-    /(?:^|[,\\s])noindex(?:$|[,\\s])/i.test(attribute(tag, 'content')));
+    /(?:^|[,\s])noindex(?:$|[,\s])/i.test(attribute(tag, 'content')));
 }
 
 function requestedUrls() {
   const input = process.env.INDEXNOW_URLS?.trim();
   assert.ok(input, 'Provide INDEXNOW_URLS (comma, newline or whitespace separated).');
-  const urls = [...new Set(input.split(/[\\s,]+/).filter(Boolean))];
+  const urls = [...new Set(input.split(/[\s,]+/).filter(Boolean))];
   assert.ok(urls.length > 0 && urls.length <= 20, 'Send 1-20 changed URLs per run, never the whole sitemap.');
   for (const value of urls) {
     const url = new URL(value);
