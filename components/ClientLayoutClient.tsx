@@ -95,6 +95,7 @@ function getNextStreakMilestone(streakDays: number) {
 function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
+  const [compactNav, setCompactNav] = useState(false);
   const [pendingDestination, setPendingDestination] = useState<{
     fromPath: string;
     href: string;
@@ -106,6 +107,36 @@ function BottomNav() {
     const frame = window.requestAnimationFrame(() => setPendingDestination(null));
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
+  useEffect(() => {
+    if (!user) return;
+    let previousY = window.scrollY;
+    let lastDirectionY = previousY;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const currentY = window.scrollY;
+      const difference = currentY - previousY;
+      previousY = currentY;
+      if (currentY < 35) {
+        lastDirectionY = currentY;
+        setCompactNav(false);
+        return;
+      }
+      // Ignore tiny scroll jitter and horizontal carousels.
+      if (Math.abs(currentY - lastDirectionY) < 16 || Math.abs(difference) < 0.5) return;
+      setCompactNav(currentY > lastDirectionY);
+      lastDirectionY = currentY;
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [user, pathname]);
+
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
@@ -128,7 +159,7 @@ function BottomNav() {
       data-tour-nav-mobile="true"
       className="border-border bg-background/95 pb-safe fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur md:hidden"
     >
-      <div className={`grid items-stretch gap-1 px-2 py-1.5 ${user ? 'grid-cols-2' : 'grid-cols-4'}`}>
+      <div className={`grid items-stretch gap-1 px-2 transition-[padding] duration-200 motion-reduce:transition-none ${compactNav && user ? 'py-0.5' : 'py-1.5'} ${user ? 'grid-cols-2' : 'grid-cols-4'}`}>
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pendingHref !== null
@@ -146,19 +177,20 @@ function BottomNav() {
               onClick={() => setPendingDestination({ href: item.href, fromPath: pathname })}
               data-evaluo-mobile-nav-item="true"
               aria-current={isActive ? 'page' : undefined}
+              aria-label={item.label}
               data-recommended-errors={
                 item.href === '/dashboard/explicaciones' ? 'true' : undefined
               }
               className={
                 item.variant === 'cta'
                   ? 'from-brand to-brand-2 mx-0.5 flex min-h-[50px] flex-col items-center justify-center rounded-2xl bg-gradient-to-r px-2 py-1.5 text-white shadow-[0_8px_20px_rgba(37,99,235,0.26)]'
-                  : `flex min-h-[50px] flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 ${
+                  : `flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 transition-[min-height] duration-200 motion-reduce:transition-none ${
                       isActive ? 'text-brand' : 'text-muted-foreground'
                     }`
               }
             >
               <Icon className="h-4.5 w-4.5" />
-              <span className="text-center text-[12px] font-medium">{item.label}</span>
+              <span aria-hidden={compactNav && Boolean(user)} className={`overflow-hidden text-center text-[12px] font-medium transition-[max-height,opacity] duration-200 motion-reduce:transition-none ${compactNav && user ? 'max-h-0 opacity-0' : 'max-h-5 opacity-100'}`}>{item.label}</span>
             </Link>
           );
         })}
