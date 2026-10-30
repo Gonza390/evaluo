@@ -8,7 +8,7 @@ export function StudentMaterialProcessingRefresh() {
   const router = useRouter();
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
+    let timer: number | null = null;
     let lastRefresh = Date.now();
     const refresh = () => {
       if (document.visibilityState !== 'visible') return;
