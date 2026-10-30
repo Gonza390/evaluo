@@ -79,12 +79,9 @@ export const metadata: Metadata = {
   authors: [{ name: 'Evaluo' }],
   creator: 'Evaluo',
   publisher: 'Evaluo',
-  alternates: {
-    canonical: '/',
-  },
+  // Public pages define their own canonical; do not make all routes inherit '/'.
   openGraph: {
     type: 'website',
-    url: '/',
     siteName: 'Evaluo',
     title: 'No estudies todo por igual | Evaluo',
     description:
