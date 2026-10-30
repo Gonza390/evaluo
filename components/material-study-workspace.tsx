@@ -2709,7 +2709,7 @@ export function MaterialStudyWorkspace({
                 </button>
               </DropdownMenuTrigger>
             </h1>
-            <DropdownMenuContent align="center" sideOffset={8} className="w-[min(310px,calc(100vw-32px))] rounded-xl p-2">
+            <DropdownMenuContent align="center" sideOffset={8} className="max-h-[70dvh] w-[min(310px,calc(100vw-32px))] overflow-y-auto rounded-xl p-2">
               <DropdownMenuLabel className="text-[11px] font-semibold text-slate-500">Documento actual</DropdownMenuLabel>
               <p className="px-2 pb-2 text-[13px] font-semibold leading-5 break-words text-slate-900">{title}</p>
               {isOwner && !demo ? (
