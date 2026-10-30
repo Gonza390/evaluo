@@ -6,6 +6,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { EditorialMethodology } from '@/components/seo/editorial-methodology';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 import { COUNTRY_NICHE_GUIDES, getCountryNicheGuide } from '@/lib/es-country-niche-guides';
@@ -172,6 +173,7 @@ export default async function CountryStudyGuidePage({params}: Props) {
               </TrackedLink>
               <p className="mt-3 text-xs text-slate-500">Puedes elegir tu archivo antes de registrarte. El plan gratuito tiene límites de uso.</p>
             </section>
+            <EditorialMethodology kind="admissions" sourceName={guide.sourceName} sourceUrl={guide.sourceUrl} />
             <p className="mt-8 text-xs leading-6 text-slate-500">
               Publicado el 29 de octubre de 2026. Evaluo es independiente de las instituciones
               mencionadas. La fuente oficial enlazada es la referencia válida para programas y reglas de admisión.
