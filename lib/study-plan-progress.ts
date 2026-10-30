@@ -45,7 +45,8 @@ export async function syncStudyPlanProgress(materialId: string) {
   const {data,error}=await supabase.from('student_material_topic_activity_progress' as never)
     .select('topic_index,activity').eq('user_id',user.id).eq('material_id',materialId);
   if (error) return;
-  const remote = new Set((data??[] as Array<{topic_index:number;activity:Activity}>).map(row=>`${row.topic_index}:${row.activity}`));
+  const remoteRows = (data ?? []) as Array<{topic_index:number;activity:Activity}>;
+  const remote = new Set(remoteRows.map(row=>`${row.topic_index}:${row.activity}`));
   for(const k of remote) local[k]=true;
   localStorage.setItem(key,JSON.stringify(local));
   const pending=Object.keys(local).filter(k=>local[k] && !remote.has(k) && /^\\d+:(reading|questions|flashcards|glossary)$/.test(k));
