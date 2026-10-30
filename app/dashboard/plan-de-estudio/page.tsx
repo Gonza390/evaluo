@@ -65,8 +65,8 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
           <div className="min-w-0 space-y-4">
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
-              <div className="mb-3 flex items-center justify-between">
+            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+              <div className="mb-2.5 flex items-center justify-between">
                 <h2 className="text-[14px] font-bold">Tu avance</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
