@@ -80,6 +80,8 @@ if (FORCE_ALL) {
     all();
   } else {
     if (changed.has(BLOG_VIEW) ||
+        changed.has('components/marketing/study-blog-workshop.tsx') ||
+        changed.has('lib/study-blog-workshop-types.ts') ||
         [...changed].some(path => /^app\/(?:\(es\)\/|\(en\)\/)?(?:en\/)?blog\/\[slug\]\/page\.tsx$/.test(path)) ||
         changed.has('app/(es)/layout.tsx') ||
         changed.has('app/(en)/layout.tsx')) {
@@ -88,6 +90,13 @@ if (FORCE_ALL) {
       for (const locale of BLOG_LOCALES) {
         const prefixes = locale === 'es' ? ['app/blog/', 'app/(es)/blog/'] : ['app/en/blog/', 'app/(en)/en/blog/'];
         if ([...changed].some(path => prefixes.some(p => path === p + 'page.tsx'))) output.add(hubFor(locale));
+      }
+      // Changes to detailed workshop content only affect their locale.
+      for (const locale of BLOG_LOCALES) {
+        if (changed.has('lib/study-blog-workshops-' + locale + '.ts')) {
+          output.add(hubFor(locale));
+          for (const article of current[locale].values()) output.add(urlsFor(locale, article));
+        }
       }
       if (changed.has(ARTICLES_FILE)) {
         let beforeCatalog = null;
