@@ -244,7 +244,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               <div className="space-y-1">
                 <Link
                   href="/pricing"
-                  title={collapsed ? 'Planes y suscripción' : undefined}
+                  title={collapsed ? 'Planes' : undefined}
                   className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
@@ -253,13 +253,13 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 >
                   <Crown className="h-4 w-4 shrink-0" />
                   {!collapsed ? (
-                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>Planes y suscripción</p>
+                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>Planes</p>
                   ) : null}
                 </Link>
 
                 <button
                   type="button"
-                  title={collapsed ? 'Ayuda' : undefined}
+                  title={collapsed ? 'Sugerencias' : undefined}
                   onClick={(event) => {
                     event.stopPropagation();
                     setFeedbackOpen(true);
@@ -271,7 +271,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   }`}
                 >
                   <CircleHelp className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>Ayuda</p> : null}
+                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>Sugerencias</p> : null}
                 </button>
 
                 <DropdownMenu>
@@ -295,7 +295,6 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                         <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-sm"}`}>
                           {getUserName()}
                         </p>
-                        <p className="truncate text-[11px] text-slate-400">Tu perfil</p>
                       </div>
                     ) : null}
                   </DropdownMenuTrigger>
