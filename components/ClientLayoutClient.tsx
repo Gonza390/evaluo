@@ -522,7 +522,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
           {!isLegalRoute && !isAdministradorRoute && !isMaterialStudyRoute ? (
             <div
               data-app-footer
-              className={isCompactAppRoute ? 'hidden md:block' : undefined}
+              className={isCompactAppRoute ? 'hidden' : undefined}
             >
               <DeferredFooter />
             </div>

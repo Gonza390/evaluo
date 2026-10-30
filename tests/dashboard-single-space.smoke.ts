@@ -78,6 +78,21 @@ assert.match(dashboardMaterialsSource, /\{isShared \? \(/,
   'Shared PDFs should still show their meaningful visibility state.');
 assert.match(dashboardMaterialsSource, /\{formatDate\(material\.created_at\)\}/,
   'PDF cards must retain their upload date.');
+assert.match(dashboardMaterialsSource, /data-desktop-material-search/,
+  'The PDF library should offer desktop search when enough materials exist.');
+assert.match(dashboardMaterialsSource, /initialMaterials\.length >= 3/,
+  'A single material should not introduce an unnecessary search box.');
+assert.match(dashboardMaterialsSource, /Buscar entre tus PDFs/,
+  'Search must be accessible by label.');
+assert.match(dashboardMaterialsSource, /visibleMaterials\.map\(\(material\)/,
+  'The visible PDF cards must respond to the search query.');
+assert.match(dashboardMaterialsSource, /xl:grid-cols-2/,
+  'Desktop should make use of available width without modifying the mobile layout.');
+assert.match(dashboardMaterialsSource, /Mostrar todos/,
+  'Empty search results should have a clear recovery action.');
+assert.match(navbarSource, /pathname\.startsWith\('\/materiales\/'\)/,
+  'Mi espacio remains selected when a student is reading a PDF.');
+
 assert.doesNotMatch(dashboardMaterialsSource, /dashboard_materials_header/,
   'Tus PDFs must not display a redundant upload CTA in the section header.');
 assert.match(dashboardMaterialsSource, /primaryActionLabel="Subí tu PDF"/,
@@ -90,8 +105,8 @@ assert.match(dashboardMaterialsSource, /min-h-10 min-w-10/);
 assert.match(appChromeSource, /const isCompactAppRoute =/);
 assert.match(appChromeSource, /Boolean\(user\)/);
 assert.match(appChromeSource, /data-app-footer/);
-assert.match(appChromeSource, /className=\{isCompactAppRoute \? 'hidden md:block' : undefined\}/,
-  'Mobile private pages must not display the large site footer, while desktop and public routes retain it.');
+assert.match(appChromeSource, /className=\{isCompactAppRoute \? 'hidden' : undefined\}/,
+  'All private pages should omit the public site footer, in mobile and desktop.');
 assert.match(appChromeSource, /\{showBottomNav \? <BottomNav \/> : null\}/,
   'Do not remove the useful mobile bottom navigation while hiding the scroll-producing footer.');
 for (const privatePath of ['/dashboard/', '/calendario', '/configuracion', '/referidos', '/materiales/']) {

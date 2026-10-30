@@ -9,7 +9,9 @@ import {
   FileText,
   Globe,
   Loader2,
+  Search,
   Trash2,
+  X,
 } from 'lucide-react';
 import { deleteStudentMaterialAction } from '@/app/dashboard/materiales/actions';
 import type { StudentMaterial } from '@/lib/data/student-materials';
@@ -52,6 +54,21 @@ export function StudentMaterialsWorkspace({
   const openUploadPicker = usePdfUploadTrigger();
   const [isPending, startTransition] = useTransition();
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
+  const [materialQuery, setMaterialQuery] = useState('');
+  const normalizedQuery = materialQuery
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es-AR')
+    .trim();
+  const visibleMaterials = normalizedQuery
+    ? initialMaterials.filter((material) =>
+        material.title
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLocaleLowerCase('es-AR')
+          .includes(normalizedQuery)
+      )
+    : initialMaterials;
 
   const handleDeleteMaterial = () => {
     if (!materialToDelete) {
@@ -91,7 +108,36 @@ export function StudentMaterialsWorkspace({
           }
         />
 
-        <div className="mt-3 space-y-2">
+        {initialMaterials.length >= 3 ? (
+          <div data-desktop-material-search className="mt-4 hidden items-center justify-between gap-4 lg:flex">
+            <div className="relative w-full max-w-[360px]">
+              <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                aria-label="Buscar entre tus PDFs"
+                value={materialQuery}
+                onChange={(event) => setMaterialQuery(event.target.value)}
+                placeholder="Buscar un PDF..."
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pr-10 pl-10 text-[13px] text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/15"
+              />
+              {materialQuery ? (
+                <button
+                  type="button"
+                  aria-label="Limpiar búsqueda"
+                  onClick={() => setMaterialQuery('')}
+                  className="absolute top-1/2 right-2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+            <span className="shrink-0 text-[12px] font-medium text-slate-500" aria-live="polite">
+              {visibleMaterials.length} de {initialMaterials.length} PDFs
+            </span>
+          </div>
+        ) : null}
+
+        <div className={`mt-3 ${initialMaterials.length >= 2 ? 'grid gap-3 xl:grid-cols-2' : 'space-y-2'}`}>
           {initialMaterials.length === 0 ? (
             <StudyStatePanel
               icon={FileText}
@@ -104,8 +150,20 @@ export function StudentMaterialsWorkspace({
               secondaryActionHref="/preview/primer-pdf?source=dashboard_empty"
               className="border-dashed"
             />
+          ) : visibleMaterials.length === 0 ? (
+            <div className="col-span-full flex flex-col items-start gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6">
+              <p className="text-[13px] font-semibold text-slate-900">No encontramos PDFs con ese nombre.</p>
+              <p className="text-[12px] text-slate-600">Probá con otra palabra o volvé a mostrar todos tus materiales.</p>
+              <button
+                type="button"
+                onClick={() => setMaterialQuery('')}
+                className="text-brand mt-1 min-h-9 rounded-lg px-1 text-[12.5px] font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Mostrar todos
+              </button>
+            </div>
           ) : (
-            initialMaterials.map((material) => {
+            visibleMaterials.map((material) => {
               const isShared = material.visibility === 'shared';
               const isFailed = material.processing_status === 'failed';
 
@@ -113,9 +171,9 @@ export function StudentMaterialsWorkspace({
                 <article
                   data-evaluo-motion-card
                   key={material.id}
-                  className="relative flex flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
+                  className="relative flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch xl:justify-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
@@ -151,7 +209,7 @@ export function StudentMaterialsWorkspace({
                       </div>
                     </div>
 
-                    <div className="relative z-10 flex flex-wrap items-center gap-2">
+                    <div className="relative z-10 flex flex-wrap items-center gap-2 xl:mt-auto xl:pt-1">
                       <Button asChild size="sm" className="min-h-10 rounded-lg px-3 text-[12.5px]" onClick={(event) => event.stopPropagation()}>
                         <Link href={getStudentMaterialRoute(material.id)}>
                           <Eye className="h-4 w-4" />
