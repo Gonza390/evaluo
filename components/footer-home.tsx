@@ -138,6 +138,12 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Guías de estudio universitario
               </Link>
+              <Link href="/blog" className="text-xs text-white/80 transition hover:text-white">
+                Blog de estudio
+              </Link>
+              <Link href="/en/blog" lang="en" className="text-xs text-white/80 transition hover:text-white">
+                Study blog in English
+              </Link>
               <Link
                 href="/es/estudiar-pdf-con-ia"
                 className="text-xs text-white/80 transition hover:text-white"
