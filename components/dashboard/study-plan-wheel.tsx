@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getProgress, type TopicActivities } from '@/lib/study-plan-progress';
+import { getProgress, syncStudyPlanProgress, type TopicActivities } from '@/lib/study-plan-progress';
 export function StudyPlanWheel({ materialId, title, topicActivities }: { materialId: string; title: string; topicCount: number; topicActivities: TopicActivities[] }) {
   const [progress, setProgress] = useState({percent:0,done:0,total:0});
   useEffect(() => {
     const update = () => setProgress(getProgress(materialId,topicActivities));
     update();
+    void syncStudyPlanProgress(materialId).then(update);
     window.addEventListener('focus',update);
     window.addEventListener('pageshow',update);
     return () => {window.removeEventListener('focus',update);window.removeEventListener('pageshow',update);};
