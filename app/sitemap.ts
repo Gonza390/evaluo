@@ -76,6 +76,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/es-es/estudiar-pdf-con-ia`,
     },
+    { url: `${baseUrl}/en` },
+    { url: `${baseUrl}/en/pdf-to-quiz` },
+    { url: `${baseUrl}/en/pdf-to-flashcards` },
+    { url: `${baseUrl}/en/study-pdf-with-ai` },
     {
       url: `${baseUrl}/funciones/resumir-pdf-con-ia`,
     },
