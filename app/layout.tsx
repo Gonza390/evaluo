@@ -128,7 +128,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-AR" className={inter.className}>
+    <html lang="es" className={inter.className}>
       <body className="bg-background text-foreground min-h-screen text-[0.92rem]">
         <style>{ROOT_INLINE_CSS}</style>
         <GlobalClientRuntime />
