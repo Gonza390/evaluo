@@ -24,6 +24,16 @@ assert.match(workspace, /data-pdf-mobile-title-trigger/,
   'The center pill must allow reading the complete document title.');
 assert.match(workspace, /data-pdf-mobile-more-trigger/,
   'The three-dot control must open a functional menu.');
+assert.match(workspace, /data-mobile-summary-active=\{activeTab === 'resumen' && !progressOpen \? 'true' : undefined\}/,
+  'Only the active mobile summary should hide the floating share action.');
+const mobileOverflow = workspace.split('data-pdf-mobile-more-trigger')[1]?.split('</DropdownMenuContent>')[0] ?? '';
+assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
+  'The three-dot menu must not duplicate the visible Back button.');
+assert.match(mobileOverflow, /Abrir PDF original/,
+  'Keep the original PDF action in the overflow menu.');
+const globalStyles = readFileSync('app/globals.css', 'utf8');
+assert.match(globalStyles, /@media \(max-width: 767px\)\s*\{\s*body:has\(\[data-mobile-summary-active='true'\]\) \[data-student-material-share-control\]/,
+  'The share FAB must be hidden only in mobile summary mode, not on desktop.');
 assert.match(workspace, /DropdownMenuItem asChild/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
