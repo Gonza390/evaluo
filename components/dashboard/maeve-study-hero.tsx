@@ -33,10 +33,6 @@ export function MaeveStudyHero({
   const firstPdfViewTrackedRef = useRef(false);
   const nextActionViewTrackedRef = useRef<string | null>(null);
   const firstName = user ? getUserName().split(' ')[0] : '';
-  const personalized =
-    Boolean(firstName) && firstName !== 'Estudiante'
-      ? `Tu espacio de estudio, ${firstName}`
-      : 'Tu espacio de estudio';
   const isFirstPdfState = materialsCount === 0;
 
   useEffect(() => {
@@ -64,30 +60,25 @@ export function MaeveStudyHero({
     <section
       data-evaluo-motion-card
       ref={heroRef}
-      className="rounded-[1.5rem] border border-[#e0e7f5] bg-[linear-gradient(180deg,#f1f5ff_0%,#fff_69%)] px-5 py-7 text-center shadow-[0_12px_34px_rgba(30,60,140,0.04)] sm:rounded-[1.875rem] sm:px-8 sm:py-9"
+      className="rounded-[1.25rem] border border-[#e0e7f5] bg-[linear-gradient(180deg,#f1f5ff_0%,#fff_75%)] px-4 py-5 text-center shadow-[0_8px_24px_rgba(30,60,140,0.035)] sm:rounded-[1.5rem] sm:px-7 sm:py-6"
     >
       <div className="mx-auto flex max-w-[950px] flex-col items-center">
-        <div className="h-[112px] w-[112px] sm:h-[142px] sm:w-[142px]">
+        <div className="h-[84px] w-[84px] sm:h-[104px] sm:w-[104px]">
           <EviMascot />
         </div>
-        <h1 className="mt-2 text-[29px] leading-[1.12] font-bold tracking-[-0.045em] text-[#0b0c1e] sm:mt-3 sm:text-[clamp(32px,3.3vw,44px)]">
+        <h1 className="mt-2 text-[25px] leading-[1.18] font-bold tracking-[-0.04em] text-[#0b0c1e] sm:mt-2 sm:text-[32px]">
           {firstName && firstName !== 'Estudiante'
             ? `¿Qué estudiamos hoy, ${firstName}?`
             : '¿Qué estudiamos hoy?'}
         </h1>
-        <p className="mt-4 text-base leading-snug text-[#4b5071] sm:text-[19px]">
-          {isFirstPdfState
-            ? 'Empezá con tu primer material'
-            : nextStudyAction?.title ?? 'Retomá tu estudio donde lo dejaste'}
-        </p>
-        <p className="mt-2 max-w-[830px] text-[13px] leading-[1.55] text-[#5a6481] sm:text-base">
+        <p className="mt-3 max-w-[760px] text-[13px] leading-[1.5] text-[#5a6481] sm:text-[14px]">
           {isFirstPdfState
             ? 'Subí el PDF que tenés que estudiar y Evaluo te ayuda a entenderlo, practicar y reforzar.'
             : nextStudyAction?.description ?? 'Elegí un material para continuar o sumá uno nuevo.'}
         </p>
 
         {isFirstPdfState ? (
-          <div className="mt-5 grid w-full max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="mt-4 grid w-full max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
             {FIRST_PDF_STEPS.map((step, index) => (
               <div key={step} className="flex items-center gap-2 rounded-xl border border-blue-100/80 bg-white/80 px-2.5 py-2 text-left">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{index + 1}</span>
@@ -97,10 +88,10 @@ export function MaeveStudyHero({
           </div>
         ) : null}
 
-        <div className="mt-6 flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row sm:gap-4">
+        <div className="mt-4 flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row sm:gap-3">
           {materialsCount > 0 && primaryMaterialHref ? (
             <>
-              <Button asChild className="h-[52px] w-full rounded-2xl bg-[#0066ee] px-7 text-[15px] font-semibold text-white shadow-[0_10px_22px_rgba(0,102,238,0.19)] hover:bg-[#0058d4] sm:w-auto">
+              <Button asChild className="h-11 w-full rounded-xl bg-[#0066ee] px-5 text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(0,102,238,0.19)] hover:bg-[#0058d4] sm:w-auto">
                 <Link
                   href={nextStudyAction?.href ?? primaryMaterialHref}
                   onClick={() => {
@@ -137,7 +128,7 @@ export function MaeveStudyHero({
             </>
           ) : (
             <Button type="button" data-first-pdf-cta="dashboard_empty" onClick={onUploadClick}
-              className="h-[52px] w-full max-w-xs rounded-2xl bg-[#0066ee] px-7 text-[15px] font-semibold text-white hover:bg-[#0058d4] sm:w-auto">
+              className="h-11 w-full max-w-xs rounded-xl bg-[#0066ee] px-5 text-[14px] font-semibold text-white hover:bg-[#0058d4] sm:w-auto">
               Subir mi PDF <Upload className="ml-2 h-4 w-4" />
             </Button>
           )}
