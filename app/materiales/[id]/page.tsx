@@ -526,6 +526,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           pageCount={material.page_count}
           title={material.title}
           otherPdfOptions={otherPdfOptions}
+          shareAvailable={isOwner && hasFullAcademicContext}
           viewerUrl={viewerUrl}
           visibility={visibility}
           studyGlossary={topicGlossary}
