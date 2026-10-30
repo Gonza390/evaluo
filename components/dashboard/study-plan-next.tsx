@@ -35,7 +35,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   ];
   return all.filter(step=>step.id==='reading'||t[step.id]);
  };
- return <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
+ return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
       return <div key={topic}>
