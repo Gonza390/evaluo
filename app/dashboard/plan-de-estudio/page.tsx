@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, FileText, GraduationCap, ListChecks, Sparkles } from 'lucide-react';
+import { ArrowRight, CalendarDays, FileText, GraduationCap } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
@@ -55,7 +55,6 @@ export default async function StudyPlanPage() {
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-[22px] font-bold tracking-[-0.035em] lg:text-[24px]">Plan de estudio</h1>
-            <p className="mt-1 text-[12px] text-slate-500">Una vista clara de tus materiales y tu próximo paso para aprender.</p>
           </div>
           <Link href="/calendario" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50">
             <CalendarDays className="size-4" /> Ver calendario
