@@ -1,6 +1,8 @@
+'use client';
+
 import type { ReactNode } from 'react';
-import ClientLayoutClient from '@/components/ClientLayoutClient';
+import { NestedClientLayout } from '@/components/SharedPrivateShell';
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
-  return <ClientLayoutClient>{children}</ClientLayoutClient>;
+  return <NestedClientLayout>{children}</NestedClientLayout>;
 }
