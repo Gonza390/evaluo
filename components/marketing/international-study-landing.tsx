@@ -337,6 +337,7 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
                 {STUDY_MARKETS[key].country}
               </Link>
             ))}
+            <Link href="/en" className="hover:underline" lang="en">English</Link>
             <Link href="/es/paises" className="hover:underline">Más países</Link>
             <Link href="/estudiar-pdf-con-ia" className="hover:underline">Argentina</Link>
           </nav>
