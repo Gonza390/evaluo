@@ -27,7 +27,27 @@ function getSafeInternalPath(value: string | null | undefined, fallback = '/dash
   }
 }
 
-function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean) {
+function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean, english = false) {
+  if (english) {
+    if (reason === 'pdf-first') {
+      return isSignUp
+        ? 'Create an account to continue with the PDF you selected. Your document will be waiting when you return.'
+        : 'Sign in to continue with the PDF you selected.';
+    }
+    if (reason === 'shared-pdf') {
+      return isSignUp
+        ? 'Create an account to access the shared PDF and study tools.'
+        : 'Sign in to open the shared PDF.';
+    }
+    if (reason === 'preguntero') {
+      return isSignUp
+        ? 'Create an account to save your answers and continue your practice.'
+        : 'Sign in to resume your previous practice.';
+    }
+    return isSignUp
+      ? 'Create an account to save your study materials and progress. The current study dashboard is in Spanish.'
+      : 'Welcome back. Sign in to continue studying in the current Spanish-language dashboard.';
+  }
   if (reason === 'pdf-first') {
     return isSignUp
       ? 'Creá tu cuenta para procesar el PDF que ya elegiste. Cuando vuelvas, Evaluo continúa con ese archivo automáticamente.'
@@ -96,7 +116,8 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginFormGoogleFirst() {
+export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' | 'en' }) {
+  const english = locale === 'en';
   const [mode, setMode] = useState<AuthMode>('login');
   const [emailExpanded, setEmailExpanded] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -148,9 +169,9 @@ export default function LoginFormGoogleFirst() {
       });
     }
     if (requestedReason === 'inactive') {
-      setNotice('Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
+      setNotice(english ? 'Your session ended due to inactivity. Sign in to continue.' : 'Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
     } else if (requestedReason === 'auth-expired') {
-      setNotice('Tu sesión venció o fue cerrada. Volvé a iniciar sesión para continuar donde estabas.');
+      setNotice(english ? 'Your session has expired. Sign in again to continue.' : 'Tu sesión venció o fue cerrada. Volvé a iniciar sesión para continuar donde estabas.');
     }
 
     setIntent(requestedIntent);
@@ -180,12 +201,12 @@ export default function LoginFormGoogleFirst() {
         : reason === 'preguntero'
           ? 'login_preguntero'
           : 'login';
-  const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
+  const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp, english);
 
 
   const validateLegal = () => {
     if (!isSignUp || acceptLegal) return true;
-    setMessage('Aceptá los Términos y la Política de privacidad para crear tu cuenta.');
+    setMessage(english ? 'Please accept the Terms and Privacy Policy to create an account.' : 'Aceptá los Términos y la Política de privacidad para crear tu cuenta.');
     return false;
   };
 
@@ -218,7 +239,7 @@ export default function LoginFormGoogleFirst() {
 
       if (error) setMessage(error.message);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No pudimos continuar con Google.');
+      setMessage(error instanceof Error ? error.message : english ? 'We could not continue with Google.' : 'No pudimos continuar con Google.');
     } finally {
       setLoading(false);
     }
@@ -227,8 +248,8 @@ export default function LoginFormGoogleFirst() {
   const handleEmail = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!validateLegal()) return;
-    if (!email.includes('@')) return setMessage('Ingresá un correo electrónico válido.');
-    if (password.length < 6) return setMessage('La contraseña debe tener al menos 6 caracteres.');
+    if (!email.includes('@')) return setMessage(english ? 'Enter a valid email address.' : 'Ingresá un correo electrónico válido.');
+    if (password.length < 6) return setMessage(english ? 'Your password must be at least 6 characters long.' : 'La contraseña debe tener al menos 6 caracteres.');
 
     setLoading(true);
     setMessage('');
@@ -279,9 +300,13 @@ export default function LoginFormGoogleFirst() {
 
         // Solo esperamos correo cuando Supabase NO devolvió una sesión.
         setMessage(
-          reason === 'shared-pdf'
-            ? 'Registro exitoso. Revisá tu correo para confirmar la cuenta y acceder al PDF compartido.'
-            : 'Registro exitoso. Revisá tu correo para confirmar tu cuenta.'
+          english
+            ? reason === 'shared-pdf'
+              ? 'Account created. Check your email to confirm your account and access the shared PDF.'
+              : 'Account created. Check your email to confirm your account.'
+            : reason === 'shared-pdf'
+              ? 'Registro exitoso. Revisá tu correo para confirmar la cuenta y acceder al PDF compartido.'
+              : 'Registro exitoso. Revisá tu correo para confirmar tu cuenta.'
         );
         return;
       }
@@ -299,7 +324,7 @@ export default function LoginFormGoogleFirst() {
       });
       window.location.href = redirectPath;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No pudimos continuar con tu correo.');
+      setMessage(error instanceof Error ? error.message : english ? 'We could not continue with your email.' : 'No pudimos continuar con tu correo.');
     } finally {
       setLoading(false);
     }
@@ -331,7 +356,7 @@ export default function LoginFormGoogleFirst() {
     setNotice('');
   };
 
-  const success = message.toLowerCase().includes('registro exitoso');
+  const success = message.toLowerCase().includes('registro exitoso') || message.startsWith('Account created.');
 
   return (
     <section className="px-1 py-1 sm:px-2 sm:py-2">
