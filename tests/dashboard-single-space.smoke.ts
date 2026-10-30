@@ -165,19 +165,24 @@ assert.match(appChromeSource, /data-mobile-calendar-link/,
   'Calendar belongs in the mobile top bar beside the profile avatar.');
 assert.match(appChromeSource, /href="\/calendario"\s+data-mobile-calendar-link/,
   'The top calendar icon must navigate to the actual Calendar route.');
-assert.match(appChromeSource, /data-mobile-profile-menu-trigger/,
+assert.match(appChromeSource, /MobileProfileMenu = dynamic/,
+  'The avatar menu must be lazy-loaded to protect the global app performance budget.');
+assert.match(appChromeSource, /<MobileProfileMenu/,
+  'The profile menu must render beside the calendar in the mobile header.');
+const mobileProfileMenuSource = readFileSync(resolve('components/mobile-profile-menu.tsx'), 'utf8');
+assert.match(mobileProfileMenuSource, /data-mobile-profile-menu-trigger/,
   'The profile avatar must open a mobile menu instead of immediately navigating.');
-assert.match(appChromeSource, /data-mobile-profile-menu/,
+assert.match(mobileProfileMenuSource, /data-mobile-profile-menu/,
   'The menu should be identified for responsive verification.');
-assert.match(appChromeSource, /Ajustes/,
+assert.match(mobileProfileMenuSource, /Ajustes/,
   'The profile menu must offer Ajustes.');
-assert.match(appChromeSource, /Sugerencias/,
+assert.match(mobileProfileMenuSource, /Sugerencias/,
   'The profile menu must offer Sugerencias.');
-assert.match(appChromeSource, /href="\/configuracion"/,
+assert.match(mobileProfileMenuSource, /href="\/configuracion"/,
   'Ajustes must lead to the existing configuration page.');
-assert.match(appChromeSource, /onSelect=\{\(\) => setFeedbackOpen\(true\)\}/,
+assert.match(mobileProfileMenuSource, /onSelect=\{\(\) => setFeedbackOpen\(true\)\}/,
   'Sugerencias must open the existing feedback form.');
-assert.match(appChromeSource, /<FeedbackDialog open=\{feedbackOpen\} onOpenChange=\{setFeedbackOpen\} sourcePath=\{pathname\} \/>/,
+assert.match(mobileProfileMenuSource, /<FeedbackDialog open=\{feedbackOpen\} onOpenChange=\{setFeedbackOpen\} sourcePath=\{sourcePath\} \/>/,
   'The feedback flow must stay connected to its source path.');
 assert.match(appChromeSource, /Ver racha de estudio:/,
   'Keep the streak control independent from the avatar.');
