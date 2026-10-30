@@ -51,6 +51,7 @@ import {
 } from '@/lib/student-materials/practice-entry';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { saveReadingPosition } from '@/lib/reading-progress';
+import { markActivity } from '@/lib/study-plan-progress';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import {
   completeFirstPdfOnboardingAction,
@@ -2172,6 +2173,12 @@ export function MaterialStudyWorkspace({
                   );
                 })}
               </div>
+              {!demo && isOwner && glossaryTopicIndex !== null ? (
+                <button type="button" onClick={() => markActivity(materialId, glossaryTopicIndex, 'glossary')}
+                  className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                  Terminé de revisar los conceptos
+                </button>
+              ) : null}
               {showLongTopicGlossaryPracticeCta && glossaryTopicIndex !== null ? (
                 <div
                   data-topic-glossary-practice-cta
@@ -2226,7 +2233,7 @@ export function MaterialStudyWorkspace({
                   : undefined
               }
               materialId={materialId}
-              onComplete={demo || flashcardTopicIndex !== null ? undefined : requestExamDatePrompt}
+              onComplete={demo ? undefined : () => { if (flashcardTopicIndex !== null) markActivity(materialId, flashcardTopicIndex, 'flashcards'); else requestExamDatePrompt(); }}
               demoMode={Boolean(demo)}
             />
           </div>
@@ -2326,7 +2333,7 @@ export function MaterialStudyWorkspace({
                 sections={studySummary.sections}
                 glossary={studyGlossary}
                 materialId={materialId}
-                onComplete={practiceSectionIndex === undefined ? requestExamDatePrompt : undefined}
+                onComplete={() => { if (!demo && practiceSectionIndex !== undefined) markActivity(materialId, practiceSectionIndex, 'questions'); else if (practiceSectionIndex === undefined) requestExamDatePrompt(); }}
               />
             )}
           </div>
