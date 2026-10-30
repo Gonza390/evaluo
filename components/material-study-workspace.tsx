@@ -202,6 +202,7 @@ type MaterialStudyWorkspaceProps = {
   pedagogicalArtifacts?: PedagogicalArtifacts;
   initialDiagnostic?: boolean;
   initialPracticeSectionIndex?: number;
+  initialResourceTopicIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
   /** Mostrar la guía de estudio al llegar al Resumen desde un PDF recién procesado. */
@@ -327,6 +328,7 @@ export function MaterialStudyWorkspace({
   pedagogicalArtifacts,
   initialDiagnostic = false,
   initialPracticeSectionIndex,
+  initialResourceTopicIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
   initialStudyStartGuideRequested = false,
@@ -420,8 +422,8 @@ export function MaterialStudyWorkspace({
   const scrollFirstChapterSmoothlyRef = useRef(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
-  const [flashcardTopicIndex, setFlashcardTopicIndex] = useState<number | null>(null);
-  const [glossaryTopicIndex, setGlossaryTopicIndex] = useState<number | null>(null);
+  const [flashcardTopicIndex, setFlashcardTopicIndex] = useState<number | null>(initialTab === 'tarjetas' ? initialResourceTopicIndex ?? null : null);
+  const [glossaryTopicIndex, setGlossaryTopicIndex] = useState<number | null>(initialTab === 'glosario' ? initialResourceTopicIndex ?? null : null);
   const [summaryReturnIndex, setSummaryReturnIndex] = useState<number | null>(null);
   const promptedChapterFinishesRef = useRef(new Set<number>());
   const chapterFinishNavigationPauseRef = useRef(0);
