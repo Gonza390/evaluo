@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
+  BookOpen,
   CalendarDays,
   CircleAlert,
   Flame,
@@ -108,7 +109,7 @@ function BottomNav() {
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
-        { label: 'Estudiar', href: '/dashboard/explicaciones', icon: CircleAlert },
+        { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
       ]
     : [
         { label: 'Inicio', href: '/', icon: Home },
