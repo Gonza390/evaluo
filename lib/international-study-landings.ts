@@ -127,6 +127,7 @@ export const STUDY_HREFLANG: Record<string, string> = {
   'es-CO': toAbsoluteUrl(STUDY_MARKETS['es-co'].path),
   'es-ES': toAbsoluteUrl(STUDY_MARKETS['es-es'].path),
   'es-AR': toAbsoluteUrl('/estudiar-pdf-con-ia'),
+  en: toAbsoluteUrl('/en/study-pdf-with-ai'),
   'x-default': toAbsoluteUrl(STUDY_MARKETS.es.path),
 };
 
