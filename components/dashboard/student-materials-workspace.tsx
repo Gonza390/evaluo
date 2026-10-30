@@ -173,8 +173,12 @@ export function StudentMaterialsWorkspace({
                   className="relative flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch xl:justify-start">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                        <FileText className="h-5 w-5" strokeWidth={1.8} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
                           <Link
                             href={getStudentMaterialRoute(material.id)}
@@ -206,9 +210,8 @@ export function StudentMaterialsWorkspace({
                         <span>{formatDate(material.created_at)}</span>
                         {material.page_count ? <span>{material.page_count} páginas</span> : null}
                       </div>
+                      </div>
                     </div>
-
-
                   </div>
                 </article>
               );
