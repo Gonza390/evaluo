@@ -743,7 +743,6 @@ export default function CalendarioPage() {
     <>
       <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-3 overflow-x-clip px-3 py-3 sm:space-y-4 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
         <AppPageHeader
-          eyebrow="Planificación"
           size="compact"
           title="Calendario"
           description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
@@ -752,18 +751,18 @@ export default function CalendarioPage() {
           <div className="relative p-1.5 min-[380px]:p-2 sm:p-3">
             <div className="min-w-0 overflow-hidden rounded-[16px] border border-slate-200/80 bg-white shadow-[0_10px_26px_rgba(15,23,42,0.05)]">
               <div
-                className="flex flex-col gap-2 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-3 py-2.5 sm:px-4 lg:flex-row lg:items-center lg:justify-between"
+                className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-1.5 py-2.5 min-[380px]:px-3 sm:gap-2 sm:px-4"
               >
-                <div className="relative flex min-w-0 items-center justify-between gap-1 min-[380px]:justify-start min-[380px]:gap-2">
+                <div className="flex min-w-0 shrink items-center gap-0 sm:gap-1">
                   <button
                     type="button"
                     onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900"
+                    className="inline-flex h-8 w-6 shrink-0 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900 sm:h-9 sm:w-9"
                     aria-label="Mes anterior"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <h2 className="text-foreground min-w-0 truncate text-[18px] font-bold tracking-[-0.04em] min-[380px]:text-[19px] sm:text-[20px]">
+                  <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-bold tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
                     {formatMonthLabel(visibleMonth)}
                   </h2>
                   <button
@@ -776,7 +775,7 @@ export default function CalendarioPage() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 min-[420px]:flex min-[420px]:flex-wrap">
+                <div className="flex shrink-0 flex-nowrap items-center gap-1 sm:gap-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -785,17 +784,18 @@ export default function CalendarioPage() {
                       setSelectedDate(today);
                       setVisibleMonth(getMonthStart(today));
                     }}
-                    className="h-8 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 shadow-sm hover:bg-white hover:text-slate-900"
+                    className="h-8 rounded-xl border border-slate-200 bg-white px-2 text-[12px] text-slate-700 shadow-sm hover:bg-white hover:text-slate-900 sm:px-3 sm:text-sm"
                   >
                     Hoy
                   </Button>
                   <Button
                     type="button"
                     onClick={() => openComposerForDate(selectedDate)}
-                    className="h-8 min-w-0 rounded-xl bg-gradient-to-r from-brand to-brand-2 px-3 text-white shadow-[0_12px_28px_rgba(37,99,235,0.24)] hover:opacity-95 sm:px-4"
+                    aria-label="Agregar evento"
+                    className="h-8 min-w-8 rounded-xl bg-gradient-to-r from-brand to-brand-2 px-2 text-white shadow-[0_12px_28px_rgba(37,99,235,0.24)] hover:opacity-95 sm:px-4"
                   >
                     <CalendarPlus className="h-4 w-4" />
-                    <span className="truncate">Agregar evento</span>
+                    <span className="hidden whitespace-nowrap sm:inline">Agregar evento</span>
                   </Button>
                 </div>
               </div>
