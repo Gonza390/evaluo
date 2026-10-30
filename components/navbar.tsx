@@ -54,7 +54,7 @@ function isNavItemActive(pathname: string, href: string) {
 const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-  { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
+  { label: 'Estudiar', href: '/dashboard/explicaciones', icon: CircleAlert },
 ];
 
 function NavItem({
