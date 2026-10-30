@@ -11,8 +11,8 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   useEffect(() => {
     const update = () => {
       try {
-        setDone(JSON.parse(localStorage.getItem(progressKey(materialId)) || '{}'));
-        setRead(Math.min(topicCount, Math.max(0, Number(localStorage.getItem(`evaluo_summary_reading_progress_v1:${materialId}`) || 0) || 0)));
+        setDone(getProgress(materialId, topicActivities).record);
+        setRead(getProgress(materialId, topicActivities).read);
       } catch { setDone({}); setRead(0); }
     };
     update();
@@ -32,7 +32,8 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
     {id:'flashcards',label:`Repasar flashcards del tema ${topic + 1}`,subtitle:'Revisá las tarjetas de memoria',href:`/materiales/${materialId}?tab=tarjetas&studyTopic=${topic}`,done:!!done[`${topic}:flashcards`],icon:Layers3},
     {id:'glossary',label:`Revisar glosario del tema ${topic + 1}`,subtitle:'Repasá los conceptos importantes',href:`/materiales/${materialId}?tab=glosario&studyTopic=${topic}`,done:!!done[`${topic}:glossary`],icon:BookText},
   ];
-  const available = tasks.filter(task => task.id === 'read' || topicActivities[topic]?.[task.id as keyof TopicActivities]);\n  const next = available.findIndex(t=>!t.done);
+  const available = tasks.filter(task => task.id === 'read' || topicActivities[topic]?.[task.id as keyof TopicActivities]);
+  const next = available.findIndex(t=>!t.done);
   return <div className="overflow-hidden rounded-[16px] border border-slate-200 bg-white">
     <div className="border-b border-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-500">Tema {topic + 1} de {topicCount}</div>
     {available.map((task,i) => {
