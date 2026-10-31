@@ -33,4 +33,21 @@ assert.equal(isTransientSimulatorCatalogError({ code: 'PGRST301', message: 'JWT 
 assert.equal(isTransientSimulatorCatalogError({ message: 'permission denied for table materias' }), false);
 assert.equal(isTransientSimulatorCatalogError(null), false);
 
+
+const publicViewHardeningSql = readFileSync('supabase/migrations/20261031210000_restrict_public_question_bank_scans.sql', 'utf8');
+const pregunteroSeo = readFileSync('lib/seo-content-signals.ts', 'utf8');
+const catalogData = readFileSync('lib/data/catalog.ts', 'utf8');
+// Limitar las lecturas del banco a consultas filtradas en el servidor y RPC de estadísticas.
+assert.ok(preguntero.includes("admin.from('preguntas_banco')") || preguntero.includes("admin\n          .from('preguntas_banco')"));
+assert.ok(preguntero.includes(".eq('es_demo', false)"));
+assert.ok(preguntero.includes(".eq('materia_id', materiaId)"));
+assert.ok(preguntero.includes('.limit(10)'));
+assert.ok(!preguntero.includes(".from('preguntas_banco_public')"));
+assert.ok(pregunteroSeo.includes('getPregunteroMateriaStats(materiaId)'));
+assert.ok(!pregunteroSeo.includes(".from('preguntas_banco_public')"));
+assert.ok(catalogData.includes("rpc('get_public_preguntero_catalog')"));
+assert.ok(!catalogData.includes(".from('preguntas_banco_public')"));
+assert.match(publicViewHardeningSql, /revoke\s+all\s+on\s+public\.preguntas_banco_public\s+from\s+public,\s*anon,\s*authenticated/i);
+assert.match(publicViewHardeningSql, /service_role/i);
+
 console.log('Preguntero cache and Explore question count tests passed.');
