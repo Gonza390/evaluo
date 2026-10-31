@@ -16,9 +16,10 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, aiAvailable = false }: {
   mode: Mode; materialId: string; materialTitle: string;
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
+  aiAvailable?: boolean;
 }) {
   const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
   const options = useMemo(() => qualifiedQuestions(questions.filter(question =>
@@ -129,7 +130,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       setGenerationError('No pudimos conectarnos para crear casos nuevos. Reintentá más tarde.');
     } finally { setGenerating(false); }
   }
-  const aiCaseButton = mode === 'casos' ? (
+  const aiCaseButton = mode === 'casos' && aiAvailable ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
