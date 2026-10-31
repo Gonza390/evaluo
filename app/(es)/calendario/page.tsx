@@ -807,7 +807,7 @@ export default function CalendarioPage() {
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[11px] font-bold text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
+                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-bold text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
                   >
                     <span className="hidden sm:inline">{label}</span>
                     <span className="text-xs sm:hidden">{label.slice(0, 3)}</span>
