@@ -72,6 +72,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const score = Array.from({ length: total }, (_, i) => correctAt(i)).filter(Boolean).length;
   const answeredCount = mode === 'unir' ? Object.keys(matches).length :
     Object.keys(responses).filter(i => responses[Number(i)]?.trim()).length;
+  const missedTopics = [...new Set(tasks.flatMap((task, i) => {
+    if (correctAt(i)) return [];
+    const name = task.type === 'recall' ? task.pair.chapterTitle : task.question.chapterTitle;
+    return name && name !== 'Situaciones de aplicación' ? [name] : [];
+  }))].slice(0, 4);
   const current = tasks[step];
   const checked = reviewed.includes(step);
 
@@ -159,6 +164,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         {score === total ? 'Completaste la actividad sin errores.' :
           'Revisá las respuestas que te costaron y volvé al material para reforzarlas.'}
       </p>
+      {missedTopics.length > 0 && <div className="mt-4 rounded-xl bg-blue-50/60 p-4">
+        <p className="text-sm font-medium text-slate-800">Temas sugeridos para repasar</p>
+        <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-slate-600">
+          {missedTopics.map(topic => <li key={topic}>{topic}</li>)}
+        </ul>
+      </div>}
       <div className="mt-6 space-y-3">
         {mode === 'unir' ? exercisePairs.map((pair, i) => (
           <article key={i} className="rounded-xl bg-slate-50 p-3 text-sm">
