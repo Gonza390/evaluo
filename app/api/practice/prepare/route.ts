@@ -10,7 +10,7 @@ import {
   type FeedbackSource,
 } from '@/lib/student-materials/practice-feedback-quality';
 import {
-  buildPracticeBank, isPracticeMode, PRACTICE_BANK_VERSION,
+  assessPracticeBankQuality, buildPracticeBank, isPracticeMode, PRACTICE_BANK_VERSION,
   safePracticeBank, sourceFingerprint, type OnDemandPracticeMode,
 } from '@/lib/student-materials/practice-on-demand';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
@@ -180,7 +180,8 @@ export async function POST(request: Request) {
       {headers:{'Cache-Control':'private, no-store'}});
   }
   if (cached?.source_fingerprint===fingerprint && safePracticeBank(cached.payload)) {
-    return NextResponse.json({source:'cached',prepared:true},
+    return NextResponse.json({source:'cached',prepared:true,
+      quality:assessPracticeBankQuality(safePracticeBank(cached.payload)!,mode)},
       {headers:{'Cache-Control':'private, no-store'}});
   }
   // After a cache miss, load the large academic JSON only for modes that
@@ -219,5 +220,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     source:enhanced.length?'ai_checked':'reused_source',prepared:true,
     questionCount:bank.questions.length,caseCount:bank.cases.length,
+    quality:assessPracticeBankQuality(bank,mode),
   },{headers:{'Cache-Control':'private, no-store'}});
 }
