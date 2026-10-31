@@ -114,7 +114,7 @@ function meaningfulOptionWords(value: string): Set<string> {
   return new Set(normalizedAnswer(value).split(' ').filter(w =>
     w.length >= 4 && !ambiguousStopwords.has(w)));
 }
-export function hasAmbiguousDistractors(question: PracticeQuestion): boolean {
+export function hasAmbiguousDistractors(question: Pick<PracticeQuestion,'answer' | 'options'>): boolean {
   const answer = normalizedAnswer(question.answer);
   if (answer.length < 40) return false;
   const expected = meaningfulOptionWords(answer);
