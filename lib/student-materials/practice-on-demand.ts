@@ -4,7 +4,7 @@ import {
 import type { CanonicalPedagogicalModel } from './types';
 
 /** Never included in the upload/processing pipeline. Only an explicit Practicar action uses it. */
-export const PRACTICE_BANK_VERSION = 1;
+export const PRACTICE_BANK_VERSION = 2; // invalidates pre-editorial cached banks
 export const ON_DEMAND_PRACTICE_MODES = ['unir','completar','casos','mixto','simulacro'] as const;
 export type OnDemandPracticeMode = typeof ON_DEMAND_PRACTICE_MODES[number];
 export type PracticeBankPayload = {
@@ -44,6 +44,7 @@ export function buildPracticeBank(
   raw: unknown,
   model: CanonicalPedagogicalModel | null,
   enhancedCases: PracticeQuestion[] = [],
+  mode?: OnDemandPracticeMode,
 ): PracticeBankPayload {
   const row = raw && typeof raw === 'object' && !Array.isArray(raw)
     ? raw as Record<string, unknown> : {};
@@ -59,8 +60,14 @@ export function buildPracticeBank(
     };
   });
   const questions = qualifiedQuestions(mapped.filter(plainQuestion)).slice(0, 35);
-  const cases = qualifiedQuestions([...enhancedCases, ...buildSourceBackedCases(model)]).slice(0, 14);
-  return { version: PRACTICE_BANK_VERSION, questions, cases };
+  // Persist the smallest mode-specific payload. Especially avoid duplicating
+  // 35 questions into Unir/Completar caches that use only glossary pairs.
+  const needsQuestions = !mode || mode === 'simulacro' || mode === 'mixto';
+  const needsCases = !mode || mode === 'casos' || mode === 'mixto';
+  const cases = needsCases
+    ? qualifiedQuestions([...enhancedCases, ...buildSourceBackedCases(model)]).slice(0, 14)
+    : [];
+  return { version: PRACTICE_BANK_VERSION, questions: needsQuestions ? questions : [], cases };
 }
 /** Do not substitute fabricated exercises when source coverage is inadequate. */
 export function sufficientPracticeBank(bank: PracticeBankPayload, mode: OnDemandPracticeMode, matchingPairs = 0) {
