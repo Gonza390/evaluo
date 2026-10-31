@@ -747,9 +747,9 @@ export default function CalendarioPage() {
           title="Calendario"
           description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
         />
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+        <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
           <div className="relative p-1.5 min-[380px]:p-2 sm:p-3">
-            <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
               <div
                 className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-white px-1.5 py-2.5 min-[380px]:px-3 sm:gap-2 sm:px-4"
               >
@@ -870,7 +870,7 @@ export default function CalendarioPage() {
                         {cellEvents.slice(0, 2).map((event) => (
                           <div
                             key={event.id}
-                            className="truncate rounded-[8px] border px-2 py-0.5 text-[12px] font-medium shadow-sm"
+                            className="truncate rounded-lg border px-2 py-0.5 text-[12px] font-medium"
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
