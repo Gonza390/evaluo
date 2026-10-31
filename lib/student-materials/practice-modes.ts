@@ -280,3 +280,35 @@ export function groundedPracticeContrast(
     wrong.definition.trim() + ' En cambio, «' + right.term + '» se reconoce por: ' +
     right.definition.trim();
 }
+
+/**
+ * Replace formulaic "other options are wrong" explanations only when the
+ * correct answer and a competing alternative both map uniquely to the
+ * student's own glossary. Never invent semantic equivalences or new facts.
+ */
+export function groundedPracticeExplanation(
+  question: Pick<PracticeQuestion,'answer' | 'options' | 'explanation'>,
+  pairs: readonly PracticePair[],
+): string {
+  const original = question.explanation.trim();
+  if (original.length >= 105 &&
+      !/(?:las dem[aá]s opciones|se define como|se caracteriza por:|significa:)/iu.test(original)) return original;
+  const findUnique = (value:string): PracticePair | null => {
+    const key = normalizedAnswer(value);
+    const matches = pairs.filter(pair =>
+      normalizedAnswer(pair.definition) === key || normalizedAnswer(pair.term) === key);
+    return matches.length === 1 ? matches[0]! : null;
+  };
+  const correct = findUnique(question.answer);
+  if (!correct) return original;
+  const other = question.options
+    .filter(option => normalizedAnswer(option) !== normalizedAnswer(question.answer))
+    .map(findUnique)
+    .find((pair): pair is PracticePair => Boolean(pair) &&
+      normalizedAnswer(pair!.term) !== normalizedAnswer(correct.term));
+  if (!other) return original;
+  return 'La opción correcta corresponde a «' + correct.term +
+    '»: ' + correct.definition.trim().replace(/[.!?]+$/u,'') +
+    '. No debe confundirse con «' + other.term +
+    '», que se refiere a ' + other.definition.trim().replace(/[.!?]+$/u,'') + '.';
+}
