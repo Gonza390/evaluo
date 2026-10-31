@@ -154,13 +154,15 @@ assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute/,
   'The topbar should not change its branding between dashboard and other routes.');
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
-assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
-  'Use two balanced bottom destinations for authenticated mobile users.');
+assert.match(appChromeSource, /grid-cols-4/,
+  'The current authenticated mobile navigation uses four balanced destinations.');
 const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
 assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
   'Keep Mi espacio in the bottom navigation.');
 assert.match(bottomNavSource, /label: 'Estudiar', href: '\/dashboard\/explicaciones'/,
   'Keep Estudiar in the bottom navigation.');
+assert.match(bottomNavSource, /label: 'Practicar', href: '\/dashboard\/practicar'/);
+assert.match(bottomNavSource, /label: 'Mi plan', href: '\/dashboard\/plan-de-estudio'/);
 assert.doesNotMatch(bottomNavSource, /label: 'Calendario'|label: 'Perfil'/,
   'Move Calendario out of the bottom bar and keep Perfil in the avatar menu.');
 assert.match(appChromeSource, /data-mobile-calendar-link/,
