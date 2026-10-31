@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
+  groundedPracticeExplanation,
   isCorrectWrittenAnswer, selectMixedQuestions, type PracticePair, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
 
@@ -46,6 +47,21 @@ assert.equal(groundedPracticeContrast(pairs[0]!.term,pairs[1]!.term,pairs)?.incl
 assert.equal(groundedPracticeContrast('Una respuesta sin definición comprobada',pairs[1]!.term,pairs),null);
 assert.equal(groundedPracticeContrast(pairs[1]!.term,pairs[1]!.term,pairs),null);
 
+const groundedFromRealIpc = groundedPracticeExplanation({
+  answer:pairs[0]!.definition,
+  options:[pairs[0]!.definition,pairs[1]!.definition],
+  explanation:'En el material se define como el concepto principal. Las demás opciones son otros conceptos.',
+},pairs);
+assert.ok(groundedFromRealIpc.includes('Hipótesis auxiliar'));
+assert.ok(groundedFromRealIpc.includes('Hipótesis fundamental'));
+assert.ok(!groundedFromRealIpc.includes('Las demás opciones'));
+const mustNotInvent=groundedPracticeExplanation({
+  answer:'Una afirmación que no existe en el glosario',
+  options:['Una afirmación que no existe en el glosario','Otra sin respaldo'],
+  explanation:'Las demás opciones no coinciden con el documento.',
+},pairs);
+assert.equal(mustNotInvent,'Las demás opciones no coinciden con el documento.',
+  'When the source does not support a contrast, do not invent a better explanation');
 const mk=(id:number,chapter:string,level:string):PracticeQuestion=>({
  id:'p-'+id,prompt:'¿Qué opción caracteriza correctamente la situación académica '+id+'?',
  options:['Opción correcta '+id,'Respuesta equivocada '+id],
