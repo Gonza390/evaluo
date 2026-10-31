@@ -2059,7 +2059,7 @@ export function MaterialStudyWorkspace({
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
                 <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
-                  <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-extrabold tracking-[0.16em] uppercase">
+                  <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-medium tracking-[0.16em] uppercase">
                     Contenido
                   </p>
                   <nav
@@ -2150,7 +2150,7 @@ export function MaterialStudyWorkspace({
         <div data-study-glossary className="mx-auto w-full max-w-[1240px] px-1 py-1 sm:px-2 sm:py-1.5">
           {glossaryTopicIndex === null ? (
             <header className="border-border mb-3 border-b pb-3 sm:pb-4">
-              <h2 className="text-foreground text-[19px] leading-[1.25] font-semibold tracking-[-0.04em] sm:text-[20px]">
+              <h2 className="text-foreground text-[19px] leading-[1.25] font-semibold tracking-[-0.035em] sm:text-[20px]">
                 Glosario
               </h2>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
@@ -2430,7 +2430,7 @@ export function MaterialStudyWorkspace({
                 </p>
                 <p
                   className={cn(
-                    'text-foreground mt-2.5 text-base font-semibold tracking-[-0.03em]',
+                    'text-foreground mt-2.5 text-base font-medium tracking-[-0.03em]',
                     demo && 'mt-2 text-sm! leading-5!'
                   )}
                 >
