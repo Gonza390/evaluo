@@ -1700,7 +1700,7 @@ export function MaterialStudyWorkspace({
     return (
       <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-3 flex flex-col gap-2.5 rounded-xl border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
-          <p className="text-primary text-[11px] font-semibold uppercase tracking-[0.12em]">
+          <p className="text-primary text-[11px] font-medium uppercase tracking-[0.12em]">
             {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
           </p>
           <p className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.03em] break-words">
@@ -1798,7 +1798,7 @@ export function MaterialStudyWorkspace({
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {tab.label}
               {tab.premium ? (
-                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] uppercase sm:text-[11px]">
+                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase sm:text-[11px]">
                   Premium
                 </span>
               ) : null}
@@ -1889,7 +1889,7 @@ export function MaterialStudyWorkspace({
 
         <div className="space-y-5 px-5 py-5 sm:px-6">
           <div className="space-y-2">
-            <div className="text-muted-foreground flex items-center justify-between text-[12px] font-semibold tracking-[0.16em] uppercase">
+            <div className="text-muted-foreground flex items-center justify-between text-[12px] font-medium tracking-[0.16em] uppercase">
               <span>Progreso</span>
               <span>{Math.min(100, regenerationProgress)}%</span>
             </div>
@@ -1938,7 +1938,7 @@ export function MaterialStudyWorkspace({
           </div>
 
           <div className="border-border bg-card rounded-[1.25rem] border px-4 py-3">
-            <p className="text-foreground text-[13px] font-semibold">
+            <p className="text-foreground text-[13px] font-medium">
               {
                 regenerationStages[
                   Math.min(regenerationStageIndex, regenerationStages.length - 1)
@@ -1992,7 +1992,7 @@ export function MaterialStudyWorkspace({
                 type="button"
                 aria-expanded={summaryIntroExpanded}
                 onClick={() => setSummaryIntroExpanded((value) => !value)}
-                className="text-primary mt-1 text-[12px] font-semibold hover:underline sm:hidden"
+                className="text-primary mt-1 text-[12px] font-medium hover:underline sm:hidden"
               >
                 {summaryIntroExpanded ? 'Ver menos' : 'Leer introducción completa'}
               </button>
@@ -2000,10 +2000,10 @@ export function MaterialStudyWorkspace({
 
             {diagnosticReviewTopics.length > 0 ? (
               <div className="border-primary mt-3 border-l-2 pl-3">
-                <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
+                <p className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">
                   Según tu diagnóstico
                 </p>
-                <p className="text-foreground mt-1 text-[14px] font-semibold">
+                <p className="text-foreground mt-1 text-[14px] font-medium">
                   Empezá por {diagnosticReviewTopics[0]}
                 </p>
               </div>
@@ -2012,7 +2012,7 @@ export function MaterialStudyWorkspace({
 
           {summaryChapters.length > 0 ? (
             <details className="group border-border bg-muted/55 mt-3 rounded-xl border px-3 py-2.5 xl:hidden">
-              <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold">
+              <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-medium">
                 <span className="inline-flex items-center gap-2">
                   <ListTree className="text-primary h-4 w-4" />
                   Índice del resumen
@@ -2161,10 +2161,10 @@ export function MaterialStudyWorkspace({
           {glossaryItemsToShow.length > 0 ? (
             <div className="w-full max-w-[1040px]">
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-4 border-b px-2 py-2.5 md:grid">
-                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-medium tracking-[0.13em] uppercase">
                   Término
                 </p>
-                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-medium tracking-[0.13em] uppercase">
                   Definición
                 </p>
               </div>
@@ -2202,7 +2202,7 @@ export function MaterialStudyWorkspace({
               </div>
               {!demo && isOwner && glossaryTopicIndex !== null ? (
                 <button type="button" onClick={() => markActivity(materialId, glossaryTopicIndex, 'glossary')}
-                  className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                  className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-medium text-blue-700 hover:bg-blue-100">
                   Terminé de revisar los conceptos
                 </button>
               ) : null}
@@ -2212,7 +2212,7 @@ export function MaterialStudyWorkspace({
                   className="border-border mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="text-foreground text-[13px] font-semibold">¿Seguimos con la práctica?</p>
+                    <p className="text-foreground text-[13px] font-medium">¿Seguimos con la práctica?</p>
                     <p className="text-muted-foreground mt-1 text-[12px] leading-5">
                       Comprobá cuánto aprendiste de este tema.
                     </p>
@@ -2422,7 +2422,7 @@ export function MaterialStudyWorkspace({
               >
                 <p
                   className={cn(
-                    'text-primary/80 text-xs font-semibold tracking-[0.18em] uppercase',
+                    'text-primary/80 text-xs font-medium tracking-[0.18em] uppercase',
                     demo && 'text-xs! leading-4!'
                   )}
                 >
@@ -2798,7 +2798,7 @@ export function MaterialStudyWorkspace({
           <div data-evaluo-desktop-reader-title className="flex min-w-0 flex-1 items-center gap-3">
             <Link
               href={backHref}
-              className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-semibold transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-medium transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Volver
@@ -2844,7 +2844,7 @@ export function MaterialStudyWorkspace({
                 setRecommendedTourStep('summary');
                 setRecommendedActive(true);
               }}
-              className="text-primary hover:bg-muted inline-flex min-h-9 shrink-0 items-center rounded-lg px-2 text-[11.5px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="text-primary hover:bg-muted inline-flex min-h-9 shrink-0 items-center rounded-lg px-2 text-[11.5px] font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               aria-label="Volver a ver la guía de cuatro pasos"
             >
               Ver guía
@@ -3025,7 +3025,7 @@ export function MaterialStudyWorkspace({
               <div className="bg-card/80 hidden rounded-2xl border border-dashed border-slate-300 px-4 py-3 shadow-none md:block">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-muted-foreground text-[12px] font-semibold tracking-[0.16em] uppercase">
+                    <p className="text-muted-foreground text-[12px] font-medium tracking-[0.16em] uppercase">
                       PDF oculto
                     </p>
                     <p className="text-muted-foreground mt-1 text-[13px] leading-5">
