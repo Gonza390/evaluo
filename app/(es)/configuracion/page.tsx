@@ -356,7 +356,7 @@ export default function ConfiguracionPage() {
   return (
     <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-950">Configuración</h1>
+        <h1 className="text-[20px] font-semibold tracking-[-0.035em] text-slate-950 sm:text-[22px] lg:text-[24px]">Configuración</h1>
         <p className="text-[13px] text-slate-500">Administrá tu cuenta y tus datos de estudio.</p>
       </header>
 
