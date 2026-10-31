@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     .map((concept: unknown) => concept && typeof concept === 'object' && 'term' in concept
       ? String(concept.term) : '').filter(Boolean).slice(0, 90);
   const allChunks: SourceFragment[] = (chunks ?? [])
-    .filter(chunk => Number.isInteger(chunk.page_start) && chunk.page_start > 0 &&
+    .filter(chunk => typeof chunk.page_start === 'number' && Number.isInteger(chunk.page_start) && chunk.page_start > 0 &&
       typeof chunk.chunk_text === 'string' && chunk.chunk_text.length >= 90)
     .map(chunk => ({ pageStart: chunk.page_start as number, text: chunk.chunk_text as string }));
   if (terms.length < 4 || allChunks.length < 2)
