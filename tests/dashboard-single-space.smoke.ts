@@ -227,7 +227,8 @@ for (const page of [compactCalendar, compactProgressList, compactHistory, compac
 assert.match(compactSettings, /text-xl font-semibold tracking-tight/,
   'Settings currently uses a compact, regular-weight page heading.');
 assert.match(compactCalendar, /max-w-\[1240px\]/);
-assert.match(compactSettings, /max-w-\[1240px\]/);
+assert.match(compactSettings, /max-w-\[760px\]/,
+  'Settings uses the focused narrow layout currently on main.');
 assert.match(compactProgress, /size="compact"/);
 assert.match(compactProgress, /grid-cols-\[236px_minmax\(0,1fr\)\]/);
 assert.match(compactProfile, /space-y-4 rounded-xl border p-3\.5 sm:p-4/);
