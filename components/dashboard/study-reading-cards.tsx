@@ -66,15 +66,15 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
           Todavía no tenés PDFs listos para estudiar. Subí uno desde Mi espacio.
         </div>
       )}
-      <div className="mt-5 border-t border-slate-100 pt-4">
+      <div className="mt-5 pt-2">
         <h2 className="text-[15px] font-normal tracking-tight text-slate-900">Herramientas de estudio</h2>
         <p className="mt-1 text-xs text-slate-500">
-          {activeMaterial ? `Continuá con ${activeMaterial.title}` : 'Subí un PDF desde Mi espacio para empezar.'}
+          {activeMaterial ? `Herramientas para ${activeMaterial.title}` : 'Subí un PDF desde Mi espacio para empezar.'}
         </p>
-        <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-3 sm:gap-3 xl:grid xl:grid-cols-5 xl:overflow-visible">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 xl:grid-cols-5">
           {tools.map((tool) => {
             const Icon = tool.icon;
-            const className = `flex min-h-[142px] xl:min-h-[118px] w-[min(74vw,240px)] min-w-[min(74vw,240px)] snap-start flex-col rounded-2xl border border-transparent p-3.5 text-left transition hover:border-current/15 hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
+            const className = `flex min-h-[126px] w-full min-w-0 flex-col rounded-2xl border border-transparent p-3.5 text-left transition hover:border-current/15 hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500  ${tool.background} ${tool.color}`;
             const content = (
               <>
                 <Icon className="h-5 w-5" aria-hidden="true" />
