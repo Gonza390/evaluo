@@ -26,22 +26,19 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
 
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-6 pb-24 sm:px-6 sm:py-9">
-      <header className="mb-5 space-y-1">
-        <h1 className="text-[22px] font-semibold tracking-tight text-slate-900">Practicar</h1>
-        <p className="text-[13px] text-slate-500">Elegí cómo querés poner a prueba lo que estudiaste.</p>
-      </header>
-      <section className="mb-5" aria-label="Material para practicar">
-        <label htmlFor="practice-material" className="mb-2 block text-[12px] font-medium text-slate-500">Estás practicando con</label>
-        <div className="relative">
+      <header className="mb-5 flex items-center justify-between gap-3">
+        <h1 className="shrink-0 text-[22px] font-semibold tracking-tight text-slate-900">Practicar</h1>
+        <div className="relative min-w-0 w-[min(60%,360px)]">
+          <label htmlFor="practice-material" className="sr-only">PDF para practicar</label>
           <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-blue-600" />
           <select id="practice-material" value={materialId} onChange={event => { setMaterialId(event.target.value); setSelectedMode(null); }}
             disabled={!materials.length}
-            className="min-h-12 w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-[13px] font-medium text-slate-800 outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20">
+            className="min-h-11 w-full appearance-none truncate rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-9 text-[13px] font-medium text-slate-800 outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20">
             {materials.length ? materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>) : <option value="">No hay materiales disponibles</option>}
           </select>
           <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         </div>
-      </section>
+      </header>
       {material ? (
         <>
           <h2 className="mb-3 text-[13px] font-medium text-slate-700">Elegí un tipo de práctica</h2>
