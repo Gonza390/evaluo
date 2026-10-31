@@ -39,6 +39,21 @@ export function verifyGeneratedPracticeCases(
         promptKey.includes(answerKey) ||
         /^(?:que significa|como se define|cual es la definicion|segun el pdf)/.test(promptKey) ||
         !normalizedAnswer(c.explanation).includes(answerKey)) continue;
+    // Some uploaded notes reproduce inconsistent Ansoff risk rankings.
+    // A literal PDF quote does not prove that a risk ranking is accurate.
+    // Reject new relative-risk exercises on those pages; product/market
+    // categorization remains allowed and source-backed.
+    const conflictOnPage = source.some(chunk => {
+      if (chunk.pageStart !== c.page) return false;
+      const text = normalizedAnswer(chunk.text);
+      return text.includes('penetracion de mercado') &&
+        text.includes('desarrollo de mercados') &&
+        text.includes('riesgo medio') && text.includes('riesgo bajo');
+    });
+    if (conflictOnPage &&
+        /\b(?:riesgo|arriesgada|arriesgado|seguridad|segura|seguro)\b/.test(
+          normalizedAnswer(scenario + ' ' + prompt + ' ' + c.explanation)
+        )) continue;
     const onPage = source.some(chunk => chunk.pageStart === c.page &&
       normalizedAnswer(chunk.text).includes(normalizedAnswer(evidence)));
     if (!onPage || source.some(chunk => normalizedAnswer(chunk.text).includes(normalizedAnswer(scenario)))) continue;
