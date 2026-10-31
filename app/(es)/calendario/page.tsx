@@ -762,7 +762,7 @@ export default function CalendarioPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-bold tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
+                  <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-semibold tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
                     {formatMonthLabel(visibleMonth)}
                   </h2>
                   <button
@@ -807,7 +807,7 @@ export default function CalendarioPage() {
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-bold text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
+                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-semibold text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
                   >
                     <span className="hidden sm:inline">{label}</span>
                     <span className="text-xs sm:hidden">{label.slice(0, 3)}</span>
@@ -909,7 +909,7 @@ export default function CalendarioPage() {
           <div className="relative h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
-                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-heading">
+                <DialogTitle className="text-[1.15rem] font-semibold tracking-[-0.05em] text-heading">
                   Agregar fecha
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
@@ -1123,7 +1123,7 @@ export default function CalendarioPage() {
 
               <div className="space-y-3">
                 <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
-                  <p className="text-[12px] font-bold tracking-[0.18em] text-slate-500 uppercase">
+                  <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
                     Vista previa
                   </p>
                   <div className="mt-2 min-h-[84px] rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
@@ -1152,7 +1152,7 @@ export default function CalendarioPage() {
                   <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-blue-500" />
-                      <p className="text-[12px] font-bold text-slate-800">Recordatorios</p>
+                      <p className="text-[12px] font-semibold text-slate-800">Recordatorios</p>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
                       Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen.
