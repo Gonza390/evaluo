@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { extractDocxContent } from '@/lib/student-materials/docx-extract';
 import {
   analyzePdfDocument,
   extractPdfTextAndPageCount,
@@ -114,7 +115,8 @@ export async function processStudentMaterial(input: {
 
   if (!material) throw new Error('No encontramos el material que queres procesar.');
 
-  const geminiPdfKeySlot = await getOrAssignGeminiPdfKeySlot(admin, material.id);
+  const isDocx = material.file_name.toLowerCase().endsWith('.docx');
+  const geminiPdfKeySlot = isDocx ? undefined : await getOrAssignGeminiPdfKeySlot(admin, material.id);
   logInfo('processStudentMaterial.geminiPdfKeySlot', {
     materialId: material.id,
     keySlot: geminiPdfKeySlot,
@@ -161,7 +163,7 @@ export async function processStudentMaterial(input: {
     processingStatus: 'processing',
     processingStage: 'extracting',
     processingProgress: 18,
-    processingMessage: 'Analizando el PDF para clasificar su estructura y estrategia de lectura.',
+    processingMessage: isDocx ? 'Extrayendo texto y apartados del documento Word.' : 'Analizando el PDF para clasificar su estructura y estrategia de lectura.',
   });
 
   const extractionStartedAt = Date.now();
@@ -169,8 +171,8 @@ export async function processStudentMaterial(input: {
   const visualAnalysisEnabled =
     await isStudentMaterialVisualAnalysisEnabled(material.id);
   const canonicalPipelineVersion = buildCanonicalSourcePipelineVersion({
-    visualAnalysisEnabled,
-  });
+    visualAnalysisEnabled: isDocx ? false : visualAnalysisEnabled,
+  }) + (isDocx ? ':docx-extract-v1' : '');
 
   // El archivo de un material es inmutable después de finalizar la carga.
   // Por eso, si ya existe una etapa de fuente válida para esta versión del
@@ -204,15 +206,15 @@ export async function processStudentMaterial(input: {
     throw new Error('No pudimos recuperar la fuente del PDF para procesarla.');
   }
 
-  const {
-    text: nativeText,
-    pageCount,
-    pages: nativePages,
-  } = sourceCheckpoint ?? await extractPdfTextAndPageCount(buffer!);
+  const wordExtraction = !sourceCheckpoint && isDocx ? extractDocxContent(buffer!) : null;
+  const nativeSource = sourceCheckpoint ?? (wordExtraction
+    ? { text: wordExtraction.text, pageCount: null, pages: null }
+    : await extractPdfTextAndPageCount(buffer!));
+  const { text: nativeText, pageCount, pages: nativePages } = nativeSource;
   const documentAnalysis = sourceCheckpoint?.documentAnalysis ??
-    analyzePdfDocument(buffer!, nativeText, pageCount);
+    wordExtraction?.documentAnalysis ?? analyzePdfDocument(buffer!, nativeText, pageCount);
 
-  if (buffer) {
+  if (buffer && !isDocx) {
     try {
       await ensureStudentMaterialThumbnail(admin, material.file_path, buffer);
     } catch (thumbnailError) {
@@ -232,7 +234,7 @@ export async function processStudentMaterial(input: {
   }
   const requiredOcr =
     documentAnalysis.requiresOcr && nativeText.trim().length === 0;
-  const visionExtractionEnabled = visualAnalysisEnabled || requiredOcr;
+  const visionExtractionEnabled = !isDocx && (visualAnalysisEnabled || requiredOcr);
 
   const selectedVisionPageNumbers = visionExtractionEnabled
     ? selectVisionPageNumbers({
@@ -258,7 +260,16 @@ export async function processStudentMaterial(input: {
     });
   }
 
-  const visionExtraction = sourceCheckpoint
+  const visionExtraction = isDocx
+    ? {
+        text: nativeText,
+        pages: null,
+        visionUsed: false,
+        visionPageNumbers: [] as number[],
+        visionModel: null,
+        clientRenderedPageNumbers: [] as number[],
+      }
+    : sourceCheckpoint
     ? {
         text: sourceCheckpoint.text,
         pages: sourceCheckpoint.pages,
@@ -818,7 +829,7 @@ export async function processStudentMaterial(input: {
   return {
     success: true,
     materialId: material.id,
-    message: 'El PDF ya quedo listo con su resumen y glosario.',
+    message: isDocx ? 'El Word ya está listo con su resumen y glosario.' : 'El PDF ya quedo listo con su resumen y glosario.',
   };
 }
 
