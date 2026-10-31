@@ -65,7 +65,7 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
     materialId={material.id} materialTitle={material.title} cases={savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED === '1' && process.env.PRACTICE_BANK_ENABLED === '1'}
     isWord={material.file_name.toLowerCase().endsWith('.docx')}
-    glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null }))}
+    glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null, englishTerm: item.englishTerm ?? null }))}
     questions={savedBank?.questions.length ? savedBank.questions : artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
       explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
