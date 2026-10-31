@@ -94,6 +94,7 @@ export function extractDocxContent(bytes: Uint8Array): ExtractedDocx {
   const stylesXml = parts.get('word/styles.xml') ?? '';
   const styles = new Set(['Title','Subtitle','Heading1','Heading2','Heading3','heading1','heading2','heading3']);
   const listStyles = new Set<string>(['ListBullet', 'ListBullet2', 'ListBullet3', 'ListNumber', 'ListNumber2', 'ListNumber3']);
+  const numberedStyles = new Set<string>(['ListNumber', 'ListNumber2', 'ListNumber3']);
   for (const match of stylesXml.matchAll(/<w:style\b([^>]*)>([\s\S]*?)<\/w:style>/g)) {
     const id = match[1]?.match(/\bw:styleId="([^"]+)"/)?.[1];
     if (id && /<w:name\b[^>]*w:val="(?:heading [1-6]|title|subtitle)"/i.test(match[2] ?? ''))
@@ -104,10 +105,14 @@ export function extractDocxContent(bytes: Uint8Array): ExtractedDocx {
       (/<w:numPr\b/.test(match[2] ?? '') ||
         /<w:name\b[^>]*w:val="(?:list (?:bullet|number)(?: [1-9])?|viñetas?|numeraci[oó]n)"/i.test(match[2] ?? '')))
       listStyles.add(id);
+    if (id && /\bw:type="paragraph"/.test(match[1] ?? '') &&
+      /<w:name\b[^>]*w:val="list number(?: [1-9])?"/i.test(match[2] ?? ''))
+      numberedStyles.add(id);
   }
   const blocks: string[] = [];
   const headings: string[] = [];
   let rows = 0, bullets = 0;
+  const numberedCounters = new Map<string, number>();
   for (const hit of xml.matchAll(/<w:tr\b[^>]*>[\s\S]*?<\/w:tr>|<w:p\b[^>]*>[\s\S]*?<\/w:p>/g)) {
     const block = hit[0];
     if (block.startsWith('<w:tr')) {
@@ -126,7 +131,14 @@ export function extractDocxContent(bytes: Uint8Array): ExtractedDocx {
       headings.push(content);
     } else {
       const bullet = /<w:numPr\b/.test(block) || listStyles.has(style);
-      blocks.push(bullet ? '• ' + content : content);
+      if (numberedStyles.has(style)) {
+        const number = (numberedCounters.get(style) ?? 0) + 1;
+        numberedCounters.set(style, number);
+        blocks.push(`${number}. ${content}`);
+      } else {
+        blocks.push(bullet ? '• ' + content : content);
+        if (!bullet) numberedCounters.clear();
+      }
       if (bullet) bullets++;
     }
   }
