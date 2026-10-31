@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   // User-initiated AI generation only; durable strict budget even if infrastructure fails.
   const limit = await enforceStrictRateLimit({
-    key: 'practice-ai-cases:' + user.id + ':' + material.id,
+    key: 'practice-ai-cases:' + user.id,
     limit: 2, windowMs: 24 * 60 * 60 * 1000,
   });
   if (!limit.allowed) return NextResponse.json({ error: 'rate_limited' },
