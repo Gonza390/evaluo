@@ -43,8 +43,12 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   // A missing bank table during rollout is safe: keep the original source-backed practice.
   // Never modify the source model or the existing study artifacts.
   let savedBank = null as ReturnType<typeof safePracticeBank>;
-  const { data: bankRow, error: bankError } = await admin
-    .from('student_material_practice_banks' as 'student_materials')
+  const practiceDb = admin as unknown as {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- optional additive practice table, not yet in generated Supabase types
+    from: (table: string) => any;
+  };
+  const { data: bankRow, error: bankError } = await practiceDb
+    .from('student_material_practice_banks')
     .select('payload,source_fingerprint')
     .eq('material_id', material.id)
     .eq('user_id', user.id)
