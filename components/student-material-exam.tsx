@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
+import { ArrowRight, Check, CircleAlert, RotateCcw, Sparkles, Layers3, BookOpenCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
@@ -530,49 +530,47 @@ export function StudentMaterialExam({
           </div>
         )}
 
-        <div data-onboarding-practice-options className="grid gap-3 py-5 sm:grid-cols-3">
-          {sizeOptions.map((option) => {
+        <div data-onboarding-practice-options className="grid grid-cols-2 gap-2.5 py-4 sm:grid-cols-3 sm:gap-3 sm:py-5">
+          {sizeOptions.map((option, index) => {
             const selected = selectedSize === option.count;
+            const Icon = index === 0 ? Sparkles : index === 1 ? Layers3 : BookOpenCheck;
+            const tones = [
+              'bg-[#F3F0FF] text-[#6452A8] border-[#E8E0FA]',
+              'bg-[#E8F5F8] text-[#27798C] border-[#D7EBF0]',
+              'bg-[#EBF5EB] text-[#39794D] border-[#D7E8D8]',
+            ];
             return (
               <button
                 key={option.count}
                 type="button"
+                aria-pressed={selected}
                 onClick={() => setSelectedSize(option.count)}
                 className={cn(
-                  'min-h-24 rounded-2xl border px-3 py-3 text-left transition',
-                  selected
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border bg-card hover:bg-muted/60 hover:border-slate-300'
+                  'group relative flex min-h-[142px] flex-col items-start rounded-[15px] border p-3 text-left transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100 sm:min-h-[156px] sm:p-4',
+                  index === 2 && sizeOptions.length === 3 && 'col-span-2 sm:col-span-1',
+                  tones[index % tones.length],
+                  selected && 'border-blue-500 ring-2 ring-blue-500/65 ring-offset-2'
                 )}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span
-                    className={cn(
-                      'text-xl font-bold',
-                      selected ? 'text-primary' : 'text-foreground'
-                    )}
-                  >
-                    {option.count}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[9.5px] font-bold tracking-[0.1em] uppercase',
-                      selected ? 'text-primary' : 'text-muted-foreground'
-                    )}
-                  >
-                    {option.label}
-                  </span>
+                <div className="flex w-full items-start justify-between gap-2">
+                  <Icon className="size-[17px] shrink-0 opacity-85" aria-hidden="true" />
+                  {selected ? <Check className="size-4 shrink-0 text-blue-600" aria-hidden="true" /> : null}
                 </div>
-                <p className="text-foreground mt-1 text-xs font-semibold">
-                  {option.count === 1 ? 'pregunta' : 'preguntas'}
-                </p>
-                <p className="text-muted-foreground mt-2 text-[12px] leading-5">
-                  {topicSectionIndex === undefined
-                    ? option.description
-                    : option.mode === 'complete'
-                      ? 'Respondé todas las preguntas disponibles de este tema.'
-                      : 'Respondé una selección de preguntas de este tema.'}
-                </p>
+                <div className="mt-auto pt-4">
+                  <p className="text-[14px] font-semibold leading-5 sm:text-[15px]">
+                    {option.label}
+                  </p>
+                  <p className="mt-0.5 text-[12px] font-medium opacity-90">
+                    {option.count} {option.count === 1 ? 'pregunta' : 'preguntas'}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-[1.4] opacity-80 sm:text-xs">
+                    {topicSectionIndex === undefined
+                      ? option.description
+                      : option.mode === 'complete'
+                        ? 'Respondé todas las preguntas disponibles de este tema.'
+                        : 'Respondé una selección de preguntas de este tema.'}
+                  </p>
+                </div>
               </button>
             );
           })}
