@@ -427,7 +427,7 @@ export function StudentMaterialFlashcards({
   if (scopedIndices.length === 0) {
     return (
       <div className="border-border bg-muted rounded-xl border px-4 py-5 text-center">
-        <p className="text-foreground font-semibold">No encontramos conceptos suficientes</p>
+        <p className="text-foreground font-medium">No encontramos conceptos suficientes</p>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-6">
           Regenerá el resumen y el glosario para intentar construir tarjetas útiles.
         </p>
@@ -441,7 +441,7 @@ export function StudentMaterialFlashcards({
         <div className="bg-primary mx-auto flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-none">
           <RotateCcw className="h-5 w-5" />
         </div>
-        <h3 className="text-foreground mt-2 text-[18px] font-bold tracking-[-0.04em]">
+        <h3 className="text-foreground mt-2 text-[18px] font-medium tracking-[-0.04em]">
           Listo para aprender con flashcards
         </h3>
         <p className="text-muted-foreground mx-auto mt-1.5 max-w-lg text-[13px] leading-5">
@@ -459,18 +459,18 @@ export function StudentMaterialFlashcards({
     return (
       <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-[640px] rounded-xl border px-4 py-4 text-center sm:px-6 sm:py-5">
         <div className="bg-emerald-50 mx-auto flex size-11 items-center justify-center rounded-xl text-emerald-600"><Check className="size-5" /></div>
-        {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-semibold">{topicTitle}</p> : null}
-        <h3 className="text-foreground mt-2 text-[20px] leading-[1.3] font-bold">¡Terminaste de repasar este tema!</h3>
+        {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-medium">{topicTitle}</p> : null}
+        <h3 className="text-foreground mt-2 text-[20px] leading-[1.3] font-semibold">¡Terminaste de repasar este tema!</h3>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
         <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
           <div className="rounded-xl border border-red-100 bg-red-50/60 px-2 py-3">
-            <p className="text-[20px] font-bold text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
+            <p className="text-[20px] font-medium text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
           </div>
           <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-2 py-3">
-            <p className="text-[20px] font-bold text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
+            <p className="text-[20px] font-medium text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3">
-            <p className="text-[20px] font-bold text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
+            <p className="text-[20px] font-medium text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
           </div>
         </div>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
@@ -496,10 +496,10 @@ export function StudentMaterialFlashcards({
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-none">
             <Check className="h-5 w-5" />
           </div>
-          <h3 className="text-foreground mt-2 text-[18px] font-bold tracking-[-0.04em]">
+          <h3 className="text-foreground mt-2 text-[18px] font-medium tracking-[-0.04em]">
             ¡Terminaste esta sesión!
           </h3>
-          <p className="text-foreground mt-2 text-sm font-semibold">
+          <p className="text-foreground mt-2 text-sm font-medium">
             {knownCount} lo sabías · {unknownCount} no lo sabías
           </p>
           {unknownCount > 0 ? (
@@ -514,13 +514,13 @@ export function StudentMaterialFlashcards({
           )}
           {unknownCount > 0 && reviewTopics.length > 0 ? (
             <div className="mx-auto mt-5 w-full max-w-xl border-t border-emerald-100 pt-5 text-left">
-              <h4 className="text-foreground text-sm font-semibold">Temas para repasar</h4>
+              <h4 className="text-foreground text-sm font-medium">Temas para repasar</h4>
               <p className="text-muted-foreground mt-1 text-xs leading-5">
                 Estos son los temas que te costaron en esta sesión.
               </p>
               <ul className="border-border mt-3 divide-y divide-slate-200 border-y">
                 {visibleReviewTopics.map((topic) => (
-                  <li key={topic} className="text-foreground py-2.5 text-sm font-semibold">
+                  <li key={topic} className="text-foreground py-2.5 text-sm font-medium">
                     {topic}
                   </li>
                 ))}
@@ -529,7 +529,7 @@ export function StudentMaterialFlashcards({
                 <button
                   type="button"
                   onClick={() => setShowAllReviewTopics((current) => !current)}
-                  className="text-primary hover:text-primary mt-2 text-xs font-semibold"
+                  className="text-primary hover:text-primary mt-2 text-xs font-medium"
                 >
                   {showAllReviewTopics
                     ? 'Ver menos'
@@ -621,17 +621,17 @@ export function StudentMaterialFlashcards({
       >
         <div className={cn('flex flex-wrap items-center justify-between', topicMode ? 'gap-1' : 'gap-3')}>
           <div>
-            <p className={cn('text-foreground text-xs font-semibold', !topicMode && 'hidden md:block')}>
+            <p className={cn('text-foreground text-xs font-medium', !topicMode && 'hidden md:block')}>
               Tarjeta {position + 1} de {order.length}
             </p>
             {topicMode ? (
-              <div className="mt-1 flex flex-wrap gap-1.5 text-xs font-semibold" aria-label="Estado de las tarjetas">
+              <div className="mt-1 flex flex-wrap gap-1.5 text-xs font-medium" aria-label="Estado de las tarjetas">
                 <span data-flashcards-bad className="rounded-full border border-red-200 px-2.5 py-0.5 text-red-600">{unknownCount} Mal</span>
                 <span data-flashcards-learning className="rounded-full border border-amber-200 px-2.5 py-0.5 text-amber-600">{learningCount} Aprendiendo</span>
                 <span data-flashcards-good className="rounded-full border border-emerald-200 px-2.5 py-0.5 text-emerald-600">{knownCount} Bien</span>
               </div>
             ) : !demoMode ? (
-              <p className="mt-0.5 flex gap-4 text-sm font-semibold">
+              <p className="mt-0.5 flex gap-4 text-sm font-medium">
                 <span className="text-emerald-700"><Check className="mr-1 inline size-4" />{knownCount} lo sabía</span>
                 <span className="text-destructive">{unknownCount} no lo sabía</span>
               </p>
@@ -708,7 +708,7 @@ export function StudentMaterialFlashcards({
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
                 ) : null}
-                <span className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">Respuesta</span>
+                <span className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">Respuesta</span>
                 <span className="text-foreground mt-2 max-h-[115px] w-full overflow-y-auto text-[13px] leading-5 sm:max-h-[140px] sm:text-sm">{currentCard.back}</span>
                 <span className="text-muted-foreground mt-2 text-[11px]">Hacé clic para volver a la pregunta</span>
               </span>
@@ -721,8 +721,8 @@ export function StudentMaterialFlashcards({
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
                 ) : null}
-                <span className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">Pregunta</span>
-                <span className="text-foreground mt-2 max-h-[105px] w-full overflow-y-auto text-[15px] leading-5 font-semibold tracking-tight sm:max-h-[125px] sm:text-[16px]">{displayFront}</span>
+                <span className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">Pregunta</span>
+                <span className="text-foreground mt-2 max-h-[105px] w-full overflow-y-auto text-[15px] leading-5 font-medium tracking-tight sm:max-h-[125px] sm:text-[16px]">{displayFront}</span>
                 <span className="text-muted-foreground mt-2 text-[11px]">Hacé clic para girar</span>
               </span>
             )}
