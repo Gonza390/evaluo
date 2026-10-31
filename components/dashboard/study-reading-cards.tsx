@@ -42,7 +42,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
             const percent = progress[material.id] ?? 0;
             return (
               <Link key={material.id} href={`/materiales/${material.id}?tab=resumen`}
-                className="flex min-h-[112px] min-w-0 flex-col items-center rounded-2xl border border-slate-200 bg-white px-2.5 pt-2.5 pb-2 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+                className="flex min-h-[112px] min-w-0 flex-col items-center rounded-2xl border border-slate-200/90 bg-white px-3 pt-3 pb-2.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)] transition hover:border-blue-200 hover:shadow-[0_6px_20px_rgba(15,23,42,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 aria-label={`Estudiar ${material.title}, ${percent}% de avance de lectura`}>
                 <FileText aria-hidden="true" className="mb-1.5 h-4 w-4 shrink-0 text-slate-500" />
                 <span className="line-clamp-2 min-h-[32px] w-full break-words text-center text-[11px] font-medium leading-4 text-slate-900 sm:text-xs">
@@ -66,7 +66,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
           Todavía no tenés PDFs listos para estudiar. Subí uno desde Mi espacio.
         </div>
       )}
-      <div className="mt-6 border-t border-slate-100 pt-4">
+      <div className="mt-5 border-t border-slate-100 pt-4">
         <h2 className="text-[15px] font-normal tracking-tight text-slate-900">Herramientas de estudio</h2>
         <p className="mt-1 text-xs text-slate-500">
           {activeMaterial ? `Continuá con ${activeMaterial.title}` : 'Subí un PDF desde Mi espacio para empezar.'}
@@ -74,7 +74,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
         <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-3 sm:gap-3 xl:grid xl:grid-cols-5 xl:overflow-visible">
           {tools.map((tool) => {
             const Icon = tool.icon;
-            const className = `flex min-h-[142px] xl:min-h-[118px] w-[min(74vw,240px)] min-w-[min(74vw,240px)] snap-start flex-col rounded-2xl border border-transparent p-3 text-left transition hover:border-blue-200 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
+            const className = `flex min-h-[142px] xl:min-h-[118px] w-[min(74vw,240px)] min-w-[min(74vw,240px)] snap-start flex-col rounded-2xl border border-transparent p-3.5 text-left transition hover:border-current/15 hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 sm:w-[174px] sm:min-w-[174px] xl:w-auto xl:min-w-0 ${tool.background} ${tool.color}`;
             const content = (
               <>
                 <Icon className="h-5 w-5" aria-hidden="true" />
