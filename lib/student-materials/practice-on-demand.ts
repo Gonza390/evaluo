@@ -2,6 +2,7 @@ import {
   buildSourceBackedCases, qualifiedQuestions, type PracticeQuestion,
 } from './practice-modes';
 import type { CanonicalPedagogicalModel } from './types';
+import { needsPedagogicalFeedback } from './practice-feedback-quality';
 
 /** Never included in the upload/processing pipeline. Only an explicit Practicar action uses it. */
 export const PRACTICE_BANK_VERSION = 2; // invalidates pre-editorial cached banks
@@ -75,4 +76,36 @@ export function sufficientPracticeBank(bank: PracticeBankPayload, mode: OnDemand
   if (mode === 'casos') return bank.cases.length >= 2;
   if (mode === 'mixto') return bank.questions.length >= 4 || matchingPairs >= 4;
   return bank.questions.filter(q => q.pageStart !== null).length >= 4;
+}
+
+/**
+ * QA diagnostics, not an automatic pedagogical certification.
+ * Recognition from a definition is NOT evidence of application.
+ * This report is deliberately separate from student grades and progress.
+ */
+export function assessPracticeBankQuality(
+  bank: PracticeBankPayload, mode: OnDemandPracticeMode,
+): {
+  questionCount: number;
+  contextualRecognitionCount: number;
+  applicationCount: number;
+  weakFeedbackCount: number;
+  uncitedQuestionCount: number;
+  depth: 'not_evaluated' | 'recognition_only' | 'includes_application';
+} {
+  const contextualRecognitionCount = bank.cases.filter(q => q.level === 'comprender').length;
+  const applicationCount = [...bank.questions, ...bank.cases]
+    .filter(q => q.level === 'aplicar').length;
+  return {
+    questionCount: bank.questions.length,
+    contextualRecognitionCount,
+    applicationCount,
+    weakFeedbackCount: bank.questions.filter(q => needsPedagogicalFeedback(q.explanation)).length,
+    uncitedQuestionCount: bank.questions.filter(q => q.pageStart === null).length,
+    // Unir/Completar are sourced from glossary, which this question bank does
+    // not load; reporting zero as quality would be misleading.
+    depth: mode === 'unir' || mode === 'completar'
+      ? 'not_evaluated'
+      : applicationCount ? 'includes_application' : 'recognition_only',
+  };
 }
