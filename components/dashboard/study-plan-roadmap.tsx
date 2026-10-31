@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getProgress, syncStudyPlanProgress, type TopicActivities } from '@/lib/study-plan-progress';
 
 export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: string; topicActivities: TopicActivities[] }) {
  const [done,setDone]=useState<Record<string,boolean>>({});
+ const scrollerRef=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   let active=true;
   const update=()=>{if(active)setDone(getProgress(materialId,topicActivities).record)};
@@ -16,15 +17,26 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
  if(!topicActivities.length)return null;
  const finished=topicActivities.map((t,i)=>Boolean(done[i+':reading'])&&(!t.questions||Boolean(done[i+':questions']))&&(!t.flashcards||Boolean(done[i+':flashcards']))&&(!t.glossary||Boolean(done[i+':glossary'])));
  const current=finished.indexOf(false);
+ const visibleCurrent=current<0?topicActivities.length-1:current;
+ useEffect(()=>{
+  const scroller=scrollerRef.current;
+  if(!scroller || !window.matchMedia('(max-width: 767px)').matches)return;
+  const previous=Math.max(0,visibleCurrent-1);
+  const previousItem=scroller.querySelector<HTMLElement>(`[data-roadmap-topic="${previous}"]`);
+  if(!previousItem)return;
+  // Keep the previous completed topic visible to make progress tangible.
+  const target=Math.max(0,previousItem.offsetLeft-12);
+  scroller.scrollTo({left:target,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+ },[materialId,visibleCurrent]);
  return <section aria-label="Tu recorrido de estudio" className="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-3 py-3 sm:px-4 sm:py-3.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
   <div className="mb-3 flex items-center justify-between gap-2">
    <h2 className="text-[14px] font-normal">Tu recorrido</h2>
    <span className="text-[11px] text-slate-500">{finished.filter(Boolean).length} de {finished.length} temas</span>
   </div>
-  <div className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><ol className="flex min-w-max items-start">
+  <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><ol className="flex min-w-max items-start">
    {topicActivities.map((t,i)=>{
     const complete=finished[i];const actual=i===current;const state=complete?'Completado':actual?'Actual':'Pendiente';
-    return <li key={i} className="relative w-[112px] shrink-0 text-center">
+    return <li key={i} data-roadmap-topic={i} className="relative w-[112px] shrink-0 text-center">
      {i>0?<span aria-hidden="true" className="absolute -left-1/2 top-[13px] h-px w-full bg-slate-200"/>:null}
      <Link href={'/materiales/'+materialId+'?tab=resumen&studyTopic='+i} aria-label={'Tema '+(i+1)+': '+(t.title||'Tema '+(i+1))+'. '+state} className="relative z-10 flex flex-col items-center gap-2 rounded-lg px-1 py-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
       <span className={'flex size-[27px] items-center justify-center rounded-full border-2 text-[11px] font-medium '+(complete?'border-[#35816A] bg-[#E9F5EE] text-[#35816A]':actual?'border-[#376CAD] bg-[#E8F2FF] text-[#376CAD]':'border-slate-200 bg-white text-slate-400')}>
