@@ -104,10 +104,16 @@ export function selectMixedQuestions(
   const available = qualifiedQuestions(cases).filter(q => !used.has(q.id) &&
     !base.some(original => normalizedAnswer(original.prompt) === normalizedAnswer(q.prompt)));
   const actualApplications = available.filter(q => q.level === 'aplicar');
+  // Prefer genuinely new cases over options already present elsewhere in the
+  // bank. This prevents a "mixed" task from merely recycling an MCQ.
+  const optionIds = new Set(options.map(q => q.id));
+  const novelApplications = actualApplications.filter(q => !optionIds.has(q.id));
+  const novelContexts = available.filter(q => !optionIds.has(q.id));
+  const pool = novelApplications.length ? novelApplications :
+    actualApplications.length ? actualApplications :
+    novelContexts.length ? novelContexts : available;
   // A classification lookup is understanding, not a transfer/application case.
-  const chosen = actualApplications.length
-    ? actualApplications[round % actualApplications.length]!
-    : available.length ? available[round % available.length]! : null;
+  const chosen = pool.length ? pool[round % pool.length]! : null;
   return { questions:base, application:chosen };
 }
 
