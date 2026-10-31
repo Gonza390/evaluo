@@ -33,6 +33,17 @@ const entry={
 };
 assert.equal(verifyGeneratedPracticeCases({cases:[entry]},sources,terms).length,1,
   'AI cases can apply a category previously absent from canonical concepts');
+const misleadingRiskSource=[{
+ pageStart:7,text:sources[0]!.text +
+ ' Penetracion de mercado: oferta actual en mercado actual (riesgo medio). Desarrollo de mercados: oferta actual en nuevo mercado (riesgo bajo).'
+}];
+assert.equal(verifyGeneratedPracticeCases({cases:[entry]},misleadingRiskSource,terms).length,1,
+  'Source conflict should not block verified product/market categorization.');
+assert.equal(verifyGeneratedPracticeCases({cases:[{
+ ...entry,prompt:'¿Cuál de las estrategias supone el riesgo más bajo en este caso?',
+ explanation:'El desarrollo de mercados sería el de riesgo más bajo según la anotación, porque se entra a una región nueva con el mismo producto.'
+}]},misleadingRiskSource,terms).length,0,
+  'Do not teach contradictory Ansoff relative risk as a reliable fact.');
 assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,page:6}]},sources,terms).length,0);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,evidence:'Cita falsa e inexistente de una región comercial'}]},sources,terms).length,0);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,options:[...entry.options.slice(0,3),'Etiqueta arbitraria']}]},sources,terms).length,0);
