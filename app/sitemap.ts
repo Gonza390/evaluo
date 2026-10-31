@@ -134,7 +134,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // production, where a failed fetch MUST still reject an incomplete sitemap.
   // Skip only preview data queries so CI / QA builds cannot be broken by
   // unrelated catalog permissions.
-  if (process.env.VERCEL_ENV === 'preview') return routes;
+  if (process.env.VERCEL_ENV === 'preview' ||
+      (process.env.CI === 'true' && !process.env.VERCEL_ENV)) return routes;
 
   const client = createPublicClient();
   const fetchAllQuestionFreshness = async () => {
