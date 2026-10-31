@@ -43,21 +43,23 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   // A missing bank table during rollout is safe: keep the original source-backed practice.
   // Never modify the source model or the existing study artifacts.
   let savedBank = null as ReturnType<typeof safePracticeBank>;
-  const practiceDb = admin as unknown as {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- optional additive practice table, not yet in generated Supabase types
-    from: (table: string) => any;
-  };
-  const { data: bankRow, error: bankError } = await practiceDb
-    .from('student_material_practice_banks')
-    .select('payload,source_fingerprint')
-    .eq('material_id', material.id)
-    .eq('user_id', user.id)
-    .eq('mode', mode)
-    .eq('version', PRACTICE_BANK_VERSION)
-    .maybeSingle();
-  if (!bankError && bankRow && 'source_fingerprint' in bankRow && 'payload' in bankRow &&
-      bankRow.source_fingerprint === sourceFingerprint(material.content_fingerprint, material.id, material.pedagogical_artifacts_version)) {
-    savedBank = safePracticeBank(bankRow.payload);
+  if (process.env.PRACTICE_BANK_ENABLED === '1') {
+    const practiceDb = admin as unknown as {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- optional additive practice table, not yet in generated Supabase types
+      from: (table: string) => any;
+    };
+    const { data: bankRow, error: bankError } = await practiceDb
+      .from('student_material_practice_banks')
+      .select('payload,source_fingerprint')
+      .eq('material_id', material.id)
+      .eq('user_id', user.id)
+      .eq('mode', mode)
+      .eq('version', PRACTICE_BANK_VERSION)
+      .maybeSingle();
+    if (!bankError && bankRow && 'source_fingerprint' in bankRow && 'payload' in bankRow &&
+        bankRow.source_fingerprint === sourceFingerprint(material.content_fingerprint, material.id, material.pedagogical_artifacts_version)) {
+      savedBank = safePracticeBank(bankRow.payload);
+    }
   }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
     materialId={material.id} materialTitle={material.title} cases={savedBank?.cases.length ? savedBank.cases : cases}
