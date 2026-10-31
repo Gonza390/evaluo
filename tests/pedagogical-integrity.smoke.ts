@@ -250,6 +250,25 @@ assert.equal(sanitized.flashcards.length, 0);
 assert.deepEqual(sanitized.miniExamQuestionIds, ['epistemology', 'science']);
 assert.equal(sanitized.integrity?.rejectedQuestions, 3);
 assert.equal(sanitized.integrity?.rejectedFlashcards, 1);
+const nearEquivalentBank = sanitizePedagogicalArtifacts({
+  ...artifacts,
+  questions:[{
+    ...safeConcept,id:'ipc-ambiguous',
+    prompt:'¿Cuál opción expresa la relación entre hipótesis y consecuencia observacional?',
+    answer:'La consecuencia observacional se deduce de la hipótesis fundamental junto con condiciones iniciales e hipótesis auxiliares.',
+    options:[
+      'La consecuencia observacional se deduce de la hipótesis fundamental junto con condiciones iniciales e hipótesis auxiliares.',
+      'La consecuencia observacional se deduce lógicamente de la hipótesis fundamental junto con hipótesis auxiliares y condiciones iniciales.',
+      'Un resultado empírico se explica sin ninguna hipótesis auxiliar ni condiciones iniciales.',
+    ],
+    explanation:'La inferencia conecta la hipótesis con las condiciones observacionales.',
+  }],
+  flashcards:[],miniExamQuestionIds:['ipc-ambiguous'],
+},sections);
+assert.equal(nearEquivalentBank.questions.length,0);
+assert.equal(nearEquivalentBank.miniExamQuestionIds.length,0);
+assert.ok(nearEquivalentBank.integrity?.rejectedReasons.includes('near_equivalent_mcq_distractors'));
+
 const sanitizedLevels = sanitizePedagogicalArtifacts({
   ...artifacts,
   questions: [{
