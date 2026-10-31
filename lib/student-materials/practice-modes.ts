@@ -108,7 +108,6 @@ export function selectMixedQuestions(
   const chosen = actualApplications.length
     ? actualApplications[round % actualApplications.length]!
     : available.length ? available[round % available.length]! : null;
-  if (chosen && base.length >= 5) base.pop(); // Keep task count bounded.
   return { questions:base, application:chosen };
 }
 
@@ -133,25 +132,33 @@ export function balancedQuestions(questions: PracticeQuestion[], limit = 10, rou
   if (!keys.length) return [];
   const selected: PracticeQuestion[] = [];
   const used = new Set<string>();
-  let row = 0;
-  while (selected.length < limit && row < eligible.length) {
+  const usedLevels = new Set<string>();
+  // First distribute across chapters; within each chapter, give priority to
+  // an as-yet-unrepresented cognitive level. This never upgrades a question's
+  // claimed depth and does not invent application exercises when absent.
+  const positions = new Map(keys.map(key => [key, 0]));
+  for (let cycle = 0; selected.length < limit && cycle < eligible.length; cycle++) {
     let added = false;
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[(i + round) % keys.length]!;
+    for (let k = 0; k < keys.length && selected.length < limit; k++) {
+      const key = keys[(k + round) % keys.length]!;
       const bucket = buckets.get(key)!;
-      const candidate = bucket[(row + round) % bucket.length];
-      if (candidate && !used.has(candidate.id)) {
-        used.add(candidate.id); selected.push(candidate); added = true;
-        if (selected.length >= limit) break;
-      }
+      const unused = bucket.filter(q => !used.has(q.id));
+      if (!unused.length) continue;
+      const offset = (positions.get(key)! + round) % unused.length;
+      const rotated = [...unused.slice(offset),...unused.slice(0,offset)];
+      const candidate = rotated.find(q => !usedLevels.has(q.level)) ?? rotated[0]!;
+      selected.push(candidate);
+      used.add(candidate.id);
+      usedLevels.add(candidate.level);
+      positions.set(key,positions.get(key)!+1);
+      added = true;
     }
-    if (!added && row >= eligible.length) break;
-    row++;
+    if (!added) break;
   }
-  // If some buckets are exhausted, complete with other distinct questions.
-  for (const item of eligible) {
+  // Remaining items: keep a bounded selection, do not repeat a question.
+  for (const q of eligible) {
     if (selected.length >= limit) break;
-    if (!used.has(item.id)) { selected.push(item); used.add(item.id); }
+    if (!used.has(q.id)) {selected.push(q); used.add(q.id);}
   }
   return selected;
 }
@@ -189,4 +196,26 @@ export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null):
     }
   }
   return qualifiedQuestions(result);
+}
+
+/** Explain a wrong alternative only when both meanings can be uniquely
+ * identified from source glossary definitions. Otherwise show the original
+ * verified explanation without inventing the student's misconception.
+ */
+export function groundedPracticeContrast(
+  selected: string, expected: string, pairs: readonly PracticePair[],
+): string | null {
+  if (!selected.trim() || !expected.trim() || normalizedAnswer(selected) === normalizedAnswer(expected)) return null;
+  const lookup = (value:string): PracticePair | null => {
+    const key = normalizedAnswer(value);
+    const matches = pairs.filter(p => normalizedAnswer(p.term) === key ||
+      normalizedAnswer(p.definition) === key ||
+      (p.englishTerm ? normalizedAnswer(p.englishTerm) === key : false));
+    return matches.length === 1 ? matches[0]! : null;
+  };
+  const wrong = lookup(selected), right = lookup(expected);
+  if (!wrong || !right || normalizedAnswer(wrong.term) === normalizedAnswer(right.term)) return null;
+  return 'La alternativa elegida corresponde a «' + wrong.term + '»: ' +
+    wrong.definition.trim() + ' En cambio, «' + right.term + '» se reconoce por: ' +
+    right.definition.trim();
 }
