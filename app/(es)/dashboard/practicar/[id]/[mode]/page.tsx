@@ -7,6 +7,9 @@ import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-ped
 import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import { PracticeSession } from '@/components/dashboard/practice-session';
 import { buildSourceBackedCases } from '@/lib/student-materials/practice-modes';
+import {
+  PRACTICE_BANK_VERSION, safePracticeBank, sourceFingerprint,
+} from '@/lib/student-materials/practice-on-demand';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 
 export default async function PracticeModePage({ params }: { params: Promise<{ id: string; mode: string }> }) {
@@ -17,7 +20,7 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=' + encodeURIComponent('/dashboard/practicar/' + id + '/' + mode));
   const { data: material } = await supabase.from('student_materials')
-    .select('id,title,file_path,processing_status')
+    .select('id,title,file_path,processing_status,content_fingerprint,pedagogical_artifacts_version')
     .eq('id', id).eq('user_id', user.id).maybeSingle();
   if (!material || material.processing_status !== 'ready') notFound();
 
@@ -37,10 +40,25 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
     ? await admin.from('student_materials').select('pedagogical_model').eq('id', material.id).maybeSingle()
     : { data: null };
   const cases = buildSourceBackedCases((modelRow?.pedagogical_model ?? null) as CanonicalPedagogicalModel | null);
+  // A missing bank table during rollout is safe: keep the original source-backed practice.
+  // Never modify the source model or the existing study artifacts.
+  let savedBank = null as ReturnType<typeof safePracticeBank>;
+  const { data: bankRow, error: bankError } = await admin
+    .from('student_material_practice_banks' as 'student_materials')
+    .select('payload,source_fingerprint')
+    .eq('material_id', material.id)
+    .eq('user_id', user.id)
+    .eq('mode', mode)
+    .eq('version', PRACTICE_BANK_VERSION)
+    .maybeSingle();
+  if (!bankError && bankRow && 'source_fingerprint' in bankRow && 'payload' in bankRow &&
+      bankRow.source_fingerprint === sourceFingerprint(material.content_fingerprint, material.id, material.pedagogical_artifacts_version)) {
+    savedBank = safePracticeBank(bankRow.payload);
+  }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
-    materialId={material.id} materialTitle={material.title} cases={cases}
+    materialId={material.id} materialTitle={material.title} cases={savedBank?.cases ?? cases}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null }))}
-    questions={artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
+    questions={savedBank?.questions ?? artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
       explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
       chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? undefined,
