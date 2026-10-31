@@ -289,9 +289,10 @@ export function QuickPdfUpload({
         return;
       }
 
+      const isPdf = studentMaterialFileKind(selectedFile.name) === 'pdf';
       const visualPreference = await updateStudentMaterialVisualAnalysisAction({
         materialId: result.materialId,
-        enabled: analyzeVisuals,
+        enabled: isPdf && analyzeVisuals,
       });
 
       if (!visualPreference.success) {
@@ -300,14 +301,14 @@ export function QuickPdfUpload({
         return;
       }
 
-      if (analyzeVisuals && visualQuota && !visualQuota.isPremium) {
+      if (isPdf && analyzeVisuals && visualQuota && !visualQuota.isPremium) {
         setVisualQuota({ isPremium: false, allowed: false, remaining: 0 });
       }
 
       setProcessingMaterialId(result.materialId);
       setProcessingProgress(10);
       setProcessingMessage(
-        analyzeVisuals
+        !isPdf ? 'Word subido. Estamos preparando tu espacio de estudio.' : analyzeVisuals
           ? 'PDF subido. Usaremos visión solo en las páginas que realmente lo necesiten.'
           : 'PDF subido. Estamos preparando tu espacio de estudio con extracción estándar.'
       );
@@ -361,7 +362,7 @@ export function QuickPdfUpload({
     <section className="rounded-2xl border border-slate-200 bg-white">
       <div className="px-5 pt-5 sm:px-6 sm:pt-6">
         <h1 className="text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-[1.7rem]">
-          Subí tu PDF
+          Subí tu PDF o Word
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
           Lo convertimos en resumen, glosario, flashcards y ejercicios para estudiar.
@@ -487,7 +488,7 @@ export function QuickPdfUpload({
           </div>
         )}
 
-        <label
+        {studentMaterialFileKind(selectedFile?.name ?? '') !== 'docx' ? <label
           className={`flex items-start gap-3 border-t border-slate-100 pt-4 text-sm ${
             visualUnavailable || visualQuotaLoading
               ? 'cursor-not-allowed text-slate-400'
@@ -523,7 +524,7 @@ export function QuickPdfUpload({
               </span>
             </span>
           </span>
-        </label>
+        </label> : null}
 
         <label className="flex cursor-pointer items-center gap-3 border-t border-slate-100 pt-4 text-sm text-slate-700">
           <input
@@ -548,7 +549,7 @@ export function QuickPdfUpload({
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          {uploading ? 'Subiendo PDF...' : 'Preparar PDF'}
+          {uploading ? 'Subiendo archivo...' : 'Preparar material'}
         </button>
       </div>
     </section>
