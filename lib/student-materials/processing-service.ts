@@ -320,7 +320,19 @@ export async function processStudentMaterial(input: {
       : 0;
 
   const extractionMs = Date.now() - extractionStartedAt;
-  const traceableChunks = buildTraceableSummaryChunks(pages, text);
+
+  const docxHeadings = isDocx ? (wordExtraction?.headings ?? sourceCheckpoint?.docxHeadings ?? []) : [];
+  // Las referencias DOCX apuntan a apartados, nunca a páginas que Word no fija.
+  const headingPositions = docxHeadings.map((name) => ({ name, offset: text.indexOf(name) }))
+    .filter((item) => item.offset >= 0).sort((a, b) => a.offset - b.offset);
+  let chunkCursor = 0;
+  const traceableChunks = buildTraceableSummaryChunks(pages, text).map((chunk) => {
+    if (!isDocx || headingPositions.length === 0) return chunk;
+    const start = text.indexOf(chunk.text.slice(0, 60), chunkCursor);
+    if (start >= 0) chunkCursor = start;
+    const heading = [...headingPositions].reverse().find((item) => item.offset <= chunkCursor);
+    return { ...chunk, sectionTitle: heading?.name ?? docxHeadings[0]! };
+  });
   const isVeryLargeNativePdf =
     typeof pageCount === 'number' &&
     pageCount >= LARGE_NATIVE_PDF_MIN_PAGES &&
@@ -434,7 +446,7 @@ export async function processStudentMaterial(input: {
       (!documentAnalysis.requiresOcr || visionUsed)) {
     await saveSourceStageCheckpoint(
       admin, material.id, contentFingerprint, canonicalPipelineVersion,
-      { text, pages, pageCount, documentAnalysis, visionUsed, visionPageNumbers }
+      { text, pages, pageCount, documentAnalysis, visionUsed, visionPageNumbers, docxHeadings }
     );
     logInfo('processStudentMaterial.sourceCheckpointSaved', {
       materialId: material.id,
