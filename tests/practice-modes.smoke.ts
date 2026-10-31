@@ -95,6 +95,20 @@ const ambiguous: PracticeQuestion = {
   explanation: 'Los dos distractores se parecen demasiado para evaluar con una única respuesta inequívoca.',
   level: 'recordar', pageStart: 2,
 };
+const oppositeChoices: PracticeQuestion={
+ id:'meaningfully-opposed',prompt:'¿Cómo influye estandarizar las tareas en la dependencia de personas?',
+ options:[
+  'La estandarización reduce la dependencia del trabajo respecto de las personas.',
+  'La estandarización aumenta la dependencia del trabajo respecto de las personas.',
+ ],
+ answer:'La estandarización reduce la dependencia del trabajo respecto de las personas.',
+ explanation:'Convertir tareas en procesos repetibles permite que el trabajo no dependa tanto de cada persona.',
+ level:'comprender',pageStart:10,chapterTitle:'Organización',
+};
+assert.equal(hasAmbiguousDistractors(oppositeChoices),false,
+ 'Antonyms distinguish meanings despite shared wording.');
+assert.equal(qualifiedQuestions([oppositeChoices]).length,1,
+ 'A valid correct-vs-opposite item should not be discarded.');
 assert.equal(hasAmbiguousDistractors(ambiguous), true);
 assert.equal(qualifiedQuestions([ambiguous]).length, 0);
 
