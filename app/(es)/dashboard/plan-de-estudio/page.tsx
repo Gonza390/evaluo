@@ -52,7 +52,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       <div className="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
-            <h1 className="mb-4 shrink-0 text-[20px] font-bold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
+            <h1 className="mb-4 shrink-0 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
             <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
 
 
@@ -73,16 +73,16 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
             <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-4">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
               <div className="relative">
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-700"><GraduationCap className="size-4" /> PRÓXIMO EXAMEN</div>
-                <h2 className="mt-2 max-w-[300px] text-[18px] sm:text-[19px] font-bold leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
+                <div className="flex items-center gap-2 text-xs font-medium text-blue-700"><GraduationCap className="size-4" /> PRÓXIMO EXAMEN</div>
+                <h2 className="mt-2 max-w-[300px] text-[18px] sm:text-[19px] font-medium leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
                 <p className="mt-2 max-w-[330px] text-[11px] leading-[18px] text-[#5473a2]">Registrá la fecha en tu calendario. Después podremos distribuir los temas y repasos hasta el examen.</p>
-                <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
+                <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-[12px] font-medium text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
               </div>
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-[14px] font-bold">Tu próximo paso</h2>
+                <h2 className="text-[14px] font-normal">Tu próximo paso</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
               {first ? <StudyPlanNextStep materialId={first.id} topicActivities={topicActivities} /> : (
