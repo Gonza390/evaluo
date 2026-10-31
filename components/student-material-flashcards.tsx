@@ -462,15 +462,16 @@ export function StudentMaterialFlashcards({
         {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-medium">{topicTitle}</p> : null}
         <h3 className="text-foreground mt-2 text-[20px] leading-[1.3] font-semibold">¡Terminaste de repasar este tema!</h3>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
+        <p className="text-muted-foreground mt-2 text-xs">Estos resultados reflejan lo que marcaste al estudiar las tarjetas, no una calificación de examen.</p>
         <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
           <div className="rounded-xl border border-red-100 bg-red-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
+            <p className="text-[20px] font-medium text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Para repasar</p>
           </div>
           <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-2 py-3">
             <p className="text-[20px] font-medium text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
+            <p className="text-[20px] font-medium text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Recordadas</p>
           </div>
         </div>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
