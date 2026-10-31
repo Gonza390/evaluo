@@ -48,7 +48,7 @@ export function buildPracticeBank(
   const row = raw && typeof raw === 'object' && !Array.isArray(raw)
     ? raw as Record<string, unknown> : {};
   const rawQuestions = Array.isArray(row.questions) ? row.questions : [];
-  const questions = qualifiedQuestions(rawQuestions.map((q: unknown) => {
+  const mapped: unknown[] = rawQuestions.map((q: unknown) => {
     const a = q && typeof q === 'object' && !Array.isArray(q) ? q as Record<string, unknown> : {};
     const ref = a.reference && typeof a.reference === 'object' && !Array.isArray(a.reference)
       ? a.reference as Record<string, unknown> : {};
@@ -57,7 +57,8 @@ export function buildPracticeBank(
       explanation: a.explanation, level: a.level, pageStart: ref.pageStart ?? null,
       chapterTitle: a.chapterTitle ?? null, kind: a.kind,
     };
-  }).filter(plainQuestion)).slice(0, 35);
+  });
+  const questions = qualifiedQuestions(mapped.filter(plainQuestion)).slice(0, 35);
   const cases = qualifiedQuestions([...enhancedCases, ...buildSourceBackedCases(model)]).slice(0, 14);
   return { version: PRACTICE_BANK_VERSION, questions, cases };
 }
