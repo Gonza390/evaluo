@@ -1,6 +1,7 @@
 import type { PedagogicalArtifacts, StudyFlashcard, StudyQuestion } from './pedagogy';
 import type { StudySummarySection } from './types';
 import { auditPracticeFlashcard } from './practice-card-quality';
+import { hasAmbiguousDistractors } from './practice-modes';
 
 /** Conservador: ante una respuesta modelo sin sustento verificable, no presentarla al alumno. */
 function norm(value: string) {
@@ -215,7 +216,11 @@ export function sanitizePedagogicalArtifacts(
 ): PedagogicalArtifacts {
   const rejectedReasons: string[] = [];
   const questions = artifacts.questions.filter(question => {
-    const reason = unsafeModelAnswerReason(question, sections);
+    // Legacy questions are used both by the PDF study workspace and Practicar.
+    // Never present a single-answer MCQ with two near-equivalent alternatives.
+    const reason = question.type === 'multiple_choice' &&
+      hasAmbiguousDistractors(question) ? 'near_equivalent_mcq_distractors' :
+      unsafeModelAnswerReason(question, sections);
     if (reason) rejectedReasons.push(reason);
     return !reason;
   }).map(question => isRecognitionPresentedAsHigherOrder(question)
