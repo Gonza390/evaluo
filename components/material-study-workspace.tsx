@@ -198,6 +198,8 @@ type MaterialStudyWorkspaceProps = {
   otherPdfOptions?: Array<{ id: string; title: string }>;
   shareAvailable?: boolean;
   viewerUrl: string;
+  docxSourceText?: string;
+  docxHasImages?: boolean;
   visibility: 'private' | 'shared';
   studyGlossary: StudyGlossaryItem[];
   studySummary: StudentMaterialSummary;
@@ -254,6 +256,8 @@ const STUDY_TABS: Array<{
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'mapa', label: 'Mapa mental', icon: MapIcon, premium: true },
 ];
+
+const DocxViewer = dynamic(() => import('@/components/DocxViewer').then((module) => module.DocxViewer), { ssr: false });
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
   ssr: false,
@@ -329,6 +333,8 @@ export function MaterialStudyWorkspace({
   otherPdfOptions = [],
   shareAvailable = false,
   viewerUrl,
+  docxSourceText = '',
+  docxHasImages = false,
   visibility: _visibility,
   studyGlossary,
   studySummary,
@@ -348,6 +354,7 @@ export function MaterialStudyWorkspace({
   children,
   demo,
 }: MaterialStudyWorkspaceProps) {
+  const isDocx = !demo && fileName.toLowerCase().endsWith('.docx');
   const { toast } = useToast();
   const router = useRouter();
   const guideRunIdRef = useRef<string | null>(null);
@@ -2569,7 +2576,10 @@ export function MaterialStudyWorkspace({
         </div>
         {(!demo || demo.progress) && !progressOpen && activeTab === 'resumen' && isViewerVisible ? (
           <div data-demo-focus="pdf" className="bg-card absolute inset-0 z-10 min-h-0 p-2">
-            <PdfViewer
+            {isDocx ? (
+  <DocxViewer title={title} text={docxSourceText} url={viewerUrl} hasImages={docxHasImages} className="h-full min-h-0" />
+) : (
+<PdfViewer
               url={viewerUrl}
               title={title}
               subtitle={null}
@@ -2582,6 +2592,7 @@ export function MaterialStudyWorkspace({
               persistView
               sourceMode="blob"
             />
+)}
           </div>
         ) : null}
       </div>
@@ -2946,7 +2957,10 @@ export function MaterialStudyWorkspace({
                         >
                           <ChevronRight className="h-4 w-4" />
                         </button>
-                        <PdfViewer
+                        {isDocx ? (
+  <DocxViewer title={title} text={docxSourceText} url={viewerUrl} hasImages={docxHasImages} className="h-full min-h-0" />
+) : (
+<PdfViewer
                           url={viewerUrl}
                           title={demo ? 'PDF de muestra' : title}
                           subtitle={null}
@@ -2959,6 +2973,7 @@ export function MaterialStudyWorkspace({
                           persistView={!demo}
                           sourceMode={demo ? 'url' : 'blob'}
                         />
+)}
                       </div>
                     </ResizablePanel>
                   ) : null}
@@ -3003,7 +3018,10 @@ export function MaterialStudyWorkspace({
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
-                <PdfViewer
+                {isDocx ? (
+  <DocxViewer title={title} text={docxSourceText} url={viewerUrl} hasImages={docxHasImages} className="h-full min-h-0" />
+) : (
+<PdfViewer
                   url={viewerUrl}
                   title={demo ? 'PDF de muestra' : title}
                   subtitle={null}
@@ -3020,6 +3038,7 @@ export function MaterialStudyWorkspace({
                   persistView={!demo}
                   sourceMode={demo ? 'url' : 'blob'}
                 />
+)}
               </div>
             ) : (
               <div className="bg-card/80 hidden rounded-2xl border border-dashed border-slate-300 px-4 py-3 shadow-none md:block">
