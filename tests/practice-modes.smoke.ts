@@ -4,6 +4,7 @@ import {
   qualifiedQuestions, selectPracticePairs, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
+import { verifyGeneratedPracticeCases } from '../lib/student-materials/practice-ai-cases.ts';
 
 const pairs = [
   { term: 'Hipótesis fundamental', definition: 'Enunciado general que dirige una investigación y se somete a prueba.', chapterTitle: null },
@@ -44,3 +45,19 @@ assert.equal(cases[0]?.pageStart, 7);
 assert.equal(cases[0]?.level, 'comprender', 'Source matching is not evidence of transfer.');
 assert.ok(cases.every(q => q.options.includes(q.answer)));
 console.log('Practice modes: pedagogical constraints and matching smoke passed');
+
+const evidence = 'La hipótesis fundamental es un enunciado general que debe ser sometido a prueba.';
+const source = [{ pageStart: 3, text: 'Aclaración: ' + evidence + ' Los contrastes requieren hipótesis auxiliares.' }];
+const generated = { cases: [{
+  scenario: 'Una investigadora presenta una afirmación general que necesita contrastar con datos empíricos obtenidos de un estudio concreto.',
+  prompt: '¿Qué tipo de hipótesis representa esta afirmación?',
+  options: ['Hipótesis fundamental', 'Hipótesis auxiliar', 'Consecuencia observacional', 'Ley'],
+  answer: 'Hipótesis fundamental',
+  explanation: 'El material establece que la hipótesis fundamental es un enunciado general sometido a prueba.',
+  evidence, page: 3,
+}] };
+const terms = generated.cases[0]!.options;
+assert.equal(verifyGeneratedPracticeCases(generated, source, terms).length, 1);
+assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],evidence:'Cita inventada que el documento nunca contiene.'}]},source,terms).length,0);
+assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],page:9}]},source,terms).length,0);
+console.log('AI case source-verification smoke passed');
