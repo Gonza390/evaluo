@@ -178,6 +178,9 @@ await check('topic reinforcement: saved explanation -> optional help -> independ
     await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
     await page.getByRole('button', { name: /Continuar estudiando|Comenzar a estudiar/ }).first().click();
+    // El primer tema no tiene errores pendientes en la fixture. Abrimos uno que sí los tiene.
+    await page.getByRole('button', { name: 'Volver a los temas' }).click();
+    await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
     await page.getByRole('button', { name: /Reforzar (?:las )?dificultades/i }).first().click();
     const review = page.locator('[data-topic-reinforcement]:visible').first();
     await review.waitFor(wait);
