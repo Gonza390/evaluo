@@ -61,7 +61,7 @@ export async function savePdfFirstDraft(file: File, source: string) {
   const record: StoredPdfFirstDraft = {
     id: DRAFT_KEY,
     name: file.name,
-    type: file.type || 'application/pdf',
+    type: file.type || (file.name.toLowerCase().endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf'),
     size: file.size,
     lastModified: file.lastModified,
     source,
