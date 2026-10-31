@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
   // Expensive generation stays opt-in until QA approves the cost/quality budget.
   // Source-backed cases remain usable even when this endpoint is disabled.
-  if (process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED !== '1') {
+  if (process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED !== '1' || process.env.PRACTICE_BANK_ENABLED !== '1') {
     return NextResponse.json({ error: 'generation_disabled' }, { status: 503 });
   }
 
