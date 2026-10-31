@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  balancedQuestions, isCorrectWrittenAnswer, qualifiedQuestions,
+  allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
+  isCorrectWrittenAnswer, qualifiedQuestions, selectMixedQuestions,
   selectPracticePairs, type PracticePair, type PracticeQuestion,
 } from '@/lib/student-materials/practice-modes';
 
@@ -57,10 +58,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       return rotate(contexts, round * 5).slice(0, 8).map(question => ({ type: 'question' as const, question }));
     if (mode === 'simulacro')
       return balancedQuestions(options, 10, round).map(question => ({ type: 'question' as const, question }));
-    const base = balancedQuestions(options, 5, round).map(question => ({ type: 'question' as const, question }));
-    const recalled = rotate(pairs, round * 3).slice(0, 3).map(pair => ({ type: 'recall' as const, pair }));
-    const applied = rotate(contexts, round).slice(0, 1).map(question => ({ type: 'question' as const, question }));
-    return [...base.slice(0, 3), ...recalled.slice(0, 2), ...applied, ...base.slice(3)];
+    const mixed = selectMixedQuestions(options, contexts, round);
+    const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
+    const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
+    const applied = mixed.application ? [{ type: 'question' as const, question:mixed.application }] : [];
+    return [...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)];
   }, [mode, pairs, options, contexts, round]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
@@ -71,7 +73,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     const item = tasks[index];
     if (!item) return false;
     return item.type === 'recall'
-      ? isCorrectWrittenAnswer(responses[index] ?? '', item.pair.term)
+      ? isCorrectWrittenAnswer(responses[index] ?? '', item.pair.term,
+        allowedWrittenVariants(item.pair,pairs))
       : responses[index] === item.question.answer;
   };
   const score = Array.from({ length: total }, (_, i) => correctAt(i)).filter(Boolean).length;
@@ -82,6 +85,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     const name = task.type === 'recall' ? task.pair.chapterTitle : task.question.chapterTitle;
     return name && name !== 'Situaciones de aplicación' ? [name] : [];
   }))].slice(0, 4);
+  const diagnosticFor = (index: number): string | null => {
+    const task = tasks[index];
+    if (!task || correctAt(index)) return null;
+    const response = responses[index] ?? '';
+    return task.type === 'recall'
+      ? groundedPracticeContrast(response, task.pair.term, pairs)
+      : groundedPracticeContrast(response, task.question.answer, pairs);
+  };
   const current = tasks[step];
   const checked = reviewed.includes(step);
 
@@ -193,6 +204,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             <p className="mt-1 text-slate-800">{prompt}</p>
             {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {responses[i] || 'Sin responder'}</p>}
             <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>
+            {diagnosticFor(i) && <p className="mt-1 text-slate-700">{diagnosticFor(i)}</p>}
             {task.type === 'question' && <>
               <p className="mt-1 text-slate-600">{task.question.explanation}</p>
               {task.question.pageStart && <Link className="mt-2 inline-block text-blue-600 underline"
@@ -315,7 +327,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           <p className={correctAt(step) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
             {correctAt(step) ? 'Bien resuelto' : 'Para reforzar'}
           </p>
+          {!correctAt(step) && responses[step]?.trim() &&
+            <p className="mt-1 text-slate-600">Elegiste: {responses[step]}</p>}
           <p className="mt-1 text-slate-700">Respuesta: {current.type === 'recall' ? current.pair.term : current.question.answer}</p>
+          {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
           {current.type === 'question' && <p className="mt-1 text-slate-600">{current.question.explanation}</p>}
         </div>}
         <div className="mt-5 flex flex-wrap items-center gap-2">
