@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {
  applyVerifiedFeedbackEdits, feedbackSourceFromArtifact, needsPedagogicalFeedback,
 } from '../lib/student-materials/practice-feedback-quality.ts';
-import {buildPracticeBank,PRACTICE_BANK_VERSION} from '../lib/student-materials/practice-on-demand.ts';
+import {assessPracticeBankQuality,buildPracticeBank,PRACTICE_BANK_VERSION} from '../lib/student-materials/practice-on-demand.ts';
 import type {PracticeQuestion} from '../lib/student-materials/practice-modes.ts';
 const excerpt='La estandarización busca reducir la dependencia del trabajo respecto a las personas para que los procesos sean repetibles y verificables.';
 const question:PracticeQuestion={
@@ -49,6 +49,17 @@ assert.equal(buildPracticeBank(bankRaw,null,[],'completar').questions.length,0);
 assert.equal(buildPracticeBank(bankRaw,null,[],'casos').questions.length,0);
 assert.equal(buildPracticeBank(bankRaw,null,[],'simulacro').questions.length,1);
 assert.equal(buildPracticeBank(bankRaw,null,[],'mixto').questions.length,1);
+const diagnosed=assessPracticeBankQuality(buildPracticeBank(bankRaw,null,[],'simulacro'),'simulacro');
+assert.equal(diagnosed.depth,'recognition_only','No application label without actual transfer questions');
+assert.equal(diagnosed.applicationCount,0);
+assert.equal(diagnosed.questionCount,1);
+assert.equal(diagnosed.uncitedQuestionCount,0);
+assert.equal(assessPracticeBankQuality(buildPracticeBank(bankRaw,null,[],'unir'),'unir').depth,
+  'not_evaluated','A bank without glossary must not pretend to certify matching.');
+assert.equal(assessPracticeBankQuality({
+ ...buildPracticeBank(bankRaw,null,[],'casos'),
+ cases:[{...question,id:'novel-case-1',level:'aplicar'}]
+},'casos').depth,'includes_application');
 const read=p=>readFileSync(new URL(p,new URL('../',import.meta.url)),'utf8');
 const route=read('app/api/practice/prepare/route.ts');
 const page=read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
