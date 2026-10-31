@@ -43,6 +43,6 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
     questions={artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
       explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
-      chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? null,
+      chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? undefined,
     }))} />;
 }
