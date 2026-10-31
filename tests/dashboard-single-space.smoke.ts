@@ -154,8 +154,10 @@ assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute/,
   'The topbar should not change its branding between dashboard and other routes.');
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
-assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
-  'Use two balanced bottom destinations for authenticated mobile users.');
+assert.match(appChromeSource, /grid-cols-4/,
+  'Keep four balanced mobile destinations for authenticated students and guests.');
+assert.match(appChromeSource, /label: 'Mi plan', href: '\/dashboard\/plan-de-estudio'/,
+  'Keep Mi plan available on the authenticated mobile navigation.');
 const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
 assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
   'Keep Mi espacio in the bottom navigation.');
