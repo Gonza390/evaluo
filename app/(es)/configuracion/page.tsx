@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, LogOut, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import { useUser } from '@/hooks/useUser';
@@ -28,6 +29,8 @@ export default function ConfiguracionPage() {
   const { user, loading, getUserName } = useUser();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingUniversidades, setLoadingUniversidades] = useState(false);
   const [loadingCarreras, setLoadingCarreras] = useState(false);
@@ -343,45 +346,109 @@ export default function ConfiguracionPage() {
 
   if (!user) return null;
 
+  const settingRow = (label: string, value: string) => (
+    <div className="flex min-h-12 items-center justify-between gap-4 border-b border-slate-100 py-3 text-[13px] last:border-b-0">
+      <span className="font-medium text-slate-800">{label}</span>
+      <span className="max-w-[55%] truncate text-right text-slate-500">{value || 'Sin especificar'}</span>
+    </div>
+  );
+
   return (
-    <div className="mx-auto w-full max-w-[1240px] space-y-3 px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+    <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header className="space-y-1">
-        <h1 className="text-foreground text-[20px] leading-[1.3] font-bold tracking-[-0.04em] sm:text-[22px]">
-          Configuración
-        </h1>
-        <p className="text-muted-foreground text-[13px] leading-5">
-          Actualizá tus datos personales y académicos.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-slate-950">Configuración</h1>
+        <p className="text-[13px] text-slate-500">Administrá tu cuenta y tus datos de estudio.</p>
       </header>
-      <ProfileSettingsForm
-        nombre={nombre}
-        pais={pais}
-        telefono={telefono}
-        anioCarrera={anioCarrera}
-        universidadId={universidadId}
-        carreraId={carreraId}
-        universidadSearch={universidadSearch}
-        carreraSearch={carreraSearch}
-        setNombre={setNombre}
-        setPais={setPais}
-        setTelefono={setTelefono}
-        setAnioCarrera={setAnioCarrera}
-        setUniversidadId={setUniversidadId}
-        setCarreraId={setCarreraId}
-        setUniversidadSearch={setUniversidadSearch}
-        setCarreraSearch={setCarreraSearch}
-        email={user.email ?? ''}
-        universidades={universidades}
-        carrerasFiltradas={carrerasFiltradas}
-        universidadSeleccionada={universidadSeleccionada}
-        loadingUniversidades={loadingUniversidades}
-        loadingCarreras={loadingCarreras}
-        hasLoadedUniversidades={hasLoadedUniversidades}
-        canSave={canSave}
-        saving={saving}
-        handleSave={handleSave}
-      />
-      <SubscriptionSettings />
+
+      <section aria-labelledby="settings-general" className="space-y-1">
+        <h2 id="settings-general" className="text-xs font-semibold text-slate-500">General</h2>
+        {settingRow('Idioma', 'Español')}
+        {settingRow('Apariencia', 'Claro')}
+        <p className="pt-1 text-[11px] text-slate-400">Estas preferencias todavía no se pueden modificar.</p>
+      </section>
+
+      <section aria-labelledby="settings-account" className="space-y-1">
+        <h2 id="settings-account" className="text-xs font-semibold text-slate-500">Cuenta</h2>
+        {settingRow('Correo electrónico', user.email ?? '')}
+        <details className="group border-b border-slate-100">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-medium text-slate-800 [&::-webkit-details-marker]:hidden">
+            Mi plan y suscripción <ChevronDown className="size-4 text-slate-400 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="pb-4"><SubscriptionSettings /></div>
+        </details>
+      </section>
+
+      <section aria-labelledby="settings-personal" className="space-y-1">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="settings-personal" className="text-xs font-semibold text-slate-500">Información personal</h2>
+          <button type="button" onClick={() => setEditingProfile((value) => !value)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600">
+            <Pencil className="size-3.5" /> {editingProfile ? 'Cerrar edición' : 'Editar datos'}
+          </button>
+        </div>
+        {settingRow('Nombre', nombre)}
+        {settingRow('País', pais)}
+        {settingRow('Teléfono', telefono)}
+      </section>
+
+      <section aria-labelledby="settings-academic" className="space-y-1">
+        <h2 id="settings-academic" className="text-xs font-semibold text-slate-500">Información académica</h2>
+        {settingRow('Universidad', universidadSearch)}
+        {settingRow('Carrera', carreraSearch)}
+        {settingRow('Año de cursado', anioCarrera ? anioCarrera + '° año' : '')}
+      </section>
+
+      {editingProfile ? (
+        <section className="space-y-2" aria-label="Editar información personal y académica">
+          <p className="text-xs text-slate-500">Modificá los campos necesarios y guardá los cambios.</p>
+          <ProfileSettingsForm
+            nombre={nombre}
+            pais={pais}
+            telefono={telefono}
+            anioCarrera={anioCarrera}
+            universidadId={universidadId}
+            carreraId={carreraId}
+            universidadSearch={universidadSearch}
+            carreraSearch={carreraSearch}
+            setNombre={setNombre}
+            setPais={setPais}
+            setTelefono={setTelefono}
+            setAnioCarrera={setAnioCarrera}
+            setUniversidadId={setUniversidadId}
+            setCarreraId={setCarreraId}
+            setUniversidadSearch={setUniversidadSearch}
+            setCarreraSearch={setCarreraSearch}
+            email={user.email ?? ''}
+            universidades={universidades}
+            carrerasFiltradas={carrerasFiltradas}
+            universidadSeleccionada={universidadSeleccionada}
+            loadingUniversidades={loadingUniversidades}
+            loadingCarreras={loadingCarreras}
+            hasLoadedUniversidades={hasLoadedUniversidades}
+            canSave={canSave}
+            saving={saving}
+            handleSave={handleSave}
+          />
+        </section>
+      ) : null}
+
+      <section aria-labelledby="settings-session" className="space-y-1">
+        <h2 id="settings-session" className="text-xs font-semibold text-slate-500">Sesión y privacidad</h2>
+        <button type="button" disabled={signingOut} onClick={async () => {
+          setSigningOut(true);
+          try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            window.location.assign('/login');
+          } catch (error) {
+            logError('configuracion.signOut', error);
+            toast({ title: 'No pudimos cerrar tu sesión', variant: 'destructive' });
+            setSigningOut(false);
+          }
+        }} className="flex min-h-12 w-full items-center gap-2 border-b border-slate-100 py-3 text-left text-[13px] font-medium text-slate-700 hover:text-blue-600 disabled:opacity-50">
+          <LogOut className="size-4 text-slate-400" />
+          {signingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
+        </button>
+      </section>
     </div>
   );
 }
