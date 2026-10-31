@@ -72,14 +72,14 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
           <div className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
             <section className="relative min-h-[210px] overflow-hidden rounded-[18px] bg-[#eaf1ff] px-4 py-6 text-[#143c85] sm:min-h-[218px] sm:px-5 sm:py-7">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
-              <div className="relative flex min-h-[162px] items-center gap-4">
+              <div className="relative flex min-h-[162px] items-center gap-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-xs font-medium text-blue-700"><Sparkles className="size-4" /> Prepará tu examen</div>
                   <h2 className="mt-2 text-[18px] font-medium leading-[1.15] tracking-[-0.04em] sm:text-[19px]">Tu estudio, organizado hasta el examen.</h2>
-                  <p className="mt-2 text-[11px] leading-[18px] text-[#5473a2]">Elegí la fecha para organizar tus temas y prácticas.</p>
-                  <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-[12px] font-medium text-white transition hover:bg-blue-700">Armar mi plan <ArrowRight className="size-4" /></Link>
+                  <p className="mt-2 text-[12px] leading-[18px] text-[#5473a2]">Elegí la fecha para organizar tus temas y prácticas.</p>
+                  <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-[12px] font-medium text-white transition hover:bg-blue-700">Armar mi plan <ArrowRight className="size-4" /></Link>
                 </div>
-                <div aria-hidden="true" className="relative hidden h-[116px] w-[94px] shrink-0 items-center justify-center min-[420px]:flex sm:h-[132px] sm:w-[106px]">
+                <div aria-hidden="true" className="relative hidden h-[116px] w-[90px] shrink-0 items-center justify-center min-[420px]:flex sm:h-[132px] sm:w-[100px]">
                   <div className="absolute inset-2 rotate-6 rounded-xl bg-[#c9dcff]/55" />
                   <div className="relative flex h-[110px] w-[82px] -rotate-3 flex-col rounded-[10px] border border-[#bad0f3] bg-white/95 px-3 pt-4 shadow-[0_8px_22px_rgba(33,79,151,0.12)] sm:h-[124px] sm:w-[92px]">
                     <div className="mb-3 h-1.5 w-10 rounded-full bg-[#4f5dff]/65" />
