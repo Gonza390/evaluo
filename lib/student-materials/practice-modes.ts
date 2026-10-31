@@ -16,7 +16,10 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
     const t = normalizedAnswer(item.term), d = normalizedAnswer(item.definition);
     return t.length >= 4 && t.length <= 65 && d.length >= 30 && d.length <= 330 &&
       t !== d && !/^(?:concepto|definicion|introduccion|conclusion|idea principal)$/.test(t) &&
-      !d.startsWith('clasificacion que incluye') && !d.startsWith('proceso cuyos pasos');
+      !item.term.includes('↔') && // A compound relation isn't a fair one-term cloze answer.
+      !d.startsWith('clasificacion que incluye') && !d.startsWith('proceso cuyos pasos') &&
+      !/^(?:carrera a la que pertenece|institucion universitaria que imparte|materia correspondiente|documento original|material compartido|universidad de origen)/.test(d) &&
+      !(t.length > 11 && d.includes(t)); // Never show the answer in its own definition.
   });
   const termCounts = new Map<string, number>(), defCounts = new Map<string, number>();
   for (const item of valid) {
