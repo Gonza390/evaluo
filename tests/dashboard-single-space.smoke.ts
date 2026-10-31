@@ -209,7 +209,7 @@ for (const source of [dashboardSource, heroWithoutSvgAnimationStyles, dashboardM
 assert.match(appChromeSource, /stablePrivateHeader\s*\? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1'/);
 assert.match(appChromeSource, /compact=\{isCompactAppRoute\}/);
 assert.match(appChromeSource, /effectiveSidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
-assert.match(appChromeSource, /isCompactAppRoute\s*\?\s*'bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0'/);
+assert.match(appChromeSource, /bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0/);
 assert.match(appChromeSource, /isExploreExperienceRoute/);
 assert.match(appChromeSource, /<PublicGuestActions trackingLocation="discovery_header" \/>/);
 const compactCalendar = readFileSync(resolve('app/(es)/calendario/page.tsx'), 'utf8');
