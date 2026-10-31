@@ -45,7 +45,7 @@ assert.equal(src?.sectionTitle,'Unidad 3: Organización');
 const question=buildPracticeBank({questions:[raw]},null,[],'simulacro').questions;
 assert.equal(question.length,1);
 assert.equal(question[0]?.chapterTitle,'Unidad 3: Organización');
-assert.equal(assessPracticeBankQuality({questions:question,cases:[],version:3},'simulacro').uncitedQuestionCount,0);
+assert.equal(assessPracticeBankQuality({questions:question,cases:[],version:4},'simulacro').uncitedQuestionCount,0);
 const explanation='La estandarización permite reducir la dependencia de personas individuales porque el equipo puede repetir y comprobar los procesos; duplicar procedimientos y errores no sería una mejora organizacional.';
 const improved=applyVerifiedFeedbackEdits(question,{feedback:[{
   sourceId:'word-q1',explanation,evidence:excerpt.slice(0,100),
@@ -64,7 +64,7 @@ const many=Array.from({length:6},(_,i)=>({
 assert.equal(qualifiedQuestions(many).length,6);
 assert.equal(balancedQuestions(many,4).length,4);
 assert.ok(new Set(balancedQuestions(many,4).map(q=>q.chapterTitle)).size>=2);
-assert.equal(sufficientPracticeBank({version:3,questions:many,cases:[]},'simulacro'),true);
+assert.equal(sufficientPracticeBank({version:4,questions:many,cases:[]},'simulacro'),true);
 const file=(p:string)=>readFileSync(new URL(p,new URL('../',import.meta.url)),'utf8');
 const route=file('app/api/practice/prepare/route.ts');
 const direct=file('app/api/practice/cases/route.ts');
