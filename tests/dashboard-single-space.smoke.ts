@@ -224,8 +224,8 @@ const compactHeader = readFileSync(resolve('components/ui/app-page-header.tsx'),
 for (const page of [compactCalendar, compactProgressList, compactHistory, compactReferrals]) {
   assert.match(page, /text-\[20px\]|size="compact"/);
 }
-assert.match(compactSettings, /text-xl font-semibold tracking-tight/,
-  'Settings currently uses a compact, regular-weight page heading.');
+assert.match(compactSettings, /text-\[20px\] font-semibold tracking-\[-0\.035em\]/,
+  'Settings must follow the shared compact study typography.');
 assert.match(compactCalendar, /max-w-\[1240px\]/);
 assert.match(compactSettings, /max-w-\[760px\]/,
   'Settings uses the focused narrow layout currently on main.');
