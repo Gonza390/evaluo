@@ -72,7 +72,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
             </section>
           </div>
 
-          <div className="min-w-0 space-y-4">
+          <div className="min-w-0 space-y-4 xl:sticky xl:top-[72px] xl:self-start">
             <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-6">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
               <div className="relative">
