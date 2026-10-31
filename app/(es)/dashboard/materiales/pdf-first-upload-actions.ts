@@ -13,6 +13,7 @@ import {
   StudentMaterialPdfPageLimitError,
 } from '@/lib/student-materials/pdf-validation';
 import { stripStudocuCoverPage } from '@/lib/student-materials/studocu-cover';
+import { validateDocxStudentMaterial } from '@/lib/student-materials/docx-validation';
 import {
   CLIENT_VISION_MAX_PAGES,
   buildClientVisionPagePath,
@@ -23,6 +24,8 @@ import {
   getValidationMessage,
   isOwnedStudentMaterialStoragePath,
   isPdfFileSignature,
+  studentMaterialFileKind,
+  validateStudentMaterialMime,
   studentMaterialUploadFileMetadataSchema,
   type StudentMaterialUploadFileMetadata,
 } from '@/lib/student-materials/validation';
@@ -426,9 +429,15 @@ export async function finalizePdfFirstUploadAction(
     if (fileBytes.byteLength !== parsed.file.size) {
       throw new Error('El tamaño del PDF subido no coincide con el archivo seleccionado.');
     }
-    if (!isPdfFileSignature(fileBytes)) throw new Error('El archivo no contiene un PDF válido.');
+    const isDocx = studentMaterialFileKind(parsed.file.name) === 'docx';
+    validateStudentMaterialMime(parsed.file.name, parsed.file.mimeType);
+    if (isDocx) {
+      await validateDocxStudentMaterial(fileBytes, user.id);
+    } else if (!isPdfFileSignature(fileBytes)) {
+      throw new Error('El archivo no contiene un PDF válido.');
+    }
 
-    const normalizedPdf = await stripStudocuCoverPage(fileBytes);
+    const normalizedPdf = isDocx ? { bytes: fileBytes, removed: false } : await stripStudocuCoverPage(fileBytes);
     const storedFileBytes = normalizedPdf.bytes;
 
     if (normalizedPdf.removed) {
@@ -445,7 +454,7 @@ export async function finalizePdfFirstUploadAction(
       await removeOwnedClientVisionCache(input.filePath, user.id);
     }
 
-    const pageCount = await assertStudentMaterialPdfPageLimit(storedFileBytes);
+    const pageCount = isDocx ? null : await assertStudentMaterialPdfPageLimit(storedFileBytes);
 
     const { data: insertedMaterial, error: insertError } = await admin
       .from('student_materials')
@@ -458,14 +467,16 @@ export async function finalizePdfFirstUploadAction(
         description: 'Material privado subido por el estudiante.',
         file_name: parsed.file.name,
         file_path: input.filePath,
-        mime_type: parsed.file.mimeType || 'application/pdf',
+        mime_type: isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf',
         file_size_bytes: storedFileBytes.byteLength,
         page_count: pageCount,
         visibility: 'private',
         processing_status: 'uploaded',
         processing_stage: 'uploaded',
         processing_progress: 10,
-        processing_message: normalizedPdf.removed
+        processing_message: isDocx
+          ? 'Word subido. Estamos preparando el contenido de estudio.'
+          : normalizedPdf.removed
           ? 'PDF subido. Quitamos la portada de Studocu y empezamos a analizar el contenido.'
           : 'PDF subido. Estamos analizando su estructura para preparar tu espacio de estudio.',
         processing_error: null,
