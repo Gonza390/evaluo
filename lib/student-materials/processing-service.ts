@@ -173,7 +173,7 @@ export async function processStudentMaterial(input: {
     await isStudentMaterialVisualAnalysisEnabled(material.id);
   const canonicalPipelineVersion = buildCanonicalSourcePipelineVersion({
     visualAnalysisEnabled: isDocx ? false : visualAnalysisEnabled,
-  }) + (isDocx ? ':docx-extract-v1' : '');
+  }) + (isDocx ? ':docx-extract-v2' : '');
 
   // El archivo de un material es inmutable después de finalizar la carga.
   // Por eso, si ya existe una etapa de fuente válida para esta versión del
