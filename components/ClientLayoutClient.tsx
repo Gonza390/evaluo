@@ -16,6 +16,8 @@ import {
   LogOut,
   Settings,
   Search,
+  ListChecks,
+  ClipboardList,
 } from 'lucide-react';
 import { UserProvider, useUser } from '@/hooks/useUser';
 import { supabase } from '@/lib/supabase-client';
@@ -141,6 +143,8 @@ function BottomNav() {
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
         { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
+        { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks },
+        { label: 'Mi plan', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
       ]
     : [
         { label: 'Inicio', href: '/', icon: Home },
@@ -159,7 +163,7 @@ function BottomNav() {
       data-tour-nav-mobile="true"
       className="border-border bg-background/95 pb-safe fixed right-0 bottom-0 left-0 z-50 border-t backdrop-blur md:hidden"
     >
-      <div className={`grid items-stretch gap-1 px-2 transition-[padding] duration-200 motion-reduce:transition-none ${compactNav && user ? 'py-0.5' : 'py-1.5'} ${user ? 'grid-cols-2' : 'grid-cols-4'}`}>
+      <div className={`grid items-stretch gap-1 px-2 transition-[padding] duration-200 motion-reduce:transition-none ${compactNav && user ? 'py-0.5' : 'py-1.5'} grid-cols-4`}>
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pendingHref !== null
