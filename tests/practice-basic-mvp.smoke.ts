@@ -50,8 +50,13 @@ const classification = {
 const cases=buildSourceBackedCases(classification);
 assert.ok(cases.length >= 2,'Casos has real classified-source fallback, no Gemini necessary');
 assert.ok(cases.every(c=>c.options.includes(c.answer)));
-assert.ok(cases.every(c=>c.level==='comprender'),
- 'Classification examples must not misrepresent recognition as application');
+assert.ok(cases.every(c=>c.level==='aplicar'),
+ 'A complete sourced Ansoff matrix supports genuine hypothetical decisions');
+assert.ok(cases.every(c=>c.kind==='source-application'));
+assert.ok(cases.every(c=>!c.prompt.toLowerCase().includes(c.answer.toLowerCase())),
+  'An application scenario must not reveal the label');
+assert.ok(cases.every(c=>!/riesgo (?:medio|bajo|alto)/i.test(c.prompt+' '+c.explanation)),
+  'Do not reproduce disputed ranking of Ansoff risks');
 const mixed=selectMixedQuestions(verified,cases);
 assert.ok(mixed.questions.length>=4,'Mixto can run on source questions');
 assert.ok(!mixed.application || !mixed.questions.some(q=>q.id===mixed.application?.id));
