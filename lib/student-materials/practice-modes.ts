@@ -120,9 +120,9 @@ function meaningfulOptionWords(value: string): Set<string> {
  */
 function explicitOpposite(answer: string, alternative: string): boolean {
   const opposite: [RegExp,RegExp][]=[
-    [/\\b(?:reduc\\w*|disminu\\w*)\\b/,/\\b(?:aument\\w*|increment\\w*)\\b/],
-    [/\\b(?:menor(?:es)?|menos)\\b/,/\\b(?:mayor(?:es)?|mas)\\b/],
-    [/\\bantes\\b/,/\\bdespues\\b/],
+    [/\b(?:reduc\w*|disminu\w*)\b/,/\b(?:aument\w*|increment\w*)\b/],
+    [/\b(?:menor(?:es)?|menos)\b/,/\b(?:mayor(?:es)?|mas)\b/],
+    [/\bantes\b/,/\bdespues\b/],
   ];
   return opposite.some(([a,b])=>(a.test(answer)&&b.test(alternative)) ||
     (b.test(answer)&&a.test(alternative)));
