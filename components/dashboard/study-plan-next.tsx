@@ -20,7 +20,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
  };
  let firstPending=0;
  while(firstPending<topicCount && isFinished(firstPending)) firstPending++;
- if(firstPending===topicCount) return <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[13px] font-semibold text-emerald-800"><CheckCircle2 className="size-5" /> ¡Completaste las actividades del PDF!</div>;
+ if(firstPending===topicCount) return <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[13px] font-medium text-emerald-800"><CheckCircle2 className="size-5" /> ¡Completaste las actividades del PDF!</div>;
  const first=topicActivities[firstPending];
  // Empezar el siguiente tema es opcional cuando la lectura y las preguntas del actual ya están hechas.
  const canStartNext=!!done[`${firstPending}:reading`] && (!first.questions || !!done[`${firstPending}:questions`]) && firstPending+1<topicCount;
@@ -39,7 +39,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
       return <div key={topic}>
-    <div className={`flex items-center justify-between px-3 py-1.5 text-[11px] font-semibold text-slate-500 ${groupIndex?'border-t border-slate-200 bg-slate-50/70':'border-b border-slate-100'}`}>
+    <div className={`flex items-center justify-between px-3 py-1.5 text-[11px] font-normal text-slate-500 ${groupIndex?'border-t border-slate-200 bg-slate-50/70':'border-b border-slate-100'}`}>
      <span>Tema {topic+1} de {topicCount}</span>{groupIndex>0?<span>Podés ir adelantando</span>:null}
     </div>
     {steps.filter(step=>!done[`${topic}:${step.id}`]).map((step,i)=>{
@@ -49,7 +49,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
      return <Link key={step.id} href={step.href} className={`flex items-center gap-3 border-t border-slate-100 px-3 py-2.5 transition first:border-t-0 hover:bg-slate-50 ${active?'bg-blue-50/70':''}`}>
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${completed?'bg-emerald-50 text-emerald-700':stepTone}`}><Icon className="size-4"/></span>
       <span className="min-w-0 flex-1">
-       <span className="block text-[12px] font-semibold">{step.label}</span>
+       <span className="block text-[12px] font-medium">{step.label}</span>
        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
         <span>{step.detail}</span>
         {!completed?<span>≈ {step.minutes} min</span>:null}
