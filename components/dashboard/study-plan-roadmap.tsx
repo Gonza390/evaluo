@@ -16,7 +16,7 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
  if(!topicActivities.length)return null;
  const finished=topicActivities.map((t,i)=>Boolean(done[i+':reading'])&&(!t.questions||Boolean(done[i+':questions']))&&(!t.flashcards||Boolean(done[i+':flashcards']))&&(!t.glossary||Boolean(done[i+':glossary'])));
  const current=finished.indexOf(false);
- return <section aria-label="Tu recorrido de estudio" className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3.5 md:block">
+ return <section aria-label="Tu recorrido de estudio" className="hidden rounded-2xl border border-slate-200/90 bg-white px-4 py-3.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)] md:block">
   <div className="mb-3 flex items-center justify-between gap-2">
    <h2 className="text-[14px] font-normal">Tu recorrido</h2>
    <span className="text-[11px] text-slate-500">{finished.filter(Boolean).length} de {finished.length} temas</span>
