@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import { deflateRawSync } from 'node:zlib';
+import { buildStudyDocumentModel, buildTraceableSummaryChunks, summarizeExtractedText } from '../lib/student-materials/text.ts';
+import { buildStudentMaterialGlossary } from '../lib/student-materials/glossary.ts';
+import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
 import {
   extractDocxContent, isDocxFileName, isDocxFileSignature,
 } from '../lib/student-materials/docx-extract.ts';
@@ -83,4 +86,26 @@ assert.throws(() => extractDocxContent(zip({
   '[Content_Types].xml': '<Types>wordprocessingml.document.macroEnabled.main+xml</Types>',
   'word/document.xml': body,
 })), /DOCX válido|macros/);
+
+const summary = summarizeExtractedText(result.text, 'Marketing estratégico');
+const documentModel = buildStudyDocumentModel(result.text, 'Marketing estratégico');
+assert.ok(summary.sections.length >= 1, 'La extracción DOCX debe alimentar el resumen académico.');
+assert.ok(documentModel.chunkCount >= 1, 'El contenido Word debe alimentar la división en bloques.');
+const readySummary = { ...summary, status: 'ready' as const, provider: 'test', errorMessage: null, sourceChunksCount: documentModel.chunkCount };
+const glossary = buildStudentMaterialGlossary(result.text, readySummary);
+const chunks = buildTraceableSummaryChunks(null, result.text);
+assert.ok(chunks.length > 0, 'La fuente Word debe producir chunks de texto sin paginación física.');
+assert.ok(chunks.every((chunk) => chunk.pageStart === null && chunk.pageEnd === null),
+  'La extracción de Word no debe inventar números de página.');
+const artifacts = buildPedagogicalArtifacts({
+  summary: readySummary,
+  glossary,
+  pageCount: null,
+  chunks: chunks.map((chunk) => ({ ...chunk, sectionTitle: result.headings[0] ?? null, excerpt: '' })),
+});
+assert.ok(artifacts.flashcards.length + artifacts.questions.length > 0,
+  'La misma plataforma pedagógica debe producir recursos estudiables a partir de DOCX.');
+assert.ok([...artifacts.flashcards, ...artifacts.questions].every((item) =>
+  item.reference.pageStart === null && item.reference.pageEnd === null
+), 'Las preguntas y tarjetas no deben citar páginas inexistentes en DOCX.');
 console.log('DOCX extraction and format validation smoke tests passed.');
