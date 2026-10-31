@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, CalendarDays, GraduationCap } from 'lucide-react';
+import { ArrowRight, GraduationCap } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
@@ -54,9 +54,6 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
           <div>
             <h1 className="text-[20px] font-bold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
           </div>
-          <Link href="/calendario" className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] sm:px-3 sm:text-[12px] font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50">
-            <CalendarDays className="size-4" /> Ver calendario
-          </Link>
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
