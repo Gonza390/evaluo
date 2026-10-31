@@ -25,13 +25,13 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
    {topicActivities.map((t,i)=>{
     const complete=finished[i];const actual=i===current;const state=complete?'Completado':actual?'Actual':'Pendiente';
     return <li key={i} className="relative w-[112px] shrink-0 text-center">
-     {i>0?<span aria-hidden="true" className={'absolute -left-1/2 top-[13px] h-[2px] w-full '+(complete?'bg-blue-500':'bg-slate-200')}/>:null}
-     <Link href={'/materiales/'+materialId+'?tab=resumen&studyTopic='+i} aria-label={'Tema '+(i+1)+': '+(t.title||'Tema '+(i+1))+'. '+state} className="relative z-10 flex flex-col items-center gap-1.5 rounded-lg px-1 py-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-      <span className={'flex size-[27px] items-center justify-center rounded-full border-2 text-[11px] font-bold '+(complete?'border-blue-600 bg-blue-600 text-white':actual?'border-blue-600 bg-white text-blue-700':'border-slate-200 bg-slate-50 text-slate-400')}>
+     {i>0?<span aria-hidden="true" className="absolute -left-1/2 top-[13px] h-px w-full bg-slate-200"/>:null}
+     <Link href={'/materiales/'+materialId+'?tab=resumen&studyTopic='+i} aria-label={'Tema '+(i+1)+': '+(t.title||'Tema '+(i+1))+'. '+state} className="relative z-10 flex flex-col items-center gap-2 rounded-lg px-1 py-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+      <span className={'flex size-[27px] items-center justify-center rounded-full border-2 text-[11px] font-bold '+(complete?'border-slate-700 bg-slate-700 text-white':actual?'border-slate-600 bg-white text-slate-700':'border-slate-200 bg-white text-slate-400')}>
        {complete?<Check className="size-4" aria-hidden="true"/>:i+1}
       </span>
-      <span title={t.title} className={'line-clamp-2 min-h-8 max-w-[108px] text-[11px] leading-4 font-medium '+(actual?'text-blue-800':'text-slate-700')}>{t.title||'Tema '+(i+1)}</span>
-      <span className={'text-[10px] '+(actual?'font-semibold text-blue-700':'text-slate-400')}>{state}</span>
+      <span title={t.title} className={'line-clamp-2 min-h-8 max-w-[108px] text-[11px] leading-4 font-medium '+(actual?'text-slate-900':'text-slate-600')}>{t.title||'Tema '+(i+1)}</span>
+      {actual ? <span className="text-[10px] font-medium text-slate-500">Estás acá</span> : null}
      </Link>
     </li>;
    })}
