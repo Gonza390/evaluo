@@ -22,8 +22,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   aiAvailable?: boolean;
 }) {
   const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
-  const options = useMemo(() => qualifiedQuestions(questions.filter(question =>
-    mode !== 'simulacro' || question.pageStart !== null)), [questions, mode]);
+  // Word/DOCX has reliable section references but no physical pages.
+  // A question without page number is still valid for the exam when it
+  // survives the same answer/distractor checks as PDF questions.
+  const options = useMemo(() => qualifiedQuestions(questions), [questions]);
   const [generatedCases, setGeneratedCases] = useState<PracticeQuestion[]>([]);
   const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
