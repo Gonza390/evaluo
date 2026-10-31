@@ -39,6 +39,29 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
 function writtenForm(value: string): string {
   return normalizedAnswer(value).replace(/^(?:el|la|los|las|un|una)\\s+/, '');
 }
+function grammaticalVariants(term: string): string[] {
+  const words = writtenForm(term).split(' ').filter(Boolean);
+  if (!words.length || words.length > 8) return [];
+  const stop = new Set(['de','del','en','al','y','e','o','por','para','con','sin','el','la','las','los']);
+  const variants: string[] = [];
+  const plural = (word: string): string | null => {
+    if (stop.has(word) || word.length < 4 || word.endsWith('s')) return null;
+    if (word.endsWith('z')) return word.slice(0,-1)+'ces';
+    if (/[aeiou]$/.test(word)) return word+'s';
+    return word+'es';
+  };
+  // Single-word changes cover "Desarrollo de mercados" as well as fully
+  // plural phrases. Nothing semantic or approximate is accepted.
+  const changed = words.map(plural);
+  for (let i=0;i<words.length;i++) {
+    if (!changed[i]) continue;
+    const variant=[...words];
+    variant[i]=changed[i]!;
+    variants.push(variant.join(' '));
+  }
+  if (changed.some(Boolean)) variants.push(words.map((word,i)=>changed[i]??word).join(' '));
+  return [...new Set(variants)];
+}
 function explicitAnswers(pair: PracticePair): string[] {
   const variants = [pair.term];
   if (pair.englishTerm?.trim()) variants.push(pair.englishTerm.trim());
@@ -65,10 +88,10 @@ export function isCorrectWrittenAnswer(answer: string, expected: string, aliases
  * within the same exercise set. Ambiguous alternatives are simply disabled.
  */
 export function allowedWrittenVariants(pair: PracticePair, allPairs: readonly PracticePair[]): string[] {
-  const variants = explicitAnswers(pair).slice(1);
+  const variants = [...explicitAnswers(pair).slice(1),...grammaticalVariants(pair.term)];
   const canonical = new Set(allPairs.filter(p => p !== pair).flatMap(p =>
-    explicitAnswers(p).map(writtenForm)));
-  return variants.filter(alias => {
+    [...explicitAnswers(p),...grammaticalVariants(p.term)].map(writtenForm)));
+  return [...new Set(variants)].filter(alias => {
     const key = writtenForm(alias);
     return key.length >= 2 && !canonical.has(key);
   });
