@@ -13,7 +13,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   update();window.addEventListener('focus',update);window.addEventListener('pageshow',update);
   return ()=>{window.removeEventListener('focus',update);window.removeEventListener('pageshow',update);};
  },[materialId,topicActivities]);
- if (!topicCount) return <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Todavía no hay temas disponibles para planificar.</div>;
+ if (!topicCount) return <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Todavía no hay temas para estudiar.</div>;
  const isFinished=(index:number)=>{
   const resources=topicActivities[index];
   return !!done[`${index}:reading`] && (!resources?.questions || !!done[`${index}:questions`]) && (!resources?.flashcards || !!done[`${index}:flashcards`]) && (!resources?.glossary || !!done[`${index}:glossary`]);
@@ -35,7 +35,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   ];
   return all.filter(step=>step.id==='reading'||t[step.id]);
  };
- return <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
+ return <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
       return <div key={topic}>
