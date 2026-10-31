@@ -21,8 +21,9 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const material = materials.find(m => m.id === materialId);
   // Solamente las opciones ya implementadas conducen a una actividad real.
-  const available = (title: string) => title === 'Opciones' || title === 'Flashcards';
-  const href = selectedMode === 'Flashcards' ? `/materiales/${materialId}?tab=tarjetas` : `/materiales/${materialId}?tab=ejercicios`;
+  const available = (title: string) => title !== 'Con tus palabras';
+  const routes: Record<string, string> = { 'Flashcards': `/materiales/${materialId}?tab=tarjetas`, 'Opciones': `/materiales/${materialId}?tab=ejercicios`, 'Unir conceptos': `/dashboard/practicar/${materialId}/unir`, 'Completar': `/dashboard/practicar/${materialId}/completar`, 'Casos': `/dashboard/practicar/${materialId}/casos`, 'Mixto': `/dashboard/practicar/${materialId}/mixto`, 'Simulacro de examen': `/dashboard/practicar/${materialId}/simulacro` };
+  const href = selectedMode ? routes[selectedMode] ?? '#' : '#';
 
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-6 pb-24 sm:px-6 sm:py-9">
