@@ -5,7 +5,7 @@ import type { CanonicalPedagogicalModel } from './types';
 import { needsPedagogicalFeedback } from './practice-feedback-quality';
 
 /** Never included in the upload/processing pipeline. Only an explicit Practicar action uses it. */
-export const PRACTICE_BANK_VERSION = 2; // invalidates pre-editorial cached banks
+export const PRACTICE_BANK_VERSION = 3; // invalidates banks without DOCX section references
 export const ON_DEMAND_PRACTICE_MODES = ['unir','completar','casos','mixto','simulacro'] as const;
 export type OnDemandPracticeMode = typeof ON_DEMAND_PRACTICE_MODES[number];
 export type PracticeBankPayload = {
@@ -57,7 +57,7 @@ export function buildPracticeBank(
     return {
       id: a.id, prompt: a.prompt, options: a.options, answer: a.answer,
       explanation: a.explanation, level: a.level, pageStart: ref.pageStart ?? null,
-      chapterTitle: a.chapterTitle ?? null, kind: a.kind,
+      chapterTitle: a.chapterTitle ?? ref.sectionTitle ?? null, kind: a.kind,
     };
   });
   const questions = qualifiedQuestions(mapped.filter(plainQuestion)).slice(0, 35);
@@ -75,7 +75,8 @@ export function sufficientPracticeBank(bank: PracticeBankPayload, mode: OnDemand
   if (mode === 'unir' || mode === 'completar') return matchingPairs >= 3;
   if (mode === 'casos') return bank.cases.length >= 2;
   if (mode === 'mixto') return bank.questions.length >= 4 || matchingPairs >= 4;
-  return bank.questions.filter(q => q.pageStart !== null).length >= 4;
+  // DOCX questions carry a section anchor instead of a physical page.
+  return bank.questions.filter(q => q.pageStart !== null || Boolean(q.chapterTitle)).length >= 4;
 }
 
 /**
@@ -101,7 +102,7 @@ export function assessPracticeBankQuality(
     contextualRecognitionCount,
     applicationCount,
     weakFeedbackCount: bank.questions.filter(q => needsPedagogicalFeedback(q.explanation)).length,
-    uncitedQuestionCount: bank.questions.filter(q => q.pageStart === null).length,
+    uncitedQuestionCount: bank.questions.filter(q => q.pageStart === null && !q.chapterTitle).length,
     // Unir/Completar are sourced from glossary, which this question bank does
     // not load; reporting zero as quality would be misleading.
     depth: mode === 'unir' || mode === 'completar'
