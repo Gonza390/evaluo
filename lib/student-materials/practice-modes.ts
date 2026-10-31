@@ -134,6 +134,17 @@ export function hasAmbiguousDistractors(question: Pick<PracticeQuestion,'answer'
     return shared >= 5 && shared/minSize >= 0.7 && shared/union >= 0.45;
   });
 }
+/** Conservative lexical check for two options that differ only by singular /
+ * plural inflection. A student must never be graded against two equivalents.
+ */
+function inflectionKey(value: string): string {
+  return normalizedAnswer(value).split(' ').map(word => {
+    if (word.length < 5) return word;
+    if (word.endsWith('es') && !/[aeiou]/.test(word.slice(-3,-2)))
+      return word.slice(0,-2);
+    return word.endsWith('s') ? word.slice(0,-1) : word;
+  }).join(' ');
+}
 export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuestion[] {
   const seen = new Set<string>();
   return questions.filter(question => {
@@ -141,6 +152,7 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
     const key = normalizedAnswer(question.prompt);
     if (!key || seen.has(key) || question.prompt.trim().length < 18 || choices.length < 2 ||
       choices.length > 6 || new Set(choices).size !== choices.length ||
+      new Set(question.options.map(inflectionKey)).size !== choices.length ||
       choices.some(choice => !choice) || !choices.includes(normalizedAnswer(question.answer)) ||
       question.explanation.trim().length < 20 || hasAmbiguousDistractors(question)) return false;
     seen.add(key); return true;
