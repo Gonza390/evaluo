@@ -61,15 +61,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]">
           <div className="min-w-0 space-y-4">
-            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
-              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-[14px] font-bold">Tu avance</h2>
-                {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
-              </div>
-              {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} topicActivities={topicActivities} /> : (
-                <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
-              )}
-            </section>
+
 
             {first ? <StudyPlanRoadmap materialId={first.id} topicActivities={topicActivities} /> : null}
 
@@ -92,6 +84,16 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
                 <p className="mt-3 max-w-[330px] text-[12px] leading-5 text-[#5473a2]">Registrá la fecha en tu calendario. Después podremos distribuir los temas y repasos hasta el examen.</p>
                 <Link href="/calendario" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[12px] font-semibold text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
               </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-[14px] font-bold">Tu avance</h2>
+                {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
+              </div>
+              {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} topicActivities={topicActivities} /> : (
+                <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
+              )}
             </section>
 
           </div>
