@@ -5,6 +5,7 @@ import { enforceStrictRateLimit } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { verifyGeneratedPracticeCases, type SourceFragment } from '@/lib/student-materials/practice-ai-cases';
 import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
+import { sourceBackedPracticeTerms } from '@/lib/student-materials/practice-classification-terms';
 import {
   applyVerifiedFeedbackEdits, feedbackSourceFromArtifact, needsPedagogicalFeedback,
   type FeedbackSource,
@@ -55,7 +56,9 @@ async function enhanceCases(admin: UntypedAdmin, userId: string, materialId: str
     .select('chunk_text,page_start').eq('student_material_id', materialId)
     .order('chunk_index', { ascending: true }).limit(60);
   if (error || !Array.isArray(chunks)) return [];
-  const terms = model.concepts.map(x => x.term).filter((x): x is string => typeof x === 'string' && x.length > 3).slice(0, 70);
+  // Classification labels (e.g. Ansoff growth strategies) are valid answers,
+  // even when the base concept list only contains the parent's matrix.
+  const terms = sourceBackedPracticeTerms(model);
   const all: SourceFragment[] = chunks.filter((x: {page_start: number|null;chunk_text:string}) =>
     Number.isInteger(x.page_start) && (x.page_start ?? 0) > 0 &&
     typeof x.chunk_text === 'string' && x.chunk_text.length >= 90
@@ -69,9 +72,19 @@ async function enhanceCases(admin: UntypedAdmin, userId: string, materialId: str
     matches:conceptTerms.filter(c => normalizedAnswer(chunk.text).includes(c.key)).map(c=>c.term),
   })).filter(chunk => chunk.matches.length >= 2);
   if (grounded.length < 2) return [];
-  const stride = Math.max(1, Math.floor(grounded.length / 7));
-  const sources = grounded.filter((_,i)=>i%stride===0).slice(0,8)
-    .map(chunk=>({pageStart:chunk.pageStart,text:chunk.text.slice(0,1100)}));
+  // Highest-evidence chunks first, but no more than two per PDF page;
+  // otherwise a long chapter crowds out all other topics.
+  const ordered = [...grounded].sort((a,b) => b.matches.length - a.matches.length);
+  const perPage = new Map<number,number>();
+  const sources: SourceFragment[] = [];
+  for (const chunk of ordered) {
+    const count=perPage.get(chunk.pageStart)??0;
+    if (count>=2) continue;
+    sources.push({pageStart:chunk.pageStart,text:chunk.text.slice(0,1100)});
+    perPage.set(chunk.pageStart,count+1);
+    if(sources.length>=8) break;
+  }
+  sources.sort((a,b)=>a.pageStart-b.pageStart);
   const allowedTerms = terms.filter(term => sources.some(chunk =>
     normalizedAnswer(chunk.text).includes(normalizedAnswer(term)))).slice(0,50);
   if (allowedTerms.length < 4 || !(await usePedagogicalAiBudget(userId))) return [];
