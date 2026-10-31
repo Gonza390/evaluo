@@ -6,6 +6,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
+import { StudyPlanRoadmap } from '@/components/dashboard/study-plan-roadmap';
 import { StudyPlanMaterialSelector } from '@/components/dashboard/study-plan-material-selector';
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { getTopicStudyResources, tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
@@ -69,6 +70,8 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
                 <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
               )}
             </section>
+
+            {first ? <StudyPlanRoadmap materialId={first.id} topicActivities={topicActivities} /> : null}
 
             <section>
               <div className="mb-3 flex items-center justify-between">
