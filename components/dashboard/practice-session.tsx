@@ -36,6 +36,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [reviewed, setReviewed] = useState<number[]>([]);
   const [finished, setFinished] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
+  const [examStarted, setExamStarted] = useState(false);
   const [deadline, setDeadline] = useState<number | null>(null);
   const posted = useRef('');
   const exercisePairs = useMemo(() => rotate(pairs, round * 5).slice(0, 5), [pairs, round]);
@@ -75,7 +76,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const checked = reviewed.includes(step);
 
   useEffect(() => {
-    if (mode !== 'simulacro' || !ready || finished) return;
+    if (mode !== 'simulacro' || !ready || finished || !examStarted) return;
     if (deadline === null) { setDeadline(Date.now() + 15 * 60 * 1000); return; }
     const timer = setInterval(() => {
       const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
@@ -83,7 +84,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       if (remaining === 0) setFinished(true);
     }, 1000);
     return () => clearInterval(timer);
-  }, [mode, ready, finished, deadline]);
+  }, [mode, ready, finished, deadline, examStarted]);
 
   useEffect(() => {
     if (!finished || !ready) return;
@@ -117,7 +118,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       }
       const newCases = (body.cases as PracticeQuestion[]);
       setGeneratedCases(newCases);
-      setRound(0); setStep(0); setResponses({}); setReviewed([]); setFinished(false);
+      setRound(value => value + 1); setStep(0); setResponses({}); setReviewed([]); setFinished(false);
     } catch {
       setGenerationError('No pudimos conectarnos para crear casos nuevos. Reintentá más tarde.');
     } finally { setGenerating(false); }
@@ -139,7 +140,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   function anotherRound() {
     setRound(value => value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
-    setReviewed([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null);
+    setReviewed([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null); setExamStarted(false);
   }
   function setResponse(value: string) {
     if (checked || finished) return;
@@ -190,7 +191,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       {aiCaseButton}
       <div className="mt-6 flex flex-wrap gap-2">
         <button type="button" onClick={anotherRound}
-          className="min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">Otra ronda</button>
+          className="min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? 'Nuevo simulacro' : 'Practicar otra vez'}</button>
         <Link href={'/materiales/' + materialId + '?tab=resumen'}
           className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
           Volver al resumen
@@ -212,7 +213,20 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
         Practicar con opciones
       </Link>
-    </section> : finished ? fullReport : <section className="mt-6">
+    </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+        <p className="text-sm font-medium text-slate-900">Antes de comenzar</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Vas a resolver {total} preguntas de distintos temas. Tenés 15 minutos.
+          Podés volver a preguntas anteriores, dejar respuestas sin completar y entregar antes.
+          No vas a ver las soluciones hasta finalizar.
+        </p>
+        <button type="button" onClick={() => setExamStarted(true)}
+          className="mt-5 min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
+          Comenzar simulacro
+        </button>
+      </section>
+    ) : <section className="mt-6">
       {aiCaseButton}
       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-slate-500">
         <span>{mode === 'unir' ? 'Relacioná los conceptos con sus definiciones' :
