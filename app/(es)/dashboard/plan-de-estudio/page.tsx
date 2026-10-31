@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, GraduationCap } from 'lucide-react';
+import { ArrowRight, ListChecks, Sparkles } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanNextStep } from '@/components/dashboard/study-plan-next-step';
@@ -72,11 +72,16 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
           <div className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-hidden">
             <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-4">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
-              <div className="relative">
-                <div className="flex items-center gap-2 text-xs font-medium text-blue-700"><GraduationCap className="size-4" /> PRÓXIMO EXAMEN</div>
-                <h2 className="mt-2 max-w-[300px] text-[18px] sm:text-[19px] font-medium leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
-                <p className="mt-2 max-w-[330px] text-[11px] leading-[18px] text-[#5473a2]">Registrá la fecha en tu calendario. Después podremos distribuir los temas y repasos hasta el examen.</p>
-                <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-[12px] font-medium text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
+              <div className="relative flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 text-xs font-medium text-blue-700"><Sparkles className="size-4" /> Prepará tu examen</div>
+                  <h2 className="mt-2 text-[18px] font-medium leading-[1.15] tracking-[-0.04em] sm:text-[19px]">Tu estudio, organizado hasta el examen.</h2>
+                  <p className="mt-2 text-[11px] leading-[18px] text-[#5473a2]">Poné la fecha. Evaluo se encarga de distribuir tus temas y prácticas.</p>
+                  <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-[12px] font-medium text-white transition hover:bg-blue-700">Armar mi plan <ArrowRight className="size-4" /></Link>
+                </div>
+                <div aria-hidden="true" className="hidden shrink-0 items-center justify-center rounded-2xl border border-blue-200/70 bg-white/35 p-3 min-[420px]:flex">
+                  <ListChecks className="size-11 text-[#4f5dff]" strokeWidth={1.35} />
+                </div>
               </div>
             </section>
 
