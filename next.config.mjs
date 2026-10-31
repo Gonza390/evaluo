@@ -95,6 +95,8 @@ const nextConfig = {
   },
   images: {
     unoptimized: false,
+    // Prefer modern image codecs; Next.js chooses the best supported format.
+    formats: ['image/avif', 'image/webp'],
     deviceSizes: [360, 390, 414, 640, 750, 828, 1080, 1200, 1920],
     imageSizes: [32, 48, 64, 96, 128, 160, 192, 224, 256, 320, 384, 448, 512],
     remotePatterns: [
