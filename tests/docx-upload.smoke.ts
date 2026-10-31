@@ -47,11 +47,12 @@ function zip(parts: Record<string, string>) {
   end.writeUInt32LE(offset, 16);
   return Buffer.concat([...locals, directory, end]);
 }
-const styles = '<w:styles><w:style w:styleId="Heading1"><w:name w:val="heading 1"/></w:style></w:styles>';
+const styles = '<w:styles><w:style w:styleId="Heading1"><w:name w:val="heading 1"/></w:style>' +
+  '<w:style w:type="paragraph" w:styleId="ListBullet"><w:name w:val="List Bullet"/><w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr></w:style></w:styles>';
 const body = '<w:document><w:body>' +
   '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Marketing estratégico</w:t></w:r></w:p>' +
   '<w:p><w:r><w:t>La segmentación de mercados permite dividir el público en grupos con necesidades, hábitos y comportamientos comparables. La propuesta de valor debe responder a problemas reales de cada segmento.</w:t></w:r></w:p>' +
-  '<w:p><w:pPr><w:numPr/></w:pPr><w:r><w:t>Identificar objetivos y evaluar indicadores relevantes.</w:t></w:r></w:p>' +
+  '<w:p><w:pPr><w:pStyle w:val="ListBullet"/></w:pPr><w:r><w:t>Identificar objetivos y evaluar indicadores relevantes.</w:t></w:r></w:p>' +
   '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>Demográfica</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Edad e ingresos</w:t></w:r></w:p></w:tc></w:tr></w:tbl>' +
   '<w:p><w:r><w:drawing/></w:r><w:r><w:t>El análisis se complementa con encuestas, entrevistas y seguimiento de resultados a lo largo del ciclo comercial.</w:t></w:r></w:p>' +
   '</w:body></w:document>';
@@ -76,6 +77,10 @@ assert.deepEqual(result.headings, ['Marketing estratégico']);
 assert.equal(result.documentAnalysis.pageCount, null);
 assert.equal(result.documentAnalysis.hasTables, true);
 assert.equal(result.documentAnalysis.hasLists, true);
+assert.equal(result.documentAnalysis.bulletCount, 1,
+  'Detectar listas incluso cuando Word almacena numPr solo en el estilo.');
+assert.match(result.text, /• Identificar objetivos y evaluar indicadores relevantes/,
+  'Conservar la señal estructural de una lista, no solo el texto.');
 assert.equal(result.hasImages, true);
 assert.throws(() => extractDocxContent(Buffer.from('not a docx')), /DOCX válido/);
 assert.throws(() => extractDocxContent(zip({
