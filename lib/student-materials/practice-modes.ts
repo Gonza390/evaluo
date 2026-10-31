@@ -12,6 +12,7 @@ export function normalizedAnswer(value: string): string {
 /** Only unambiguous, non-generic one-to-one term-definition pairs qualify. */
 export function selectPracticePairs(items: PracticePair[], limit = 50): PracticePair[] {
   const valid = items.filter(item => {
+    if (!item || typeof item.term !== 'string' || typeof item.definition !== 'string') return false;
     const t = normalizedAnswer(item.term), d = normalizedAnswer(item.definition);
     return t.length >= 4 && t.length <= 65 && d.length >= 30 && d.length <= 330 &&
       t !== d && !/^(?:concepto|definicion|introduccion|conclusion|idea principal)$/.test(t) &&
@@ -86,7 +87,7 @@ export function balancedQuestions(questions: PracticeQuestion[], limit = 10, rou
  * Never invent a scenario or interpret an unlabeled list as having definitions.
  */
 export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null): PracticeQuestion[] {
-  if (!model) return [];
+  if (!model || !Array.isArray(model.classifications)) return [];
   const result: PracticeQuestion[] = [];
   for (const [index, group] of model.classifications.entries()) {
     if (!group.title || !Array.isArray(group.items)) continue;
