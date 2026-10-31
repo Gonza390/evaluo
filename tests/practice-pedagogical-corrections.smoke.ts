@@ -99,4 +99,9 @@ assert.match(session,/selectMixedQuestions\(options, contexts, round\)/,
   'Mixto selection must reject duplicates');
 assert.match(page,/englishTerm: item\.englishTerm \?\? null/,
   'Document-specified English equivalents must be passed to the grader');
+const artifactCache=file('lib/data/student-material-pedagogical-cache.ts');
+assert.match(artifactCache,/withGroundedExplanations\(sanitizePedagogicalArtifacts\(/,
+ 'Existing source artifacts must be filtered and their feedback improved before display');
+assert.match(artifactCache,/return withGroundedExplanations\(artifacts,glossary\)/,
+ 'Presentation must use improved explanations without mutating stored questions');
 console.log('Practice pedagogical QA passed: explicit equivalents, fair grading, contrasts, mixed uniqueness and exam levels');
