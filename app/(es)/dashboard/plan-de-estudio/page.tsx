@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
-import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
+import { StudyPlanNextStep } from '@/components/dashboard/study-plan-next-step';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
 import { StudyPlanRoadmap } from '@/components/dashboard/study-plan-roadmap';
 import { StudyPlanMaterialSelector } from '@/components/dashboard/study-plan-material-selector';
@@ -85,10 +85,10 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
             <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
               <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-[14px] font-bold">Tu avance</h2>
+                <h2 className="text-[14px] font-bold">Tu próximo paso</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
-              {first ? <StudyPlanWheel materialId={first.id} title={first.title} topicCount={topicCount} topicActivities={topicActivities} /> : (
+              {first ? <StudyPlanNextStep materialId={first.id} topicActivities={topicActivities} /> : (
                 <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
               )}
             </section>
