@@ -1700,7 +1700,7 @@ export function MaterialStudyWorkspace({
     return (
       <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-3 flex flex-col gap-2.5 rounded-xl border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
-          <p className="text-primary text-[10.5px] font-bold uppercase tracking-[0.12em]">
+          <p className="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">
             {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
           </p>
           <p className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.03em] break-words">
@@ -1798,7 +1798,7 @@ export function MaterialStudyWorkspace({
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {tab.label}
               {tab.premium ? (
-                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.08em] uppercase sm:text-[10px]">
+                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold tracking-[0.08em] uppercase sm:text-[11px]">
                   Premium
                 </span>
               ) : null}
@@ -1945,7 +1945,7 @@ export function MaterialStudyWorkspace({
                 ]?.[1]
               }
             </p>
-            <p className="text-muted-foreground mt-1.5 text-[12.5px] leading-5">
+            <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
               Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario
               del PDF.
             </p>
@@ -2000,10 +2000,10 @@ export function MaterialStudyWorkspace({
 
             {diagnosticReviewTopics.length > 0 ? (
               <div className="border-primary mt-3 border-l-2 pl-3">
-                <p className="text-primary text-[10.5px] font-bold tracking-[0.14em] uppercase">
+                <p className="text-primary text-[11px] font-bold tracking-[0.14em] uppercase">
                   Según tu diagnóstico
                 </p>
-                <p className="text-foreground mt-1 text-[13.5px] font-semibold">
+                <p className="text-foreground mt-1 text-[14px] font-semibold">
                   Empezá por {diagnosticReviewTopics[0]}
                 </p>
               </div>
@@ -2034,7 +2034,7 @@ export function MaterialStudyWorkspace({
                         data-active-chapter={activeSummaryChapterIndex === index || undefined}
                         aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                         className={cn(
-                          'flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[12.5px] leading-5 transition-colors',
+                          'flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[13px] leading-5 transition-colors',
                           activeSummaryChapterIndex === index
                             ? 'border-primary bg-primary/10 text-primary font-semibold'
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
@@ -2059,7 +2059,7 @@ export function MaterialStudyWorkspace({
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
                 <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
-                  <p className="text-muted-foreground mb-2 shrink-0 text-[10px] font-extrabold tracking-[0.16em] uppercase">
+                  <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-extrabold tracking-[0.16em] uppercase">
                     Contenido
                   </p>
                   <nav
@@ -2111,7 +2111,7 @@ export function MaterialStudyWorkspace({
                       className="border-border scroll-mt-5 border-b py-4 first:pt-0 last:border-b-0 last:pb-2 sm:py-5"
                     >
                       <header className="mb-2.5 sm:mb-3">
-                        <p className="text-primary text-[10px] font-extrabold tracking-[0.18em] uppercase">
+                        <p className="text-primary text-[11px] font-extrabold tracking-[0.18em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
                         <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-bold tracking-[-0.035em]">
@@ -2161,10 +2161,10 @@ export function MaterialStudyWorkspace({
           {glossaryItemsToShow.length > 0 ? (
             <div className="w-full max-w-[1040px]">
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-4 border-b px-2 py-2.5 md:grid">
-                <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
                   Término
                 </p>
-                <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
                   Definición
                 </p>
               </div>
@@ -2192,7 +2192,7 @@ export function MaterialStudyWorkspace({
                       </div>
 
                       <div className="min-w-0">
-                        <p className="text-foreground text-[13px] leading-[1.65] sm:text-[13.5px] [overflow-wrap:anywhere]">
+                        <p className="text-foreground text-[13px] leading-[1.65] sm:text-[14px] [overflow-wrap:anywhere]">
                           {item.definition}
                         </p>
                       </div>
