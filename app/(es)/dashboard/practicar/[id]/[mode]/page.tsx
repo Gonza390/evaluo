@@ -57,7 +57,7 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
       .eq('version', PRACTICE_BANK_VERSION)
       .maybeSingle();
     if (!bankError && bankRow && 'source_fingerprint' in bankRow && 'payload' in bankRow &&
-        bankRow.source_fingerprint === sourceFingerprint(material.content_fingerprint, material.id, material.pedagogical_artifacts_version)) {
+        bankRow.source_fingerprint === sourceFingerprint(material.content_fingerprint, material.id, material.pedagogical_artifacts_version) + ':editorial:2:ai:' + String(process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED === '1')) {
       savedBank = safePracticeBank(bankRow.payload);
     }
   }
