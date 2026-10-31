@@ -247,13 +247,13 @@ export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null):
       // We can test Ansoff's product/market distinction but must not treat
       // disputed relative-risk rankings in uploaded notes as established facts.
       const evidence = item.slice(colon + 1).trim()
-        .replace(/\\s*\\(\\s*riesgo\\s+(?:muy\\s+)?(?:bajo|medio|alto)\\s*\\)/giu, '').trim();
+        .replace(/\s*\(\s*riesgo\s+(?:muy\s+)?(?:bajo|medio|alto)\s*\)/giu, '').trim();
       if (name.length < 4 || evidence.length < 25 || evidence.length > 240) return null;
       return { name, evidence };
     }).filter((entry): entry is { name: string; evidence: string } => Boolean(entry));
     const labels = [...new Set(parsed.map(entry => normalizedAnswer(entry.name)))];
     if (parsed.length < 2 || labels.length !== parsed.length || parsed.length > 6 ||
-        parsed.some(entry => /^grupo\\s*\\d+$/i.test(entry.name))) continue;
+        parsed.some(entry => /^grupo\s*\d+$/i.test(entry.name))) continue;
     if (new Set(parsed.map(entry => normalizedAnswer(entry.evidence))).size !== parsed.length) continue;
     const options = parsed.map(choice => choice.name);
     const pageStart = group.pageReferences?.[0] ?? null;
@@ -264,7 +264,7 @@ export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null):
       for (const [i,caseItem] of authored.entries()) {
         result.push({
           id: 'source-application-' + index + '-' + i,
-          prompt: caseItem.scenario + '\\n\\n' + caseItem.question,
+          prompt: caseItem.scenario + '\n\n' + caseItem.question,
           options, answer:caseItem.answer,explanation:caseItem.explanation,
           level:'aplicar',kind:'source-application',
           chapterTitle:group.title,pageStart,
