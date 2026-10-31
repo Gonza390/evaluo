@@ -154,18 +154,18 @@ export async function POST(request: Request) {
   if (typeof input.materialId!=='string'||!uuid.test(input.materialId)||!isPracticeMode(input.mode))
     return NextResponse.json({error:'invalid_request'},{status:400});
   const mode: OnDemandPracticeMode = input.mode;
-  // Ownership check happens BEFORE any privileged reads, AI call or database write.
-  const {data:material,error:materialError}=await supabase.from('student_materials')
-    .select('id,user_id,processing_status,content_fingerprint,pedagogical_artifacts,pedagogical_artifacts_version,pedagogical_model')
-    .eq('id',input.materialId).eq('user_id',user.id).maybeSingle();
-  if (materialError||!material||material.processing_status!=='ready')
-    return NextResponse.json({error:'material_not_found'},{status:404});
-  // Default OFF until the isolated table is deployed in a test database.
-  // This avoids needless read errors and writes against the existing Supabase project.
+  // The feature is off by default. Avoid even reading the large model/question
+  // payload for a disabled mode on the shared Supabase Free instance.
   if (process.env.PRACTICE_BANK_ENABLED !== '1') {
     return NextResponse.json({ source:'existing', prepared:false, reason:'bank_disabled' },
       { headers:{'Cache-Control':'private, no-store'} });
   }
+  // Ownership check happens BEFORE any privileged reads, AI call or database write.
+  const {data:material,error:materialError}=await supabase.from('student_materials')
+    .select('id,user_id,processing_status,content_fingerprint,pedagogical_artifacts_version')
+    .eq('id',input.materialId).eq('user_id',user.id).maybeSingle();
+  if (materialError||!material||material.processing_status!=='ready')
+    return NextResponse.json({error:'material_not_found'},{status:404});
   const admin=createAdminClient() as unknown as UntypedAdmin;
   const fingerprint=sourceFingerprint(material.content_fingerprint,material.id,material.pedagogical_artifacts_version)+
     ':editorial:2:ai:'+String(allowAi());
@@ -183,16 +183,29 @@ export async function POST(request: Request) {
     return NextResponse.json({source:'cached',prepared:true},
       {headers:{'Cache-Control':'private, no-store'}});
   }
-  const model=material.pedagogical_model as CanonicalPedagogicalModel|null;
+  // After a cache miss, load the large academic JSON only for modes that
+  // actually consume questions or classifications. Unir/Completar rely on
+  // their existing glossary and never read the full question bank here.
+  const needsDetailedSource=mode!=='unir'&&mode!=='completar';
+  const {data:detailed,error:detailError}=needsDetailedSource
+    ?await supabase.from('student_materials')
+      .select('pedagogical_artifacts,pedagogical_model')
+      .eq('id',material.id).eq('user_id',user.id).maybeSingle()
+    :{data:null,error:null};
+  if(detailError || (needsDetailedSource&&!detailed)) {
+    return NextResponse.json({source:'existing',prepared:false,reason:'source_unavailable'},
+      {headers:{'Cache-Control':'private, no-store'}});
+  }
+  const model=(detailed?.pedagogical_model ?? null) as CanonicalPedagogicalModel|null;
   // One AI request per first-time mode preparation, not one per item.
   // Casos gets genuinely new scenarios. Mixto/Simulacro first repair
   // weak source question feedback; mixed can also reuse source-backed cases.
   const useAi=allowAi();
   const enhanced=useAi&&mode==='casos'
     ?await enhanceCases(admin,user.id,material.id,model):[];
-  const bank=buildPracticeBank(material.pedagogical_artifacts,model,enhanced,mode);
+  const bank=buildPracticeBank(detailed?.pedagogical_artifacts ?? null,model,enhanced,mode);
   if (useAi&&(mode==='mixto'||mode==='simulacro')&&bank.questions.length) {
-    bank.questions=await enhanceFeedback(user.id,material.pedagogical_artifacts,bank.questions);
+    bank.questions=await enhanceFeedback(user.id,detailed?.pedagogical_artifacts ?? null,bank.questions);
   }
   const {error:writeError}=await admin.from('student_material_practice_banks').upsert({
     material_id:material.id,user_id:user.id,mode,version:PRACTICE_BANK_VERSION,
