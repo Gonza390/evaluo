@@ -361,14 +361,14 @@ export default function ConfiguracionPage() {
       </header>
 
       <section aria-labelledby="settings-general" className="space-y-1">
-        <h2 id="settings-general" className="text-xs font-semibold text-slate-500">General</h2>
+        <h2 id="settings-general" className="text-xs font-normal text-slate-500">General</h2>
         {settingRow('Idioma', 'Español')}
         {settingRow('Apariencia', 'Claro')}
         <p className="pt-1 text-xs text-slate-400">Estas preferencias todavía no se pueden modificar.</p>
       </section>
 
       <section aria-labelledby="settings-account" className="space-y-1">
-        <h2 id="settings-account" className="text-xs font-semibold text-slate-500">Cuenta</h2>
+        <h2 id="settings-account" className="text-xs font-normal text-slate-500">Cuenta</h2>
         {settingRow('Correo electrónico', user.email ?? '')}
         <details className="group border-b border-slate-100">
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-medium text-slate-800 [&::-webkit-details-marker]:hidden">
@@ -380,7 +380,7 @@ export default function ConfiguracionPage() {
 
       <section aria-labelledby="settings-personal" className="space-y-1">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="settings-personal" className="text-xs font-semibold text-slate-500">Información personal</h2>
+          <h2 id="settings-personal" className="text-xs font-normal text-slate-500">Información personal</h2>
           <button type="button" onClick={() => setEditingProfile((value) => !value)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600">
             <Pencil className="size-3.5" /> {editingProfile ? 'Cerrar edición' : 'Editar datos'}
           </button>
@@ -391,7 +391,7 @@ export default function ConfiguracionPage() {
       </section>
 
       <section aria-labelledby="settings-academic" className="space-y-1">
-        <h2 id="settings-academic" className="text-xs font-semibold text-slate-500">Información académica</h2>
+        <h2 id="settings-academic" className="text-xs font-normal text-slate-500">Información académica</h2>
         {settingRow('Universidad', universidadSearch)}
         {settingRow('Carrera', carreraSearch)}
         {settingRow('Año de cursado', anioCarrera ? anioCarrera + '° año' : '')}
@@ -432,7 +432,7 @@ export default function ConfiguracionPage() {
       ) : null}
 
       <section aria-labelledby="settings-session" className="space-y-1">
-        <h2 id="settings-session" className="text-xs font-semibold text-slate-500">Sesión y privacidad</h2>
+        <h2 id="settings-session" className="text-xs font-normal text-slate-500">Sesión y privacidad</h2>
         <button type="button" disabled={signingOut} onClick={async () => {
           setSigningOut(true);
           try {
