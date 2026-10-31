@@ -26,9 +26,9 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
 
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-6 pb-24 sm:px-6 sm:py-9">
-      <header className="mb-4 flex items-center justify-between gap-3">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="shrink-0 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px] text-slate-900">Practicar</h1>
-        <div className="relative min-w-0 w-[min(60%,360px)]">
+        <div className="relative min-w-0 w-full sm:w-[min(60%,360px)]">
           <label htmlFor="practice-material" className="sr-only">PDF para practicar</label>
           <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-blue-600" />
           <select id="practice-material" value={materialId} onChange={event => { setMaterialId(event.target.value); setSelectedMode(null); }}
@@ -41,7 +41,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
       </header>
       {material ? (
         <>
-          <h2 className="mb-3 text-[15px] font-normal tracking-tight text-slate-700">Elegí un tipo de práctica</h2>
+          <h2 className="mb-3 text-[15px] font-normal tracking-tight text-slate-700">Elegí cómo practicar</h2>
           <div className="grid grid-cols-2 gap-3">
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
@@ -67,9 +67,9 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
               </Link>
             ) : selectedMode ? (
               <p className="flex min-h-11 items-center gap-2 rounded-xl bg-slate-50 px-3 text-xs text-slate-600" role="status">
-                <CircleHelp className="size-4 shrink-0" /> Esta modalidad todavía no está disponible. Ya podés ver su lugar en la pantalla.
+                <CircleHelp className="size-4 shrink-0" /> Esta modalidad estará disponible próximamente.
               </p>
-            ) : <p className="text-center text-xs text-slate-500">Seleccioná una tarjeta para continuar.</p>}
+            ) : <p className="text-center text-xs text-slate-500">Elegí una opción para empezar.</p>}
           </div>
         </>
       ) : (
