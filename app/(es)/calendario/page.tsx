@@ -807,7 +807,7 @@ export default function CalendarioPage() {
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
+                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-1.5 text-center text-[12px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
                   >
                     <span className="hidden sm:inline">{label}</span>
                     <span className="text-xs sm:hidden">{label.slice(0, 3)}</span>
@@ -833,7 +833,7 @@ export default function CalendarioPage() {
                       key={dateKey}
                       type="button"
                       onClick={() => openComposerForDate(date)}
-                      className={`group flex min-h-[58px] min-w-0 flex-col gap-1 border-r border-b px-1 py-1.5 text-left transition last:border-r-0 hover:bg-white min-[380px]:min-h-[64px] min-[380px]:px-1.5 sm:min-h-[74px] sm:gap-1.5 sm:px-2.5 sm:py-2 lg:min-h-[86px] ${
+                      className={`group flex min-h-[58px] min-w-0 flex-col gap-1 border-r border-b px-1 py-1.5 text-left transition last:border-r-0 hover:bg-white min-[380px]:min-h-[64px] min-[380px]:px-1.5 sm:min-h-[64px] sm:gap-1 sm:px-2 sm:py-1.5 lg:min-h-[64px] ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
                       style={{
@@ -848,7 +848,7 @@ export default function CalendarioPage() {
                     >
                       <div className="flex items-start justify-between">
                         <span
-                          className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-medium"
+                          className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-medium"
                           style={{
                             backgroundColor: isToday
                               ? 'var(--brand)'
@@ -866,11 +866,11 @@ export default function CalendarioPage() {
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 overflow-hidden">
-                        {cellEvents.slice(0, 2).map((event) => (
+                      <div className="space-y-0.5 overflow-hidden">
+                        {cellEvents.slice(0, 1).map((event) => (
                           <div
                             key={event.id}
-                            className="truncate rounded-lg border px-2 py-0.5 text-[12px] font-medium"
+                            className="truncate rounded-md border px-1.5 py-0.5 text-[11px] font-medium"
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
@@ -889,9 +889,9 @@ export default function CalendarioPage() {
                             {event.title}
                           </div>
                         ))}
-                        {cellEvents.length > 2 ? (
+                        {cellEvents.length > 1 ? (
                           <div className="text-[12px] font-medium text-slate-500">
-                            +{cellEvents.length - 2} más
+                            +{cellEvents.length - 1} más
                           </div>
                         ) : null}
                       </div>
