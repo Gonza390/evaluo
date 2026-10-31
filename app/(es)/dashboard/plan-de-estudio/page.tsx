@@ -50,14 +50,10 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:h-[calc(100dvh-52px)] xl:overflow-hidden">
       <div className="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
-        <div className="mb-4 flex items-center justify-between gap-2 sm:gap-3">
-          <div>
-            <h1 className="text-[20px] font-bold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
-          </div>
-        </div>
-
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
-          <div className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
+          <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
+            <h1 className="mb-4 shrink-0 text-[20px] font-bold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
+            <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
 
 
             {first ? <StudyPlanRoadmap materialId={first.id} topicActivities={topicActivities} /> : null}
@@ -70,6 +66,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
                 <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Subí un PDF para comenzar con el tema 1.</div>
               )}
             </section>
+            </div>
           </div>
 
           <div className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-hidden">
