@@ -16,7 +16,7 @@ import {
 } from '@/app/dashboard/materiales/visual-analysis-actions';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 
@@ -53,7 +53,7 @@ type QuickPdfUploadProps = {
 };
 
 function fileTitle(fileName: string) {
-  const value = fileName.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim();
+  const value = fileName.replace(/\.(pdf|docx)$/i, '').replace(/[_-]+/g, ' ').trim();
   return value || 'Mi material de estudio';
 }
 
@@ -190,9 +190,9 @@ export function QuickPdfUpload({
       return;
     }
 
-    if (!file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+    if (!isSupportedStudentMaterialFile(file.name, file.type)) {
       setSelectedFile(null);
-      setErrorMessage('Por ahora solo aceptamos archivos PDF.');
+      setErrorMessage('Aceptamos archivos PDF y Word (.docx).');
       return;
     }
 
@@ -246,7 +246,7 @@ export function QuickPdfUpload({
     };
     const fileMetadata = {
       name: selectedFile.name,
-      mimeType: selectedFile.type || 'application/pdf',
+      mimeType: studentMaterialFileKind(selectedFile.name) === 'docx' ? STUDENT_MATERIAL_DOCX_MIME : 'application/pdf',
       size: selectedFile.size,
     };
 
@@ -380,7 +380,7 @@ export function QuickPdfUpload({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold text-slate-950">
-                {selectedFile ? selectedFile.name : 'Elegir un PDF'}
+                {selectedFile ? selectedFile.name : 'Elegir un PDF o Word'}
               </span>
               <span className="mt-1 block text-xs text-slate-500">
                 {selectedFile
@@ -392,7 +392,7 @@ export function QuickPdfUpload({
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="sr-only"
             onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
           />
