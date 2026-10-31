@@ -54,6 +54,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: DOCX smoke
+        run: npm run test:docx
+
       - name: Test
         run: npm test
 
@@ -61,7 +64,22 @@ jobs:
         run: node scripts/audit-domain-migration.mjs
 
       - name: Build
-        run: npm run build
+        shell: bash
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            if npm run build 2>&1 | tee /tmp/evaluo-build.log; then
+              exit 0
+            fi
+            if ! grep -Eq 'next/font/google queries have exactly one entry|@vercel/turbopack-next/internal/font/google/font' /tmp/evaluo-build.log; then
+              exit 1
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            echo "Transient Next.js Google Fonts fetch; retrying build (attempt $attempt of 3)."
+            rm -rf .next
+          done
 
       - name: Performance budget
         run: npm run performance:budget

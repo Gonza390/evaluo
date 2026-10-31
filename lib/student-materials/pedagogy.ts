@@ -1732,7 +1732,9 @@ function anchorAndCompleteChapterQuestions(
     const candidates = model.concepts.filter((concept) =>
       cleanLine(concept.term).length >= 7 &&
       cleanLine(concept.detail).length >= 30 &&
-      (concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) &&
+      ((concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) ||
+        chunks.some((chunk) => chunk.pageStart === null &&
+          normalizeForDedupe(chunk.text).includes(normalizeForDedupe(concept.term)))) &&
       uniqueChapterForConcept(concept.term) === index
     );
     for (const [candidateIndex, concept] of candidates.entries()) {

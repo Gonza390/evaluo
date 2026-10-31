@@ -697,8 +697,8 @@ assert.match(pdfStudyWorkspace, /data-active-chapter=\{activeSummaryChapterIndex
 assert.match(pdfStudyWorkspace, /data-study-glossary className="mx-auto w-full max-w-\[1240px\]/);
 assert.match(pdfStudyWorkspace, /<div className="w-full max-w-\[1040px\]">/);
 assert.match(pdfStudyWorkspace, /text-\[19px\].*sm:text-\[20px\]/);
-assert.match(pdfStudyWorkspace, /text-\[14px\] leading-5 font-semibold/);
-assert.match(pdfStudyWorkspace, /text-\[13px\] leading-\[1\.65\] sm:text-\[13\.5px\]/);
+assert.match(pdfStudyWorkspace, /text-\[14px\] leading-5 font-normal/);
+assert.match(pdfStudyWorkspace, /text-\[13px\] leading-\[1\.65\] sm:text-\[14px\]/);
 assert.match(pdfStudyWorkspace, /glossaryTopicIndex === null \?/);
 assert.match(pdfStudyWorkspace, /renderTopicResourceHeader\('glosario'\)/);
 assert.match(pdfStudyWorkspace, /getTopicStudyResources\(studySummary\.sections, usefulGlossary, studyArtifacts\.flashcards, index\)/);
