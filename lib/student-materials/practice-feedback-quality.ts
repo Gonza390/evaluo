@@ -2,12 +2,13 @@ import { normalizedAnswer, qualifiedQuestions, type PracticeQuestion } from './p
 
 export type FeedbackSource = {
   id: string;
-  pageStart: number;
+  pageStart: number | null;
+  sectionTitle?: string | null;
   excerpt: string;
   answer: string;
   options: string[];
 };
-type FeedbackEdit = { sourceId: unknown; explanation: unknown; evidence: unknown; page: unknown };
+type FeedbackEdit = { sourceId: unknown; explanation: unknown; evidence: unknown; page: unknown; sectionTitle?: unknown };
 const genericFeedback = /(?:las dem[aá]s opciones (?:expresan|son)|se define como|seg[uú]n el (?:pdf|material)|la respuesta correcta es|se caracteriza por:|la relaci[oó]n presentada en el pdf)/iu;
 
 export function needsPedagogicalFeedback(explanation: string): boolean {
@@ -40,11 +41,13 @@ export function applyVerifiedFeedbackEdits(
     if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
     const edit = item as FeedbackEdit;
     if (typeof edit.sourceId !== 'string' || typeof edit.explanation !== 'string' ||
-      typeof edit.evidence !== 'string' || !Number.isInteger(edit.page) ||
-      typeof edit.page !== 'number') continue;
+      typeof edit.evidence !== 'string' ||
+      !(edit.page === null || (Number.isInteger(edit.page) && typeof edit.page === 'number'))) continue;
     const src = indexed.get(edit.sourceId);
     const explanation = edit.explanation.trim(), evidence = edit.evidence.trim();
-    if (!src || src.pageStart !== edit.page || approved.has(edit.sourceId) ||
+    if (!src || src.pageStart !== edit.page ||
+      (src.pageStart === null && (!src.sectionTitle || edit.sectionTitle !== src.sectionTitle)) ||
+      approved.has(edit.sourceId) ||
       evidence.length < 28 || evidence.length > 350 ||
       !normalizedAnswer(src.excerpt).includes(normalizedAnswer(evidence)) ||
       explanation.length < 110 || explanation.length > 550 ||
@@ -69,8 +72,11 @@ export function feedbackSourceFromArtifact(raw: unknown): FeedbackSource | null 
     ? q.reference as Record<string, unknown> : {};
   if (typeof q.id !== 'string' || typeof q.answer !== 'string' ||
       !Array.isArray(q.options) || !q.options.every(x => typeof x === 'string') ||
-      !Number.isInteger(ref.pageStart) || typeof ref.pageStart !== 'number' ||
+      !(ref.pageStart === null || (Number.isInteger(ref.pageStart) && typeof ref.pageStart === 'number' && ref.pageStart > 0)) ||
+      (ref.pageStart === null && (typeof ref.sectionTitle !== 'string' || !ref.sectionTitle.trim())) ||
       typeof ref.excerpt !== 'string' || ref.excerpt.trim().length < 70) return null;
-  return { id:q.id,pageStart:ref.pageStart,excerpt:ref.excerpt.slice(0,650),
+  return { id:q.id,pageStart:ref.pageStart as number | null,
+    sectionTitle:typeof ref.sectionTitle === 'string' ? ref.sectionTitle : null,
+    excerpt:ref.excerpt.slice(0,650),
     answer:q.answer,options:q.options };
 }
