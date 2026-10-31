@@ -72,6 +72,11 @@ const view=file('components/dashboard/practice-session.tsx');
 assert.match(route,/docxCaseSchema/);
 assert.match(route,/docxFeedbackSchema/);
 assert.match(direct,/docxSchema/);
+assert.ok(direct.includes("PRACTICE_BANK_ENABLED !== '1'"),
+  'The direct Gemini endpoint must not spend AI until the isolated bank is enabled.');
+assert.ok(direct.indexOf("PRACTICE_BANK_ENABLED !== '1'") < direct.indexOf('enforceStrictRateLimit({'),
+  'Disabled AI must stop before allocating a rate-limit slot.');
+
 assert.doesNotMatch(view,/mode !== 'simulacro' \|\| question\.pageStart !== null/);
 const process=file('lib/student-materials/processing-service.ts');
 assert.doesNotMatch(process,/student_material_practice_banks|PRACTICE_PEDAGOGICAL_AI_ENABLED|practice\/prepare/,'Word and PDF ingestion must not generate costly advanced modes');
