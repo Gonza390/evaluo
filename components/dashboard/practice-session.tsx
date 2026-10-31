@@ -39,6 +39,17 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const total = mode === 'unir' ? currentPairs.length : activity.length;
   const correct = mode === 'unir' ? currentPairs.filter((_, i) => associations[i] === i).length :
     (activity as (Pair | Question)[]).filter((q,i) => 'term' in q ? normalize(responses[i] ?? '') === normalize(q.term) : responses[i] === q.answer).length;
+  useEffect(() => {
+    if (!finished || !complete) return;
+    const controller = new AbortController();
+    void fetch('/api/practice/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ materialId, mode, correct, total }), signal: controller.signal,
+    }).catch(() => undefined);
+    return () => controller.abort();
+  // Register completed attempt exactly once until a new round.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished, round]);
   const q = mode === 'unir' ? null : activity[step];
   useEffect(() => {
     if (mode !== 'simulacro' || finished || !complete) return;
