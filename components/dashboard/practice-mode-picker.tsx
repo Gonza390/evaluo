@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, FileText, Layers3, ListChecks, Mic, Network, Timer, Zap } from 'lucide-react';
 
@@ -19,11 +20,40 @@ const modes = [
 export function PracticeModePicker({ materials, initialMaterialId }: { materials: Material[]; initialMaterialId: string | null }) {
   const [materialId, setMaterialId] = useState(() => materials.find(m => m.id === initialMaterialId)?.id ?? materials[0]?.id ?? '');
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [prepareError, setPrepareError] = useState('');
+  const router = useRouter();
   const material = materials.find(m => m.id === materialId);
   // Solamente las opciones ya implementadas conducen a una actividad real.
   const available = (title: string) => title !== 'Con tus palabras';
   const routes: Record<string, string> = { 'Flashcards': `/materiales/${materialId}?tab=tarjetas`, 'Opciones': `/materiales/${materialId}?tab=ejercicios`, 'Unir conceptos': `/dashboard/practicar/${materialId}/unir`, 'Completar': `/dashboard/practicar/${materialId}/completar`, 'Casos': `/dashboard/practicar/${materialId}/casos`, 'Mixto': `/dashboard/practicar/${materialId}/mixto`, 'Simulacro de examen': `/dashboard/practicar/${materialId}/simulacro` };
   const href = selectedMode ? routes[selectedMode] ?? '#' : '#';
+  async function startPractice() {
+    if (!selectedMode || !materialId || preparing || selectedMode === 'Con tus palabras') return;
+    setPrepareError('');
+    // Existing Flashcards and Opciones have their own established flows: never alter those.
+    if (selectedMode === 'Flashcards' || selectedMode === 'Opciones') {
+      router.push(href);
+      return;
+    }
+    setPreparing(true);
+    try {
+      const mode = href.split('/').at(-1);
+      const response = await fetch('/api/practice/prepare', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ materialId, mode }),
+      });
+      if (!response.ok) {
+        setPrepareError('No pudimos preparar la actividad. Podés reintentarlo.');
+        return;
+      }
+      router.push(href);
+    } catch {
+      setPrepareError('No pudimos conectar con Practicar. Reintentá en un momento.');
+    } finally {
+      setPreparing(false);
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-6 pb-24 sm:px-6 sm:py-9">
@@ -32,7 +62,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
         <div className="relative min-w-0 w-full sm:w-[min(60%,360px)]">
           <label htmlFor="practice-material" className="sr-only">Material para practicar</label>
           <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-blue-600" />
-          <select id="practice-material" value={materialId} onChange={event => { setMaterialId(event.target.value); setSelectedMode(null); }}
+          <select id="practice-material" value={materialId} onChange={event => { setMaterialId(event.target.value); setSelectedMode(null); setPrepareError(''); }}
             disabled={!materials.length}
             className="min-h-11 w-full appearance-none truncate rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-9 text-[13px] font-medium text-slate-800 outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20">
             {materials.length ? materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>) : <option value="">No hay materiales disponibles</option>}
@@ -63,14 +93,16 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
           </div>
           <div className="mt-4 flex flex-col gap-2">
             {selectedMode && available(selectedMode) ? (
-              <Link href={href} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white transition hover:bg-blue-700">
-                {selectedMode === 'Flashcards' ? 'Practicar con flashcards' : 'Comenzar práctica'} <ArrowRight className="size-4" />
-              </Link>
+              <button type="button" disabled={preparing} onClick={() => void startPractice()}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white transition hover:bg-blue-700 disabled:opacity-60">
+                {preparing ? 'Preparando práctica…' : selectedMode === 'Flashcards' ? 'Practicar con flashcards' : 'Comenzar práctica'} <ArrowRight className="size-4" />
+              </button>
             ) : selectedMode ? (
               <p className="flex min-h-11 items-center gap-2 rounded-xl bg-slate-50 px-3 text-xs text-slate-600" role="status">
                 <CircleHelp className="size-4 shrink-0" /> Esta modalidad estará disponible próximamente.
               </p>
             ) : <p className="text-center text-xs text-slate-500">Elegí una opción para empezar.</p>}
+            {prepareError && <p role="alert" className="text-xs text-amber-800">{prepareError}</p>}
           </div>
         </>
       ) : (
