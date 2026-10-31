@@ -292,7 +292,7 @@ export function groundedPracticeExplanation(
 ): string {
   const original = question.explanation.trim();
   if (original.length >= 105 &&
-      !/(?:las dem[aá]s opciones|se define como|se caracteriza por:|significa:)/iu.test(original)) return original;
+      !/(?:las dem[aá]s opciones|se define como|se caracteriza por:|significa:|la relaci[oó]n presentada en el pdf|entre .+ se da esta relaci[oó]n)/iu.test(original)) return original;
   const findUnique = (value:string): PracticePair | null => {
     const key = normalizedAnswer(value);
     const matches = pairs.filter(pair =>
