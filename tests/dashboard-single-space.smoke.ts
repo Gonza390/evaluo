@@ -224,7 +224,7 @@ for (const page of [compactCalendar, compactSettings, compactProgressList, compa
   assert.match(page, /text-\[20px\]|size="compact"/);
 }
 assert.match(compactCalendar, /max-w-\[1240px\]/);
-assert.match(compactSettings, /max-w-\[1240px\]/);
+assert.match(compactSettings, /max-w-\[760px\]/);
 assert.match(compactProgress, /size="compact"/);
 assert.match(compactProgress, /grid-cols-\[236px_minmax\(0,1fr\)\]/);
 assert.match(compactProfile, /space-y-4 rounded-xl border p-3\.5 sm:p-4/);
