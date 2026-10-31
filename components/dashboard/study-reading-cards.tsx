@@ -26,11 +26,11 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
 
   const activeMaterial = materials.find((material) => material.id === lastOpenedMaterialId) ?? materials[0] ?? null;
   const tools = [
-    { title: 'Resumen', description: 'Repasá lo esencial.', icon: BookOpenText, tab: 'resumen', color: 'text-blue-700', background: 'bg-blue-50' },
-    { title: 'Flashcards', description: 'Memorizá con tarjetas.', icon: Layers3, tab: 'tarjetas', color: 'text-violet-700', background: 'bg-violet-50' },
-    { title: 'Glosario', description: 'Entendé los conceptos.', icon: BookOpen, tab: 'glosario', color: 'text-cyan-800', background: 'bg-cyan-50' },
-    { title: 'Mapa mental', description: 'Conectá las ideas.', icon: Network, tab: 'mapa', color: 'text-emerald-800', background: 'bg-emerald-50' },
-    { title: 'Progreso', description: 'Revisá tu aprendizaje.', icon: ChartNoAxesColumnIncreasing, tab: 'progreso', color: 'text-amber-800', background: 'bg-amber-50' },
+    { title: 'Resumen', description: 'Repasá lo esencial.', icon: BookOpenText, tab: 'resumen', color: 'text-[#376CAD]', background: 'bg-[#E8F2FF]' },
+    { title: 'Flashcards', description: 'Memorizá con tarjetas.', icon: Layers3, tab: 'tarjetas', color: 'text-[#745AB3]', background: 'bg-[#F0EBFC]' },
+    { title: 'Glosario', description: 'Entendé los conceptos.', icon: BookOpen, tab: 'glosario', color: 'text-[#41839B]', background: 'bg-[#E2F2F7]' },
+    { title: 'Mapa mental', description: 'Conectá las ideas.', icon: Network, tab: 'mapa', color: 'text-[#35816A]', background: 'bg-[#E9F5EE]' },
+    { title: 'Progreso', description: 'Revisá tu aprendizaje.', icon: ChartNoAxesColumnIncreasing, tab: 'progreso', color: 'text-[#AD713D]', background: 'bg-[#FFF2E6]' },
   ] as const;
 
   return (
@@ -80,7 +80,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
                 <Icon className="h-5 w-5" aria-hidden="true" />
                 <span className="mt-auto text-sm font-bold">{tool.title}</span>
                 <span className="mt-1 text-xs leading-4 opacity-85">{tool.description}</span>
-                <span className="mt-1.5 text-xs font-semibold">{activeMaterial ? 'Abrir →' : 'Elegí un PDF'}</span>
+                <span className="mt-1.5 text-xs font-medium">{activeMaterial ? 'Abrir →' : 'Elegí un PDF'}</span>
               </>
             );
             return activeMaterial ? (
