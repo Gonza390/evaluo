@@ -1,4 +1,5 @@
 import type { CanonicalPedagogicalModel } from './types';
+import { constructSourceBackedScenarios } from './practice-case-scenarios';
 
 export type PracticePair = { term: string; definition: string; chapterTitle: string | null; englishTerm?: string | null };
 export type PracticeQuestion = {
@@ -231,28 +232,54 @@ export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null):
       const colon = item.indexOf(':');
       if (colon < 4 || colon > 58) return null;
       const name = item.slice(0, colon).trim();
-      // Source notes can contain disputed relative-risk labels (e.g. Ansoff).
-      // Classification practice should test the *defining characteristic*,
-      // not promote an unreviewed risk ranking as an academic fact.
+      // We can test Ansoff's product/market distinction but must not treat
+      // disputed relative-risk rankings in uploaded notes as established facts.
       const evidence = item.slice(colon + 1).trim()
-        .replace(/\s*\(\s*riesgo\s+(?:muy\s+)?(?:bajo|medio|alto)\s*\)/giu, '').trim();
+        .replace(/\\s*\\(\\s*riesgo\\s+(?:muy\\s+)?(?:bajo|medio|alto)\\s*\\)/giu, '').trim();
       if (name.length < 4 || evidence.length < 25 || evidence.length > 240) return null;
       return { name, evidence };
     }).filter((entry): entry is { name: string; evidence: string } => Boolean(entry));
     const labels = [...new Set(parsed.map(entry => normalizedAnswer(entry.name)))];
     if (parsed.length < 2 || labels.length !== parsed.length || parsed.length > 6 ||
-        parsed.some(entry => /^grupo\s*\d+$/i.test(entry.name))) continue;
+        parsed.some(entry => /^grupo\\s*\\d+$/i.test(entry.name))) continue;
     if (new Set(parsed.map(entry => normalizedAnswer(entry.evidence))).size !== parsed.length) continue;
-    for (const [i, entry] of parsed.entries()) {
+    const options = parsed.map(choice => choice.name);
+    const pageStart = group.pageReferences?.[0] ?? null;
+    const authored = constructSourceBackedScenarios(group.title,parsed);
+    if (authored.length) {
+      // Only explicitly grounded alternative systems have authored applications.
+      // Hypothetical situations are original; the classifications are verbatim.
+      for (const [i,caseItem] of authored.entries()) {
+        result.push({
+          id: 'source-application-' + index + '-' + i,
+          prompt: caseItem.scenario + '\\n\\n' + caseItem.question,
+          options, answer:caseItem.answer,explanation:caseItem.explanation,
+          level:'aplicar',kind:'source-application',
+          chapterTitle:group.title,pageStart,
+        });
+      }
+      continue;
+    }
+    // A classification whose definitions exist but don't justify new factual
+    // scenarios is a recognition exercise, never misleadingly labeled application.
+    for (const [i,entry] of parsed.entries()) {
+      // If the description contains its own answer or another category label,
+      // grading is trivial or potentially ambiguous. Drop it.
+      const content=normalizedAnswer(entry.evidence);
+      if (parsed.some(item=>normalizedAnswer(item.name).length>8 &&
+            content.includes(normalizedAnswer(item.name)))) continue;
+      const alternative=parsed.find(item=>item!==entry);
+      if(!alternative)continue;
       result.push({
-        id: `source-case-${index}-${i}`,
-        prompt: `En «${group.title}», se presenta esta situación: ${entry.evidence} ¿A cuál de estas categorías corresponde?`,
-        options: parsed.map(choice => choice.name),
-        answer: entry.name,
-        explanation: `El material relaciona «${entry.name}» con: ${entry.evidence}`,
-        level: 'comprender', kind: 'classification-scenario',
-        chapterTitle: group.title,
-        pageStart: group.pageReferences?.[0] ?? null,
+        id: 'source-recognition-' + index + '-' + i,
+        prompt: 'En «' + group.title + '», el material describe lo siguiente: «' +
+          entry.evidence + '». ¿A qué categoría corresponde específicamente?',
+        options,answer:entry.name,
+        explanation: 'Corresponde a «' + entry.name + '» porque su característica es: ' +
+          entry.evidence + '. En cambio, «' + alternative.name +
+          '» se describe como: ' + alternative.evidence + '.',
+        level:'comprender',kind:'classification-recognition',
+        chapterTitle:group.title,pageStart,
       });
     }
   }
