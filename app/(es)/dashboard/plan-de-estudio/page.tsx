@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, CalendarDays, FileText, GraduationCap } from 'lucide-react';
+import { ArrowRight, CalendarDays, GraduationCap } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanWheel } from '@/components/dashboard/study-plan-wheel';
@@ -94,18 +94,6 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
               </div>
             </section>
 
-            <section>
-              <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] font-bold tracking-tight">Tus materiales</h2><span className="text-xs text-slate-400">{materials.length} PDFs</span></div>
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                {materials.length ? materials.slice(0, 6).map(material => (
-                  <Link key={material.id} href={`/materiales/${material.id}?tab=resumen`} className="flex min-h-11 items-center gap-3 border-b border-slate-100 px-3 py-2.5 transition last:border-0 hover:bg-slate-50">
-                    <FileText className="size-4 shrink-0 text-slate-400" />
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{material.title}</span>
-                    <ArrowRight className="size-4 shrink-0 text-slate-400" />
-                  </Link>
-                )) : <p className="p-5 text-sm text-slate-500">Tus PDFs aparecerán aquí cuando estén listos.</p>}
-              </div>
-            </section>
           </div>
         </div>
       </div>
