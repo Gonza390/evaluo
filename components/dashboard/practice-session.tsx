@@ -102,7 +102,6 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       body: JSON.stringify({ materialId, mode, correct: score, total }),
     }).catch(() => undefined);
   // Only send on transition to completed; responses cannot change after completion.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 
   async function generateNewCases() {
