@@ -132,13 +132,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const client = createPublicClient();
   // Use the approved public aggregate; the raw question-bank view is intentionally private.
   const fetchPublicQuestionSignals = async () => {
-    const { data, error } = await client.rpc('get_public_preguntero_catalog');
-    if (error) throw error;
-    return { data: (data ?? []) as Array<{
+    type PublicQuestionRow = {
       materia_id: string | null;
       question_count: number | null;
       parciales: number[] | null;
-    }> };
+    };
+    const catalogClient = client as unknown as {
+      rpc: (name: 'get_public_preguntero_catalog') => Promise<{
+        data: PublicQuestionRow[] | null;
+        error: { message: string } | null;
+      }>;
+    };
+    const { data, error } = await catalogClient.rpc('get_public_preguntero_catalog');
+    if (error) throw error;
+    return { data: data ?? [] };
   };
   // PostgREST limits one response to 1,000 rows. Sitemap discovery must paginate.
   const fetchAllMaterias = async () => {
