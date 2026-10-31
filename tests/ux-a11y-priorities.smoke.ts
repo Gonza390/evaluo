@@ -14,8 +14,8 @@ assert.match(materials, /onPrimaryAction=\{\(\) => openUploadPicker\(/);
 assert.match(dashboardChrome, /usePdfUploadTrigger\(\)/);
 const calendar = source('app/(es)/calendario/page.tsx');
 const calendarStyles = source('app/(es)/calendario/calendar-clean.css');
-assert.match(calendar, /var\(--calendar-exam-text\)/);
-assert.match(calendar, /var\(--calendar-assignment-text\)/);
+assert.match(calendar, /event\.type === 'exam'[\s\S]*?'#AD713D'/);
+assert.match(calendar, /'#376CAD'/);
 assert.match(calendarStyles, /--calendar-exam-text: #92400e/);
 assert.match(calendar, /text-slate-500' : 'text-slate-900'/);
 assert.match(workspace, /if \(outcome === 'completed' && \(demo \|\| isOwner\)\)/,
