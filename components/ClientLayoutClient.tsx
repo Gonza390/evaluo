@@ -250,6 +250,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
   const isMaterialStudyRoute = pathname.startsWith('/materiales/');
+  const isDesktopStudyPlanRoute = pathname === '/dashboard/plan-de-estudio';
   // A single compact mobile header for all authenticated screens.
   // Una misma escala para la aplicación privada; el sitio público y el área
   // de SEO mantienen su composición. El lector de PDFs conserva su UI interna.
@@ -311,7 +312,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     <div
       data-private-compact={isCompactAppRoute ? 'true' : undefined}
       className={`bg-background flex flex-col ${
-        isMaterialStudyRoute ? 'h-dvh min-h-0 overflow-hidden' : 'min-h-screen'
+        isMaterialStudyRoute ? 'h-dvh min-h-0 overflow-hidden' : isDesktopStudyPlanRoute ? 'min-h-screen xl:h-dvh xl:min-h-0 xl:overflow-hidden' : 'min-h-screen'
       }`}
     >
       {showTopBar ? (
@@ -598,12 +599,12 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     : isExploreExperienceRoute
                       ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
                       : isCompactAppRoute
-                        ? 'bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0'
+                        ? `bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0 ${isDesktopStudyPlanRoute ? 'xl:min-h-0 xl:overflow-hidden xl:pb-0' : ''}`
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
             {isCompactAppRoute ? (
-              <div key={pathname} data-evaluo-route-enter className={isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : 'min-h-full w-full'}>
+              <div key={pathname} data-evaluo-route-enter className={isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : isDesktopStudyPlanRoute ? 'min-h-full w-full xl:h-full xl:min-h-0' : 'min-h-full w-full'}>
                 {children}
               </div>
             ) : children}
