@@ -32,6 +32,12 @@ export async function POST(request: Request) {
   if (!material || material.processing_status !== 'ready')
     return NextResponse.json({ error: 'material_not_found' }, { status: 404 });
 
+  // Expensive generation stays opt-in until QA approves the cost/quality budget.
+  // Source-backed cases remain usable even when this endpoint is disabled.
+  if (process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED !== '1') {
+    return NextResponse.json({ error: 'generation_disabled' }, { status: 503 });
+  }
+
   // User-initiated AI generation only; durable strict budget even if infrastructure fails.
   const limit = await enforceStrictRateLimit({
     key: 'practice-ai-cases:' + user.id,
