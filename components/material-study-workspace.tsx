@@ -2111,10 +2111,10 @@ export function MaterialStudyWorkspace({
                       className="border-border scroll-mt-5 border-b py-4 first:pt-0 last:border-b-0 last:pb-2 sm:py-5"
                     >
                       <header className="mb-2.5 sm:mb-3">
-                        <p className="text-primary text-[11px] font-extrabold tracking-[0.18em] uppercase">
+                        <p className="text-primary text-[11px] font-medium tracking-[0.12em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-normal tracking-[-0.035em]">
+                        <h3 className="text-foreground mt-1 text-[17px] leading-[1.45] font-medium tracking-[-0.025em]">
                           {section.displayTitle}
                         </h3>
                       </header>
@@ -2809,7 +2809,7 @@ export function MaterialStudyWorkspace({
                 <DropdownMenuTrigger asChild>
                   <button type="button" aria-label={`Cambiar PDF actual: ${title}`}
                     className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
-                    <span className="min-w-0 truncate text-[0.98rem] sm:text-[1.06rem]" title={title}>{title}</span>
+                    <span className="min-w-0 truncate text-[14px] sm:text-[16px]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
@@ -2826,7 +2826,7 @@ export function MaterialStudyWorkspace({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-semibold tracking-[-0.03em] sm:text-[1.06rem]" title={title}>{title}</h1>
+              <h1 className="text-foreground min-w-0 truncate text-[14px] font-semibold tracking-[-0.03em] sm:text-[16px]" title={title}>{title}</h1>
             )}
           </div>
 
