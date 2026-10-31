@@ -21,6 +21,15 @@ type CatalogRpcClient = {
   rpc: (fn: 'get_catalog_content_signals') => PromiseLike<CatalogRpcResult>;
 };
 
+// Fallback sin descargar el banco: el catálogo público devuelve sólo materias
+// aprobadas y sus conteos previamente agregados.
+type PregunteroCatalogFallbackClient = {
+  rpc: (fn: 'get_public_preguntero_catalog') => PromiseLike<{
+    data: Array<{ materia_id: string | null }> | null;
+    error: { message?: string } | null;
+  }>;
+};
+
 export interface CatalogCarrera {
   id: string;
   nombre: string;
@@ -70,7 +79,7 @@ async function fetchCatalogContentSignalsLegacy(
 ): Promise<CatalogContentSignals> {
   const [questionsResult, summariesResult, resourcesResult, studentMaterialsResult] =
     await Promise.all([
-      client.from('preguntas_banco_public').select('materia_id').limit(10000),
+      (client as unknown as PregunteroCatalogFallbackClient).rpc('get_public_preguntero_catalog'),
       client.from('resumenes').select('materia_id').limit(10000),
       client.from('recursos').select('materia_id').limit(10000),
       client

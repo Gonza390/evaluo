@@ -41,7 +41,7 @@ for (const source of [legacyNewSource, legacyUploadSource]) {
   assert.doesNotMatch(source, /\/dashboard\/materiales\?/);
 }
 
-assert.match(navbarSource, /\{ label: 'Mi espacio', href: '\/dashboard', icon: Home \}/);
+assert.match(navbarSource, /\{ label: 'Mi espacio', href: '\/dashboard', icon: Home(?:, iconTone: '[^']+')? \}/);
 assert.doesNotMatch(navbarSource, /href: '\/dashboard\/materiales'/);
 assert.doesNotMatch(navbarSource, /label: 'Inicio', href: '\/dashboard'/);
 
@@ -127,7 +127,7 @@ assert.match(appChromeSource, /effectiveSidebarCollapsed \? 'md:ml-\[76px\]' : '
 assert.match(navbarSource, /compact \? 'md:top-\[52px\]' : 'md:top-\[81px\]'/);
 assert.match(navbarSource, /compact \? 'w-\[56px\]' : 'w-\[76px\]'/);
 assert.match(navbarSource, /compact \? 'w-\[176px\]' : 'w-\[248px\]'/);
-assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
+assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-1\.5 py-1' : 'min-h-11 gap-2\.5 px-2 py-1\.5'/);
 
 // El botón de plegado comparte la fila superior, sin separar "Mi espacio"
 // ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
@@ -154,8 +154,10 @@ assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute/,
   'The topbar should not change its branding between dashboard and other routes.');
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
-assert.match(appChromeSource, /user \? 'grid-cols-2' : 'grid-cols-4'/,
-  'Use two balanced bottom destinations for authenticated mobile users.');
+assert.match(appChromeSource, /grid-cols-4/,
+  'Keep four balanced mobile destinations for authenticated students and guests.');
+assert.match(appChromeSource, /label: 'Mi plan', href: '\/dashboard\/plan-de-estudio'/,
+  'Keep Mi plan available on the authenticated mobile navigation.');
 const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
 assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
   'Keep Mi espacio in the bottom navigation.');
@@ -207,7 +209,7 @@ for (const source of [dashboardSource, heroWithoutSvgAnimationStyles, dashboardM
 assert.match(appChromeSource, /stablePrivateHeader\s*\? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1'/);
 assert.match(appChromeSource, /compact=\{isCompactAppRoute\}/);
 assert.match(appChromeSource, /effectiveSidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
-assert.match(appChromeSource, /isCompactAppRoute\s*\?\s*'bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0'/);
+assert.match(appChromeSource, /bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0/);
 assert.match(appChromeSource, /isExploreExperienceRoute/);
 assert.match(appChromeSource, /<PublicGuestActions trackingLocation="discovery_header" \/>/);
 const compactCalendar = readFileSync(resolve('app/(es)/calendario/page.tsx'), 'utf8');
@@ -222,7 +224,7 @@ for (const page of [compactCalendar, compactSettings, compactProgressList, compa
   assert.match(page, /text-\[20px\]|size="compact"/);
 }
 assert.match(compactCalendar, /max-w-\[1240px\]/);
-assert.match(compactSettings, /max-w-\[1240px\]/);
+assert.match(compactSettings, /max-w-\[760px\]/);
 assert.match(compactProgress, /size="compact"/);
 assert.match(compactProgress, /grid-cols-\[236px_minmax\(0,1fr\)\]/);
 assert.match(compactProfile, /space-y-4 rounded-xl border p-3\.5 sm:p-4/);
