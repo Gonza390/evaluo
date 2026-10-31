@@ -1,6 +1,6 @@
 import type { CanonicalPedagogicalModel } from './types';
 
-export type PracticePair = { term: string; definition: string; chapterTitle: string | null };
+export type PracticePair = { term: string; definition: string; chapterTitle: string | null; englishTerm?: string | null };
 export type PracticeQuestion = {
   id: string; prompt: string; options: string[]; answer: string; explanation: string;
   level: string; pageStart: number | null; chapterTitle?: string | null; kind?: string;
@@ -33,12 +33,45 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
         normalizedAnswer(other.definition).slice(0, 48) === normalizedAnswer(item.definition).slice(0, 48)))
     .slice(0, limit);
 }
-/** A wrong choice in matching is not counted correct merely because its definition is similar. */
-export function isCorrectWrittenAnswer(answer: string, expected: string): boolean {
-  const response = normalizedAnswer(answer), term = normalizedAnswer(expected);
-  if (!response || !term) return false;
-  return response === term || response === 'el ' + term || response === 'la ' + term ||
-    response === 'los ' + term || response === 'las ' + term;
+/** Equivalences are accepted only when explicitly present in the glossary.
+ * No fuzzy/semantic matching: that could incorrectly award another concept.
+ */
+function writtenForm(value: string): string {
+  return normalizedAnswer(value).replace(/^(?:el|la|los|las|un|una)\\s+/, '');
+}
+function explicitAnswers(pair: PracticePair): string[] {
+  const variants = [pair.term];
+  if (pair.englishTerm?.trim()) variants.push(pair.englishTerm.trim());
+  // A source term such as "Responsabilidad social empresaria (RSE)" already
+  // declares both a full label and an abbreviation. Require matching initials.
+  const alias = /^(.*?)\\s*\\(([A-ZÁÉÍÓÚÑ]{2,8})\\)\\s*$/u.exec(pair.term.trim());
+  if (alias) {
+    const long = alias[1]!.trim(), acronym = alias[2]!;
+    const initials = normalizedAnswer(long).split(' ')
+      .filter(word => !['de','del','la','las','los','el','en','y'].includes(word))
+      .map(word => word[0] ?? '').join('').toUpperCase();
+    if (initials === normalizedAnswer(acronym).toUpperCase()) {
+      variants.push(long, acronym);
+    }
+  }
+  return variants;
+}
+export function isCorrectWrittenAnswer(answer: string, expected: string, aliases: readonly string[] = []): boolean {
+  const response = writtenForm(answer);
+  if (!response) return false;
+  return [expected, ...aliases].some(candidate => writtenForm(candidate) === response);
+}
+/** Don't accept a glossary alias if it could also be a different answer
+ * within the same exercise set. Ambiguous alternatives are simply disabled.
+ */
+export function allowedWrittenVariants(pair: PracticePair, allPairs: readonly PracticePair[]): string[] {
+  const variants = explicitAnswers(pair).slice(1);
+  const canonical = new Set(allPairs.filter(p => p !== pair).flatMap(p =>
+    explicitAnswers(p).map(writtenForm)));
+  return variants.filter(alias => {
+    const key = writtenForm(alias);
+    return key.length >= 2 && !canonical.has(key);
+  });
 }
 /** A shared long definition stem can make two options pedagogically equivalent. */
 export function hasAmbiguousDistractors(question: PracticeQuestion): boolean {
@@ -62,6 +95,23 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
     seen.add(key); return true;
   });
 }
+/** Keep application separate from recognition and never repeat a question in Mixto. */
+export function selectMixedQuestions(
+  options: PracticeQuestion[], cases: PracticeQuestion[], round = 0,
+): { questions: PracticeQuestion[]; application: PracticeQuestion | null } {
+  const base = balancedQuestions(options, 5, round);
+  const used = new Set(base.map(q => q.id));
+  const available = qualifiedQuestions(cases).filter(q => !used.has(q.id) &&
+    !base.some(original => normalizedAnswer(original.prompt) === normalizedAnswer(q.prompt)));
+  const actualApplications = available.filter(q => q.level === 'aplicar');
+  // A classification lookup is understanding, not a transfer/application case.
+  const chosen = actualApplications.length
+    ? actualApplications[round % actualApplications.length]!
+    : available.length ? available[round % available.length]! : null;
+  if (chosen && base.length >= 5) base.pop(); // Keep task count bounded.
+  return { questions:base, application:chosen };
+}
+
 /** Distribute exams across chapters instead of consuming the first ten generated questions. */
 export function balancedQuestions(questions: PracticeQuestion[], limit = 10, round = 0): PracticeQuestion[] {
   const buckets = new Map<string, PracticeQuestion[]>();
