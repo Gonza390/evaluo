@@ -356,7 +356,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         </div>
       </>}
       {mode === 'casos' && <p className="mt-4 text-xs text-slate-500">
-        Situaciones construidas a partir de clasificaciones del documento. No son una evaluación de transferencia a escenarios inéditos.
+        {contexts.some(question => question.level === 'aplicar')
+          ? 'Las situaciones son ficticias y sirven para aplicar conceptos documentados. Algunos ejercicios también pueden comprobar clasificaciones.'
+          : 'Esta actividad identifica categorías descritas en tu material; no evalúa todavía la aplicación a situaciones nuevas.'}
       </p>}
     </section>}
   </main>;
