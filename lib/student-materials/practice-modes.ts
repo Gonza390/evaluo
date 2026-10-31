@@ -37,7 +37,7 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
  * No fuzzy/semantic matching: that could incorrectly award another concept.
  */
 function writtenForm(value: string): string {
-  return normalizedAnswer(value).replace(/^(?:el|la|los|las|un|una)\\s+/, '');
+  return normalizedAnswer(value).replace(/^(?:el|la|los|las|un|una)\s+/, '');
 }
 function grammaticalVariants(term: string): string[] {
   const words = writtenForm(term).split(' ').filter(Boolean);
@@ -67,7 +67,7 @@ function explicitAnswers(pair: PracticePair): string[] {
   if (pair.englishTerm?.trim()) variants.push(pair.englishTerm.trim());
   // A source term such as "Responsabilidad social empresaria (RSE)" already
   // declares both a full label and an abbreviation. Require matching initials.
-  const alias = /^(.*?)\\s*\\(([A-ZÁÉÍÓÚÑ]{2,8})\\)\\s*$/u.exec(pair.term.trim());
+  const alias = /^(.*?)\s*\(([A-ZÁÉÍÓÚÑ]{2,8})\)\s*$/u.exec(pair.term.trim());
   if (alias) {
     const long = alias[1]!.trim(), acronym = alias[2]!;
     const initials = normalizedAnswer(long).split(' ')
@@ -96,14 +96,41 @@ export function allowedWrittenVariants(pair: PracticePair, allPairs: readonly Pr
     return key.length >= 2 && !canonical.has(key);
   });
 }
-/** A shared long definition stem can make two options pedagogically equivalent. */
+/**
+ * A key academic integrity failure: some generated distractors are near-
+ * paraphrases of the designated correct answer. Distinct strings can still
+ * express the same proposition. This lexical screen is conservative and
+ * sends such questions to rejection, not automatic rewriting of the grade.
+ * It is not a substitute for semantic or faculty review.
+ */
+const ambiguousStopwords = new Set([
+  'de','del','la','las','el','los','un','una','unos','unas','al','con','en','que',
+  'por','para','como','sobre','su','sus','donde','cuyo','cual','cuando','entre',
+  'cada','todo','todos','todas','este','esta','estas','estos','desde','hacia',
+  'forma','mismo','misma','sera','ser','son','es','fue','han','hay','debe',
+  'deben','tener','tiene','tienen','junto','acompanado','acompanada',
+]);
+function meaningfulOptionWords(value: string): Set<string> {
+  return new Set(normalizedAnswer(value).split(' ').filter(w =>
+    w.length >= 4 && !ambiguousStopwords.has(w)));
+}
 export function hasAmbiguousDistractors(question: PracticeQuestion): boolean {
   const answer = normalizedAnswer(question.answer);
-  if (answer.length < 44) return false;
+  if (answer.length < 40) return false;
+  const expected = meaningfulOptionWords(answer);
   return question.options.some(choice => {
-    const candidate = normalizedAnswer(choice);
-    return candidate !== answer && candidate.length >= 44 &&
-      candidate.slice(0, 42) === answer.slice(0, 42);
+    const alternative = normalizedAnswer(choice);
+    if (alternative === answer) return false;
+    if (alternative.length >= 44 && alternative.slice(0,42) === answer.slice(0,42)) return true;
+    if (alternative.length < 38 || expected.size < 5) return false;
+    const other = meaningfulOptionWords(alternative);
+    if (other.size < 5) return false;
+    const shared = [...expected].filter(word => other.has(word)).length;
+    const minSize = Math.min(expected.size,other.size);
+    const union = expected.size + other.size - shared;
+    // High overlap AND high containment. These are review thresholds,
+    // not claims that the two statements are mathematically equivalent.
+    return shared >= 5 && shared/minSize >= 0.7 && shared/union >= 0.45;
   });
 }
 export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuestion[] {
