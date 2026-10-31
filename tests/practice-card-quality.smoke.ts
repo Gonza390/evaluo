@@ -33,6 +33,14 @@ const uncited=auditPracticeFlashcard({
  back:'Autocrático centraliza decisiones; democrático involucra al equipo.',
  reference:null,
 });
+
+const overloaded=auditPracticeFlashcard({
+ front:'¿Qué seis afirmaciones forman parte de esta clasificación de actividades científicas?',
+ back:'Hipótesis de prueba · Contraste de resultados · Datos registrados · Inferencias generales · Procedimientos metodológicos · Condiciones del experimento',
+ reference:{pageStart:12,excerpt:'Hipótesis de prueba, contraste de resultados, datos registrados, inferencias, procedimientos y condiciones del experimento.'},
+});
+assert.equal(overloaded.approved,false,'A six-target card cannot be self-assessed as a single binary retrieval');
+assert.ok(overloaded.reasons.includes('overloaded_multi_target_flashcard'));
 assert.equal(uncited.approved,false);
 assert.ok(uncited.reasons.includes('missing_source'));
 console.log('Practice flashcard QA: metadata, risk conflicts, quality and source gates passed');
