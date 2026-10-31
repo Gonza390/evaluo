@@ -1,4 +1,4 @@
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { register } from 'node:module';
@@ -17,6 +17,20 @@ export async function resolve(specifier, context, nextResolve) {
 
   if (specifier === 'next/headers') {
     return nextResolve('next/headers.js', context);
+  }
+
+  // Native node --experimental-strip-types does not resolve extensionless
+  // relative TypeScript imports. Next.js and tsc do; mirror that for smoke tests.
+  if ((specifier.startsWith('./') || specifier.startsWith('../')) && context.parentURL?.startsWith('file:')) {
+    const target = new URL(specifier, context.parentURL);
+    if (!/\.(?:[cm]?js|tsx?)$/.test(target.pathname)) {
+      const candidatePath = fileURLToPath(target);
+      for (const ext of ['.ts', '.tsx', '.mjs', '.js']) {
+        if (existsSync(candidatePath + ext)) {
+          return nextResolve(pathToFileURL(candidatePath + ext).href, context);
+        }
+      }
+    }
   }
 
   if (specifier.startsWith('@/')) {
