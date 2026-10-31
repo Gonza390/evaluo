@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { deflateRawSync } from 'node:zlib';
+import { buildDocxTraceableSummaryChunks } from '../lib/student-materials/docx-chunks.ts';
 import { buildStudyDocumentModel, buildTraceableSummaryChunks, summarizeExtractedText } from '../lib/student-materials/text.ts';
 import { buildStudentMaterialGlossary } from '../lib/student-materials/glossary.ts';
 import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
@@ -98,6 +99,24 @@ assert.throws(() => extractDocxContent(zip({
   '[Content_Types].xml': '<Types>wordprocessingml.document.macroEnabled.main+xml</Types>',
   'word/document.xml': body,
 })), /DOCX válido|macros/);
+
+const multiUnitText = [
+  'Unidad 1: Mercado',
+  'La segmentación demográfica agrupa consumidores por edad, ingresos y características observables. Sus criterios permiten clasificar públicos para acciones comerciales medibles.',
+  'Unidad 2: Propuesta de valor',
+  'La propuesta de valor combina beneficios verificables y problemas concretos que el producto resuelve para un segmento específico. No equivale a medir la edad de los clientes.',
+].join('\n\n');
+const docxChunks = buildDocxTraceableSummaryChunks(multiUnitText, [
+  'Unidad 1: Mercado', 'Unidad 2: Propuesta de valor',
+]);
+assert.ok(docxChunks.some((chunk) => chunk.sectionTitle === 'Unidad 1: Mercado'));
+assert.ok(docxChunks.some((chunk) => chunk.sectionTitle === 'Unidad 2: Propuesta de valor'));
+assert.ok(docxChunks.every((chunk) => chunk.pageStart === null && chunk.pageEnd === null));
+assert.ok(docxChunks.every((chunk) =>
+  !(chunk.text.includes('Unidad 1: Mercado') && chunk.text.includes('Unidad 2: Propuesta de valor'))
+), 'Los bloques pedagógicos de Word no deben mezclar dos unidades distintas.');
+assert.ok(docxChunks.every((chunk) => chunk.contentHash.length === 64 && chunk.text.length > 0));
+assert.deepEqual(docxChunks.map((chunk) => chunk.chunkIndex), docxChunks.map((_, i) => i));
 
 const summary = summarizeExtractedText(result.text, 'Marketing estratégico');
 const documentModel = buildStudyDocumentModel(result.text, 'Marketing estratégico');
