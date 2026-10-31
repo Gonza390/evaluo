@@ -230,7 +230,12 @@ export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null):
     const parsed = group.items.map(item => {
       const colon = item.indexOf(':');
       if (colon < 4 || colon > 58) return null;
-      const name = item.slice(0, colon).trim(), evidence = item.slice(colon + 1).trim();
+      const name = item.slice(0, colon).trim();
+      // Source notes can contain disputed relative-risk labels (e.g. Ansoff).
+      // Classification practice should test the *defining characteristic*,
+      // not promote an unreviewed risk ranking as an academic fact.
+      const evidence = item.slice(colon + 1).trim()
+        .replace(/\s*\(\s*riesgo\s+(?:muy\s+)?(?:bajo|medio|alto)\s*\)/giu, '').trim();
       if (name.length < 4 || evidence.length < 25 || evidence.length > 240) return null;
       return { name, evidence };
     }).filter((entry): entry is { name: string; evidence: string } => Boolean(entry));
