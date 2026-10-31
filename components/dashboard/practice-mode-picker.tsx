@@ -12,7 +12,7 @@ const modes = [
   { title: 'Opciones', description: 'Verdadero o falso y elegir entre varias.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
   { title: 'Unir conceptos', description: 'Unís cada término con su definición.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
   { title: 'Completar', description: 'Recuperá el concepto que falta a partir de su definición.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
-  { title: 'Casos', description: 'Relacioná situaciones con conceptos. También podés generar casos con IA.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
+  { title: 'Casos', description: 'Relacioná situaciones del material con sus conceptos y explicaciones.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
   { title: 'Con tus palabras', description: 'Lo explicás con tus palabras, como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
   { title: 'Simulacro de examen', description: 'Con reloj y sin ver cómo te fue hasta el final, como el día del examen.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
 ] as const;
