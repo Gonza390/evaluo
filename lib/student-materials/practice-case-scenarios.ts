@@ -34,10 +34,27 @@ function ansoff(categories: LabelledCategory[]): SourceBackedScenario[] {
   if(!penetration||!market||!product||!diversify||categories.length!==4)return[];
   // A source with just category names is not sufficient. A wrong or truncated
   // matrix must never yield a confidently graded question.
-  if(!hasAll(penetration.evidence,['product','exist','mercado','actual']) ||
-     !hasAll(market.evidence,['product','exist','nuevo','mercado']) ||
-     !hasAll(product.evidence,['nuevo','product','mercado','actual']) ||
-     !hasAll(diversify.evidence,['nuevo','product','nuevo','mercado'])) return[];
+  const existingProduct=(value:string)=> {
+    const text=norm(value);
+    return text.includes('product') && (text.includes('exist') ||
+      /productos? (?:actuales?|ya ofrecidos?)/.test(text));
+  };
+  const newProduct=(value:string)=> {
+    const text=norm(value);
+    return /nuevos? productos?|productos? nuevos?|nueva oferta/.test(text);
+  };
+  const currentMarket=(value:string)=> {
+    const text=norm(value);
+    return text.includes('mercado actual') || text.includes('mercados actuales');
+  };
+  const newMarket=(value:string)=> {
+    const text=norm(value);
+    return /nuevos? mercados?|mercados? nuevos?|region nueva|nuevo pais|pais nuevo|mercado donde todavia no se participa|mercado en el que aun no participamos/.test(text);
+  };
+  if(!existingProduct(penetration.evidence)||!currentMarket(penetration.evidence) ||
+     !existingProduct(market.evidence)||!newMarket(market.evidence) ||
+     !newProduct(product.evidence)||!currentMarket(product.evidence) ||
+     !newProduct(diversify.evidence)||!newMarket(diversify.evidence)) return[];
   const question='¿Qué estrategia de crecimiento describe mejor esta decisión?';
   return [
     {
