@@ -87,6 +87,43 @@ const ambiguous: PracticeQuestion = {
 };
 assert.equal(hasAmbiguousDistractors(ambiguous), true);
 assert.equal(qualifiedQuestions([ambiguous]).length, 0);
+
+const realIpcParaphrases: PracticeQuestion[] = [{
+  id:'ipc-effect-matilda',
+  prompt:'¿Qué significa el efecto Matilda en la ciencia?',
+  answer:'Manifestación de omisiones selectivas donde el trabajo de una científica es omitido o atribuido a un varón cercano.',
+  options:[
+    'Manifestación de omisiones selectivas donde el trabajo de una científica es omitido o atribuido a un varón cercano.',
+    'Trabajo de una científica omitido o atribuido a un varón cercano, invisibilizando sus aportes.',
+    'Participación de mujeres en áreas interdisciplinarias sin omisiones de atribución.',
+  ],
+  explanation:'La atribución de descubrimientos debe considerar a quien los produjo.',
+  level:'recordar',pageStart:22,
+},{
+  id:'ipc-explanation',
+  prompt:'¿Cuál es la relación entre explicación nomológico-deductiva y leyes universales?',
+  answer:'El explanans de una explicación nomológico deductiva debe contener por lo menos una ley universal.',
+  options:[
+    'El explanans de una explicación nomológico deductiva debe contener por lo menos una ley universal.',
+    'El explanans de una explicación nomológico-deductiva debe contener al menos una ley universal.',
+    'El explanans puede prescindir completamente de enunciados generales.',
+  ],
+  explanation:'Una ley universal forma parte de las premisas necesarias en esa explicación.',
+  level:'comprender',pageStart:17,
+}];
+assert.equal(qualifiedQuestions(realIpcParaphrases).length,0,
+  'Real IPC near-paraphrases must not grade one of two equivalent answers as wrong');
+const negatedButDistinct: PracticeQuestion = {
+  ...realIpcParaphrases[1]!,id:'negated-distinction',
+  options:[
+    realIpcParaphrases[1]!.answer,
+    'La explicación nomológico deductiva NO requiere ninguna ley universal, por lo que depende solo de observaciones.',
+    'Un conjunto de definiciones nunca puede cumplir funciones explicativas.',
+  ],
+};
+assert.equal(qualifiedQuestions([negatedButDistinct]).length,1,
+ 'Clearly distinct alternatives must remain available for practice');
+
 const byPage = Array.from({ length: 16 }, (_, i): PracticeQuestion => ({
   ...questions[i % questions.length]!, id: 'pages-' + i,
   prompt: 'Pregunta con fuente y página repartida número ' + i + '?',
