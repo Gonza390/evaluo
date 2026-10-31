@@ -6,6 +6,8 @@ import { ensureStudentMaterialStudyArtifacts } from '@/lib/student-material-summ
 import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-pedagogical-cache';
 import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import { PracticeSession } from '@/components/dashboard/practice-session';
+import { buildSourceBackedCases } from '@/lib/student-materials/practice-modes';
+import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 
 export default async function PracticeModePage({ params }: { params: Promise<{ id: string; mode: string }> }) {
   const { id, mode } = await params;
@@ -31,11 +33,16 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   const artifacts = await loadOrBuildPedagogicalArtifacts({
     admin, materialId: material.id, summary: studySummary, glossary,
   });
+  const { data: modelRow } = mode === 'casos' || mode === 'mixto'
+    ? await admin.from('student_materials').select('pedagogical_model').eq('id', material.id).maybeSingle()
+    : { data: null };
+  const cases = buildSourceBackedCases((modelRow?.pedagogical_model ?? null) as CanonicalPedagogicalModel | null);
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
-    materialId={material.id} materialTitle={material.title}
+    materialId={material.id} materialTitle={material.title} cases={cases}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null }))}
     questions={artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
       explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
+      chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? null,
     }))} />;
 }
