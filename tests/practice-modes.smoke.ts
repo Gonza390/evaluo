@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {
-  balancedQuestions, buildSourceBackedCases, isCorrectWrittenAnswer,
+  balancedQuestions, buildSourceBackedCases, hasAmbiguousDistractors, isCorrectWrittenAnswer,
   qualifiedQuestions, selectPracticePairs, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
@@ -61,3 +61,47 @@ assert.equal(verifyGeneratedPracticeCases(generated, source, terms).length, 1);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],evidence:'Cita inventada que el documento nunca contiene.'}]},source,terms).length,0);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],page:9}]},source,terms).length,0);
 console.log('AI case source-verification smoke passed');
+
+const ambiguous: PracticeQuestion = {
+  id: 'ambiguous-distractors',
+  prompt: '¿Qué representa una premisa valorativa implícita?',
+  options: [
+    'Juicio de valor necesario en las premisas para respaldar una conclusión normativa y evitar la falacia naturalista.',
+    'Juicio de valor necesario en las premisas para evitar el salto de los hechos a una norma.',
+  ],
+  answer: 'Juicio de valor necesario en las premisas para respaldar una conclusión normativa y evitar la falacia naturalista.',
+  explanation: 'Los dos distractores se parecen demasiado para evaluar con una única respuesta inequívoca.',
+  level: 'recordar', pageStart: 2,
+};
+assert.equal(hasAmbiguousDistractors(ambiguous), true);
+assert.equal(qualifiedQuestions([ambiguous]).length, 0);
+const byPage = Array.from({ length: 16 }, (_, i): PracticeQuestion => ({
+  ...questions[i % questions.length]!, id: 'pages-' + i,
+  prompt: 'Pregunta con fuente y página repartida número ' + i + '?',
+  chapterTitle: null, kind: 'concept', pageStart: 1 + i * 3,
+}));
+const pageExam = balancedQuestions(byPage, 8);
+assert.equal(pageExam.length, 8);
+assert.ok(new Set(pageExam.map(q => Math.floor(((q.pageStart ?? 1) - 1) / 12))).size >= 3,
+  'When chapter tags are missing, sample different document segments.');
+const fs = await import('node:fs');
+const url = await import('node:url');
+const root = new URL('../', import.meta.url);
+const sourceFile = (path: string) => fs.readFileSync(new URL(path, root), 'utf8');
+const picker = sourceFile('components/dashboard/practice-mode-picker.tsx');
+const workspace = sourceFile('components/dashboard/practice-session.tsx');
+const route = sourceFile('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
+const aiRoute = sourceFile('app/api/practice/cases/route.ts');
+for (const mode of ['unir','completar','casos','mixto','simulacro']) {
+  assert.ok(picker.includes('/dashboard/practicar/${materialId}/'+mode), 'Picker must navigate to '+mode);
+  assert.ok(route.includes("'"+mode+"'"), 'Page must accept '+mode);
+}
+assert.match(picker, /title !== 'Con tus palabras'/);
+assert.match(route, /\.eq\('user_id', user\.id\)/, 'Only owners may access practice PDFs');
+assert.match(aiRoute, /enforceStrictRateLimit/, 'AI generation must be rate limited');
+assert.match(workspace, /Comprobar respuesta/, 'Show feedback for formative practice');
+assert.match(workspace, /Entregar examen/, 'Finish exam explicitly');
+assert.match(workspace, /setSecondsLeft/, 'Have a working countdown');
+assert.match(workspace, /verifiedChapterCount/, 'Do not imply guaranteed topic coverage');
+assert.match(workspace, /Vinculado/, 'A linked association must not display a correct check prematurely');
+console.log('Practice UX navigation, security and integrity checks passed');
