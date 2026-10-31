@@ -16,16 +16,16 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, aiAvailable = false }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, aiAvailable = false, isWord = false }: {
   mode: Mode; materialId: string; materialTitle: string;
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
-  aiAvailable?: boolean;
+  aiAvailable?: boolean; isWord?: boolean;
 }) {
   const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
-  // Word/DOCX has reliable section references but no physical pages.
-  // A question without page number is still valid for the exam when it
-  // survives the same answer/distractor checks as PDF questions.
-  const options = useMemo(() => qualifiedQuestions(questions), [questions]);
+  // PDF exams keep the existing page-citation requirement. DOCX questions
+  // have section citations instead and must not be rejected for page=null.
+  const options = useMemo(() => qualifiedQuestions(questions.filter(question =>
+    mode !== 'simulacro' || isWord || question.pageStart !== null)), [questions, mode, isWord]);
   const [generatedCases, setGeneratedCases] = useState<PracticeQuestion[]>([]);
   const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
