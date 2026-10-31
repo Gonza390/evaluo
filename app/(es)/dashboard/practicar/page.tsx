@@ -34,5 +34,6 @@ export default async function PracticeHomePage() {
       .find((id): id is string => typeof id === 'string' && ids.has(id)) ?? null;
   }
 
-  return <PracticeModePicker materials={materials} initialMaterialId={lastOpenedMaterialId} />;
+  return <PracticeModePicker materials={materials} initialMaterialId={lastOpenedMaterialId}
+    advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
 }
