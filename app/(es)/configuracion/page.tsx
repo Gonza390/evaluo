@@ -364,7 +364,7 @@ export default function ConfiguracionPage() {
         <h2 id="settings-general" className="text-xs font-semibold text-slate-500">General</h2>
         {settingRow('Idioma', 'Español')}
         {settingRow('Apariencia', 'Claro')}
-        <p className="pt-1 text-[11px] text-slate-400">Estas preferencias todavía no se pueden modificar.</p>
+        <p className="pt-1 text-xs text-slate-400">Estas preferencias todavía no se pueden modificar.</p>
       </section>
 
       <section aria-labelledby="settings-account" className="space-y-1">
