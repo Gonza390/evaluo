@@ -35,12 +35,13 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   ];
   return all.filter(step=>step.id==='reading'||t[step.id]);
  };
+ const sessionMinutes=visibleTopics.reduce((total,index)=>total+buildSteps(index).filter(step=>!done[`${index}:${step.id}`]).reduce((minutes,step)=>minutes+step.minutes,0),0);
  return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
       return <div key={topic}>
     <div className={`flex items-center justify-between px-3 py-1.5 text-[11px] font-semibold text-slate-500 ${groupIndex?'border-t border-slate-200 bg-slate-50/70':'border-b border-slate-100'}`}>
-     <span>Tema {topic+1} de {topicCount}</span>{groupIndex>0?<span>Podés ir adelantando</span>:null}
+     <span>Tema {topic+1} de {topicCount}</span>{groupIndex>0?<span>Podés ir adelantando</span>:groupIndex===0?<span className="inline-flex items-center gap-1"><Clock3 className="size-3" />≈ {sessionMinutes} min en total</span>:null}
     </div>
     {steps.filter(step=>!done[`${topic}:${step.id}`]).map((step,i)=>{
      const Icon=step.icon;const completed=!!done[`${topic}:${step.id}`];
@@ -52,7 +53,6 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
        <span className="block text-[12px] font-semibold">{step.label}</span>
        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
         <span>{step.detail}</span>
-        {!completed?<span className="inline-flex items-center gap-1"><Clock3 className="size-3"/>≈ {step.minutes} min</span>:null}
        </span>
       </span>
       <ArrowRight className={`size-4 ${active?'text-blue-700':'text-slate-400'}`}/>
