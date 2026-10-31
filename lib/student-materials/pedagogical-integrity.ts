@@ -1,5 +1,6 @@
 import type { PedagogicalArtifacts, StudyFlashcard, StudyQuestion } from './pedagogy';
 import type { StudySummarySection } from './types';
+import { auditPracticeFlashcard } from './practice-card-quality';
 
 /** Conservador: ante una respuesta modelo sin sustento verificable, no presentarla al alumno. */
 function norm(value: string) {
@@ -221,7 +222,8 @@ export function sanitizePedagogicalArtifacts(
     ? { ...question, level: (question.kind === 'process' ? 'comprender' : 'recordar') as StudyQuestion['level'] }
     : question);
   const flashcards = artifacts.flashcards.filter(card => {
-    const reason = unsafeFlashcardReason(card);
+    const review = auditPracticeFlashcard(card);
+    const reason = unsafeFlashcardReason(card) ?? review.reasons[0] ?? null;
     if (reason) rejectedReasons.push(reason);
     return !reason;
   }).map(card => ({ ...card, level: accurateFlashcardLevel(card) }));
