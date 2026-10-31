@@ -284,7 +284,7 @@ function StudyDocumentShell({
     <div className="surface-card border-border bg-card rounded-2xl border shadow-none">
       <div className={compact ? 'space-y-3 px-3 py-3' : 'space-y-5 px-4 py-4 sm:px-5 sm:py-5'}>
         <section className="space-y-1.5">
-          <h2 className="text-foreground text-[1.12rem] font-bold tracking-[-0.04em]">{title}</h2>
+          <h2 className="text-foreground text-[1.12rem] font-semibold tracking-[-0.04em]">{title}</h2>
           {description ? (
             <p className="text-muted-foreground text-[13px] leading-6">{description}</p>
           ) : null}
@@ -1700,7 +1700,7 @@ export function MaterialStudyWorkspace({
     return (
       <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-3 flex flex-col gap-2.5 rounded-xl border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
-          <p className="text-primary text-[11px] font-bold uppercase tracking-[0.12em]">
+          <p className="text-primary text-[11px] font-semibold uppercase tracking-[0.12em]">
             {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
           </p>
           <p className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.03em] break-words">
@@ -1798,7 +1798,7 @@ export function MaterialStudyWorkspace({
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {tab.label}
               {tab.premium ? (
-                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold tracking-[0.08em] uppercase sm:text-[11px]">
+                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tracking-[0.08em] uppercase sm:text-[11px]">
                   Premium
                 </span>
               ) : null}
@@ -1879,7 +1879,7 @@ export function MaterialStudyWorkspace({
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-foreground text-[1.2rem] font-bold tracking-[-0.05em]">
+              <h3 className="text-foreground text-[1.2rem] font-semibold tracking-[-0.05em]">
                 Estamos regenerando tu material
               </h3>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">{fileName}</p>
@@ -2000,7 +2000,7 @@ export function MaterialStudyWorkspace({
 
             {diagnosticReviewTopics.length > 0 ? (
               <div className="border-primary mt-3 border-l-2 pl-3">
-                <p className="text-primary text-[11px] font-bold tracking-[0.14em] uppercase">
+                <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
                   Según tu diagnóstico
                 </p>
                 <p className="text-foreground mt-1 text-[14px] font-semibold">
@@ -2041,7 +2041,7 @@ export function MaterialStudyWorkspace({
                         )}
                       >
                         <span className={cn(
-                          'mt-0.5 min-w-5 font-bold tabular-nums',
+                          'mt-0.5 min-w-5 font-semibold tabular-nums',
                           activeSummaryChapterIndex === index ? 'text-primary' : 'text-muted-foreground'
                         )}>
                           {String(index + 1).padStart(2, '0')}
@@ -2084,7 +2084,7 @@ export function MaterialStudyWorkspace({
                             )}
                           >
                             <span className={cn(
-                              'min-w-5 font-bold tabular-nums transition',
+                              'min-w-5 font-semibold tabular-nums transition',
                               activeSummaryChapterIndex === index ? 'text-primary' : 'text-slate-300 group-hover:text-primary'
                             )}>
                               {String(index + 1).padStart(2, '0')}
@@ -2114,7 +2114,7 @@ export function MaterialStudyWorkspace({
                         <p className="text-primary text-[11px] font-extrabold tracking-[0.18em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-bold tracking-[-0.035em]">
+                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.035em]">
                           {section.displayTitle}
                         </h3>
                       </header>
@@ -2150,7 +2150,7 @@ export function MaterialStudyWorkspace({
         <div data-study-glossary className="mx-auto w-full max-w-[1240px] px-1 py-1 sm:px-2 sm:py-1.5">
           {glossaryTopicIndex === null ? (
             <header className="border-border mb-3 border-b pb-3 sm:pb-4">
-              <h2 className="text-foreground text-[19px] leading-[1.25] font-bold tracking-[-0.04em] sm:text-[20px]">
+              <h2 className="text-foreground text-[19px] leading-[1.25] font-semibold tracking-[-0.04em] sm:text-[20px]">
                 Glosario
               </h2>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
@@ -2161,10 +2161,10 @@ export function MaterialStudyWorkspace({
           {glossaryItemsToShow.length > 0 ? (
             <div className="w-full max-w-[1040px]">
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-4 border-b px-2 py-2.5 md:grid">
-                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.13em] uppercase">
                   Término
                 </p>
-                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.13em] uppercase">
                   Definición
                 </p>
               </div>
@@ -2808,7 +2808,7 @@ export function MaterialStudyWorkspace({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" aria-label={`Cambiar PDF actual: ${title}`}
-                    className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-bold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
+                    className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
                     <span className="min-w-0 truncate text-[0.98rem] sm:text-[1.06rem]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
@@ -2826,7 +2826,7 @@ export function MaterialStudyWorkspace({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-bold tracking-[-0.03em] sm:text-[1.06rem]" title={title}>{title}</h1>
+              <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-semibold tracking-[-0.03em] sm:text-[1.06rem]" title={title}>{title}</h1>
             )}
           </div>
 
