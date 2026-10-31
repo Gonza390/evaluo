@@ -18,7 +18,7 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
  const current=finished.indexOf(false);
  return <section aria-label="Tu recorrido de estudio" className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3.5 md:block">
   <div className="mb-3 flex items-center justify-between gap-2">
-   <h2 className="text-[14px] font-bold">Tu recorrido</h2>
+   <h2 className="text-[14px] font-normal">Tu recorrido</h2>
    <span className="text-[11px] text-slate-500">{finished.filter(Boolean).length} de {finished.length} temas</span>
   </div>
   <div className="overflow-x-auto pb-1"><ol className="flex min-w-max items-start">
