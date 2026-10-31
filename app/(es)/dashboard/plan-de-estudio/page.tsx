@@ -57,7 +57,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
-          <div className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
+          <div className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
 
 
             {first ? <StudyPlanRoadmap materialId={first.id} topicActivities={topicActivities} /> : null}
@@ -72,7 +72,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
             </section>
           </div>
 
-          <div className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain">
+          <div className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-hidden">
             <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-4">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
               <div className="relative">
