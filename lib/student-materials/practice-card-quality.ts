@@ -3,7 +3,7 @@ import { normalizedAnswer } from './practice-modes';
 export type PracticeFlashcard = {
   front: string;
   back: string;
-  reference?: { pageStart?: number | null; excerpt?: string | null } | null;
+  reference?: { pageStart?: number | null; sectionTitle?: string | null; excerpt?: string | null } | null;
 };
 export type FlashcardReview = {
   approved: boolean;
@@ -17,8 +17,11 @@ export function auditPracticeFlashcard(card: PracticeFlashcard): FlashcardReview
   const back = normalizedAnswer(card.back);
   const reasons: string[] = [], improvements: string[] = [];
   if (front.length < 14 || back.length < 17) reasons.push('insufficient_content');
-  if (!card.reference?.pageStart || typeof card.reference.excerpt !== 'string' ||
-      card.reference.excerpt.length < 40) reasons.push('missing_source');
+  const ref = card.reference;
+  const anchored = (typeof ref?.pageStart === 'number' && ref.pageStart > 0) ||
+    (typeof ref?.sectionTitle === 'string' && ref.sectionTitle.trim().length > 0);
+  if (!anchored || typeof ref?.excerpt !== 'string' ||
+      ref.excerpt.trim().length < 40) reasons.push('missing_source');
   if (/(?:materia correspondiente|carrera a la que pertenece|universidad que imparte|documento original|tu espacio academico|seguir estudiando este material)/.test(back) ||
       /^(?:que significa|cual es) (?:desarrollo emprendedor|licenciatura en comercializacion)/.test(front)) {
     reasons.push('nonacademic_document_metadata');
