@@ -48,8 +48,8 @@ export async function POST(request: Request) {
       .order('chunk_index', { ascending: true }).limit(100),
   ]);
   if (modelError || chunksError) return NextResponse.json({ error: 'material_unavailable' }, { status: 503 });
-  const terms = (Array.isArray(modelRow?.pedagogical_model?.concepts)
-    ? modelRow.pedagogical_model.concepts : [])
+  const model = (modelRow?.pedagogical_model ?? null) as { concepts?: unknown[] } | null;
+  const terms = (Array.isArray(model?.concepts) ? model.concepts : [])
     .map((concept: unknown) => concept && typeof concept === 'object' && 'term' in concept
       ? String(concept.term) : '').filter(Boolean).slice(0, 90);
   const allChunks: SourceFragment[] = (chunks ?? [])
