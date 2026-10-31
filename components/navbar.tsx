@@ -7,6 +7,7 @@ import {
   BookOpen,
   CalendarDays,
   ClipboardList,
+  ListChecks,
   CircleAlert,
   CircleHelp,
   Crown,
@@ -57,6 +58,7 @@ const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario', href: '/calendario', icon: CalendarDays },
   { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
+  { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks },
   { label: 'Plan de estudio', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
 ];
 
