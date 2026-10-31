@@ -22,9 +22,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
 }) {
   const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
   const options = useMemo(() => qualifiedQuestions(questions), [questions]);
+  const [generatedCases, setGeneratedCases] = useState<PracticeQuestion[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState('');
   const contexts = useMemo(() => qualifiedQuestions([
-    ...questions.filter(q => q.level === 'aplicar'), ...cases,
-  ]), [questions, cases]);
+    ...generatedCases, ...questions.filter(q => q.level === 'aplicar'), ...cases,
+  ]), [questions, cases, generatedCases]);
   const [round, setRound] = useState(0);
   const [step, setStep] = useState(0);
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
@@ -96,6 +99,43 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 
+  async function generateNewCases() {
+    if (generating) return;
+    setGenerating(true); setGenerationError('');
+    try {
+      const response = await fetch('/api/practice/cases', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ materialId }),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok || !body || typeof body !== 'object' || !('cases' in body) ||
+          !Array.isArray(body.cases) || body.cases.length < 1) {
+        setGenerationError(response.status === 429
+          ? 'Ya usaste los intentos de generación con IA de hoy. Podés seguir con los casos del material.'
+          : 'No pudimos crear casos nuevos con evidencia suficiente. Podés continuar con los existentes.');
+        return;
+      }
+      const newCases = (body.cases as PracticeQuestion[]);
+      setGeneratedCases(newCases);
+      setRound(0); setStep(0); setResponses({}); setReviewed([]); setFinished(false);
+    } catch {
+      setGenerationError('No pudimos conectarnos para crear casos nuevos. Reintentá más tarde.');
+    } finally { setGenerating(false); }
+  }
+  const aiCaseButton = mode === 'casos' ? (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
+      <p className="mt-1 text-xs leading-5 text-slate-600">
+        La IA puede proponer casos nuevos usando tu material. Solo mostramos los que pasan una
+        comprobación de conceptos y citas; no reemplaza la revisión docente.
+      </p>
+      <button type="button" disabled={generating} onClick={generateNewCases}
+        className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-blue-700 disabled:opacity-50">
+        {generating ? 'Generando situaciones…' : generatedCases.length ? 'Generar otros casos con IA' : 'Generar casos con IA'}
+      </button>
+      {generationError && <p role="status" className="mt-2 text-xs text-amber-800">{generationError}</p>}
+    </div>
+  ) : null;
   function anotherRound() {
     setRound(value => value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
@@ -147,6 +187,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           </article>;
         })}
       </div>
+      {aiCaseButton}
       <div className="mt-6 flex flex-wrap gap-2">
         <button type="button" onClick={anotherRound}
           className="min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">Otra ronda</button>
@@ -167,10 +208,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <h2 className="font-medium text-slate-800">No hay suficientes ejercicios confiables</h2>
       <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
         No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>
+      {aiCaseButton}
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
         Practicar con opciones
       </Link>
     </section> : finished ? fullReport : <section className="mt-6">
+      {aiCaseButton}
       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-slate-500">
         <span>{mode === 'unir' ? 'Relacioná los conceptos con sus definiciones' :
           'Pregunta ' + (step + 1) + ' de ' + total}</span>
