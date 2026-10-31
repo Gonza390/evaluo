@@ -12,6 +12,15 @@ const pairs = [
   { term: 'Definición repetida A', definition: 'Definición idéntica que hace imposible evaluar una unión con certeza.', chapterTitle: null },
   { term: 'Definición repetida B', definition: 'Definición idéntica que hace imposible evaluar una unión con certeza.', chapterTitle: null },
 ];
+const noisyPairs = selectPracticePairs([
+  {term:'Universidad Siglo 21',definition:'Institución universitaria que imparte la materia.',chapterTitle:null},
+  {term:'Carrera de Marketing',definition:'Carrera a la que pertenece el material de estudio.',chapterTitle:null},
+  {term:'Estandarización',definition:'La estandarización ayuda a que el proceso se repita de manera consistente.',chapterTitle:null},
+  {term:'Hipótesis auxiliar ↔ Consecuencia observacional',definition:'Vínculo que conecta las condiciones del experimento con una observación esperada.',chapterTitle:null},
+  {term:'Falsacionismo',definition:'Corriente que exige falsabilidad de los enunciados científicos empíricos.',chapterTitle:null},
+]);
+assert.equal(noisyPairs.length,1,'No metadata or self-revealing and compound answers in matching or cloze.');
+assert.equal(noisyPairs[0]?.term,'Falsacionismo');
 const selected = selectPracticePairs(pairs);
 assert.equal(selected.length, 2, 'Matching must eliminate ambiguous duplicate definitions.');
 assert.equal(isCorrectWrittenAnswer('hipotesis fundamental', 'Hipótesis fundamental'), true);
