@@ -115,6 +115,18 @@ function meaningfulOptionWords(value: string): Set<string> {
   return new Set(normalizedAnswer(value).split(' ').filter(w =>
     w.length >= 4 && !ambiguousStopwords.has(w)));
 }
+/** High lexical overlap doesn't imply semantic equivalence when the
+ * alternatives explicitly oppose the same quantity or relation.
+ */
+function explicitOpposite(answer: string, alternative: string): boolean {
+  const opposite: [RegExp,RegExp][]=[
+    [/\\b(?:reduc\\w*|disminu\\w*)\\b/,/\\b(?:aument\\w*|increment\\w*)\\b/],
+    [/\\b(?:menor(?:es)?|menos)\\b/,/\\b(?:mayor(?:es)?|mas)\\b/],
+    [/\\bantes\\b/,/\\bdespues\\b/],
+  ];
+  return opposite.some(([a,b])=>(a.test(answer)&&b.test(alternative)) ||
+    (b.test(answer)&&a.test(alternative)));
+}
 export function hasAmbiguousDistractors(question: Pick<PracticeQuestion,'answer' | 'options'>): boolean {
   const answer = normalizedAnswer(question.answer);
   if (answer.length < 40) return false;
@@ -122,6 +134,10 @@ export function hasAmbiguousDistractors(question: Pick<PracticeQuestion,'answer'
   return question.options.some(choice => {
     const alternative = normalizedAnswer(choice);
     if (alternative === answer) return false;
+    // Opposite choices can correctly distinguish a concept; never treat
+    // "reduce dependencia" and "aumenta dependencia" as synonyms just because
+    // the remaining words are identical.
+    if (explicitOpposite(answer,alternative)) return false;
     if (alternative.length >= 44 && alternative.slice(0,42) === answer.slice(0,42)) return true;
     if (alternative.length < 38 || expected.size < 5) return false;
     const other = meaningfulOptionWords(alternative);
