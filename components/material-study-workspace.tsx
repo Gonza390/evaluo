@@ -1879,7 +1879,7 @@ export function MaterialStudyWorkspace({
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-foreground text-[1.2rem] font-semibold tracking-[-0.05em]">
+              <h3 className="text-foreground text-[1.2rem] font-normal tracking-[-0.05em]">
                 Estamos regenerando tu material
               </h3>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">{fileName}</p>
@@ -1916,7 +1916,7 @@ export function MaterialStudyWorkspace({
                     />
                     <span
                       className={
-                        isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                        isActive ? 'text-foreground font-medium' : 'text-muted-foreground'
                       }
                     >
                       {label}
@@ -2036,12 +2036,12 @@ export function MaterialStudyWorkspace({
                         className={cn(
                           'flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[13px] leading-5 transition-colors',
                           activeSummaryChapterIndex === index
-                            ? 'border-primary bg-primary/10 text-primary font-semibold'
+                            ? 'border-primary bg-primary/10 text-primary font-medium'
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
                         )}
                       >
                         <span className={cn(
-                          'mt-0.5 min-w-5 font-semibold tabular-nums',
+                          'mt-0.5 min-w-5 font-medium tabular-nums',
                           activeSummaryChapterIndex === index ? 'text-primary' : 'text-muted-foreground'
                         )}>
                           {String(index + 1).padStart(2, '0')}
@@ -2079,12 +2079,12 @@ export function MaterialStudyWorkspace({
                             className={cn(
                               'group flex items-start gap-2 rounded-lg border-l-[3px] px-2 py-1.5 text-[12px] leading-[1.45] transition-colors',
                               activeSummaryChapterIndex === index
-                                ? 'border-primary bg-primary/10 text-primary font-semibold'
+                                ? 'border-primary bg-primary/10 text-primary font-medium'
                                 : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
                             )}
                           >
                             <span className={cn(
-                              'min-w-5 font-semibold tabular-nums transition',
+                              'min-w-5 font-medium tabular-nums transition',
                               activeSummaryChapterIndex === index ? 'text-primary' : 'text-slate-300 group-hover:text-primary'
                             )}>
                               {String(index + 1).padStart(2, '0')}
@@ -2114,7 +2114,7 @@ export function MaterialStudyWorkspace({
                         <p className="text-primary text-[11px] font-extrabold tracking-[0.18em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.035em]">
+                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-normal tracking-[-0.035em]">
                           {section.displayTitle}
                         </h3>
                       </header>
@@ -2181,7 +2181,7 @@ export function MaterialStudyWorkspace({
                       className="border-border bg-card grid gap-1.5 rounded-xl border p-3 md:grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] md:gap-4 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3"
                     >
                       <div className="min-w-0 space-y-1">
-                        <h3 className="text-foreground text-[14px] leading-5 font-semibold tracking-[-0.025em] [overflow-wrap:anywhere]">
+                        <h3 className="text-foreground text-[14px] leading-5 font-normal tracking-[-0.025em] [overflow-wrap:anywhere]">
                           {item.term}
                         </h3>
                         {englishTerm ? (
@@ -2391,7 +2391,7 @@ export function MaterialStudyWorkspace({
               >
                 <p
                   className={cn(
-                    'text-muted-foreground font-semibold uppercase',
+                    'text-muted-foreground font-medium uppercase',
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
@@ -2448,7 +2448,7 @@ export function MaterialStudyWorkspace({
               >
                 <p
                   className={cn(
-                    'text-muted-foreground font-semibold uppercase',
+                    'text-muted-foreground font-medium uppercase',
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
@@ -2808,7 +2808,7 @@ export function MaterialStudyWorkspace({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" aria-label={`Cambiar PDF actual: ${title}`}
-                    className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
+                    className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
                     <span className="min-w-0 truncate text-[0.98rem] sm:text-[1.06rem]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
