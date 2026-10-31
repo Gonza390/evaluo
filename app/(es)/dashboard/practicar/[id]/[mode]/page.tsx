@@ -20,7 +20,7 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=' + encodeURIComponent('/dashboard/practicar/' + id + '/' + mode));
   const { data: material } = await supabase.from('student_materials')
-    .select('id,title,file_path,processing_status,content_fingerprint,pedagogical_artifacts_version')
+    .select('id,title,file_name,file_path,processing_status,content_fingerprint,pedagogical_artifacts_version')
     .eq('id', id).eq('user_id', user.id).maybeSingle();
   if (!material || material.processing_status !== 'ready') notFound();
 
@@ -64,6 +64,7 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
     materialId={material.id} materialTitle={material.title} cases={savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED === '1' && process.env.PRACTICE_BANK_ENABLED === '1'}
+    isWord={material.file_name.toLowerCase().endsWith('.docx')}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null }))}
     questions={savedBank?.questions.length ? savedBank.questions : artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
