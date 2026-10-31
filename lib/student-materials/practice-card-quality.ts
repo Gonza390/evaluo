@@ -19,7 +19,11 @@ export function auditPracticeFlashcard(card: PracticeFlashcard): FlashcardReview
   if (front.length < 14 || back.length < 17) reasons.push('insufficient_content');
   const ref = card.reference;
   const anchored = (typeof ref?.pageStart === 'number' && ref.pageStart > 0) ||
-    (typeof ref?.sectionTitle === 'string' && ref.sectionTitle.trim().length > 0);
+    (typeof ref?.sectionTitle === 'string' && ref.sectionTitle.trim().length > 0) ||
+    // Some legitimate Word notes contain no headings: an extracted excerpt
+    // still gives students a traceable passage without fictitious pages.
+    (ref?.pageStart === null && typeof ref.excerpt === 'string' &&
+      ref.excerpt.trim().length >= 80);
   if (!anchored || typeof ref?.excerpt !== 'string' ||
       ref.excerpt.trim().length < 40) reasons.push('missing_source');
   if (/(?:materia correspondiente|carrera a la que pertenece|universidad que imparte|documento original|tu espacio academico|seguir estudiando este material)/.test(back) ||
