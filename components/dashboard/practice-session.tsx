@@ -21,8 +21,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
 }) {
   const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
-  const options = useMemo(() => qualifiedQuestions(questions), [questions]);
+  const options = useMemo(() => qualifiedQuestions(questions.filter(question =>
+    mode !== 'simulacro' || question.pageStart !== null)), [questions, mode]);
   const [generatedCases, setGeneratedCases] = useState<PracticeQuestion[]>([]);
+  const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState('');
   const contexts = useMemo(() => qualifiedQuestions([
@@ -227,7 +229,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
         <p className="text-sm font-medium text-slate-900">Antes de comenzar</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Vas a resolver {total} preguntas de distintos temas. Tenés 15 minutos.
+          Vas a resolver {total} preguntas {verifiedChapterCount >= 2 ? 'de diferentes temas identificados' : 'distribuidas por el material'}. Tenés 15 minutos.
           Podés volver a preguntas anteriores, dejar respuestas sin completar y entregar antes.
           No vas a ver las soluciones hasta finalizar.
         </p>
@@ -255,7 +257,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           <button type="button" key={pair.term} aria-pressed={selectedTerm === i} onClick={() => setSelectedTerm(i)}
             className={'min-h-14 rounded-xl border p-3 text-left text-sm transition ' +
               (selectedTerm === i ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white')}>
-            {pair.term}{matches[i] !== undefined ? ' ✓' : ''}
+            {pair.term}{matches[i] !== undefined ? ' · Vinculado' : ''}
           </button>
         ))}</div>
         <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Después, tocá su definición</p>
@@ -286,7 +288,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </> : current && <>
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
           {current.type === 'recall' ? <>
-            <p className="text-xs text-slate-500">Escribí el concepto que falta</p>
+            <p className="text-xs text-slate-500">Escribí el término usado en el material (las tildes no afectan la corrección)</p>
             <p className="mt-3 text-base leading-7 text-slate-900">________: {current.pair.definition}</p>
             <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">Concepto</label>
             <input id="practice-input" type="text" autoComplete="off" maxLength={120}
