@@ -57,7 +57,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
         </div>
 
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
-          <div className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
+          <div className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
 
 
             {first ? <StudyPlanRoadmap materialId={first.id} topicActivities={topicActivities} /> : null}
@@ -73,18 +73,18 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
           </div>
 
           <div className="min-w-0 space-y-4 xl:min-h-0 xl:overflow-y-auto xl:overscroll-contain">
-            <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-6">
+            <section className="relative overflow-hidden rounded-[18px] bg-[#eaf1ff] p-4 text-[#143c85] sm:p-4">
               <div className="absolute -right-6 -top-6 size-36 rounded-full bg-blue-200/50 blur-2xl" />
               <div className="relative">
                 <div className="flex items-center gap-2 text-xs font-semibold text-blue-700"><GraduationCap className="size-4" /> PRÓXIMO EXAMEN</div>
-                <h2 className="mt-3 max-w-[300px] text-[19px] sm:text-[21px] font-bold leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
-                <p className="mt-3 max-w-[330px] text-[12px] leading-5 text-[#5473a2]">Registrá la fecha en tu calendario. Después podremos distribuir los temas y repasos hasta el examen.</p>
-                <Link href="/calendario" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[12px] font-semibold text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
+                <h2 className="mt-2 max-w-[300px] text-[18px] sm:text-[19px] font-bold leading-[1.15] tracking-[-0.04em]">¿Cuándo rendís?</h2>
+                <p className="mt-2 max-w-[330px] text-[11px] leading-[18px] text-[#5473a2]">Registrá la fecha en tu calendario. Después podremos distribuir los temas y repasos hasta el examen.</p>
+                <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-[12px] font-semibold text-white transition hover:bg-blue-700">Agregar fecha <ArrowRight className="size-4" /></Link>
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
-              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
+            <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-[14px] font-bold">Tu próximo paso</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
