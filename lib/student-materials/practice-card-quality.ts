@@ -37,7 +37,15 @@ export function auditPracticeFlashcard(card: PracticeFlashcard): FlashcardReview
     reasons.push('unverified_ansoff_risk_ranking');
   }
   if (/segun (?:el pdf|el material)/.test(front)) improvements.push('replace_generic_prompt');
-  if (card.back.length > 360 ||
-      card.back.split(/\s*[·;]\s*/).length >= 5) improvements.push('split_into_single_target_cards');
+  const targets = card.back.split(/\s*[·;]\s*/).filter(Boolean).length;
+  // More than four independent answers cannot be reliably self-assessed as
+  // one binary remembered/forgotten flashcard. Keep source data untouched
+  // and exclude these until they can be split into independently cited cards.
+  if (card.back.length > 420 || targets >= 5) {
+    reasons.push('overloaded_multi_target_flashcard');
+    improvements.push('split_into_single_target_cards');
+  } else if (card.back.length > 300 || targets >= 4) {
+    improvements.push('split_into_single_target_cards');
+  }
   return { approved: reasons.length === 0, reasons, improvements };
 }
