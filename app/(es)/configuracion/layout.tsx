@@ -7,7 +7,7 @@ export default function ConfiguracionLayout({ children }: { children: React.Reac
     <ClientLayout>
       <div className="configuration-editorial">
         {children}
-        <div className="mx-auto mt-3 w-full max-w-[1240px] px-3 pb-5 sm:px-4 lg:px-6">
+        <div className="mx-auto mt-0 w-full max-w-[760px] px-4 pb-8 sm:px-6">
           <DeleteAccountSection />
         </div>
       </div>
