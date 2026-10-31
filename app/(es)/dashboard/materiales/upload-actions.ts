@@ -12,11 +12,14 @@ import {
   StudentMaterialPdfPageLimitError,
 } from '@/lib/student-materials/pdf-validation';
 import { stripStudocuCoverPage } from '@/lib/student-materials/studocu-cover';
+import { validateDocxStudentMaterial } from '@/lib/student-materials/docx-validation';
 import {
   buildStudentMaterialStoragePath,
   getValidationMessage,
   isOwnedStudentMaterialStoragePath,
   isPdfFileSignature,
+  studentMaterialFileKind,
+  validateStudentMaterialMime,
   studentMaterialUploadFileMetadataSchema,
   studentMaterialUploadMetadataSchema,
   type StudentMaterialUploadFileMetadata,
@@ -411,11 +414,15 @@ export async function finalizeStudentMaterialUploadAction(
       throw new Error('El tamaño del PDF subido no coincide con el archivo seleccionado.');
     }
 
-    if (!isPdfFileSignature(fileBytes)) {
+    const isDocx = studentMaterialFileKind(parsed.file.name) === 'docx';
+    validateStudentMaterialMime(parsed.file.name, parsed.file.mimeType);
+    if (isDocx) {
+      await validateDocxStudentMaterial(fileBytes, user.id);
+    } else if (!isPdfFileSignature(fileBytes)) {
       throw new Error('El archivo no contiene un PDF válido.');
     }
 
-    const normalizedPdf = await stripStudocuCoverPage(fileBytes);
+    const normalizedPdf = isDocx ? { bytes: fileBytes, removed: false } : await stripStudocuCoverPage(fileBytes);
     const storedFileBytes = normalizedPdf.bytes;
 
     if (normalizedPdf.removed) {
@@ -431,7 +438,7 @@ export async function finalizeStudentMaterialUploadAction(
       }
     }
 
-    await assertStudentMaterialPdfPageLimit(storedFileBytes);
+    if (!isDocx) await assertStudentMaterialPdfPageLimit(storedFileBytes);
 
     const { data: insertedMaterial, error: insertError } = await admin
       .from('student_materials')
@@ -444,13 +451,15 @@ export async function finalizeStudentMaterialUploadAction(
         description: parsed.metadata.description.trim(),
         file_name: parsed.file.name,
         file_path: input.filePath,
-        mime_type: parsed.file.mimeType || 'application/pdf',
+        mime_type: isDocx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf',
         file_size_bytes: storedFileBytes.byteLength,
         visibility: parsed.metadata.shareWithCatalog ? 'shared' : 'private',
         processing_status: 'uploaded',
         processing_stage: 'uploaded',
         processing_progress: 10,
-        processing_message: normalizedPdf.removed
+        processing_message: isDocx
+          ? 'Word subido. Estamos preparando el contenido de estudio.'
+          : normalizedPdf.removed
           ? 'PDF subido. Quitamos la portada de Studocu y ahora vamos a analizar el contenido.'
           : 'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
         processing_error: null,
