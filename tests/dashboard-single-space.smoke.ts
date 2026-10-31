@@ -41,7 +41,7 @@ for (const source of [legacyNewSource, legacyUploadSource]) {
   assert.doesNotMatch(source, /\/dashboard\/materiales\?/);
 }
 
-assert.match(navbarSource, /\{ label: 'Mi espacio', href: '\/dashboard', icon: Home \}/);
+assert.match(navbarSource, /\{ label: 'Mi espacio', href: '\/dashboard', icon: Home(?:, iconTone: '[^']+')? \}/);
 assert.doesNotMatch(navbarSource, /href: '\/dashboard\/materiales'/);
 assert.doesNotMatch(navbarSource, /label: 'Inicio', href: '\/dashboard'/);
 
