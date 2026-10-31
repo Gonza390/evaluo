@@ -15,6 +15,8 @@ export type CachedSource = {
   documentAnalysis: StudyDocumentAnalysis;
   visionUsed: boolean;
   visionPageNumbers: number[];
+  /** DOCX: encabezados académicos, no números de página ficticios. */
+  docxHeadings?: string[];
 };
 
 export function selectMissingOcrPages(selected: number[], cached: readonly CachedPage[]) {
