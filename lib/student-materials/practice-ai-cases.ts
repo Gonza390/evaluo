@@ -28,8 +28,17 @@ export function verifyGeneratedPracticeCases(
     const scenario = c.scenario.trim(), prompt = c.prompt.trim(), evidence = c.evidence.trim();
     if (scenario.length < 65 || scenario.length > 430 ||
         prompt.length < 25 || prompt.length > 240 ||
-        c.explanation.length < 40 || c.explanation.length > 450 ||
+        c.explanation.length < 80 || c.explanation.length > 450 ||
         evidence.length < 28 || evidence.length > 380) continue;
+    // A scenario that supplies its own answer, or a definition disguised
+    // as a case, does not measure transfer to a new situation.
+    const answerKey = normalizedAnswer(c.answer);
+    const promptKey = normalizedAnswer(prompt);
+    if (answerKey.length < 4 ||
+        normalizedAnswer(scenario).includes(answerKey) ||
+        promptKey.includes(answerKey) ||
+        /^(?:que significa|como se define|cual es la definicion|segun el pdf)/.test(promptKey) ||
+        !normalizedAnswer(c.explanation).includes(answerKey)) continue;
     const onPage = source.some(chunk => chunk.pageStart === c.page &&
       normalizedAnswer(chunk.text).includes(normalizedAnswer(evidence)));
     if (!onPage || source.some(chunk => normalizedAnswer(chunk.text).includes(normalizedAnswer(scenario)))) continue;
