@@ -762,7 +762,7 @@ export default function CalendarioPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-semibold tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
+                  <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-medium tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
                     {formatMonthLabel(visibleMonth)}
                   </h2>
                   <button
