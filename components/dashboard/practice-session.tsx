@@ -34,12 +34,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const currentPairs = useMemo(() => rotate(pairs, round * 5).slice(0, 5), [pairs, round]);
   const definitions = useMemo(() => rotate(currentPairs.map((p, i) => ({ ...p, pairIndex: i })), currentPairs.length > 1 ? 2 : 0), [currentPairs]);
   const pool = mode === 'casos' ? cases : usable;
-  const activity = mode === 'unir' ? currentPairs : mode === 'completar' ? rotate(pairs, round * 5).slice(0, 5) : rotate(pool, round * 8).slice(0, mode === 'simulacro' ? 10 : 8);
+  const activity = mode === 'unir' ? currentPairs : mode === 'completar' ? rotate(pairs, round * 5).slice(0, 5) : mode === 'mixto' ? [ ...rotate(usable, round * 5).slice(0, 5), ...rotate(pairs, round * 3).slice(0, 3) ] : rotate(pool, round * 8).slice(0, mode === 'simulacro' ? 10 : 8);
   const complete = mode === 'unir' ? currentPairs.length >= 3 : activity.length >= (mode === 'completar' ? 1 : 3);
   const total = mode === 'unir' ? currentPairs.length : activity.length;
   const correct = mode === 'unir' ? currentPairs.filter((_, i) => associations[i] === i).length :
-    mode === 'completar' ? (activity as Pair[]).filter((q, i) => normalize(responses[i] ?? '') === normalize(q.term)).length :
-    (activity as Question[]).filter((q, i) => responses[i] === q.answer).length;
+    (activity as (Pair | Question)[]).filter((q,i) => 'term' in q ? normalize(responses[i] ?? '') === normalize(q.term) : responses[i] === q.answer).length;
   const q = mode === 'unir' ? null : activity[step];
   useEffect(() => {
     if (mode !== 'simulacro' || finished || !complete) return;
@@ -105,8 +104,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               {Object.values(associations).includes(d.pairIndex) && <span className="shrink-0 text-xs text-blue-600">{currentPairs[Number(Object.keys(associations).find(k => associations[Number(k)] === d.pairIndex))]?.term}</span>}
             </button>)}</div>
           </> : q && ('term' in q) ? <>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-sm text-slate-500">Escribí el concepto que corresponde a esta definición:</p>
-              <p className="mt-3 text-base leading-7 text-slate-900">{q.definition}</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-sm text-slate-500">Completá el concepto que falta en el apunte:</p>
+              <p className="mt-3 text-base leading-7 text-slate-900">________: {q.definition}</p>
               <label htmlFor="practice-answer" className="mt-5 block text-xs text-slate-500">Concepto</label>
               <input id="practice-answer" value={responses[step] ?? ''} onChange={e=>setResponses(old=>({...old,[step]:e.target.value}))}
                 className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500" placeholder="Tu respuesta" autoComplete="off" />
