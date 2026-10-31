@@ -76,7 +76,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 text-xs font-medium text-blue-700"><Sparkles className="size-4" /> Prepará tu examen</div>
                   <h2 className="mt-2 text-[18px] font-medium leading-[1.15] tracking-[-0.04em] sm:text-[19px]">Tu estudio, organizado hasta el examen.</h2>
-                  <p className="mt-2 text-[11px] leading-[18px] text-[#5473a2]">Poné la fecha. Evaluo se encarga de distribuir tus temas y prácticas.</p>
+                  <p className="mt-2 text-[11px] leading-[18px] text-[#5473a2]">Elegí la fecha para organizar tus temas y prácticas.</p>
                   <Link href="/calendario" className="mt-2.5 inline-flex items-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-[12px] font-medium text-white transition hover:bg-blue-700">Armar mi plan <ArrowRight className="size-4" /></Link>
                 </div>
                 <div aria-hidden="true" className="hidden shrink-0 items-center justify-center rounded-2xl border border-blue-200/70 bg-white/35 p-3 min-[420px]:flex">
@@ -85,13 +85,13 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
+            <section className="rounded-2xl bg-white p-3.5">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-[14px] font-normal">Tu próximo paso</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
               {first ? <StudyPlanNextStep materialId={first.id} topicActivities={topicActivities} /> : (
-                <p className="text-[12px] text-slate-500">Subí un PDF desde Mi espacio para comenzar.</p>
+                <p className="text-[12px] text-slate-500">Subí un PDF para empezar.</p>
               )}
             </section>
 
