@@ -36,6 +36,5 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
     </li>;
    })}
   </ol></div>
-  <p className="mt-2 text-[10px] text-slate-500">Elegí un tema para leerlo o repasarlo.</p>
  </section>;
 }
