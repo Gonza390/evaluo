@@ -53,7 +53,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
             <h1 className="mb-4 shrink-0 text-[20px] font-bold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
-            <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden">
+            <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
 
 
             {first ? <StudyPlanRoadmap materialId={first.id} topicActivities={topicActivities} /> : null}
