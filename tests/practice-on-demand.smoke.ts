@@ -60,7 +60,7 @@ assert.match(prepare,/PRACTICE_PEDAGOGICAL_AI_ENABLED === '1'/,'AI must be opt-i
 assert.match(prepare,/cached\?\.source_fingerprint===fingerprint/,'Cache has source-version invalidation');
 assert.match(prepare,/enforceStrictRateLimit/,'AI calls have a hard budget');
 assert.match(prepare,/if \(cacheError\)/,'Missing table must degrade safely');
-assert.match(page,/savedBank\?\.cases \?\? cases/,'Existing cases remain available when no cache exists');
+assert.match(page,/savedBank\\?\\.cases\\.length \\? savedBank\\.cases : cases/,'Existing cases remain available when no cache exists');
 assert.doesNotMatch(upload,/practice\/prepare|student_material_practice_banks|PRACTICE_PEDAGOGICAL_AI_ENABLED/,
   'The PDF upload pipeline must never schedule advanced practice generation');
 assert.ok(file('supabase/manual/practice-banks.sql').includes('enable row level security'));
