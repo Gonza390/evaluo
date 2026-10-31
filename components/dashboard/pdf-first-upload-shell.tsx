@@ -818,7 +818,7 @@ export function PdfFirstUploadShell({
                     : 'Preparación de tu PDF'
                 : isDirectSignupFirstPdf
                   ? 'Empecemos con tu primer material'
-                  : 'Subir PDF'}
+                  : 'Subir PDF o Word'}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
@@ -838,7 +838,7 @@ export function PdfFirstUploadShell({
                           : 'Estamos procesando tu PDF'
                       : isDirectSignupFirstPdf
                         ? 'Empecemos con tu primer material'
-                        : 'Subir PDF'}
+                        : 'Subir PDF o Word'}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
                     {processing
@@ -850,7 +850,7 @@ export function PdfFirstUploadShell({
                       : restoringDraft
                         ? 'Recuperando el PDF que elegiste antes del registro.'
                         : isDirectSignupFirstPdf
-                          ? 'Subí un PDF y convertí tus apuntes en material para estudiar y practicar.'
+                          ? 'Subí un PDF o Word y convertí tus apuntes en material para estudiar y practicar.'
                           : 'Elegí el archivo y poné un nombre.'}
                   </p>
                 </div>
@@ -878,7 +878,7 @@ export function PdfFirstUploadShell({
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-sm font-semibold text-slate-950">
-                      {isDirectSignupFirstPdf ? 'Subir mi PDF' : 'Elegir PDF'}
+                      {isDirectSignupFirstPdf ? 'Subir mi material' : 'Elegir PDF o Word'}
                     </span>
                     <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
                   </button>
