@@ -1,143 +1,275 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import {
+  balancedQuestions, isCorrectWrittenAnswer, qualifiedQuestions,
+  selectPracticePairs, type PracticePair, type PracticeQuestion,
+} from '@/lib/student-materials/practice-modes';
 
-type Pair = { term: string; definition: string; chapterTitle: string | null };
-type Question = { id: string; prompt: string; options: string[]; answer: string; explanation: string; level: string; pageStart: number | null };
 type Mode = 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro';
-const titles: Record<Mode, string> = { unir: 'Unir conceptos', completar: 'Completar', casos: 'Casos', mixto: 'Mixto', simulacro: 'Simulacro de examen' };
-const normalize = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-function selectPairs(input: Pair[]) {
-  const seenTerms = new Set<string>(), seenDefinitions = new Set<string>();
-  return input.filter(p => {
-    const t = normalize(p.term), d = normalize(p.definition);
-    if (t.length < 4 || t.length > 65 || d.length < 30 || d.length > 360 || seenTerms.has(t) || seenDefinitions.has(d)) return false;
-    if (input.filter(other => normalize(other.term) === t || normalize(other.definition) === d).length !== 1) return false;
-    seenTerms.add(t); seenDefinitions.add(d); return true;
-  }).slice(0, 20);
-}
-function rotate<T>(items: T[], by: number) { return items.length ? [...items.slice(by % items.length), ...items.slice(0, by % items.length)] : items; }
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions }: {
-  mode: Mode; materialId: string; materialTitle: string; glossary: Pair[]; questions: Question[];
+type Task = { type: 'question'; question: PracticeQuestion } | { type: 'recall'; pair: PracticePair };
+const title: Record<Mode, string> = {
+  unir: 'Unir conceptos', completar: 'Completar', casos: 'Casos',
+  mixto: 'Práctica mixta', simulacro: 'Simulacro de examen',
+};
+const rotate = <T,>(values: T[], amount: number) =>
+  values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
+
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases }: {
+  mode: Mode; materialId: string; materialTitle: string;
+  glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
 }) {
-  const pairs = useMemo(() => selectPairs(glossary), [glossary]);
-  const usable = useMemo(() => questions.filter(q => q.options.includes(q.answer) && new Set(q.options.map(normalize)).size === q.options.length), [questions]);
-  const cases = useMemo(() => usable.filter(q => q.level === 'aplicar'), [usable]);
+  const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
+  const options = useMemo(() => qualifiedQuestions(questions), [questions]);
+  const contexts = useMemo(() => qualifiedQuestions([
+    ...questions.filter(q => q.level === 'aplicar'), ...cases,
+  ]), [questions, cases]);
   const [round, setRound] = useState(0);
   const [step, setStep] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [associations, setAssociations] = useState<Record<number, number>>({});
+  const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
+  const [matches, setMatches] = useState<Record<number, number>>({});
   const [responses, setResponses] = useState<Record<number, string>>({});
+  const [reviewed, setReviewed] = useState<number[]>([]);
   const [finished, setFinished] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
-  const currentPairs = useMemo(() => rotate(pairs, round * 5).slice(0, 5), [pairs, round]);
-  const definitions = useMemo(() => rotate(currentPairs.map((p, i) => ({ ...p, pairIndex: i })), currentPairs.length > 1 ? 2 : 0), [currentPairs]);
-  const pool = mode === 'casos' ? cases : usable;
-  const activity = mode === 'unir' ? currentPairs : mode === 'completar' ? rotate(pairs, round * 5).slice(0, 5) : mode === 'mixto' ? [ ...rotate(usable, round * 5).slice(0, 5), ...rotate(pairs, round * 3).slice(0, 3) ] : rotate(pool, round * 8).slice(0, mode === 'simulacro' ? 10 : 8);
-  const complete = mode === 'unir' ? currentPairs.length >= 3 : activity.length >= (mode === 'completar' ? 1 : 3);
-  const total = mode === 'unir' ? currentPairs.length : activity.length;
-  const correct = mode === 'unir' ? currentPairs.filter((_, i) => associations[i] === i).length :
-    (activity as (Pair | Question)[]).filter((q,i) => 'term' in q ? normalize(responses[i] ?? '') === normalize(q.term) : responses[i] === q.answer).length;
+  const [deadline, setDeadline] = useState<number | null>(null);
+  const posted = useRef('');
+  const exercisePairs = useMemo(() => rotate(pairs, round * 5).slice(0, 5), [pairs, round]);
+  const definitions = useMemo(() => rotate(
+    exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })), exercisePairs.length > 1 ? 2 : 0,
+  ), [exercisePairs]);
+
+  const tasks = useMemo<Task[]>(() => {
+    if (mode === 'unir') return [];
+    if (mode === 'completar')
+      return rotate(pairs, round * 5).slice(0, 6).map(pair => ({ type: 'recall' as const, pair }));
+    if (mode === 'casos')
+      return rotate(contexts, round * 5).slice(0, 8).map(question => ({ type: 'question' as const, question }));
+    if (mode === 'simulacro')
+      return balancedQuestions(options, 10, round).map(question => ({ type: 'question' as const, question }));
+    const base = balancedQuestions(options, 5, round).map(question => ({ type: 'question' as const, question }));
+    const recalled = rotate(pairs, round * 3).slice(0, 3).map(pair => ({ type: 'recall' as const, pair }));
+    const applied = rotate(contexts, round).slice(0, 1).map(question => ({ type: 'question' as const, question }));
+    return [...base.slice(0, 3), ...recalled.slice(0, 2), ...applied, ...base.slice(3)];
+  }, [mode, pairs, options, contexts, round]);
+
+  const total = mode === 'unir' ? exercisePairs.length : tasks.length;
+  const ready = mode === 'unir' ? exercisePairs.length >= 3 : mode === 'casos' ? contexts.length >= 2 :
+    mode === 'completar' ? tasks.length >= 3 : tasks.length >= 4;
+  const correctAt = (index: number) => {
+    if (mode === 'unir') return matches[index] === index;
+    const item = tasks[index];
+    if (!item) return false;
+    return item.type === 'recall'
+      ? isCorrectWrittenAnswer(responses[index] ?? '', item.pair.term)
+      : responses[index] === item.question.answer;
+  };
+  const score = Array.from({ length: total }, (_, i) => correctAt(i)).filter(Boolean).length;
+  const answeredCount = mode === 'unir' ? Object.keys(matches).length :
+    Object.keys(responses).filter(i => responses[Number(i)]?.trim()).length;
+  const current = tasks[step];
+  const checked = reviewed.includes(step);
+
   useEffect(() => {
-    if (!finished || !complete) return;
-    const controller = new AbortController();
+    if (mode !== 'simulacro' || !ready || finished) return;
+    if (deadline === null) { setDeadline(Date.now() + 15 * 60 * 1000); return; }
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setSecondsLeft(remaining);
+      if (remaining === 0) setFinished(true);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [mode, ready, finished, deadline]);
+
+  useEffect(() => {
+    if (!finished || !ready) return;
+    const attempt = materialId + ':' + mode + ':' + round;
+    if (posted.current === attempt) return;
+    posted.current = attempt;
+    // Analytics-only score. The server intentionally does not treat this as verified mastery.
     void fetch('/api/practice/session', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ materialId, mode, correct, total }), signal: controller.signal,
+      body: JSON.stringify({ materialId, mode, correct: score, total }),
     }).catch(() => undefined);
-    return () => controller.abort();
-  // Register completed attempt exactly once until a new round.
+  // Only send on transition to completed; responses cannot change after completion.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finished, round]);
-  const q = mode === 'unir' ? null : activity[step];
-  useEffect(() => {
-    if (mode !== 'simulacro' || finished || !complete) return;
-    const interval = setInterval(() => setSecondsLeft(value => Math.max(0, value - 1)), 1000);
-    return () => clearInterval(interval);
-  }, [mode, finished, complete]);
-  useEffect(() => { if (mode === 'simulacro' && secondsLeft === 0) setFinished(true); }, [mode, secondsLeft]);
-  function restart() { setRound(x => x + 1); setStep(0); setSelected(null); setAssociations({}); setResponses({}); setFinished(false); setSecondsLeft(15 * 60); }
-  const answered = mode === 'unir' ? Object.keys(associations).length === currentPairs.length : Object.keys(responses).length === total;
-  return (
-    <main className="mx-auto w-full max-w-[780px] px-4 py-7 pb-24 sm:px-6 sm:py-9">
-      <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
-      <h1 className="mt-4 text-[23px] font-semibold tracking-tight text-slate-900">{titles[mode]}</h1>
-      <p className="mt-1 truncate text-sm text-slate-500">{materialTitle}</p>
-      {!complete ? <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-        No hay suficiente contenido verificable en este material para esta modalidad.
-        {mode === 'casos' ? ' Para Casos se necesitan preguntas que realmente evalúen aplicación.' : ''}
-        <div className="mt-4"><Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="text-blue-600 underline">Practicar con opciones</Link></div>
-      </div> : finished ? (
-        <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7" aria-live="polite">
-          <p className="text-sm text-slate-500">Resultado de la práctica</p>
-          <h2 className="mt-2 text-3xl font-semibold">{correct} de {total} correctas</h2>
-          <p className="mt-2 text-sm text-slate-600">Revisá tus errores antes de comenzar otra ronda.</p>
-          <div className="mt-5 space-y-3">
-            {mode === 'unir' ? currentPairs.map((p,i) => <div key={i} className="rounded-xl bg-slate-50 p-3 text-sm">
-              <strong className={associations[i] === i ? 'text-emerald-700' : 'text-rose-700'}>{p.term}</strong>
-              <p className="mt-1 text-slate-700">{p.definition}</p>
-            </div>) : (activity as (Pair | Question)[]).map((a,i) => {
-              const answer = 'term' in a ? a.term : a.answer;
-              const isRight = 'term' in a ? normalize(responses[i] ?? '') === normalize(answer) : responses[i] === answer;
-              return <div className="rounded-xl bg-slate-50 p-3 text-sm" key={i}>
-                <p className={isRight ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>{isRight ? 'Correcta' : 'Para reforzar'}</p>
-                <p className="mt-1 text-slate-800">{'term' in a ? a.definition : a.prompt}</p>
-                {!isRight && <p className="mt-1 text-slate-600">Respuesta: {answer}</p>}
-                {'explanation' in a && <p className="mt-1 text-slate-600">{a.explanation}</p>}
-                {'pageStart' in a && a.pageStart && <Link className="mt-1 inline-block text-xs text-blue-600 underline" href={'/materiales/' + materialId + '?tab=resumen&page=' + a.pageStart}>Revisar material · pág. {a.pageStart}</Link>}
-              </div>;
-            })}
-          </div>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <button onClick={restart} className="min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">Otra ronda</button>
-            <Link href={'/materiales/' + materialId + '?tab=resumen'} className="inline-flex min-h-11 items-center rounded-xl border px-5 text-sm font-medium">Volver al resumen</Link>
-          </div>
-        </section>
-      ) : (
-        <section className="mt-7">
-          <div className="mb-4 flex items-center justify-between text-sm text-slate-500">
-            <span>{mode === 'unir' ? 'Relacioná cada término con su definición' : 'Actividad ' + (step + 1) + ' de ' + total}</span>
-            {mode === 'simulacro' && <span role="timer" aria-label="Tiempo restante">{Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} restantes</span>}
-          </div>
-          {mode === 'unir' ? <>
-            <p className="mb-2 text-xs font-medium text-slate-600">1. Seleccioná un concepto</p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{currentPairs.map((p,i) =>
-              <button key={i} type="button" aria-pressed={selected === i} onClick={() => setSelected(i)}
-                className={'min-h-14 rounded-xl border p-3 text-left text-sm ' + (selected === i ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white')}>{p.term}{associations[i] !== undefined ? ' ✓' : ''}</button>)}</div>
-            <p className="mb-2 mt-6 text-xs font-medium text-slate-600">2. Elegí su definición</p>
-            <div className="space-y-2">{definitions.map(d => <button key={d.pairIndex} type="button" disabled={selected === null}
-              onClick={() => { if (selected === null) return; setAssociations(old => {
-                const next = { ...old }; for (const key of Object.keys(next)) if (next[Number(key)] === d.pairIndex) delete next[Number(key)];
-                next[selected] = d.pairIndex; return next; }); setSelected(null); }}
-              className="flex min-h-14 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-3 text-left text-sm disabled:opacity-60">
-              <span>{d.definition}</span>
-              {Object.values(associations).includes(d.pairIndex) && <span className="shrink-0 text-xs text-blue-600">{currentPairs[Number(Object.keys(associations).find(k => associations[Number(k)] === d.pairIndex))]?.term}</span>}
-            </button>)}</div>
-          </> : q && ('term' in q) ? <>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-sm text-slate-500">Completá el concepto que falta en el apunte:</p>
-              <p className="mt-3 text-base leading-7 text-slate-900">________: {q.definition}</p>
-              <label htmlFor="practice-answer" className="mt-5 block text-xs text-slate-500">Concepto</label>
-              <input id="practice-answer" value={responses[step] ?? ''} onChange={e=>setResponses(old=>({...old,[step]:e.target.value}))}
-                className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500" placeholder="Tu respuesta" autoComplete="off" />
-            </div>
-          </> : q && ('prompt' in q) ? <>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-base font-medium leading-7 text-slate-900">{q.prompt}</p>
-              <div className="mt-5 space-y-2">{q.options.map(option => <button key={option} type="button"
-                onClick={()=>{setResponses(old=>({...old,[step]:option}));}}
-                aria-pressed={responses[step]===option}
-                className={'min-h-12 w-full rounded-xl border p-3 text-left text-sm ' +
-                  (responses[step]===option?'border-blue-600 bg-blue-50':'border-slate-200 hover:bg-slate-50')}>{option}</button>)}</div>
-            </div>
-          </> : null}
-          <div className="mt-5 flex flex-wrap justify-between gap-2">
-            {mode !== 'unir' && <button disabled={step===0} onClick={()=>setStep(x=>x-1)} className="min-h-11 rounded-xl border px-5 text-sm disabled:opacity-40">Anterior</button>}
-            {mode !== 'unir' && step < total-1 ? <button onClick={()=>setStep(x=>x+1)} disabled={!responses[step]?.trim()} className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm text-white disabled:opacity-40">Siguiente</button> :
-              <button disabled={!answered} onClick={()=>setFinished(true)} className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">Finalizar y ver resultados</button>}
-          </div>
-        </section>
-      )}
-    </main>
-  );
+  }, [finished]);
+
+  function anotherRound() {
+    setRound(value => value + 1);
+    setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
+    setReviewed([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null);
+  }
+  function setResponse(value: string) {
+    if (checked || finished) return;
+    setResponses(old => ({ ...old, [step]: value }));
+  }
+  function reviewOrNext() {
+    if (!checked && mode !== 'simulacro') { setReviewed(old => [...old, step]); return; }
+    if (step < tasks.length - 1) { setStep(old => old + 1); return; }
+    setFinished(true);
+  }
+  const fullReport = finished ? (
+    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
+      <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}</p>
+      <h2 className="mt-2 text-3xl font-semibold text-slate-900">{score} de {total}</h2>
+      <p className="mt-2 text-sm text-slate-600">
+        {score === total ? 'Completaste la actividad sin errores.' :
+          'Revisá las respuestas que te costaron y volvé al material para reforzarlas.'}
+      </p>
+      <div className="mt-6 space-y-3">
+        {mode === 'unir' ? exercisePairs.map((pair, i) => (
+          <article key={i} className="rounded-xl bg-slate-50 p-3 text-sm">
+            <p className={correctAt(i) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
+              {correctAt(i) ? 'Correcta' : 'Para reforzar'} · {pair.term}
+            </p>
+            {!correctAt(i) && <p className="mt-1 text-slate-500">Tu elección: {exercisePairs[matches[i]]?.definition ?? 'Sin responder'}</p>}
+            <p className="mt-1 text-slate-700">{pair.definition}</p>
+          </article>
+        )) : tasks.map((task, i) => {
+          const answer = task.type === 'recall' ? task.pair.term : task.question.answer;
+          const prompt = task.type === 'recall' ? task.pair.definition : task.question.prompt;
+          return <article className="rounded-xl bg-slate-50 p-3 text-sm" key={i}>
+            <p className={correctAt(i) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
+              {correctAt(i) ? 'Correcta' : 'Para reforzar'} · {i + 1}
+            </p>
+            <p className="mt-1 text-slate-800">{prompt}</p>
+            {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {responses[i] || 'Sin responder'}</p>}
+            <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>
+            {task.type === 'question' && <>
+              <p className="mt-1 text-slate-600">{task.question.explanation}</p>
+              {task.question.pageStart && <Link className="mt-2 inline-block text-blue-600 underline"
+                href={'/materiales/' + materialId + '?tab=resumen&page=' + task.question.pageStart}>
+                Revisar el material · página {task.question.pageStart}
+              </Link>}
+            </>}
+          </article>;
+        })}
+      </div>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <button type="button" onClick={anotherRound}
+          className="min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">Otra ronda</button>
+        <Link href={'/materiales/' + materialId + '?tab=resumen'}
+          className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
+          Volver al resumen
+        </Link>
+      </div>
+      <p className="mt-3 text-xs text-slate-500">Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.</p>
+    </section>
+  ) : null;
+
+  return <main className="mx-auto w-full max-w-[780px] px-4 py-7 pb-24 sm:px-6 sm:py-9">
+    <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
+    <h1 className="mt-4 text-[23px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+    <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
+    {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+      <h2 className="font-medium text-slate-800">No hay suficientes ejercicios confiables</h2>
+      <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
+        No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>
+      <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
+        Practicar con opciones
+      </Link>
+    </section> : finished ? fullReport : <section className="mt-6">
+      <div className="mb-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+        <span>{mode === 'unir' ? 'Relacioná los conceptos con sus definiciones' :
+          'Pregunta ' + (step + 1) + ' de ' + total}</span>
+        {mode === 'simulacro' ? <span role="timer" className="font-medium tabular-nums">
+          {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} restantes
+        </span> : <span>{answeredCount} de {total} respondidas</span>}
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-blue-600 transition-all"
+          style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / total * 100) + '%' }} />
+      </div>
+      {mode === 'unir' ? <>
+        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Primero elegí un concepto</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{exercisePairs.map((pair, i) => (
+          <button type="button" key={pair.term} aria-pressed={selectedTerm === i} onClick={() => setSelectedTerm(i)}
+            className={'min-h-14 rounded-xl border p-3 text-left text-sm transition ' +
+              (selectedTerm === i ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white')}>
+            {pair.term}{matches[i] !== undefined ? ' ✓' : ''}
+          </button>
+        ))}</div>
+        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Después, tocá su definición</p>
+        <div className="space-y-2">{definitions.map(({ pair, pairIndex }) => {
+          const matchedIndex = Object.keys(matches).find(key => matches[Number(key)] === pairIndex);
+          return <button key={pairIndex} type="button" disabled={selectedTerm === null} onClick={() => {
+            if (selectedTerm === null) return;
+            setMatches(old => {
+              const next = { ...old };
+              for (const key of Object.keys(next))
+                if (next[Number(key)] === pairIndex) delete next[Number(key)];
+              next[selectedTerm] = pairIndex;
+              return next;
+            });
+            setSelectedTerm(null);
+          }} className="flex min-h-14 w-full flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white p-3 text-left text-sm disabled:opacity-75">
+            <span className="flex-1">{pair.definition}</span>
+            {matchedIndex !== undefined &&
+              <span className="rounded-md bg-blue-50 px-2 py-1 text-xs text-blue-700">
+                {exercisePairs[Number(matchedIndex)]?.term}
+              </span>}
+          </button>;
+        })}</div>
+        <button type="button" disabled={answeredCount !== total} onClick={() => setFinished(true)}
+          className="mt-5 min-h-11 w-full rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
+          Corregir asociaciones
+        </button>
+      </> : current && <>
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+          {current.type === 'recall' ? <>
+            <p className="text-xs text-slate-500">Escribí el concepto que falta</p>
+            <p className="mt-3 text-base leading-7 text-slate-900">________: {current.pair.definition}</p>
+            <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">Concepto</label>
+            <input id="practice-input" type="text" autoComplete="off" maxLength={120}
+              disabled={checked || mode === 'simulacro'} value={responses[step] ?? ''}
+              onChange={event => setResponse(event.target.value)}
+              className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500"
+              placeholder="Escribí el término" />
+          </> : <>
+            <p className="text-base font-medium leading-7 text-slate-900">{current.question.prompt}</p>
+            <div className="mt-5 space-y-2">{current.question.options.map(option =>
+              <button key={option} type="button" disabled={checked} aria-pressed={responses[step] === option}
+                onClick={() => setResponse(option)}
+                className={'min-h-12 w-full rounded-xl border p-3 text-left text-sm transition disabled:cursor-default ' +
+                  (responses[step] === option ? 'border-blue-600 bg-blue-50' : 'border-slate-200 hover:bg-slate-50')}>
+                {option}
+              </button>
+            )}</div>
+          </>}
+        </div>
+        {checked && mode !== 'simulacro' && <div role="status" className="mt-3 rounded-xl bg-slate-50 p-4 text-sm">
+          <p className={correctAt(step) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
+            {correctAt(step) ? 'Bien resuelto' : 'Para reforzar'}
+          </p>
+          <p className="mt-1 text-slate-700">Respuesta: {current.type === 'recall' ? current.pair.term : current.question.answer}</p>
+          {current.type === 'question' && <p className="mt-1 text-slate-600">{current.question.explanation}</p>}
+        </div>}
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <button type="button" disabled={step === 0} onClick={() => setStep(value => value - 1)}
+            className="min-h-11 rounded-xl border border-slate-200 px-4 text-sm disabled:opacity-40">
+            Anterior
+          </button>
+          {mode === 'simulacro' ? <>
+            {step < total - 1 && <button type="button" onClick={() => setStep(value => value + 1)}
+              className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
+              {responses[step] ? 'Siguiente' : 'Omitir'}
+            </button>}
+            <button type="button" onClick={() => setFinished(true)}
+              className={'min-h-11 rounded-xl border px-4 text-sm ' +
+                (step === total - 1 ? 'ml-auto bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700')}>
+              Entregar examen
+            </button>
+          </> : <button type="button" disabled={!checked && !responses[step]?.trim()} onClick={reviewOrNext}
+            className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
+            {!checked ? 'Comprobar respuesta' : step === total - 1 ? 'Ver resultados' : 'Siguiente'}
+          </button>}
+        </div>
+      </>}
+      {mode === 'casos' && <p className="mt-4 text-xs text-slate-500">
+        Situaciones construidas a partir de clasificaciones del documento. No son una evaluación de transferencia a escenarios inéditos.
+      </p>}
+    </section>}
+  </main>;
 }
