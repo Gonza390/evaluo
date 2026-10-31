@@ -54,6 +54,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: DOCX smoke
+        run: npm run test:docx
+
       - name: Test
         run: npm test
 
