@@ -447,7 +447,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       // El acceso al material ya se verificó arriba. No exponer una API pública
       // que pueda revelar el contenido de documentos privados.
       const { data: sourceRow } = await admin
-        .from('student_material_processing_checkpoints')
+        .from('student_material_processing_checkpoints' as never)
         .select('source_payload')
         .eq('student_material_id', material.id)
         .maybeSingle();
