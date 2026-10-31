@@ -6,12 +6,12 @@ import { ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, FileText, Layers3
 
 type Material = { id: string; title: string };
 const modes = [
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
+  { title: 'Mixto', description: 'Combiná opciones, conceptos y situaciones con corrección.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
   { title: 'Flashcards', description: 'Te acordás la respuesta y le das la vuelta a la tarjeta.', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
   { title: 'Opciones', description: 'Verdadero o falso y elegir entre varias.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
   { title: 'Unir conceptos', description: 'Unís cada término con su definición.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
-  { title: 'Completar', description: 'Una frase del apunte con la palabra clave tapada.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
-  { title: 'Casos', description: 'Aplicás lo que sabés a un problema concreto.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
+  { title: 'Completar', description: 'Recuperá el concepto que falta a partir de su definición.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
+  { title: 'Casos', description: 'Relacioná situaciones con conceptos. También podés generar casos con IA.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
   { title: 'Con tus palabras', description: 'Lo explicás con tus palabras, como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
   { title: 'Simulacro de examen', description: 'Con reloj y sin ver cómo te fue hasta el final, como el día del examen.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
 ] as const;
@@ -30,7 +30,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="shrink-0 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px] text-slate-900">Practicar</h1>
         <div className="relative min-w-0 w-full sm:w-[min(60%,360px)]">
-          <label htmlFor="practice-material" className="sr-only">PDF para practicar</label>
+          <label htmlFor="practice-material" className="sr-only">Material para practicar</label>
           <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-blue-600" />
           <select id="practice-material" value={materialId} onChange={event => { setMaterialId(event.target.value); setSelectedMode(null); }}
             disabled={!materials.length}
