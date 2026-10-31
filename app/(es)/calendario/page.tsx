@@ -874,16 +874,16 @@ export default function CalendarioPage() {
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
-                                  ? 'var(--calendar-exam-bg)'
-                                  : 'var(--calendar-assignment-bg)',
+                                  ? '#FFF2E6'
+                                  : '#E8F2FF',
                               borderColor:
                                 event.type === 'exam'
-                                  ? 'var(--calendar-exam-border)'
-                                  : 'var(--calendar-assignment-border)',
+                                  ? '#F1DFC8'
+                                  : '#D5E6FA',
                               color:
                                 event.type === 'exam'
-                                  ? 'var(--calendar-exam-text)'
-                                  : 'var(--calendar-assignment-text)',
+                                  ? '#AD713D'
+                                  : '#376CAD',
                             }}
                           >
                             {event.title}
@@ -1175,8 +1175,8 @@ export default function CalendarioPage() {
                             <Badge
                               className={
                                 event.type === 'exam'
-                                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                  : 'border-blue-200 bg-blue-50 text-blue-700'
+                                  ? 'border-[#F1DFC8] bg-[#FFF2E6] text-[#AD713D]'
+                                  : 'border-[#D5E6FA] bg-[#E8F2FF] text-[#376CAD]'
                               }
                               variant="outline"
                             >
