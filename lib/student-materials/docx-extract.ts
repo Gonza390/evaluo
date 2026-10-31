@@ -93,10 +93,17 @@ export function extractDocxContent(bytes: Uint8Array): ExtractedDocx {
   const xml = parts.get('word/document.xml')!;
   const stylesXml = parts.get('word/styles.xml') ?? '';
   const styles = new Set(['Title','Subtitle','Heading1','Heading2','Heading3','heading1','heading2','heading3']);
+  const listStyles = new Set<string>(['ListBullet', 'ListBullet2', 'ListBullet3', 'ListNumber', 'ListNumber2', 'ListNumber3']);
   for (const match of stylesXml.matchAll(/<w:style\b([^>]*)>([\s\S]*?)<\/w:style>/g)) {
     const id = match[1]?.match(/\bw:styleId="([^"]+)"/)?.[1];
     if (id && /<w:name\b[^>]*w:val="(?:heading [1-6]|title|subtitle)"/i.test(match[2] ?? ''))
       styles.add(id);
+    // Word puede guardar la numeración en el estilo, no dentro de cada <w:p>.
+    // Los estilos de tabla no deben confundirse con listas de párrafos.
+    if (id && /\bw:type="paragraph"/.test(match[1] ?? '') &&
+      (/<w:numPr\b/.test(match[2] ?? '') ||
+        /<w:name\b[^>]*w:val="(?:list (?:bullet|number)(?: [1-9])?|viñetas?|numeraci[oó]n)"/i.test(match[2] ?? '')))
+      listStyles.add(id);
   }
   const blocks: string[] = [];
   const headings: string[] = [];
@@ -118,7 +125,7 @@ export function extractDocxContent(bytes: Uint8Array): ExtractedDocx {
       blocks.push('\n' + content + '\n');
       headings.push(content);
     } else {
-      const bullet = /<w:numPr\b/.test(block);
+      const bullet = /<w:numPr\b/.test(block) || listStyles.has(style);
       blocks.push(bullet ? '• ' + content : content);
       if (bullet) bullets++;
     }
