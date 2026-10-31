@@ -89,6 +89,12 @@ export async function POST(request: Request) {
     .eq('id',input.materialId).eq('user_id',user.id).maybeSingle();
   if (materialError||!material||material.processing_status!=='ready')
     return NextResponse.json({error:'material_not_found'},{status:404});
+  // Default OFF until the isolated table is deployed in a test database.
+  // This avoids needless read errors and writes against the existing Supabase project.
+  if (process.env.PRACTICE_BANK_ENABLED !== '1') {
+    return NextResponse.json({ source:'existing', prepared:false, reason:'bank_disabled' },
+      { headers:{'Cache-Control':'private, no-store'} });
+  }
   const admin=createAdminClient() as unknown as UntypedAdmin;
   const fingerprint=sourceFingerprint(material.content_fingerprint,material.id,material.pedagogical_artifacts_version);
   // The separate table is optional during rollout. Never perform AI without persistence:
