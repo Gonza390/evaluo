@@ -127,7 +127,7 @@ assert.match(appChromeSource, /effectiveSidebarCollapsed \? 'md:ml-\[76px\]' : '
 assert.match(navbarSource, /compact \? 'md:top-\[52px\]' : 'md:top-\[81px\]'/);
 assert.match(navbarSource, /compact \? 'w-\[56px\]' : 'w-\[76px\]'/);
 assert.match(navbarSource, /compact \? 'w-\[176px\]' : 'w-\[248px\]'/);
-assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-2\.5 py-2' : 'gap-2\.5 px-3 py-2\.5'/);
+assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-1\.5 py-1' : 'min-h-11 gap-2\.5 px-2 py-1\.5'/);
 
 // El botón de plegado comparte la fila superior, sin separar "Mi espacio"
 // ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
