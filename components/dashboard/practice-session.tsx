@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 type Pair = { term: string; definition: string; chapterTitle: string | null };
@@ -30,7 +30,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [associations, setAssociations] = useState<Record<number, number>>({});
   const [responses, setResponses] = useState<Record<number, string>>({});
   const [finished, setFinished] = useState(false);
-  const [timeStarted, setTimeStarted] = useState<number | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(15 * 60);
   const currentPairs = useMemo(() => rotate(pairs, round * 5).slice(0, 5), [pairs, round]);
   const definitions = useMemo(() => rotate(currentPairs.map((p, i) => ({ ...p, pairIndex: i })), currentPairs.length > 1 ? 2 : 0), [currentPairs]);
   const pool = mode === 'casos' ? cases : usable;
@@ -41,7 +41,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     mode === 'completar' ? (activity as Pair[]).filter((q, i) => normalize(responses[i] ?? '') === normalize(q.term)).length :
     (activity as Question[]).filter((q, i) => responses[i] === q.answer).length;
   const q = mode === 'unir' ? null : activity[step];
-  function restart() { setRound(x => x + 1); setStep(0); setSelected(null); setAssociations({}); setResponses({}); setFinished(false); setTimeStarted(null); }
+  useEffect(() => {
+    if (mode !== 'simulacro' || finished || !complete) return;
+    const interval = setInterval(() => setSecondsLeft(value => Math.max(0, value - 1)), 1000);
+    return () => clearInterval(interval);
+  }, [mode, finished, complete]);
+  useEffect(() => { if (mode === 'simulacro' && secondsLeft === 0) setFinished(true); }, [mode, secondsLeft]);
+  function restart() { setRound(x => x + 1); setStep(0); setSelected(null); setAssociations({}); setResponses({}); setFinished(false); setSecondsLeft(15 * 60); }
   const answered = mode === 'unir' ? Object.keys(associations).length === currentPairs.length : Object.keys(responses).length === total;
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-7 pb-24 sm:px-6 sm:py-9">
@@ -82,7 +88,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         <section className="mt-7">
           <div className="mb-4 flex items-center justify-between text-sm text-slate-500">
             <span>{mode === 'unir' ? 'Relacioná cada término con su definición' : 'Actividad ' + (step + 1) + ' de ' + total}</span>
-            {mode === 'simulacro' && <span>Sin corrección hasta el final</span>}
+            {mode === 'simulacro' && <span role="timer" aria-label="Tiempo restante">{Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} restantes</span>}
           </div>
           {mode === 'unir' ? <>
             <p className="mb-2 text-xs font-medium text-slate-600">1. Seleccioná un concepto</p>
@@ -109,7 +115,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
               <p className="text-base font-medium leading-7 text-slate-900">{q.prompt}</p>
               <div className="mt-5 space-y-2">{q.options.map(option => <button key={option} type="button"
-                onClick={()=>{setResponses(old=>({...old,[step]:option}));if(!timeStarted)setTimeStarted(Date.now());}}
+                onClick={()=>{setResponses(old=>({...old,[step]:option}));}}
                 aria-pressed={responses[step]===option}
                 className={'min-h-12 w-full rounded-xl border p-3 text-left text-sm ' +
                   (responses[step]===option?'border-blue-600 bg-blue-50':'border-slate-200 hover:bg-slate-50')}>{option}</button>)}</div>
