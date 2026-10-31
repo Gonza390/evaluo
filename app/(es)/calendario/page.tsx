@@ -917,7 +917,7 @@ export default function CalendarioPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-[18px] border border-slate-200 bg-white p-1">
+              <div className="rounded-2xl bg-slate-50/60 p-1">
                 <div className="grid grid-cols-2 gap-1">
                   <Button
                     type="button"
@@ -1122,7 +1122,7 @@ export default function CalendarioPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+                <div className="rounded-2xl bg-slate-50/40 p-3">
                   <p className="text-[12px] font-medium tracking-[0.18em] text-slate-500 uppercase">
                     Vista previa
                   </p>
@@ -1163,7 +1163,7 @@ export default function CalendarioPage() {
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-3">
                     <p className="text-[13px] font-medium text-slate-900">
-                      Ya tenés cargado para este día
+                      Fechas de este día
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
@@ -1200,7 +1200,7 @@ export default function CalendarioPage() {
                   </div>
                 ) : (
                   <div className="min-h-[74px] rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-500">
-                    Todavía no tenés fechas guardadas para este día.
+                    No hay fechas para este día.
                   </div>
                 )}
 
