@@ -747,9 +747,9 @@ export default function CalendarioPage() {
           title="Calendario"
           description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
         />
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+        <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
           <div className="relative p-1.5 min-[380px]:p-2 sm:p-3">
-            <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
               <div
                 className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-white px-1.5 py-2.5 min-[380px]:px-3 sm:gap-2 sm:px-4"
               >
@@ -870,20 +870,20 @@ export default function CalendarioPage() {
                         {cellEvents.slice(0, 2).map((event) => (
                           <div
                             key={event.id}
-                            className="truncate rounded-[8px] border px-2 py-0.5 text-[12px] font-medium shadow-sm"
+                            className="truncate rounded-lg border px-2 py-0.5 text-[12px] font-medium"
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
-                                  ? 'var(--calendar-exam-bg)'
-                                  : 'var(--calendar-assignment-bg)',
+                                  ? '#FFF2E6'
+                                  : '#E8F2FF',
                               borderColor:
                                 event.type === 'exam'
-                                  ? 'var(--calendar-exam-border)'
-                                  : 'var(--calendar-assignment-border)',
+                                  ? '#F1DFC8'
+                                  : '#D5E6FA',
                               color:
                                 event.type === 'exam'
-                                  ? 'var(--calendar-exam-text)'
-                                  : 'var(--calendar-assignment-text)',
+                                  ? '#AD713D'
+                                  : '#376CAD',
                             }}
                           >
                             {event.title}
@@ -917,7 +917,7 @@ export default function CalendarioPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-[18px] border border-slate-200 bg-white p-1">
+              <div className="rounded-2xl bg-slate-50/60 p-1">
                 <div className="grid grid-cols-2 gap-1">
                   <Button
                     type="button"
@@ -1122,7 +1122,7 @@ export default function CalendarioPage() {
               </div>
 
               <div className="space-y-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
+                <div className="rounded-2xl bg-slate-50/40 p-3">
                   <p className="text-[12px] font-medium tracking-[0.18em] text-slate-500 uppercase">
                     Vista previa
                   </p>
@@ -1163,7 +1163,7 @@ export default function CalendarioPage() {
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-3">
                     <p className="text-[13px] font-medium text-slate-900">
-                      Ya tenés cargado para este día
+                      Fechas de este día
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
@@ -1175,8 +1175,8 @@ export default function CalendarioPage() {
                             <Badge
                               className={
                                 event.type === 'exam'
-                                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                  : 'border-blue-200 bg-blue-50 text-blue-700'
+                                  ? 'border-[#F1DFC8] bg-[#FFF2E6] text-[#AD713D]'
+                                  : 'border-[#D5E6FA] bg-[#E8F2FF] text-[#376CAD]'
                               }
                               variant="outline"
                             >
@@ -1200,7 +1200,7 @@ export default function CalendarioPage() {
                   </div>
                 ) : (
                   <div className="min-h-[74px] rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-500">
-                    Todavía no tenés fechas guardadas para este día.
+                    No hay fechas para este día.
                   </div>
                 )}
 

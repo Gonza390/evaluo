@@ -46,7 +46,7 @@ const StudyErrorDetail = dynamic(
   }
 );
 const actionClass =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring';
 
 function topicStatus(topic: PdfProgressTopic) {
   if (topic.errors.some((error) => error.status === 'pending'))
@@ -318,7 +318,7 @@ export function PdfProgressPanel({
               className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
               aria-label="Tu próxima actividad"
             >
-              <h3 className="text-[16px] font-semibold">Tu próxima actividad</h3>
+              <h3 className="text-[16px] font-medium">Tu próxima actividad</h3>
               {lastOutcome && (
                 <p className="text-foreground mt-2 text-sm!">
                   Última tanda: {lastOutcome.total}{' '}
@@ -451,13 +451,13 @@ export function PdfProgressPanel({
             className="border-border mt-6 scroll-mt-4 border-t pt-5"
             aria-label="Contenido de este tema"
           >
-            <h3 className="text-[16px] font-semibold">1 · Leé el resumen del tema</h3>
+            <h3 className="text-[16px] font-medium">1 · Leé el resumen del tema</h3>
             {summaryBody && focusConcepts.length > 0 && (
               <div
                 className="border-border bg-muted/30 mt-4 rounded-xl border p-4"
                 aria-label="Guía de lectura del tema"
               >
-                <h4 className="text-sm font-semibold">Antes de leer: en qué enfocarte</h4>
+                <h4 className="text-sm font-medium">Antes de leer: en qué enfocarte</h4>
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
                   Buscá cómo se explican estos conceptos en tu material. Después, intentá
                   explicarlos con tus palabras y sin mirar.
@@ -508,7 +508,7 @@ export function PdfProgressPanel({
               className="border-border border-t py-5"
               aria-label="Cómo continuar con tu estudio"
             >
-              <h3 className="text-[16px] font-semibold">3 · Tu próximo paso</h3>
+              <h3 className="text-[16px] font-medium">3 · Tu próximo paso</h3>
               <p className="text-muted-foreground mt-2 text-sm!">
                 {topicPending.length > 0
                   ? 'Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.'
@@ -716,7 +716,7 @@ export function PdfProgressPanel({
   if (data.loadError)
     return (
       <div className="mx-auto max-w-5xl p-6">
-        <h1 className="text-3xl font-semibold">Tu progreso</h1>
+        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Tu progreso</h1>
         <p role="alert" className="mt-4">
           No pudimos cargar tus errores. Tus resultados siguen guardados.
         </p>
@@ -779,7 +779,7 @@ export function PdfProgressPanel({
       <h2
         id={`${panelId}-heading`}
         tabIndex={-1}
-        className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-bold tracking-[-0.04em] ${reviewOpen ? 'sr-only' : ''}`}
+        className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-semibold tracking-[-0.035em] ${reviewOpen ? 'sr-only' : ''}`}
       >
         Tu progreso
       </h2>
@@ -817,7 +817,7 @@ export function PdfProgressPanel({
             ))}
           <span
             aria-current="page"
-            className="border-primary text-primary border-b-2 pb-4 font-semibold"
+            className="border-primary text-primary border-b-2 pb-4 font-medium"
           >
             Progreso
           </span>
@@ -852,7 +852,7 @@ export function PdfProgressPanel({
             >
               <div className="border-border bg-card space-y-3 rounded-xl border p-3.5">
                 <div>
-                  <h3 className="text-[13px] font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
+                  <h3 className="text-[13px] font-medium">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {currentTopic?.title ?? 'Conceptos pendientes'}
                   </p>
@@ -897,7 +897,7 @@ export function PdfProgressPanel({
                   </p>
                 ) : (
                 <div className="border-border border-t pt-3">
-                  <h4 className="text-[13px] font-semibold">Tu próxima actividad</h4>
+                  <h4 className="text-[13px] font-medium">Tu próxima actividad</h4>
                   <p className="text-muted-foreground mt-2 text-[13px] leading-5">
                     {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
                   </p>
@@ -985,7 +985,7 @@ export function PdfProgressPanel({
               aria-labelledby={`real-topics-title-${panelId}`}
             >
               <div className="p-4 pb-2">
-                <h2 id={`real-topics-title-${panelId}`} className="text-[16px] font-semibold">
+                <h2 id={`real-topics-title-${panelId}`} className="text-[16px] font-medium">
                   {showOnboardingExample ? 'Así vas a ver tu progreso' : 'Contenido de tu PDF'}
                 </h2>
                 {showOnboardingExample && (

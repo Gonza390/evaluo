@@ -564,7 +564,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           initialResourceTopicIndex={
             isOwner && (query.tab === 'tarjetas' || query.tab === 'glosario' || query.tab === 'resumen') &&
             typeof query.studyTopic === 'string' &&
-            /^(0|[1-9]\\d{0,3})$/.test(query.studyTopic) &&
+            /^(0|[1-9]\d{0,3})$/.test(query.studyTopic) &&
             Number(query.studyTopic) < studySummary.sections.length
               ? Number(query.studyTopic)
               : undefined

@@ -289,7 +289,7 @@ function StudyCallout({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              'text-[10.5px] font-extrabold tracking-[0.13em] uppercase',
+              'text-[10.5px] font-medium tracking-[0.1em] uppercase',
               config.labelClassName
             )}
           >
@@ -351,7 +351,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
               {header.map((column, index) => (
                 <th
                   key={`${column}-${index}`}
-                  className="border-b border-[#DCE6FF] px-3.5 py-2.5 text-[11px] font-bold tracking-[0.02em] text-slate-800 sm:px-4"
+                  className="border-b border-[#DCE6FF] px-3.5 py-2.5 text-[11px] font-medium tracking-[0.02em] text-slate-800 sm:px-4"
                 >
                   {renderInlineMarkdown(column)}
                 </th>
@@ -418,11 +418,11 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
       content.push(
         <div key={itemKey} className={level <= 3 ? 'pt-2' : 'pt-1'}>
           {level <= 3 ? (
-            <h4 className="text-[1.03rem] font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.08rem]">
+            <h4 className="text-[1.03rem] font-medium tracking-[-0.03em] text-slate-950 sm:text-[1.08rem]">
               {renderInlineMarkdown(headingText)}
             </h4>
           ) : (
-            <h5 className="text-[0.94rem] font-semibold tracking-[-0.02em] text-slate-900">
+            <h5 className="text-[0.94rem] font-medium tracking-[-0.02em] text-slate-900">
               {renderInlineMarkdown(headingText)}
             </h5>
           )}
@@ -435,7 +435,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
     if (/^\d+\.\d+(?:\.\d+)?\s+/.test(line)) {
       content.push(
         <div key={itemKey} className="pt-1">
-          <h5 className="text-[0.95rem] font-bold tracking-[-0.02em] text-slate-950">
+          <h5 className="text-[0.95rem] font-medium tracking-[-0.02em] text-slate-950">
             {renderInlineMarkdown(line)}
           </h5>
           {renderPageReference(pageReference, itemKey)}
@@ -451,7 +451,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
 
       content.push(
         <div key={itemKey} className="flex items-start gap-3 py-0.5">
-          <span className="mt-0.5 inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF4FF] px-1.5 text-[11px] font-bold text-[#2563EB]">
+          <span className="mt-0.5 inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF4FF] px-1.5 text-[11px] font-medium text-[#2563EB]">
             {itemNumber}
           </span>
           <div className="min-w-0 flex-1">
@@ -513,7 +513,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
       className={cn(
         'text-pretty',
         compact
-          ? 'space-y-2.5 [&_h4]:text-[14.5px] [&_h4]:leading-5 [&_h5]:text-[13px] [&_p]:text-[13px] [&_p]:leading-[1.6]'
+          ? 'space-y-2.5 [&_h4]:text-[15px] [&_h4]:leading-6 [&_h5]:text-[14px] [&_p]:text-[15px] [&_p]:leading-[1.7]'
           : 'space-y-4'
       )}
     >

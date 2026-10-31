@@ -7,6 +7,7 @@ import {
   BookOpen,
   CalendarDays,
   ClipboardList,
+  ListChecks,
   CircleAlert,
   CircleHelp,
   Crown,
@@ -41,6 +42,7 @@ type NavConfigItem = {
   href: string;
   icon: typeof Home;
   disabled?: boolean;
+  iconTone?: string;
 };
 
 function isNavItemActive(pathname: string, href: string) {
@@ -54,10 +56,11 @@ function isNavItemActive(pathname: string, href: string) {
 }
 
 const navItems: NavConfigItem[] = [
-  { label: 'Mi espacio', href: '/dashboard', icon: Home },
-  { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-  { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
-  { label: 'Plan de estudio', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
+  { label: 'Mi espacio', href: '/dashboard', icon: Home, iconTone: 'bg-blue-50 text-blue-700' },
+  { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen, iconTone: 'bg-sky-50 text-sky-700' },
+  { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks, iconTone: 'bg-emerald-50 text-emerald-700' },
+  { label: 'Plan de estudio', href: '/dashboard/plan-de-estudio', icon: ClipboardList, iconTone: 'bg-violet-50 text-violet-700' },
+  { label: 'Calendario', href: '/calendario', icon: CalendarDays, iconTone: 'bg-amber-50 text-amber-700' },
 ];
 
 function NavItem({
@@ -67,6 +70,7 @@ function NavItem({
   collapsed,
   disabled,
   icon: Icon,
+  iconTone = 'bg-slate-100 text-slate-600',
   dataTourAttr,
   compact = false,
 }: {
@@ -76,6 +80,7 @@ function NavItem({
   collapsed: boolean;
   disabled?: boolean;
   icon: typeof Home;
+  iconTone?: string;
   dataTourAttr?: string;
   compact?: boolean;
 }) {
@@ -85,9 +90,9 @@ function NavItem({
   const pending = pendingFrom === pathname && !active;
   const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} transition-colors duration-150 ${
     active
-      ? 'text-primary font-semibold'
-      : 'text-muted-foreground font-medium hover:bg-muted/50 hover:text-foreground'
-  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`;
+      ? 'text-slate-900 font-medium'
+      : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
+  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-1.5 py-1' : 'min-h-11 gap-2.5 px-2 py-1.5'}`;
 
   if (disabled) {
     return (
@@ -96,7 +101,7 @@ function NavItem({
         title={collapsed ? label : undefined}
         className={`${baseClass} cursor-default opacity-75`}
       >
-        <Icon className="h-4 w-4 shrink-0" />
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconTone}`}><Icon className="h-4 w-4" /></span>
         {!collapsed ? <span>{label}</span> : null}
       </button>
     );
@@ -113,7 +118,7 @@ function NavItem({
       className={baseClass}
       {...(dataTourAttr ? { [dataTourAttr]: 'true' } : {})}
     >
-      <Icon className={`h-4 w-4 shrink-0 ${pending ? 'animate-pulse text-primary' : ''}`} />
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconTone}`}><Icon className={`h-4 w-4 ${pending ? 'animate-pulse' : ''}`} /></span>
       {!collapsed ? <span>{label}</span> : null}
     </Link>
   );
@@ -190,6 +195,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 href={navItems[0].href}
                 label={navItems[0].label}
                 icon={navItems[0].icon}
+                iconTone={navItems[0].iconTone}
                 disabled={navItems[0].disabled}
                 collapsed={collapsed}
                 compact={compact}
@@ -214,6 +220,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 href={item.href}
                 label={item.label}
                 icon={item.icon}
+                iconTone={item.iconTone}
                 disabled={item.disabled}
                 collapsed={collapsed}
                 compact={compact}
@@ -229,7 +236,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               <span
                 data-evaluo-sidebar-indicator
                 aria-hidden="true"
-                className="pointer-events-none absolute top-0 left-0 !m-0 rounded-lg bg-primary/8"
+                className="pointer-events-none absolute top-0 left-0 !m-0 rounded-lg bg-slate-100/70"
                 style={{
                   width: activeIndicator.width,
                   height: activeIndicator.height,

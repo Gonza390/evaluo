@@ -13,7 +13,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   update();window.addEventListener('focus',update);window.addEventListener('pageshow',update);
   return ()=>{window.removeEventListener('focus',update);window.removeEventListener('pageshow',update);};
  },[materialId,topicActivities]);
- if (!topicCount) return <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Todavía no hay temas disponibles para planificar.</div>;
+ if (!topicCount) return <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">Todavía no hay temas para estudiar.</div>;
  const isFinished=(index:number)=>{
   const resources=topicActivities[index];
   return !!done[`${index}:reading`] && (!resources?.questions || !!done[`${index}:questions`]) && (!resources?.flashcards || !!done[`${index}:flashcards`]) && (!resources?.glossary || !!done[`${index}:glossary`]);
@@ -35,7 +35,7 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
   ];
   return all.filter(step=>step.id==='reading'||t[step.id]);
  };
- return <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+ return <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
   {visibleTopics.map((topic,groupIndex)=>{
    const steps=buildSteps(topic);
       return <div key={topic}>
@@ -44,9 +44,9 @@ export function StudyPlanNext({ materialId, topicCount, topicActivities }: { mat
     </div>
     {steps.filter(step=>!done[`${topic}:${step.id}`]).map((step,i)=>{
      const Icon=step.icon;const completed=!!done[`${topic}:${step.id}`];
-     const stepTone = step.id === 'reading' ? 'bg-blue-50 text-blue-700' : step.id === 'questions' ? 'bg-indigo-50 text-indigo-700' : step.id === 'flashcards' ? 'bg-violet-50 text-violet-700' : 'bg-amber-50 text-amber-700';
+     const stepTone = step.id === 'reading' ? 'bg-[#E8F2FF] text-[#376CAD]' : step.id === 'questions' ? 'bg-[#E9F5EE] text-[#35816A]' : step.id === 'flashcards' ? 'bg-[#F0EBFC] text-[#745AB3]' : 'bg-[#E2F2F7] text-[#41839B]';
      const active=groupIndex===0 && i===0;
-     return <Link key={step.id} href={step.href} className={`flex items-center gap-3 border-t border-slate-100 px-3 py-2.5 transition first:border-t-0 hover:bg-slate-50 ${active?'bg-blue-50/70':''}`}>
+     return <Link key={step.id} href={step.href} className={`flex items-center gap-3 border-t border-slate-100 px-3.5 py-3 transition first:border-t-0 hover:bg-slate-50 ${active?'bg-slate-50/70':''}`}>
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${completed?'bg-emerald-50 text-emerald-700':stepTone}`}><Icon className="size-4"/></span>
       <span className="min-w-0 flex-1">
        <span className="block text-[12px] font-medium">{step.label}</span>
