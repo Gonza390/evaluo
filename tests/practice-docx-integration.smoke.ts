@@ -77,7 +77,11 @@ assert.ok(direct.includes("PRACTICE_BANK_ENABLED !== '1'"),
 assert.ok(direct.indexOf("PRACTICE_BANK_ENABLED !== '1'") < direct.indexOf('enforceStrictRateLimit({'),
   'Disabled AI must stop before allocating a rate-limit slot.');
 
-assert.doesNotMatch(view,/mode !== 'simulacro' \|\| question\.pageStart !== null/);
+assert.doesNotMatch(view,/mode !== 'simulacro' \\|\\| question\\.pageStart !== null/);
+assert.match(view,/mode !== 'simulacro' \\|\\| isWord \\|\\| question\\.pageStart !== null/,
+  'PDF still rejects uncited exam questions; Word permits section references');
+assert.match(file('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx'),
+  /isWord=\\{material\\.file_name\\.toLowerCase\\(\\)\\.endsWith\\('\\.docx'\\)\\}/);
 const process=file('lib/student-materials/processing-service.ts');
 assert.doesNotMatch(process,/student_material_practice_banks|PRACTICE_PEDAGOGICAL_AI_ENABLED|practice\/prepare/,'Word and PDF ingestion must not generate costly advanced modes');
 console.log('DOCX practice full-mode source, correction, case generation and cache compatibility tests passed');
