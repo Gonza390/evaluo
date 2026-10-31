@@ -63,6 +63,7 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
     materialId={material.id} materialTitle={material.title} cases={savedBank?.cases.length ? savedBank.cases : cases}
+    aiAvailable={process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED === '1'}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null }))}
     questions={savedBank?.questions.length ? savedBank.questions : artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
