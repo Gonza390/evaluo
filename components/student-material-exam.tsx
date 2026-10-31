@@ -445,7 +445,7 @@ export function StudentMaterialExam({
           </button>
         )}
         <div className="border-border border-b pb-4">
-          <p className="text-primary text-[11px] font-bold tracking-[0.14em] uppercase">
+          <p className="text-primary text-[11px] font-semibold tracking-[0.14em] uppercase">
             Práctica de este tema
           </p>
           <h2 className="text-foreground mt-2 text-xl font-semibold">
@@ -487,12 +487,12 @@ export function StudentMaterialExam({
           </button>
         )}
         <header className="border-border border-b pb-5">
-          <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
+          <p className="text-primary text-[11px] font-semibold tracking-[0.15em] uppercase">
             {topicSectionIndex === undefined
               ? 'Práctica basada en este PDF'
               : 'Práctica de este tema'}
           </p>
-          <h2 className="text-foreground mt-2 text-[20px] font-bold tracking-[-0.05em] sm:text-[22px]">
+          <h2 className="text-foreground mt-2 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]">
             {topicTitle ?? 'Elegí cuánto querés practicar'}
           </h2>
         </header>
@@ -557,7 +557,7 @@ export function StudentMaterialExam({
                   {selected ? <Check className="size-4 shrink-0 text-blue-600" aria-hidden="true" /> : null}
                 </div>
                 <div className="mt-auto pt-4">
-                  <p className="text-[14px] font-semibold leading-5">
+                  <p className="text-[14px] font-medium leading-5">
                     {option.label}
                   </p>
                   <p className="mt-0.5 text-[12px] font-medium opacity-90">
@@ -716,11 +716,11 @@ export function StudentMaterialExam({
         <div ref={finalResultRef} className="mx-auto w-full max-w-[640px] px-2 py-3 sm:px-3 sm:py-4">
           <div className="border-border bg-card rounded-xl border px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-col items-center text-center">
-              <p className="text-primary text-[11px] font-bold tracking-[0.13em] uppercase">
+              <p className="text-primary text-[11px] font-semibold tracking-[0.13em] uppercase">
                 Práctica finalizada{topicTitle ? ` · ${topicTitle}` : ''}
               </p>
               <h2
-                className="text-foreground mt-3 text-[30px] font-bold tracking-[-0.06em] sm:text-[34px]"
+                className="text-foreground mt-3 text-[30px] font-semibold tracking-[-0.06em] sm:text-[34px]"
                 aria-label={`Resultado: ${result.correct} de ${result.total}`}
               >
                 {result.correct} de {result.total}
@@ -728,7 +728,7 @@ export function StudentMaterialExam({
             </div>
 
             <div className="border-border mt-4 border-t pt-4 text-center">
-              <h3 className="text-foreground text-[19px] leading-[1.3] font-bold tracking-tight sm:text-[20px]">
+              <h3 className="text-foreground text-[19px] leading-[1.3] font-semibold tracking-tight sm:text-[20px]">
                 {hasErrors ? 'Detectamos qué necesitás reforzar' : '¡Excelente! Respondiste todo correctamente'}
               </h3>
               <p className="text-muted-foreground mx-auto mt-2 max-w-md text-[13px] leading-5">
@@ -819,7 +819,7 @@ export function StudentMaterialExam({
             <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
               Práctica terminada
             </p>
-            <h2 className="text-foreground mt-3 text-[30px] font-bold tracking-[-0.07em] sm:text-[34px]">
+            <h2 className="text-foreground mt-3 text-[30px] font-semibold tracking-[-0.07em] sm:text-[34px]">
               {result.correct} <span className="text-muted-foreground/45">/ {result.total}</span>
             </h2>
             <p className="text-muted-foreground mt-2 text-sm">
@@ -942,7 +942,7 @@ export function StudentMaterialExam({
                     metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'study_errors' },
                   });
                 }}
-                className="bg-primary text-primary-foreground inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-semibold transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+                className="bg-primary text-primary-foreground inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-medium transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
               >
                 Continuar ahora <ArrowRight className="h-4 w-4" />
               </Link>
@@ -1131,11 +1131,11 @@ export function StudentMaterialExam({
     return (
       <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
         <header className="border-border border-b pb-6">
-          <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
+          <p className="text-primary text-[11px] font-semibold tracking-[0.15em] uppercase">
             Práctica completada{topicTitle ? ` · ${topicTitle}` : ''}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
-            <h2 className="text-foreground text-3xl font-bold tracking-[-0.07em]">
+            <h2 className="text-foreground text-3xl font-semibold tracking-[-0.07em]">
               {topicSectionIndex === undefined
                 ? `${result.percentage}%`
                 : `${result.correct} de ${result.total}`}
@@ -1153,10 +1153,10 @@ export function StudentMaterialExam({
             .filter((level) => topicSectionIndex === undefined || result.levels[level].total > 0)
             .map((level) => (
               <div key={level} className="py-2 sm:px-5 first:sm:pl-0 last:sm:pr-0">
-                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.14em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.14em] uppercase">
                   {levelLabel(level)}
                 </p>
-                <p className="text-foreground mt-1 text-lg font-bold">
+                <p className="text-foreground mt-1 text-lg font-semibold">
                   {result.levels[level].correct}/{result.levels[level].total}
                 </p>
               </div>
@@ -1220,12 +1220,12 @@ export function StudentMaterialExam({
         )}
         {!isSimulation && (
           <section className="border-primary/20 bg-primary/5 mt-5 rounded-xl border p-4 sm:p-5" aria-live="polite">
-            <p className="text-primary text-[11px] font-bold tracking-[0.13em] uppercase">Tu próximo objetivo</p>
+            <p className="text-primary text-[11px] font-semibold tracking-[0.13em] uppercase">Tu próximo objetivo</p>
             {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
               <p className="text-muted-foreground mt-2 text-sm">Preparando tu próximo repaso con tus respuestas guardadas…</p>
             ) : objectiveStatus === 'saved' && nextObjective ? (
               <>
-                <h3 className="text-foreground mt-2 text-lg font-bold">
+                <h3 className="text-foreground mt-2 text-lg font-semibold">
                   {nextObjective.kind === 'reinforce' ? `Reforzar: ${nextObjective.topicTitle || 'tus errores'}`
                     : nextObjective.kind === 'practice' ? `Practicar: ${nextObjective.topicTitle || 'el próximo tema'}`
                     : 'Consolidar lo aprendido'}
@@ -1458,11 +1458,11 @@ export function StudentMaterialExam({
         )}
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-muted-foreground text-[12px] font-bold tracking-[0.14em] uppercase">
+            <p className="text-muted-foreground text-[12px] font-semibold tracking-[0.14em] uppercase">
               Pregunta {currentIndex + 1} de {questions.length}
             </p>
           </div>
-          <span className="text-primary text-[11px] font-bold tracking-[0.12em] uppercase md:hidden">
+          <span className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase md:hidden">
             {levelLabel(current.level)}
           </span>
         </div>
@@ -1482,7 +1482,7 @@ export function StudentMaterialExam({
         </div>
 
         <article className="border-border border-t pt-4">
-          <h2 className="text-foreground text-[16px] leading-6 font-bold tracking-[-0.035em] sm:text-[16px]">
+          <h2 className="text-foreground text-[16px] leading-6 font-medium tracking-[-0.025em] sm:text-[16px]">
             {current.prompt}
           </h2>
 
@@ -1515,7 +1515,7 @@ export function StudentMaterialExam({
                   >
                     <span
                       className={cn(
-                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold',
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
                         selected && !isRevealed && 'border-primary bg-primary text-white',
                         !selected &&
                           !showCorrect &&
@@ -1563,7 +1563,7 @@ export function StudentMaterialExam({
                       : 'border-primary'
                 )}
               >
-                <p className="text-foreground text-sm font-bold">
+                <p className="text-foreground text-sm font-semibold">
                   {current.type === 'multiple_choice'
                     ? isCorrect
                       ? 'Correcto'
