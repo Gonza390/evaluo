@@ -807,7 +807,7 @@ export default function CalendarioPage() {
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-semibold text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
+                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
                   >
                     <span className="hidden sm:inline">{label}</span>
                     <span className="text-xs sm:hidden">{label.slice(0, 3)}</span>
@@ -848,7 +848,7 @@ export default function CalendarioPage() {
                     >
                       <div className="flex items-start justify-between">
                         <span
-                          className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-semibold"
+                          className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-medium"
                           style={{
                             backgroundColor: isToday
                               ? 'var(--brand)'
@@ -870,7 +870,7 @@ export default function CalendarioPage() {
                         {cellEvents.slice(0, 2).map((event) => (
                           <div
                             key={event.id}
-                            className="truncate rounded-[8px] border px-2 py-0.5 text-[12px] font-semibold shadow-sm"
+                            className="truncate rounded-[8px] border px-2 py-0.5 text-[12px] font-medium shadow-sm"
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
@@ -922,7 +922,7 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`h-9 rounded-[12px] text-[13px] font-semibold ${
+                    className={`h-9 rounded-[12px] text-[13px] font-medium ${
                       formState.type === 'exam'
                         ? 'bg-white text-brand shadow-sm hover:bg-white'
                         : 'text-slate-600 hover:bg-white'
@@ -941,7 +941,7 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`h-9 rounded-[12px] text-[13px] font-semibold ${
+                    className={`h-9 rounded-[12px] text-[13px] font-medium ${
                       formState.type === 'assignment'
                         ? 'bg-white text-brand shadow-sm hover:bg-white'
                         : 'text-slate-600 hover:bg-white'
@@ -1100,7 +1100,7 @@ export default function CalendarioPage() {
                         </div>
                       </div>
                       <div className="flex min-h-[112px] flex-col justify-between rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                        <p className="text-[12px] font-semibold tracking-[0.14em] text-slate-500 uppercase">
+                        <p className="text-[12px] font-medium tracking-[0.14em] text-slate-500 uppercase">
                           Organizacion
                         </p>
                         <p>
@@ -1123,7 +1123,7 @@ export default function CalendarioPage() {
 
               <div className="space-y-3">
                 <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
-                  <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+                  <p className="text-[12px] font-medium tracking-[0.18em] text-slate-500 uppercase">
                     Vista previa
                   </p>
                   <div className="mt-2 min-h-[84px] rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
@@ -1152,7 +1152,7 @@ export default function CalendarioPage() {
                   <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-blue-500" />
-                      <p className="text-[12px] font-semibold text-slate-800">Recordatorios</p>
+                      <p className="text-[12px] font-medium text-slate-800">Recordatorios</p>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
                       Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen.
@@ -1162,7 +1162,7 @@ export default function CalendarioPage() {
 
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-3">
-                    <p className="text-[13px] font-semibold text-slate-900">
+                    <p className="text-[13px] font-medium text-slate-900">
                       Ya tenés cargado para este día
                     </p>
                     {selectedDateEvents.map((event) => (
