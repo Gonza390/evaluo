@@ -270,6 +270,28 @@ const sanitizedLevels = sanitizePedagogicalArtifacts({
 assert.equal(sanitizedLevels.questions[0]?.level, 'recordar');
 assert.equal(sanitizedLevels.flashcards[0]?.level, 'recordar');
 assert.equal(sanitizedLevels.flashcards.length, 1);
+const wordExcerpt = 'La segmentación de mercados divide a los consumidores en grupos de necesidades compartidas y permite diseñar una propuesta de valor adaptada a cada grupo.';
+const wordArtifacts = sanitizePedagogicalArtifacts({
+  ...artifacts,
+  questions: [],
+  flashcards: [{
+    ...incorrectCard,
+    id: 'word-metadata',
+    front: '¿Qué significa Licenciatura en Comercialización?',
+    back: 'Carrera a la que pertenece el material de estudio.',
+    reference: { pageStart: null, pageEnd: null, sectionTitle: 'Portada', excerpt: wordExcerpt },
+  },{
+    ...incorrectCard,
+    id: 'word-valid',
+    front: '¿Cómo contribuye la segmentación a mejorar una propuesta de valor?',
+    back: 'Permite agrupar necesidades semejantes y diseñar una oferta relevante para cada grupo.',
+    reference: { pageStart: null, pageEnd: null, sectionTitle: 'Unidad 1: Mercado', excerpt: wordExcerpt },
+  }],
+  miniExamQuestionIds: [],
+}, sections);
+assert.deepEqual(wordArtifacts.flashcards.map(card => card.id), ['word-valid'],
+  'Hide administrative Word flashcards without removing grounded academic cards');
+
 assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Cuál de estas afirmaciones representa mejor Epistemología?' }), true);
 assert.equal(isRecognitionPresentedAsHigherOrder(safeConcept), false);
 assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Qué caracteriza mejor a “Epistemología”?' }), true,
