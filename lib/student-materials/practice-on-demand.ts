@@ -5,7 +5,7 @@ import type { CanonicalPedagogicalModel } from './types';
 import { needsPedagogicalFeedback } from './practice-feedback-quality';
 
 /** Never included in the upload/processing pipeline. Only an explicit Practicar action uses it. */
-export const PRACTICE_BANK_VERSION = 3; // invalidates banks without DOCX section references
+export const PRACTICE_BANK_VERSION = 4; // includes separately labeled, source-verified application cases
 export const ON_DEMAND_PRACTICE_MODES = ['unir','completar','casos','mixto','simulacro'] as const;
 export type OnDemandPracticeMode = typeof ON_DEMAND_PRACTICE_MODES[number];
 export type PracticeBankPayload = {
