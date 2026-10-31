@@ -34,7 +34,7 @@ assert.equal(isTransientSimulatorCatalogError({ message: 'permission denied for 
 assert.equal(isTransientSimulatorCatalogError(null), false);
 
 
-const publicViewHardeningSql = readFileSync('supabase/migrations/20261031210000_restrict_public_question_bank_scans.sql', 'utf8');
+const publicViewHardeningSql = readFileSync('supabase/migrations/20261031204119_restrict_public_question_bank_scans.sql', 'utf8');
 const pregunteroSeo = readFileSync('lib/seo-content-signals.ts', 'utf8');
 const catalogData = readFileSync('lib/data/catalog.ts', 'utf8');
 // Limitar las lecturas del banco a consultas filtradas en el servidor y RPC de estadísticas.
