@@ -221,9 +221,11 @@ const compactProgressList = readFileSync(resolve('app/(es)/dashboard/progreso/pa
 const compactHistory = readFileSync(resolve('components/dashboard/explanations-history-client.tsx'), 'utf8');
 const compactReferrals = readFileSync(resolve('app/(es)/referidos/page.tsx'), 'utf8');
 const compactHeader = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
-for (const page of [compactCalendar, compactSettings, compactProgressList, compactHistory, compactReferrals]) {
+for (const page of [compactCalendar, compactProgressList, compactHistory, compactReferrals]) {
   assert.match(page, /text-\[20px\]|size="compact"/);
 }
+assert.match(compactSettings, /text-xl font-semibold tracking-tight/,
+  'Settings currently uses a compact, regular-weight page heading.');
 assert.match(compactCalendar, /max-w-\[1240px\]/);
 assert.match(compactSettings, /max-w-\[1240px\]/);
 assert.match(compactProgress, /size="compact"/);
