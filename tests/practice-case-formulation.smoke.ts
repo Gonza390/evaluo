@@ -35,6 +35,13 @@ const incomplete=build([{title:'Matriz de Ansoff',pageReferences:[7],items:[
   'Diversificacion: productos nuevos en mercado nuevo',
 ]}]);
 assert.ok(incomplete.every(c=>c.level!=='aplicar'),'Do not infer an unsourced product/market dimension');
+assert.equal(qualifiedQuestions([{
+ id:'ambiguous-inflection', prompt:'¿Qué estrategia permite ingresar a un territorio nuevo con productos existentes?',
+ options:['Desarrollo de mercado','Desarrollo de mercados','Penetración de mercado'],
+ answer:'Desarrollo de mercados',
+ explanation:'Ambas expresiones de desarrollo de mercado son equivalentes en singular y plural.',
+ pageStart:7,level:'comprender',
+}]).length,0,'Near-duplicate singular/plural distractors are unfair and must be rejected');
 const random=build([{title:'Clasificación sin criterios',pageReferences:[9],items:[
   'Categoría A','Categoría B','Categoría C',
 ]}]);
