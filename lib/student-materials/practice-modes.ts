@@ -25,7 +25,9 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
     defCounts.set(d, (defCounts.get(d) ?? 0) + 1);
   }
   return valid.filter(item => termCounts.get(normalizedAnswer(item.term)) === 1 &&
-      defCounts.get(normalizedAnswer(item.definition)) === 1)
+      defCounts.get(normalizedAnswer(item.definition)) === 1 &&
+      !valid.some(other => other !== item &&
+        normalizedAnswer(other.definition).slice(0, 48) === normalizedAnswer(item.definition).slice(0, 48)))
     .slice(0, limit);
 }
 /** A wrong choice in matching is not counted correct merely because its definition is similar. */
@@ -35,6 +37,16 @@ export function isCorrectWrittenAnswer(answer: string, expected: string): boolea
   return response === term || response === 'el ' + term || response === 'la ' + term ||
     response === 'los ' + term || response === 'las ' + term;
 }
+/** A shared long definition stem can make two options pedagogically equivalent. */
+export function hasAmbiguousDistractors(question: PracticeQuestion): boolean {
+  const answer = normalizedAnswer(question.answer);
+  if (answer.length < 44) return false;
+  return question.options.some(choice => {
+    const candidate = normalizedAnswer(choice);
+    return candidate !== answer && candidate.length >= 44 &&
+      candidate.slice(0, 42) === answer.slice(0, 42);
+  });
+}
 export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuestion[] {
   const seen = new Set<string>();
   return questions.filter(question => {
@@ -43,7 +55,7 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
     if (!key || seen.has(key) || question.prompt.trim().length < 18 || choices.length < 2 ||
       choices.length > 6 || new Set(choices).size !== choices.length ||
       choices.some(choice => !choice) || !choices.includes(normalizedAnswer(question.answer)) ||
-      question.explanation.trim().length < 20) return false;
+      question.explanation.trim().length < 20 || hasAmbiguousDistractors(question)) return false;
     seen.add(key); return true;
   });
 }
@@ -51,8 +63,16 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
 export function balancedQuestions(questions: PracticeQuestion[], limit = 10, round = 0): PracticeQuestion[] {
   const buckets = new Map<string, PracticeQuestion[]>();
   const eligible = qualifiedQuestions(questions);
+  const maxPage = Math.max(1, ...eligible.map(q => q.pageStart ?? 0));
+  const pageBand = Math.max(4, Math.ceil(maxPage / 4));
   for (const question of eligible) {
-    const topic = normalizedAnswer(question.chapterTitle || question.kind || 'general');
+    // No atribuir un tema por cercanía léxica: cuando no hay capítulo verificado,
+    // distribuir por posición del documento como proxy y no presentarlo como tema.
+    const topic = question.chapterTitle
+      ? 'chapter:' + normalizedAnswer(question.chapterTitle)
+      : question.pageStart
+        ? 'page-band:' + Math.floor((question.pageStart - 1) / pageBand)
+        : 'uncited:' + normalizedAnswer(question.kind || 'general');
     const bucket = buckets.get(topic) ?? [];
     bucket.push(question); buckets.set(topic, bucket);
   }
@@ -99,7 +119,8 @@ export function buildSourceBackedCases(model: CanonicalPedagogicalModel | null):
       return { name, evidence };
     }).filter((entry): entry is { name: string; evidence: string } => Boolean(entry));
     const labels = [...new Set(parsed.map(entry => normalizedAnswer(entry.name)))];
-    if (parsed.length < 2 || labels.length !== parsed.length || parsed.length > 6) continue;
+    if (parsed.length < 2 || labels.length !== parsed.length || parsed.length > 6 ||
+        parsed.some(entry => /^grupo\s*\d+$/i.test(entry.name))) continue;
     if (new Set(parsed.map(entry => normalizedAnswer(entry.evidence))).size !== parsed.length) continue;
     for (const [i, entry] of parsed.entries()) {
       result.push({
