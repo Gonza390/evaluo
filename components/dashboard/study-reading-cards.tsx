@@ -35,7 +35,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
 
   return (
     <section aria-label="Tus PDFs para estudiar" className="mx-auto w-full max-w-[1240px] px-3 py-4 sm:px-5 lg:px-6">
-      <h1 className="mb-3 text-xl font-bold tracking-tight text-slate-900">Tus materiales</h1>
+      <h1 className="mb-4 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px] text-slate-900">Tus materiales</h1>
       {materials.length ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5">
           {materials.map((material) => {
@@ -45,11 +45,11 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
                 className="flex min-h-[112px] min-w-0 flex-col items-center rounded-2xl border border-slate-200 bg-white px-2.5 pt-2.5 pb-2 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                 aria-label={`Estudiar ${material.title}, ${percent}% de avance de lectura`}>
                 <FileText aria-hidden="true" className="mb-1.5 h-4 w-4 shrink-0 text-slate-500" />
-                <span className="line-clamp-2 min-h-[32px] w-full break-words text-center text-[11px] font-semibold leading-4 text-slate-900 sm:text-xs">
+                <span className="line-clamp-2 min-h-[32px] w-full break-words text-center text-[11px] font-medium leading-4 text-slate-900 sm:text-xs">
                   {material.title}
                 </span>
                 <span className="mt-auto pt-1.5 text-center text-[10px] text-slate-500">
-                  Lectura · <span className={percent === 100 ? 'font-bold text-emerald-600' : 'font-semibold text-slate-700'}>{percent}%</span>
+                  Lectura · <span className={percent === 100 ? 'font-medium text-emerald-600' : 'font-medium text-slate-700'}>{percent}%</span>
                 </span>
                 <div role="progressbar" aria-label={`Lectura de ${material.title}`}
                   aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}
@@ -67,7 +67,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
         </div>
       )}
       <div className="mt-6 border-t border-slate-100 pt-4">
-        <h2 className="text-base font-bold tracking-tight text-slate-900">Herramientas de estudio</h2>
+        <h2 className="text-[15px] font-normal tracking-tight text-slate-900">Herramientas de estudio</h2>
         <p className="mt-1 text-xs text-slate-500">
           {activeMaterial ? `Continuá con ${activeMaterial.title}` : 'Subí un PDF desde Mi espacio para empezar.'}
         </p>
@@ -78,7 +78,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
             const content = (
               <>
                 <Icon className="h-5 w-5" aria-hidden="true" />
-                <span className="mt-auto text-sm font-bold">{tool.title}</span>
+                <span className="mt-auto text-[13px] font-medium">{tool.title}</span>
                 <span className="mt-1 text-xs leading-4 opacity-85">{tool.description}</span>
                 <span className="mt-1.5 text-xs font-medium">{activeMaterial ? 'Abrir →' : 'Elegí un PDF'}</span>
               </>
