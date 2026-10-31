@@ -27,7 +27,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-6 pb-24 sm:px-6 sm:py-9">
       <header className="mb-5 flex items-center justify-between gap-3">
-        <h1 className="shrink-0 text-[22px] font-semibold tracking-tight text-slate-900">Practicar</h1>
+        <h1 className="shrink-0 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px] text-slate-900">Practicar</h1>
         <div className="relative min-w-0 w-[min(60%,360px)]">
           <label htmlFor="practice-material" className="sr-only">PDF para practicar</label>
           <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-blue-600" />
@@ -41,7 +41,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
       </header>
       {material ? (
         <>
-          <h2 className="mb-3 text-[13px] font-medium text-slate-700">Elegí un tipo de práctica</h2>
+          <h2 className="mb-3 text-[15px] font-normal tracking-tight text-slate-700">Elegí un tipo de práctica</h2>
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
@@ -53,7 +53,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
                     <Icon className="size-[16px]" aria-hidden="true" />
                     {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                   </span>
-                  <span className="mt-auto pt-4 text-[13px] font-semibold leading-4">{title}</span>
+                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
                   <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
                   {!supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">Próximamente</span> : null}
                 </button>
@@ -62,7 +62,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
           </div>
           <div className="mt-5 flex flex-col gap-2">
             {selectedMode && available(selectedMode) ? (
-              <Link href={href} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-[13px] font-semibold text-white transition hover:bg-blue-700">
+              <Link href={href} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white transition hover:bg-blue-700">
                 {selectedMode === 'Flashcards' ? 'Practicar con flashcards' : 'Comenzar práctica'} <ArrowRight className="size-4" />
               </Link>
             ) : selectedMode ? (
@@ -74,7 +74,7 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
         </>
       ) : (
         <div className="rounded-xl border border-slate-200 p-5 text-sm text-slate-600">
-          Todavía no tenés materiales listos para practicar. <Link href="/dashboard" className="font-semibold text-blue-600 underline">Ir a Mi espacio</Link>
+          Todavía no tenés materiales listos para practicar. <Link href="/dashboard" className="font-medium text-blue-600 underline">Ir a Mi espacio</Link>
         </div>
       )}
     </main>
