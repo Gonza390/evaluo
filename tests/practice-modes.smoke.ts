@@ -69,6 +69,9 @@ const terms = generated.cases[0]!.options;
 assert.equal(verifyGeneratedPracticeCases(generated, source, terms).length, 1);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],evidence:'Cita inventada que el documento nunca contiene.'}]},source,terms).length,0);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],page:9}]},source,terms).length,0);
+assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],scenario:generated.cases[0].scenario+' Se trata de una hipótesis fundamental.'}]},source,terms).length,0,'A scenario cannot reveal its own answer.');
+assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],prompt:'¿Qué significa una hipótesis fundamental dentro del texto?'}]},source,terms).length,0,'Definition questions are not application cases.');
+assert.equal(verifyGeneratedPracticeCases({cases:[{...generated.cases[0],explanation:'Esto se sabe porque la definición propuesta encaja con la pregunta y por tanto es verdadera.'}]},source,terms).length,0,'Feedback must justify the actual correct concept.');
 console.log('AI case source-verification smoke passed');
 
 const ambiguous: PracticeQuestion = {
