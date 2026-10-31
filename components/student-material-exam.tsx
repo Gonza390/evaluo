@@ -530,7 +530,7 @@ export function StudentMaterialExam({
           </div>
         )}
 
-        <div data-onboarding-practice-options className="grid grid-cols-2 gap-2.5 py-4 sm:grid-cols-3 sm:gap-3 sm:py-5">
+        <div data-onboarding-practice-options className="grid w-full max-w-[520px] grid-cols-2 gap-2.5 py-4">
           {sizeOptions.map((option, index) => {
             const selected = selectedSize === option.count;
             const Icon = index === 0 ? Sparkles : index === 1 ? Layers3 : BookOpenCheck;
@@ -546,8 +546,8 @@ export function StudentMaterialExam({
                 aria-pressed={selected}
                 onClick={() => setSelectedSize(option.count)}
                 className={cn(
-                  'group relative flex min-h-[142px] flex-col items-start rounded-[15px] border p-3 text-left transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100 sm:min-h-[156px] sm:p-4',
-                  index === 2 && sizeOptions.length === 3 && 'col-span-2 sm:col-span-1',
+                  'group relative flex min-h-[142px] flex-col items-start rounded-[15px] border p-3 text-left transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100',
+                  index === 2 && sizeOptions.length === 3 && 'col-span-2',
                   tones[index % tones.length],
                   selected && 'border-blue-500 ring-2 ring-blue-500/65 ring-offset-2'
                 )}
@@ -557,13 +557,13 @@ export function StudentMaterialExam({
                   {selected ? <Check className="size-4 shrink-0 text-blue-600" aria-hidden="true" /> : null}
                 </div>
                 <div className="mt-auto pt-4">
-                  <p className="text-[14px] font-semibold leading-5 sm:text-[15px]">
+                  <p className="text-[14px] font-semibold leading-5">
                     {option.label}
                   </p>
                   <p className="mt-0.5 text-[12px] font-medium opacity-90">
                     {option.count} {option.count === 1 ? 'pregunta' : 'preguntas'}
                   </p>
-                  <p className="mt-1 text-[11px] leading-[1.4] opacity-80 sm:text-xs">
+                  <p className="mt-1 text-[11px] leading-[1.4] opacity-80">
                     {topicSectionIndex === undefined
                       ? option.description
                       : option.mode === 'complete'
