@@ -745,7 +745,7 @@ assert.ok(flashcardView.includes("isFlipping && 'animate-flashcard-turn'"));
 assert.ok(practiceView.includes('max-w-[1240px] px-1 py-2'));
 assert.ok(practiceView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(practiceView.includes('max-w-[640px] px-2 py-3'));
-assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-semibold'));
+assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-medium'));
 assert.ok(diagnosticView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(pdfProgressDetail.includes('text-[20px] sm:text-[22px]'));
 assert.ok(errorReviewView.includes('text-[13.5px] leading-6 break-words'));
