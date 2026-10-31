@@ -17,7 +17,9 @@ const modes = [
   { title: 'Simulacro de examen', description: 'Con reloj y sin ver cómo te fue hasta el final, como el día del examen.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
 ] as const;
 
-export function PracticeModePicker({ materials, initialMaterialId }: { materials: Material[]; initialMaterialId: string | null }) {
+export function PracticeModePicker({ materials, initialMaterialId, advancedPracticeEnabled = false }: {
+  materials: Material[]; initialMaterialId: string | null; advancedPracticeEnabled?: boolean;
+}) {
   const [materialId, setMaterialId] = useState(() => materials.find(m => m.id === initialMaterialId)?.id ?? materials[0]?.id ?? '');
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -31,27 +33,28 @@ export function PracticeModePicker({ materials, initialMaterialId }: { materials
   async function startPractice() {
     if (!selectedMode || !materialId || preparing || selectedMode === 'Con tus palabras') return;
     setPrepareError('');
-    // Existing Flashcards and Opciones have their own established flows: never alter those.
-    if (selectedMode === 'Flashcards' || selectedMode === 'Opciones') {
+    // All basic activities reuse already-processed source questions and glossary.
+    // Never round-trip through an optional AI/cache endpoint when it is off.
+    if (!advancedPracticeEnabled || selectedMode === 'Flashcards' || selectedMode === 'Opciones' ||
+        selectedMode === 'Unir conceptos' || selectedMode === 'Completar') {
       router.push(href);
       return;
     }
     setPreparing(true);
     try {
       const mode = href.split('/').at(-1);
-      const response = await fetch('/api/practice/prepare', {
+      // Preparing an enhanced bank is best-effort. Even if the optional table,
+      // provider or network fails, existing source-backed practice still works.
+      await fetch('/api/practice/prepare', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ materialId, mode }),
+        signal: AbortSignal.timeout(9000),
       });
-      if (!response.ok) {
-        setPrepareError('No pudimos preparar la actividad. Podés reintentarlo.');
-        return;
-      }
-      router.push(href);
     } catch {
-      setPrepareError('No pudimos conectar con Practicar. Reintentá en un momento.');
+      // Use the existing source-backed route, never block a student's practice.
     } finally {
       setPreparing(false);
+      router.push(href);
     }
   }
 
