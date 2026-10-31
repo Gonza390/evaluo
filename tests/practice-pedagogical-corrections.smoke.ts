@@ -11,9 +11,12 @@ const pairs:PracticePair[]=[
  {term:'Responsabilidad social empresaria (RSE)',definition:'Enfoque empresarial que reconoce responsabilidades sociales y ambientales dentro de su gestión.',chapterTitle:'Marketing'},
 ];
 const alias=allowedWrittenVariants(pairs[0]!,pairs);
-assert.deepEqual(alias,['Auxiliary hypothesis']);
+assert.ok(alias.includes('Auxiliary hypothesis'));
+assert.ok(alias.includes('hipotesis auxiliares'),'Unambiguous grammatical plural is allowed');
 assert.equal(isCorrectWrittenAnswer('la hipótesis auxiliar',pairs[0]!.term,alias),true);
 assert.equal(isCorrectWrittenAnswer('auxiliary hypothesis',pairs[0]!.term,alias),true);
+assert.equal(isCorrectWrittenAnswer('hipótesis auxiliares',pairs[0]!.term,alias),true);
+assert.equal(isCorrectWrittenAnswer('hipótesis auxiliar',pairs[0]!.term,alias),true);
 assert.equal(isCorrectWrittenAnswer('hipótesis secundaria',pairs[0]!.term,alias),false,
   'Do not infer synonyms not documented in the material');
 assert.equal(isCorrectWrittenAnswer('hipótesis fundamental',pairs[0]!.term,alias),false,
@@ -27,10 +30,18 @@ const duplicates:PracticePair[]=[
   {term:'Planificación',definition:'Construcción de objetivos y actividades para alcanzar un resultado organizacional.',chapterTitle:null,englishTerm:'Planning'},
   {term:'Programación',definition:'Organización temporal de un conjunto de acciones y sus recursos previstos.',chapterTitle:null,englishTerm:'Planning'},
 ];
-assert.deepEqual(allowedWrittenVariants(duplicates[0]!,duplicates),[],
+assert.ok(!allowedWrittenVariants(duplicates[0]!,duplicates).includes('Planning'),
  'Ambiguous translations cannot grade either concept as correct');
 assert.equal(isCorrectWrittenAnswer('Planning',duplicates[0]!.term,
   allowedWrittenVariants(duplicates[0]!,duplicates)),false);
+const pluralCollision:PracticePair[]=[
+  {term:'Mercado',definition:'Ámbito de encuentro de oferentes y demandantes que intercambian productos y servicios.',chapterTitle:null},
+  {term:'Mercados',definition:'Conjunto de espacios o segmentos en los que se organiza la demanda de una actividad.',chapterTitle:null},
+];
+assert.ok(!allowedWrittenVariants(pluralCollision[0]!,pluralCollision).includes('mercados'),
+  'Never grade a plural form if it is another explicit concept in the same glossary');
+assert.equal(isCorrectWrittenAnswer('mercados',pluralCollision[0]!.term,
+  allowedWrittenVariants(pluralCollision[0]!,pluralCollision)),false);
 assert.equal(groundedPracticeContrast(pairs[0]!.term,pairs[1]!.term,pairs)?.includes('Hipótesis fundamental'),true);
 assert.equal(groundedPracticeContrast('Una respuesta sin definición comprobada',pairs[1]!.term,pairs),null);
 assert.equal(groundedPracticeContrast(pairs[1]!.term,pairs[1]!.term,pairs),null);
