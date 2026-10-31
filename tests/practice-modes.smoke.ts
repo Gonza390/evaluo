@@ -53,6 +53,16 @@ assert.equal(cases.length, 3);
 assert.equal(cases[0]?.pageStart, 7);
 assert.equal(cases[0]?.level, 'comprender', 'Source matching is not evidence of transfer.');
 assert.ok(cases.every(q => q.options.includes(q.answer)));
+const ansoffCases = buildSourceBackedCases({
+  classifications:[{title:'Matriz de Ansoff',pageReferences:[7],items:[
+    'Penetración de mercado: productos existentes en el mercado actual (riesgo medio)',
+    'Desarrollo de mercados: vender el producto actual en un mercado nuevo (riesgo bajo)',
+  ]}],
+} as unknown as CanonicalPedagogicalModel);
+assert.equal(ansoffCases.length,2);
+assert.ok(ansoffCases.every(q => !/riesgo (?:medio|bajo)/i.test(q.prompt+' '+q.explanation)),
+  'Do not teach the dubious relative-risk ranking extracted from the real study PDF');
+
 console.log('Practice modes: pedagogical constraints and matching smoke passed');
 
 const evidence = 'La hipótesis fundamental es un enunciado general que debe ser sometido a prueba.';
