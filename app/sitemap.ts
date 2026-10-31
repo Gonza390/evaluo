@@ -129,6 +129,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  // Previews are not public/indexable. Their Supabase anon role can lack access
+  // to production-only catalog views. Keep all dynamic sitemap validation on
+  // production, where a failed fetch MUST still reject an incomplete sitemap.
+  // Skip only preview data queries so CI / QA builds cannot be broken by
+  // unrelated catalog permissions.
+  if (process.env.VERCEL_ENV === 'preview') return routes;
+
   const client = createPublicClient();
   const fetchAllQuestionFreshness = async () => {
     const pageSize = 1000;
