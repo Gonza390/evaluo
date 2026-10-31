@@ -60,9 +60,9 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
     savedBank = safePracticeBank(bankRow.payload);
   }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
-    materialId={material.id} materialTitle={material.title} cases={savedBank?.cases ?? cases}
+    materialId={material.id} materialTitle={material.title} cases={savedBank?.cases.length ? savedBank.cases : cases}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null }))}
-    questions={savedBank?.questions ?? artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
+    questions={savedBank?.questions.length ? savedBank.questions : artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
       id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
       explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
       chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? undefined,
