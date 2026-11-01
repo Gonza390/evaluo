@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Clock3, Flag, ClipboardList } from 'lucide-react
 export function ExamPracticeScreen({materialTitle,questions,index,answers,marked,secondsLeft,onSelect,onNavigate,onToggleMark,onSubmit}:{materialTitle:string;questions:{prompt:string;options:string[]}[];index:number;answers:Record<number,string>;marked:number[];secondsLeft:number;onSelect:(option:string)=>void;onNavigate:(index:number)=>void;onToggleMark:()=>void;onSubmit:()=>void}){
  const count=questions.length,question=questions[index],answered=questions.filter((_,i)=>Boolean(answers[i]?.trim())).length;
  const time=`${Math.floor(secondsLeft/60)}:${String(secondsLeft%60).padStart(2,'0')}`;
- return <main className="mx-auto w-full max-w-[1100px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
+ return <main className="practice-step-enter mx-auto w-full max-w-[1100px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
    <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
     <div className="min-w-0"><p className="mb-2 truncate text-[12px] text-slate-500"><Link href="/dashboard/practicar" className="hover:text-blue-600">Practicar</Link><span className="mx-2">/</span>{materialTitle}</p>
       <div className="flex items-center gap-2.5"><span className="flex size-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600"><ClipboardList className="size-4"/></span><h1 className="text-[20px] font-semibold tracking-[-.035em] text-slate-900 sm:text-[22px]">Simulacro de examen</h1></div>
