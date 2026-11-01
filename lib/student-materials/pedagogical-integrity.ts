@@ -2,7 +2,7 @@ import type { PedagogicalArtifacts, StudyFlashcard, StudyQuestion } from './peda
 import type { StudySummarySection } from './types';
 import { auditPracticeFlashcard } from './practice-card-quality';
 import { hasAmbiguousDistractors } from './practice-modes';
-import { isAdministrativeMultipleChoice } from './nonacademic-metadata';
+import { practiceQuestionQualityIssue } from './practice-question-quality';
 
 /** Conservador: ante una respuesta modelo sin sustento verificable, no presentarla al alumno. */
 function norm(value: string) {
@@ -86,14 +86,15 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
   if (question.type === 'multiple_choice') {
     // Cached banks can contain a correct-looking answer copied from a PDF
     // cover page. Such metadata is not a teachable academic definition.
-    if (isAdministrativeMultipleChoice({
+    const issue = practiceQuestionQualityIssue({
       prompt: question.prompt,
       answer: question.answer,
       options: question.options,
       kind: question.kind,
       sectionTitle: question.reference.sectionTitle ?? question.chapterTitle,
       sourceExcerpt: question.reference.excerpt,
-    })) return 'nonacademic_document_metadata';
+    });
+    if (issue) return issue;
     if (!question.options.some(option => norm(option) === norm(question.answer))) {
       return 'correct_answer_not_in_options';
     }
