@@ -674,20 +674,20 @@ export function StudentMaterialFlashcards({
       <div
         className={cn(
           'mx-auto w-full',
-          topicMode ? 'max-w-[640px] space-y-2.5' : 'max-w-[720px] space-y-3',
+          topicMode ? 'max-w-[640px] space-y-2.5 pt-4 sm:pt-5' : 'max-w-[720px] space-y-3',
           isFullscreen && 'flex min-h-full flex-col justify-center'
         )}
       >
         <div className={cn('flex flex-wrap items-center justify-between', topicMode ? 'gap-1' : 'gap-3')}>
-          <div>
+          <div className={topicMode ? 'min-w-0 w-full' : undefined}>
             <p className={cn('text-foreground text-xs font-medium', !topicMode && 'hidden md:block')}>
               Tarjeta {position + 1} de {order.length}
             </p>
             {topicMode ? (
-              <div className="mt-1 flex flex-wrap gap-1.5 text-xs font-medium" aria-label="Estado de las tarjetas">
-                <span data-flashcards-bad className="rounded-full border border-red-200 px-2.5 py-0.5 text-red-600">{unknownCount} Mal</span>
-                <span data-flashcards-learning className="rounded-full border border-amber-200 px-2.5 py-0.5 text-amber-600">{learningCount} Aprendiendo</span>
-                <span data-flashcards-good className="rounded-full border border-emerald-200 px-2.5 py-0.5 text-emerald-600">{knownCount} Bien</span>
+              <div className="mt-1 grid w-full grid-cols-3 items-center gap-1 text-[11px] font-medium sm:text-xs" aria-label="Estado de las tarjetas">
+                <span data-flashcards-bad className="justify-self-start whitespace-nowrap rounded-full border border-red-200 px-2 py-0.5 text-red-600 sm:px-2.5">{unknownCount} Mal</span>
+                <span data-flashcards-learning className="justify-self-center whitespace-nowrap rounded-full border border-amber-200 px-2 py-0.5 text-amber-600 sm:px-2.5">{learningCount} Aprendiendo</span>
+                <span data-flashcards-good className="justify-self-end whitespace-nowrap rounded-full border border-emerald-200 px-2 py-0.5 text-emerald-600 sm:px-2.5">{knownCount} Bien</span>
               </div>
             ) : !demoMode ? (
               <p className="mt-0.5 flex gap-4 text-sm font-medium">
