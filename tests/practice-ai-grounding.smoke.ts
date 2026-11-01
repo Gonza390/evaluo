@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {sourceBackedPracticeTerms} from '../lib/student-materials/practice-classification-terms.ts';
 import {verifyGeneratedPracticeCases} from '../lib/student-materials/practice-ai-cases.ts';
+import {distinctApplicationCases, MIN_CASES_PER_PRACTICE} from '../lib/student-materials/practice-modes.ts';
 import type {CanonicalPedagogicalModel} from '../lib/student-materials/types.ts';
 
 const model={
@@ -50,4 +51,36 @@ assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,options:[...entry.op
 assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,scenario:entry.scenario+' Esto es un desarrollo de mercados.'}]},sources,terms).length,0);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,prompt:'¿Qué significa el desarrollo de mercados?'}]},sources,terms).length,0);
 assert.equal(verifyGeneratedPracticeCases({cases:[{...entry,explanation:'La elección correcta es claramente la adecuada para la situación planteada, ya que así debe entenderse.'}]},sources,terms).length,0);
+
+// A six-case session should be possible from genuinely different source-backed
+// applications without weakening evidence checks or reusing a duplicate case.
+const sixNovelScenarios=[
+  'Una compañía de alimentos vende galletas en su ciudad y comienza a vender exactamente las mismas galletas en otra provincia donde aún no tenía distribuidores.',
+  'Una editorial conserva su catálogo y comienza a ofrecer esos mismos libros en un país donde antes no tenía presencia comercial.',
+  'Una pyme comercializa calzado en su región y empieza a distribuir esos mismos modelos en una ciudad en la que todavía no había operado.',
+  'Un fabricante de bicicletas mantiene el mismo producto pero ingresa por primera vez a un mercado extranjero donde nunca había tenido clientes.',
+  'Una marca de muebles ofrece sus mesas habituales en una nueva zona geográfica sin modificar características ni incorporar una línea diferente.',
+  'Una empresa tecnológica que vendía sus licencias localmente decide comercializar el mismo sistema en otros territorios aún no atendidos.',
+];
+const sixEntries=sixNovelScenarios.map((scenario,index)=>({
+  ...entry,scenario,prompt:'¿Cuál estrategia representa mejor el cambio comercial de la organización en el caso '+(index+1)+'?',
+}));
+const multi=verifyGeneratedPracticeCases({cases:sixEntries},sources,terms);
+assert.equal(multi.length,MIN_CASES_PER_PRACTICE,
+  'The AI validator must retain six independently grounded cases when supplied.');
+assert.equal(distinctApplicationCases(multi).length,MIN_CASES_PER_PRACTICE);
+assert.equal(distinctApplicationCases([...multi,multi[0]!,multi[1]!]).length,MIN_CASES_PER_PRACTICE,
+  'Repeating one scenario may not inflate the six-case minimum.');
+assert.equal(distinctApplicationCases([
+  ...multi,{...multi[0]!,id:'recognition-only',level:'comprender',kind:'classification-recognition'}
+]).length,MIN_CASES_PER_PRACTICE,
+  'Recognition exercises must never count toward six application cases.');
+assert.equal(distinctApplicationCases(multi.slice(0,5)).length,5,
+  'A bank of five good applications cannot masquerade as six.');
+const sessionSource=await import('node:fs').then(fs=>fs.readFileSync(
+  new URL('../components/dashboard/practice-session.tsx',import.meta.url),'utf8'));
+assert.match(sessionSource,/contexts\.length >= MIN_CASES_PER_PRACTICE/);
+assert.match(sessionSource,/setGeneratedCases\(previous => distinctApplicationCases/,
+  'New AI cases must be merged with validated existing ones, not overwrite them.');
+
 console.log('Practice AI grounding: classification coverage, novel-case generation and adversarial validation passed');
