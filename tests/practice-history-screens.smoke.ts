@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 
 const read = (path: string) => readFileSync(path, 'utf8');
 const picker = read('components/dashboard/practice-mode-picker.tsx');
+const exerciseScreens = read('components/dashboard/practice-visual-screens.tsx');
 const panel = read('components/dashboard/practice-history-panel.tsx');
 const page = read('app/(es)/dashboard/practicar/page.tsx');
 const history = read('lib/student-materials/practice-history.ts');
@@ -18,6 +19,14 @@ assert.match(picker, /bg-transparent py-2\.5 pl-10/, 'Selector de PDF sin recuad
 assert.doesNotMatch(picker, /rounded-xl border border-\[#E2E8F2\] bg-white py-2\.5 pl-10/, 'El selector no vuelve a ser una tarjeta');
 assert.doesNotMatch(panel, /materialTitle|Historial de este material/, 'El historial no repite el nombre del PDF');
 assert.doesNotMatch(panel, /size-\[17px\] shrink-0 text-\[#71809A\]/, 'Sin ícono de historial en el encabezado');
+assert.doesNotMatch(picker, />MATERIAL<\/span>|Conceptos clave y preguntas frecuentes|Más preguntas y práctica en cada modalidad/,
+  'El paso Cómo querés repasar no muestra tarjeta de material ni textos redundantes');
+assert.match(picker, /≈ 10 min/, 'El repaso rápido sigue mostrando su duración');
+assert.match(picker, /≈ 40 min/, 'El repaso completo sigue mostrando su duración');
+assert.match(exerciseScreens, /flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end/,
+  'Salir y Terminar se ubican en extremos opuestos en móvil');
+assert.match(exerciseScreens, /onClick=\{\(\)=>setSubmitted\(true\)\}/,
+  'Terminar mantiene su acción de comprobación');
 assert.match(picker, /data-practice-dual-pane/, 'Practicar identifica su layout de dos paneles');
 assert.match(picker, /lg:h-\[calc\(100dvh-52px\)\]/, 'La altura desktop queda acotada al viewport');
 assert.match(picker, /lg:flex-1 lg:content-start lg:overflow-y-auto/, 'Las modalidades tienen scroll propio en escritorio');
