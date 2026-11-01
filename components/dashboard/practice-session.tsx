@@ -618,7 +618,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500"
               placeholder="Escribí el término" />
           </> : <>
-            {mode === 'opciones' && <p className="mb-2 text-xs font-medium text-slate-500">¿Verdadero o falso?</p>}
+            {mode === 'opciones' && <p className="mb-2 text-center text-xs font-medium text-slate-500">¿Verdadero o falso?</p>}
             <p className="text-base font-medium leading-7 text-slate-900">{current.question.prompt}</p>
             <div className={mode === 'opciones' ? 'mt-5 grid grid-cols-2 gap-3' : 'mt-5 space-y-2'}>{current.question.options.map(option =>
               <button key={option} type="button" disabled={checked} aria-pressed={responses[step] === option}
