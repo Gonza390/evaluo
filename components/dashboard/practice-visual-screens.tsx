@@ -15,20 +15,43 @@ function Header({title,materialTitle,icon,progress,total,accent}:{title:string;m
  </header>;
 }
 export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTerm,onSelectTerm,matches,onMatch,onFinish}:{materialTitle:string;pairs:Pair[];definitions:{pair:Pair;pairIndex:number}[];selectedTerm:number|null;onSelectTerm:(n:number)=>void;matches:Record<number,number>;onMatch:(term:number,definition:number)=>void;onFinish:()=>void}){
- const correct=Object.keys(matches).filter(k=>matches[Number(k)]===Number(k)).length;
- const locked=(i:number)=>matches[i]===i;
- const activeText=selectedTerm===null?'Elegí un concepto y después su definición.':`Tocá la definición de «${pairs[selectedTerm]?.term??''}».`;
- const rowH=76,top=26;
- const y1=(i:number)=>top+i*rowH+32;
- const y2=(i:number)=>top+i*rowH+32;
- return <main className="mx-auto w-full max-w-[1110px] px-4 py-6 pb-24 sm:px-6 sm:py-9 lg:px-10">
-  <Header title="Unir conceptos" materialTitle={materialTitle} icon="match" progress={correct} total={pairs.length} accent="#2fb67c"/>
-  <div className="grid grid-cols-2 gap-x-3 lg:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)] lg:gap-x-2">
-   <div className="space-y-2"><p className="mb-3 text-[11px] font-semibold tracking-[.08em] text-slate-500">CONCEPTOS</p>{pairs.map((p,i)=><button key={p.term+i} type="button" disabled={locked(i)} aria-pressed={selectedTerm===i} onClick={()=>onSelectTerm(i)} className={`flex min-h-[68px] w-full items-center justify-between gap-2 rounded-[14px] border px-3 py-3 text-left text-[13px] font-medium leading-5 transition sm:px-4 sm:text-[14px] ${locked(i)?'border-emerald-200 bg-[#f7fcf9] text-slate-900':selectedTerm===i?'border-2 border-blue-600 bg-blue-50 text-slate-900 ring-4 ring-blue-100':'border-slate-200 bg-white text-slate-800 hover:border-blue-200'}`}><span>{p.term}</span>{locked(i)&&<Check className="size-4 shrink-0 text-emerald-700"/>}</button>)}</div>
-   <div aria-hidden="true" className="relative hidden lg:block"><svg className="absolute inset-x-0 top-[32px] overflow-visible" width="86" height={pairs.length*76} viewBox={`0 0 86 ${pairs.length*76}`} fill="none">{Object.entries(matches).filter(([a,b])=>Number(a)===b).map(([a,b])=>{const i=Number(a),j=definitions.findIndex(d=>d.pairIndex===b);return j<0?null:<path key={a} d={`M0 ${y1(i)-32} C43 ${y1(i)-32} 43 ${y2(j)-32} 86 ${y2(j)-32}`} stroke="#2fb67c" strokeWidth="3" strokeLinecap="round"/>})}{selectedTerm!==null&&<path d={`M0 ${y1(selectedTerm)-32} C32 ${y1(selectedTerm)-32} 50 ${y1(selectedTerm)-12} 72 ${y1(selectedTerm)-12}`} stroke="#0b6cf0" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="2 6"/>}</svg></div>
-   <div className="space-y-2"><p className="mb-3 text-[11px] font-semibold tracking-[.08em] text-slate-500">DEFINICIONES</p>{definitions.map(({pair,pairIndex},i)=>{const correctPair=Object.entries(matches).some(([t,d])=>Number(t)===d&&d===pairIndex);return <button key={pairIndex} type="button" disabled={selectedTerm===null||correctPair} onClick={()=>selectedTerm!==null&&onMatch(selectedTerm,pairIndex)} className={`flex min-h-[68px] w-full items-center justify-between gap-2 rounded-[14px] border px-3 py-2.5 text-left text-[12px] leading-[1.45] transition sm:px-4 sm:text-[13px] ${correctPair?'border-emerald-200 bg-[#f7fcf9] text-slate-900':selectedTerm!==null?'border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50':'border-slate-200 bg-white text-slate-700'}`}><span>{pair.definition}</span>{correctPair&&<Check className="size-4 shrink-0 text-emerald-700"/>}</button>})}</div>
+ const [submitted,setSubmitted]=React.useState(false);
+ const joined=Object.keys(matches).length;
+ const correct=Object.entries(matches).filter(([k,v])=>Number(k)===v).length;
+ const matchOf=(index:number)=>matches[index]!==undefined;
+ const definitionOwner=(index:number)=>Object.keys(matches).find(key=>matches[Number(key)]===index);
+ const rowHeight=62;
+ const rowY=(i:number)=>i*rowHeight+26;
+ return <main className="mx-auto w-full max-w-[1010px] px-4 py-4 pb-14 sm:px-6 sm:py-6 lg:px-8">
+  <div className="mb-5"><Header title="Unir conceptos" materialTitle={materialTitle} icon="match" progress={joined} total={pairs.length} accent="#2fb67c"/></div>
+  <div className="grid grid-cols-2 gap-x-2 lg:grid-cols-[minmax(0,1fr)_68px_minmax(0,1fr)] lg:gap-x-0">
+   <div className="space-y-1.5"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">CONCEPTOS</p>{pairs.map((pair,i)=>{
+    const linked=matchOf(i),good=linked&&matches[i]===i;
+    return <button key={pair.term+i} type="button" disabled={submitted} aria-pressed={selectedTerm===i}
+     onClick={()=>onSelectTerm(i)}
+     className={`flex min-h-[56px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium leading-4 transition sm:px-3 sm:text-[13px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):selectedTerm===i?'border-blue-600 bg-blue-50 text-slate-900 ring-2 ring-blue-100':linked?'border-blue-200 bg-blue-50/50 text-slate-900':'border-slate-200 bg-white text-slate-800 hover:border-blue-300'}`}>
+      <span>{pair.term}</span>{submitted&&linked?<span className="shrink-0 text-sm">{good?'✓':'×'}</span>:linked?<span className="size-2 shrink-0 rounded-full bg-blue-500"/>:null}
+     </button>;
+   })}</div>
+   <div aria-hidden="true" className="relative hidden lg:block"><svg className="absolute left-0 top-[27px] overflow-visible" width="68" height={pairs.length*rowHeight} viewBox={`0 0 68 ${pairs.length*rowHeight}`} fill="none">
+    {Object.entries(matches).map(([key,definitionId])=>{const i=Number(key),j=definitions.findIndex(d=>d.pairIndex===definitionId);if(j<0)return null;const good=i===definitionId;return <path key={key} d={`M0 ${rowY(i)-27} C34 ${rowY(i)-27} 34 ${rowY(j)-27} 68 ${rowY(j)-27}`} stroke={submitted?(good?'#16a34a':'#e11d48'):'#3b82f6'} strokeWidth="2.5" strokeLinecap="round"/>;})}
+    {!submitted&&selectedTerm!==null&&<path d={`M0 ${rowY(selectedTerm)-27} C22 ${rowY(selectedTerm)-27} 35 ${rowY(selectedTerm)-15} 56 ${rowY(selectedTerm)-15}`} stroke="#2563eb" strokeWidth="2" strokeDasharray="2 6" strokeLinecap="round"/>}
+   </svg></div>
+   <div className="space-y-1.5"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">DEFINICIONES</p>{definitions.map(({pair,pairIndex})=>{
+    const owner=definitionOwner(pairIndex),linked=owner!==undefined,good=linked&&Number(owner)===pairIndex;
+    return <button key={pairIndex} type="button" disabled={submitted||selectedTerm===null}
+     onClick={()=>selectedTerm!==null&&onMatch(selectedTerm,pairIndex)}
+     className={`flex min-h-[56px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left text-[11px] leading-[1.35] transition sm:px-3 sm:text-[12px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):linked?'border-blue-200 bg-blue-50/50 text-slate-900':selectedTerm!==null?'border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50':'border-slate-200 bg-white text-slate-700'}`}>
+     <span>{pair.definition}</span>{submitted&&linked?<span className="shrink-0 text-sm">{good?'✓':'×'}</span>:linked?<span className="size-2 shrink-0 rounded-full bg-blue-500"/>:null}
+    </button>;
+   })}</div>
   </div>
-  <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5"><p className="text-[13px] text-slate-600" aria-live="polite">{correct===pairs.length?'¡Uniste todos los conceptos!':activeText}</p><div className="flex items-center gap-2"><button type="button" onClick={()=>{const n=pairs.findIndex((_,i)=>!locked(i));if(n>=0)onSelectTerm(n)}} disabled={correct===pairs.length} className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-[13px] font-medium text-slate-600 disabled:opacity-40"><Lightbulb size={16}/> Pista</button><Link href="/dashboard/practicar" className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-[13px] font-medium text-slate-600"><LogOut size={16}/> Salir</Link>{correct===pairs.length&&<button type="button" onClick={onFinish} className="min-h-10 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white">Ver resultados</button>}</div></div>
+  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+   <p className="text-[12px] text-slate-600" aria-live="polite">{submitted?`${correct} de ${pairs.length} asociaciones correctas.`:selectedTerm===null?'Elegí un concepto y después su definición.':`Tocá la definición de «${pairs[selectedTerm]?.term??''}».`}</p>
+   <div className="flex items-center gap-2"><Link href="/dashboard/practicar" className="inline-flex min-h-10 items-center rounded-xl px-3 text-[13px] font-medium text-slate-600">Salir</Link>
+    {!submitted?<button type="button" disabled={joined!==pairs.length} onClick={()=>setSubmitted(true)} className="min-h-10 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white disabled:opacity-40">Terminar</button>:<button type="button" onClick={onFinish} className="min-h-10 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white">Ver resultados</button>}
+   </div>
+  </div>
  </main>;
 }
 export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,onSelect,onNext,onPrevious,onSkip,onGenerate,generating}:{materialTitle:string;question:CaseQuestion;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void;onGenerate:()=>void;generating:boolean}){
