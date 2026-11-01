@@ -110,7 +110,6 @@ export function PdfFirstUploadShell({
   const { toast } = useToast();
   const isPreAuthPdfResume =
     initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
-  const isDirectSignupFirstPdf = initialSource === 'signup-direct';
   // El catálogo y el perfil académico se solicitan sólo si el estudiante
   // abre la opción de universidad/carrera. Nunca se cargan con Mi espacio.
   const [universidades, setUniversidades] = useState<UniversidadOption[]>([]);
@@ -124,11 +123,10 @@ export function PdfFirstUploadShell({
   const resumeHandledRef = useRef(false);
   const readyTrackedRef = useRef(false);
   const firstPdfReadyTrackedRef = useRef(false);
-  const directSignupOpenTrackedRef = useRef(false);
   const autoRetryCountsRef = useRef<Record<string, number>>({});
   const autoRetryingMaterialRef = useRef<string | null>(null);
   const processingPollRef = useRef(createSingleFlightPolling<StudentMaterialProcessingState | null>());
-  const [open, setOpen] = useState(initialOpen);
+  const [open, setOpen] = useState(initialOpen && initialSource !== 'signup-direct');
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [examDate, setExamDate] = useState(initialExamDate);
@@ -253,17 +251,8 @@ export function PdfFirstUploadShell({
     : 0;
 
   useEffect(() => {
-    if (initialOpen) setOpen(true);
-  }, [initialOpen]);
-
-  useEffect(() => {
-    if (!initialOpen || !isDirectSignupFirstPdf || directSignupOpenTrackedRef.current) return;
-    directSignupOpenTrackedRef.current = true;
-    trackMarketingEvent('first_pdf_upload_opened', {
-      location: 'post_signup',
-      source: initialSource,
-    });
-  }, [initialOpen, initialSource, isDirectSignupFirstPdf]);
+    if (initialOpen && initialSource !== 'signup-direct') setOpen(true);
+  }, [initialOpen, initialSource]);
 
   useEffect(() => {
     if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
@@ -833,9 +822,7 @@ export function PdfFirstUploadShell({
                   : ready
                     ? 'Tu PDF está listo'
                     : 'Preparación de tu PDF'
-                : isDirectSignupFirstPdf
-                  ? 'Empecemos con tu primer material'
-                  : 'Subir PDF o Word'}
+                : 'Subir PDF o Word'}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
@@ -853,9 +840,7 @@ export function PdfFirstUploadShell({
                         : ready
                           ? 'Tu PDF está listo'
                           : 'Estamos procesando tu PDF'
-                      : isDirectSignupFirstPdf
-                        ? 'Empecemos con tu primer material'
-                        : 'Subir PDF o Word'}
+                      : 'Subir PDF o Word'}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
                     {processing
@@ -866,9 +851,7 @@ export function PdfFirstUploadShell({
                           : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
                       : restoringDraft
                         ? 'Recuperando el PDF que elegiste antes del registro.'
-                        : isDirectSignupFirstPdf
-                          ? 'Subí un PDF o Word y convertí tus apuntes en material para estudiar y practicar.'
-                          : 'Elegí el archivo y poné un nombre.'}
+                        : 'Elegí el archivo y poné un nombre.'}
                   </p>
                 </div>
               </div>
@@ -895,7 +878,7 @@ export function PdfFirstUploadShell({
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-sm font-semibold text-slate-950">
-                      {isDirectSignupFirstPdf ? 'Subir mi material' : 'Elegir PDF o Word'}
+                      Elegir PDF o Word
                     </span>
                     <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
                   </button>
@@ -960,7 +943,7 @@ export function PdfFirstUploadShell({
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
-                    {isDirectSignupFirstPdf ? 'Ahora no' : 'Cancelar'}
+                    Cancelar
                   </Button>
                   <Button
                     type="button"
