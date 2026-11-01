@@ -1626,15 +1626,62 @@ const distinctPracticeModel: CanonicalPedagogicalModel = {
     ],
     pageReferences: [(i % 94) + 1],
   })),
-  processes: Array.from({ length: 48 }, (_, i) => ({
-    title: `Procedimiento académico ${i + 1}`,
-    steps: [
-      'Se reconocen las condiciones iniciales de la tarea mediante observaciones registradas.',
-      'Se comparan los datos disponibles con criterios previamente establecidos.',
-      'Se documentan las conclusiones obtenidas y las acciones de seguimiento.',
-    ],
-    pageReferences: [(i % 94) + 1],
-  })),
+  processes: [
+    {
+      title: 'Revisión bibliográfica',
+      steps: [
+        'Se consultan artículos publicados en bases de datos especializadas.',
+        'Se contrastan los hallazgos y limitaciones de las fuentes seleccionadas.',
+        'Se sintetizan las coincidencias y diferencias entre los trabajos analizados.',
+      ],
+      pageReferences: [8],
+    },
+    {
+      title: 'Diseño experimental',
+      steps: [
+        'Se formula una hipótesis que pueda ponerse a prueba con observaciones.',
+        'Se asignan participantes a condiciones comparables antes de medir.',
+        'Se registran los resultados y se evalúan las diferencias entre grupos.',
+      ],
+      pageReferences: [19],
+    },
+    {
+      title: 'Control de inventario',
+      steps: [
+        'Se cuentan las unidades físicas disponibles en el depósito.',
+        'Se cotejan las cantidades observadas con los registros del sistema.',
+        'Se investigan los faltantes y se corrigen las diferencias documentadas.',
+      ],
+      pageReferences: [31],
+    },
+    {
+      title: 'Auditoría financiera',
+      steps: [
+        'Se reúnen los comprobantes que respaldan las operaciones registradas.',
+        'Se cotejan los saldos contables con documentación independiente.',
+        'Se informan las desviaciones detectadas y la evidencia examinada.',
+      ],
+      pageReferences: [43],
+    },
+    {
+      title: 'Investigación etnográfica',
+      steps: [
+        'Se observan las interacciones cotidianas de una comunidad participante.',
+        'Se consignan testimonios y situaciones en notas de campo.',
+        'Se interpretan las prácticas compartidas a partir de registros contextualizados.',
+      ],
+      pageReferences: [61],
+    },
+    {
+      title: 'Planificación curricular',
+      steps: [
+        'Se establecen competencias de aprendizaje para un curso.',
+        'Se organizan actividades y recursos acordes con los objetivos seleccionados.',
+        'Se diseñan instrumentos para evaluar el logro de los resultados esperados.',
+      ],
+      pageReferences: [82],
+    },
+  ],
 };
 const distinctLongArtifacts = buildCurrentPedagogicalArtifacts({
   summary: longSummaryWithChapters,
@@ -1651,6 +1698,34 @@ assert.ok(
     question.type !== 'multiple_choice' || new Set(question.options).size === question.options.length
   ),
   'Ninguna pregunta aceptada puede tener alternativas duplicadas.'
+);
+assert.ok(
+  distinctLongArtifacts.questions.filter(question => question.kind === 'process').length >= 4,
+  'Los procesos con secuencias distintas deben producir preguntas realmente discriminables.'
+);
+const duplicatedProcessModel: CanonicalPedagogicalModel = {
+  ...distinctPracticeModel,
+  processes: [
+    ...distinctPracticeModel.processes,
+    {
+      ...distinctPracticeModel.processes[0]!,
+      title: 'Otro proceso con los mismos pasos',
+    },
+  ],
+};
+const duplicatedProcessArtifacts = buildCurrentPedagogicalArtifacts({
+  summary: longSummaryWithChapters,
+  glossary: extensiveGlossary,
+  canonicalModel: duplicatedProcessModel,
+  pageCount: 94,
+});
+assert.ok(
+  !duplicatedProcessArtifacts.questions.some(question =>
+    question.kind === 'process' &&
+    (question.answer === 'Revisión bibliográfica' ||
+      question.answer === 'Otro proceso con los mismos pasos')
+  ),
+  'Dos procesos con idénticos pasos no autorizan respuestas diferentes para el mismo escenario.'
 );
 const integratedCardPages = integratedLongArtifacts.flashcards
   .map((card) => card.reference.pageStart)
