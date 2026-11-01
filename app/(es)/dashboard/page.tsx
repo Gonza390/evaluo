@@ -171,6 +171,11 @@ export default async function DashboardPage({
 
           <LazyMaeveStudySpace
             materials={materials}
+            firstName={(() => {
+              const candidate = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.nombre]
+                .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
+              return candidate?.trim().split(/\s+/)[0];
+            })()}
             initialUniversidadId={resolvedUniversidadId}
             initialCarreraId={resolvedCarreraId}
             initialMateriaId={uploadMateriaId}
