@@ -73,11 +73,11 @@ export function buildPracticeBank(
 }
 /** Do not substitute fabricated exercises when source coverage is inadequate. */
 export function sufficientPracticeBank(bank: PracticeBankPayload, mode: OnDemandPracticeMode, matchingPairs = 0) {
-  if (mode === 'unir' || mode === 'completar') return matchingPairs >= 3;
+  if (mode === 'unir' || mode === 'completar') return matchingPairs >= MIN_CASES_PER_PRACTICE;
   if (mode === 'casos') return distinctApplicationCases(bank.cases).length >= MIN_CASES_PER_PRACTICE;
-  if (mode === 'mixto') return bank.questions.length >= 4 || matchingPairs >= 4;
+  if (mode === 'mixto') return bank.questions.length >= 4 && matchingPairs >= 2;
   // DOCX questions carry a section anchor instead of a physical page.
-  return bank.questions.filter(q => q.pageStart !== null || Boolean(q.chapterTitle)).length >= 4;
+  return bank.questions.filter(q => q.pageStart !== null || Boolean(q.chapterTitle)).length >= MIN_CASES_PER_PRACTICE;
 }
 
 /**
