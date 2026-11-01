@@ -10,7 +10,7 @@ assert.equal(source.match(/relative z-10 flex h-full w-full flex-col items-cente
   'Las caras deben estar por encima de capas decorativas.');
 assert.doesNotMatch(source, /motion-safe:animate-in|motion-safe:fade-in|motion-safe:zoom-in-95/,
   'No debe haber animaciones de entrada que oculten el texto.');
-assert.match(source, /border-slate-200 bg-white px-4 py-3 text-center text-slate-950/,
+assert.match(source, /border-slate-200 bg-white px-4 text-center text-slate-950/,
   'La tarjeta debe tener fondo blanco y texto oscuro.');
 assert.match(source, /onClick=\{flipCard\}/,
   'Un único control alterna pregunta y respuesta.');

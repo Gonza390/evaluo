@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import '@/components/dashboard/practice-motion.css';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, CircleAlert, RotateCcw, Sparkles, Layers3, BookOpenCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -713,7 +714,7 @@ export function StudentMaterialExam({
       };
 
       return (
-        <div ref={finalResultRef} className="mx-auto w-full max-w-[640px] px-2 py-3 sm:px-3 sm:py-4">
+        <div ref={finalResultRef} className="practice-screen-enter mx-auto w-full max-w-[640px] px-2 py-3 sm:px-3 sm:py-4">
           <div className="border-border bg-card rounded-xl border px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-col items-center text-center">
               <p className="text-primary text-[11px] font-medium tracking-[0.13em] uppercase">
@@ -1436,7 +1437,7 @@ export function StudentMaterialExam({
 
   return (
     <>
-      <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
+      <div className="practice-screen-enter mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
         {topicSectionIndex !== undefined && (
           <div className="border-border border-b pb-3">
             <p className="text-muted-foreground text-[13px] font-medium">{topicTitle}</p>
@@ -1481,7 +1482,7 @@ export function StudentMaterialExam({
           />
         </div>
 
-        <article className="border-border border-t pt-4">
+        <article key={current.id} className="practice-step-enter border-border border-t pt-4">
           <h2 className="text-foreground text-[16px] leading-6 font-medium tracking-[-0.025em] sm:text-[16px]">
             {current.prompt}
           </h2>

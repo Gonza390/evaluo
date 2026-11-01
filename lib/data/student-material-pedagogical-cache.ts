@@ -3,6 +3,7 @@ import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy'
 import { PEDAGOGICAL_QUALITY_REPORT_VERSION } from '@/lib/student-materials/quality';
 import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 import { sanitizePedagogicalArtifacts } from '@/lib/student-materials/pedagogical-integrity';
+import { groundedPracticeExplanation, type PracticePair } from '@/lib/student-materials/practice-modes';
 import { logError } from '@/lib/observability';
 
 export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = PEDAGOGICAL_ARTIFACTS_VERSION;
@@ -14,6 +15,20 @@ type UntypedAdmin = {
   from: (table: string) => any;
 };
 
+/**
+ * View-only editorial improvement. The original artifacts are kept intact in
+ * Supabase and continue to serve as the source of truth for grading.
+ */
+function withGroundedExplanations(artifacts: Artifacts, glossary: BuildInput['glossary']): Artifacts {
+  const pairs:PracticePair[] = glossary.map(item => ({
+    term:item.term,definition:item.definition,chapterTitle:null,
+    englishTerm:item.englishTerm ?? null,
+  }));
+  return {...artifacts,questions:artifacts.questions.map(question =>
+    question.type === 'multiple_choice'
+      ? {...question,explanation:groundedPracticeExplanation(question,pairs)}
+      : question)};
+}
 type LoadInput = {
   admin: unknown;
   materialId: string;
@@ -39,7 +54,7 @@ export async function loadOrBuildPedagogicalArtifacts({
     cachedRow?.pedagogical_artifacts_version === CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION &&
     cachedRow?.pedagogical_artifacts
   ) {
-    return sanitizePedagogicalArtifacts(cachedRow.pedagogical_artifacts as Artifacts, summary.sections);
+    return withGroundedExplanations(sanitizePedagogicalArtifacts(cachedRow.pedagogical_artifacts as Artifacts, summary.sections),glossary);
   }
 
   const [{ data: sourceChunks, error: chunksError }, { data: modelRow, error: modelError }] =
@@ -130,7 +145,7 @@ export async function loadOrBuildPedagogicalArtifacts({
   // Las previews pueden apuntar al mismo Supabase que producción.
   // No reemplazar un banco persistido con el contrato experimental del branch:
   // el banco de preview se calcula para la vista actual, sin migrar datos.
-  if (process.env.VERCEL_ENV === 'preview') return artifacts;
+  if (process.env.VERCEL_ENV === 'preview') return withGroundedExplanations(artifacts,glossary);
 
   const { error: persistError } = await db
     .from('student_materials')
@@ -145,5 +160,5 @@ export async function loadOrBuildPedagogicalArtifacts({
     logError('studentMaterial.pedagogicalArtifacts.persist', persistError);
   }
 
-  return artifacts;
+  return withGroundedExplanations(artifacts,glossary);
 }

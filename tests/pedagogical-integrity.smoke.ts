@@ -250,6 +250,25 @@ assert.equal(sanitized.flashcards.length, 0);
 assert.deepEqual(sanitized.miniExamQuestionIds, ['epistemology', 'science']);
 assert.equal(sanitized.integrity?.rejectedQuestions, 3);
 assert.equal(sanitized.integrity?.rejectedFlashcards, 1);
+const nearEquivalentBank = sanitizePedagogicalArtifacts({
+  ...artifacts,
+  questions:[{
+    ...safeConcept,id:'ipc-ambiguous',
+    prompt:'¿Cuál opción expresa la relación entre hipótesis y consecuencia observacional?',
+    answer:'La consecuencia observacional se deduce de la hipótesis fundamental junto con condiciones iniciales e hipótesis auxiliares.',
+    options:[
+      'La consecuencia observacional se deduce de la hipótesis fundamental junto con condiciones iniciales e hipótesis auxiliares.',
+      'La consecuencia observacional se deduce lógicamente de la hipótesis fundamental junto con hipótesis auxiliares y condiciones iniciales.',
+      'Un resultado empírico se explica sin ninguna hipótesis auxiliar ni condiciones iniciales.',
+    ],
+    explanation:'La inferencia conecta la hipótesis con las condiciones observacionales.',
+  }],
+  flashcards:[],miniExamQuestionIds:['ipc-ambiguous'],
+},sections);
+assert.equal(nearEquivalentBank.questions.length,0);
+assert.equal(nearEquivalentBank.miniExamQuestionIds.length,0);
+assert.ok(nearEquivalentBank.integrity?.rejectedReasons.includes('near_equivalent_mcq_distractors'));
+
 const sanitizedLevels = sanitizePedagogicalArtifacts({
   ...artifacts,
   questions: [{
@@ -270,6 +289,28 @@ const sanitizedLevels = sanitizePedagogicalArtifacts({
 assert.equal(sanitizedLevels.questions[0]?.level, 'recordar');
 assert.equal(sanitizedLevels.flashcards[0]?.level, 'recordar');
 assert.equal(sanitizedLevels.flashcards.length, 1);
+const wordExcerpt = 'La segmentación de mercados divide a los consumidores en grupos de necesidades compartidas y permite diseñar una propuesta de valor adaptada a cada grupo.';
+const wordArtifacts = sanitizePedagogicalArtifacts({
+  ...artifacts,
+  questions: [],
+  flashcards: [{
+    ...incorrectCard,
+    id: 'word-metadata',
+    front: '¿Qué significa Licenciatura en Comercialización?',
+    back: 'Carrera a la que pertenece el material de estudio.',
+    reference: { pageStart: null, pageEnd: null, sectionTitle: 'Portada', excerpt: wordExcerpt },
+  },{
+    ...incorrectCard,
+    id: 'word-valid',
+    front: '¿Cómo contribuye la segmentación a mejorar una propuesta de valor?',
+    back: 'Permite agrupar necesidades semejantes y diseñar una oferta relevante para cada grupo.',
+    reference: { pageStart: null, pageEnd: null, sectionTitle: 'Unidad 1: Mercado', excerpt: wordExcerpt },
+  }],
+  miniExamQuestionIds: [],
+}, sections);
+assert.deepEqual(wordArtifacts.flashcards.map(card => card.id), ['word-valid'],
+  'Hide administrative Word flashcards without removing grounded academic cards');
+
 assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Cuál de estas afirmaciones representa mejor Epistemología?' }), true);
 assert.equal(isRecognitionPresentedAsHigherOrder(safeConcept), false);
 assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Qué caracteriza mejor a “Epistemología”?' }), true,

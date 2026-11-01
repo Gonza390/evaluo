@@ -946,3 +946,15 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
     animation: none;
   }
 }
+
+/* Suaviza el cambio entre procesamiento y material listo, sin demorar acciones. */
+.pdf-processing-journey[data-complete='true'] .journey-complete,
+.pdf-processing-journey[data-complete='true'] .journey-processing-status {
+  animation: journey-enter 260ms cubic-bezier(.22, 1, .36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pdf-processing-journey[data-complete='true'] .journey-complete,
+  .pdf-processing-journey[data-complete='true'] .journey-processing-status {
+    animation: none;
+  }
+}

@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import advanceStyles from './student-material-flashcards.module.css';
 import { cn } from '@/lib/utils';
 import { pdfStudyControlsClassName } from '@/components/study/pdf-study-styles';
 import {
@@ -26,6 +27,7 @@ import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 type RecallResult = 'known' | 'unknown';
+type CardAdvancePhase = 'idle' | 'leaving' | 'entering';
 type QualityVote = 'up' | 'down';
 
 function shuffledIndexes(length: number) {
@@ -70,12 +72,20 @@ function buildSessionOrder(recall: Record<number, RecallResult>, length: number)
   return [...shuffledIndexes(difficult.length).map((index) => difficult[index]!), ...remaining];
 }
 
+function boundedProgress<T>(values: Record<number, T>, count: number): Record<number, T> {
+  return Object.fromEntries(
+    Object.entries(values).filter(([index]) => Number(index) < count)
+  ) as Record<number, T>;
+}
+
 export function StudentMaterialFlashcards({
   cards,
   materialId,
   onComplete,
+  onSessionComplete,
   demoMode = false,
   allowedCardIndices,
+  persistentCardCount,
   topicTitle,
   onPracticeTopic,
   onReturnToTopic,
@@ -83,13 +93,19 @@ export function StudentMaterialFlashcards({
   cards: StudyFlashcard[];
   materialId: string;
   onComplete?: () => void;
+  /** Se usa desde Practicar para registrar el intento, no modifica la evaluación. */
+  onSessionComplete?: (result: { correct: number; total: number; answers: { prompt: string; selectedAnswer: string; correctAnswer: string; correct: boolean }[] }) => void;
   demoMode?: boolean;
   allowedCardIndices?: number[];
+  /** On-demand cards are session-only; do not map their changing indices onto
+   * the persistent recall data for the original uploaded PDF/DOCX deck. */
+  persistentCardCount?: number;
   topicTitle?: string;
   onPracticeTopic?: () => void;
   onReturnToTopic?: () => void;
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
+  const persistenceLimit = persistentCardCount ?? cards.length;
   // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
   // Los índices siguen siendo los del PDF completo para conservar su progreso.
   const [started, setStarted] = useState(demoMode || allowedCardIndices !== undefined);
@@ -100,6 +116,9 @@ export function StudentMaterialFlashcards({
   const [flipped, setFlipped] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const flipTimersRef = useRef<number[]>([]);
+  const advanceTimersRef = useRef<number[]>([]);
+  const advancingRef = useRef(false);
+  const [advancePhase, setAdvancePhase] = useState<CardAdvancePhase>('idle');
   const [flipReady, setFlipReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
@@ -118,7 +137,7 @@ export function StudentMaterialFlashcards({
   // Un solo panel dibuja cada cara. Gira hacia el canto, cambiamos el texto
   // cuando queda de perfil y termina el giro sin superponer capas.
   const flipCard = useCallback(() => {
-    if (!flipReady || isFlipping) return;
+    if (!flipReady || isFlipping || advancingRef.current) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setFlipped((current) => !current);
       return;
@@ -132,6 +151,7 @@ export function StudentMaterialFlashcards({
 
   useEffect(() => () => {
     flipTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    advanceTimersRef.current.forEach((timer) => window.clearTimeout(timer));
   }, []);
 
   // Durante la hidratación de Next.js el HTML es visible, pero los manejadores
@@ -175,6 +195,10 @@ export function StudentMaterialFlashcards({
   const hiddenReviewTopicsCount = Math.max(0, reviewTopics.length - 3);
 
   const beginSession = useCallback((nextOrder: number[]) => {
+    advanceTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    advanceTimersRef.current = [];
+    advancingRef.current = false;
+    setAdvancePhase('idle');
     completionHandledRef.current = false;
     setOrder(nextOrder);
     setSessionRecall({});
@@ -202,6 +226,10 @@ export function StudentMaterialFlashcards({
   }, [beginSession, cards.length, demoMode, materialId, recallByCard, scopedIndices]);
 
   const finishSession = useCallback(() => {
+    advanceTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    advanceTimersRef.current = [];
+    advancingRef.current = false;
+    setAdvancePhase('idle');
     setStarted(false);
     setOrder([]);
     setSessionRecall({});
@@ -228,8 +256,18 @@ export function StudentMaterialFlashcards({
   useEffect(() => {
     if (!allReviewed || completionHandledRef.current) return;
     completionHandledRef.current = true;
+    onSessionComplete?.({
+      correct: knownCount,
+      total: order.length,
+      answers: order.map((index) => ({
+        prompt: cards[index]?.front ?? '',
+        selectedAnswer: sessionRecall[index] === 'known' ? 'Lo sabía' : 'No lo sabía',
+        correctAnswer: cards[index]?.back ?? '',
+        correct: sessionRecall[index] === 'known',
+      })),
+    });
     onComplete?.();
-  }, [allReviewed, onComplete]);
+  }, [allReviewed, cards, knownCount, onComplete, onSessionComplete, order, sessionRecall]);
 
   const scheduleTomorrowReminder = useCallback(() => {
     if (demoMode || unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
@@ -266,27 +304,27 @@ export function StudentMaterialFlashcards({
           recall?: Record<number, RecallResult>;
           votes?: Record<number, QualityVote>;
         };
-        setRecallByCard(parsed.recall ?? {});
-        setVoteByCard(parsed.votes ?? {});
+        setRecallByCard(boundedProgress(parsed.recall ?? {}, persistenceLimit));
+        setVoteByCard(boundedProgress(parsed.votes ?? {}, persistenceLimit));
       }
     } catch {
       // El estudio sigue funcionando aunque el navegador bloquee storage.
     } finally {
       setHasLoadedProgress(true);
     }
-  }, [demoMode, storageKey]);
+  }, [demoMode, storageKey, persistenceLimit]);
 
   useEffect(() => {
     if (demoMode || !hasLoadedProgress) return;
     try {
       window.localStorage.setItem(
         storageKey,
-        JSON.stringify({ recall: recallByCard, votes: voteByCard })
+        JSON.stringify({ recall: boundedProgress(recallByCard, persistenceLimit), votes: boundedProgress(voteByCard, persistenceLimit) })
       );
     } catch {
       // Persistencia opcional: nunca debe bloquear una sesión.
     }
-  }, [demoMode, hasLoadedProgress, recallByCard, storageKey, voteByCard]);
+  }, [demoMode, hasLoadedProgress, recallByCard, storageKey, voteByCard, persistenceLimit]);
 
   useEffect(() => {
     if (demoMode) return;
@@ -299,8 +337,8 @@ export function StudentMaterialFlashcards({
           return;
         }
         // Mantener los cambios locales que pueden haber ocurrido mientras cargaba el servidor.
-        setRecallByCard((current) => ({ ...result.progress.recall, ...current }));
-        setVoteByCard((current) => ({ ...result.progress.votes, ...current }));
+        setRecallByCard((current) => ({ ...boundedProgress(result.progress.recall, persistenceLimit), ...current }));
+        setVoteByCard((current) => ({ ...boundedProgress(result.progress.votes, persistenceLimit), ...current }));
       })
       .catch(() => {
         if (active) setProgressSyncError(true);
@@ -311,7 +349,7 @@ export function StudentMaterialFlashcards({
     return () => {
       active = false;
     };
-  }, [demoMode, materialId]);
+  }, [demoMode, materialId, persistenceLimit]);
 
   useEffect(() => {
     if (demoMode || !hasLoadedProgress || !hasLoadedServer) return;
@@ -322,7 +360,7 @@ export function StudentMaterialFlashcards({
     ]);
     if (indexes.size === 0) return;
 
-    const entries = [...indexes].map((cardIndex) => ({
+    const entries = [...indexes].filter(cardIndex => cardIndex < persistenceLimit).map((cardIndex) => ({
       cardIndex,
       recall: recallByCard[cardIndex] ?? null,
       vote: voteByCard[cardIndex] ?? null,
@@ -351,16 +389,17 @@ export function StudentMaterialFlashcards({
       window.clearTimeout(timer);
       if (retryTimer !== null) window.clearTimeout(retryTimer);
     };
-  }, [demoMode, hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
+  }, [demoMode, hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard, persistenceLimit]);
 
   const navigateBack = useCallback(() => {
+    if (advancingRef.current) return;
     setPosition((current) => Math.max(0, current - 1));
     setFlipped(false);
   }, []);
 
   const markRecall = useCallback(
     (result: RecallResult) => {
-      if (!flipped || !currentCard) return;
+      if (!flipped || !currentCard || isFlipping || advancingRef.current) return;
 
       setRecallByCard((current) => ({ ...current, [currentCardIndex]: result }));
       setSessionRecall((current) => ({ ...current, [currentCardIndex]: result }));
@@ -382,15 +421,34 @@ export function StudentMaterialFlashcards({
       }
 
       if (position < order.length - 1) {
-        setPosition((current) => Math.min(order.length - 1, current + 1));
-        setFlipped(false);
+        // La clasificación se guarda inmediatamente; solo la sustitución visual
+        // espera a que la tarjeta anterior se deslice hacia afuera.
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          setPosition((current) => Math.min(order.length - 1, current + 1));
+          setFlipped(false);
+        } else {
+          advancingRef.current = true;
+          setAdvancePhase('leaving');
+          advanceTimersRef.current = [
+            window.setTimeout(() => {
+              setPosition((current) => Math.min(order.length - 1, current + 1));
+              setFlipped(false);
+              setAdvancePhase('entering');
+            }, 140),
+            window.setTimeout(() => {
+              setAdvancePhase('idle');
+              advancingRef.current = false;
+              advanceTimersRef.current = [];
+            }, 340),
+          ];
+        }
         return;
       }
 
       setFlipped(false);
       setIsFullscreen(false);
     },
-    [currentCard, currentCardIndex, demoMode, flipped, materialId, order.length, position]
+    [currentCard, currentCardIndex, demoMode, flipped, isFlipping, materialId, order.length, position]
   );
 
   useEffect(() => {
@@ -462,15 +520,16 @@ export function StudentMaterialFlashcards({
         {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-medium">{topicTitle}</p> : null}
         <h3 className="text-foreground mt-2 text-[20px] leading-[1.3] font-semibold">¡Terminaste de repasar este tema!</h3>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
+        <p className="text-muted-foreground mt-2 text-xs">Estos resultados reflejan lo que marcaste al estudiar las tarjetas, no una calificación de examen.</p>
         <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
           <div className="rounded-xl border border-red-100 bg-red-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Mal</p>
+            <p className="text-[20px] font-medium text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Para repasar</p>
           </div>
           <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-2 py-3">
             <p className="text-[20px] font-medium text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Bien</p>
+            <p className="text-[20px] font-medium text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Recordadas</p>
           </div>
         </div>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
@@ -600,11 +659,11 @@ export function StudentMaterialFlashcards({
 
   const topicMode = allowedCardIndices !== undefined;
   const recallControls = (
-    <div className="grid grid-cols-2 gap-2">
-      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping} onClick={() => markRecall('unknown')} className="min-h-11 rounded-lg border-red-200 px-2 text-[13px] text-red-700 hover:bg-red-50">
+    <div className="flex w-full items-center justify-between gap-3">
+      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('unknown')} className="min-h-11 min-w-[112px] shrink-0 rounded-lg border-red-200 px-3 text-[13px] text-red-700 hover:bg-red-50 sm:min-w-[128px]">
         {topicMode ? 'Mal' : 'No lo sabía'}
       </Button>
-      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping} onClick={() => markRecall('known')} className="min-h-11 rounded-lg border-emerald-200 px-2 text-[13px] text-emerald-700 hover:bg-emerald-50">
+      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('known')} className="min-h-11 min-w-[112px] shrink-0 rounded-lg border-emerald-200 px-3 text-[13px] text-emerald-700 hover:bg-emerald-50 sm:min-w-[128px]">
         {topicMode ? 'Bien' : 'Lo sabía'}
       </Button>
     </div>
@@ -620,15 +679,15 @@ export function StudentMaterialFlashcards({
         )}
       >
         <div className={cn('flex flex-wrap items-center justify-between', topicMode ? 'gap-1' : 'gap-3')}>
-          <div>
+          <div className={topicMode ? 'min-w-0 w-full' : undefined}>
             <p className={cn('text-foreground text-xs font-medium', !topicMode && 'hidden md:block')}>
               Tarjeta {position + 1} de {order.length}
             </p>
             {topicMode ? (
-              <div className="mt-1 flex flex-wrap gap-1.5 text-xs font-medium" aria-label="Estado de las tarjetas">
-                <span data-flashcards-bad className="rounded-full border border-red-200 px-2.5 py-0.5 text-red-600">{unknownCount} Mal</span>
-                <span data-flashcards-learning className="rounded-full border border-amber-200 px-2.5 py-0.5 text-amber-600">{learningCount} Aprendiendo</span>
-                <span data-flashcards-good className="rounded-full border border-emerald-200 px-2.5 py-0.5 text-emerald-600">{knownCount} Bien</span>
+              <div className="mt-1 grid w-full grid-cols-3 items-center gap-1 text-[11px] font-medium sm:text-xs" aria-label="Estado de las tarjetas">
+                <span data-flashcards-bad className="justify-self-start whitespace-nowrap rounded-full border border-red-200 px-2 py-0.5 text-red-600 sm:px-2.5">{unknownCount} Mal</span>
+                <span data-flashcards-learning className="justify-self-center whitespace-nowrap rounded-full border border-amber-200 px-2 py-0.5 text-amber-600 sm:px-2.5">{learningCount} Aprendiendo</span>
+                <span data-flashcards-good className="justify-self-end whitespace-nowrap rounded-full border border-emerald-200 px-2 py-0.5 text-emerald-600 sm:px-2.5">{knownCount} Bien</span>
               </div>
             ) : !demoMode ? (
               <p className="mt-0.5 flex gap-4 text-sm font-medium">
@@ -690,20 +749,23 @@ export function StudentMaterialFlashcards({
             aria-pressed={flipped}
             aria-busy={isFlipping}
             data-flashcard-flipping={isFlipping}
+            data-flashcard-advance={advancePhase}
             data-flashcard-ready={flipReady}
             disabled={!flipReady}
             onClick={flipCard}
             className={cn(
               'relative isolate block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
               topicMode ? 'h-[190px] sm:h-[205px]' : 'h-[188px] sm:h-[210px]',
-              isFlipping && 'animate-flashcard-turn'
+              isFlipping && 'animate-flashcard-turn',
+              advancePhase === 'leaving' && advanceStyles.cardLeaving,
+              advancePhase === 'entering' && advanceStyles.cardEntering
             )}
           >
             {flipped ? (
               <span
                 data-flashcard-face="back"
                 data-flashcard-content
-                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
+                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-7 pb-3" : "py-3")}
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
@@ -716,7 +778,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="front"
                 data-flashcard-content
-                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
+                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-7 pb-3" : "py-3")}
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>

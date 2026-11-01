@@ -1,0 +1,9 @@
+@keyframes practice-screen-arrive{from{opacity:0;transform:translate3d(0,9px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes practice-choice-arrive{from{opacity:0;transform:translate3d(0,5px,0) scale(.995)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+.practice-screen-enter{animation:practice-screen-arrive 280ms cubic-bezier(.22,1,.36,1) both}
+.practice-step-enter{animation:practice-choice-arrive 230ms cubic-bezier(.22,1,.36,1) both}
+@media(prefers-reduced-motion:reduce){.practice-screen-enter,.practice-step-enter{animation:none!important}}
+
+@keyframes practice-screen-depart{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(0,-7px,0)}}
+.practice-screen-leave{animation:practice-screen-depart 200ms ease-in both;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.practice-screen-leave{animation:none!important}}

@@ -177,7 +177,9 @@ await check('topic reinforcement: saved explanation -> optional help -> independ
   try {
     await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
-    await page.getByRole('button', { name: /Continuar estudiando|Comenzar a estudiar/ }).first().click();
+    // La prueba se centra en el refuerzo del tema 2. Entramos directamente
+    // desde el listado para no depender de la navegación del CTA de continuación.
+    await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
     await page.getByRole('button', { name: /Reforzar (?:las )?dificultades/i }).first().click();
     const review = page.locator('[data-topic-reinforcement]:visible').first();
     await review.waitFor(wait);

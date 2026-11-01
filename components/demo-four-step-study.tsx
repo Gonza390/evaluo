@@ -1,14 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
 import {
   MaterialStudyWorkspace,
   type StudyTabId,
 } from '@/components/material-study-workspace';
-import { StudentMaterialDiagnostic } from '@/components/student-material-diagnostic';
-import { StudentMaterialExam } from '@/components/student-material-exam';
 import { emptyTopicPracticeContext } from '@/lib/student-materials/topic-practice';
 import { buildPedagogicalArtifacts, type StudyQuestion } from '@/lib/student-materials/pedagogy';
 import type { StudyErrorsPageData } from '@/lib/study-errors';
@@ -16,6 +14,18 @@ import type { PdfTopicEvidence } from '@/lib/student-materials/progress';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-materials/types';
+
+// Estas pantallas sólo se usan cuando el estudiante avanza a práctica o progreso.
+// Separarlas del bundle inicial reduce el JS de la demostración pública.
+const PdfProgressPanel = dynamic(
+  () => import('@/components/dashboard/pdf-progress-panel').then(mod => mod.PdfProgressPanel)
+);
+const StudentMaterialDiagnostic = dynamic(
+  () => import('@/components/student-material-diagnostic').then(mod => mod.StudentMaterialDiagnostic)
+);
+const StudentMaterialExam = dynamic(
+  () => import('@/components/student-material-exam').then(mod => mod.StudentMaterialExam)
+);
 
 const DEMO_MATERIAL_ID = 'demo-material';
 const DEMO_TITLE = 'IA y nuevas tecnologías';

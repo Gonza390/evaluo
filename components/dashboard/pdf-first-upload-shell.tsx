@@ -38,7 +38,7 @@ import {
   inspectPdfForClientVision,
   renderPdfPagesForClientVision,
 } from '@/lib/student-materials/client-pdf-vision-render';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 import { PdfProcessingPanel } from '@/components/pdf-processing/pdf-processing-panel';
@@ -62,7 +62,7 @@ type Props = {
 function titleFromFile(name: string) {
   return (
     name
-      .replace(/\.pdf$/i, '')
+      .replace(/\.(pdf|docx)$/i, '')
       .replace(/[_-]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
@@ -393,10 +393,9 @@ export function PdfFirstUploadShell({
   const selectFile = (selected: File | null) => {
     if (!selected) return;
     if (
-      !selected.name.toLowerCase().endsWith('.pdf') ||
-      (selected.type && selected.type !== 'application/pdf')
+      !isSupportedStudentMaterialFile(selected.name, selected.type)
     ) {
-      toast({ description: 'Por ahora solo aceptamos archivos PDF.', variant: 'destructive' });
+      toast({ description: 'Aceptamos archivos PDF y Word (.docx).', variant: 'destructive' });
       return;
     }
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
@@ -447,7 +446,7 @@ export function PdfFirstUploadShell({
       };
       const fileMetadata = {
         name: activeFile.name,
-        mimeType: activeFile.type || 'application/pdf',
+        mimeType: studentMaterialFileKind(activeFile.name) === 'docx' ? STUDENT_MATERIAL_DOCX_MIME : 'application/pdf',
         size: activeFile.size,
       };
       const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata });
@@ -470,6 +469,7 @@ export function PdfFirstUploadShell({
       // Vercel conserva el renderer del servidor como fallback.
       const clientVisionPromise = (async () => {
         try {
+          if (studentMaterialFileKind(activeFile.name) !== 'pdf') return;
           const plan = await inspectPdfForClientVision(
             activeFile,
             CLIENT_VISION_MAX_PAGES
@@ -782,7 +782,7 @@ export function PdfFirstUploadShell({
       <input
         ref={pickerRef}
         type="file"
-        accept=".pdf,application/pdf"
+        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         className="sr-only"
         onChange={(event) => {
           const selected = event.currentTarget.files?.[0] ?? null;
@@ -822,7 +822,7 @@ export function PdfFirstUploadShell({
                   : ready
                     ? 'Tu PDF está listo'
                     : 'Preparación de tu PDF'
-                : 'Subir PDF'}
+                : 'Subir PDF o Word'}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
@@ -840,7 +840,7 @@ export function PdfFirstUploadShell({
                         : ready
                           ? 'Tu PDF está listo'
                           : 'Estamos procesando tu PDF'
-                      : 'Subir PDF'}
+                      : 'Subir PDF o Word'}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
                     {processing
@@ -878,7 +878,7 @@ export function PdfFirstUploadShell({
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-sm font-semibold text-slate-950">
-                      Elegir PDF
+                      Elegir PDF o Word
                     </span>
                     <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
                   </button>

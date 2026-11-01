@@ -1,6 +1,17 @@
 import { z } from 'zod';
 
 export const MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES = 20 * 1024 * 1024;
+export const STUDENT_MATERIAL_DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+export function studentMaterialFileKind(name: string): 'pdf' | 'docx' | null {
+  if (/\.pdf$/i.test(name)) return 'pdf';
+  if (/\.docx$/i.test(name)) return 'docx';
+  return null;
+}
+export function isSupportedStudentMaterialFile(name: string, mimeType: string) {
+  const kind = studentMaterialFileKind(name);
+  return kind === 'pdf' ? (!mimeType || mimeType === 'application/pdf') :
+    kind === 'docx' ? (!mimeType || mimeType === STUDENT_MATERIAL_DOCX_MIME || mimeType === 'application/octet-stream') : false;
+}
 export const MAX_FREE_STUDENT_MATERIAL_PDF_PAGES = 100;
 // Premium no tiene un límite de páginas; el límite técnico por archivo sigue siendo 20 MB.
 export const MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES: number | null = null;
@@ -39,28 +50,31 @@ export const studentMaterialUploadFileMetadataSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, 'Seleccioná un PDF válido para continuar.')
+    .min(1, 'Seleccioná un PDF o Word válido para continuar.')
     .max(255, 'El nombre del archivo es demasiado largo.')
-    .refine((value) => value.toLowerCase().endsWith('.pdf'), 'Por ahora solo aceptamos archivos PDF.'),
+    .refine((value) => studentMaterialFileKind(value) !== null, 'Aceptamos archivos PDF y Word (.docx).'),
   mimeType: z
     .string()
     .trim()
     .max(120, 'El tipo de archivo no es válido.')
     .refine(
-      (value) => !value || value === 'application/pdf',
-      'Por ahora solo aceptamos archivos PDF.'
+      (value) => !value || value === 'application/pdf' || value === STUDENT_MATERIAL_DOCX_MIME || value === 'application/octet-stream',
+      'Aceptamos archivos PDF y Word (.docx).'
     ),
   size: z
     .number()
     .int()
-    .positive('Seleccioná un PDF válido para continuar.')
+    .positive('Seleccioná un archivo válido para continuar.')
     .max(
       MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
-      'El PDF supera el limite de 20 MB. Reduce el archivo e intentalo nuevamente.'
+      'El archivo supera el límite de 20 MB. Reducilo e intentá nuevamente.'
     ),
 });
 
 export type StudentMaterialUploadMetadata = z.infer<typeof studentMaterialUploadMetadataSchema>;
+export function validateStudentMaterialMime(name: string, mime: string) {
+  if (!isSupportedStudentMaterialFile(name, mime)) throw new Error('El formato del documento no coincide con su extensión.');
+}
 export type StudentMaterialUploadFileMetadata = z.infer<
   typeof studentMaterialUploadFileMetadataSchema
 >;
