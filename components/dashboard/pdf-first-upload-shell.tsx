@@ -82,11 +82,18 @@ function isTransientProcessingFailure(message: string | null | undefined) {
  * the behavior of another button, and nested buttons retain their own onClick.
  */
 const PdfUploadTriggerContext = createContext<((location?: string) => void) | null>(null);
+const PdfDropUploadContext = createContext<((file: File) => void) | null>(null);
 
 export function usePdfUploadTrigger() {
   const trigger = useContext(PdfUploadTriggerContext);
   if (!trigger) throw new Error('usePdfUploadTrigger requires PdfFirstUploadShell');
   return trigger;
+}
+
+export function usePdfDropUpload() {
+  const upload = useContext(PdfDropUploadContext);
+  if (!upload) throw new Error('usePdfDropUpload requires PdfFirstUploadShell');
+  return upload;
 }
 
 export function PdfFirstUploadShell({
@@ -416,6 +423,12 @@ export function PdfFirstUploadShell({
     setFile(selected);
     setTitle(titleFromFile(selected.name));
     setExamDate(initialExamDate);
+    return true;
+  };
+
+  const uploadDroppedFile = (selected: File) => {
+    if (uploading) return;
+    if (selectFile(selected)) setOpen(true);
   };
 
   const startProcessing = async (selectedFile?: File | null, selectedTitle?: string) => {
@@ -773,6 +786,7 @@ export function PdfFirstUploadShell({
 
   return (
     <PdfUploadTriggerContext.Provider value={openUploadPicker}>
+    <PdfDropUploadContext.Provider value={uploadDroppedFile}>
     <div className="relative">
       <input
         ref={pickerRef}
@@ -1247,6 +1261,7 @@ export function PdfFirstUploadShell({
         </Dialog>
       ) : null}
     </div>
+    </PdfDropUploadContext.Provider>
     </PdfUploadTriggerContext.Provider>
   );
 }
