@@ -31,6 +31,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [generatedTrueFalse, setGeneratedTrueFalse] = useState<PracticeQuestion[]>([]);
   const [trueFalseLoading, setTrueFalseLoading] = useState(false);
   const [trueFalseError, setTrueFalseError] = useState('');
+  const [trueFalseDiagnostic, setTrueFalseDiagnostic] = useState('');
   const trueFalseBusy = useRef(false);
   const trueFalseAttempts = useRef(0);
   const trueFalsePool = useMemo(() => verifiedTrueFalsePool(generatedTrueFalse), [generatedTrueFalse]);
@@ -199,6 +200,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     trueFalseAttempts.current += 1;
     setTrueFalseLoading(true);
     setTrueFalseError('');
+    setTrueFalseDiagnostic('');
     try {
       const response = await fetch('/api/practice/true-false', {
         method:'POST',
@@ -210,16 +212,33 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         }),
         signal:AbortSignal.timeout(65000),
       });
-      const data:unknown = await response.json();
+      // An error route may return HTML (for instance a missing local API
+      // route). Keep the HTTP status instead of losing it in response.json().
+      const data:unknown = await response.json().catch(() => null);
+      const errorCode = data && typeof data === 'object' && 'error' in data &&
+        typeof data.error === 'string' ? data.error : 'unknown_response';
       if (!response.ok || !data || typeof data !== 'object' ||
           !('questions' in data) || !Array.isArray(data.questions)) {
-        setTrueFalseError(response.status === 429
-          ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
+        setTrueFalseDiagnostic('HTTP ' + response.status + ' · ' + errorCode);
+        setTrueFalseError(
+          response.status === 401
+            ? 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.'
+          : response.status === 403
+            ? 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.'
+          : response.status === 404 && errorCode === 'material_not_found'
+            ? 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.'
+          : response.status === 404
+            ? 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá master y reiniciá el entorno local.'
+          : response.status === 429
+            ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
+          : response.status === 422
+            ? 'No encontramos suficientes afirmaciones comprobables en estos apartados. Reintentá con otras páginas.'
           : response.status === 503
-            ? 'No pudimos conectarnos a la IA para preparar esta actividad. Reintentá; si continúa, revisá la configuración de Gemini.'
-            : response.status === 422
-              ? 'No alcanzaron las afirmaciones comprobables de estos apartados. Reintentá para revisar otras páginas.'
-              : 'No pudimos preparar la práctica en este momento. Podés reintentar.');
+            ? 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.'
+          : response.status === 500
+            ? 'Se produjo un error interno al preparar Verdadero o Falso.'
+          : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.'
+        );
         return;
       }
       const incoming = verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
@@ -229,8 +248,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         return;
       }
       setGeneratedTrueFalse(unique);
-    } catch {
-      setTrueFalseError('No pudimos generar afirmaciones verificadas. Reintentá más tarde.');
+    } catch (error) {
+      setTrueFalseDiagnostic(error instanceof Error ? error.name : 'network_error');
+      setTrueFalseError('La conexión se interrumpió mientras preparábamos Verdadero o Falso. Revisá tu conexión y reintentá.');
     } finally {
       trueFalseBusy.current=false;
       setTrueFalseLoading(false);
@@ -430,6 +450,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>}
       {aiCaseButton}
       {trueFalseError && <p role="status" className="mt-3 text-sm text-amber-800">{trueFalseError}</p>}
+      {mode === 'opciones' && trueFalseError && process.env.NODE_ENV !== 'production' && trueFalseDiagnostic &&
+        <p className="mt-1 text-xs text-slate-500" data-practice-diagnostic>{trueFalseDiagnostic}</p>}
       {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">Preparando conceptos del material…</p>}
       {pairError && <p role="status" className="mt-3 text-sm text-amber-800">{pairError}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-3">
