@@ -35,8 +35,16 @@ export default async function PracticeHomePage() {
       .find((id): id is string => typeof id === 'string' && ids.has(id)) ?? null;
   }
 
-  const history = await getPracticeHistory(user.id, materials.map(material => material.id));
+  let history: Awaited<ReturnType<typeof getPracticeHistory>> = [];
+  let historyLoadError = false;
+  try {
+    history = await getPracticeHistory(user.id, materials.map(material => material.id));
+  } catch {
+    // Mostrar el selector de práctica, pero nunca afirmar que el historial está vacío.
+    historyLoadError = true;
+  }
 
   return <PracticeModePicker materials={materials} initialMaterialId={lastOpenedMaterialId}
-    history={history} advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
+    history={history} historyLoadError={historyLoadError}
+    advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
 }
