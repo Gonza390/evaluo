@@ -161,8 +161,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       body: JSON.stringify({ sessionId: sessionIdRef.current, materialId, mode, correct: score, total, answers }),
     }).then((response) => {
       if (!response.ok) throw new Error('save_failed');
-      setHistorySaveFailed(false);
-    }).catch(() => { posted.current = ''; setHistorySaveFailed(true); });
+      if (posted.current === attempt) setHistorySaveFailed(false);
+    }).catch(() => {
+      // Un intento anterior puede terminar en red después de iniciar otra ronda.
+      // Nunca marcar la ronda nueva como fallida ni permitir doble guardado.
+      if (posted.current === attempt) {
+        posted.current = '';
+        setHistorySaveFailed(true);
+      }
+    });
   };
   useEffect(() => {
     if (finished && ready) saveCompletedSession();
@@ -335,6 +342,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     </div>
   ) : null;
   function anotherRound() {
+    posted.current = '';
     setRound(value => value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
     setReviewed([]); setMarkedForReview([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null); setExamStarted(false);
