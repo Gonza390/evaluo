@@ -659,11 +659,11 @@ export function StudentMaterialFlashcards({
 
   const topicMode = allowedCardIndices !== undefined;
   const recallControls = (
-    <div className="grid grid-cols-2 gap-2">
-      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('unknown')} className="min-h-11 rounded-lg border-red-200 px-2 text-[13px] text-red-700 hover:bg-red-50">
+    <div className="flex w-full items-center justify-between gap-3">
+      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('unknown')} className="min-h-11 min-w-[112px] shrink-0 rounded-lg border-red-200 px-3 text-[13px] text-red-700 hover:bg-red-50 sm:min-w-[128px]">
         {topicMode ? 'Mal' : 'No lo sabía'}
       </Button>
-      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('known')} className="min-h-11 rounded-lg border-emerald-200 px-2 text-[13px] text-emerald-700 hover:bg-emerald-50">
+      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('known')} className="min-h-11 min-w-[112px] shrink-0 rounded-lg border-emerald-200 px-3 text-[13px] text-emerald-700 hover:bg-emerald-50 sm:min-w-[128px]">
         {topicMode ? 'Bien' : 'Lo sabía'}
       </Button>
     </div>
