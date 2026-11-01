@@ -87,7 +87,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
     mode === 'casos' ? contexts.length >= MIN_CASES_PER_PRACTICE :
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
-    mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 :
+    mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && distinctApplicationCases(contexts).length >= 1 :
     mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, MIN_CASES_PER_PRACTICE) :
     tasks.length >= MIN_CASES_PER_PRACTICE;
   const correctAt = (index: number) => {
@@ -184,7 +184,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   useEffect(() => {
     const needsMore = mode === 'casos'
       ? contexts.length < MIN_CASES_PER_PRACTICE
-      : mode === 'mixto' ? options.length < 4
+      : mode === 'mixto' ? options.length < 4 || contexts.length < 1
       : mode === 'simulacro'
         ? options.length < MIN_CASES_PER_PRACTICE : false;
     if (!aiAvailable || !needsMore || generating || generationError ||
@@ -362,6 +362,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
         ? 'Preparando afirmaciones de Verdadero o Falso…' : mode === 'casos' && generating
         ? 'Preparando tus casos prácticos…' : 'No hay suficientes ejercicios confiables'}</h2>
+      {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.</p> : null}
       {mode === 'opciones' ? <p className="mt-2">
         {trueFalsePool.length} de {MIN_CASES_PER_PRACTICE} afirmaciones verificadas.
         {trueFalseLoading ? ' Estamos comprobando afirmaciones y sus correcciones contra el documento.' :
