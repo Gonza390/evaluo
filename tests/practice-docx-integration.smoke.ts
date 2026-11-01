@@ -82,7 +82,7 @@ assert.match(direct, /\.eq\('user_id', user\.id\)/,
   'AI must only read the authenticated student\'s own document.');
 
 assert.doesNotMatch(view,/mode !== 'simulacro' \|\| question\.pageStart !== null/);
-assert.match(view,/mode !== 'simulacro' \|\| isWord \|\| question\.pageStart !== null/,
+assert.match(view,/mode !== 'simulacro' \|\| isWord \|\|\s*question\.pageStart !== null/,
   'PDF still rejects uncited exam questions; Word permits section references');
 assert.match(file('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx'),
   /isWord=\{material\.file_name\.toLowerCase\(\)\.endsWith\('\.docx'\)\}/);
