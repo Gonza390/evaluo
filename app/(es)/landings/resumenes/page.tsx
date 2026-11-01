@@ -70,7 +70,10 @@ const loadSummaryCatalog = nextCache(
           .in('materia_id', materiaIds)
           .range(from, from + pageSize - 1);
 
-        if (questionsError) throw questionsError;
+        // El catálogo de resúmenes es público, pero el banco de preguntas puede
+        // no tener permisos de lectura anónima. Nunca romper la landing por un
+        // contador opcional; en ese caso ocultamos las métricas de preguntas.
+        if (questionsError) return [];
         rows.push(...((data ?? []) as Array<{ materia_id: string | null; parcial: number | null }>));
         if (!data || data.length < pageSize) break;
       }
