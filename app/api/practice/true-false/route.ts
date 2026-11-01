@@ -38,7 +38,22 @@ const adjudicationSchema = {
   required:['judgments'],
 };
 
+// Return an actionable API error rather than an unhandled 500 from auth,
+// Supabase or the rate limiter. Never include provider keys or document text.
 export async function POST(request: Request) {
+  try {
+    return await handleVerifiedTrueFalse(request);
+  } catch (error) {
+    console.error('[practice.true-false] Unexpected server failure', 
+      error instanceof Error ? error.name : 'unknown_error');
+    return NextResponse.json(
+      { error: 'server_unavailable' },
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
+    );
+  }
+}
+
+async function handleVerifiedTrueFalse(request: Request) {
   const supabase = await createClientServer();
   const {data:{user}} = await supabase.auth.getUser();
   if (!user) return NextResponse.json({error:'unauthorized'},{status:401});
@@ -167,7 +182,12 @@ export async function POST(request: Request) {
     if(!questions.length) return NextResponse.json({error:'ambiguous_generation'},{status:422});
     return NextResponse.json({questions,source:'independently_verified_against_document'},
       {headers:{'Cache-Control':'private, no-store'}});
-  } catch {
-    return NextResponse.json({error:'provider_unavailable'},{status:503});
+  } catch (error) {
+    console.error('[practice.true-false] Gemini generation or review failed',
+      error instanceof Error ? error.name : 'unknown_error');
+    return NextResponse.json(
+      { error: 'generation_or_review_failed' },
+      { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
+    );
   }
 }
