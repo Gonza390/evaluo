@@ -72,10 +72,14 @@ const view=file('components/dashboard/practice-session.tsx');
 assert.match(route,/docxCaseSchema/);
 assert.match(route,/docxFeedbackSchema/);
 assert.match(direct,/docxSchema/);
-assert.ok(direct.includes("PRACTICE_BANK_ENABLED !== '1'"),
-  'The direct Gemini endpoint must not spend AI until the isolated bank is enabled.');
-assert.ok(direct.indexOf("PRACTICE_BANK_ENABLED !== '1'") < direct.indexOf('enforceStrictRateLimit({'),
-  'Disabled AI must stop before allocating a rate-limit slot.');
+// Casos is generated only when the authenticated student explicitly enters
+// this mode; the optional practice-bank table is not required in master.
+assert.ok(!direct.includes("PRACTICE_BANK_ENABLED !== '1'"),
+  'Six-case preparation must not depend on the optional practice bank table.');
+assert.match(direct, /enforceStrictRateLimit\(/,
+  'On-demand AI cases retain a hard user-level abuse/cost ceiling.');
+assert.match(direct, /\.eq\('user_id', user\.id\)/,
+  'AI must only read the authenticated student\'s own document.');
 
 assert.doesNotMatch(view,/mode !== 'simulacro' \|\| question\.pageStart !== null/);
 assert.match(view,/mode !== 'simulacro' \|\| isWord \|\| question\.pageStart !== null/,
