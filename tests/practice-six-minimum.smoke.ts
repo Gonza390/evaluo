@@ -4,6 +4,7 @@ import {
   MIN_CASES_PER_PRACTICE, balancedQuestions, qualifiedQuestions,
   selectPracticePairs, type PracticePair, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
+import { sourceVerifiedPairs } from '../lib/student-materials/practice-source-pairs.ts';
 
 const read = (path: string) =>
   readFileSync(new URL('../' + path, import.meta.url), 'utf8');
@@ -32,6 +33,27 @@ const questions:PracticeQuestion[] = Array.from({length:6},(_,i)=>({
 assert.equal(qualifiedQuestions(questions).length,6);
 assert.equal(balancedQuestions(questions,8).length,6);
 assert.equal(balancedQuestions(questions,10).length,6);
+
+const quote='Hipótesis auxiliar: Supuesto adicional que acompaña la contrastación de una hipótesis principal para derivar predicciones observables.';
+const term={term:'Hipótesis auxiliar',
+  definition:'Supuesto adicional que acompaña la contrastación de una hipótesis principal para derivar predicciones observables.',
+  evidence:quote,page:12};
+assert.equal(sourceVerifiedPairs([term],[{
+  text:quote+' En el programa se distingue de la hipótesis principal.',
+  pageStart:12,sectionTitle:null,
+}]).length,1,'A literal and correctly located PDF definition is accepted.');
+assert.equal(sourceVerifiedPairs([{...term,page:11}],[{
+  text:quote,pageStart:12,sectionTitle:null,
+}]).length,0,'A false PDF page must be rejected.');
+assert.equal(sourceVerifiedPairs([{...term,evidence:'Una cita que no existe en el archivo.'}],[{
+  text:quote,pageStart:12,sectionTitle:null,
+}]).length,0,'Unsourced definitions must be rejected.');
+assert.equal(sourceVerifiedPairs([{...term,page:undefined,sectionTitle:'Unidad 2'}],[{
+  text:quote,pageStart:null,sectionTitle:'Unidad 2',
+}]).length,1,'DOCX uses the exact section rather than a fabricated page.');
+assert.equal(sourceVerifiedPairs([{...term,page:undefined,sectionTitle:'Unidad 1'}],[{
+  text:quote,pageStart:null,sectionTitle:'Unidad 2',
+}]).length,0,'Unrelated DOCX headings cannot support answers.');
 
 const session = read('components/dashboard/practice-session.tsx');
 assert.match(session,/rotate\(pairs, round \* 6\)\.slice\(0, 6\)/,
