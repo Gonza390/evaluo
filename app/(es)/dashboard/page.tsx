@@ -186,7 +186,7 @@ export default async function DashboardPage({
             initialExamDate={examDate}
             initialSource={source}
             trackingMateriaId={requestedMateriaId}
-            initialOpen={openUpload === '1'}
+            initialOpen={openUpload === '1' && source !== 'signup-direct'}
             pendingReinforcementCount={pendingReinforcementCount}
             nextStudyAction={nextStudyAction}
           />
