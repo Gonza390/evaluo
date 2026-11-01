@@ -12,7 +12,7 @@ type Material = { id: string; title: string };
 const modes = [
   { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'from-[#FBF5E7] to-[#F9EDDB] text-[#98712E]' },
   { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'from-[#ECF8FA] to-[#DDEFF5] text-[#337F99]' },
-  { title: 'Opciones', description: 'Verdadero, falso y múltiples opciones.', Icon: Check, color: 'from-[#EAF6EB] to-[#DDF0E1] text-[#398052]' },
+  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'from-[#EAF6EB] to-[#DDF0E1] text-[#398052]' },
   { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'from-[#E9F7F5] to-[#D8EEEB] text-[#237F7B]' },
   { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'from-[#FDF0E6] to-[#FAE4D5] text-[#AC6137]' },
   { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'from-[#F1EBFA] to-[#E7DDF5] text-[#6650A4]' },
