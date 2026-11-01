@@ -25,7 +25,7 @@ export function sourceVerifiedPairs(
       normalizedAnswer(f.text).includes(normalizedAnswer(quote)));
     if (!source || !normalizedAnswer(quote).includes(normalizedAnswer(term)) ||
         !normalizedAnswer(quote).includes(normalizedAnswer(definition))) continue;
-    candidates.push({ term, definition, chapterTitle: source.sectionTitle ?? null });
+    candidates.push({ term, definition, chapterTitle: source.sectionTitle ?? null, pageStart: source.pageStart });
   }
   return selectPracticePairs(candidates, 18);
 }
