@@ -22,15 +22,25 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
       !/^(?:carrera a la que pertenece|institucion universitaria que imparte|materia correspondiente|documento original|material compartido|universidad de origen)/.test(d) &&
       !(t.length > 11 && d.includes(t)); // Never show the answer in its own definition.
   });
+  // The same term-definition pair may appear in both the PDF glossary and
+  // an on-demand supplement. Identical duplicates are one academic concept,
+  // but conflicting definitions of the same term remain excluded.
+  const seenPairs = new Set<string>();
+  const unique = valid.filter(item => {
+    const key = normalizedAnswer(item.term) + '::' + normalizedAnswer(item.definition);
+    if (seenPairs.has(key)) return false;
+    seenPairs.add(key);
+    return true;
+  });
   const termCounts = new Map<string, number>(), defCounts = new Map<string, number>();
-  for (const item of valid) {
+  for (const item of unique) {
     const t = normalizedAnswer(item.term), d = normalizedAnswer(item.definition);
     termCounts.set(t, (termCounts.get(t) ?? 0) + 1);
     defCounts.set(d, (defCounts.get(d) ?? 0) + 1);
   }
-  return valid.filter(item => termCounts.get(normalizedAnswer(item.term)) === 1 &&
+  return unique.filter(item => termCounts.get(normalizedAnswer(item.term)) === 1 &&
       defCounts.get(normalizedAnswer(item.definition)) === 1 &&
-      !valid.some(other => other !== item &&
+      !unique.some(other => other !== item &&
         normalizedAnswer(other.definition).slice(0, 48) === normalizedAnswer(item.definition).slice(0, 48)))
     .slice(0, limit);
 }
