@@ -175,6 +175,8 @@ export async function POST(request: Request) {
       'No uses conocimiento externo ni supongas intenciones que el escenario no declara.',
       'Incluí evidencia TEXTUAL del material de 28 a 380 caracteres y',
       'una explicación concreta de al menos 90 caracteres.',
+      'La cita literal y la explicación DEBEN mencionar explícitamente la alternativa selectedAnswer.',
+      'No es suficiente que la cita esté en la misma página: tiene que justificar el concepto elegido.',
       'Respondé JSON {judgments:[{id,verdict,selectedAnswer,explanation,evidence}]}',
       'CASOS A RESOLVER (sin respuestas): '+
         JSON.stringify(candidates.map(q=>({id:q.id,prompt:q.prompt,options:q.options}))),
