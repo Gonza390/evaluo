@@ -353,7 +353,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const fullReport = finished ? (
     <section className="practice-screen-enter mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
       <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}</p>
-      <h2 className="mt-2 text-[24px] font-semibold text-slate-900">{score} de {total}</h2>
+      <h2 className="mt-2 text-[21px] font-semibold text-slate-900">{score} de {total}</h2>
       <p className="mt-2 text-sm text-slate-600">
         {score === total ? 'Completaste la actividad sin errores.' :
           'Revisá las respuestas que te costaron y volvé al material para reforzarlas.'}
@@ -364,7 +364,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           {missedTopics.map(topic => <li key={topic}>{topic}</li>)}
         </ul>
       </div>}
-      <div className="mt-6 space-y-3">
+      <div className="mt-4 space-y-2">
         {mode === 'unir' ? exercisePairs.map((pair, i) => (
           <article key={i} className="rounded-xl bg-slate-50 p-3 text-sm">
             <p className={correctAt(i) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
@@ -395,9 +395,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         })}
       </div>
       {aiCaseButton}
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={anotherRound}
-          className="min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? 'Nuevo simulacro' : 'Practicar otra vez'}</button>
+          className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? 'Nuevo simulacro' : 'Practicar otra vez'}</button>
         <Link href={'/materiales/' + materialId + '?tab=resumen'}
           className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
           Volver al resumen
@@ -620,7 +620,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         </div>}
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <button type="button" disabled={step === 0} onClick={() => setStep(value => value - 1)}
-            className="min-h-11 rounded-xl border border-slate-200 px-4 text-sm disabled:opacity-40">
+            className="min-h-10 rounded-xl border border-slate-200 px-4 text-sm disabled:opacity-40">
             Anterior
           </button>
           {mode === 'simulacro' ? <>
