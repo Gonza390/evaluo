@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import './practice-motion.css';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
@@ -350,7 +351,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     setFinished(true);
   }
   const fullReport = finished ? (
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
+    <section className="practice-screen-enter mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
       <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}</p>
       <h2 className="mt-2 text-[24px] font-semibold text-slate-900">{score} de {total}</h2>
       <p className="mt-2 text-sm text-slate-600">
@@ -422,7 +423,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   if (!finished && (pendingPreparation || (ready && !revealPractice)))
     return <PracticePreparing mode={mode} ready={ready} />;
 
-  if (ready && !finished && mode === 'simulacro' && examStarted && current?.type === 'question') return <ExamPracticeScreen
+  if (ready && !finished && mode === 'simulacro' && examStarted && current?.type === 'question') return <ExamPracticeScreen key={step}
     materialTitle={materialTitle} index={step} secondsLeft={secondsLeft}
     questions={tasks.filter((task):task is Extract<Task,{type:'question'}>=>task.type==='question').map(task=>({prompt:task.question.prompt,options:task.question.options}))}
     answers={responses} marked={markedForReview} onSelect={setResponse}
@@ -443,14 +444,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       });
       setSelectedTerm(null);
     }} onFinish={() => setFinished(true)} />;
-  if (ready && !finished && mode === 'mixto' && current?.type === 'question') return <MixedPracticeScreen
+  if (ready && !finished && mode === 'mixto' && current?.type === 'question') return <MixedPracticeScreen key={step}
     materialTitle={materialTitle} prompt={current.question.prompt} options={current.question.options}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.question.answer}
     explanation={groundedPracticeExplanation(current.question,pairs)}
     onSelect={setResponse} onConfirm={reviewOrNext}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }} />;
-  if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <CompletePracticeScreen
+  if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <CompletePracticeScreen key={step}
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.pair.term}
@@ -458,7 +459,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }} />;
-  if (ready && !finished && mode === 'casos' && current?.type === 'question') return <CasesPracticeScreen
+  if (ready && !finished && mode === 'casos' && current?.type === 'question') return <CasesPracticeScreen key={step}
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} explanation={groundedPracticeExplanation(current.question,pairs)}
