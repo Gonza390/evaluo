@@ -51,8 +51,8 @@ function average(items: PracticeHistoryEntry[]) {
   return items.length ? Math.round(items.reduce((sum, item) => sum + percentOf(item), 0) / items.length) : 0;
 }
 
-export function PracticeHistoryPanel({ history, materialId, materialTitle, onStartFlashcards, historyLoadError = false }: {
-  history: PracticeHistoryEntry[]; materialId: string; materialTitle?: string;
+export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, historyLoadError = false }: {
+  history: PracticeHistoryEntry[]; materialId: string;
   onStartFlashcards?: () => void;
   historyLoadError?: boolean;
 }) {
@@ -104,9 +104,6 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
           <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
             Prácticas realizadas
           </h2>
-          <p className="mt-1 truncate text-[11px] text-[#66758D]" title={materialTitle}>
-            {materialTitle ? `De ${materialTitle}` : 'Historial de este material'}
-          </p>
           <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
             <div className="min-w-0 pr-2">
               <p className="text-[10px] text-slate-500">Prácticas</p>
@@ -173,15 +170,9 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
     <aside aria-labelledby="practice-history-title"
       className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0">
       <div className="shrink-0 px-4 pt-4 sm:px-5 sm:pt-5">
-        <div className="flex items-center justify-between gap-2">
-          <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
-            Prácticas realizadas
-          </h2>
-          <History className="size-[17px] shrink-0 text-[#71809A]" aria-hidden="true"/>
-        </div>
-        <p className="mt-1 truncate text-[11px] text-[#66758D]" title={materialTitle}>
-          {materialTitle ? `De ${materialTitle}` : 'Historial de este material'}
-        </p>
+        <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
+          Prácticas realizadas
+        </h2>
         <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
           <div className="min-w-0 pr-2">
             <p className="text-[10px] text-slate-500">Prácticas</p>
