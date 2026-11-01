@@ -73,36 +73,48 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
   if (selectedMode && available(selectedMode)) return (
-    <main className="practice-screen-enter mx-auto flex min-h-[calc(100dvh-100px)] w-full max-w-[1040px] items-center justify-center px-4 py-7 sm:px-6 sm:py-10">
-      <div className="w-full max-w-[720px] text-center">
-        <img src="/evi-pensando.svg" alt="Evi pensando" className="mx-auto mb-3 h-[112px] w-[112px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:h-[136px] sm:w-[136px]"/>
-        <h1 className="text-[23px] font-semibold tracking-[-.045em] text-[#0F1B3D] sm:text-[26px]">¿Cómo querés repasar?</h1>
-        <p className="mx-auto mt-1 max-w-[310px] text-[12px] leading-5 text-slate-500 sm:text-[13px]">Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo.</p>
-        <div className="mx-auto mt-4 inline-flex max-w-full items-center gap-2.5 rounded-xl border border-[#E7EBF4] bg-white px-3 py-2 text-left">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><FileText className="size-4"/></span>
-          <span className="min-w-0"><span className="block text-[9px] font-semibold tracking-[.08em] text-slate-500">MATERIAL</span><span className="block max-w-[250px] truncate text-[12px] font-medium text-slate-900">{material?.title ?? 'Tu material'}</span></span>
+    <main className="practice-screen-enter mx-auto flex w-full max-w-[880px] items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5">
+      <div className="w-full max-w-[650px] text-center">
+        <img src="/evi-pensando.svg" alt="Evi pensando"
+          className="mx-auto mb-1.5 h-[56px] w-[56px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:mb-2 sm:h-[76px] sm:w-[76px]" />
+        <h1 className="text-[21px] font-semibold leading-[1.2] tracking-[-.045em] text-[#0F1B3D] sm:text-[23px]">¿Cómo querés repasar?</h1>
+        <p className="mx-auto mt-1 max-w-[370px] text-[11px] leading-[1.4] text-slate-500 sm:text-[12px]">
+          Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo.
+        </p>
+        <div className="mx-auto mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-2.5 py-1.5 text-left sm:mt-3.5">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><FileText className="size-3.5"/></span>
+          <span className="min-w-0">
+            <span className="block text-[9px] font-semibold tracking-[.08em] text-slate-500">MATERIAL</span>
+            <span className="block max-w-[min(58vw,260px)] truncate text-[11px] font-medium text-slate-900 sm:text-[12px]">{material?.title ?? 'Tu material'}</span>
+          </span>
         </div>
-        <div role="radiogroup" aria-label="Tipo de repaso" className="mt-6 grid gap-3 text-left sm:grid-cols-2 sm:gap-4">
+        <div role="radiogroup" aria-label="Tipo de repaso" className="mt-3 grid gap-2 text-left sm:mt-4 sm:grid-cols-2 sm:gap-3">
           {([
             {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',detail:'Conceptos clave y preguntas frecuentes',Icon:Zap,iconClass:'bg-[#FFF3D0] text-[#8B650F]'},
             {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',detail:'Más preguntas y práctica en cada modalidad',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#2563EB]'},
           ]).map(option=>{
             const chosen=sessionLength===option.id;
-            return <button key={option.id} type="button" role="radio" aria-checked={chosen} onClick={()=>setSessionLength(option.id)} className={`relative flex h-full flex-col rounded-2xl border p-4 text-left transition sm:p-5 ${chosen?'border-[#2563EB] bg-[#F7FAFF] ring-[3px] ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
-              <span className={`flex size-10 items-center justify-center rounded-xl ${option.iconClass}`}><option.Icon className="size-[18px]"/></span>
-              <span className={`absolute right-4 top-4 flex size-5 items-center justify-center rounded-full border ${chosen?'border-[#2563EB] bg-[#2563EB]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
-              <span className="mt-3 block text-[16px] font-semibold tracking-tight text-[#0F1B3D]">{option.title}</span>
-              <span className="mt-1 block min-h-[54px] text-[12px] leading-[1.55] text-slate-600">{option.description}</span>
-              <span className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 text-[11px] font-medium text-slate-700">
-                <span className="flex items-center gap-2"><Clock3 className="size-[15px] shrink-0 text-slate-500"/>{option.time}</span>
-                <span className="flex items-start gap-2"><ListChecks className="mt-0.5 size-[15px] shrink-0 text-slate-500"/>{option.detail}</span>
+            return <button key={option.id} type="button" role="radio" aria-checked={chosen}
+              onClick={()=>setSessionLength(option.id)}
+              className={`relative flex h-full min-w-0 flex-col rounded-xl border px-3 py-2.5 text-left transition-colors sm:rounded-2xl sm:p-3.5 ${chosen?'border-[#2563EB] bg-[#F7FAFF] ring-2 ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
+              <span className="flex items-center gap-2.5 pr-7">
+                <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${option.iconClass}`}><option.Icon className="size-[16px]"/></span>
+                <span className="text-[14px] font-semibold tracking-tight text-[#0F1B3D]">{option.title}</span>
+              </span>
+              <span aria-hidden="true" className={`absolute right-3 top-3 flex size-[18px] items-center justify-center rounded-full border ${chosen?'border-[#2563EB] bg-[#2563EB]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
+              <span className="mt-2 block text-[11px] leading-[1.4] text-slate-600 sm:min-h-[32px]">{option.description}</span>
+              <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 pt-2 text-[10px] font-medium leading-[1.35] text-slate-700 sm:text-[11px]">
+                <span className="inline-flex shrink-0 items-center gap-1.5"><Clock3 className="size-3.5 shrink-0 text-slate-500"/>{option.time}</span>
+                <span className="inline-flex min-w-0 items-start gap-1.5"><ListChecks className="size-3.5 shrink-0 text-slate-500"/>{option.detail}</span>
               </span>
             </button>;
           })}
         </div>
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <button type="button" onClick={()=>setSelectedMode(null)} className="min-h-10 rounded-xl px-4 text-[13px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
-          <button type="button" onClick={()=>void startPractice()} className="inline-flex min-h-11 min-w-[170px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 text-[13px] font-medium text-white hover:bg-blue-700">Continuar <ArrowRight className="size-4"/></button>
+        <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
+          <button type="button" onClick={()=>setSelectedMode(null)} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
+          <button type="button" onClick={()=>void startPractice()} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
+            Continuar <ArrowRight className="size-4"/>
+          </button>
         </div>
       </div>
     </main>
