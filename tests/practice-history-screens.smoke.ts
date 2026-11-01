@@ -26,6 +26,19 @@ assert.match(picker, /≈ 10 min/, 'El repaso rápido sigue mostrando su duraci�
 assert.match(picker, /≈ 40 min/, 'El repaso completo sigue mostrando su duración');
 assert.match(exerciseScreens, /flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end/,
   'Salir y Terminar se ubican en extremos opuestos en móvil');
+const caseScreen = exerciseScreens.slice(
+  exerciseScreens.indexOf('export function CasesPracticeScreen('),
+  exerciseScreens.indexOf('export function CompletePracticeScreen(')
+);
+assert.match(caseScreen, /mt-4 flex w-full items-center justify-between gap-2/,
+  'Anterior permanece en el extremo izquierdo del pie de Casos en móvil');
+assert.match(caseScreen, /ml-auto flex shrink-0 items-center gap-1/,
+  'Saltar y Confirmar permanecen agrupados a la derecha');
+assert.match(caseScreen, /onClick=\{onPrevious\}/);
+assert.match(caseScreen, /onClick=\{onSkip\}/);
+assert.match(caseScreen, /onClick=\{onNext\}/);
+
+
 assert.match(exerciseScreens, /onClick=\{\(\)=>setSubmitted\(true\)\}/,
   'Terminar mantiene su acción de comprobación');
 assert.match(practiceSession, /mode === 'opciones' \? \(/,
