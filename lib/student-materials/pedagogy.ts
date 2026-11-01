@@ -1,4 +1,5 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
+import { isAdministrativeConcept, isAdministrativeStudyDescription } from '@/lib/student-materials/nonacademic-metadata';
 import { incompleteOpenAnswerReason } from '@/lib/student-materials/pedagogical-integrity';
 import type {
   CanonicalPedagogicalModel,
@@ -517,16 +518,9 @@ function isAdministrativeCanonicalConcept(
   model: CanonicalPedagogicalModel,
   concept: CanonicalPedagogicalModel['concepts'][number]
 ) {
-  const term = normalizeForDedupe(concept.term);
-  const modelTitle = normalizeForDedupe(model.title);
-  const detail = normalizeForDedupe(concept.detail);
-
-  if (term && modelTitle && (term === modelTitle || modelTitle.includes(term))) {
-    return true;
-  }
-
-  return /^(?:asignatura|materia|titulo|autor|documento)\b/u.test(detail) ||
-    /(?:asignatura|materia) correspondiente al material de estudio/u.test(detail);
+  return isAdministrativeConcept({
+    term: concept.term, detail: concept.detail, modelTitle: model.title,
+  });
 }
 
 const MIN_FLASHCARD_TARGET = 12;
@@ -1060,11 +1054,13 @@ function buildFallbackMultipleChoice(
   chunks: PedagogicalChunk[],
   sectionTitles: string[]
 ) {
-  return concepts
+  const academicConcepts = concepts.filter(concept =>
+    !isAdministrativeStudyDescription(concept.definition));
+  return academicConcepts
     .slice(0, 5)
     .map((concept, index): StudyQuestion => {
       const correctAnswer = truncateAtWord(concept.definition, 220);
-      const distractors = selectDistractorDefinitions(concept, concepts, 3).map((item) =>
+      const distractors = selectDistractorDefinitions(concept, academicConcepts, 3).map((item) =>
         truncateAtWord(item, 220)
       );
       const options = placeCorrectOption(correctAnswer, distractors, index % 4).slice(0, 4);
@@ -1125,7 +1121,8 @@ function buildCanonicalConceptQuestions(
   limit = 10
 ) {
   const concepts = model.concepts.filter(
-    (concept) => cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
+    (concept) => !isAdministrativeCanonicalConcept(model,concept) &&
+      cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
   );
   const selected = selectDistributedByPages(concepts, limit, (concept) => concept.pageReferences);
 
@@ -1741,6 +1738,7 @@ function anchorAndCompleteChapterQuestions(
     // Dar cabida a relaciones antes de completar el resto con definiciones.
     addRelationships(2);
     const candidates = model.concepts.filter((concept) =>
+      !isAdministrativeCanonicalConcept(model, concept) &&
       cleanLine(concept.term).length >= 7 &&
       cleanLine(concept.detail).length >= 30 &&
       ((concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) ||
@@ -1756,7 +1754,8 @@ function anchorAndCompleteChapterQuestions(
       const distractors = rankSemanticItems(
         `${concept.term} ${concept.detail}`, concept.pageReferences,
         model.concepts.filter((item) =>
-          item !== concept && normalizeForDedupe(item.detail) !== normalizeForDedupe(concept.detail)
+          item !== concept && !isAdministrativeCanonicalConcept(model, item) &&
+          normalizeForDedupe(item.detail) !== normalizeForDedupe(concept.detail)
         ),
         (item) => `${item.term} ${item.detail}`,
         (item) => item.pageReferences,
