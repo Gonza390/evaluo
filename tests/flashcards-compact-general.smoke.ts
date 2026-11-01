@@ -29,7 +29,7 @@ assert.match(cards, /data-flashcards-learning className="justify-self-center/,
   'Aprendiendo se centra.');
 assert.match(cards, /data-flashcards-good className="justify-self-end/,
   'Bien se alinea a la derecha.');
-assert.match(cards, /max-w-\\[640px\\] space-y-2\\.5 pt-4 sm:pt-5/,
+assert.match(cards, /max-w-\[640px\] space-y-2\.5 pt-4 sm:pt-5/,
   'El contenido de Flashcards por tema baja ligeramente sin cambiar la tarjeta.');
 
 console.log('Flashcards general compact and visible smoke: OK.');
