@@ -306,7 +306,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const fullReport = finished ? (
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
       <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}</p>
-      <h2 className="mt-2 text-3xl font-semibold text-slate-900">{score} de {total}</h2>
+      <h2 className="mt-2 text-[24px] font-semibold text-slate-900">{score} de {total}</h2>
       <p className="mt-2 text-sm text-slate-600">
         {score === total ? 'Completaste la actividad sin errores.' :
           'Revisá las respuestas que te costaron y volvé al material para reforzarlas.'}
@@ -409,9 +409,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }}
     onGenerate={() => { void generateNewCases(); }} generating={generating} />;
 
-  return <main className="mx-auto w-full max-w-[780px] px-4 py-7 pb-24 sm:px-6 sm:py-9">
+  return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
-    <h1 className="mt-4 text-[23px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+    <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
     <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
       <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
