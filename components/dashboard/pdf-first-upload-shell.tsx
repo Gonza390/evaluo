@@ -395,7 +395,9 @@ export function PdfFirstUploadShell({
       source: initialSource || 'dashboard',
     });
 
-    setOpen(true);
+    // No abrir un segundo dropzone vacío sobre la pantalla de bienvenida.
+    // El diálogo se abre cuando ya existe un PDF elegido.
+    if (location !== 'dashboard_empty') setOpen(true);
     pickerRef.current?.click();
   }, [initialSource, uploading]);
 
@@ -794,7 +796,8 @@ export function PdfFirstUploadShell({
         accept=".pdf,application/pdf"
         className="sr-only"
         onChange={(event) => {
-          selectFile(event.currentTarget.files?.[0] ?? null);
+          const selected = event.currentTarget.files?.[0] ?? null;
+          if (selectFile(selected)) setOpen(true);
           event.currentTarget.value = '';
         }}
       />
