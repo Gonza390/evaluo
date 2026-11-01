@@ -1,4 +1,4 @@
-import { normalizedAnswer, qualifiedQuestions, type PracticeQuestion } from './practice-modes';
+import { balancedQuestions, normalizedAnswer, qualifiedQuestions, type PracticeQuestion } from './practice-modes';
 
 export type TrueFalseFragment = {
   pageStart: number | null;
@@ -105,4 +105,19 @@ export function sufficientTrueFalse(questions: PracticeQuestion[], minimum = 6):
   return pool.length >= minimum &&
     pool.filter(q => q.answer === 'Verdadero').length >= 2 &&
     pool.filter(q => q.answer === 'Falso').length >= 2;
+}
+
+/** Keep both truth values in the actual displayed round, not merely in the bank. */
+export function selectBalancedTrueFalse(
+  questions: PracticeQuestion[], limit = 8, round = 0,
+): PracticeQuestion[] {
+  const pool = verifiedTrueFalsePool(questions);
+  const selected = [
+    ...balancedQuestions(pool.filter(q => q.answer === 'Verdadero'), 2, round),
+    ...balancedQuestions(pool.filter(q => q.answer === 'Falso'), 2, round),
+  ];
+  const chosen = new Set(selected.map(q => q.id));
+  const rest = balancedQuestions(pool.filter(q => !chosen.has(q.id)),
+    Math.max(0, limit - selected.length), round);
+  return balancedQuestions([...selected, ...rest], limit, round);
 }
