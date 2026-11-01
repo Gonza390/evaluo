@@ -40,7 +40,8 @@ const bank=buildPracticeBank(base,model);
 assert.equal(bank.version,PRACTICE_BANK_VERSION);
 assert.equal(bank.questions.length,2);
 assert.equal(bank.cases.length,3);
-assert.equal(sufficientPracticeBank(bank,'casos'),true);
+assert.equal(sufficientPracticeBank(bank,'casos'),false,
+  'Three recognition exercises cannot satisfy the minimum of six application cases.');
 assert.equal(sufficientPracticeBank(bank,'simulacro'),false);
 assert.equal(sufficientPracticeBank(bank,'unir',4),true);
 assert.equal(sufficientPracticeBank(bank,'unir',0),false);
