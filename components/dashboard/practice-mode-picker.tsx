@@ -11,14 +11,14 @@ import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, 
 
 type Material = { id: string; title: string };
 const modes = [
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'from-[#FBF5E7] to-[#F9EDDB] text-[#98712E]' },
-  { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'from-[#ECF8FA] to-[#DDEFF5] text-[#337F99]' },
-  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'from-[#EAF6EB] to-[#DDF0E1] text-[#398052]' },
-  { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'from-[#E9F7F5] to-[#D8EEEB] text-[#237F7B]' },
-  { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'from-[#FDF0E6] to-[#FAE4D5] text-[#AC6137]' },
-  { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'from-[#F1EBFA] to-[#E7DDF5] text-[#6650A4]' },
-  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'from-[#FBEFF1] to-[#F8E4E9] text-[#A94968]' },
-  { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'from-[#F0F1F4] to-[#E3E6EB] text-[#596477]' },
+  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#E8F2FF] text-[#376CAD]' },
+  { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'bg-[#F0EBFC] text-[#745AB3]' },
+  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'bg-[#E9F5EE] text-[#35816A]' },
+  { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'bg-[#E2F2F7] text-[#41839B]' },
+  { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'bg-[#FFF2E6] text-[#AD713D]' },
+  { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'bg-[#F0EBFC] text-[#745AB3]' },
+  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'bg-[#E8F2FF] text-[#376CAD]' },
+  { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'bg-[#E2F2F7] text-[#41839B]' },
 ] as const;
 
 export function PracticeModePicker({ materials, initialMaterialId, history, historyLoadError = false, advancedPracticeEnabled = false }: {
@@ -146,7 +146,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
                   return (
                     <button key={title} type="button" aria-pressed={selected} disabled={!supported}
                       onClick={() => { setSelectedMode(title); setSessionLength('rapido'); }}
-                      className={`group flex min-h-[108px] min-w-0 flex-col items-start gap-2 rounded-[15px] border bg-gradient-to-br px-3 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 enabled:hover:-translate-y-[1px] enabled:hover:shadow-[0_5px_16px_rgba(15,27,61,0.05)] focus-visible:ring-2 focus-visible:ring-[#2563EB] disabled:cursor-not-allowed sm:min-h-[96px] sm:flex-row sm:gap-2.5 sm:px-3.5 sm:py-3 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
+                      className={`group flex min-h-[108px] min-w-0 flex-col items-start gap-2 rounded-[15px] border px-3 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 enabled:hover:-translate-y-[1px] enabled:hover:shadow-[0_5px_16px_rgba(15,27,61,0.05)] focus-visible:ring-2 focus-visible:ring-[#2563EB] disabled:cursor-not-allowed sm:min-h-[96px] sm:flex-row sm:gap-2.5 sm:px-3.5 sm:py-3 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
                       <span className="flex size-[31px] shrink-0 items-center justify-center rounded-[10px] bg-white/60 sm:size-[34px]">
                         <Icon className="size-[16px]" aria-hidden="true" strokeWidth={1.8} />
                       </span>
