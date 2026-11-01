@@ -57,8 +57,10 @@ const page=file('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
 const upload=file('lib/student-materials/processing-service.ts');
 assert.match(picker,/onClick=\{\(\)\s*=>\s*void startPractice\(\)\}/,'Explicit button starts preparation');
 assert.match(picker,/fetch\('\/api\/practice\/prepare'/,'No POST on page entry or mode selection');
-assert.match(picker,/selectedMode === 'Flashcards' \|\| selectedMode === 'Opciones'/,
-  'Preserve the established study flows');
+assert.match(picker,/'Flashcards': `\/dashboard\/practicar\/\$\{materialId\}\/flashcards`/,
+  'Flashcards keep the existing route and screen');
+assert.match(picker,/'Opciones': `\/dashboard\/practicar\/\$\{materialId\}\/opciones`/,
+  'Verdadero/Falso keeps its own route');
 assert.match(prepare,/\.eq\('user_id',user\.id\)/,'Only the document owner can prepare practice');
 assert.match(prepare,/PRACTICE_PEDAGOGICAL_AI_ENABLED === '1'/,'AI must be opt-in');
 assert.match(prepare,/cached\?\.source_fingerprint===fingerprint/,'Cache has source-version invalidation');
