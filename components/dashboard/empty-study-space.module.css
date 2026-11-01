@@ -1,0 +1,20 @@
+@keyframes evi-welcome-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-6px) rotate(1deg); }
+}
+
+.floatingEvi {
+  transform-origin: 50% 70%;
+  animation: evi-welcome-float 4.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatingEvi { animation: none; transform: none; }
+}
+
+@media (max-height: 660px) {
+  .floatingEvi {
+    max-width: 62px;
+    max-height: 62px;
+  }
+}
