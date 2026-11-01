@@ -435,8 +435,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
       <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
-        ? 'Preparando afirmaciones de Verdadero o Falso…' : mode === 'casos' && generating
-        ? 'Preparando tus casos prácticos…' : 'No hay suficientes ejercicios confiables'}</h2>
+        ? 'Preparando afirmaciones de Verdadero o Falso…'
+        : mode === 'opciones' && trueFalseError
+          ? 'No pudimos iniciar Verdadero o Falso'
+          : mode === 'casos' && generating
+            ? 'Preparando tus casos prácticos…'
+            : 'No hay suficientes ejercicios confiables'}</h2>
       {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.</p> : null}
       {mode === 'opciones' ? <p className="mt-2">
         {trueFalsePool.length} de {MIN_CASES_PER_PRACTICE} afirmaciones verificadas.
