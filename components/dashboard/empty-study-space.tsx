@@ -62,22 +62,21 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
         onDragLeave={(event) => { event.preventDefault(); setIsDragging(false); }}
         onDrop={handleDrop}
-        aria-label="Arrastrá un PDF acá o elegilo desde tu computadora"
+        aria-label="Arrastrá un archivo PDF o presioná para elegirlo"
         className={`mt-3 flex w-full max-w-[620px] cursor-pointer flex-col items-center rounded-[18px] border-2 border-dashed px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-4 sm:rounded-[22px] sm:px-5 sm:py-4 ${isDragging ? 'border-[#2563eb] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6394f0] hover:bg-[#f0f6ff]'}`}
       >
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#0b63e5] sm:size-10">
           <Upload className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
         </span>
-        <span className="mt-2 text-[15px] font-medium tracking-[-0.02em] text-[#0f1623] sm:text-[17px]">Arrastrá tu material acá</span>
-        <span className="mt-0.5 text-[11px] text-[#526079] sm:text-[12px]">o elegilo desde tu computadora</span>
-        <span className="mt-2.5 inline-flex min-h-[36px] items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[12px] font-medium text-white shadow-[0_8px_20px_rgba(11,99,229,0.16)] sm:mt-3 sm:min-h-[40px] sm:text-[13px]">
-          <Upload className="size-[16px]" strokeWidth={2} aria-hidden="true" />
-          Subir PDF
+        <span className="mt-2 text-[15px] font-medium tracking-[-0.02em] text-[#0f1623] sm:text-[17px]">Arrastrá tu PDF acá</span>
+        <span className="mt-1 text-[12px] text-[#526079]">
+          <span className="sm:hidden">o tocá acá para elegirlo</span>
+          <span className="hidden sm:inline">o hacé clic para elegirlo</span>
         </span>
         <span className="mt-3 flex w-full flex-wrap items-start justify-center gap-x-3 gap-y-1.5 sm:mt-4 sm:gap-x-5">
           {illustratedFormats.map((format, index) => (
             <span key={format.title} className="flex min-w-[42px] flex-col items-center gap-1" title={format.title === 'PDF' ? 'PDF disponible' : 'Otros formatos: próximamente'}>
-              <span className={`${styles.fileFormatIcon} flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`} style={{ animationDelay: `${index * 90}ms` }}>
+              <span className={`${styles.fileFormatIcon} flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`} style={{ animationDelay: `${index * 140}ms` }}>
                 {format.icon === 'book' ? <BookOpen className="size-[18px]" aria-hidden="true" />
                   : format.icon === 'audio' ? <AudioLines className="size-[18px]" aria-hidden="true" />
                     : <span className="text-[9px] font-bold">{format.title}</span>}
