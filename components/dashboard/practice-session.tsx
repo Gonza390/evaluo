@@ -649,7 +649,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             className="mt-2 inline-block text-blue-600 underline">Revisar el concepto en el material · página {current.pair.pageStart}</Link>}
 
         </div>}
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className={mode === 'opciones'
+          ? 'mt-5 flex w-full items-center justify-between gap-2'
+          : 'mt-5 flex flex-wrap items-center gap-2'}>
           <button type="button" disabled={step === 0} onClick={() => setStep(value => value - 1)}
             className="min-h-10 rounded-xl border border-slate-200 px-4 text-sm disabled:opacity-40">
             Anterior
