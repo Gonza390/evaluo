@@ -1,20 +1,15 @@
-@keyframes evi-welcome-float {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50% { transform: translateY(-6px) rotate(1deg); }
+/* Evi moves inside its SVG so the shadow stays in place and the eyes blink. */
+@keyframes file-icon-hop {
+  0%, 100% { transform: translateY(0); }
+  36% { transform: translateY(-8px); }
+  58% { transform: translateY(1px); }
+  75% { transform: translateY(-2px); }
 }
 
-.floatingEvi {
-  transform-origin: 50% 70%;
-  animation: evi-welcome-float 4.2s ease-in-out infinite;
+.fileFormatIcon {
+  animation: file-icon-hop 640ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .floatingEvi { animation: none; transform: none; }
-}
-
-@media (max-height: 660px) {
-  .floatingEvi {
-    max-width: 62px;
-    max-height: 62px;
-  }
+  .fileFormatIcon { animation: none; }
 }
