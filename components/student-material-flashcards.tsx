@@ -82,6 +82,7 @@ export function StudentMaterialFlashcards({
   cards,
   materialId,
   onComplete,
+  onSessionComplete,
   demoMode = false,
   allowedCardIndices,
   persistentCardCount,
@@ -92,6 +93,8 @@ export function StudentMaterialFlashcards({
   cards: StudyFlashcard[];
   materialId: string;
   onComplete?: () => void;
+  /** Se usa desde Practicar para registrar el intento, no modifica la evaluación. */
+  onSessionComplete?: (result: { correct: number; total: number; answers: { prompt: string; selectedAnswer: string; correctAnswer: string; correct: boolean }[] }) => void;
   demoMode?: boolean;
   allowedCardIndices?: number[];
   /** On-demand cards are session-only; do not map their changing indices onto
@@ -253,8 +256,18 @@ export function StudentMaterialFlashcards({
   useEffect(() => {
     if (!allReviewed || completionHandledRef.current) return;
     completionHandledRef.current = true;
+    onSessionComplete?.({
+      correct: knownCount,
+      total: order.length,
+      answers: order.map((index) => ({
+        prompt: cards[index]?.front ?? '',
+        selectedAnswer: sessionRecall[index] === 'known' ? 'Lo sabía' : 'No lo sabía',
+        correctAnswer: cards[index]?.back ?? '',
+        correct: sessionRecall[index] === 'known',
+      })),
+    });
     onComplete?.();
-  }, [allReviewed, onComplete]);
+  }, [allReviewed, cards, knownCount, onComplete, onSessionComplete, order, sessionRecall]);
 
   const scheduleTomorrowReminder = useCallback(() => {
     if (demoMode || unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
