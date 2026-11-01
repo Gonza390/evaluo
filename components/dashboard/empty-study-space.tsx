@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import styles from './empty-study-space.module.css';
 import { useState, type DragEvent } from 'react';
 import { AudioLines, BookOpen, Upload } from 'lucide-react';
 import { usePdfDropUpload, usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
@@ -34,22 +35,23 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
 
   return (
     <section
+      data-empty-study-space
       aria-label="Empezá a estudiar con Evaluo"
-      className="mx-auto flex w-full flex-col items-center rounded-[24px] border border-[#e3eaf5] px-4 py-7 text-center shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:rounded-[32px] sm:px-8 sm:py-9"
+      className="mx-auto flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden rounded-[22px] border border-[#e3eaf5] px-3 py-3 text-center shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:rounded-[28px] sm:px-6 sm:py-4"
       style={{ background: 'linear-gradient(180deg, #eef4ff 0%, #ffffff 85%)' }}
     >
       <Image
         src="/evi-bienvenida.svg"
         alt="Evi te da la bienvenida con una hoja para estudiar"
-        width={168}
-        height={168}
+        width={112}
+        height={112}
         priority
-        className="h-[112px] w-[112px] object-contain sm:h-[148px] sm:w-[148px]"
+        className={`${styles.floatingEvi} h-[72px] w-[72px] shrink-0 object-contain sm:h-[92px] sm:w-[92px] lg:h-[106px] lg:w-[106px]`}
       />
-      <h1 className="mt-3 max-w-[800px] text-[27px] font-bold leading-[1.15] tracking-[-0.035em] text-[#0f1623] sm:text-[35px] lg:text-[40px]">
+      <h1 className="mt-2 max-w-[800px] text-[24px] font-semibold leading-[1.14] tracking-[-0.035em] text-[#0f1623] sm:text-[30px] lg:text-[32px]">
         ¿Qué estudiamos hoy{firstName ? `, ${firstName}` : ''}?
       </h1>
-      <p className="mt-3 max-w-[560px] text-[13px] leading-[1.55] text-[#526079] sm:text-[16px]">
+      <p className="mt-1.5 max-w-[560px] text-[12px] leading-[1.45] text-[#526079] sm:text-[13px]">
         Subí tu primer material y Evaluo lo convierte en resumen, práctica y plan de estudio.
       </p>
 
@@ -61,26 +63,26 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         onDragLeave={(event) => { event.preventDefault(); setIsDragging(false); }}
         onDrop={handleDrop}
         aria-label="Arrastrá un PDF acá o elegilo desde tu computadora"
-        className={`mt-6 flex w-full max-w-[660px] cursor-pointer flex-col items-center rounded-[22px] border-2 border-dashed px-3 py-7 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-7 sm:rounded-[24px] sm:px-6 sm:py-8 ${isDragging ? 'border-[#2563eb] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6394f0] hover:bg-[#f0f6ff]'}`}
+        className={`mt-3 flex w-full max-w-[620px] cursor-pointer flex-col items-center rounded-[18px] border-2 border-dashed px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-4 sm:rounded-[22px] sm:px-5 sm:py-4 ${isDragging ? 'border-[#2563eb] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6394f0] hover:bg-[#f0f6ff]'}`}
       >
-        <span className="flex size-12 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#0b63e5] sm:size-14">
-          <Upload className="size-6" strokeWidth={1.8} aria-hidden="true" />
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#0b63e5] sm:size-10">
+          <Upload className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
         </span>
-        <span className="mt-4 text-[17px] font-semibold tracking-[-0.02em] text-[#0f1623] sm:text-[20px]">Arrastrá tu material acá</span>
-        <span className="mt-1 text-[12px] text-[#526079] sm:text-[14px]">o elegilo desde tu computadora</span>
-        <span className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#0b63e5] px-6 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.22)] sm:mt-5 sm:min-h-[52px] sm:text-[16px]">
-          <Upload className="size-[18px]" strokeWidth={2} aria-hidden="true" />
+        <span className="mt-2 text-[15px] font-medium tracking-[-0.02em] text-[#0f1623] sm:text-[17px]">Arrastrá tu material acá</span>
+        <span className="mt-0.5 text-[11px] text-[#526079] sm:text-[12px]">o elegilo desde tu computadora</span>
+        <span className="mt-2.5 inline-flex min-h-[36px] items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[12px] font-medium text-white shadow-[0_8px_20px_rgba(11,99,229,0.16)] sm:mt-3 sm:min-h-[40px] sm:text-[13px]">
+          <Upload className="size-[16px]" strokeWidth={2} aria-hidden="true" />
           Subir PDF
         </span>
-        <span className="mt-6 flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-3 sm:gap-x-6">
+        <span className="mt-3 flex w-full flex-wrap items-start justify-center gap-x-3 gap-y-1.5 sm:mt-4 sm:gap-x-5">
           {illustratedFormats.map((format) => (
-            <span key={format.title} className="flex min-w-[44px] flex-col items-center gap-1.5" title={format.title === 'PDF' ? 'PDF disponible' : 'Otros formatos: próximamente'}>
-              <span className={`flex h-10 w-[34px] items-center justify-center rounded-[7px] text-white ${format.color}`}>
+            <span key={format.title} className="flex min-w-[42px] flex-col items-center gap-1" title={format.title === 'PDF' ? 'PDF disponible' : 'Otros formatos: próximamente'}>
+              <span className={`flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`}>
                 {format.icon === 'book' ? <BookOpen className="size-[18px]" aria-hidden="true" />
                   : format.icon === 'audio' ? <AudioLines className="size-[18px]" aria-hidden="true" />
                     : <span className="text-[9px] font-bold">{format.title}</span>}
               </span>
-              <span className="text-[10px] text-[#667085] sm:text-[12px]">{format.label}</span>
+              <span className="text-[9px] text-[#667085] sm:text-[10px]">{format.label}</span>
             </span>
           ))}
         </span>
