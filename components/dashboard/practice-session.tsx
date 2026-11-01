@@ -457,7 +457,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </> : current && <>
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
           {current.type === 'recall' ? <>
-            <p className="text-xs text-slate-500">Escribí el término usado en el material (las tildes no afectan la corrección)</p>
+            <p className="text-xs text-slate-500">Escribí el término específico que aparece en el material. Aceptamos tildes, variantes gramaticales y equivalencias documentadas.</p>
             <p className="mt-3 text-base leading-7 text-slate-900">________: {current.pair.definition}</p>
             <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">Concepto</label>
             <input id="practice-input" type="text" autoComplete="off" maxLength={120}
@@ -483,10 +483,18 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             {correctAt(step) ? 'Bien resuelto' : 'Para reforzar'}
           </p>
           {!correctAt(step) && responses[step]?.trim() &&
-            <p className="mt-1 text-slate-600">Elegiste: {responses[step]}</p>}
+            <p className="mt-1 text-slate-600">
+              {current.type === 'recall'
+                ? 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: '
+                : 'Elegiste: '}{responses[step]}
+            </p>}
           <p className="mt-1 text-slate-700">{mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: '}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
           {current.type === 'question' && <p className="mt-1 text-slate-600">{groundedPracticeExplanation(current.question,pairs)}</p>}
+          {current.type === 'recall' && current.pair.pageStart && <Link
+            href={'/materiales/' + materialId + '?tab=resumen&page=' + current.pair.pageStart}
+            className="mt-2 inline-block text-blue-600 underline">Revisar el concepto en el material · página {current.pair.pageStart}</Link>}
+
         </div>}
         <div className="mt-5 flex flex-wrap items-center gap-2">
           <button type="button" disabled={step === 0} onClick={() => setStep(value => value - 1)}
