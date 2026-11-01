@@ -1606,7 +1606,7 @@ assert.ok(
 );
 assert.ok(
   integratedLongArtifacts.questions.length > 43,
-  'La práctica real del wrapper v2 debe ampliar el banco canónico.'
+  'La práctica real del wrapper v2 debe ampliar el banco canónico; aceptadas=' + integratedLongArtifacts.questions.length + '; descartes=' + JSON.stringify(integratedLongArtifacts.integrity ?? null)
 );
 const integratedCardPages = integratedLongArtifacts.flashcards
   .map((card) => card.reference.pageStart)
