@@ -48,8 +48,9 @@ export async function POST(request: Request) {
       insert: (value: Record<string, unknown>) => PromiseLike<{ error: { code?: string; message: string } | null }>;
     };
   };
+  const attemptId = p.sessionId ?? crypto.randomUUID();
   const { error } = await db.from('practice_mode_sessions').insert({
-    id: p.sessionId ?? crypto.randomUUID(),
+    id: attemptId,
     user_id: user.id, material_id: material.id, mode: p.mode,
     correct: p.correct, total: p.total, answers,
     source: 'client_self_reported',
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
     await trackServerAnalyticsEvent({
       eventName: 'practice_mode_session_completed', userId: user.id,
       path: '/dashboard/practicar/' + material.id + '/' + p.mode,
-      metadata: { material_id: material.id, mode: p.mode, correct: p.correct, total: p.total, source: 'client_self_reported' },
+      metadata: { material_id: material.id, mode: p.mode, correct: p.correct, total: p.total, history_session_id: attemptId, source: 'client_self_reported' },
     });
   }
   return NextResponse.json({ ok: true });
