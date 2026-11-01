@@ -72,6 +72,11 @@ const ansoff:PracticePair[]=[
   {term:'Diversificación',definition:'Ingresar a mercados nuevos incorporando productos que la organización no comercializaba.',chapterTitle:'Marketing'},
   {term:'Desarrollo de mercados',definition:'Ofrecer productos existentes a clientes de regiones todavía no atendidas por la empresa.',chapterTitle:'Marketing'},
 ];
+assert.equal(selectPracticePairs([{
+  term:'Tasa de cambio',
+  definition:'La tasa de cambio es una magnitud que compara valores económicos entre períodos.',
+  chapterTitle:'Economía',
+}]).length,0,'Completar must not reveal its own short target phrase in the definition');
 assert.equal(selectPracticePairs([...ansoff,ansoff[0]!]).length,3,
   'An identical model supplement cannot erase a valid glossary concept');
 assert.equal(selectPracticePairs([...ansoff,{...ansoff[0]!,definition:'Otra definición que contradice el significado del mismo término académico.'}]).length,2,
