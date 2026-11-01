@@ -22,8 +22,8 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, aiAvailable = false, isWord = false }: {
-  mode: Mode; materialId: string; materialTitle: string;
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false }: {
+  mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
   aiAvailable?: boolean; isWord?: boolean;
 }) {
@@ -68,7 +68,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const posted = useRef('');
   const sessionIdRef = useRef<string | null>(null);
   const [historySaveFailed, setHistorySaveFailed] = useState(false);
-  const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, 6), [pairs, round]);
+  const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, reviewLength === 'rapido' ? 6 : 8), [pairs, round, reviewLength]);
   const definitions = useMemo(() => rotate(
     exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })), exercisePairs.length > 1 ? 2 : 0,
   ), [exercisePairs]);
@@ -76,19 +76,19 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const tasks = useMemo<Task[]>(() => {
     if (mode === 'unir') return [];
     if (mode === 'completar')
-      return rotate(pairs, round * 5).slice(0, 6).map(pair => ({ type: 'recall' as const, pair }));
+      return rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8).map(pair => ({ type: 'recall' as const, pair }));
     if (mode === 'casos')
-      return rotate(contexts, round * 5).slice(0, 8).map(question => ({ type: 'question' as const, question }));
+      return rotate(contexts, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8).map(question => ({ type: 'question' as const, question }));
     if (mode === 'simulacro')
-      return balancedQuestions(options, 10, round).map(question => ({ type: 'question' as const, question }));
+      return balancedQuestions(options, reviewLength === 'rapido' ? 6 : 10, round).map(question => ({ type: 'question' as const, question }));
     if (mode === 'opciones')
-      return selectBalancedTrueFalse(trueFalsePool, 8, round).map(question => ({ type: 'question' as const, question }));
+      return selectBalancedTrueFalse(trueFalsePool, reviewLength === 'rapido' ? 6 : 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
     const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
     const applied = mixed.application ? [{ type: 'question' as const, question:mixed.application }] : [];
-    return [...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)];
-  }, [mode, pairs, options, contexts, trueFalsePool, round]);
+    return [...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)].slice(0, reviewLength === 'rapido' ? 6 : 10);
+  }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
   const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
