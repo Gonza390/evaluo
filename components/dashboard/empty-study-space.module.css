@@ -1,15 +1,16 @@
-/* Evi moves inside its SVG so the shadow stays in place and the eyes blink. */
+/* Evi has its own float, blink and shadow animation inside the SVG.
+ * File icons perform one subtle upward hop every five seconds, staggered. */
 @keyframes file-icon-hop {
   0%, 100% { transform: translateY(0); }
-  36% { transform: translateY(-8px); }
-  58% { transform: translateY(1px); }
-  75% { transform: translateY(-2px); }
+  5% { transform: translateY(-7px); }
+  11% { transform: translateY(0); }
 }
 
 .fileFormatIcon {
-  animation: file-icon-hop 640ms ease-out both;
+  animation: file-icon-hop 5s ease-in-out infinite both;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fileFormatIcon { animation: none; }
+  .fileFormatIcon { animation: none; will-change: auto; }
 }
