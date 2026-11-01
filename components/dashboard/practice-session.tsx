@@ -490,8 +490,18 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
-    <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
-    <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
+    {mode === 'opciones' ? (
+      <div className="mt-3 flex min-w-0 items-center gap-2.5">
+        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+        <span aria-hidden="true" className="shrink-0 text-slate-300">·</span>
+        <span className="min-w-0 flex-1 truncate text-[12px] text-slate-500 sm:text-sm" title={materialTitle}>{materialTitle}</span>
+      </div>
+    ) : (
+      <>
+        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+        <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
+      </>
+    )}
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
       <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
         ? 'Preparando afirmaciones de Verdadero o Falso…'
@@ -613,7 +623,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             <div className={mode === 'opciones' ? 'mt-5 grid grid-cols-2 gap-3' : 'mt-5 space-y-2'}>{current.question.options.map(option =>
               <button key={option} type="button" disabled={checked} aria-pressed={responses[step] === option}
                 onClick={() => setResponse(option)}
-                className={'min-h-12 w-full rounded-xl border p-3 text-left text-sm transition disabled:cursor-default ' +
+                className={'min-h-12 w-full rounded-xl border p-3 text-sm transition disabled:cursor-default ' +
+                  (mode === 'opciones' ? 'text-center ' : 'text-left ') +
                   (responses[step] === option ? 'border-blue-600 bg-blue-50' : 'border-slate-200 hover:bg-slate-50')}>
                 {option}
               </button>
