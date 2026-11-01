@@ -62,7 +62,7 @@ assert.match(session,/mode === 'unir' \? exercisePairs\.length >= MIN_CASES_PER_
 assert.match(session,/mode === 'completar' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'mixto' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'opciones'/);
-assert.match(session,/balancedQuestions\(trueFalsePool, 8, round\)/);
+assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, 8, round\)/);
 assert.match(session,/sufficientTrueFalse\(trueFalsePool, MIN_CASES_PER_PRACTICE\)/);
 assert.match(session,/balancedQuestions\(options, 10, round\)/);
 assert.match(session,/fetch\('\/api\/practice\/supplement'/);
