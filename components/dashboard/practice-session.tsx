@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { MatchPracticeScreen, CasesPracticeScreen } from '@/components/dashboard/practice-visual-screens';
+import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
@@ -368,6 +368,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       });
       setSelectedTerm(null);
     }} onFinish={() => setFinished(true)} />;
+  if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <CompletePracticeScreen
+    materialTitle={materialTitle} definition={current.pair.definition}
+    index={step} total={total} value={responses[step] ?? ''} checked={checked}
+    correct={correctAt(step)} answer={current.pair.term}
+    explanation={checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.'}
+    onChange={setResponse} onConfirm={reviewOrNext}
+    onPrevious={() => { if(step>0)setStep(step-1); }}
+    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }} />;
   if (ready && !finished && mode === 'casos' && current?.type === 'question') return <CasesPracticeScreen
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
