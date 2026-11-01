@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
+import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
@@ -59,6 +60,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [matches, setMatches] = useState<Record<number, number>>({});
   const [responses, setResponses] = useState<Record<number, string>>({});
   const [reviewed, setReviewed] = useState<number[]>([]);
+  const [markedForReview, setMarkedForReview] = useState<number[]>([]);
   const [finished, setFinished] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
   const [examStarted, setExamStarted] = useState(false);
@@ -312,7 +314,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   function anotherRound() {
     setRound(value => value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
-    setReviewed([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null); setExamStarted(false);
+    setReviewed([]); setMarkedForReview([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null); setExamStarted(false);
   }
   function setResponse(value: string) {
     if (checked || finished) return;
@@ -391,6 +393,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       (aiAvailable && ['casos','mixto','simulacro','opciones','unir','completar'].includes(mode)));
   if (!finished && (pendingPreparation || (ready && !revealPractice)))
     return <PracticePreparing mode={mode} ready={ready} />;
+
+  if (ready && !finished && mode === 'simulacro' && examStarted && current?.type === 'question') return <ExamPracticeScreen
+    materialTitle={materialTitle} index={step} secondsLeft={secondsLeft}
+    questions={tasks.filter((task):task is Extract<Task,{type:'question'}>=>task.type==='question').map(task=>({prompt:task.question.prompt,options:task.question.options}))}
+    answers={responses} marked={markedForReview} onSelect={setResponse}
+    onNavigate={setStep}
+    onToggleMark={()=>setMarkedForReview(previous=>previous.includes(step)?previous.filter(i=>i!==step):[...previous,step])}
+    onSubmit={()=>setFinished(true)} />;
 
   if (ready && !finished && mode === 'unir') return <MatchPracticeScreen
     materialTitle={materialTitle} pairs={exercisePairs} definitions={definitions}
