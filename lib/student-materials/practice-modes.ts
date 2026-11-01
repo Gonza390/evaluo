@@ -1,6 +1,6 @@
 import type { CanonicalPedagogicalModel } from './types';
 import { constructSourceBackedScenarios } from './practice-case-scenarios';
-import { isAdministrativeMultipleChoice } from './nonacademic-metadata';
+import { practiceQuestionQualityIssue } from './practice-question-quality';
 
 export type PracticePair = { term: string; definition: string; chapterTitle: string | null; englishTerm?: string | null; pageStart?: number | null };
 export type PracticeQuestion = {
@@ -182,7 +182,7 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
       new Set(question.options.map(inflectionKey)).size !== choices.length ||
       choices.some(choice => !choice) || !choices.includes(normalizedAnswer(question.answer)) ||
       question.explanation.trim().length < 20 || hasAmbiguousDistractors(question) ||
-      isAdministrativeMultipleChoice({
+      practiceQuestionQualityIssue({
         prompt: question.prompt, answer: question.answer,
         options: question.options, kind: question.kind,
         sectionTitle: question.chapterTitle,
