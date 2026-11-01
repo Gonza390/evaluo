@@ -36,7 +36,7 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
     // All basic activities reuse already-processed source questions and glossary.
     // Never round-trip through an optional AI/cache endpoint when it is off.
     if (!advancedPracticeEnabled || selectedMode === 'Flashcards' || selectedMode === 'Opciones' ||
-        selectedMode === 'Unir conceptos' || selectedMode === 'Completar') {
+        selectedMode === 'Unir conceptos' || selectedMode === 'Completar' || selectedMode === 'Casos') {
       router.push(href);
       return;
     }
