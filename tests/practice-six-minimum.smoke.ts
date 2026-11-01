@@ -11,8 +11,12 @@ const read = (path: string) =>
 assert.equal(MIN_CASES_PER_PRACTICE, 6);
 const pairs:PracticePair[] = Array.from({length:6},(_,i)=>({
   term:'Término académico '+(i+1),
-  definition:'Característica independiente de la unidad académica número '+(i+1)+
-    ' que permite diferenciar correctamente esta respuesta.',
+  definition:['Identifica la secuencia de observaciones y permite clasificar tareas.',
+    'Relaciona las variables de una hipótesis con su registro empírico.',
+    'Contrasta resultados medidos con los objetivos establecidos inicialmente.',
+    'Interpreta las restricciones de recursos de una organización educativa.',
+    'Describe la distribución de responsabilidades entre distintas áreas.',
+    'Evalúa la correspondencia entre los hallazgos y las conclusiones.'][i]!,
   chapterTitle:'Unidad A',
 }));
 assert.equal(selectPracticePairs(pairs).length,6,
