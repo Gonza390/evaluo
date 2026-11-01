@@ -59,7 +59,7 @@ assert.match(picker, /scrollbarStyles\.scrollArea/, 'La barra de las modalidades
 assert.match(panel, /lg:h-full lg:min-h-0/, 'El historial queda fijo dentro de la columna');
 assert.doesNotMatch(panel, /lg:sticky/, 'No depende del scroll general de página');
 assert.match(picker, /material && <PracticeHistoryPanel/, 'Sin PDF no se presenta un historial engañoso');
-assert.match(picker, /onStartFlashcards=\{\(\) => \{ setSessionLength\('rapido'\); setSelectedMode\('Flashcards'\); \}\}/,
+assert.match(picker, /onStartFlashcards=\{\(\) => openReview\('Flashcards'\)\}/,
   'El botón del vacío usa el flujo real de selección de Flashcards');
 assert.match(panel, /if \(historyLoadError\)/, 'La falla de lectura no se confunde con una cuenta vacía');
 assert.match(panel, /if \(sessions\.length === 0\)/, 'Estado vacío aislado');
