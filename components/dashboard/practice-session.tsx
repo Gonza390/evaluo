@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
   groundedPracticeExplanation,
@@ -25,6 +26,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
 }) {
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
+  const [generatedTrueFalse, setGeneratedTrueFalse] = useState<PracticeQuestion[]>([]);
+  const [trueFalseLoading, setTrueFalseLoading] = useState(false);
+  const [trueFalseError, setTrueFalseError] = useState('');
+  const trueFalseBusy = useRef(false);
+  const trueFalseAttempts = useRef(0);
+  const trueFalsePool = useMemo(() => verifiedTrueFalsePool(generatedTrueFalse), [generatedTrueFalse]);
   const pairs = useMemo(() => selectPracticePairs([...glossary, ...addedPairs]),
     [glossary, addedPairs]);
   // PDF exams keep the existing page-citation requirement. DOCX questions
@@ -68,19 +75,20 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     if (mode === 'simulacro')
       return balancedQuestions(options, 10, round).map(question => ({ type: 'question' as const, question }));
     if (mode === 'opciones')
-      return balancedQuestions(options, 8, round).map(question => ({ type: 'question' as const, question }));
+      return balancedQuestions(trueFalsePool, 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
     const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
     const applied = mixed.application ? [{ type: 'question' as const, question:mixed.application }] : [];
     return [...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)];
-  }, [mode, pairs, options, contexts, round]);
+  }, [mode, pairs, options, contexts, trueFalsePool, round]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
   const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
     mode === 'casos' ? contexts.length >= MIN_CASES_PER_PRACTICE :
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
     mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 :
+    mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, MIN_CASES_PER_PRACTICE) :
     tasks.length >= MIN_CASES_PER_PRACTICE;
   const correctAt = (index: number) => {
     if (mode === 'unir') return matches[index] === index;
@@ -101,7 +109,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }))].slice(0, 4);
   const diagnosticFor = (index: number): string | null => {
     const task = tasks[index];
-    if (!task || correctAt(index)) return null;
+    if (!task || correctAt(index) || mode === 'opciones') return null;
     const response = responses[index] ?? '';
     return task.type === 'recall'
       ? groundedPracticeContrast(response, task.pair.term, pairs)
@@ -177,12 +185,59 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     const needsMore = mode === 'casos'
       ? contexts.length < MIN_CASES_PER_PRACTICE
       : mode === 'mixto' ? options.length < 4
-      : mode === 'simulacro' || mode === 'opciones'
+      : mode === 'simulacro'
         ? options.length < MIN_CASES_PER_PRACTICE : false;
     if (!aiAvailable || !needsMore || generating || generationError ||
         attempts.current >= 6 || generatingRequest.current) return;
     void generateNewCases();
   }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases]);
+  const generateTrueFalse = useCallback(async () => {
+    if (trueFalseBusy.current) return;
+    trueFalseBusy.current = true;
+    trueFalseAttempts.current += 1;
+    setTrueFalseLoading(true);
+    setTrueFalseError('');
+    try {
+      const response = await fetch('/api/practice/true-false', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          materialId,
+          round:trueFalseAttempts.current - 1,
+          previous:trueFalsePool.map(q => q.prompt),
+        }),
+        signal:AbortSignal.timeout(65000),
+      });
+      const data:unknown = await response.json();
+      if (!response.ok || !data || typeof data !== 'object' ||
+          !('questions' in data) || !Array.isArray(data.questions)) {
+        setTrueFalseError(response.status === 429
+          ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
+          : 'No encontramos nuevas afirmaciones con respuestas comprobables en este material. Podés reintentar.');
+        return;
+      }
+      const incoming = verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
+      const unique = verifiedTrueFalsePool([...trueFalsePool,...incoming]);
+      if (unique.length === trueFalsePool.length) {
+        setTrueFalseError('La IA no encontró afirmaciones nuevas y diferentes. Podés reintentar con otros apartados.');
+        return;
+      }
+      setGeneratedTrueFalse(unique);
+    } catch {
+      setTrueFalseError('No pudimos generar afirmaciones verificadas. Reintentá más tarde.');
+    } finally {
+      trueFalseBusy.current=false;
+      setTrueFalseLoading(false);
+    }
+  },[materialId,trueFalsePool]);
+  useEffect(() => {
+    if (mode !== 'opciones' || !aiAvailable ||
+        sufficientTrueFalse(trueFalsePool, MIN_CASES_PER_PRACTICE) ||
+        trueFalseBusy.current || trueFalseLoading || trueFalseError ||
+        trueFalseAttempts.current >= 6) return;
+    void generateTrueFalse();
+  },[mode,aiAvailable,trueFalsePool,trueFalseLoading,trueFalseError,generateTrueFalse]);
+
   const [pairLoading, setPairLoading] = useState(false);
   const [pairError, setPairError] = useState('');
   const pairBusy = useRef(false);
@@ -304,20 +359,28 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     <h1 className="mt-4 text-[23px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
     <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-      <h2 className="font-medium text-slate-800">{mode === 'casos' && generating
+      <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
+        ? 'Preparando afirmaciones de Verdadero o Falso…' : mode === 'casos' && generating
         ? 'Preparando tus casos prácticos…' : 'No hay suficientes ejercicios confiables'}</h2>
-      {mode === 'casos' ? <p className="mt-2">
+      {mode === 'opciones' ? <p className="mt-2">
+        {trueFalsePool.length} de {MIN_CASES_PER_PRACTICE} afirmaciones verificadas.
+        {trueFalseLoading ? ' Estamos comprobando afirmaciones y sus correcciones contra el documento.' :
+          ' Para comenzar necesitamos al menos seis afirmaciones, con respuestas verdaderas y falsas.'}
+      </p> : mode === 'casos' ? <p className="mt-2">
         {contexts.length} de {MIN_CASES_PER_PRACTICE} casos de aplicación verificados.
         {generating ? ' Estamos creando situaciones nuevas a partir de tu material.' :
           ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.'}
       </p> : <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
         No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>}
       {aiCaseButton}
+      {trueFalseError && <p role="status" className="mt-3 text-sm text-amber-800">{trueFalseError}</p>}
       {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">Preparando conceptos del material…</p>}
       {pairError && <p role="status" className="mt-3 text-sm text-amber-800">{pairError}</p>}
-      {mode !== 'casos' && <button type="button" disabled={pairLoading || generating}
+      {mode !== 'casos' && <button type="button" disabled={pairLoading || generating || trueFalseLoading}
         onClick={() => {
-          if (mode === 'unir' || mode === 'completar' ||
+          if (mode === 'opciones') {
+            trueFalseAttempts.current=0;void generateTrueFalse();
+          } else if (mode === 'unir' || mode === 'completar' ||
               (mode === 'mixto' && pairs.length < 2)) {
             pairAttempts.current=0;void generatePairs();
           } else {
@@ -325,10 +388,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           }
         }}
         className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-sm text-blue-700">
-        {pairLoading || generating ? 'Preparando práctica…' : 'Reintentar completar seis ejercicios'}
+        {pairLoading || generating || trueFalseLoading ? 'Preparando práctica…' : 'Reintentar completar seis ejercicios'}
       </button>}
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
-        Practicar con opciones
+        Volver a la práctica general
       </Link>
     </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
@@ -402,8 +465,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500"
               placeholder="Escribí el término" />
           </> : <>
+            {mode === 'opciones' && <p className="mb-2 text-xs font-medium text-slate-500">¿Verdadero o falso?</p>}
             <p className="text-base font-medium leading-7 text-slate-900">{current.question.prompt}</p>
-            <div className="mt-5 space-y-2">{current.question.options.map(option =>
+            <div className={mode === 'opciones' ? 'mt-5 grid grid-cols-2 gap-3' : 'mt-5 space-y-2'}>{current.question.options.map(option =>
               <button key={option} type="button" disabled={checked} aria-pressed={responses[step] === option}
                 onClick={() => setResponse(option)}
                 className={'min-h-12 w-full rounded-xl border p-3 text-left text-sm transition disabled:cursor-default ' +
@@ -419,7 +483,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           </p>
           {!correctAt(step) && responses[step]?.trim() &&
             <p className="mt-1 text-slate-600">Elegiste: {responses[step]}</p>}
-          <p className="mt-1 text-slate-700">Respuesta: {current.type === 'recall' ? current.pair.term : current.question.answer}</p>
+          <p className="mt-1 text-slate-700">{mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: '}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
           {current.type === 'question' && <p className="mt-1 text-slate-600">{groundedPracticeExplanation(current.question,pairs)}</p>}
         </div>}
