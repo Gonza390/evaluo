@@ -55,8 +55,30 @@ const caseQ:PracticeQuestion={
 const review={judgments:[{
   id:caseQ.id,verdict:'supported',selectedAnswer:caseQ.answer,evidence:source,
   explanation:'La empresa conserva los productos y el mercado de destino, por lo que mantiene los dos elementos de la penetración de mercado y no cambia de oferta.',
+  alternatives:[
+    {option:'Diversificación',verdict:'ruled_out',
+      reason:'No modifica la oferta ni ingresa a mercados nuevos, mientras que diversificar requiere ambas novedades simultáneamente.'},
+    {option:'Desarrollo de mercados',verdict:'ruled_out',
+      reason:'La decisión ocurre dentro de la misma ciudad, por lo que no se incorpora un mercado nuevo como exigiría esta estrategia.'},
+    {option:'Desarrollo de productos',verdict:'ruled_out',
+      reason:'Los cuadernos vendidos siguen siendo los mismos, sin introducir una oferta nueva a los compradores actuales.'},
+  ],
 }]};
 assert.equal(applyIndependentCaseReview([caseQ],review,[snippet]).length,1);
+const reviewedCase=applyIndependentCaseReview([caseQ],review,[snippet])[0]!;
+for (const alternative of caseQ.options.filter(option=>option!==caseQ.answer)) {
+  assert.ok(reviewedCase.explanation.includes(alternative),
+    'A case must explain why each named distractor is wrong.');
+}
+assert.equal(applyIndependentCaseReview([caseQ],{judgments:[{
+  ...review.judgments[0],alternatives:review.judgments[0].alternatives!.slice(0,2),
+}]},[snippet]).length,0,'Missing alternative adjudication must fail closed');
+assert.equal(applyIndependentCaseReview([caseQ],{judgments:[{
+  ...review.judgments[0],alternatives:[
+    {...review.judgments[0].alternatives![0],verdict:'plausible'},
+    ...review.judgments[0].alternatives!.slice(1),
+  ],
+}]},[snippet]).length,0,'A potentially correct distractor disqualifies single-answer grading');
 assert.equal(applyIndependentCaseReview([caseQ],{judgments:[{
   ...review.judgments[0],selectedAnswer:'Diversificación',
 }]},[snippet]).length,0,'Disagreement between solvers rejects the generated case.');
