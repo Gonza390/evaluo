@@ -1,11 +1,12 @@
 import {
-  buildSourceBackedCases, qualifiedQuestions, type PracticeQuestion,
+  buildSourceBackedCases, distinctApplicationCases, MIN_CASES_PER_PRACTICE,
+  qualifiedQuestions, type PracticeQuestion,
 } from './practice-modes';
 import type { CanonicalPedagogicalModel } from './types';
 import { needsPedagogicalFeedback } from './practice-feedback-quality';
 
 /** Never included in the upload/processing pipeline. Only an explicit Practicar action uses it. */
-export const PRACTICE_BANK_VERSION = 4; // includes separately labeled, source-verified application cases
+export const PRACTICE_BANK_VERSION = 5; // six verified application cases for Casos
 export const ON_DEMAND_PRACTICE_MODES = ['unir','completar','casos','mixto','simulacro'] as const;
 export type OnDemandPracticeMode = typeof ON_DEMAND_PRACTICE_MODES[number];
 export type PracticeBankPayload = {
@@ -73,7 +74,7 @@ export function buildPracticeBank(
 /** Do not substitute fabricated exercises when source coverage is inadequate. */
 export function sufficientPracticeBank(bank: PracticeBankPayload, mode: OnDemandPracticeMode, matchingPairs = 0) {
   if (mode === 'unir' || mode === 'completar') return matchingPairs >= 3;
-  if (mode === 'casos') return bank.cases.length >= 2;
+  if (mode === 'casos') return distinctApplicationCases(bank.cases).length >= MIN_CASES_PER_PRACTICE;
   if (mode === 'mixto') return bank.questions.length >= 4 || matchingPairs >= 4;
   // DOCX questions carry a section anchor instead of a physical page.
   return bank.questions.filter(q => q.pageStart !== null || Boolean(q.chapterTitle)).length >= 4;
