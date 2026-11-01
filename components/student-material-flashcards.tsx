@@ -674,7 +674,7 @@ export function StudentMaterialFlashcards({
       <div
         className={cn(
           'mx-auto w-full',
-          topicMode ? 'max-w-[640px] space-y-2.5 pt-4 sm:pt-5' : 'max-w-[720px] space-y-3',
+          topicMode ? 'max-w-[640px] space-y-2.5' : 'max-w-[720px] space-y-3',
           isFullscreen && 'flex min-h-full flex-col justify-center'
         )}
       >
@@ -765,7 +765,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="back"
                 data-flashcard-content
-                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
+                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-7 pb-3" : "py-3")}
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
@@ -778,7 +778,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="front"
                 data-flashcard-content
-                className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-slate-950 sm:px-5"
+                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-7 pb-3" : "py-3")}
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
