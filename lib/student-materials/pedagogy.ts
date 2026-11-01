@@ -1345,7 +1345,18 @@ function buildCanonicalProcessQuestions(
   chunks: PedagogicalChunk[],
   limit = 8
 ) {
-  const eligible = model.processes.filter((process) => process.steps.length >= 2);
+  // Distinct process labels with the *same* steps cannot be graded fairly:
+  // the scenario would support multiple answers. Reject such candidates,
+  // rather than using a different label or a random correct-answer key.
+  const candidatesWithSteps = model.processes.filter((process) => process.steps.length >= 2);
+  const sequenceFrequency = new Map<string, number>();
+  for (const process of candidatesWithSteps) {
+    const signature = normalizeForDedupe(process.steps.join(' → '));
+    sequenceFrequency.set(signature, (sequenceFrequency.get(signature) ?? 0) + 1);
+  }
+  const eligible = candidatesWithSteps.filter((process) =>
+    sequenceFrequency.get(normalizeForDedupe(process.steps.join(' → '))) === 1
+  );
   const selected = selectDistributedByPages(eligible, limit, (process) => process.pageReferences);
 
   return selected
