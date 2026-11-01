@@ -214,7 +214,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           !('questions' in data) || !Array.isArray(data.questions)) {
         setTrueFalseError(response.status === 429
           ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
-          : 'No encontramos nuevas afirmaciones con respuestas comprobables en este material. Podés reintentar.');
+          : response.status === 503
+            ? 'No pudimos conectarnos a la IA para preparar esta actividad. Reintentá; si continúa, revisá la configuración de Gemini.'
+            : response.status === 422
+              ? 'No alcanzaron las afirmaciones comprobables de estos apartados. Reintentá para revisar otras páginas.'
+              : 'No pudimos preparar la práctica en este momento. Podés reintentar.');
         return;
       }
       const incoming = verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
@@ -415,6 +419,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       {trueFalseError && <p role="status" className="mt-3 text-sm text-amber-800">{trueFalseError}</p>}
       {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">Preparando conceptos del material…</p>}
       {pairError && <p role="status" className="mt-3 text-sm text-amber-800">{pairError}</p>}
+      <div className="mt-4 flex flex-wrap items-center gap-3">
       {mode !== 'casos' && <button type="button" disabled={pairLoading || generating || trueFalseLoading}
         onClick={() => {
           if (mode === 'opciones') {
@@ -426,12 +431,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             attempts.current=0;void generateNewCases();
           }
         }}
-        className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-sm text-blue-700">
+        className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-sm text-blue-700">
         {pairLoading || generating || trueFalseLoading ? 'Preparando práctica…' : 'Reintentar completar seis ejercicios'}
       </button>}
-      <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
+      <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="inline-flex min-h-11 items-center text-blue-600 underline">
         Volver a la práctica general
       </Link>
+      </div>
     </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
         <p className="text-sm font-medium text-slate-900">Antes de comenzar</p>
