@@ -600,7 +600,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     : isExploreExperienceRoute
                       ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
                       : isCompactAppRoute
-                        ? `bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0 ${isDesktopStudyPlanRoute ? 'xl:min-h-0 xl:overflow-hidden xl:pb-0' : ''} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:overflow-hidden has-[[data-empty-study-space]]:pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:has-[[data-empty-study-space]]:pb-0' : ''}`
+                        ? `bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0 ${isDesktopStudyPlanRoute ? 'xl:min-h-0 xl:overflow-hidden xl:pb-0' : ''} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:has-[[data-empty-study-space]]:pb-0' : ''}`
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
