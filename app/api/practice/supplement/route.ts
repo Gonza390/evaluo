@@ -27,7 +27,7 @@ const docxSchema = {
   required: ['terms'],
 };
 
-export function sourceVerifiedPairs(
+function sourceVerifiedPairs(
   items: unknown, fragments: Fragment[], excludedTerms: string[] = [],
 ): PracticePair[] {
   if (!Array.isArray(items)) return [];
