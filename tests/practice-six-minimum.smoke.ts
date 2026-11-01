@@ -56,7 +56,7 @@ assert.equal(sourceVerifiedPairs([{...term,page:undefined,sectionTitle:'Unidad 1
 }]).length,0,'Unrelated DOCX headings cannot support answers.');
 
 const session = read('components/dashboard/practice-session.tsx');
-assert.match(session,/rotate\(pairs, round \* 6\)\.slice\(0, 6\)/,
+assert.match(session,/rotate\(pairs, round \* 6\)\.slice\(0, reviewLength === 'rapido' \? 6 : 8\)/,
   'Matching must show six pairs, not the old five.');
 assert.match(session,/mode === 'unir' \? exercisePairs\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'completar' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
