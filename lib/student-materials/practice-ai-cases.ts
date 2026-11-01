@@ -18,7 +18,7 @@ export function verifyGeneratedPracticeCases(
   if (!Array.isArray(record.cases)) return [];
   const names = new Set(knownTerms.map(normalizedAnswer).filter(Boolean));
   const verified: PracticeQuestion[] = [];
-  for (const [index, entry] of record.cases.slice(0, 6).entries()) {
+  for (const [index, entry] of record.cases.slice(0, 12).entries()) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
     const c = entry as GeneratedCase;
     if (typeof c.scenario !== 'string' || typeof c.prompt !== 'string' ||
@@ -79,5 +79,5 @@ export function verifyGeneratedPracticeCases(
     };
     if (qualifiedQuestions([caseQuestion]).length) verified.push(caseQuestion);
   }
-  return qualifiedQuestions(verified).slice(0, 4);
+  return qualifiedQuestions(verified).slice(0, 10);
 }
