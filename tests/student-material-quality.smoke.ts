@@ -1523,7 +1523,16 @@ const enoughTopicModel: CanonicalPedagogicalModel = {
   concepts: ['A', 'B', 'C'].flatMap((letter, chapterIndex) =>
     Array.from({ length: 8 }, (_, i) => ({
       term: `Principio ${letter} ${i + 1}`,
-      detail: `El principio ${letter} ${i + 1} establece un criterio académico particular con consecuencias diferentes en el aprendizaje y la evaluación del contenido.`,
+      detail: [
+        'La práctica de recuperación exige recordar contenidos sin mirar los apuntes para detectar conocimientos incompletos.',
+        'La repetición espaciada distribuye sesiones entre varios días para contrarrestar el olvido progresivo.',
+        'La elaboración conceptual conecta una idea nueva con conocimientos previos mediante explicaciones propias.',
+        'El aprendizaje intercalado alterna tipos de problemas y obliga a reconocer qué procedimiento corresponde.',
+        'La retroalimentación correctiva identifica el error específico y explica cómo mejorar la respuesta.',
+        'La transferencia educativa aplica una regla estudiada a una situación nueva con datos diferentes.',
+        'La autoevaluación calibrada compara la confianza declarada con resultados obtenidos en ejercicios.',
+        'El contraste de hipótesis compara predicciones alternativas utilizando evidencias observables.',
+      ][i] + ` El ejercicio pertenece a la unidad ${letter} y al principio ${i + 1}.`,
       kind: 'definicion' as const,
       pageReferences: [chapterIndex * 8 + i + 1],
     }))
