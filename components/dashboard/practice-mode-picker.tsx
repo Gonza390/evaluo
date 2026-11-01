@@ -70,6 +70,42 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
   }
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
+  if (selectedMode && available(selectedMode)) return (
+    <main className="mx-auto flex min-h-[calc(100dvh-100px)] w-full max-w-[1040px] items-center justify-center px-4 py-7 sm:px-6 sm:py-10">
+      <div className="w-full max-w-[720px] text-center">
+        <img src="/evi-pensando.svg" alt="Evi pensando" className="mx-auto mb-3 h-[112px] w-[112px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:h-[136px] sm:w-[136px]"/>
+        <h1 className="text-[23px] font-semibold tracking-[-.045em] text-[#0F1B3D] sm:text-[26px]">¿Cómo querés repasar?</h1>
+        <p className="mx-auto mt-1 max-w-[310px] text-[12px] leading-5 text-slate-500 sm:text-[13px]">Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo.</p>
+        <div className="mx-auto mt-4 inline-flex max-w-full items-center gap-2.5 rounded-xl border border-[#E7EBF4] bg-white px-3 py-2 text-left">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><FileText className="size-4"/></span>
+          <span className="min-w-0"><span className="block text-[9px] font-semibold tracking-[.08em] text-slate-500">MATERIAL</span><span className="block max-w-[250px] truncate text-[12px] font-medium text-slate-900">{material?.title ?? 'Tu material'}</span></span>
+        </div>
+        <div role="radiogroup" aria-label="Tipo de repaso" className="mt-6 grid gap-3 text-left sm:grid-cols-2 sm:gap-4">
+          {([
+            {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',detail:'Conceptos clave y preguntas frecuentes',Icon:Zap,iconClass:'bg-[#FFF3D0] text-[#8B650F]'},
+            {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',detail:'Más preguntas y práctica en cada modalidad',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#2563EB]'},
+          ]).map(option=>{
+            const chosen=sessionLength===option.id;
+            return <button key={option.id} type="button" role="radio" aria-checked={chosen} onClick={()=>setSessionLength(option.id)} className={`relative flex h-full flex-col rounded-2xl border p-4 text-left transition sm:p-5 ${chosen?'border-[#2563EB] bg-[#F7FAFF] ring-[3px] ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
+              <span className={`flex size-10 items-center justify-center rounded-xl ${option.iconClass}`}><option.Icon className="size-[18px]"/></span>
+              <span className={`absolute right-4 top-4 flex size-5 items-center justify-center rounded-full border ${chosen?'border-[#2563EB] bg-[#2563EB]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
+              <span className="mt-3 block text-[16px] font-semibold tracking-tight text-[#0F1B3D]">{option.title}</span>
+              <span className="mt-1 block min-h-[54px] text-[12px] leading-[1.55] text-slate-600">{option.description}</span>
+              <span className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 text-[11px] font-medium text-slate-700">
+                <span className="flex items-center gap-2"><Clock3 className="size-[15px] shrink-0 text-slate-500"/>{option.time}</span>
+                <span className="flex items-start gap-2"><ListChecks className="mt-0.5 size-[15px] shrink-0 text-slate-500"/>{option.detail}</span>
+              </span>
+            </button>;
+          })}
+        </div>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <button type="button" onClick={()=>setSelectedMode(null)} className="min-h-10 rounded-xl px-4 text-[13px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
+          <button type="button" onClick={()=>void startPractice()} className="inline-flex min-h-11 min-w-[170px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 text-[13px] font-medium text-white hover:bg-blue-700">Continuar <ArrowRight className="size-4"/></button>
+        </div>
+      </div>
+    </main>
+  );
+
   return (
     <main className="mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:px-7 lg:pt-9">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
@@ -140,29 +176,6 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
         </section>
         <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material?.title} history={history} />
       </div>
-      {selectedMode && available(selectedMode) && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0F1B3D]/35 px-4 py-6 backdrop-blur-[2px]" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedMode(null);}}>
-          <section role="dialog" aria-modal="true" aria-labelledby="practice-intensity-title" className="w-full max-w-[410px] rounded-2xl border border-[#E7EBF4] bg-white p-5 shadow-[0_22px_70px_rgba(15,27,61,0.16)] sm:p-6">
-            <button type="button" onClick={()=>setSelectedMode(null)} className="mb-4 inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-800"><ArrowLeft className="size-3.5"/> Volver a Practicar</button>
-            <span className="mb-3 inline-flex size-9 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#4F5DFF]"><Clock3 className="size-[18px]"/></span>
-            <h2 id="practice-intensity-title" className="text-[20px] font-semibold tracking-[-.035em] text-[#0F1B3D]">¿Cuánto querés practicar?</h2>
-            <p className="mt-1 text-[13px] leading-5 text-slate-500">Elegí cómo querés estudiar con {selectedMode.toLowerCase()}.</p>
-            <div className="mt-5 grid gap-2.5">
-              <button type="button" aria-pressed={sessionLength==='rapido'} onClick={()=>setSessionLength('rapido')} className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition ${sessionLength==='rapido'?'border-[#4F5DFF] bg-[#F6F7FF] ring-1 ring-[#4F5DFF]/20':'border-[#E7EBF4] bg-white hover:border-slate-300'}`}>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F5DFF]"><Zap className="size-[18px]"/></span>
-                <span className="flex-1"><span className="block text-[13px] font-semibold text-slate-900">Repaso rápido</span><span className="mt-0.5 block text-[11px] leading-4 text-slate-500">Una sesión corta para practicar lo esencial</span></span>
-                <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${sessionLength==='rapido'?'border-[#4F5DFF] bg-[#4F5DFF]':'border-slate-300'}`}>{sessionLength==='rapido'&&<Check className="size-3 text-white"/>}</span>
-              </button>
-              <button type="button" aria-pressed={sessionLength==='completo'} onClick={()=>setSessionLength('completo')} className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition ${sessionLength==='completo'?'border-[#4F5DFF] bg-[#F6F7FF] ring-1 ring-[#4F5DFF]/20':'border-[#E7EBF4] bg-white hover:border-slate-300'}`}>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F0F3F9] text-[#53647B]"><BookOpen className="size-[18px]"/></span>
-                <span className="flex-1"><span className="block text-[13px] font-semibold text-slate-900">Repaso completo</span><span className="mt-0.5 block text-[11px] leading-4 text-slate-500">Más ejercicios para profundizar en el material</span></span>
-                <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${sessionLength==='completo'?'border-[#4F5DFF] bg-[#4F5DFF]':'border-slate-300'}`}>{sessionLength==='completo'&&<Check className="size-3 text-white"/>}</span>
-              </button>
-            </div>
-            <button type="button" onClick={()=>void startPractice()} disabled={preparing} className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[13px] font-medium text-white transition hover:bg-[#1D4ED8] disabled:opacity-50">Empezar a practicar <ArrowRight className="size-4"/></button>
-          </section>
-        </div>
-      )}
     </main>
   );
 }
