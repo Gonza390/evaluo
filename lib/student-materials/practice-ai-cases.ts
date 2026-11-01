@@ -81,3 +81,37 @@ export function verifyGeneratedPracticeCases(
   }
   return qualifiedQuestions(verified).slice(0, 10);
 }
+
+
+/** AI-generated applied cases require an independent solution without seeing
+ * the generator's chosen correct answer. Matching a literal PDF quote does
+ * not prove that a scenario uniquely implies a chosen strategy. */
+export function applyIndependentCaseReview(
+  cases: PracticeQuestion[],
+  review: unknown,
+  sources: SourceFragment[],
+): PracticeQuestion[] {
+  if (!review || typeof review !== 'object' || Array.isArray(review) ||
+      !('judgments' in review) || !Array.isArray(review.judgments)) return [];
+  const judgments = (review.judgments as unknown[])
+    .filter((value):value is Record<string,unknown> =>
+      Boolean(value) && typeof value === 'object' && !Array.isArray(value));
+  return cases.filter(q => {
+    const matches = judgments.filter(j => j.id === q.id);
+    if (matches.length !== 1) return false;
+    const judge = matches[0]!;
+    if (judge.verdict !== 'supported' ||
+        typeof judge.selectedAnswer !== 'string' ||
+        normalizedAnswer(judge.selectedAnswer) !== normalizedAnswer(q.answer) ||
+        typeof judge.explanation !== 'string' ||
+        judge.explanation.trim().length < 90 ||
+        typeof judge.evidence !== 'string' ||
+        judge.evidence.trim().length < 28) return false;
+    const sourceMatches = sources.some(s =>
+      (q.pageStart === null
+        ? s.pageStart === null && s.sectionTitle === q.chapterTitle
+        : s.pageStart === q.pageStart) &&
+      normalizedAnswer(s.text).includes(normalizedAnswer(judge.evidence as string)));
+    return sourceMatches;
+  });
+}
