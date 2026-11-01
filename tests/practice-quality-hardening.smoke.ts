@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { applyIndependentTrueFalseReview, selectBalancedTrueFalse } from '../lib/student-materials/practice-true-false.ts';
+import { applyIndependentTrueFalseReview } from '../lib/student-materials/practice-true-false.ts';
 import { applyIndependentCaseReview } from '../lib/student-materials/practice-ai-cases.ts';
 import {
-  distinctApplicationCases, qualifiedQuestions, selectMixedQuestions,
+  distinctApplicationCases, selectMixedQuestions,
   selectPracticePairs, allowedWrittenVariants, isCorrectWrittenAnswer,
   balancedQuestions, type PracticePair, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
