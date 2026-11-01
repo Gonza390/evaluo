@@ -20,6 +20,7 @@ alter table public.practice_mode_sessions enable row level security;
 revoke all on public.practice_mode_sessions from public, anon, authenticated, service_role;
 grant select on public.practice_mode_sessions to authenticated;
 grant select, insert on public.practice_mode_sessions to service_role;
+drop policy if exists "Student reads only own practices" on public.practice_mode_sessions;
 create policy "Student reads only own practices" on public.practice_mode_sessions
   for select to authenticated using (
     user_id = (select auth.uid())
