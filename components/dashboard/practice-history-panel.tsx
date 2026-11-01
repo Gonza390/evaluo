@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, Clock3, History, Layers3, ListChecks, Network, RotateCcw, Timer, TrendingUp, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
+import scrollbarStyles from './practice-history-scrollbar.module.css';
 
 const modeLabels: Record<string, string> = {
   unir: 'Unir conceptos', completar: 'Completar', casos: 'Casos',
@@ -253,7 +254,7 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
           ))}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overscroll-contain">
+      <div className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overscroll-contain`}>
         {selected.length === 0 ? (
           <div className="flex flex-col items-center px-2 py-9 text-center">
             <History className="size-7 text-[#99A7BD]" aria-hidden="true"/>
@@ -315,7 +316,7 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
                           <div className="mt-3 rounded-xl border border-[#E7EBF4] bg-[#FAFBFD] p-3">
                             <p className="text-[11px] font-semibold text-[#0F1B3D]">{item.correct} de {item.total} · Resultado orientativo</p>
                             {item.answers?.length ? (
-                              <div className="mt-2 max-h-[250px] space-y-2 overflow-y-auto">
+                              <div className={`${scrollbarStyles.scrollArea} mt-2 max-h-[250px] space-y-2 overflow-y-auto`}>
                                 {item.answers.map((answer, i) => (
                                   <div key={i} className="rounded-lg border border-[#E7EBF4] bg-white px-2.5 py-2 text-[11px] leading-[1.5]">
                                     <p className="font-medium text-slate-800">{i+1}. {answer.prompt}</p>
