@@ -53,7 +53,7 @@ export async function getPracticeHistory(userId: string, allowedMaterialIds: str
     .order('created_at', { ascending: false }).limit(500);
   const [recent, legacy] = await Promise.all([newSessions, legacyEvents]);
   // No presentar una pantalla "sin prácticas" cuando falló la consulta real.
-  if (recent.error) throw new Error('practice_history_unavailable');
+  if (recent.error || legacy.error) throw new Error('practice_history_unavailable');
   const saved: PracticeHistoryEntry[] = (recent.error ? [] : recent.data ?? []).flatMap((row: Record<string, unknown>) => {
     if (!isText(row.id) || !isText(row.material_id) || !allowed.has(row.material_id) ||
         !isText(row.mode) || !MODES.has(row.mode) || !isScore(row.correct, row.total) ||
