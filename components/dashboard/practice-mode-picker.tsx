@@ -9,7 +9,7 @@ type Material = { id: string; title: string };
 const modes = [
   { title: 'Mixto', description: 'Combiná opciones, conceptos y situaciones con corrección.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
   { title: 'Flashcards', description: 'Te acordás la respuesta y le das la vuelta a la tarjeta.', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
-  { title: 'Opciones', description: 'Verdadero o falso y elegir entre varias.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
+  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
   { title: 'Unir conceptos', description: 'Unís cada término con su definición.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
   { title: 'Completar', description: 'Recuperá el concepto que falta a partir de su definición.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
   { title: 'Casos', description: 'Relacioná situaciones del material con sus conceptos y explicaciones.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
