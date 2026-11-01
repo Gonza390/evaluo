@@ -1326,12 +1326,38 @@ const denseQuestionBankModel: CanonicalPedagogicalModel = {
     relevance: 'alta' as const,
     pageReferences: [i + 1],
   })),
-  concepts: Array.from({ length: 150 }, (_, i) => ({
-    term: `Concepto ${i + 1}`,
-    detail: `Definición diferenciada del concepto ${i + 1}, con efectos sobre el proceso educativo y relación con el conocimiento científico del tema.`,
-    kind: 'definicion' as const,
-    pageReferences: [(i % 94) + 1],
-  })),
+  concepts: Array.from({ length: 150 }, (_, i) => {
+    // A number inserted into the same generic sentence does not make 150
+    // semantically different concepts. Distinct domains AND methods make
+    // this a realistic fixture for evaluating distractor curation.
+    const domains = [
+      'microbiología', 'astronomía', 'botánica', 'historia', 'economía',
+      'lingüística', 'geología', 'ecología', 'psicología', 'matemática',
+    ];
+    const methods = [
+      'la observación del crecimiento de microorganismos en cultivos controlados',
+      'el estudio de espectros emitidos por objetos celestes distantes',
+      'la comparación de tejidos vegetales mediante microscopía',
+      'la contrastación de fuentes primarias de distintas épocas',
+      'la modelización de decisiones de consumo con restricciones presupuestarias',
+      'la interpretación de patrones sintácticos de lenguas naturales',
+      'la medición de minerales presentes en muestras de rocas',
+      'el seguimiento de relaciones entre especies y hábitats',
+      'la evaluación del comportamiento mediante escalas validadas',
+      'la demostración de propiedades de funciones continuas',
+      'la exploración de secuencias temporales con sensores calibrados',
+      'la clasificación de evidencias obtenidas en registros longitudinales',
+      'la construcción de modelos de predicción con datos observados',
+      'la comparación de protocolos de investigación bajo condiciones reproducibles',
+      'el registro de cambios en sistemas sometidos a perturbaciones',
+    ];
+    return {
+      term: `Concepto ${i + 1}`,
+      detail: `En el campo de ${domains[i % domains.length]}, se trabaja con ${methods[Math.floor(i / domains.length) % methods.length]} para estudiar un problema definido.`,
+      kind: 'definicion' as const,
+      pageReferences: [(i % 94) + 1],
+    };
+  }),
   relationships: Array.from({ length: 90 }, (_, i) => ({
     source: `Concepto ${i + 1}`,
     target: `Concepto ${i + 2}`,
