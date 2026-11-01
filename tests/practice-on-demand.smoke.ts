@@ -55,7 +55,7 @@ const picker=file('components/dashboard/practice-mode-picker.tsx');
 const prepare=file('app/api/practice/prepare/route.ts');
 const page=file('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
 const upload=file('lib/student-materials/processing-service.ts');
-assert.match(picker,/onClick=\{\(\) => void startPractice\(\)\}/,'Explicit button starts preparation');
+assert.match(picker,/onClick=\{\(\)\s*=>\s*void startPractice\(\)\}/,'Explicit button starts preparation');
 assert.match(picker,/fetch\('\/api\/practice\/prepare'/,'No POST on page entry or mode selection');
 assert.match(picker,/selectedMode === 'Flashcards' \|\| selectedMode === 'Opciones'/,
   'Preserve the established study flows');
