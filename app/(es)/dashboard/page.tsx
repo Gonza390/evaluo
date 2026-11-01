@@ -124,7 +124,7 @@ export default async function DashboardPage({
 
     return (
       <div className={materials.length === 0
-        ? 'animate-page-enter flex h-full min-h-0 flex-col overflow-hidden bg-white px-3 py-2 sm:px-4 sm:py-3 lg:px-6'
+        ? 'animate-page-enter flex h-full min-h-0 flex-col bg-white px-3 py-2 sm:px-4 sm:py-3 lg:px-6'
         : 'animate-page-enter min-h-screen bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5'}>
         <ReferralPortalDashboardShortcut />
         <div className={materials.length === 0
