@@ -6,6 +6,7 @@ import { ensureStudentMaterialStudyArtifacts } from '@/lib/student-material-summ
 import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-pedagogical-cache';
 import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import { PracticeSession } from '@/components/dashboard/practice-session';
+import { PracticeFlashcardSession } from '@/components/dashboard/practice-flashcard-session';
 import { buildSourceBackedCases } from '@/lib/student-materials/practice-modes';
 import {
   PRACTICE_BANK_VERSION, safePracticeBank, sourceFingerprint,
@@ -14,7 +15,7 @@ import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 
 export default async function PracticeModePage({ params }: { params: Promise<{ id: string; mode: string }> }) {
   const { id, mode } = await params;
-  const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro'];
+  const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards'];
   if (!supported.includes(mode) || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -36,6 +37,9 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
   const artifacts = await loadOrBuildPedagogicalArtifacts({
     admin, materialId: material.id, summary: studySummary, glossary,
   });
+  if (mode === 'flashcards') return <PracticeFlashcardSession
+    materialId={material.id} cards={artifacts.flashcards} />;
+
   const { data: modelRow } = mode === 'casos' || mode === 'mixto'
     ? await admin.from('student_materials').select('pedagogical_model').eq('id', material.id).maybeSingle()
     : { data: null };
@@ -61,9 +65,9 @@ export default async function PracticeModePage({ params }: { params: Promise<{ i
       savedBank = safePracticeBank(bankRow.payload);
     }
   }
-  return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro'}
+  return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
     materialId={material.id} materialTitle={material.title} cases={savedBank?.cases.length ? savedBank.cases : cases}
-    aiAvailable={mode === 'casos' || (process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED === '1' && process.env.PRACTICE_BANK_ENABLED === '1')}
+    aiAvailable={true}
     isWord={material.file_name.toLowerCase().endsWith('.docx')}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null, englishTerm: item.englishTerm ?? null }))}
     questions={savedBank?.questions.length ? savedBank.questions : artifacts.questions.filter(q => q.type === 'multiple_choice' && q.options.length >= 2).map(q => ({
