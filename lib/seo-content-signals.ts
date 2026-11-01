@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase-public';
+import { getPregunteroMateriaStats } from '@/lib/data/preguntero';
 
 export type MateriaSeoContentSignals = {
   questionCount: number;
@@ -26,11 +27,9 @@ export function hasSubstantialStudyLandingContent(
 const loadMateriaSeoContentSignals = unstable_cache(
   async (materiaId: string): Promise<MateriaSeoContentSignals> => {
     const client = createPublicClient();
+    // Los conteos públicos provienen del RPC cacheado, no de un COUNT del banco.
     const [questions, summaries, summaryResources, resources] = await Promise.all([
-      client
-        .from('preguntas_banco_public')
-        .select('id', { count: 'exact', head: true })
-        .eq('materia_id', materiaId),
+      getPregunteroMateriaStats(materiaId).catch(() => null),
       client
         .from('resumenes')
         .select('id', { count: 'exact', head: true })
@@ -46,7 +45,7 @@ const loadMateriaSeoContentSignals = unstable_cache(
         .eq('materia_id', materiaId),
     ]);
 
-    const questionCount = questions.error ? 0 : (questions.count ?? 0);
+    const questionCount = questions?.totalPreguntas ?? 0;
     const summaryCount = summaries.error ? 0 : (summaries.count ?? 0);
     const summaryResourceCount = summaryResources.error ? 0 : (summaryResources.count ?? 0);
     const resourceCount = resources.error ? 0 : (resources.count ?? 0);

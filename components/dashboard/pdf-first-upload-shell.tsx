@@ -82,11 +82,18 @@ function isTransientProcessingFailure(message: string | null | undefined) {
  * the behavior of another button, and nested buttons retain their own onClick.
  */
 const PdfUploadTriggerContext = createContext<((location?: string) => void) | null>(null);
+const PdfDropUploadContext = createContext<((file: File) => void) | null>(null);
 
 export function usePdfUploadTrigger() {
   const trigger = useContext(PdfUploadTriggerContext);
   if (!trigger) throw new Error('usePdfUploadTrigger requires PdfFirstUploadShell');
   return trigger;
+}
+
+export function usePdfDropUpload() {
+  const upload = useContext(PdfDropUploadContext);
+  if (!upload) throw new Error('usePdfDropUpload requires PdfFirstUploadShell');
+  return upload;
 }
 
 export function PdfFirstUploadShell({
@@ -388,7 +395,9 @@ export function PdfFirstUploadShell({
       source: initialSource || 'dashboard',
     });
 
-    setOpen(true);
+    // No abrir un segundo dropzone vacío sobre la pantalla de bienvenida.
+    // El diálogo se abre cuando ya existe un PDF elegido.
+    if (location !== 'dashboard_empty') setOpen(true);
     pickerRef.current?.click();
   }, [initialSource, uploading]);
 
@@ -415,6 +424,12 @@ export function PdfFirstUploadShell({
     setFile(selected);
     setTitle(titleFromFile(selected.name));
     setExamDate(initialExamDate);
+    return true;
+  };
+
+  const uploadDroppedFile = (selected: File) => {
+    if (uploading) return;
+    if (selectFile(selected)) setOpen(true);
   };
 
   const startProcessing = async (selectedFile?: File | null, selectedTitle?: string) => {
@@ -773,19 +788,21 @@ export function PdfFirstUploadShell({
 
   return (
     <PdfUploadTriggerContext.Provider value={openUploadPicker}>
-    <div className="relative">
+    <PdfDropUploadContext.Provider value={uploadDroppedFile}>
+    <div className="relative has-[[data-empty-study-space]]:h-full has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1">
       <input
         ref={pickerRef}
         type="file"
         accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         className="sr-only"
         onChange={(event) => {
-          selectFile(event.currentTarget.files?.[0] ?? null);
+          const selected = event.currentTarget.files?.[0] ?? null;
+          if (selectFile(selected)) setOpen(true);
           event.currentTarget.value = '';
         }}
       />
       <div
-        className={`transition duration-200 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
+        className={`transition duration-200 has-[[data-empty-study-space]]:h-full has-[[data-empty-study-space]]:min-h-0 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
         aria-hidden={open}
       >
         {children}
@@ -1247,6 +1264,7 @@ export function PdfFirstUploadShell({
         </Dialog>
       ) : null}
     </div>
+    </PdfDropUploadContext.Provider>
     </PdfUploadTriggerContext.Provider>
   );
 }

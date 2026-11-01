@@ -807,7 +807,7 @@ export default function CalendarioPage() {
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-2 text-center text-[12px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
+                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-1.5 text-center text-[12px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
                   >
                     <span className="hidden sm:inline">{label}</span>
                     <span className="text-xs sm:hidden">{label.slice(0, 3)}</span>
@@ -833,7 +833,7 @@ export default function CalendarioPage() {
                       key={dateKey}
                       type="button"
                       onClick={() => openComposerForDate(date)}
-                      className={`group flex min-h-[58px] min-w-0 flex-col gap-1 border-r border-b px-1 py-1.5 text-left transition last:border-r-0 hover:bg-white min-[380px]:min-h-[64px] min-[380px]:px-1.5 sm:min-h-[74px] sm:gap-1.5 sm:px-2.5 sm:py-2 lg:min-h-[86px] ${
+                      className={`group flex min-h-[58px] min-w-0 flex-col gap-1 border-r border-b px-1 py-1.5 text-left transition last:border-r-0 hover:bg-white min-[380px]:min-h-[64px] min-[380px]:px-1.5 sm:min-h-[64px] sm:gap-1 sm:px-2 sm:py-1.5 lg:min-h-[64px] ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
                       style={{
@@ -848,7 +848,7 @@ export default function CalendarioPage() {
                     >
                       <div className="flex items-start justify-between">
                         <span
-                          className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-medium"
+                          className="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-medium"
                           style={{
                             backgroundColor: isToday
                               ? 'var(--brand)'
@@ -866,11 +866,11 @@ export default function CalendarioPage() {
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 overflow-hidden">
-                        {cellEvents.slice(0, 2).map((event) => (
+                      <div className="space-y-0.5 overflow-hidden">
+                        {cellEvents.slice(0, 1).map((event) => (
                           <div
                             key={event.id}
-                            className="truncate rounded-lg border px-2 py-0.5 text-[12px] font-medium"
+                            className="truncate rounded-md border px-1.5 py-0.5 text-[11px] font-medium"
                             style={{
                               backgroundColor:
                                 event.type === 'exam'
@@ -889,9 +889,9 @@ export default function CalendarioPage() {
                             {event.title}
                           </div>
                         ))}
-                        {cellEvents.length > 2 ? (
+                        {cellEvents.length > 1 ? (
                           <div className="text-[12px] font-medium text-slate-500">
-                            +{cellEvents.length - 2} más
+                            +{cellEvents.length - 1} más
                           </div>
                         ) : null}
                       </div>
@@ -905,11 +905,11 @@ export default function CalendarioPage() {
       </div>
 
       <Dialog open={isComposerOpen} onOpenChange={setIsComposerOpen}>
-        <DialogContent className="h-[min(78vh,640px)] w-[min(calc(100vw-1rem),360px)] max-w-[360px] overflow-hidden rounded-[22px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] md:h-auto md:max-h-[76vh] md:w-[680px] md:max-w-[680px] lg:w-[760px] lg:max-w-[760px]">
-          <div className="relative h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
+        <DialogContent className="h-[min(78vh,640px)] w-[min(calc(100vw-1rem),360px)] max-w-[360px] overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_18px_56px_rgba(15,23,42,0.12)] md:h-auto md:max-h-[76vh] md:w-[680px] md:max-w-[680px] lg:w-[760px] lg:max-w-[760px]">
+          <div className="relative h-full overflow-y-auto px-3.5 py-3.5 sm:px-5 sm:py-5 md:max-h-[76vh]">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
-                <DialogTitle className="text-[1.15rem] font-semibold tracking-[-0.05em] text-heading">
+                <DialogTitle className="text-[18px] font-medium tracking-[-0.035em] text-heading">
                   Agregar fecha
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
@@ -922,7 +922,7 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`h-9 rounded-[12px] text-[13px] font-medium ${
+                    className={`h-9 rounded-xl text-[13px] font-medium ${
                       formState.type === 'exam'
                         ? 'bg-white text-brand shadow-sm hover:bg-white'
                         : 'text-slate-600 hover:bg-white'
@@ -941,7 +941,7 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     variant="ghost"
-                    className={`h-9 rounded-[12px] text-[13px] font-medium ${
+                    className={`h-9 rounded-xl text-[13px] font-medium ${
                       formState.type === 'assignment'
                         ? 'bg-white text-brand shadow-sm hover:bg-white'
                         : 'text-slate-600 hover:bg-white'
@@ -961,7 +961,7 @@ export default function CalendarioPage() {
               </div>
             </div>
 
-            <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
+            <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <div className="relative">
                 <div
                   className="h-[332px] overflow-hidden"
@@ -983,7 +983,7 @@ export default function CalendarioPage() {
                               }))
                             }
                             placeholder="Ej: Derecho Constitucional"
-                            className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
+                            className="h-10 rounded-xl border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                           />
                         </div>
 
@@ -1031,11 +1031,11 @@ export default function CalendarioPage() {
                         </div>
 
                         {careerMateriaLoading ? (
-                          <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
+                          <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                             Cargando materias de tu carrera...
                           </div>
                         ) : filteredCareerMateriaOptions.length > 0 ? (
-                          <div className="max-h-[112px] min-h-[112px] overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-1 shadow-sm">
+                          <div className="max-h-[112px] min-h-[112px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
                             {filteredCareerMateriaOptions.map((materia) => (
                               <button
                                 key={materia.id}
@@ -1054,11 +1054,11 @@ export default function CalendarioPage() {
                             ))}
                           </div>
                         ) : formState.subjectName.trim().length > 0 ? (
-                          <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
+                          <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                             No encontramos una materia de tu carrera con ese nombre.
                           </div>
                         ) : careerMateriaOptions.length === 0 ? (
-                          <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
+                          <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                             Cuando tu carrera tenga materias asociadas, aparecerán aquí para
                             elegirlas.
                           </div>
@@ -1080,7 +1080,7 @@ export default function CalendarioPage() {
                             }))
                           }
                           placeholder="Ej: TP final de Derecho Privado"
-                          className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
+                          className="h-10 rounded-xl border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2 opacity-45">
@@ -1099,7 +1099,7 @@ export default function CalendarioPage() {
                           ))}
                         </div>
                       </div>
-                      <div className="flex min-h-[112px] flex-col justify-between rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
+                      <div className="flex min-h-[112px] flex-col justify-between rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                         <p className="text-[12px] font-medium tracking-[0.14em] text-slate-500 uppercase">
                           Organizacion
                         </p>
@@ -1111,7 +1111,7 @@ export default function CalendarioPage() {
                           Ejemplo: TP final de Derecho Privado.
                         </p>
                       </div>
-                      <div className="hidden rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
+                      <div className="hidden rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                         Guardá la entrega con un nombre claro para poder usar esta información
                         después en recordatorios, analíticas o planificación.
                       </div>
@@ -1126,7 +1126,7 @@ export default function CalendarioPage() {
                   <p className="text-[12px] font-medium tracking-[0.18em] text-slate-500 uppercase">
                     Vista previa
                   </p>
-                  <div className="mt-2 min-h-[84px] rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
+                  <div className="mt-2 min-h-[84px] rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
                     {formState.type === 'exam' ? (
                       <span>
                         Se guardará como{' '}
@@ -1161,14 +1161,14 @@ export default function CalendarioPage() {
                 ) : null}
 
                 {selectedDateEvents.length > 0 ? (
-                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-3">
+                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
                     <p className="text-[13px] font-medium text-slate-900">
                       Fechas de este día
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="flex items-start justify-between gap-3 rounded-[16px] border border-slate-200 bg-white px-3 py-2.5"
+                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
@@ -1199,7 +1199,7 @@ export default function CalendarioPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="min-h-[74px] rounded-[16px] border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-500">
+                  <div className="min-h-[74px] rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-500">
                     No hay fechas para este día.
                   </div>
                 )}
@@ -1214,7 +1214,7 @@ export default function CalendarioPage() {
                     Cancelar
                   </Button>
                   <Button
-                    className="h-9 rounded-xl bg-gradient-to-r from-brand to-brand-2 px-3.5 text-[13px] text-white hover:opacity-95"
+                    className="h-9 rounded-xl bg-blue-600 px-3.5 text-[13px] font-medium text-white transition hover:bg-blue-700"
                     onClick={handleCreateEvent}
                     disabled={isSavingEvent}
                   >
@@ -1229,7 +1229,7 @@ export default function CalendarioPage() {
       </Dialog>
 
       <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
-        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-[24px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)]">
+        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_18px_56px_rgba(15,23,42,0.12)]">
           <div className="px-4 py-4 sm:px-5 sm:py-5">
             <PremiumUpsell
               title="Armá el plan para tu próximo parcial"

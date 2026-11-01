@@ -3,12 +3,14 @@
 import { MaeveDashboardChrome } from '@/components/dashboard/maeve-dashboard-chrome';
 import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
+import { EmptyStudySpace } from '@/components/dashboard/empty-study-space';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { getStudentMaterialRoute } from '@/lib/routes';
 
 export type MaeveStudySpaceProps = {
   materials: StudentMaterial[];
+  firstName?: string;
   initialUniversidadId?: string;
   initialCarreraId?: string;
   initialMateriaId?: string;
@@ -26,6 +28,7 @@ export type MaeveStudySpaceProps = {
  */
 export function MaeveStudySpace({
   materials,
+  firstName,
   initialUniversidadId = '',
   initialCarreraId = '',
   initialMateriaId = '',
@@ -48,8 +51,14 @@ export function MaeveStudySpace({
       initialExamDate={initialExamDate}
       initialSource={initialSource}
       trackingMateriaId={trackingMateriaId}
-      initialOpen={initialOpen}
+      // El estado vacío ya tiene su propia zona de carga; no mostramos
+      // automáticamente el diálogo inicial. Las cargas retomadas desde
+      // la landing conservan su restauración tras el registro.
+      initialOpen={initialOpen && (materials.length > 0 || initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-'))}
     >
+      {materials.length === 0 ? (
+        <EmptyStudySpace firstName={firstName} />
+      ) : (
       <MaeveDashboardChrome
         materialsCount={materials.length}
         primaryMaterialHref={primaryMaterialHref}
@@ -61,6 +70,7 @@ export function MaeveStudySpace({
           initialMaterials={materials}
         />
       </MaeveDashboardChrome>
+      )}
     </PdfFirstUploadShell>
   );
 }

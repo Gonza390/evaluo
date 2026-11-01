@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { logError, logInfo } from '@/lib/observability';
 import { createPublicClient } from '@/lib/supabase-public';
+import { createAdminClient } from '@/lib/supabase-admin';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 
@@ -123,7 +124,8 @@ const loadParcialData = unstable_cache(
     materiaId: string,
     parcial: PregunteroParcialKey
   ): Promise<PregunteroParcialData | null> => {
-    const client = createPublicClient();
+    // Esta carga corre solo en el servidor; nunca publicar la clave service_role.
+    const admin = createAdminClient();
     const bootstrap = await getMateriaBootstrap({ materiaId });
 
     if (bootstrap.materiaFound === false) {
@@ -136,9 +138,10 @@ const loadParcialData = unstable_cache(
     try {
       const [stats, sampleRows] = await Promise.all([
         getPregunteroMateriaStats(materiaId),
-        client
-          .from('preguntas_banco_public')
+        admin
+          .from('preguntas_banco')
           .select('id, enunciado, opciones, parcial')
+          .eq('es_demo', false)
           .eq('materia_id', materiaId)
           .in('parcial', parciales)
           .order('creado_at', { ascending: false })
