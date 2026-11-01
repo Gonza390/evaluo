@@ -16,33 +16,66 @@ function Header({title,materialTitle,icon,progress,total,accent}:{title:string;m
 }
 export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTerm,onSelectTerm,matches,onMatch,onFinish}:{materialTitle:string;pairs:Pair[];definitions:{pair:Pair;pairIndex:number}[];selectedTerm:number|null;onSelectTerm:(n:number)=>void;matches:Record<number,number>;onMatch:(term:number,definition:number)=>void;onFinish:()=>void}){
  const [submitted,setSubmitted]=React.useState(false);
+ const [geometry,setGeometry]=React.useState<{width:number;height:number;starts:{x:number;y:number}[];ends:{x:number;y:number}[]}|null>(null);
+ const [pointer,setPointer]=React.useState<{x:number;y:number}|null>(null);
+ const boardRef=React.useRef<HTMLDivElement|null>(null);
+ const conceptRefs=React.useRef<(HTMLButtonElement|null)[]>([]);
+ const definitionRefs=React.useRef<(HTMLButtonElement|null)[]>([]);
  const joined=Object.keys(matches).length;
- const correct=Object.entries(matches).filter(([k,v])=>Number(k)===v).length;
- const matchOf=(index:number)=>matches[index]!==undefined;
+ const correct=Object.entries(matches).filter(([key,value])=>Number(key)===value).length;
  const definitionOwner=(index:number)=>Object.keys(matches).find(key=>matches[Number(key)]===index);
- const rowHeight=54;
- const rowY=(i:number)=>i*rowHeight+26;
- return <main className="mx-auto w-full max-w-[860px] px-3 py-4 pb-14 sm:px-5 sm:py-5 lg:px-6">
-  <div className="mb-5"><Header title="Unir conceptos" materialTitle={materialTitle} icon="match" progress={joined} total={pairs.length} accent="#2fb67c"/></div>
-  <div className="grid grid-cols-2 gap-x-2 lg:grid-cols-[minmax(0,1fr)_68px_minmax(0,1fr)] lg:gap-x-0">
-   <div className="space-y-1"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">CONCEPTOS</p>{pairs.map((pair,i)=>{
-    const linked=matchOf(i),good=linked&&matches[i]===i;
-    return <button key={pair.term+i} type="button" disabled={submitted} aria-pressed={selectedTerm===i}
-     onClick={()=>onSelectTerm(i)}
-     className={`flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium leading-4 transition sm:px-3 sm:text-[13px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):selectedTerm===i?'border-blue-600 bg-blue-50 text-slate-900 ring-2 ring-blue-100':linked?'border-blue-200 bg-blue-50/50 text-slate-900':'border-slate-200 bg-white text-slate-800 hover:border-blue-300'}`}>
-      <span>{pair.term}</span>{submitted&&linked?<span className="shrink-0 text-sm">{good?'✓':'×'}</span>:linked?<span className="size-2 shrink-0 rounded-full bg-blue-500"/>:null}
+ const measure=React.useCallback(()=>{
+  const board=boardRef.current;
+  if(!board)return;
+  const rect=board.getBoundingClientRect();
+  const point=(element:HTMLButtonElement|null,side:'left'|'right')=>{
+   if(!element)return {x:0,y:0};
+   const b=element.getBoundingClientRect();
+   return {x:side==='right'?b.right-rect.left:b.left-rect.left,y:b.top+b.height/2-rect.top};
+  };
+  setGeometry({width:rect.width,height:rect.height,starts:pairs.map((_,i)=>point(conceptRefs.current[i]??null,'right')),ends:definitions.map((_,i)=>point(definitionRefs.current[i]??null,'left'))});
+ },[pairs,definitions]);
+ React.useEffect(()=>{
+  const observer=new ResizeObserver(measure);
+  const board=boardRef.current;
+  if(board)observer.observe(board);
+  for(const element of [...conceptRefs.current,...definitionRefs.current])if(element)observer.observe(element);
+  measure();
+  return()=>observer.disconnect();
+ },[measure]);
+ React.useEffect(()=>{setPointer(null);},[selectedTerm]);
+ const curve=(start:{x:number;y:number},end:{x:number;y:number})=>{
+  const c=Math.max(14,Math.min(62,Math.abs(end.x-start.x)*.48));
+  return `M ${start.x} ${start.y} C ${start.x+c} ${start.y} ${end.x-c} ${end.y} ${end.x} ${end.y}`;
+ };
+ return <main className="mx-auto w-full max-w-[920px] px-3 py-4 pb-12 sm:px-5 sm:py-5 lg:px-6">
+  <Header title="Unir conceptos" materialTitle={materialTitle} icon="match" progress={joined} total={pairs.length} accent="#3b82f6"/>
+  <div ref={boardRef} onPointerMove={event=>{
+   if(submitted||selectedTerm===null||!boardRef.current)return;
+   const rect=boardRef.current.getBoundingClientRect();
+   setPointer({x:event.clientX-rect.left,y:event.clientY-rect.top});
+  }} onPointerLeave={()=>setPointer(null)} className="relative grid grid-cols-[minmax(0,1fr)_24px_minmax(0,1fr)] gap-x-0 sm:grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)]">
+   <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" viewBox={geometry?`0 0 ${geometry.width} ${geometry.height}`:'0 0 1 1'} preserveAspectRatio="none" fill="none">
+    {geometry&&Object.entries(matches).map(([key,definitionId])=>{
+     const i=Number(key),j=definitions.findIndex(item=>item.pairIndex===definitionId);
+     if(j<0||!geometry.starts[i]||!geometry.ends[j])return null;
+     const path=curve(geometry.starts[i],geometry.ends[j]);
+     return <path key={key} d={path} stroke={submitted?(i===definitionId?'#16a34a':'#e11d48'):'#3b82f6'} strokeWidth="2.5" strokeLinecap="round" className="transition-colors duration-200"/>;
+    })}
+    {geometry&&selectedTerm!==null&&!submitted&&geometry.starts[selectedTerm]&&pointer&&<path d={curve(geometry.starts[selectedTerm],pointer)} stroke="#2563eb" strokeWidth="2" strokeDasharray="3 5" strokeLinecap="round" opacity=".75"/>}
+   </svg>
+   <div className="relative z-10 col-start-1 space-y-1.5"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">CONCEPTOS</p>{pairs.map((pair,i)=>{
+    const linked=matches[i]!==undefined,good=matches[i]===i;
+    return <button ref={el=>{conceptRefs.current[i]=el;}} key={pair.term+i} type="button" disabled={submitted} aria-pressed={selectedTerm===i} onClick={()=>onSelectTerm(i)}
+     className={`relative flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium leading-4 transition sm:px-3 sm:text-[13px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):selectedTerm===i?'border-blue-600 bg-blue-50 text-slate-900 ring-2 ring-blue-100':linked?'border-blue-200 bg-blue-50/50 text-slate-900':'border-slate-200 bg-white text-slate-800 hover:border-blue-300'}`}>
+     <span>{pair.term}</span><span className={`absolute -right-1.5 top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-white ${submitted&&linked?(good?'bg-emerald-500':'bg-rose-500'):linked||selectedTerm===i?'bg-blue-500':'bg-slate-300'}`}/>
      </button>;
    })}</div>
-   <div aria-hidden="true" className="relative hidden lg:block"><svg className="absolute left-0 top-[27px] overflow-visible" width="68" height={pairs.length*rowHeight} viewBox={`0 0 68 ${pairs.length*rowHeight}`} fill="none">
-    {Object.entries(matches).map(([key,definitionId])=>{const i=Number(key),j=definitions.findIndex(d=>d.pairIndex===definitionId);if(j<0)return null;const good=i===definitionId;return <path key={key} d={`M0 ${rowY(i)-27} C34 ${rowY(i)-27} 34 ${rowY(j)-27} 68 ${rowY(j)-27}`} stroke={submitted?(good?'#16a34a':'#e11d48'):'#3b82f6'} strokeWidth="2.5" strokeLinecap="round"/>;})}
-    {!submitted&&selectedTerm!==null&&<path d={`M0 ${rowY(selectedTerm)-27} C22 ${rowY(selectedTerm)-27} 35 ${rowY(selectedTerm)-15} 56 ${rowY(selectedTerm)-15}`} stroke="#2563eb" strokeWidth="2" strokeDasharray="2 6" strokeLinecap="round"/>}
-   </svg></div>
-   <div className="space-y-1"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">DEFINICIONES</p>{definitions.map(({pair,pairIndex})=>{
-    const owner=definitionOwner(pairIndex),linked=owner!==undefined,good=linked&&Number(owner)===pairIndex;
-    return <button key={pairIndex} type="button" disabled={submitted||selectedTerm===null}
-     onClick={()=>selectedTerm!==null&&onMatch(selectedTerm,pairIndex)}
-     className={`flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left text-[11px] leading-[1.35] transition sm:px-3 sm:text-[12px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):linked?'border-blue-200 bg-blue-50/50 text-slate-900':selectedTerm!==null?'border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50':'border-slate-200 bg-white text-slate-700'}`}>
-     <span>{pair.definition}</span>{submitted&&linked?<span className="shrink-0 text-sm">{good?'✓':'×'}</span>:linked?<span className="size-2 shrink-0 rounded-full bg-blue-500"/>:null}
+   <div className="relative z-10 col-start-3 space-y-1.5"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">DEFINICIONES</p>{definitions.map(({pair,pairIndex},i)=>{
+    const owner=definitionOwner(pairIndex),linked=owner!==undefined,good=Number(owner)===pairIndex;
+    return <button ref={el=>{definitionRefs.current[i]=el;}} key={pairIndex} type="button" disabled={submitted||selectedTerm===null} onClick={()=>selectedTerm!==null&&onMatch(selectedTerm,pairIndex)}
+     className={`relative flex min-h-[48px] w-full items-center rounded-xl border px-2.5 py-2 text-left text-[11px] leading-[1.35] transition sm:px-3 sm:text-[12px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):linked?'border-blue-200 bg-blue-50/50 text-slate-900':selectedTerm!==null?'border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50':'border-slate-200 bg-white text-slate-700'}`}>
+     <span className={`absolute -left-1.5 top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-white ${submitted&&linked?(good?'bg-emerald-500':'bg-rose-500'):linked?'bg-blue-500':'bg-slate-300'}`}/><span>{pair.definition}</span>
     </button>;
    })}</div>
   </div>
