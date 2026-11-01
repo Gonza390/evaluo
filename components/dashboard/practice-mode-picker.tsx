@@ -21,10 +21,11 @@ const modes = [
   { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'from-[#F0F1F4] to-[#E3E6EB] text-[#596477]' },
 ] as const;
 
-export function PracticeModePicker({ materials, initialMaterialId, history, advancedPracticeEnabled = false }: {
+export function PracticeModePicker({ materials, initialMaterialId, history, historyLoadError = false, advancedPracticeEnabled = false }: {
   materials: Material[];
   initialMaterialId: string | null;
   history: PracticeHistoryEntry[];
+  historyLoadError?: boolean;
   advancedPracticeEnabled?: boolean;
 }) {
   const [materialId, setMaterialId] = useState(() => materials.find(m => m.id === initialMaterialId)?.id ?? materials[0]?.id ?? '');
@@ -131,7 +132,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
         )}
       </header>
 
-      <div className="mt-6 grid items-start gap-7 lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)] lg:gap-6 xl:gap-9">
+      <div className={`mt-6 grid items-start gap-7 lg:gap-6 xl:gap-9 ${material ? 'lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]' : ''}`}>
         <section aria-labelledby="practice-modes-title" className="min-w-0">
           {material ? (
             <>
@@ -175,8 +176,9 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
             </div>
           )}
         </section>
-        <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material?.title} history={history}
-          onStartFlashcards={material ? () => { setSessionLength('rapido'); setSelectedMode('Flashcards'); } : undefined} />
+        {material && <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material.title} history={history}
+          historyLoadError={historyLoadError}
+          onStartFlashcards={() => { setSessionLength('rapido'); setSelectedMode('Flashcards'); }} />}
       </div>
     </main>
   );
