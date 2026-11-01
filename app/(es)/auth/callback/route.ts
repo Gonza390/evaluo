@@ -125,20 +125,6 @@ export async function GET(request: Request) {
         updated_at: new Date().toISOString(),
       });
 
-      if ((isNewUser || qaAccount) && nextPath === '/dashboard') {
-        const { count: materialCount, error: materialCountError } = await supabase
-          .from('student_materials')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        if (!materialCountError && (materialCount ?? 0) === 0) {
-          return redirectWithSessionCookies(
-            `${requestUrl.origin}/dashboard?openUpload=1&source=signup-direct`,
-            sessionCookies
-          );
-        }
-      }
-
       return redirectWithSessionCookies(`${requestUrl.origin}${nextPath}`, sessionCookies);
     }
 
