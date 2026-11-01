@@ -16,11 +16,13 @@ export function PracticeFlashcardSession({ materialId, cards }: {
   const tries = useRef(0);
   const combined = useMemo(() => {
     const seen = new Set<string>();
+    const seenAnswers = new Set<string>();
     return [...cards, ...supplement].filter(card => {
       if (card.front.trim().length < 8 || card.back.trim().length < 20) return false;
       const key = normalizedAnswer(card.front);
-      if (seen.has(key)) return false;
-      seen.add(key);
+      const answer = normalizedAnswer(card.back);
+      if (seen.has(key) || seenAnswers.has(answer)) return false;
+      seen.add(key); seenAnswers.add(answer);
       return true;
     });
   }, [cards, supplement]);
@@ -42,7 +44,8 @@ export function PracticeFlashcardSession({ materialId, cards }: {
       const newCards: StudyFlashcard[] = (body.pairs as PracticePair[]).map(pair => ({
         front:'¿Qué significa “'+pair.term+'”?', back:pair.definition,level:'recordar',
         kind:'concept',reference:{
-          pageStart:null,pageEnd:null,sectionTitle:pair.chapterTitle ?? null,
+          pageStart:pair.pageStart ?? null,pageEnd:pair.pageStart ?? null,
+          sectionTitle:pair.chapterTitle ?? null,
           excerpt:pair.definition,
         },
       }));
