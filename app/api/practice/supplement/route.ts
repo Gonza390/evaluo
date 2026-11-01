@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       normalizedAnswer(f.text).includes(normalizedAnswer(concept.term)));
     if (!match) continue;
     fromModel.push({ term: concept.term, definition: concept.detail,
-      chapterTitle: match.sectionTitle });
+      chapterTitle: match.sectionTitle, pageStart: match.pageStart });
   }
   const local = selectPracticePairs(fromModel, 18);
   if (local.length >= 6) return NextResponse.json({ pairs: local, source: 'canonical' },
