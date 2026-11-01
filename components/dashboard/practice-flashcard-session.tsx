@@ -15,6 +15,26 @@ export function PracticeFlashcardSession({ materialId, cards }: {
   const [error, setError] = useState('');
   const busy = useRef(false);
   const tries = useRef(0);
+  const [saveError, setSaveError] = useState(false);
+  type SavedFlashcardResult = { correct: number; total: number; answers: { prompt: string; selectedAnswer: string; correctAnswer: string; correct: boolean }[] };
+  const latestAttempt = useRef<(SavedFlashcardResult & { sessionId: string; materialId: string; mode: 'flashcards' }) | null>(null);
+  const persistSession = useCallback(async (payload: NonNullable<typeof latestAttempt.current>) => {
+    try {
+      const response = await fetch('/api/practice/session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('save_failed');
+      setSaveError(false);
+    } catch {
+      setSaveError(true);
+    }
+  }, []);
+  const onSessionComplete = useCallback((result: SavedFlashcardResult) => {
+    const payload = { sessionId: crypto.randomUUID(), materialId, mode: 'flashcards' as const, ...result };
+    latestAttempt.current = payload;
+    void persistSession(payload);
+  }, [materialId, persistSession]);
   // Retain the original card indexes; stored recall answers must always map
   // back to the same source deck, even if some source cards fail quality QA.
   const combined = useMemo(() => [...cards, ...supplement], [cards, supplement]);
@@ -87,6 +107,11 @@ export function PracticeFlashcardSession({ materialId, cards }: {
     <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
     <StudentMaterialFlashcards key={combined.length} cards={combined}
       allowedCardIndices={approvedIndices} persistentCardCount={cards.length}
-      materialId={materialId}/>
+      materialId={materialId} onSessionComplete={onSessionComplete}/>
+    {saveError && <p role="alert" className="mt-3 text-sm text-amber-800">
+      No pudimos guardar esta sesión en Tus prácticas.
+      <button type="button" className="ml-2 font-medium underline"
+        onClick={() => { if (latestAttempt.current) void persistSession(latestAttempt.current); }}>Reintentar</button>
+    </p>}
   </main>;
 }
