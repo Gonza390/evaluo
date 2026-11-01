@@ -105,8 +105,10 @@ export function applyIndependentCaseReview(
         normalizedAnswer(judge.selectedAnswer) !== normalizedAnswer(q.answer) ||
         typeof judge.explanation !== 'string' ||
         judge.explanation.trim().length < 90 ||
+        !normalizedAnswer(judge.explanation).includes(normalizedAnswer(q.answer)) ||
         typeof judge.evidence !== 'string' ||
-        judge.evidence.trim().length < 28) return false;
+        judge.evidence.trim().length < 28 ||
+        !normalizedAnswer(judge.evidence).includes(normalizedAnswer(q.answer))) return false;
     const sourceMatches = sources.some(s =>
       (q.pageStart === null
         ? s.pageStart === null && s.sectionTitle === q.chapterTitle
