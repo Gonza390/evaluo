@@ -12,7 +12,7 @@ import { auditPracticeFlashcard } from '../lib/student-materials/practice-card-q
 const root=new URL('../',import.meta.url);
 const read=(path:string)=>readFileSync(new URL(path,root),'utf8');
 
-const source='La estrategia de penetración mantiene los productos actuales dentro de los mercados actuales y busca mejorar las ventas sin cambiar la oferta.';
+const source='La estrategia de penetración de mercado mantiene los productos actuales dentro de los mercados actuales y busca mejorar las ventas sin cambiar la oferta.';
 const snippet={pageStart:5,sectionTitle:null,text:'Conceptos comerciales. '+source};
 const q:PracticeQuestion={
   id:'v1',prompt:source,
