@@ -1,5 +1,6 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
 import { isAdministrativeConcept, isAdministrativeStudyDescription } from '@/lib/student-materials/nonacademic-metadata';
+import { isNonSequentialProcess, practiceQuestionQualityIssue } from '@/lib/student-materials/practice-question-quality';
 import { incompleteOpenAnswerReason } from '@/lib/student-materials/pedagogical-integrity';
 import type {
   CanonicalPedagogicalModel,
@@ -1345,7 +1346,8 @@ function buildCanonicalProcessQuestions(
   // Distinct process labels with the *same* steps cannot be graded fairly:
   // the scenario would support multiple answers. Reject such candidates,
   // rather than using a different label or a random correct-answer key.
-  const candidatesWithSteps = model.processes.filter((process) => process.steps.length >= 2);
+  const candidatesWithSteps = model.processes.filter((process) =>
+    process.steps.length >= 2 && !isNonSequentialProcess({title:process.title,steps:process.steps}));
   const sequenceFrequency = new Map<string, number>();
   for (const process of candidatesWithSteps) {
     const signature = normalizeForDedupe(process.steps.join(' → '));
@@ -1402,7 +1404,10 @@ function buildCanonicalProcessQuestions(
         ),
       };
     })
-    .filter((question): question is StudyQuestion => Boolean(question));
+    .filter((question): question is StudyQuestion => Boolean(question) &&
+      !practiceQuestionQualityIssue({
+        prompt:question!.prompt,answer:question!.answer,options:question!.options,kind:question!.kind,
+      }));
 }
 
 function isPhFormula(expression: string) {
