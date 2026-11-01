@@ -24,6 +24,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   aiAvailable?: boolean; isWord?: boolean;
 }) {
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
+  const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
   const pairs = useMemo(() => selectPracticePairs([...glossary, ...addedPairs]),
     [glossary, addedPairs]);
   // PDF exams keep the existing page-citation requirement. DOCX questions
@@ -34,7 +35,6 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     ...(mode !== 'casos' ? generatedOptions : []),
   ]), [questions, generatedOptions, mode, isWord]);
   const [generatedCases, setGeneratedCases] = useState<PracticeQuestion[]>([]);
-  const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
   const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState('');
