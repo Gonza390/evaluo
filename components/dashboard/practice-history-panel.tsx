@@ -76,7 +76,7 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
   if (historyLoadError) {
     return (
       <aside aria-labelledby="practice-history-title"
-        className="min-w-0 rounded-[18px] border border-[#E7EBF4] bg-white px-5 py-5 shadow-[0_5px_22px_rgba(15,27,61,0.035)]">
+        className={`${scrollbarStyles.scrollArea} min-w-0 rounded-[18px] border border-[#E7EBF4] bg-white px-5 py-5 shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain`}>
         <h2 id="practice-history-title" className="text-[18px] font-semibold text-[#0F1B3D]">
           Prácticas realizadas
         </h2>
@@ -99,7 +99,7 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
   if (sessions.length === 0) {
     return (
       <aside aria-labelledby="practice-history-title"
-        className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:sticky lg:top-5 lg:min-h-[min(630px,calc(100dvh-150px))]">
+        className={`${scrollbarStyles.scrollArea} flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain`}>
         <div className="shrink-0 px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
           <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
             Prácticas realizadas
@@ -171,7 +171,7 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
 
   return (
     <aside aria-labelledby="practice-history-title"
-      className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:sticky lg:top-5 lg:max-h-[min(710px,calc(100dvh-42px))]">
+      className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0">
       <div className="shrink-0 px-4 pt-4 sm:px-5 sm:pt-5">
         <div className="flex items-center justify-between gap-2">
           <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
