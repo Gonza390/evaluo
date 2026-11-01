@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, Clock3, History, Layers3, ListChecks, Network, RotateCcw, Timer, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
 
@@ -57,29 +57,13 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
   historyLoadError?: boolean;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState('all');
-  const [errorsOnly, setErrorsOnly] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const now = useMemo(() => new Date(), []);
   const sessions = useMemo(() => history.filter(item => item.materialId === materialId), [history, materialId]);
-  const modeCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    sessions.forEach(item => { counts[item.mode] = (counts[item.mode] ?? 0) + 1; });
-    return counts;
-  }, [sessions]);
-  const selected = useMemo(() => sessions.filter(item =>
-    (mode === 'all' || item.mode === mode) && (!errorsOnly || item.correct < item.total)
-  ), [sessions, mode, errorsOnly]);
-  const visible = showAll ? selected : selected.slice(0, 12);
+  const visible = showAll ? sessions : sessions.slice(0, 12);
   const totalToReview = sessions.reduce((sum, item) => sum + item.total - item.correct, 0);
   const averageScore = average(sessions);
-  const recent = [...sessions].reverse().slice(-8);
-  // Comparar bloques independientes. Con menos de ocho sesiones no existe
-  // un período anterior comparable: mostrar solo las barras observadas.
-  const previousFour = sessions.length >= 8 ? average(sessions.slice(4, 8)) : null;
-  const lastFour = sessions.length >= 8 ? average(sessions.slice(0, 4)) : null;
-  const change = previousFour !== null && lastFour !== null ? lastFour - previousFour : null;
   const groups: { key: string; items: PracticeHistoryEntry[] }[] = [];
   for (const entry of visible) {
     const key = dateLabel(entry.completedAt, now);
@@ -87,7 +71,6 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
     if (last?.key === key) last.items.push(entry);
     else groups.push({ key, items: [entry] });
   }
-  const hasErrors = sessions.some(item => item.correct < item.total);
 
   // Diferenciar una consulta fallida de un usuario que todavía no practicó.
   if (historyLoadError) {
@@ -170,9 +153,9 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E4F8EE] text-[#12A05F]">
-                <TrendingUp className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
+                <History className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
-              <p className="text-[11px] leading-4 text-[#344054]">Cómo vas mejorando de una a la otra</p>
+              <p className="text-[11px] leading-4 text-[#344054]">Tus resultados, ordenados por fecha</p>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#F0E9FD] text-[#7A3FE0]">
@@ -213,49 +196,9 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
             <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#0F1B3D]">{totalToReview}</p>
           </div>
         </div>
-        {sessions.length >= 2 && (
-          <div className="mt-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[10px] text-slate-500">Evolución</p>
-              <p className={`mt-1 text-[11px] font-medium ${change !== null && change > 0 ? 'text-emerald-700' : 'text-slate-600'}`}>
-                {change === null ? 'Tus resultados recientes' : change === 0 ? 'Sin cambios en las últimas 4' :
-                  `${change > 0 ? '+' : ''}${change} puntos vs. las 4 anteriores`}
-              </p>
-            </div>
-            <div className="flex h-[36px] shrink-0 items-end gap-[4px]" role="img"
-              aria-label={`Aciertos de las últimas ${recent.length} prácticas, de más antigua a más reciente`}>
-              {recent.map((item, index) => (
-                <span key={item.id} className={`w-[8px] rounded-t-[3px] ${index === recent.length - 1 ? 'bg-[#4F5DFF]' : 'bg-[#CDD6F6]'}`}
-                  style={{ height: `${Math.max(4, Math.round(percentOf(item) * 0.34))}px` }} />
-              ))}
-            </div>
-          </div>
-        )}
-        {hasErrors && (
-          <button type="button" onClick={() => { setMode('all'); setErrorsOnly(value => !value); setExpandedId(null); setShowAll(false); }}
-            aria-pressed={errorsOnly}
-            className="mt-4 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-3 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-            <RotateCcw className="size-3.5" aria-hidden="true"/>
-            {errorsOnly ? 'Mostrar todas las prácticas' : 'Ver prácticas con errores'}
-          </button>
-        )}
-        <div className="-mx-4 mt-4 flex gap-1.5 overflow-x-auto px-4 pb-3 sm:-mx-5 sm:px-5" role="group" aria-label="Filtrar por modalidad">
-          <button type="button" onClick={() => { setMode('all'); setExpandedId(null); setShowAll(false); }}
-            aria-pressed={mode === 'all'}
-            className={`min-h-8 shrink-0 rounded-full border px-3 text-[11px] font-medium ${mode === 'all' ? 'border-[#0F1B3D] bg-[#0F1B3D] text-white' : 'border-[#E7EBF4] bg-white text-slate-600 hover:border-slate-300'}`}>
-            Todas · {sessions.length}
-          </button>
-          {Object.keys(modeCounts).sort((a,b) => (modeLabels[a] ?? a).localeCompare(modeLabels[b] ?? b, 'es')).map(key => (
-            <button key={key} type="button" aria-pressed={mode === key}
-              onClick={() => { setMode(key); setExpandedId(null); setShowAll(false); }}
-              className={`min-h-8 shrink-0 rounded-full border px-3 text-[11px] font-medium ${mode === key ? 'border-[#0F1B3D] bg-[#0F1B3D] text-white' : 'border-[#E7EBF4] bg-white text-slate-600 hover:border-slate-300'}`}>
-              {modeLabels[key] ?? key} · {modeCounts[key]}
-            </button>
-          ))}
-        </div>
       </div>
       <div className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overscroll-contain`}>
-        {selected.length === 0 ? (
+        {sessions.length === 0 ? (
           <div className="flex flex-col items-center px-2 py-9 text-center">
             <History className="size-7 text-[#99A7BD]" aria-hidden="true"/>
             <p className="mt-3 text-[12px] font-medium text-[#0F1B3D]">
@@ -343,13 +286,13 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
                 </div>
               </div>
             ))}
-            {selected.length > visible.length && (
+            {sessions.length > visible.length && (
               <button type="button" onClick={() => setShowAll(true)}
                 className="mt-3 flex min-h-9 items-center gap-1 text-[11px] font-medium text-[#2563EB] hover:underline">
-                Ver todas ({selected.length}) <ChevronRight className="size-3" aria-hidden="true"/>
+                Ver todas ({sessions.length}) <ChevronRight className="size-3" aria-hidden="true"/>
               </button>
             )}
-            {showAll && selected.length > 12 && <button type="button" onClick={() => setShowAll(false)}
+            {showAll && sessions.length > 12 && <button type="button" onClick={() => setShowAll(false)}
               className="mt-2 text-[11px] font-medium text-slate-500 hover:underline">Ver menos</button>}
           </>
         )}
