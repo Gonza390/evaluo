@@ -79,9 +79,9 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
     </button>;
    })}</div>
   </div>
-  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+  <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
    <p className="text-[12px] text-slate-600" aria-live="polite">{submitted?`${correct} de ${pairs.length} asociaciones correctas.`:selectedTerm===null?'Elegí un concepto y después su definición.':`Tocá la definición de «${pairs[selectedTerm]?.term??''}».`}</p>
-   <div className="flex items-center gap-2"><Link href="/dashboard/practicar" className="inline-flex min-h-10 items-center rounded-xl px-3 text-[13px] font-medium text-slate-600">Salir</Link>
+   <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end"><Link href="/dashboard/practicar" className="inline-flex min-h-10 items-center rounded-xl px-3 text-[13px] font-medium text-slate-600">Salir</Link>
     {!submitted?<button type="button" disabled={joined!==pairs.length} onClick={()=>setSubmitted(true)} className="min-h-10 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white disabled:opacity-40">Terminar</button>:<button type="button" onClick={onFinish} className="min-h-10 rounded-xl bg-blue-600 px-5 text-[13px] font-medium text-white">Ver resultados</button>}
    </div>
   </div>
