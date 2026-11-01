@@ -208,7 +208,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     finally {pairBusy.current=false;setPairLoading(false);}
   },[materialId,mode,pairs]);
   useEffect(()=>{
-    if (!['unir','completar','mixto'].includes(mode) || pairs.length >= MIN_CASES_PER_PRACTICE ||
+    const neededPairs = mode === 'mixto' ? 2 : MIN_CASES_PER_PRACTICE;
+    if (!['unir','completar','mixto'].includes(mode) || pairs.length >= neededPairs ||
         pairLoading || pairBusy.current || pairError || pairAttempts.current >= 6) return;
     void generatePairs();
   },[mode,pairs.length,pairLoading,pairError,generatePairs]);
@@ -317,7 +318,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       {mode !== 'casos' && <button type="button" disabled={pairLoading || generating}
         onClick={() => {
           if (mode === 'unir' || mode === 'completar' ||
-              (mode === 'mixto' && pairs.length < 6)) {
+              (mode === 'mixto' && pairs.length < 2)) {
             pairAttempts.current=0;void generatePairs();
           } else {
             attempts.current=0;void generateNewCases();
