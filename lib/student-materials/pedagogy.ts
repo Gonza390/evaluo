@@ -1163,15 +1163,18 @@ function buildCanonicalRelationshipQuestions(
     .map((item, index): StudyQuestion => {
       const correct = truncateAtWord(item.description, 190);
       const candidates = relationships.filter((candidate) => candidate !== item);
-      const distractors = rankSemanticItems(
-        `${item.source} ${item.target} ${item.description}`,
-        item.pageReferences,
-        candidates,
-        (candidate) => `${candidate.source} ${candidate.target} ${candidate.description}`,
-        (candidate) => candidate.pageReferences,
-        3
-      ).map((candidate) => truncateAtWord(candidate.description, 190));
-      const options = placeCorrectOption(correct, distractors, (index + 1) % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={
+        option:correct,label:`${item.source} → ${item.target}`,evidence:item.description,
+      };
+      const distractors=chooseDocumentedDistractors(correctEvidence,rankSemanticItems(
+        `${item.source} ${item.target} ${item.description}`,item.pageReferences,candidates,
+        candidate=>`${candidate.source} ${candidate.target} ${candidate.description}`,
+        candidate=>candidate.pageReferences,Math.min(16,candidates.length)
+      ).map(candidate=>({
+        option:truncateAtWord(candidate.description,190),
+        label:`${candidate.source} → ${candidate.target}`,evidence:candidate.description,
+      })));
+      const options=placeCorrectOption(correct,distractors.map(d=>d.option),(index+1)%4).slice(0,4);
       // Reconocer una relación no demuestra transferencia a un caso nuevo.
       // Reservar "aplicar" para consignas con una tarea contextual verificable.
       const isCausal = CAUSAL_SIGNAL_PATTERN.test(item.description);
@@ -1197,7 +1200,7 @@ function buildCanonicalRelationshipQuestions(
                 : `¿Cuál es el vínculo entre “${item.source}” y “${item.target}”?`,
         options,
         answer: correct,
-        explanation: `Entre “${item.source}” y “${item.target}” se da esta relación: ${finishSentence(correct)}`,
+        explanation: explainDocumentedOptions(`${item.source} → ${item.target}`,correctEvidence,distractors),
         reference: referenceFromPages(
           item.pageReferences,
           `${item.source} ${item.target}`,
@@ -1274,11 +1277,13 @@ function buildCanonicalClassificationQuestions(
       // No convertir una lista de bullets pegados en un supuesto caso académico.
       const caseText = cleanLine(correct.detail.split(/[●★➔⇒]|\s{2,}(?=[A-ZÁÉÍÓÚ]{4,}\s*:)/u)[0] ?? '');
       if (caseText.length < 15 || caseText.length > 240) return null;
-      const labels = dedupeStrings(entries.map((entry) => entry.label));
-      const distractors = labels.filter(
-        (label) => normalizeForDedupe(label) !== normalizeForDedupe(correct.label)
-      );
-      const options = placeCorrectOption(correct.label, distractors, (index + 2) % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={
+        option:correct.label,label:correct.label,evidence:correct.detail,
+      };
+      const distractors=chooseDocumentedDistractors(correctEvidence,withEvidence
+        .filter(entry=>normalizeForDedupe(entry.label)!==normalizeForDedupe(correct.label))
+        .map(entry=>({option:entry.label,label:entry.label,evidence:entry.detail})));
+      const options=placeCorrectOption(correct.label,distractors.map(d=>d.option),(index+2)%4).slice(0,4);
       if (options.length < 3) return null;
 
       return {
@@ -1292,7 +1297,7 @@ function buildCanonicalClassificationQuestions(
           : `En el tema “${classification.title}”, ¿qué nombre recibe la categoría caracterizada por “${truncateAtWord(caseText, 130)}”?`,
         options,
         answer: correct.label,
-        explanation: `“${correct.label}” se identifica por esta característica: ${finishSentence(truncateAtWord(correct.detail, 190))}`,
+        explanation: explainDocumentedOptions(classification.title,correctEvidence,distractors),
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -1340,15 +1345,13 @@ function buildCanonicalProcessQuestions(
       if (scenarioSteps.length < 2) return null;
 
       const candidates = eligible.filter((candidate) => candidate !== process);
-      const distractors = rankSemanticItems(
-        `${process.title} ${process.steps.join(' ')}`,
-        process.pageReferences,
-        candidates,
-        (candidate) => `${candidate.title} ${candidate.steps.join(' ')}`,
-        (candidate) => candidate.pageReferences,
-        3
-      ).map((candidate) => candidate.title);
-      const options = placeCorrectOption(process.title, distractors, index % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={option:process.title,label:process.title,evidence:process.steps.join(' → ')};
+      const distractors=chooseDocumentedDistractors(correctEvidence,rankSemanticItems(
+        `${process.title} ${process.steps.join(' ')}`,process.pageReferences,candidates,
+        candidate=>`${candidate.title} ${candidate.steps.join(' ')}`,
+        candidate=>candidate.pageReferences,Math.min(16,candidates.length)
+      ).map(item=>({option:item.title,label:item.title,evidence:item.steps.join(' → ')})));
+      const options=placeCorrectOption(process.title,distractors.map(d=>d.option),index%4).slice(0,4);
       if (options.length < 3) return null;
 
       const listedSteps = scenarioSteps
@@ -1371,7 +1374,7 @@ function buildCanonicalProcessQuestions(
         prompt: prompts[index % prompts.length]!,
         options,
         answer: process.title,
-        explanation: `Es “${process.title}” porque las etapas siguen este orden: ${finishSentence(truncateAtWord(process.steps.join(' → '), 260))}`,
+        explanation: explainDocumentedOptions(process.title,correctEvidence,distractors),
         reference: referenceFromPages(
           process.pageReferences,
           process.title,
