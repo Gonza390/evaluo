@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { PracticeModePicker } from '@/components/dashboard/practice-mode-picker';
+import { getPracticeHistory } from '@/lib/student-materials/practice-history';
 
 export const metadata: Metadata = {
   title: 'Practicar | Evaluo',
@@ -34,6 +35,8 @@ export default async function PracticeHomePage() {
       .find((id): id is string => typeof id === 'string' && ids.has(id)) ?? null;
   }
 
+  const history = await getPracticeHistory(user.id, materials.map(material => material.id));
+
   return <PracticeModePicker materials={materials} initialMaterialId={lastOpenedMaterialId}
-    advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
+    history={history} advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
 }
