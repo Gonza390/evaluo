@@ -43,7 +43,10 @@ assert.equal(bank.cases.length,3);
 assert.equal(sufficientPracticeBank(bank,'casos'),false,
   'Three recognition exercises cannot satisfy the minimum of six application cases.');
 assert.equal(sufficientPracticeBank(bank,'simulacro'),false);
-assert.equal(sufficientPracticeBank(bank,'unir',4),true);
+assert.equal(sufficientPracticeBank(bank,'unir',4),false);
+assert.equal(sufficientPracticeBank(bank,'unir',6),true);
+assert.equal(sufficientPracticeBank(bank,'completar',5),false);
+assert.equal(sufficientPracticeBank(bank,'completar',6),true);
 assert.equal(sufficientPracticeBank(bank,'unir',0),false);
 assert.equal(safePracticeBank(bank)?.questions.length,2);
 assert.equal(safePracticeBank({...bank,version:PRACTICE_BANK_VERSION-1}),null);
