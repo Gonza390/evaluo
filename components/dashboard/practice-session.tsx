@@ -66,6 +66,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [examStarted, setExamStarted] = useState(false);
   const [deadline, setDeadline] = useState<number | null>(null);
   const posted = useRef('');
+  const sessionIdRef = useRef<string | null>(null);
+  const [historySaveFailed, setHistorySaveFailed] = useState(false);
   const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, 6), [pairs, round]);
   const definitions = useMemo(() => rotate(
     exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })), exercisePairs.length > 1 ? 2 : 0,
@@ -134,17 +136,37 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     return () => clearInterval(timer);
   }, [mode, ready, finished, deadline, examStarted]);
 
-  useEffect(() => {
-    if (!finished || !ready) return;
+  const saveCompletedSession = () => {
+    if (!ready || !finished) return;
     const attempt = materialId + ':' + mode + ':' + round;
     if (posted.current === attempt) return;
     posted.current = attempt;
-    // Analytics-only score. The server intentionally does not treat this as verified mastery.
+    sessionIdRef.current ??= crypto.randomUUID();
+    const answers = mode === 'unir'
+      ? exercisePairs.map((pair, i) => ({
+          prompt: pair.term,
+          selectedAnswer: exercisePairs[matches[i]]?.definition ?? '',
+          correctAnswer: pair.definition,
+          correct: correctAt(i),
+        }))
+      : tasks.map((task, i) => ({
+          prompt: task.type === 'recall' ? task.pair.definition : task.question.prompt,
+          selectedAnswer: responses[i] ?? '',
+          correctAnswer: task.type === 'recall' ? task.pair.term : task.question.answer,
+          correct: correctAt(i),
+        }));
     void fetch('/api/practice/session', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ materialId, mode, correct: score, total }),
-    }).catch(() => undefined);
-  // Only send on transition to completed; responses cannot change after completion.
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+      body: JSON.stringify({ sessionId: sessionIdRef.current, materialId, mode, correct: score, total, answers }),
+    }).then((response) => {
+      if (!response.ok) throw new Error('save_failed');
+      setHistorySaveFailed(false);
+    }).catch(() => { posted.current = ''; setHistorySaveFailed(true); });
+  };
+  useEffect(() => {
+    if (finished && ready) saveCompletedSession();
+    // One submission per finished round; scores are frozen at completion.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished]);
 
   const generateNewCases = useCallback(async () => {
@@ -315,6 +337,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     setRound(value => value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
     setReviewed([]); setMarkedForReview([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null); setExamStarted(false);
+    sessionIdRef.current = null;
+    setHistorySaveFailed(false);
   }
   function setResponse(value: string) {
     if (checked || finished) return;
@@ -378,6 +402,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           Volver al resumen
         </Link>
       </div>
+      {historySaveFailed && <div role="alert" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-amber-800">
+        No pudimos guardar esta práctica en el historial.
+        <button type="button" onClick={saveCompletedSession} className="font-medium underline">Reintentar</button>
+      </div>}
       <p className="mt-3 text-xs text-slate-500">Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.</p>
     </section>
   ) : null;
