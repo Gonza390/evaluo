@@ -198,19 +198,6 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
         </div>
       </div>
       <div className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overscroll-contain`}>
-        {sessions.length === 0 ? (
-          <div className="flex flex-col items-center px-2 py-9 text-center">
-            <History className="size-7 text-[#99A7BD]" aria-hidden="true"/>
-            <p className="mt-3 text-[12px] font-medium text-[#0F1B3D]">
-              {sessions.length === 0 ? 'Todavía no realizaste prácticas' : 'No hay prácticas con estos filtros'}
-            </p>
-            <p className="mt-1 max-w-[33ch] text-[11px] leading-5 text-slate-500">
-              {sessions.length === 0 ? 'Cuando termines una actividad, sus resultados aparecerán acá.' :
-                'Probá otra modalidad o mostrá todas las prácticas.'}
-            </p>
-          </div>
-        ) : (
-          <>
             {groups.map(group => (
               <div key={group.key}>
                 <h3 className="sticky top-0 z-10 bg-white py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
@@ -294,8 +281,6 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
             )}
             {showAll && sessions.length > 12 && <button type="button" onClick={() => setShowAll(false)}
               className="mt-2 text-[11px] font-medium text-slate-500 hover:underline">Ver menos</button>}
-          </>
-        )}
       </div>
       {sessions.length >= 500 && (
         <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 text-[10px] text-slate-500">
