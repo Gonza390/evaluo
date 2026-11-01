@@ -141,7 +141,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   );
 
   return (
-    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-7 lg:pb-5 lg:pt-6">
+    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-7 lg:pb-5 lg:pt-6`}>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
           <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
