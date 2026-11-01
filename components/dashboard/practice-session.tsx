@@ -166,7 +166,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   useEffect(() => {
     if (finished && ready) saveCompletedSession();
     // One submission per finished round; scores are frozen at completion.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Finishing a round triggers a single submission for that frozen attempt.
   }, [finished]);
 
   const generateNewCases = useCallback(async () => {
