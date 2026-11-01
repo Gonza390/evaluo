@@ -37,7 +37,7 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
     <section
       data-empty-study-space
       aria-label="Empezá a estudiar con Evaluo"
-      className="mx-auto flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden rounded-[22px] border border-[#e3eaf5] px-3 py-3 text-center shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:rounded-[28px] sm:px-6 sm:py-4"
+      className={`${styles.mobileLowered} mx-auto flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden rounded-[22px] border border-[#e3eaf5] px-3 py-3 text-center shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:rounded-[28px] sm:px-6 sm:py-4`}
       style={{ background: 'linear-gradient(180deg, #eef4ff 0%, #ffffff 85%)' }}
     >
       <Image
