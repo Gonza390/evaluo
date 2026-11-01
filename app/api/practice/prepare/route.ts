@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isPracticeUuid } from '@/lib/student-materials/practice-request-validation';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit } from '@/lib/rate-limit';
@@ -54,7 +55,6 @@ const docxFeedbackSchema = {
 // Only source-backed existing materials are read. No upload jobs or study artifacts are regenerated.
 // The AI flag is OFF by default, to prevent unplanned usage on shared Free infrastructure.
 const allowAi = () => process.env.PRACTICE_PEDAGOGICAL_AI_ENABLED === '1';
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type UntypedAdmin = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- additive table absent from generated Database until the isolated migration is applied
   from: (table: string) => any;
@@ -222,7 +222,7 @@ export async function POST(request: Request) {
   let body: unknown;
   try {body=await request.json();} catch {return NextResponse.json({error:'invalid_json'},{status:400});}
   const input=body&&typeof body==='object'&&!Array.isArray(body)?body as Record<string,unknown>:{};
-  if (typeof input.materialId!=='string'||!uuid.test(input.materialId)||!isPracticeMode(input.mode))
+  if (!isPracticeUuid(input.materialId)||!isPracticeMode(input.mode))
     return NextResponse.json({error:'invalid_request'},{status:400});
   const mode: OnDemandPracticeMode = input.mode;
   // The feature is off by default. Avoid even reading the large model/question
