@@ -789,7 +789,7 @@ export function PdfFirstUploadShell({
   return (
     <PdfUploadTriggerContext.Provider value={openUploadPicker}>
     <PdfDropUploadContext.Provider value={uploadDroppedFile}>
-    <div className="relative">
+    <div className="relative has-[[data-empty-study-space]]:h-full has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1">
       <input
         ref={pickerRef}
         type="file"
@@ -802,7 +802,7 @@ export function PdfFirstUploadShell({
         }}
       />
       <div
-        className={`transition duration-200 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
+        className={`transition duration-200 has-[[data-empty-study-space]]:h-full has-[[data-empty-study-space]]:min-h-0 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
         aria-hidden={open}
       >
         {children}
