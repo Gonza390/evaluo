@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 const read = (path: string) => readFileSync(path, 'utf8');
 const picker = read('components/dashboard/practice-mode-picker.tsx');
 const exerciseScreens = read('components/dashboard/practice-visual-screens.tsx');
+const practiceSession = read('components/dashboard/practice-session.tsx');
 const panel = read('components/dashboard/practice-history-panel.tsx');
 const page = read('app/(es)/dashboard/practicar/page.tsx');
 const history = read('lib/student-materials/practice-history.ts');
@@ -27,6 +28,12 @@ assert.match(exerciseScreens, /flex w-full items-center justify-between gap-3 sm
   'Salir y Terminar se ubican en extremos opuestos en móvil');
 assert.match(exerciseScreens, /onClick=\{\(\)=>setSubmitted\(true\)\}/,
   'Terminar mantiene su acción de comprobación');
+assert.match(practiceSession, /mode === 'opciones' \? \(/,
+  'Opciones tiene encabezado propio para PDF en la misma línea');
+assert.match(practiceSession, /min-w-0 flex-1 truncate text-\[12px\]/,
+  'Nombre de PDF truncado en pantallas pequeñas');
+assert.match(practiceSession, /mode === 'opciones' \? 'text-center ' : 'text-left '/,
+  'Verdadero y Falso centrados, sin cambiar las otras modalidades');
 assert.match(picker, /data-practice-dual-pane/, 'Practicar identifica su layout de dos paneles');
 assert.match(picker, /lg:h-\[calc\(100dvh-52px\)\]/, 'La altura desktop queda acotada al viewport');
 assert.match(picker, /lg:flex-1 lg:content-start lg:overflow-y-auto/, 'Las modalidades tienen scroll propio en escritorio');
