@@ -12,14 +12,14 @@ import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, 
 
 type Material = { id: string; title: string };
 const modes = [
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#E8F2FF] text-[#376CAD]' },
-  { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'bg-[#F0EBFC] text-[#745AB3]' },
-  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'bg-[#E9F5EE] text-[#35816A]' },
-  { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'bg-[#E2F2F7] text-[#41839B]' },
-  { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'bg-[#FFF2E6] text-[#AD713D]' },
-  { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'bg-[#F0EBFC] text-[#745AB3]' },
-  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'bg-[#E8F2FF] text-[#376CAD]' },
-  { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'bg-[#E2F2F7] text-[#41839B]' },
+  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
+  { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
+  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
+  { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
+  { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
+  { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
+  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
+  { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
 ] as const;
 
 export function PracticeModePicker({ materials, initialMaterialId, history, historyLoadError = false, advancedPracticeEnabled = false }: {
@@ -156,7 +156,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
             <select id="practice-material" value={materialId} onChange={event => {
               setMaterialId(event.target.value); setSelectedMode(null); setPrepareError('');
             }}
-              className="min-h-11 w-full appearance-none truncate rounded-xl border border-[#E2E8F2] bg-white py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] outline-none transition-colors focus-visible:border-[#2563EB] focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 sm:text-[13px]">
+              className="min-h-11 w-full appearance-none truncate border-0 bg-transparent py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] shadow-none outline-none transition-colors hover:text-[#2563EB] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[#2563EB]/25 sm:text-[13px]">
               {materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
             </select>
             <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -171,27 +171,21 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               <h2 id="practice-modes-title" className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D] lg:shrink-0">
                 Elegí cómo practicar
               </h2>
-              <div tabIndex={0} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
+              <div tabIndex={0} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} mt-3 grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
                 {modes.map(({ title, description, Icon, color }) => {
                   const supported = available(title);
                   const selected = selectedMode === title;
                   return (
                     <button key={title} type="button" aria-pressed={selected} disabled={!supported}
                       onClick={() => openReview(title)}
-                      className={`group flex min-h-[108px] min-w-0 flex-col items-start gap-2 rounded-[15px] border px-3 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 enabled:hover:-translate-y-[1px] enabled:hover:shadow-[0_5px_16px_rgba(15,27,61,0.05)] focus-visible:ring-2 focus-visible:ring-[#2563EB] disabled:cursor-not-allowed sm:min-h-[96px] sm:flex-row sm:gap-2.5 sm:px-3.5 sm:py-3 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
-                      <span className="flex size-[31px] shrink-0 items-center justify-center rounded-[10px] bg-white/60 sm:size-[34px]">
-                        <Icon className="size-[16px]" aria-hidden="true" strokeWidth={1.8} />
+                      className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
+                      <span className="flex w-full items-center justify-between">
+                        <Icon className="size-[16px]" aria-hidden="true" />
+                        {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                       </span>
-                      <span className="flex min-w-0 flex-1 flex-col sm:pt-0.5">
-                        <span className="flex min-w-0 items-center justify-between gap-1 text-[12px] font-semibold leading-[1.3] sm:text-[13px]">
-                          {title}
-                          {selected && <Check className="size-3.5 shrink-0 text-[#2563EB]" aria-hidden="true" />}
-                        </span>
-                        <span className="mt-1 line-clamp-2 text-[10px] leading-[1.4] opacity-85 sm:text-[11px]">
-                          {description}
-                        </span>
-                        {!supported && <span className="mt-1 text-[10px] font-medium opacity-70">Próximamente</span>}
-                      </span>
+                      <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
+                      <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
+                      {!supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">Próximamente</span> : null}
                     </button>
                   );
                 })}
@@ -208,7 +202,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
             </div>
           )}
         </section>
-        {material && <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material.title} history={history}
+        {material && <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
           historyLoadError={historyLoadError}
           onStartFlashcards={() => openReview('Flashcards')} />}
       </div>
