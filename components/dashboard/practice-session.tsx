@@ -9,11 +9,11 @@ import {
   selectPracticePairs, type PracticePair, type PracticeQuestion,
 } from '@/lib/student-materials/practice-modes';
 
-type Mode = 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro';
+type Mode = 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones';
 type Task = { type: 'question'; question: PracticeQuestion } | { type: 'recall'; pair: PracticePair };
 const title: Record<Mode, string> = {
   unir: 'Unir conceptos', completar: 'Completar', casos: 'Casos',
-  mixto: 'Práctica mixta', simulacro: 'Simulacro de examen',
+  mixto: 'Práctica mixta', simulacro: 'Simulacro de examen', opciones: 'Opciones',
 };
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
@@ -23,12 +23,18 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
   aiAvailable?: boolean; isWord?: boolean;
 }) {
-  const pairs = useMemo(() => selectPracticePairs(glossary), [glossary]);
+  const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
+  const pairs = useMemo(() => selectPracticePairs([...glossary, ...addedPairs]),
+    [glossary, addedPairs]);
   // PDF exams keep the existing page-citation requirement. DOCX questions
   // have section citations instead and must not be rejected for page=null.
-  const options = useMemo(() => qualifiedQuestions(questions.filter(question =>
-    mode !== 'simulacro' || isWord || question.pageStart !== null)), [questions, mode, isWord]);
+  const options = useMemo(() => qualifiedQuestions([
+    ...questions.filter(question => mode !== 'simulacro' || isWord ||
+      question.pageStart !== null),
+    ...(mode !== 'casos' ? generatedOptions : []),
+  ]), [questions, generatedOptions, mode, isWord]);
   const [generatedCases, setGeneratedCases] = useState<PracticeQuestion[]>([]);
+  const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
   const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState('');
@@ -48,7 +54,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [examStarted, setExamStarted] = useState(false);
   const [deadline, setDeadline] = useState<number | null>(null);
   const posted = useRef('');
-  const exercisePairs = useMemo(() => rotate(pairs, round * 5).slice(0, 5), [pairs, round]);
+  const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, 6), [pairs, round]);
   const definitions = useMemo(() => rotate(
     exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })), exercisePairs.length > 1 ? 2 : 0,
   ), [exercisePairs]);
@@ -61,6 +67,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       return rotate(contexts, round * 5).slice(0, 8).map(question => ({ type: 'question' as const, question }));
     if (mode === 'simulacro')
       return balancedQuestions(options, 10, round).map(question => ({ type: 'question' as const, question }));
+    if (mode === 'opciones')
+      return balancedQuestions(options, 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
     const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
@@ -69,8 +77,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }, [mode, pairs, options, contexts, round]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
-  const ready = mode === 'unir' ? exercisePairs.length >= 3 : mode === 'casos' ? contexts.length >= MIN_CASES_PER_PRACTICE :
-    mode === 'completar' ? tasks.length >= 3 : tasks.length >= 4;
+  const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
+    mode === 'casos' ? contexts.length >= MIN_CASES_PER_PRACTICE :
+    mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
+    mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 :
+    tasks.length >= MIN_CASES_PER_PRACTICE;
   const correctAt = (index: number) => {
     if (mode === 'unir') return matches[index] === index;
     const item = tasks[index];
@@ -145,23 +156,63 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           : 'No pudimos generar más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.');
         return;
       }
-      setGeneratedCases(previous => distinctApplicationCases([
-        ...previous, ...(body.cases as PracticeQuestion[]),
-      ]));
+      const incoming = body.cases as PracticeQuestion[];
+      if (mode === 'casos') {
+        setGeneratedCases(previous => distinctApplicationCases([
+          ...previous, ...incoming,
+        ]));
+      } else {
+        setGeneratedOptions(previous => qualifiedQuestions([...previous, ...incoming]));
+      }
     } catch {
       setGenerationError('No pudimos conectarnos para generar los casos. Podés reintentar.');
     } finally {
       generatingRequest.current = false;
       setGenerating(false);
     }
-  }, [materialId, contexts]);
+  }, [materialId, contexts, options, mode]);
   // The student enters an actual six-case session only when enough verified
   // applications exist. Try again with fresh source snippets if QA rejects any.
   useEffect(() => {
-    if (mode !== 'casos' || !aiAvailable || contexts.length >= MIN_CASES_PER_PRACTICE ||
-        generating || generationError || attempts.current >= 6 || generatingRequest.current) return;
+    const needsMore = mode === 'casos'
+      ? contexts.length < MIN_CASES_PER_PRACTICE
+      : mode === 'mixto' ? options.length < 4
+      : mode === 'simulacro' || mode === 'opciones'
+        ? options.length < MIN_CASES_PER_PRACTICE : false;
+    if (!aiAvailable || !needsMore || generating || generationError ||
+        attempts.current >= 6 || generatingRequest.current) return;
     void generateNewCases();
-  }, [mode, aiAvailable, contexts.length, generating, generationError, generateNewCases]);
+  }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases]);
+  const [pairLoading, setPairLoading] = useState(false);
+  const [pairError, setPairError] = useState('');
+  const pairBusy = useRef(false);
+  const pairAttempts = useRef(0);
+  const generatePairs = useCallback(async () => {
+    if (pairBusy.current || pairAttempts.current >= 6) return;
+    pairBusy.current=true;pairAttempts.current++;
+    setPairLoading(true);setPairError('');
+    try {
+      const response = await fetch('/api/practice/supplement', {
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({materialId,mode,round:pairAttempts.current-1,
+          excludedTerms:pairs.map(p=>p.term)}),signal:AbortSignal.timeout(65000),
+      });
+      const body:unknown = await response.json();
+      if (!response.ok || !body || typeof body !== 'object' ||
+          !('pairs' in body) || !Array.isArray(body.pairs)) throw new Error('invalid');
+      const fresh = selectPracticePairs([...(body.pairs as PracticePair[])]).filter(
+        next=>!pairs.some(existing=>existing.term.toLowerCase()===next.term.toLowerCase()));
+      if (!fresh.length) setPairError('No encontramos otros conceptos independientes y verificables en este material.');
+      else setAddedPairs(previous=>[...previous,...fresh]);
+    } catch {setPairError('No pudimos completar seis conceptos confiables. Podés reintentar.');}
+    finally {pairBusy.current=false;setPairLoading(false);}
+  },[materialId,mode,pairs]);
+  useEffect(()=>{
+    if (!['unir','completar','mixto'].includes(mode) || pairs.length >= MIN_CASES_PER_PRACTICE ||
+        pairLoading || pairBusy.current || pairError || pairAttempts.current >= 6) return;
+    void generatePairs();
+  },[mode,pairs.length,pairLoading,pairError,generatePairs]);
+
   const aiCaseButton = mode === 'casos' && aiAvailable && (!ready || finished) ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
@@ -261,6 +312,20 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </p> : <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
         No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>}
       {aiCaseButton}
+      {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">Preparando conceptos del material…</p>}
+      {pairError && <p role="status" className="mt-3 text-sm text-amber-800">{pairError}</p>}
+      {mode !== 'casos' && <button type="button" disabled={pairLoading || generating}
+        onClick={() => {
+          if (mode === 'unir' || mode === 'completar' ||
+              (mode === 'mixto' && pairs.length < 6)) {
+            pairAttempts.current=0;void generatePairs();
+          } else {
+            attempts.current=0;void generateNewCases();
+          }
+        }}
+        className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-sm text-blue-700">
+        {pairLoading || generating ? 'Preparando práctica…' : 'Reintentar completar seis ejercicios'}
+      </button>}
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
         Practicar con opciones
       </Link>
