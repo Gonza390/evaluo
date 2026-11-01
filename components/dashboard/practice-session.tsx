@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
@@ -358,6 +359,18 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <p className="mt-3 text-xs text-slate-500">Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.</p>
     </section>
   ) : null;
+
+  const [revealPractice,setRevealPractice]=useState(false);
+  useEffect(()=>{
+    if(!ready){setRevealPractice(false);return;}
+    const timer=window.setTimeout(()=>setRevealPractice(true),360);
+    return()=>window.clearTimeout(timer);
+  },[ready]);
+  const pendingPreparation=!ready && !generationError && !pairError && !trueFalseError &&
+    (generating || pairLoading || trueFalseLoading ||
+      (aiAvailable && ['casos','mixto','simulacro','opciones','unir','completar'].includes(mode)));
+  if (!finished && (pendingPreparation || (ready && !revealPractice)))
+    return <PracticePreparing mode={mode} ready={ready} />;
 
   if (ready && !finished && mode === 'unir') return <MatchPracticeScreen
     materialTitle={materialTitle} pairs={exercisePairs} definitions={definitions}
