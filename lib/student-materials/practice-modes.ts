@@ -403,14 +403,20 @@ export function groundedPracticeExplanation(
   };
   const correct = findUnique(question.answer);
   if (!correct) return original;
-  const other = question.options
+  const others = question.options
     .filter(option => normalizedAnswer(option) !== normalizedAnswer(question.answer))
-    .map(findUnique)
-    .find((pair): pair is PracticePair => Boolean(pair) &&
-      normalizedAnswer(pair!.term) !== normalizedAnswer(correct.term));
-  if (!other) return original;
+    .map(findUnique);
+  // Never describe an unknown distractor as wrong without a source-backed
+  // meaning. A partial contrast could mask a second valid option.
+  if (!others.length || others.some(pair => !pair ||
+      normalizedAnswer(pair.term) === normalizedAnswer(correct.term))) return original;
+  const uniqueOthers = others as PracticePair[];
+  if (new Set(uniqueOthers.map(pair=>normalizedAnswer(pair.term))).size!==uniqueOthers.length)
+    return original;
   return 'La opción correcta corresponde a «' + correct.term +
     '»: ' + correct.definition.trim().replace(/[.!?]+$/u,'') +
-    '. No debe confundirse con «' + other.term +
-    '», que se refiere a ' + other.definition.trim().replace(/[.!?]+$/u,'') + '.';
+    '. Las demás alternativas pertenecen a conceptos diferentes: ' +
+    uniqueOthers.map(other => '«'+other.term+'» describe ' +
+      other.definition.trim().replace(/[.!?]+$/u,'')).join('; ') +
+    '. La consigna pide específicamente «'+correct.term+'».';
 }
