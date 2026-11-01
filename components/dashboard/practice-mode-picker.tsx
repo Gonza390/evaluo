@@ -188,10 +188,17 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
             </>
           ) : (
-            <div className="rounded-xl border border-[#E7EBF4] bg-slate-50 p-5 text-[13px] text-slate-600">
-              Todavía no tenés materiales listos para practicar.
-              <Link href="/dashboard" className="ml-1 font-medium text-[#2563EB] underline">Ir a Mi espacio</Link>
-            </div>
+            <section className="mx-auto flex min-h-[390px] max-w-[520px] flex-col items-center justify-center px-3 py-10 text-center sm:min-h-[450px]" aria-labelledby="empty-practice-title">
+              <div className="mb-5 flex size-[76px] items-center justify-center rounded-[24px] border border-[#E7EBF4] bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_8px_25px_rgba(15,27,61,0.05)]">
+                <BookOpen className="size-9" strokeWidth={1.6} aria-hidden="true" />
+              </div>
+              <h2 id="empty-practice-title" className="text-[22px] font-bold tracking-[-0.035em] text-[#0F1B3D] sm:text-[26px]">Tu próxima práctica empieza con un archivo</h2>
+              <p className="mt-3 max-w-[38ch] text-[14px] leading-6 text-[#64748B]">Subí tu PDF o documento Word y prepará actividades para poner a prueba lo que aprendiste.</p>
+              <Link href="/dashboard/materiales/subir" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-6 text-[14px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:w-auto">
+                <FileText className="size-[18px]" aria-hidden="true" />Subir material<ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <p className="mt-4 text-[12px] text-[#7F8AA3]">Cuando esté listo, vas a poder elegir cómo practicar.</p>
+            </section>
           )}
         </section>
         {material && <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
