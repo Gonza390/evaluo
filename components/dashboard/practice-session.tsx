@@ -547,17 +547,28 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </Link>
       </div>
     </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
-      <section className={`${leavingActivity?'practice-screen-leave':'practice-screen-enter'} mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7`}>
-        <p className="text-sm font-medium text-slate-900">Antes de comenzar</p>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Vas a resolver {total} preguntas {verifiedChapterCount >= 2 ? 'de diferentes temas identificados' : 'distribuidas por el material'}. Tenés 15 minutos.
-          Podés volver a preguntas anteriores, dejar respuestas sin completar y entregar antes.
-          No vas a ver las soluciones hasta finalizar.
-        </p>
-        <button type="button" onClick={() => transitionTo(()=>setExamStarted(true))}
-          className="mt-5 min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
-          Comenzar simulacro
-        </button>
+      <section className={`${leavingActivity?'practice-screen-leave':'practice-screen-enter'} mx-auto mt-4 w-full max-w-[920px] rounded-[22px] bg-white px-4 py-5 sm:border sm:border-[#E7EBF4] sm:px-10 sm:py-9 sm:shadow-[0_8px_28px_rgba(15,23,42,0.04)] lg:px-14`}>
+        <div className="mx-auto max-w-[650px] text-center">
+          <img src="/evi-pensando.svg" alt="" className="mx-auto mb-4 size-[92px] object-contain sm:size-[112px]" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F7EF] px-3 py-1 text-[12px] font-bold text-[#16774F]"><span aria-hidden="true">✓</span> Listo</span>
+          <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">Tu simulacro está listo</h1>
+          <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.</p>
+          <div className="mx-auto mt-5 flex min-w-0 max-w-full items-center gap-3 rounded-[14px] border border-[#E7EBF4] px-4 py-3 text-left sm:max-w-[440px]">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><span aria-hidden="true">▤</span></span>
+            <div className="min-w-0"><p className="text-[10px] font-bold tracking-[.08em] text-slate-500">MATERIAL</p><p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{materialTitle}</p></div>
+          </div>
+          <div className="mx-auto mt-5 divide-y divide-[#EEF1F6] rounded-[18px] border border-[#E7EBF4] px-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:max-w-[560px] sm:px-6">
+            {[
+              [`${total} preguntas`, verifiedChapterCount >= 2 ? 'De distintos temas de tu material.' : 'Preparadas a partir de tu material.', '❔'],
+              ['15 minutos', 'Podés entregar antes si terminás.', '◷'],
+              ['Sin soluciones hasta el final', 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
+            ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
+          </div>
+          <div className="mx-auto mt-6 flex max-w-[560px] flex-col gap-2">
+            <button type="button" onClick={() => transitionTo(()=>setExamStarted(true))} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8]">Comenzar simulacro</button>
+            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">Ahora no, volver a Practicar</Link>
+          </div>
+        </div>
       </section>
     ) : <section className="mt-6">
       {aiCaseButton}
