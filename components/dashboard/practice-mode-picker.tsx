@@ -31,6 +31,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   const [materialId, setMaterialId] = useState(() => materials.find(m => m.id === initialMaterialId)?.id ?? materials[0]?.id ?? '');
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
+  const [leavingReview, setLeavingReview] = useState(false);
   const [prepareError, setPrepareError] = useState('');
   const [sessionLength,setSessionLength] = useState<'rapido'|'completo'>('rapido');
   const router = useRouter();
@@ -48,32 +49,32 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   const href = selectedMode ? routes[selectedMode] ?? '#' : '#';
 
   async function startPractice() {
-    if (!selectedMode || !materialId || preparing || !available(selectedMode)) return;
+    if (!selectedMode || !materialId || preparing || leavingReview || !available(selectedMode)) return;
     const destination = href + '?repaso=' + sessionLength;
+    const requiresPreparation = advancedPracticeEnabled &&
+      !['Flashcards','Opciones','Unir conceptos','Completar','Casos'].includes(selectedMode);
+    const prepareMode = href.split('/').at(-1);
     setPrepareError('');
-    if (!advancedPracticeEnabled || selectedMode === 'Flashcards' || selectedMode === 'Opciones' ||
-        selectedMode === 'Unir conceptos' || selectedMode === 'Completar' || selectedMode === 'Casos') {
-      router.push(destination);
-      return;
-    }
+    setLeavingReview(true);
+    await new Promise<void>(resolve => window.setTimeout(resolve, 210));
     setPreparing(true);
-    try {
-      await fetch('/api/practice/prepare', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ materialId, mode: href.split('/').at(-1) }),
-        signal: AbortSignal.timeout(9000),
-      });
-    } catch {
-      // Una preparación avanzada fallida no impide empezar la práctica básica.
-    } finally {
-      setPreparing(false);
-      router.push(destination);
+    if (requiresPreparation) {
+      try {
+        await fetch('/api/practice/prepare', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ materialId, mode: prepareMode }),
+          signal: AbortSignal.timeout(9000),
+        });
+      } catch {
+        // Optional preparation cannot block the ordinary practice session.
+      }
     }
+    router.push(destination);
   }
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
   if (selectedMode && available(selectedMode)) return (
-    <main className="practice-screen-enter mx-auto flex w-full max-w-[880px] items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5">
+    <main className={`${leavingReview ? "practice-screen-leave" : "practice-screen-enter"} mx-auto flex w-full max-w-[880px]`} items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5">
       <div className="w-full max-w-[650px] text-center">
         <img src="/evi-pensando.svg" alt="Evi pensando"
           className="mx-auto mb-1.5 h-[56px] w-[56px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:mb-2 sm:h-[76px] sm:w-[76px]" />
@@ -111,8 +112,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
           })}
         </div>
         <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
-          <button type="button" onClick={()=>setSelectedMode(null)} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
-          <button type="button" onClick={()=>void startPractice()} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
+          <button type="button" onClick={()=>setSelectedMode(null)} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
+          <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
             Continuar <ArrowRight className="size-4"/>
           </button>
         </div>
