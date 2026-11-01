@@ -32,4 +32,10 @@ assert.match(cards, /data-flashcards-good className="justify-self-end/,
 assert.match(cards, /max-w-\[640px\] space-y-2\.5 pt-4 sm:pt-5/,
   'El contenido de Flashcards por tema baja ligeramente sin cambiar la tarjeta.');
 
+assert.match(cards, /flex w-full items-center justify-between gap-3/,
+  'Los botones de calificación se separan a extremos opuestos.');
+assert.match(cards, /min-w-\\[112px\\] shrink-0 rounded-lg border-red-200/,
+  'El botón de Mal permanece compacto.');
+assert.match(cards, /min-w-\\[112px\\] shrink-0 rounded-lg border-emerald-200/,
+  'El botón de Bien permanece compacto.');
 console.log('Flashcards general compact and visible smoke: OK.');
