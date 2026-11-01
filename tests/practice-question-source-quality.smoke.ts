@@ -4,7 +4,7 @@ import {qualifiedQuestions,balancedQuestions,type PracticeQuestion} from '../lib
 
 const question=(id:string,prompt:string,answer:string,kind:string):PracticeQuestion=>({
   id,prompt,answer,kind,level:'comprender',pageStart:9,
-  options:[answer,'Desarrollo de mercados','Proceso de delegación y liderazgo'],
+  options:[answer,'Desarrollo de mercados','Diversificación comercial'],
   explanation:'La respuesta es verificable con las definiciones del tema de estudio.',
 });
 const resources=question('resources','¿A qué proceso corresponde esta secuencia de acciones: “Objetivos y tareas a corto plazo” → “Programa rector” → “Desarrollo personal y continuo”?','Recursos para lograr unidad en el equipo','process');
