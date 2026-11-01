@@ -12,7 +12,7 @@ const keys = [
 ] as const;
 const previous = Object.fromEntries(keys.map(k => [k, process.env[k]]));
 const realFetch = globalThis.fetch;
-let requests: string[] = [];
+const requests: string[] = [];
 try {
   for (const key of keys) delete process.env[key];
   process.env.GEMINI_API_KEY = 'sandbox-fake-pdf-key';
