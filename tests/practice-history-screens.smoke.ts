@@ -20,9 +20,12 @@ assert.match(panel, /\/evi\/evi-animo\.svg/, 'Ilustración Evi real');
 assert.match(panel, /Todavía no practicaste/);
 assert.match(panel, /Empezar con Flashcards/);
 assert.match(panel, /Qué vas a ver acá/);
-assert.match(panel, /previousFour = sessions\.length >= 8/, 'La tendencia no compara muestras solapadas');
+assert.doesNotMatch(panel, /Evolución|previousFour|Filtrar por modalidad|Ver prácticas con errores/, 
+  'Historial simplificado sin tendencia, filtros ni CTA de errores');
+assert.match(panel, /groups\.map\(group => \(/, 'Se mantiene la lista de prácticas');
+assert.match(panel, /scrollbarStyles\.scrollArea/, 'La lista mantiene scroll con barra invisible');
 assert.match(panel, /router\.refresh\(\)/, 'Hay recuperación tras error');
-assert.match(panel, /selected\.length > visible\.length/, 'Historial largo tiene paginación');
+assert.match(panel, /sessions\.length > visible\.length/, 'Historial largo tiene paginación');
 assert.match(page, /historyLoadError=\{historyLoadError\}/, 'El error llega al panel');
 assert.match(history, /throw new Error\('practice_history_unavailable'\)/);
 assert.match(history, /history_session_id/, 'Los eventos antiguos y actuales no se duplican por heurística amplia');
