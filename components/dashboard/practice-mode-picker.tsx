@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, FileText, Layers3, ListChecks, Mic, Network, Timer, Zap } from 'lucide-react';
 
 type Material = { id: string; title: string };
@@ -57,6 +58,8 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
       router.push(href);
     }
   }
+
+  if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
   return (
     <main className="mx-auto w-full max-w-[780px] px-4 py-6 pb-24 sm:px-6 sm:py-9">
