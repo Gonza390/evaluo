@@ -48,7 +48,7 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
   const c=Math.max(14,Math.min(62,Math.abs(end.x-start.x)*.48));
   return `M ${start.x} ${start.y} C ${start.x+c} ${start.y} ${end.x-c} ${end.y} ${end.x} ${end.y}`;
  };
- return <main className="mx-auto w-full max-w-[920px] px-3 py-4 pb-12 sm:px-5 sm:py-5 lg:px-6">
+ return <main className="practice-step-enter mx-auto w-full max-w-[920px] px-3 py-4 pb-12 sm:px-5 sm:py-5 lg:px-6">
   <Header title="Unir conceptos" materialTitle={materialTitle} icon="match" progress={joined} total={pairs.length} accent="#3b82f6"/>
   <div ref={boardRef} onPointerMove={event=>{
    if(submitted||selectedTerm===null||!boardRef.current)return;
@@ -88,7 +88,7 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
  </main>;
 }
 export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,onSelect,onNext,onPrevious,onSkip,onGenerate,generating}:{materialTitle:string;question:CaseQuestion;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void;onGenerate:()=>void;generating:boolean}){
- return <main className="mx-auto w-full max-w-[860px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
+ return <main className="practice-step-enter mx-auto w-full max-w-[860px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
   <Header title="Casos" materialTitle={materialTitle} icon="case" progress={index} total={total} accent="#8b4fd1"/>
   <div className="grid items-start gap-4 lg:grid-cols-[1.14fr_1fr] lg:gap-6">
    <section className="rounded-2xl border border-violet-200 bg-[#f7f3fd] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-4"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold tracking-[.08em] text-violet-900">SITUACIÓN</span><span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-medium text-violet-800"><Sparkles size={14}/> Generado con IA</span></div><p className="whitespace-pre-line text-[13px] leading-[1.65] text-[#272238] sm:text-[14px]">{question.prompt}</p></section>
@@ -103,7 +103,7 @@ export function CompletePracticeScreen({materialTitle,definition,index,total,val
  React.useEffect(()=>setHint(false),[index]);
  const words=answer.trim().split(/\s+/).filter(Boolean).length;
  const initial=answer.trim().charAt(0).toLocaleUpperCase('es');
- return <main className="mx-auto w-full max-w-[860px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
+ return <main className="practice-step-enter mx-auto w-full max-w-[860px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
   <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
    <div className="min-w-0"><p className="mb-2 truncate text-xs text-slate-500">Practicar <span className="mx-1.5">/</span> {materialTitle}</p><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-[#fdf0df] text-[#b9792d]"><span className="text-lg font-semibold">__</span></span><h1 className="text-[19px] font-semibold tracking-[-.035em] text-slate-900 sm:text-[21px]">Completar</h1></div></div>
    <div className="w-full sm:w-[230px] sm:shrink-0"><p className="mb-2 text-right text-xs font-medium text-slate-700">Pregunta {index+1} de {total}</p><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#e8993a] transition-[width]" style={{width:`${total?(index+1)/total*100:0}%`}}/></div></div>
@@ -122,7 +122,7 @@ export function CompletePracticeScreen({materialTitle,definition,index,total,val
 export function MixedPracticeScreen({materialTitle,prompt,options,index,total,value,checked,correct,answer,explanation,onSelect,onConfirm,onSkip}:{materialTitle:string;prompt:string;options:string[];index:number;total:number;value:string;checked:boolean;correct:boolean;answer:string;explanation:string;onSelect:(s:string)=>void;onConfirm:()=>void;onSkip:()=>void}){
  const isBoolean=options.length===2&&options.every(v=>/^(verdadero|falso)$/i.test(v.trim()));
  const subtype=isBoolean?'Verdadero o falso':'Opción múltiple';
- return <main className="mx-auto w-full max-w-[860px] px-3 py-4 pb-12 sm:px-5 sm:py-5 lg:px-6">
+ return <main className="practice-step-enter mx-auto w-full max-w-[860px] px-3 py-4 pb-12 sm:px-5 sm:py-5 lg:px-6">
   <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
    <div className="min-w-0"><p className="mb-2 truncate text-xs text-slate-500">Practicar <span className="mx-1.5">/</span> {materialTitle}</p><div className="flex flex-wrap items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e6f6ef] text-[#2fb67c]"><Check size={18}/></span><h1 className="text-[19px] font-semibold tracking-[-.035em] text-slate-900 sm:text-[21px]">Mixto</h1><span className="rounded-full bg-[#e6f6ef] px-3 py-1.5 text-xs font-medium text-[#14634a]">{subtype}</span></div></div>
    <div className="w-full sm:w-[230px] sm:shrink-0"><p className="mb-2 text-right text-xs font-medium text-slate-700">Pregunta {index+1} de {total}</p><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#2fb67c] transition-[width]" style={{width:`${total?(index+1)/total*100:0}%`}}/></div></div>
