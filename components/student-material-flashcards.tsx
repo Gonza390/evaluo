@@ -310,8 +310,8 @@ export function StudentMaterialFlashcards({
           return;
         }
         // Mantener los cambios locales que pueden haber ocurrido mientras cargaba el servidor.
-        setRecallByCard((current) => ({ ...result.progress.recall, ...current }));
-        setVoteByCard((current) => ({ ...result.progress.votes, ...current }));
+        setRecallByCard((current) => ({ ...boundedProgress(result.progress.recall, persistenceLimit), ...current }));
+        setVoteByCard((current) => ({ ...boundedProgress(result.progress.votes, persistenceLimit), ...current }));
       })
       .catch(() => {
         if (active) setProgressSyncError(true);
@@ -322,7 +322,7 @@ export function StudentMaterialFlashcards({
     return () => {
       active = false;
     };
-  }, [demoMode, materialId]);
+  }, [demoMode, materialId, persistenceLimit]);
 
   useEffect(() => {
     if (demoMode || !hasLoadedProgress || !hasLoadedServer) return;
