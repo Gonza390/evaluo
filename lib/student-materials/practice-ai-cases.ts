@@ -96,9 +96,9 @@ export function applyIndependentCaseReview(
   const judgments = (review.judgments as unknown[])
     .filter((value):value is Record<string,unknown> =>
       Boolean(value) && typeof value === 'object' && !Array.isArray(value));
-  return cases.filter(q => {
+  return cases.flatMap(q => {
     const matches = judgments.filter(j => j.id === q.id);
-    if (matches.length !== 1) return false;
+    if (matches.length !== 1) return [];
     const judge = matches[0]!;
     if (judge.verdict !== 'supported' ||
         typeof judge.selectedAnswer !== 'string' ||
@@ -108,12 +108,33 @@ export function applyIndependentCaseReview(
         !normalizedAnswer(judge.explanation).includes(normalizedAnswer(q.answer)) ||
         typeof judge.evidence !== 'string' ||
         judge.evidence.trim().length < 28 ||
-        !normalizedAnswer(judge.evidence).includes(normalizedAnswer(q.answer))) return false;
+        !normalizedAnswer(judge.evidence).includes(normalizedAnswer(q.answer))) return [];
     const sourceMatches = sources.some(s =>
       (q.pageStart === null
         ? s.pageStart === null && s.sectionTitle === q.chapterTitle
         : s.pageStart === q.pageStart) &&
       normalizedAnswer(s.text).includes(normalizedAnswer(judge.evidence as string)));
-    return sourceMatches;
+    if (!sourceMatches || !Array.isArray(judge.alternatives)) return [];
+    const alternatives = judge.alternatives.filter((item:unknown):item is Record<string,unknown> =>
+      Boolean(item) && typeof item === 'object' && !Array.isArray(item));
+    const wrongOptions = q.options.filter(option => normalizedAnswer(option) !== normalizedAnswer(q.answer));
+    if (alternatives.length !== wrongOptions.length) return [];
+    const seen = new Set<string>();
+    const rejected: Array<{option:string,reason:string}> = [];
+    for (const item of alternatives) {
+      if (typeof item.option !== 'string' || typeof item.reason !== 'string' ||
+          item.verdict !== 'ruled_out' || item.reason.trim().length < 55) return [];
+      const key = normalizedAnswer(item.option);
+      if (seen.has(key) || !wrongOptions.some(option => normalizedAnswer(option) === key)) return [];
+      seen.add(key);
+      rejected.push({option:item.option,reason:item.reason.trim()});
+    }
+    if (rejected.length !== wrongOptions.length) return [];
+    return [{
+      ...q,
+      explanation: judge.explanation.trim() +
+        '\n\nPor qué no las otras opciones: ' +
+        rejected.map(item => '«' + item.option + '»: ' + item.reason).join(' · '),
+    }];
   });
 }
