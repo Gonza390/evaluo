@@ -7,8 +7,8 @@ import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-qu
 import { MIN_CASES_PER_PRACTICE, normalizedAnswer, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
-export function PracticeFlashcardSession({ materialId, cards }: {
-  materialId: string; cards: StudyFlashcard[];
+export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo' }: {
+  materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo';
 }) {
   const [supplement, setSupplement] = useState<StudyFlashcard[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,7 +106,7 @@ export function PracticeFlashcardSession({ materialId, cards }: {
   return <main className="mx-auto max-w-[960px] px-4 py-7">
     <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
     <StudentMaterialFlashcards key={combined.length} cards={combined}
-      allowedCardIndices={approvedIndices} persistentCardCount={cards.length}
+      allowedCardIndices={reviewLength === 'rapido' ? approvedIndices.slice(0, 6) : approvedIndices} persistentCardCount={cards.length}
       materialId={materialId} onSessionComplete={onSessionComplete}/>
     {saveError && <p role="alert" className="mt-3 text-sm text-amber-800">
       No pudimos guardar esta sesión en Tus prácticas.
