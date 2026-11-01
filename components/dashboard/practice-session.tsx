@@ -63,6 +63,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [reviewed, setReviewed] = useState<number[]>([]);
   const [markedForReview, setMarkedForReview] = useState<number[]>([]);
   const [finished, setFinished] = useState(false);
+  const [leavingActivity, setLeavingActivity] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
   const [examStarted, setExamStarted] = useState(false);
   const [deadline, setDeadline] = useState<number | null>(null);
@@ -341,6 +342,17 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       {generationError && <p role="status" className="mt-2 text-xs text-amber-800">{generationError}</p>}
     </div>
   ) : null;
+  function transitionTo(action:()=>void) {
+    if (leavingActivity) return;
+    setLeavingActivity(true);
+    window.setTimeout(()=>{
+      action();
+      setLeavingActivity(false);
+    },200);
+  }
+  function completeWithTransition() {
+    transitionTo(()=>setFinished(true));
+  }
   function anotherRound() {
     posted.current = '';
     setRound(value => value + 1);
@@ -356,7 +368,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   function reviewOrNext() {
     if (!checked && mode !== 'simulacro') { setReviewed(old => [...old, step]); return; }
     if (step < tasks.length - 1) { setStep(old => old + 1); return; }
-    setFinished(true);
+    completeWithTransition();
   }
   const fullReport = finished ? (
     <section className="practice-screen-enter mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
@@ -431,15 +443,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   if (!finished && (pendingPreparation || (ready && !revealPractice)))
     return <PracticePreparing mode={mode} ready={ready} />;
 
-  if (ready && !finished && mode === 'simulacro' && examStarted && current?.type === 'question') return <ExamPracticeScreen key={step}
+  if (ready && !finished && mode === 'simulacro' && examStarted && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><ExamPracticeScreen key={step}
     materialTitle={materialTitle} index={step} secondsLeft={secondsLeft}
     questions={tasks.filter((task):task is Extract<Task,{type:'question'}>=>task.type==='question').map(task=>({prompt:task.question.prompt,options:task.question.options}))}
     answers={responses} marked={markedForReview} onSelect={setResponse}
     onNavigate={setStep}
     onToggleMark={()=>setMarkedForReview(previous=>previous.includes(step)?previous.filter(i=>i!==step):[...previous,step])}
-    onSubmit={()=>setFinished(true)} />;
+    onSubmit={completeWithTransition} /></div>;
 
-  if (ready && !finished && mode === 'unir') return <MatchPracticeScreen
+  if (ready && !finished && mode === 'unir') return <div className={leavingActivity?'practice-screen-leave':''}><MatchPracticeScreen
     materialTitle={materialTitle} pairs={exercisePairs} definitions={definitions}
     selectedTerm={selectedTerm} onSelectTerm={setSelectedTerm} matches={matches}
     onMatch={(term,definition) => {
@@ -451,30 +463,30 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         return next;
       });
       setSelectedTerm(null);
-    }} onFinish={() => setFinished(true)} />;
-  if (ready && !finished && mode === 'mixto' && current?.type === 'question') return <MixedPracticeScreen key={step}
+    }} onFinish={completeWithTransition} /></div>;
+  if (ready && !finished && mode === 'mixto' && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><MixedPracticeScreen key={step}
     materialTitle={materialTitle} prompt={current.question.prompt} options={current.question.options}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.question.answer}
     explanation={groundedPracticeExplanation(current.question,pairs)}
     onSelect={setResponse} onConfirm={reviewOrNext}
-    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }} />;
-  if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <CompletePracticeScreen key={step}
+    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
+  if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <div className={leavingActivity?'practice-screen-leave':''}><CompletePracticeScreen key={step}
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.pair.term}
     explanation={checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.'}
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
-    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }} />;
-  if (ready && !finished && mode === 'casos' && current?.type === 'question') return <CasesPracticeScreen key={step}
+    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
+  if (ready && !finished && mode === 'casos' && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><CasesPracticeScreen key={step}
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} explanation={groundedPracticeExplanation(current.question,pairs)}
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
-    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }}
-    onGenerate={() => { void generateNewCases(); }} generating={generating} />;
+    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
+    onGenerate={() => { void generateNewCases(); }} generating={generating} /></div>;
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
@@ -525,14 +537,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </Link>
       </div>
     </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+      <section className={`${leavingActivity?'practice-screen-leave':'practice-screen-enter'} mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7`}>
         <p className="text-sm font-medium text-slate-900">Antes de comenzar</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Vas a resolver {total} preguntas {verifiedChapterCount >= 2 ? 'de diferentes temas identificados' : 'distribuidas por el material'}. Tenés 15 minutos.
           Podés volver a preguntas anteriores, dejar respuestas sin completar y entregar antes.
           No vas a ver las soluciones hasta finalizar.
         </p>
-        <button type="button" onClick={() => setExamStarted(true)}
+        <button type="button" onClick={() => transitionTo(()=>setExamStarted(true))}
           className="mt-5 min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
           Comenzar simulacro
         </button>
@@ -580,7 +592,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               </span>}
           </button>;
         })}</div>
-        <button type="button" disabled={answeredCount !== total} onClick={() => setFinished(true)}
+        <button type="button" disabled={answeredCount !== total} onClick={completeWithTransition}
           className="mt-5 min-h-11 w-full rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
           Corregir asociaciones
         </button>
@@ -636,7 +648,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
               {responses[step] ? 'Siguiente' : 'Omitir'}
             </button>}
-            <button type="button" onClick={() => setFinished(true)}
+            <button type="button" onClick={completeWithTransition}
               className={'min-h-11 rounded-xl border px-4 text-sm ' +
                 (step === total - 1 ? 'ml-auto bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700')}>
               Entregar examen
