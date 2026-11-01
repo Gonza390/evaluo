@@ -45,12 +45,15 @@ export async function getPracticeHistory(userId: string, allowedMaterialIds: str
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const newSessions = (admin as unknown as { from: (name: string) => any }).from('practice_mode_sessions')
     .select('id,material_id,mode,correct,total,answers,completed_at')
-    .eq('user_id', userId).order('completed_at', { ascending: false }).limit(100);
+    .eq('user_id', userId).in('material_id', allowedMaterialIds)
+    .order('completed_at', { ascending: false }).limit(500);
   const legacyEvents = admin.from('analytics_events')
     .select('id,metadata,created_at').eq('user_id', userId)
     .eq('event_name', 'practice_mode_session_completed')
-    .order('created_at', { ascending: false }).limit(100);
+    .order('created_at', { ascending: false }).limit(500);
   const [recent, legacy] = await Promise.all([newSessions, legacyEvents]);
+  // No presentar una pantalla "sin prácticas" cuando falló la consulta real.
+  if (recent.error) throw new Error('practice_history_unavailable');
   const saved: PracticeHistoryEntry[] = (recent.error ? [] : recent.data ?? []).flatMap((row: Record<string, unknown>) => {
     if (!isText(row.id) || !isText(row.material_id) || !allowed.has(row.material_id) ||
         !isText(row.mode) || !MODES.has(row.mode) || !isScore(row.correct, row.total) ||
@@ -69,9 +72,13 @@ export async function getPracticeHistory(userId: string, allowedMaterialIds: str
         !MODES.has(m.mode) || !isScore(m.correct, m.total)) return [];
     const when = Date.parse(event.created_at);
     // No duplicar el evento analítico de un intento ya guardado en la nueva tabla.
-    if (saved.some((row) => row.materialId === m.material_id && row.mode === m.mode &&
+    const storedId = m.history_session_id;
+    if (isText(storedId) && saved.some(row => row.id === storedId)) return [];
+    // Eventos anteriores a la inclusión de ID: comparar el instante de guardado,
+    // nunca fusionar resultados repetidos que se hicieron minutos después.
+    if (!isText(storedId) && saved.some((row) => row.materialId === m.material_id && row.mode === m.mode &&
         row.correct === m.correct && row.total === m.total &&
-        Math.abs(Date.parse(row.completedAt) - when) < 90_000)) return [];
+        Math.abs(Date.parse(row.completedAt) - when) < 5_000)) return [];
     return [{
       id: 'legacy-' + event.id, materialId: m.material_id, mode: m.mode,
       correct: m.correct, total: m.total as number,
@@ -80,5 +87,5 @@ export async function getPracticeHistory(userId: string, allowedMaterialIds: str
   });
   return [...saved, ...old]
     .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
-    .slice(0, 100);
+    .slice(0, 500);
 }
