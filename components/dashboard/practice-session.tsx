@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
+import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
   groundedPracticeExplanation,
@@ -75,7 +75,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     if (mode === 'simulacro')
       return balancedQuestions(options, 10, round).map(question => ({ type: 'question' as const, question }));
     if (mode === 'opciones')
-      return balancedQuestions(trueFalsePool, 8, round).map(question => ({ type: 'question' as const, question }));
+      return selectBalancedTrueFalse(trueFalsePool, 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
     const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
