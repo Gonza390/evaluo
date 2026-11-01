@@ -123,9 +123,13 @@ export default async function DashboardPage({
       : null;
 
     return (
-      <div className="animate-page-enter min-h-screen bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+      <div className={materials.length === 0
+        ? 'animate-page-enter flex h-full min-h-0 flex-col overflow-hidden bg-white px-3 py-2 sm:px-4 sm:py-3 lg:px-6'
+        : 'animate-page-enter min-h-screen bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5'}>
         <ReferralPortalDashboardShortcut />
-        <div className="mx-auto w-full max-w-[1240px]">
+        <div className={materials.length === 0
+          ? 'mx-auto flex min-h-0 w-full max-w-[1240px] flex-1 flex-col'
+          : 'mx-auto w-full max-w-[1240px]'}>
           {isQaAccount(user) ? (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[12.5px]">
               <span className="font-semibold text-indigo-900">Cuenta de pruebas de Evaluo</span>
