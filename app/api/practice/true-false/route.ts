@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isPracticeUuid } from '@/lib/student-materials/practice-request-validation';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
@@ -9,7 +10,6 @@ import {
 import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
 
 export const maxDuration = 60;
-const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const shape = (word: boolean) => ({
   type:'OBJECT',
   properties:{
@@ -63,7 +63,7 @@ async function handleVerifiedTrueFalse(request: Request) {
   }
   const input=raw&&typeof raw==='object'&&!Array.isArray(raw)
     ?raw as Record<string,unknown>:{};
-  if (typeof input.materialId!=='string'||!uuid.test(input.materialId)) {
+  if (!isPracticeUuid(input.materialId)) {
     return NextResponse.json({error:'invalid_request'},{status:400});
   }
   const round=Number.isInteger(input.round) ? Math.min(12,Math.max(0,Number(input.round))) : 0;
