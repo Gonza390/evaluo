@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  verifyGeneratedTrueFalse, verifiedTrueFalsePool, sufficientTrueFalse,
+  verifyGeneratedTrueFalse, verifiedTrueFalsePool, sufficientTrueFalse, selectBalancedTrueFalse,
 } from '../lib/student-materials/practice-true-false.ts';
 
 const correct = [
@@ -38,6 +38,17 @@ assert.equal(verified.filter(q=>q.answer==='Falso').length,3);
 assert.ok(verified.every(q=>q.options.join('/')==='Verdadero/Falso' &&
   q.kind==='true-false-source-backed'),'Opciones is NOT multiple choice.');
 assert.equal(sufficientTrueFalse(verified),true);
+const balanced = selectBalancedTrueFalse(verified);
+assert.equal(balanced.length,6);
+assert.equal(balanced.filter(q=>q.answer==='Verdadero').length,3);
+assert.equal(balanced.filter(q=>q.answer==='Falso').length,3);
+const longPool = [...verified, ...correct.slice(0,3).map((text,i) => ({
+ ...verified[i]!, id:'extra-'+i,
+ prompt:text+' El dato adicional corresponde a la clase de este semestre.',
+}))];
+const displayed = selectBalancedTrueFalse(longPool, 6);
+assert.equal(displayed.length,6);
+assert.ok(displayed.filter(q=>q.answer==='Falso').length >= 2);
 assert.equal(sufficientTrueFalse(verified.slice(0,5)),false);
 assert.equal(sufficientTrueFalse(verified.filter(q=>q.answer==='Verdadero')),false);
 assert.equal(verifiedTrueFalsePool(verified).length,6);
@@ -65,7 +76,7 @@ const session=file('components/dashboard/practice-session.tsx');
 const endpoint=file('app/api/practice/true-false/route.ts');
 const picker=file('components/dashboard/practice-mode-picker.tsx');
 const upload=file('lib/student-materials/processing-service.ts');
-assert.match(session,/mode === 'opciones'\s*\)?\s*return balancedQuestions\(trueFalsePool, 8, round\)/);
+assert.match(session,/mode === 'opciones'\s*\)?\s*return selectBalancedTrueFalse\(trueFalsePool, 8, round\)/);
 assert.match(session,/sufficientTrueFalse\(trueFalsePool, MIN_CASES_PER_PRACTICE\)/);
 assert.match(session,/fetch\('\/api\/practice\/true-false'/);
 assert.match(endpoint,/export async function POST\(/);
