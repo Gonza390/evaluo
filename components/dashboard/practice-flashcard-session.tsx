@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-quality';
 import { MIN_CASES_PER_PRACTICE, normalizedAnswer, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
@@ -14,18 +15,20 @@ export function PracticeFlashcardSession({ materialId, cards }: {
   const [error, setError] = useState('');
   const busy = useRef(false);
   const tries = useRef(0);
-  const combined = useMemo(() => {
-    const seen = new Set<string>();
+  // Retain the original card indexes; stored recall answers must always map
+  // back to the same source deck, even if some source cards fail quality QA.
+  const combined = useMemo(() => [...cards, ...supplement], [cards, supplement]);
+  const approvedIndices = useMemo(() => {
+    const seenPrompts = new Set<string>();
     const seenAnswers = new Set<string>();
-    return [...cards, ...supplement].filter(card => {
-      if (card.front.trim().length < 8 || card.back.trim().length < 20) return false;
-      const key = normalizedAnswer(card.front);
-      const answer = normalizedAnswer(card.back);
-      if (seen.has(key) || seenAnswers.has(answer)) return false;
-      seen.add(key); seenAnswers.add(answer);
-      return true;
+    return combined.flatMap((card, index) => {
+      const key = normalizedAnswer(card.front), answer = normalizedAnswer(card.back);
+      if (seenPrompts.has(key) || seenAnswers.has(answer) ||
+          !auditPracticeFlashcard(card).approved) return [];
+      seenPrompts.add(key); seenAnswers.add(answer);
+      return [index];
     });
-  }, [cards, supplement]);
+  }, [combined]);
   const fetchMore = useCallback(async () => {
     if (busy.current || tries.current >= 6) return;
     busy.current = true; tries.current++;
@@ -35,7 +38,7 @@ export function PracticeFlashcardSession({ materialId, cards }: {
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           materialId,mode:'flashcards',round:tries.current-1,
-          excludedTerms: combined.map(card => card.front.match(/“([^”]+)”/)?.[1] ?? '').filter(Boolean),
+          excludedTerms: combined.map(card => card.front.match(/[“"]([^”"]+)[”"]/)?.[1] ?? '').filter(Boolean),
         }), signal:AbortSignal.timeout(65000),
       });
       const body: unknown = await response.json();
@@ -50,7 +53,8 @@ export function PracticeFlashcardSession({ materialId, cards }: {
         },
       }));
       const known = new Set(combined.map(card=>normalizedAnswer(card.front)));
-      const fresh = newCards.filter(card=>!known.has(normalizedAnswer(card.front)));
+      const fresh = newCards.filter(card=>!known.has(normalizedAnswer(card.front)) &&
+        auditPracticeFlashcard(card).approved);
       if (!fresh.length) {
         setError('El documento no aporta suficientes tarjetas nuevas y verificables para completar seis.');
       } else setSupplement(old=>[...old,...fresh]);
@@ -61,17 +65,17 @@ export function PracticeFlashcardSession({ materialId, cards }: {
     }
   },[materialId,combined]);
   useEffect(()=>{
-    if (combined.length >= MIN_CASES_PER_PRACTICE || error || loading ||
+    if (approvedIndices.length >= MIN_CASES_PER_PRACTICE || error || loading ||
         busy.current || tries.current >= 6) return;
     void fetchMore();
-  },[combined.length,error,loading,fetchMore]);
+  },[approvedIndices.length,error,loading,fetchMore]);
 
-  if (combined.length < MIN_CASES_PER_PRACTICE) return (
+  if (approvedIndices.length < MIN_CASES_PER_PRACTICE) return (
     <main className="mx-auto max-w-[780px] px-4 py-7">
       <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
         <h1 className="text-lg font-medium text-slate-900">Preparando tus flashcards</h1>
-        <p className="mt-2 text-sm text-slate-600">{combined.length} de {MIN_CASES_PER_PRACTICE} tarjetas verificadas.</p>
+        <p className="mt-2 text-sm text-slate-600">{approvedIndices.length} de {MIN_CASES_PER_PRACTICE} tarjetas verificadas.</p>
         {loading ? <p className="mt-2 text-sm text-slate-500" role="status">Buscando conceptos del material…</p> : null}
         {error ? <p role="status" className="mt-2 text-sm text-amber-800">{error}</p> : null}
         {!loading ? <button onClick={() => {tries.current=0;void fetchMore();}}
@@ -81,6 +85,8 @@ export function PracticeFlashcardSession({ materialId, cards }: {
   );
   return <main className="mx-auto max-w-[960px] px-4 py-7">
     <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
-    <StudentMaterialFlashcards key={combined.length} cards={combined} materialId={materialId}/>
+    <StudentMaterialFlashcards key={combined.length} cards={combined}
+      allowedCardIndices={approvedIndices} persistentCardCount={cards.length}
+      materialId={materialId}/>
   </main>;
 }
