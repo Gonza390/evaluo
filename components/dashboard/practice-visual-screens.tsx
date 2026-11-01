@@ -54,8 +54,8 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
    if(submitted||selectedTerm===null||!boardRef.current)return;
    const rect=boardRef.current.getBoundingClientRect();
    setPointer({x:event.clientX-rect.left,y:event.clientY-rect.top});
-  }} onPointerLeave={()=>setPointer(null)} className="relative grid grid-cols-[minmax(0,1fr)_24px_minmax(0,1fr)] gap-x-0 sm:grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)]">
-   <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-visible" viewBox={geometry?`0 0 ${geometry.width} ${geometry.height}`:'0 0 1 1'} preserveAspectRatio="none" fill="none">
+  }} onPointerLeave={()=>setPointer(null)} className="relative isolate grid grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)] gap-x-0 sm:grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)]">
+   <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 h-full w-full overflow-hidden" viewBox={geometry?`0 0 ${geometry.width} ${geometry.height}`:'0 0 1 1'} preserveAspectRatio="none" fill="none">
     {geometry&&Object.entries(matches).map(([key,definitionId])=>{
      const i=Number(key),j=definitions.findIndex(item=>item.pairIndex===definitionId);
      if(j<0||!geometry.starts[i]||!geometry.ends[j])return null;
@@ -64,18 +64,18 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
     })}
     {geometry&&selectedTerm!==null&&!submitted&&geometry.starts[selectedTerm]&&pointer&&<path d={curve(geometry.starts[selectedTerm],pointer)} stroke="#2563eb" strokeWidth="2" strokeDasharray="3 5" strokeLinecap="round" opacity=".75"/>}
    </svg>
-   <div className="relative z-10 col-start-1 space-y-1.5"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">CONCEPTOS</p>{pairs.map((pair,i)=>{
+   <div className="relative z-10 col-start-1 min-w-0 space-y-2"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">CONCEPTOS</p>{pairs.map((pair,i)=>{
     const linked=matches[i]!==undefined,good=matches[i]===i;
     return <button ref={el=>{conceptRefs.current[i]=el;}} key={pair.term+i} type="button" disabled={submitted} aria-pressed={selectedTerm===i} onClick={()=>onSelectTerm(i)}
-     className={`relative flex min-h-[48px] w-full items-center justify-between gap-2 rounded-xl border px-2.5 py-2 text-left text-[12px] font-medium leading-4 transition sm:px-3 sm:text-[13px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):selectedTerm===i?'border-blue-600 bg-blue-50 text-slate-900 ring-2 ring-blue-100':linked?'border-blue-200 bg-blue-50/50 text-slate-900':'border-slate-200 bg-white text-slate-800 hover:border-blue-300'}`}>
-     <span>{pair.term}</span><span className={`absolute -right-1.5 top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-white ${submitted&&linked?(good?'bg-emerald-500':'bg-rose-500'):linked||selectedTerm===i?'bg-blue-500':'bg-slate-300'}`}/>
+     className={`relative flex min-h-[64px] min-w-0 w-full items-center justify-between gap-1 rounded-xl border px-2 py-2.5 text-left text-[11px] font-medium leading-[1.4] break-words [overflow-wrap:anywhere] sm:min-h-[56px] transition sm:px-3 sm:text-[13px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):selectedTerm===i?'border-blue-600 bg-blue-50 text-slate-900 ring-2 ring-blue-100':linked?'border-blue-200 bg-blue-50/50 text-slate-900':'border-slate-200 bg-white text-slate-800 hover:border-blue-300'}`}>
+     <span className="min-w-0">{pair.term}</span><span className={`absolute -right-1.5 top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-white ${submitted&&linked?(good?'bg-emerald-500':'bg-rose-500'):linked||selectedTerm===i?'bg-blue-500':'bg-slate-300'}`}/>
      </button>;
    })}</div>
-   <div className="relative z-10 col-start-3 space-y-1.5"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">DEFINICIONES</p>{definitions.map(({pair,pairIndex},i)=>{
+   <div className="relative z-10 col-start-3 min-w-0 space-y-2"><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">DEFINICIONES</p>{definitions.map(({pair,pairIndex},i)=>{
     const owner=definitionOwner(pairIndex),linked=owner!==undefined,good=Number(owner)===pairIndex;
     return <button ref={el=>{definitionRefs.current[i]=el;}} key={pairIndex} type="button" disabled={submitted||selectedTerm===null} onClick={()=>selectedTerm!==null&&onMatch(selectedTerm,pairIndex)}
-     className={`relative flex min-h-[48px] w-full items-center rounded-xl border px-2.5 py-2 text-left text-[11px] leading-[1.35] transition sm:px-3 sm:text-[12px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):linked?'border-blue-200 bg-blue-50/50 text-slate-900':selectedTerm!==null?'border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50':'border-slate-200 bg-white text-slate-700'}`}>
-     <span className={`absolute -left-1.5 top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-white ${submitted&&linked?(good?'bg-emerald-500':'bg-rose-500'):linked?'bg-blue-500':'bg-slate-300'}`}/><span>{pair.definition}</span>
+     className={`relative flex min-h-[64px] min-w-0 w-full items-center rounded-xl border px-2 py-2.5 text-left text-[11px] leading-[1.4] break-words [overflow-wrap:anywhere] sm:min-h-[56px] transition sm:px-3 sm:text-[12px] ${submitted&&linked?(good?'border-emerald-300 bg-emerald-50 text-emerald-900':'border-rose-300 bg-rose-50 text-rose-900'):linked?'border-blue-200 bg-blue-50/50 text-slate-900':selectedTerm!==null?'border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50':'border-slate-200 bg-white text-slate-700'}`}>
+     <span className={`absolute -left-1.5 top-1/2 size-2.5 -translate-y-1/2 rounded-full border-2 border-white ${submitted&&linked?(good?'bg-emerald-500':'bg-rose-500'):linked?'bg-blue-500':'bg-slate-300'}`}/><span className="min-w-0">{pair.definition}</span>
     </button>;
    })}</div>
   </div>
