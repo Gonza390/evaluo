@@ -62,3 +62,20 @@ export function CompletePracticeScreen({materialTitle,definition,index,total,val
   </div>
  </main>;
 }
+
+export function MixedPracticeScreen({materialTitle,prompt,options,index,total,value,checked,correct,answer,explanation,onSelect,onConfirm,onSkip}:{materialTitle:string;prompt:string;options:string[];index:number;total:number;value:string;checked:boolean;correct:boolean;answer:string;explanation:string;onSelect:(s:string)=>void;onConfirm:()=>void;onSkip:()=>void}){
+ const isBoolean=options.length===2&&options.every(v=>/^(verdadero|falso)$/i.test(v.trim()));
+ const subtype=isBoolean?'Verdadero o falso':'Opción múltiple';
+ return <main className="mx-auto w-full max-w-[1080px] px-4 py-6 pb-24 sm:px-6 sm:py-9 lg:px-10">
+  <header className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+   <div className="min-w-0"><p className="mb-3 truncate text-xs text-slate-500">Practicar <span className="mx-1.5">/</span> {materialTitle}</p><div className="flex flex-wrap items-center gap-3"><span className="flex size-9 items-center justify-center rounded-xl bg-[#e6f6ef] text-[#2fb67c]"><Check size={18}/></span><h1 className="text-[22px] font-semibold tracking-[-.035em] text-slate-900 sm:text-[25px]">Mixto</h1><span className="rounded-full bg-[#e6f6ef] px-3 py-1.5 text-xs font-medium text-[#14634a]">{subtype}</span></div></div>
+   <div className="w-full sm:w-[230px] sm:shrink-0"><p className="mb-2 text-right text-xs font-medium text-slate-700">Pregunta {index+1} de {total}</p><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#2fb67c] transition-[width]" style={{width:`${total?(index+1)/total*100:0}%`}}/></div></div>
+  </header>
+  <div className="mx-auto max-w-[720px] space-y-6">
+   <section className="rounded-[20px] border border-[#cdeadb] bg-[#f1faf6] px-5 py-8 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:px-10 sm:py-10"><p className="mb-4 text-[11px] font-semibold tracking-[.08em] text-[#14634a]">{isBoolean?'AFIRMACIÓN':'PREGUNTA'}</p><p className="text-[19px] font-medium leading-[1.55] text-[#1e1b2e] sm:text-[22px]">{prompt}</p></section>
+   <div className={isBoolean?'grid grid-cols-2 gap-3 sm:gap-4':'grid grid-cols-1 gap-3 sm:grid-cols-2'}>{options.map((option,i)=>{const selected=value===option;return <button key={i} type="button" aria-pressed={selected} disabled={checked} onClick={()=>onSelect(option)} className={`relative flex min-h-[90px] items-center justify-center gap-2 rounded-[18px] border px-3 py-4 text-[16px] font-semibold transition sm:min-h-[96px] sm:text-[19px] ${selected?'border-2 border-blue-600 bg-blue-50 text-slate-900 ring-4 ring-blue-100':'border-slate-200 bg-white text-slate-900 hover:border-blue-300'}`}><span className="text-[22px] font-medium">{isBoolean?(option.trim().toLowerCase()==='verdadero'?'✓':'×'):String.fromCharCode(65+i)}</span><span className="min-w-0 break-words">{option}</span><kbd className="absolute right-2 top-2 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500">{isBoolean?(option.toLowerCase()==='verdadero'?'V':'F'):String.fromCharCode(65+i)}</kbd></button>})}</div>
+   {checked&&<div role="status" className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6"><p className={correct?'font-medium text-emerald-700':'font-medium text-rose-700'}>{correct?'Bien resuelto':'Para reforzar'}</p>{!correct&&<p className="mt-1 text-slate-700">Respuesta: {answer}</p>}<p className="mt-1 text-slate-600">{explanation}</p></div>}
+   <div className="flex items-center justify-between gap-3"><button type="button" onClick={onSkip} className="min-h-11 rounded-xl px-3 text-sm font-medium text-slate-600">Saltar</button><button type="button" disabled={!checked&&!value} onClick={onConfirm} className="min-h-11 rounded-xl bg-blue-600 px-6 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-40">{checked?(index===total-1?'Ver resultados':'Siguiente'):'Confirmar'}</button></div>
+  </div>
+ </main>;
+}
