@@ -1358,12 +1358,41 @@ const denseQuestionBankModel: CanonicalPedagogicalModel = {
       pageReferences: [(i % 94) + 1],
     };
   }),
-  relationships: Array.from({ length: 90 }, (_, i) => ({
-    source: `Concepto ${i + 1}`,
-    target: `Concepto ${i + 2}`,
-    description: `El concepto ${i + 1} favorece la comprensión del concepto ${i + 2} mediante un análisis científico verificable.`,
-    pageReferences: [(i % 94) + 1],
-  })),
+  relationships: Array.from({ length: 90 }, (_, i) => {
+    // Model relationships also need distinct causal / conceptual evidence;
+    // adding a number to one shared sentence is not an educational contrast.
+    const relations = [
+      'la cooperación entre especies y la disponibilidad de nutrientes',
+      'el movimiento de las placas tectónicas y la formación de montañas',
+      'la migración de poblaciones y la urbanización de ciudades',
+      'la densidad poblacional y la propagación de agentes infecciosos',
+      'la alfabetización temprana y la comprensión de textos complejos',
+      'la inversión en infraestructura y el costo de transporte',
+      'la humedad atmosférica y la formación de nubes de tormenta',
+      'la calidad del sueño y la consolidación de recuerdos',
+      'la diversidad de cultivos y la resistencia a plagas agrícolas',
+      'el nivel de ruido ambiental y la concentración de estudiantes',
+      'la disponibilidad de agua dulce y la salud de humedales',
+      'la presión del mercado y la estrategia de precios comerciales',
+      'la erosión de suelos y la pérdida de cobertura vegetal',
+      'el acceso a bibliotecas y la frecuencia de lectura',
+      'el intercambio comercial y la especialización productiva',
+    ];
+    const relations2 = [
+      'debido al intercambio de recursos entre organismos',
+      'por medio de mediciones sísmicas y mapas geológicos',
+      'mediante registros censales de desplazamiento interno',
+      'a través del contacto cercano entre individuos',
+      'con ejercicios de lectura y análisis de vocabulario',
+      'cuando los tiempos de entrega modifican la producción',
+    ];
+    return {
+      source: `Concepto ${i + 1}`,
+      target: `Concepto ${i + 2}`,
+      description: `Se relacionan ${relations[i % relations.length]} ${relations2[Math.floor(i / relations.length) % relations2.length]}.`,
+      pageReferences: [(i % 94) + 1],
+    };
+  }),
   classifications: [],
   processes: [],
   formulas: [],
