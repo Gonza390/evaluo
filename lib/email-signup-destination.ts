@@ -20,6 +20,6 @@ export function getEmailSignupDestination(
     // La ruta inválida no debe bloquear el registro completado.
   }
 
-  // Mismo acceso al primer PDF que el callback de Google para cuentas nuevas.
-  return path === '/dashboard' ? '/dashboard?openUpload=1&source=signup-direct' : path;
+  // El registro termina en Mi espacio, sin abrir un popup de primer PDF.
+  return path;
 }
