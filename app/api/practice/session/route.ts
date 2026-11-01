@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 
-const MODES = new Set(['unir', 'completar', 'casos', 'mixto', 'simulacro']);
+const MODES = new Set(['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones']);
 export async function POST(request: Request) {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
