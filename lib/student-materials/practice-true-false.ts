@@ -121,3 +121,44 @@ export function selectBalancedTrueFalse(
     Math.max(0, limit - selected.length), round);
   return balancedQuestions([...selected, ...rest], limit, round);
 }
+
+
+/** Independent answer check. A literal quote proves provenance, not that a
+ * one-word alteration reverses the meaning. The second adjudication receives
+ * no answer key and must independently find a contradiction or entailment.
+ * Ambiguous statements fail closed. */
+export function applyIndependentTrueFalseReview(
+  questions: PracticeQuestion[],
+  review: unknown,
+  fragments: TrueFalseFragment[],
+): PracticeQuestion[] {
+  if (!review || typeof review !== 'object' || Array.isArray(review) ||
+      !('judgments' in review) || !Array.isArray(review.judgments)) return [];
+  const assessments = (review.judgments as unknown[])
+    .filter((value): value is Record<string,unknown> =>
+      Boolean(value) && typeof value === 'object' && !Array.isArray(value));
+  const result: PracticeQuestion[] = [];
+  for (const q of verifiedTrueFalsePool(questions)) {
+    const matches = assessments.filter(item =>
+      typeof item.statement === 'string' &&
+      normalizedAnswer(item.statement) === normalizedAnswer(q.prompt));
+    if (matches.length !== 1) continue;
+    const judgment = matches[0]!;
+    const expectedVerdict = q.answer === 'Verdadero' ? 'entailed' : 'contradicted';
+    if (judgment.verdict !== expectedVerdict ||
+        typeof judgment.explanation !== 'string' ||
+        judgment.explanation.trim().length < 70 ||
+        typeof judgment.evidence !== 'string' ||
+        judgment.evidence.trim().length < 45) continue;
+    // The second quote must also be an actual excerpt from the ORIGINAL
+    // document at the same location, not a plausible quotation invented by AI.
+    const located = fragments.some(fragment =>
+      (q.pageStart === null
+        ? fragment.pageStart === null && fragment.sectionTitle === q.chapterTitle
+        : fragment.pageStart === q.pageStart) &&
+      normalizedAnswer(fragment.text).includes(normalizedAnswer(judgment.evidence as string)));
+    if (!located) continue;
+    result.push(q);
+  }
+  return result;
+}
