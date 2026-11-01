@@ -54,7 +54,7 @@ export function MaeveStudySpace({
       // El estado vacío ya tiene su propia zona de carga; no mostramos
       // automáticamente el diálogo inicial. Las cargas retomadas desde
       // la landing conservan su restauración tras el registro.
-      initialOpen={initialOpen && (materials.length > 0 || initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-'))}
+      initialOpen={initialOpen && initialSource !== 'signup-direct' && (materials.length > 0 || initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-'))}
     >
       {materials.length === 0 ? (
         <EmptyStudySpace firstName={firstName} />
