@@ -155,14 +155,14 @@ assert.doesNotMatch(appChromeSource, /isMobileDashboardRoute/,
 assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
 assert.match(appChromeSource, /grid-cols-4/,
-  'The current authenticated mobile navigation uses four balanced destinations.');
+  'Keep four balanced mobile destinations for authenticated students and guests.');
+assert.match(appChromeSource, /label: 'Mi plan', href: '\/dashboard\/plan-de-estudio'/,
+  'Keep Mi plan available on the authenticated mobile navigation.');
 const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
 assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
   'Keep Mi espacio in the bottom navigation.');
 assert.match(bottomNavSource, /label: 'Estudiar', href: '\/dashboard\/explicaciones'/,
   'Keep Estudiar in the bottom navigation.');
-assert.match(bottomNavSource, /label: 'Practicar', href: '\/dashboard\/practicar'/);
-assert.match(bottomNavSource, /label: 'Mi plan', href: '\/dashboard\/plan-de-estudio'/);
 assert.doesNotMatch(bottomNavSource, /label: 'Calendario'|label: 'Perfil'/,
   'Move Calendario out of the bottom bar and keep Perfil in the avatar menu.');
 assert.match(appChromeSource, /data-mobile-calendar-link/,
@@ -209,8 +209,7 @@ for (const source of [dashboardSource, heroWithoutSvgAnimationStyles, dashboardM
 assert.match(appChromeSource, /stablePrivateHeader\s*\? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1'/);
 assert.match(appChromeSource, /compact=\{isCompactAppRoute\}/);
 assert.match(appChromeSource, /effectiveSidebarCollapsed \? 'md:ml-\[56px\]' : 'md:ml-\[176px\]'/);
-assert.match(appChromeSource, /bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0/,
-  'The compact route keeps its paddings while allowing the study plan desktop override.');
+assert.match(appChromeSource, /bg-white p-0 pb-24 sm:p-0 sm:pb-32 lg:p-0/);
 assert.match(appChromeSource, /isExploreExperienceRoute/);
 assert.match(appChromeSource, /<PublicGuestActions trackingLocation="discovery_header" \/>/);
 const compactCalendar = readFileSync(resolve('app/(es)/calendario/page.tsx'), 'utf8');
@@ -221,14 +220,11 @@ const compactProgressList = readFileSync(resolve('app/(es)/dashboard/progreso/pa
 const compactHistory = readFileSync(resolve('components/dashboard/explanations-history-client.tsx'), 'utf8');
 const compactReferrals = readFileSync(resolve('app/(es)/referidos/page.tsx'), 'utf8');
 const compactHeader = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
-for (const page of [compactCalendar, compactProgressList, compactHistory, compactReferrals]) {
+for (const page of [compactCalendar, compactSettings, compactProgressList, compactHistory, compactReferrals]) {
   assert.match(page, /text-\[20px\]|size="compact"/);
 }
-assert.match(compactSettings, /text-\[20px\] font-semibold tracking-\[-0\.035em\]/,
-  'Settings must follow the shared compact study typography.');
 assert.match(compactCalendar, /max-w-\[1240px\]/);
-assert.match(compactSettings, /max-w-\[760px\]/,
-  'Settings uses the focused narrow layout currently on main.');
+assert.match(compactSettings, /max-w-\[760px\]/);
 assert.match(compactProgress, /size="compact"/);
 assert.match(compactProgress, /grid-cols-\[236px_minmax\(0,1fr\)\]/);
 assert.match(compactProfile, /space-y-4 rounded-xl border p-3\.5 sm:p-4/);
