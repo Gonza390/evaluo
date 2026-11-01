@@ -38,7 +38,12 @@ const caseReviewSchema = {
       verdict:{type:'STRING',enum:['supported','ambiguous','not_supported']},
       selectedAnswer:{type:'STRING'},
       explanation:{type:'STRING'},evidence:{type:'STRING'},
-    },required:['id','verdict','selectedAnswer','explanation','evidence'],
+      alternatives:{type:'ARRAY',items:{type:'OBJECT',properties:{
+        option:{type:'STRING'},
+        verdict:{type:'STRING',enum:['ruled_out','plausible','uncertain']},
+        reason:{type:'STRING'},
+      },required:['option','verdict','reason']}},
+    },required:['id','verdict','selectedAnswer','explanation','evidence','alternatives'],
   }}},required:['judgments'],
 };
 
@@ -183,17 +188,24 @@ export async function POST(request: Request) {
       'Si la conclusión contradice la fuente, verdict=not_supported.',
       'Si hay una única alternativa justificable con la fuente, verdict=supported.',
       'No uses conocimiento externo ni supongas intenciones que el escenario no declara.',
+      'Para CADA una de las tres alternativas distintas de selectedAnswer,',
+      'devolvé alternatives con option, verdict y reason (mínimo 55 caracteres).',
+      'Si el escenario o la fuente permiten otra opción como correcta, marcá plausible o uncertain',
+      'y establecé verdict=ambiguous para todo el caso. NO inventes motivos para descartarla.',
+      'Para ruled_out, explicá exactamente qué condición del escenario no satisface esa alternativa',
+      'y cómo esa condición difiere de selectedAnswer. Evitá respuestas como «no corresponde».',
+      'No incluyas selectedAnswer dentro de alternatives. Cada opción incorrecta debe aparecer una vez.',
       'Incluí evidencia TEXTUAL del material de 28 a 380 caracteres y',
       'una explicación concreta de al menos 90 caracteres.',
       'La cita literal y la explicación DEBEN mencionar explícitamente la alternativa selectedAnswer.',
       'No es suficiente que la cita esté en la misma página: tiene que justificar el concepto elegido.',
-      'Respondé JSON {judgments:[{id,verdict,selectedAnswer,explanation,evidence}]}',
+      'Respondé JSON {judgments:[{id,verdict,selectedAnswer,explanation,evidence,alternatives:[{option,verdict,reason}]}]}',
       'CASOS A RESOLVER (sin respuestas): '+
         JSON.stringify(candidates.map(q=>({id:q.id,prompt:q.prompt,options:q.options}))),
       'FUENTES: '+reviewSourceInput,
     ].join('\n');
     const review=await requestGeminiJson({
-      prompt:reviewPrompt,temperature:0,maxOutputTokens:4400,responseSchema:caseReviewSchema,
+      prompt:reviewPrompt,temperature:0,maxOutputTokens:7200,responseSchema:caseReviewSchema,
     });
     if(!review?.content) return NextResponse.json({error:'verification_unavailable'},{status:503});
     const reviewed:unknown=JSON.parse(review.content);
