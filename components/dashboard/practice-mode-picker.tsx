@@ -74,7 +74,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
   if (selectedMode && available(selectedMode)) return (
-    <main className={`${leavingReview ? "practice-screen-leave" : "practice-screen-enter"} mx-auto flex w-full max-w-[880px]`} items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5">
+    <main className={`${leavingReview ? "practice-screen-leave" : "practice-screen-enter"} mx-auto flex w-full max-w-[880px] items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5`}>
       <div className="w-full max-w-[650px] text-center">
         <img src="/evi-pensando.svg" alt="Evi pensando"
           className="mx-auto mb-1.5 h-[56px] w-[56px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:mb-2 sm:h-[76px] sm:w-[76px]" />
