@@ -20,7 +20,7 @@ export function selectPracticePairs(items: PracticePair[], limit = 50): Practice
       !item.term.includes('↔') && // A compound relation isn't a fair one-term cloze answer.
       !d.startsWith('clasificacion que incluye') && !d.startsWith('proceso cuyos pasos') &&
       !/^(?:carrera a la que pertenece|institucion universitaria que imparte|materia correspondiente|documento original|material compartido|universidad de origen)/.test(d) &&
-      !(t.length > 11 && d.includes(t)); // Never show the answer in its own definition.
+      !(' ' + d + ' ').includes(' ' + t + ' '); // No answer revealed, even for shorter academic terms.
   });
   // The same term-definition pair may appear in both the PDF glossary and
   // an on-demand supplement. Identical duplicates are one academic concept,
