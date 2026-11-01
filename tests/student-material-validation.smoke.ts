@@ -101,9 +101,13 @@ assert.equal(
   'Un PDF por encima de 20 MB debe rechazarse antes de firmar la subida.'
 );
 assert.equal(
-  studentMaterialUploadFileMetadataSchema.safeParse({ ...validFile, name: 'material.docx' }).success,
-  false,
-  'La subida firmada debe conservar la restricción a PDF.'
+  studentMaterialUploadFileMetadataSchema.safeParse({
+    ...validFile,
+    name: 'material.docx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  }).success,
+  true,
+  'La subida firmada admite DOCX con su MIME válido.'
 );
 assert.equal(
   studentMaterialUploadFileMetadataSchema.safeParse({ ...validFile, mimeType: 'text/plain' }).success,

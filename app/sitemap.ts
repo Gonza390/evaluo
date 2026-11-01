@@ -129,28 +129,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  // Previews are not public/indexable. Their Supabase anon role can lack access
+  // to production-only catalog views. Keep all dynamic sitemap validation on
+  // production, where a failed fetch MUST still reject an incomplete sitemap.
+  // Skip only preview data queries so CI / QA builds cannot be broken by
+  // unrelated catalog permissions.
+  if (process.env.VERCEL_ENV === 'preview' ||
+      (process.env.CI === 'true' && !process.env.VERCEL_ENV)) return routes;
+
   const client = createPublicClient();
-  const fetchAllQuestionFreshness = async () => {
-    const pageSize = 1000;
-    const rows: Array<{
+  // Use the approved public aggregate; the raw question-bank view is intentionally private.
+  const fetchPublicQuestionSignals = async () => {
+    type PublicQuestionRow = {
       materia_id: string | null;
-      parcial: number | null;
-      creado_at: string | null;
-    }> = [];
-
-    for (let from = 0; ; from += pageSize) {
-      const { data, error } = await client
-        .from('preguntas_banco_public')
-        .select('materia_id, parcial, creado_at')
-        .order('id', { ascending: true })
-        .range(from, from + pageSize - 1);
-
-      if (error) throw error;
-      rows.push(...(data ?? []));
-      if (!data || data.length < pageSize) break;
-    }
-
-    return { data: rows };
+      question_count: number | null;
+      parciales: number[] | null;
+    };
+    const catalogClient = client as unknown as {
+      rpc: (name: 'get_public_preguntero_catalog') => Promise<{
+        data: PublicQuestionRow[] | null;
+        error: { message: string } | null;
+      }>;
+    };
+    const { data, error } = await catalogClient.rpc('get_public_preguntero_catalog');
+    if (error) throw error;
+    return { data: data ?? [] };
   };
   // PostgREST limits one response to 1,000 rows. Sitemap discovery must paginate.
   const fetchAllMaterias = async () => {
@@ -192,7 +195,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ] = await Promise.allSettled([
     fetchAllMaterias(),
     fetchExplorarCatalogData(client),
-    fetchAllQuestionFreshness(),
+    fetchPublicQuestionSignals(),
     fetchAllMaterialMateriaIds('resumenes'),
     fetchAllMaterialMateriaIds('recursos'),
   ]);
@@ -218,16 +221,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (isFulfilled(frescuraResult)) {
     for (const row of frescuraResult.value.data ?? []) {
       const materiaId = String(row.materia_id ?? '');
-      const creadoAt = row.creado_at;
       if (!materiaId) continue;
-      materiaQuestionCount.set(materiaId, (materiaQuestionCount.get(materiaId) ?? 0) + 1);
-      materiasConPreguntas.add(materiaId);
-      parcialesConPreguntas.add(`${materiaId}:${Number(row.parcial ?? 1)}`);
-      if (!creadoAt) continue;
-      const date = new Date(creadoAt);
-      const current = materiaLastModified.get(materiaId);
-      if (!current || date.getTime() > current.getTime()) {
-        materiaLastModified.set(materiaId, date);
+      materiaQuestionCount.set(materiaId, Number(row.question_count ?? 0));
+      if (Number(row.question_count ?? 0) > 0) materiasConPreguntas.add(materiaId);
+      for (const parcial of row.parciales ?? []) {
+        parcialesConPreguntas.add(`${materiaId}:${Number(parcial)}`);
       }
     }
   }

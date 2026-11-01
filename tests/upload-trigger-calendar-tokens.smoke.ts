@@ -18,7 +18,7 @@ assert.match(shell, /<PdfUploadTriggerContext.Provider value=\{openUploadPicker\
   'Every dashboard CTA should have a direct upload action.');
 assert.match(shell, /const openUploadPicker = useCallback/);
 assert.match(shell, /pickerRef\.current\?\.click\(\)/);
-assert.match(shell, /const \[open, setOpen\] = useState\(initialOpen\)/,
+assert.match(shell, /const \[open, setOpen\] = useState\(initialOpen && initialSource !== 'signup-direct'\)/,
   'Preserve upload deep-link behavior after removing text interception.');
 assert.match(shell, /trackMarketingEvent\('pdf_picker_opened'/,
   'Preserve picker analytics when called directly.');
@@ -43,7 +43,8 @@ assert.match(materials, /setMaterialToDelete\(material\)/,
 
 assert.match(globals, /--color-heading: var\(--heading\);/);
 assert.match(calendar, /text-heading/);
-assert.match(calendar, /from-brand to-brand-2/);
+assert.match(calendar, /border-brand\/25 bg-brand\/10/,
+  'Calendar controls retain shared brand colors without requiring a decorative gradient.');
 assert.match(calendar, /text-brand/);
 assert.match(calendar, /var\(--brand\)/);
 assert.doesNotMatch(calendar, /#050B2C|#2563EB|#6366F1/,

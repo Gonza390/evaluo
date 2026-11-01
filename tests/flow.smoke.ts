@@ -697,8 +697,8 @@ assert.match(pdfStudyWorkspace, /data-active-chapter=\{activeSummaryChapterIndex
 assert.match(pdfStudyWorkspace, /data-study-glossary className="mx-auto w-full max-w-\[1240px\]/);
 assert.match(pdfStudyWorkspace, /<div className="w-full max-w-\[1040px\]">/);
 assert.match(pdfStudyWorkspace, /text-\[19px\].*sm:text-\[20px\]/);
-assert.match(pdfStudyWorkspace, /text-\[14px\] leading-5 font-semibold/);
-assert.match(pdfStudyWorkspace, /text-\[13px\] leading-\[1\.65\] sm:text-\[13\.5px\]/);
+assert.match(pdfStudyWorkspace, /text-\[14px\] leading-5 font-normal/);
+assert.match(pdfStudyWorkspace, /text-\[13px\] leading-\[1\.65\] sm:text-\[14px\]/);
 assert.match(pdfStudyWorkspace, /glossaryTopicIndex === null \?/);
 assert.match(pdfStudyWorkspace, /renderTopicResourceHeader\('glosario'\)/);
 assert.match(pdfStudyWorkspace, /getTopicStudyResources\(studySummary\.sections, usefulGlossary, studyArtifacts\.flashcards, index\)/);
@@ -745,7 +745,7 @@ assert.ok(flashcardView.includes("isFlipping && 'animate-flashcard-turn'"));
 assert.ok(practiceView.includes('max-w-[1240px] px-1 py-2'));
 assert.ok(practiceView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(practiceView.includes('max-w-[640px] px-2 py-3'));
-assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-semibold'));
+assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-medium'));
 assert.ok(diagnosticView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(pdfProgressDetail.includes('text-[20px] sm:text-[22px]'));
 assert.ok(errorReviewView.includes('text-[13.5px] leading-6 break-words'));
@@ -761,11 +761,11 @@ for (const src of [flashcardView, practiceView, diagnosticView, errorReviewView]
 // Registro por correo: sesión activa = acceso directo; sesión ausente = verificación.
 assert.equal(getEmailSignupDestination(null, '/dashboard'), null);
 assert.equal(getEmailSignupDestination({}, '/dashboard'), null);
-assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/dashboard'), '/dashboard?openUpload=1&source=signup-direct');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/dashboard'), '/dashboard');
 assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/materiales/pdf-123?tab=resumen'), '/materiales/pdf-123?tab=resumen');
 assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '/simulador?materia=1'), '/simulador?materia=1');
-assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, 'https://evil.example/'), '/dashboard?openUpload=1&source=signup-direct');
-assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '//evil.example/'), '/dashboard?openUpload=1&source=signup-direct');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, 'https://evil.example/'), '/dashboard');
+assert.equal(getEmailSignupDestination({ user: { id: 'user-1' } }, '//evil.example/'), '/dashboard');
 const activeLoginForm = readFileSync('components/LoginFormGoogleFirst.tsx', 'utf8');
 const fallbackLoginForm = readFileSync('components/LoginForm.tsx', 'utf8');
 for (const formSource of [activeLoginForm, fallbackLoginForm]) {

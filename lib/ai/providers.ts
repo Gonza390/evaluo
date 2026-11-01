@@ -542,12 +542,22 @@ async function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
     return uniqueConfiguredValues(ordered);
   }
 
-  // Compatibilidad durante la migración: nunca reutilizamos las keys de PDF.
+  // Keep document-processing and pedagogical-generation quotas separate in
+  // production. Local development and Vercel previews may intentionally have
+  // only GEMINI_API_KEY configured: do not silently disable ALL practice modes.
+  // Never use the PDF key as the app fallback in a production deployment.
+  const allowNonProductionPdfFallback =
+    process.env.NODE_ENV === 'development' ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.VERCEL_ENV === 'preview' ||
+    process.env.VERCEL_ENV === 'development';
+
   return uniqueConfiguredValues([
     process.env.GEMINI_SUMMARY_API_KEY,
     process.env.GEMINI_API_KEY_FALLBACK,
     process.env.GOOGLE_AI_KEY,
     process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    ...(allowNonProductionPdfFallback ? [primaryPdfKey] : []),
   ]);
 }
 

@@ -35,10 +35,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { StudyRichText } from '@/components/study-rich-text';
-import {
-  StudentMaterialDiagnostic,
-  emptyDiagnosticSession,
-} from '@/components/student-material-diagnostic';
+import type { DiagnosticSession } from '@/components/student-material-diagnostic';
 import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
@@ -57,7 +54,7 @@ import {
   completeFirstPdfOnboardingAction,
   skipFirstPdfOnboardingAction,
 } from '@/app/materiales/[id]/onboarding-actions';
-import { StudentMaterialExam } from '@/components/student-material-exam';
+
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
 import { SummaryChapterFinish } from '@/components/study/summary-chapter-finish';
 import { getFirstTopicResourceInfo } from '@/lib/student-materials/first-topic-resources';
@@ -66,7 +63,7 @@ import {
   shouldOfferTopicGlossaryPractice,
 } from '@/lib/student-materials/topic-study-resources';
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
-import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/processing-actions';
@@ -158,6 +155,24 @@ function revealTourContent(step: RecommendedStudyStep, focus = false, behavior: 
   return true;
 }
 
+// Estos módulos interactivos no se necesitan al abrir el resumen. Cargarlos
+// sólo al entrar en la actividad evita hidratar tres experiencias pesadas
+// durante el primer render del PDF y de la demostración pública.
+const StudentMaterialDiagnostic = dynamic(() =>
+  import('@/components/student-material-diagnostic').then(mod => mod.StudentMaterialDiagnostic)
+);
+const StudentMaterialExam = dynamic(() =>
+  import('@/components/student-material-exam').then(mod => mod.StudentMaterialExam)
+);
+const StudentMaterialFlashcards = dynamic(() =>
+  import('@/components/student-material-flashcards').then(mod => mod.StudentMaterialFlashcards)
+);
+const emptyDiagnosticSession: DiagnosticSession = {
+  currentIndex: 0,
+  selectedAnswers: {},
+  finished: false,
+};
+
 const SummaryTopicCheckPopup = dynamic(() =>
   import('@/components/study/summary-topic-check-popup').then(
     (module) => module.SummaryTopicCheckPopup
@@ -198,6 +213,8 @@ type MaterialStudyWorkspaceProps = {
   otherPdfOptions?: Array<{ id: string; title: string }>;
   shareAvailable?: boolean;
   viewerUrl: string;
+  docxSourceText?: string;
+  docxHasImages?: boolean;
   visibility: 'private' | 'shared';
   studyGlossary: StudyGlossaryItem[];
   studySummary: StudentMaterialSummary;
@@ -254,6 +271,8 @@ const STUDY_TABS: Array<{
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'mapa', label: 'Mapa mental', icon: MapIcon, premium: true },
 ];
+
+const DocxViewer = dynamic(() => import('@/components/DocxViewer').then((module) => module.DocxViewer), { ssr: false });
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
   ssr: false,
@@ -329,6 +348,8 @@ export function MaterialStudyWorkspace({
   otherPdfOptions = [],
   shareAvailable = false,
   viewerUrl,
+  docxSourceText = '',
+  docxHasImages = false,
   visibility: _visibility,
   studyGlossary,
   studySummary,
@@ -348,6 +369,7 @@ export function MaterialStudyWorkspace({
   children,
   demo,
 }: MaterialStudyWorkspaceProps) {
+  const isDocx = !demo && fileName.toLowerCase().endsWith('.docx');
   const { toast } = useToast();
   const router = useRouter();
   const guideRunIdRef = useRef<string | null>(null);
@@ -495,6 +517,17 @@ export function MaterialStudyWorkspace({
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
+  // Las pestañas inactivas usan forceMount para preservar intentos, pero su
+  // contenido no debe montarse antes de la primera visita del estudiante.
+  const [visitedInteractiveTabs, setVisitedInteractiveTabs] = useState<StudyTabId[]>(() =>
+    [demo?.activeTab ?? (initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen'))]
+  );
+  useEffect(() => {
+    if (activeTab !== 'ejercicios' && activeTab !== 'tarjetas') return;
+    setVisitedInteractiveTabs(previous =>
+      previous.includes(activeTab) ? previous : [...previous, activeTab]
+    );
+  }, [activeTab]);
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
   const isDemo = Boolean(demo);
   const hasPendingStudyErrors = (demo?.pendingStudyErrorCount ?? pendingStudyErrorCount) > 0;
@@ -2059,7 +2092,7 @@ export function MaterialStudyWorkspace({
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
                 <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
-                  <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-extrabold tracking-[0.16em] uppercase">
+                  <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-medium tracking-[0.16em] uppercase">
                     Contenido
                   </p>
                   <nav
@@ -2111,10 +2144,10 @@ export function MaterialStudyWorkspace({
                       className="border-border scroll-mt-5 border-b py-4 first:pt-0 last:border-b-0 last:pb-2 sm:py-5"
                     >
                       <header className="mb-2.5 sm:mb-3">
-                        <p className="text-primary text-[11px] font-extrabold tracking-[0.18em] uppercase">
+                        <p className="text-primary text-[11px] font-medium tracking-[0.12em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="text-foreground mt-1 text-[16px] leading-[1.4] font-normal tracking-[-0.035em]">
+                        <h3 className="text-foreground mt-1 text-[17px] leading-[1.45] font-medium tracking-[-0.025em]">
                           {section.displayTitle}
                         </h3>
                       </header>
@@ -2150,7 +2183,7 @@ export function MaterialStudyWorkspace({
         <div data-study-glossary className="mx-auto w-full max-w-[1240px] px-1 py-1 sm:px-2 sm:py-1.5">
           {glossaryTopicIndex === null ? (
             <header className="border-border mb-3 border-b pb-3 sm:pb-4">
-              <h2 className="text-foreground text-[19px] leading-[1.25] font-semibold tracking-[-0.04em] sm:text-[20px]">
+              <h2 className="text-foreground text-[19px] leading-[1.25] font-semibold tracking-[-0.035em] sm:text-[20px]">
                 Glosario
               </h2>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
@@ -2244,6 +2277,7 @@ export function MaterialStudyWorkspace({
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
+            {(activeTab === 'tarjetas' || visitedInteractiveTabs.includes('tarjetas')) && (
             <StudentMaterialFlashcards
               key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
               cards={studyArtifacts.flashcards}
@@ -2263,6 +2297,7 @@ export function MaterialStudyWorkspace({
               onComplete={demo ? undefined : () => { if (flashcardTopicIndex !== null) markActivity(materialId, flashcardTopicIndex, 'flashcards'); else requestExamDatePrompt(); }}
               demoMode={Boolean(demo)}
             />
+            )}
           </div>
         </Activity>
       </TabsContent>
@@ -2274,7 +2309,7 @@ export function MaterialStudyWorkspace({
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
-            {demo ? (
+            {(activeTab === 'ejercicios' || visitedInteractiveTabs.includes('ejercicios')) ? (demo ? (
               demo.practice
             ) : diagnosticMode ? (
               <StudentMaterialDiagnostic
@@ -2362,7 +2397,7 @@ export function MaterialStudyWorkspace({
                 materialId={materialId}
                 onComplete={() => { if (!demo && practiceSectionIndex !== undefined) markActivity(materialId, practiceSectionIndex, 'questions'); else if (practiceSectionIndex === undefined) requestExamDatePrompt(); }}
               />
-            )}
+            )) : null}
           </div>
         </Activity>
       </TabsContent>
@@ -2430,7 +2465,7 @@ export function MaterialStudyWorkspace({
                 </p>
                 <p
                   className={cn(
-                    'text-foreground mt-2.5 text-base font-semibold tracking-[-0.03em]',
+                    'text-foreground mt-2.5 text-base font-medium tracking-[-0.03em]',
                     demo && 'mt-2 text-sm! leading-5!'
                   )}
                 >
@@ -2569,7 +2604,10 @@ export function MaterialStudyWorkspace({
         </div>
         {(!demo || demo.progress) && !progressOpen && activeTab === 'resumen' && isViewerVisible ? (
           <div data-demo-focus="pdf" className="bg-card absolute inset-0 z-10 min-h-0 p-2">
-            <PdfViewer
+            {isDocx ? (
+  <DocxViewer title={title} text={docxSourceText} url={viewerUrl} hasImages={docxHasImages} className="h-full min-h-0" />
+) : (
+<PdfViewer
               url={viewerUrl}
               title={title}
               subtitle={null}
@@ -2582,6 +2620,7 @@ export function MaterialStudyWorkspace({
               persistView
               sourceMode="blob"
             />
+)}
           </div>
         ) : null}
       </div>
@@ -2740,7 +2779,7 @@ export function MaterialStudyWorkspace({
                 <button
                   type="button"
                   data-pdf-mobile-title-trigger
-                  aria-label={`Seleccionar PDF: ${title}`}
+                  aria-label={`Seleccionar material: ${title}`}
                   className="flex h-10 w-full min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   <FileText className="size-3.5 shrink-0 text-slate-500" aria-hidden="true" />
@@ -2770,7 +2809,7 @@ export function MaterialStudyWorkspace({
               <button
                 type="button"
                 data-pdf-mobile-more-trigger
-                aria-label="Más opciones del PDF"
+                aria-label="Más opciones del material"
                 className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <Ellipsis className="size-[18px]" aria-hidden="true" />
@@ -2786,7 +2825,7 @@ export function MaterialStudyWorkspace({
               <DropdownMenuItem asChild>
                 <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="size-4" aria-hidden="true" />
-                  Abrir PDF original
+                  Abrir {isDocx ? 'Word' : 'PDF'} original
                 </a>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -2807,9 +2846,9 @@ export function MaterialStudyWorkspace({
             {isOwner && !demo ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button type="button" aria-label={`Cambiar PDF actual: ${title}`}
+                  <button type="button" aria-label={`Cambiar material actual: ${title}`}
                     className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
-                    <span className="min-w-0 truncate text-[0.98rem] sm:text-[1.06rem]" title={title}>{title}</span>
+                    <span className="min-w-0 truncate text-[14px] sm:text-[16px]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
@@ -2826,7 +2865,7 @@ export function MaterialStudyWorkspace({
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <h1 className="text-foreground min-w-0 truncate text-[0.98rem] font-semibold tracking-[-0.03em] sm:text-[1.06rem]" title={title}>{title}</h1>
+              <h1 className="text-foreground min-w-0 truncate text-[14px] font-semibold tracking-[-0.03em] sm:text-[16px]" title={title}>{title}</h1>
             )}
           </div>
 
@@ -2942,11 +2981,14 @@ export function MaterialStudyWorkspace({
                           type="button"
                           onClick={() => setIsViewerVisible(false)}
                           className="border-border bg-card text-muted-foreground hover:bg-muted absolute top-1/2 left-0 z-20 inline-flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-none transition"
-                          aria-label="Ocultar PDF"
+                          aria-label={isDocx ? "Ocultar Word" : "Ocultar PDF"}
                         >
                           <ChevronRight className="h-4 w-4" />
                         </button>
-                        <PdfViewer
+                        {isDocx ? (
+  <DocxViewer title={title} text={docxSourceText} url={viewerUrl} hasImages={docxHasImages} className="h-full min-h-0" />
+) : (
+<PdfViewer
                           url={viewerUrl}
                           title={demo ? 'PDF de muestra' : title}
                           subtitle={null}
@@ -2959,6 +3001,7 @@ export function MaterialStudyWorkspace({
                           persistView={!demo}
                           sourceMode={demo ? 'url' : 'blob'}
                         />
+)}
                       </div>
                     </ResizablePanel>
                   ) : null}
@@ -2971,7 +3014,7 @@ export function MaterialStudyWorkspace({
                 type="button"
                 onClick={() => setIsViewerVisible(true)}
                 className="border-border bg-card text-muted-foreground hover:bg-muted absolute top-1/2 right-4 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border shadow-none transition"
-                aria-label="Mostrar PDF"
+                aria-label={isDocx ? "Mostrar Word" : "Mostrar PDF"}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -2999,11 +3042,14 @@ export function MaterialStudyWorkspace({
                   type="button"
                   onClick={() => setIsViewerVisible(false)}
                   className="border-border bg-card text-muted-foreground hover:bg-muted absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-none transition"
-                  aria-label="Ocultar PDF"
+                  aria-label={isDocx ? "Ocultar Word" : "Ocultar PDF"}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
-                <PdfViewer
+                {isDocx ? (
+  <DocxViewer title={title} text={docxSourceText} url={viewerUrl} hasImages={docxHasImages} className="h-full min-h-0" />
+) : (
+<PdfViewer
                   url={viewerUrl}
                   title={demo ? 'PDF de muestra' : title}
                   subtitle={null}
@@ -3020,13 +3066,14 @@ export function MaterialStudyWorkspace({
                   persistView={!demo}
                   sourceMode={demo ? 'url' : 'blob'}
                 />
+)}
               </div>
             ) : (
               <div className="bg-card/80 hidden rounded-2xl border border-dashed border-slate-300 px-4 py-3 shadow-none md:block">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-muted-foreground text-[12px] font-medium tracking-[0.16em] uppercase">
-                      PDF oculto
+                      {isDocx ? "Word oculto" : "PDF oculto"}
                     </p>
                     <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                       Mostrá el documento cuando quieras contrastar el resumen con el archivo
@@ -3037,7 +3084,7 @@ export function MaterialStudyWorkspace({
                     type="button"
                     onClick={() => setIsViewerVisible(true)}
                     className="border-border bg-card text-muted-foreground hover:bg-muted inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border shadow-none transition"
-                    aria-label="Mostrar PDF"
+                    aria-label={isDocx ? "Mostrar Word" : "Mostrar PDF"}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>

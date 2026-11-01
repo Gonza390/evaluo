@@ -1,5 +1,8 @@
 import type { PedagogicalArtifacts, StudyFlashcard, StudyQuestion } from './pedagogy';
 import type { StudySummarySection } from './types';
+import { auditPracticeFlashcard } from './practice-card-quality';
+import { hasAmbiguousDistractors } from './practice-modes';
+import { practiceQuestionQualityIssue } from './practice-question-quality';
 
 /** Conservador: ante una respuesta modelo sin sustento verificable, no presentarla al alumno. */
 function norm(value: string) {
@@ -81,6 +84,17 @@ export function incompleteOpenAnswerReason(
 export function unsafeModelAnswerReason(question: StudyQuestion, sections: StudySummarySection[]): string | null {
   if (!question.prompt.trim() || !question.answer.trim()) return 'answer_missing';
   if (question.type === 'multiple_choice') {
+    // Cached banks can contain a correct-looking answer copied from a PDF
+    // cover page. Such metadata is not a teachable academic definition.
+    const issue = practiceQuestionQualityIssue({
+      prompt: question.prompt,
+      answer: question.answer,
+      options: question.options,
+      kind: question.kind,
+      sectionTitle: question.reference.sectionTitle ?? question.chapterTitle,
+      sourceExcerpt: question.reference.excerpt,
+    });
+    if (issue) return issue;
     if (!question.options.some(option => norm(option) === norm(question.answer))) {
       return 'correct_answer_not_in_options';
     }
@@ -214,14 +228,19 @@ export function sanitizePedagogicalArtifacts(
 ): PedagogicalArtifacts {
   const rejectedReasons: string[] = [];
   const questions = artifacts.questions.filter(question => {
-    const reason = unsafeModelAnswerReason(question, sections);
+    // Legacy questions are used both by the PDF study workspace and Practicar.
+    // Never present a single-answer MCQ with two near-equivalent alternatives.
+    const reason = question.type === 'multiple_choice' &&
+      hasAmbiguousDistractors(question) ? 'near_equivalent_mcq_distractors' :
+      unsafeModelAnswerReason(question, sections);
     if (reason) rejectedReasons.push(reason);
     return !reason;
   }).map(question => isRecognitionPresentedAsHigherOrder(question)
     ? { ...question, level: (question.kind === 'process' ? 'comprender' : 'recordar') as StudyQuestion['level'] }
     : question);
   const flashcards = artifacts.flashcards.filter(card => {
-    const reason = unsafeFlashcardReason(card);
+    const review = auditPracticeFlashcard(card);
+    const reason = unsafeFlashcardReason(card) ?? review.reasons[0] ?? null;
     if (reason) rejectedReasons.push(reason);
     return !reason;
   }).map(card => ({ ...card, level: accurateFlashcardLevel(card) }));

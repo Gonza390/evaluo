@@ -29,7 +29,7 @@ assert.match(workspace, /data-mobile-summary-active=\{activeTab === 'resumen' &&
 const mobileOverflow = workspace.split('data-pdf-mobile-more-trigger')[1]?.split('</DropdownMenuContent>')[0] ?? '';
 assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
   'The three-dot menu must not duplicate the visible Back button.');
-assert.match(mobileOverflow, /Abrir PDF original/,
+assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original/, 
   'Keep the original PDF action in the overflow menu.');
 const globalStyles = readFileSync('app/globals.css', 'utf8');
 assert.match(globalStyles, /@media \(max-width: 767px\)\s*\{\s*body:has\(\[data-mobile-summary-active='true'\]\) \[data-student-material-share-control\]/,
@@ -38,7 +38,7 @@ assert.match(workspace, /DropdownMenuItem asChild/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
   'The old header and Guide remain desktop-only.');
-assert.match(workspace, /Abrir PDF original/,
+assert.match(workspace, /Abrir \{isDocx \? 'Word' : 'PDF'\} original/,
   'The menu must provide access to the original document.');
 assert.match(materialStatus, /\{title\}/,
   'Keep the material title during processing and error states.');
@@ -72,14 +72,14 @@ assert.match(workspace, /max-w-\[1040px\] text-\[13px\] leading-\[1\.65\]/,
   'La introducción debe aprovechar más ancho con tipografía compacta.');
 assert.match(workspace, /max-w-\[940px\] min-w-0/,
   'El lector de capítulos debe aprovechar el ancho disponible.');
-assert.match(workspace, /text-\[16px\] leading-\[1\.4\] font-bold/,
+assert.match(workspace, /text-\[16px\] leading-\[1\.4\] font-semibold/,
   'Los títulos de capítulo deben mantener una jerarquía legible sin ocupar demasiado.');
 assert.match(workspace, /border-b py-4 first:pt-0/,
   'Se deben reducir los espacios entre capítulos.');
-assert.match(richText, /space-y-2\.5 \[&_h4\]:text-\[14\.5px\]/,
-  'La densidad de los contenidos largos debe ser compacta.');
-assert.match(richText, /\[&_p\]:text-\[13px\] \[&_p\]:leading-\[1\.6\]/,
-  'El cuerpo de lectura debe ser legible y menos alto.');
+assert.match(richText, /space-y-2\.5 \[&_h4\]:text-\[15px\]/,
+  'El contenido largo conserva espaciado compacto y encabezados legibles.');
+assert.match(richText, /\[&_p\]:text-\[15px\] \[&_p\]:leading-\[1\.7\]/,
+  'El cuerpo de lectura mantiene el tamaño y la altura de línea actuales.');
 assert.match(styles, /h-8 flex-none shrink-0 rounded-lg border px-2\.5 text-\[12px\]/,
   'Las pestañas del estudio deben ser compactas.');
 assert.doesNotMatch(workspace, /transform:scale\(|zoom:/,

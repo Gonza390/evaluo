@@ -38,7 +38,7 @@ import {
   inspectPdfForClientVision,
   renderPdfPagesForClientVision,
 } from '@/lib/student-materials/client-pdf-vision-render';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 import { PdfProcessingPanel } from '@/components/pdf-processing/pdf-processing-panel';
@@ -62,7 +62,7 @@ type Props = {
 function titleFromFile(name: string) {
   return (
     name
-      .replace(/\.pdf$/i, '')
+      .replace(/\.(pdf|docx)$/i, '')
       .replace(/[_-]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
@@ -82,11 +82,18 @@ function isTransientProcessingFailure(message: string | null | undefined) {
  * the behavior of another button, and nested buttons retain their own onClick.
  */
 const PdfUploadTriggerContext = createContext<((location?: string) => void) | null>(null);
+const PdfDropUploadContext = createContext<((file: File) => void) | null>(null);
 
 export function usePdfUploadTrigger() {
   const trigger = useContext(PdfUploadTriggerContext);
   if (!trigger) throw new Error('usePdfUploadTrigger requires PdfFirstUploadShell');
   return trigger;
+}
+
+export function usePdfDropUpload() {
+  const upload = useContext(PdfDropUploadContext);
+  if (!upload) throw new Error('usePdfDropUpload requires PdfFirstUploadShell');
+  return upload;
 }
 
 export function PdfFirstUploadShell({
@@ -103,7 +110,6 @@ export function PdfFirstUploadShell({
   const { toast } = useToast();
   const isPreAuthPdfResume =
     initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
-  const isDirectSignupFirstPdf = initialSource === 'signup-direct';
   // El catálogo y el perfil académico se solicitan sólo si el estudiante
   // abre la opción de universidad/carrera. Nunca se cargan con Mi espacio.
   const [universidades, setUniversidades] = useState<UniversidadOption[]>([]);
@@ -117,11 +123,10 @@ export function PdfFirstUploadShell({
   const resumeHandledRef = useRef(false);
   const readyTrackedRef = useRef(false);
   const firstPdfReadyTrackedRef = useRef(false);
-  const directSignupOpenTrackedRef = useRef(false);
   const autoRetryCountsRef = useRef<Record<string, number>>({});
   const autoRetryingMaterialRef = useRef<string | null>(null);
   const processingPollRef = useRef(createSingleFlightPolling<StudentMaterialProcessingState | null>());
-  const [open, setOpen] = useState(initialOpen);
+  const [open, setOpen] = useState(initialOpen && initialSource !== 'signup-direct');
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [examDate, setExamDate] = useState(initialExamDate);
@@ -246,17 +251,8 @@ export function PdfFirstUploadShell({
     : 0;
 
   useEffect(() => {
-    if (initialOpen) setOpen(true);
-  }, [initialOpen]);
-
-  useEffect(() => {
-    if (!initialOpen || !isDirectSignupFirstPdf || directSignupOpenTrackedRef.current) return;
-    directSignupOpenTrackedRef.current = true;
-    trackMarketingEvent('first_pdf_upload_opened', {
-      location: 'post_signup',
-      source: initialSource,
-    });
-  }, [initialOpen, initialSource, isDirectSignupFirstPdf]);
+    if (initialOpen && initialSource !== 'signup-direct') setOpen(true);
+  }, [initialOpen, initialSource]);
 
   useEffect(() => {
     if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
@@ -388,17 +384,18 @@ export function PdfFirstUploadShell({
       source: initialSource || 'dashboard',
     });
 
-    setOpen(true);
+    // No abrir un segundo dropzone vacío sobre la pantalla de bienvenida.
+    // El diálogo se abre cuando ya existe un PDF elegido.
+    if (location !== 'dashboard_empty') setOpen(true);
     pickerRef.current?.click();
   }, [initialSource, uploading]);
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
     if (
-      !selected.name.toLowerCase().endsWith('.pdf') ||
-      (selected.type && selected.type !== 'application/pdf')
+      !isSupportedStudentMaterialFile(selected.name, selected.type)
     ) {
-      toast({ description: 'Por ahora solo aceptamos archivos PDF.', variant: 'destructive' });
+      toast({ description: 'Aceptamos archivos PDF y Word (.docx).', variant: 'destructive' });
       return;
     }
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
@@ -416,6 +413,12 @@ export function PdfFirstUploadShell({
     setFile(selected);
     setTitle(titleFromFile(selected.name));
     setExamDate(initialExamDate);
+    return true;
+  };
+
+  const uploadDroppedFile = (selected: File) => {
+    if (uploading) return;
+    if (selectFile(selected)) setOpen(true);
   };
 
   const startProcessing = async (selectedFile?: File | null, selectedTitle?: string) => {
@@ -443,7 +446,7 @@ export function PdfFirstUploadShell({
       };
       const fileMetadata = {
         name: activeFile.name,
-        mimeType: activeFile.type || 'application/pdf',
+        mimeType: studentMaterialFileKind(activeFile.name) === 'docx' ? STUDENT_MATERIAL_DOCX_MIME : 'application/pdf',
         size: activeFile.size,
       };
       const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata });
@@ -466,6 +469,7 @@ export function PdfFirstUploadShell({
       // Vercel conserva el renderer del servidor como fallback.
       const clientVisionPromise = (async () => {
         try {
+          if (studentMaterialFileKind(activeFile.name) !== 'pdf') return;
           const plan = await inspectPdfForClientVision(
             activeFile,
             CLIENT_VISION_MAX_PAGES
@@ -773,19 +777,21 @@ export function PdfFirstUploadShell({
 
   return (
     <PdfUploadTriggerContext.Provider value={openUploadPicker}>
-    <div className="relative">
+    <PdfDropUploadContext.Provider value={uploadDroppedFile}>
+    <div className="relative has-[[data-empty-study-space]]:h-full has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1">
       <input
         ref={pickerRef}
         type="file"
-        accept=".pdf,application/pdf"
+        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         className="sr-only"
         onChange={(event) => {
-          selectFile(event.currentTarget.files?.[0] ?? null);
+          const selected = event.currentTarget.files?.[0] ?? null;
+          if (selectFile(selected)) setOpen(true);
           event.currentTarget.value = '';
         }}
       />
       <div
-        className={`transition duration-200 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
+        className={`transition duration-200 has-[[data-empty-study-space]]:h-full has-[[data-empty-study-space]]:min-h-0 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
         aria-hidden={open}
       >
         {children}
@@ -816,9 +822,7 @@ export function PdfFirstUploadShell({
                   : ready
                     ? 'Tu PDF está listo'
                     : 'Preparación de tu PDF'
-                : isDirectSignupFirstPdf
-                  ? 'Empecemos con tu primer material'
-                  : 'Subir PDF'}
+                : 'Subir PDF o Word'}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
@@ -836,9 +840,7 @@ export function PdfFirstUploadShell({
                         : ready
                           ? 'Tu PDF está listo'
                           : 'Estamos procesando tu PDF'
-                      : isDirectSignupFirstPdf
-                        ? 'Empecemos con tu primer material'
-                        : 'Subir PDF'}
+                      : 'Subir PDF o Word'}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
                     {processing
@@ -849,9 +851,7 @@ export function PdfFirstUploadShell({
                           : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
                       : restoringDraft
                         ? 'Recuperando el PDF que elegiste antes del registro.'
-                        : isDirectSignupFirstPdf
-                          ? 'Subí un PDF y convertí tus apuntes en material para estudiar y practicar.'
-                          : 'Elegí el archivo y poné un nombre.'}
+                        : 'Elegí el archivo y poné un nombre.'}
                   </p>
                 </div>
               </div>
@@ -878,7 +878,7 @@ export function PdfFirstUploadShell({
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-sm font-semibold text-slate-950">
-                      {isDirectSignupFirstPdf ? 'Subir mi PDF' : 'Elegir PDF'}
+                      Elegir PDF o Word
                     </span>
                     <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
                   </button>
@@ -943,7 +943,7 @@ export function PdfFirstUploadShell({
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
-                    {isDirectSignupFirstPdf ? 'Ahora no' : 'Cancelar'}
+                    Cancelar
                   </Button>
                   <Button
                     type="button"
@@ -1247,6 +1247,7 @@ export function PdfFirstUploadShell({
         </Dialog>
       ) : null}
     </div>
+    </PdfDropUploadContext.Provider>
     </PdfUploadTriggerContext.Provider>
   );
 }

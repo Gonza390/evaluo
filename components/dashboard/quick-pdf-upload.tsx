@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import './practice-motion.css';
 import { CheckCircle2, ImageIcon, Loader2, Upload } from 'lucide-react';
 import {
   cancelStudentMaterialUploadAction,
@@ -16,7 +17,7 @@ import {
 } from '@/app/dashboard/materiales/visual-analysis-actions';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/validation';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 
@@ -53,7 +54,7 @@ type QuickPdfUploadProps = {
 };
 
 function fileTitle(fileName: string) {
-  const value = fileName.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim();
+  const value = fileName.replace(/\.(pdf|docx)$/i, '').replace(/[_-]+/g, ' ').trim();
   return value || 'Mi material de estudio';
 }
 
@@ -92,6 +93,8 @@ export function QuickPdfUpload({
   const [processingMaterialId, setProcessingMaterialId] = useState<string | null>(null);
   const [processingMessage, setProcessingMessage] = useState('Preparando tu material...');
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [processingDeparting, setProcessingDeparting] = useState(false);
+  const redirectingRef = useRef(false);
 
   const universityById = useMemo(
     () => new Map(universidades.map((item) => [item.id, item.nombre])),
@@ -166,8 +169,14 @@ export function QuickPdfUpload({
       setProcessingProgress(state.progress ?? 0);
 
       if (state.status === 'ready') {
-        router.replace(`${getStudentMaterialRoute(processingMaterialId)}?inicio=1`);
-        router.refresh();
+        if (redirectingRef.current) return;
+        redirectingRef.current = true;
+        setProcessingProgress(100);
+        setProcessingDeparting(true);
+        window.setTimeout(() => {
+          router.replace(`${getStudentMaterialRoute(processingMaterialId)}?inicio=1`);
+          router.refresh();
+        }, 210);
       } else if (state.status === 'failed') {
         setErrorMessage(state.error || 'No pudimos terminar de preparar el PDF.');
         setProcessingMaterialId(null);
@@ -190,9 +199,9 @@ export function QuickPdfUpload({
       return;
     }
 
-    if (!file.name.toLowerCase().endsWith('.pdf') || (file.type && file.type !== 'application/pdf')) {
+    if (!isSupportedStudentMaterialFile(file.name, file.type)) {
       setSelectedFile(null);
-      setErrorMessage('Por ahora solo aceptamos archivos PDF.');
+      setErrorMessage('Aceptamos archivos PDF y Word (.docx).');
       return;
     }
 
@@ -246,7 +255,7 @@ export function QuickPdfUpload({
     };
     const fileMetadata = {
       name: selectedFile.name,
-      mimeType: selectedFile.type || 'application/pdf',
+      mimeType: studentMaterialFileKind(selectedFile.name) === 'docx' ? STUDENT_MATERIAL_DOCX_MIME : 'application/pdf',
       size: selectedFile.size,
     };
 
@@ -289,9 +298,10 @@ export function QuickPdfUpload({
         return;
       }
 
+      const isPdf = studentMaterialFileKind(selectedFile.name) === 'pdf';
       const visualPreference = await updateStudentMaterialVisualAnalysisAction({
         materialId: result.materialId,
-        enabled: analyzeVisuals,
+        enabled: isPdf && analyzeVisuals,
       });
 
       if (!visualPreference.success) {
@@ -300,14 +310,14 @@ export function QuickPdfUpload({
         return;
       }
 
-      if (analyzeVisuals && visualQuota && !visualQuota.isPremium) {
+      if (isPdf && analyzeVisuals && visualQuota && !visualQuota.isPremium) {
         setVisualQuota({ isPremium: false, allowed: false, remaining: 0 });
       }
 
       setProcessingMaterialId(result.materialId);
       setProcessingProgress(10);
       setProcessingMessage(
-        analyzeVisuals
+        !isPdf ? 'Word subido. Estamos preparando tu espacio de estudio.' : analyzeVisuals
           ? 'PDF subido. Usaremos visión solo en las páginas que realmente lo necesiten.'
           : 'PDF subido. Estamos preparando tu espacio de estudio con extracción estándar.'
       );
@@ -331,7 +341,7 @@ export function QuickPdfUpload({
     const progress = Math.max(10, Math.min(processingProgress, 100));
 
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <section className={`${processingDeparting ? "practice-screen-leave" : "practice-screen-enter"} rounded-2xl border border-slate-200 bg-white p-5 sm:p-6`}>
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -361,7 +371,7 @@ export function QuickPdfUpload({
     <section className="rounded-2xl border border-slate-200 bg-white">
       <div className="px-5 pt-5 sm:px-6 sm:pt-6">
         <h1 className="text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-[1.7rem]">
-          Subí tu PDF
+          Subí tu PDF o Word
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
           Lo convertimos en resumen, glosario, flashcards y ejercicios para estudiar.
@@ -380,7 +390,7 @@ export function QuickPdfUpload({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold text-slate-950">
-                {selectedFile ? selectedFile.name : 'Elegir un PDF'}
+                {selectedFile ? selectedFile.name : 'Elegir un PDF o Word'}
               </span>
               <span className="mt-1 block text-xs text-slate-500">
                 {selectedFile
@@ -392,7 +402,7 @@ export function QuickPdfUpload({
           <input
             ref={fileInputRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className="sr-only"
             onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
           />
@@ -487,7 +497,7 @@ export function QuickPdfUpload({
           </div>
         )}
 
-        <label
+        {studentMaterialFileKind(selectedFile?.name ?? '') !== 'docx' ? <label
           className={`flex items-start gap-3 border-t border-slate-100 pt-4 text-sm ${
             visualUnavailable || visualQuotaLoading
               ? 'cursor-not-allowed text-slate-400'
@@ -523,7 +533,7 @@ export function QuickPdfUpload({
               </span>
             </span>
           </span>
-        </label>
+        </label> : null}
 
         <label className="flex cursor-pointer items-center gap-3 border-t border-slate-100 pt-4 text-sm text-slate-700">
           <input
@@ -548,7 +558,7 @@ export function QuickPdfUpload({
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          {uploading ? 'Subiendo PDF...' : 'Preparar PDF'}
+          {uploading ? 'Subiendo archivo...' : 'Preparar material'}
         </button>
       </div>
     </section>

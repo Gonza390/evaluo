@@ -440,6 +440,24 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
         if (pdf.id !== material.id) otherPdfOptions.push({ id: pdf.id, title: pdf.title });
       }
     }
+    const isDocx = material.file_name.toLowerCase().endsWith('.docx');
+    let docxSourceText = '';
+    let docxHasImages = false;
+    if (isDocx) {
+      // El acceso al material ya se verificó arriba. No exponer una API pública
+      // que pueda revelar el contenido de documentos privados.
+      const { data: sourceRow } = await admin
+        .from('student_material_processing_checkpoints' as never)
+        .select('source_payload')
+        .eq('student_material_id', material.id)
+        .maybeSingle();
+      const cachedSource = (sourceRow as { source_payload?: {
+        text?: string;
+        documentAnalysis?: { hasEmbeddedImages?: boolean };
+      } } | null)?.source_payload;
+      docxSourceText = cachedSource?.text ?? '';
+      docxHasImages = cachedSource?.documentAnalysis?.hasEmbeddedImages === true;
+    }
     const visibility = normalizeMaterialVisibility(material.visibility);
 
     // One onboarding per NEW account, not per URL, PDF or entry point.
@@ -528,6 +546,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           otherPdfOptions={otherPdfOptions}
           shareAvailable={isOwner && hasFullAcademicContext}
           viewerUrl={viewerUrl}
+          docxSourceText={docxSourceText}
+          docxHasImages={docxHasImages}
           visibility={visibility}
           studyGlossary={topicGlossary}
           studySummary={studySummary}
@@ -544,7 +564,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           initialResourceTopicIndex={
             isOwner && (query.tab === 'tarjetas' || query.tab === 'glosario' || query.tab === 'resumen') &&
             typeof query.studyTopic === 'string' &&
-            /^(0|[1-9]\\d{0,3})$/.test(query.studyTopic) &&
+            /^(0|[1-9]\d{0,3})$/.test(query.studyTopic) &&
             Number(query.studyTopic) < studySummary.sections.length
               ? Number(query.studyTopic)
               : undefined

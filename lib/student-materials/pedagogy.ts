@@ -1,4 +1,7 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
+import { isAdministrativeConcept, isAdministrativeStudyDescription } from '@/lib/student-materials/nonacademic-metadata';
+import { isNonSequentialProcess, practiceQuestionQualityIssue } from '@/lib/student-materials/practice-question-quality';
+import { chooseDocumentedDistractors, explainDocumentedOptions, type DocumentedOption } from '@/lib/student-materials/practice-option-evidence';
 import { incompleteOpenAnswerReason } from '@/lib/student-materials/pedagogical-integrity';
 import type {
   CanonicalPedagogicalModel,
@@ -517,16 +520,9 @@ function isAdministrativeCanonicalConcept(
   model: CanonicalPedagogicalModel,
   concept: CanonicalPedagogicalModel['concepts'][number]
 ) {
-  const term = normalizeForDedupe(concept.term);
-  const modelTitle = normalizeForDedupe(model.title);
-  const detail = normalizeForDedupe(concept.detail);
-
-  if (term && modelTitle && (term === modelTitle || modelTitle.includes(term))) {
-    return true;
-  }
-
-  return /^(?:asignatura|materia|titulo|autor|documento)\b/u.test(detail) ||
-    /(?:asignatura|materia) correspondiente al material de estudio/u.test(detail);
+  return isAdministrativeConcept({
+    term: concept.term, detail: concept.detail, modelTitle: model.title,
+  });
 }
 
 const MIN_FLASHCARD_TARGET = 12;
@@ -1060,14 +1056,19 @@ function buildFallbackMultipleChoice(
   chunks: PedagogicalChunk[],
   sectionTitles: string[]
 ) {
-  return concepts
+  const academicConcepts = concepts.filter(concept =>
+    !isAdministrativeStudyDescription(concept.definition));
+  return academicConcepts
     .slice(0, 5)
     .map((concept, index): StudyQuestion => {
       const correctAnswer = truncateAtWord(concept.definition, 220);
-      const distractors = selectDistractorDefinitions(concept, concepts, 3).map((item) =>
-        truncateAtWord(item, 220)
-      );
-      const options = placeCorrectOption(correctAnswer, distractors, index % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={option:correctAnswer,label:concept.term,evidence:concept.definition};
+      const distractors=chooseDocumentedDistractors(correctEvidence,
+        selectDistractorDefinitions(concept,academicConcepts,12).flatMap(definition=>{
+          const matches=academicConcepts.filter(item=>normalizeForDedupe(item.definition)===normalizeForDedupe(definition));
+          return matches.length===1?[{option:truncateAtWord(definition,220),label:matches[0]!.term,evidence:definition}]:[];
+        }));
+      const options=placeCorrectOption(correctAnswer,distractors.map(item=>item.option),index%4).slice(0,4);
       const level = 'recordar' as const;
 
       return {
@@ -1082,10 +1083,7 @@ function buildFallbackMultipleChoice(
             : `¿Qué caracteriza mejor a “${concept.term}”?`,
         options,
         answer: correctAnswer,
-        explanation:
-          level === 'recordar'
-            ? `“${concept.term}” se refiere a: ${finishSentence(correctAnswer)}`
-            : `“${concept.term}” se caracteriza por: ${finishSentence(correctAnswer)}`,
+        explanation: explainDocumentedOptions(concept.term,correctEvidence,distractors),
         reference: findReference(
           concept.term,
           chunks,
@@ -1096,36 +1094,14 @@ function buildFallbackMultipleChoice(
     .filter((question) => question.options.length >= 3);
 }
 
-function buildConceptFeedback(
-  term: string,
-  definition: string,
-  pages: number[] | undefined,
-  model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
-) {
-  // Sólo ampliar la definición si el mismo material aporta una relación
-  // independiente y localizable en las páginas del concepto.
-  const pageSet = new Set((pages ?? []).filter((page) => page > 0));
-  const related = model.relationships.find((relation) =>
-    normalizeForDedupe(relation.source) === normalizeForDedupe(term) &&
-    relation.target.trim() &&
-    relation.description.trim().length >= 24 &&
-    normalizeForDedupe(relation.description) !== normalizeForDedupe(definition) &&
-    (relation.pageReferences ?? []).some((page) => pageSet.has(page)) &&
-    !hasSourceContradictedCausalDirection(relation, chunks)
-  );
-  if (related) {
-    return `“${term}” significa: ${finishSentence(definition)} También se relaciona con “${related.target}”: ${finishSentence(truncateAtWord(related.description, 190))}`;
-  }
-  return `“${term}” se caracteriza por: ${finishSentence(definition)}`;
-}
 function buildCanonicalConceptQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[],
   limit = 10
 ) {
   const concepts = model.concepts.filter(
-    (concept) => cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
+    (concept) => !isAdministrativeCanonicalConcept(model,concept) &&
+      cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
   );
   const selected = selectDistributedByPages(concepts, limit, (concept) => concept.pageReferences);
 
@@ -1133,15 +1109,13 @@ function buildCanonicalConceptQuestions(
     .map((concept, index): StudyQuestion => {
       const correct = truncateAtWord(concept.detail, 210);
       const candidates = concepts.filter((candidate) => candidate.term !== concept.term);
-      const distractors = rankSemanticItems(
-        `${concept.term} ${concept.detail}`,
-        concept.pageReferences,
-        candidates,
-        (candidate) => `${candidate.term} ${candidate.detail}`,
-        (candidate) => candidate.pageReferences,
-        3
-      ).map((candidate) => truncateAtWord(candidate.detail, 210));
-      const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={option:correct,label:concept.term,evidence:concept.detail};
+      const distractors=chooseDocumentedDistractors(correctEvidence,rankSemanticItems(
+        `${concept.term} ${concept.detail}`,concept.pageReferences,candidates,
+        candidate=>`${candidate.term} ${candidate.detail}`,
+        candidate=>candidate.pageReferences,Math.min(16,candidates.length)
+      ).map(item=>({option:truncateAtWord(item.detail,210),label:item.term,evidence:item.detail})));
+      const options=placeCorrectOption(correct,distractors.map(item=>item.option),index%4).slice(0,4);
       const level: StudyQuestion['level'] = 'recordar';
 
       return {
@@ -1161,7 +1135,7 @@ function buildCanonicalConceptQuestions(
                 : `¿Cómo se describe “${concept.term}”?`,
         options,
         answer: correct,
-        explanation: buildConceptFeedback(concept.term, correct, concept.pageReferences, model, chunks),
+        explanation: explainDocumentedOptions(concept.term,correctEvidence,distractors),
         reference: referenceFromPages(
           concept.pageReferences,
           concept.term,
@@ -1189,15 +1163,18 @@ function buildCanonicalRelationshipQuestions(
     .map((item, index): StudyQuestion => {
       const correct = truncateAtWord(item.description, 190);
       const candidates = relationships.filter((candidate) => candidate !== item);
-      const distractors = rankSemanticItems(
-        `${item.source} ${item.target} ${item.description}`,
-        item.pageReferences,
-        candidates,
-        (candidate) => `${candidate.source} ${candidate.target} ${candidate.description}`,
-        (candidate) => candidate.pageReferences,
-        3
-      ).map((candidate) => truncateAtWord(candidate.description, 190));
-      const options = placeCorrectOption(correct, distractors, (index + 1) % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={
+        option:correct,label:`${item.source} → ${item.target}`,evidence:item.description,
+      };
+      const distractors=chooseDocumentedDistractors(correctEvidence,rankSemanticItems(
+        `${item.source} ${item.target} ${item.description}`,item.pageReferences,candidates,
+        candidate=>`${candidate.source} ${candidate.target} ${candidate.description}`,
+        candidate=>candidate.pageReferences,Math.min(16,candidates.length)
+      ).map(candidate=>({
+        option:truncateAtWord(candidate.description,190),
+        label:`${candidate.source} → ${candidate.target}`,evidence:candidate.description,
+      })));
+      const options=placeCorrectOption(correct,distractors.map(d=>d.option),(index+1)%4).slice(0,4);
       // Reconocer una relación no demuestra transferencia a un caso nuevo.
       // Reservar "aplicar" para consignas con una tarea contextual verificable.
       const isCausal = CAUSAL_SIGNAL_PATTERN.test(item.description);
@@ -1223,7 +1200,7 @@ function buildCanonicalRelationshipQuestions(
                 : `¿Cuál es el vínculo entre “${item.source}” y “${item.target}”?`,
         options,
         answer: correct,
-        explanation: `Entre “${item.source}” y “${item.target}” se da esta relación: ${finishSentence(correct)}`,
+        explanation: explainDocumentedOptions(`${item.source} → ${item.target}`,correctEvidence,distractors),
         reference: referenceFromPages(
           item.pageReferences,
           `${item.source} ${item.target}`,
@@ -1300,11 +1277,13 @@ function buildCanonicalClassificationQuestions(
       // No convertir una lista de bullets pegados en un supuesto caso académico.
       const caseText = cleanLine(correct.detail.split(/[●★➔⇒]|\s{2,}(?=[A-ZÁÉÍÓÚ]{4,}\s*:)/u)[0] ?? '');
       if (caseText.length < 15 || caseText.length > 240) return null;
-      const labels = dedupeStrings(entries.map((entry) => entry.label));
-      const distractors = labels.filter(
-        (label) => normalizeForDedupe(label) !== normalizeForDedupe(correct.label)
-      );
-      const options = placeCorrectOption(correct.label, distractors, (index + 2) % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={
+        option:correct.label,label:correct.label,evidence:correct.detail,
+      };
+      const distractors=chooseDocumentedDistractors(correctEvidence,withEvidence
+        .filter(entry=>normalizeForDedupe(entry.label)!==normalizeForDedupe(correct.label))
+        .map(entry=>({option:entry.label,label:entry.label,evidence:entry.detail})));
+      const options=placeCorrectOption(correct.label,distractors.map(d=>d.option),(index+2)%4).slice(0,4);
       if (options.length < 3) return null;
 
       return {
@@ -1318,7 +1297,7 @@ function buildCanonicalClassificationQuestions(
           : `En el tema “${classification.title}”, ¿qué nombre recibe la categoría caracterizada por “${truncateAtWord(caseText, 130)}”?`,
         options,
         answer: correct.label,
-        explanation: `“${correct.label}” se identifica por esta característica: ${finishSentence(truncateAtWord(correct.detail, 190))}`,
+        explanation: explainDocumentedOptions(classification.title,correctEvidence,distractors),
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -1345,7 +1324,19 @@ function buildCanonicalProcessQuestions(
   chunks: PedagogicalChunk[],
   limit = 8
 ) {
-  const eligible = model.processes.filter((process) => process.steps.length >= 2);
+  // Distinct process labels with the *same* steps cannot be graded fairly:
+  // the scenario would support multiple answers. Reject such candidates,
+  // rather than using a different label or a random correct-answer key.
+  const candidatesWithSteps = model.processes.filter((process) =>
+    process.steps.length >= 2 && !isNonSequentialProcess({title:process.title,steps:process.steps}));
+  const sequenceFrequency = new Map<string, number>();
+  for (const process of candidatesWithSteps) {
+    const signature = normalizeForDedupe(process.steps.join(' → '));
+    sequenceFrequency.set(signature, (sequenceFrequency.get(signature) ?? 0) + 1);
+  }
+  const eligible = candidatesWithSteps.filter((process) =>
+    sequenceFrequency.get(normalizeForDedupe(process.steps.join(' → '))) === 1
+  );
   const selected = selectDistributedByPages(eligible, limit, (process) => process.pageReferences);
 
   return selected
@@ -1354,15 +1345,13 @@ function buildCanonicalProcessQuestions(
       if (scenarioSteps.length < 2) return null;
 
       const candidates = eligible.filter((candidate) => candidate !== process);
-      const distractors = rankSemanticItems(
-        `${process.title} ${process.steps.join(' ')}`,
-        process.pageReferences,
-        candidates,
-        (candidate) => `${candidate.title} ${candidate.steps.join(' ')}`,
-        (candidate) => candidate.pageReferences,
-        3
-      ).map((candidate) => candidate.title);
-      const options = placeCorrectOption(process.title, distractors, index % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={option:process.title,label:process.title,evidence:process.steps.join(' → ')};
+      const distractors=chooseDocumentedDistractors(correctEvidence,rankSemanticItems(
+        `${process.title} ${process.steps.join(' ')}`,process.pageReferences,candidates,
+        candidate=>`${candidate.title} ${candidate.steps.join(' ')}`,
+        candidate=>candidate.pageReferences,Math.min(16,candidates.length)
+      ).map(item=>({option:item.title,label:item.title,evidence:item.steps.join(' → ')})));
+      const options=placeCorrectOption(process.title,distractors.map(d=>d.option),index%4).slice(0,4);
       if (options.length < 3) return null;
 
       const listedSteps = scenarioSteps
@@ -1385,7 +1374,7 @@ function buildCanonicalProcessQuestions(
         prompt: prompts[index % prompts.length]!,
         options,
         answer: process.title,
-        explanation: `Es “${process.title}” porque las etapas siguen este orden: ${finishSentence(truncateAtWord(process.steps.join(' → '), 260))}`,
+        explanation: explainDocumentedOptions(process.title,correctEvidence,distractors),
         reference: referenceFromPages(
           process.pageReferences,
           process.title,
@@ -1394,7 +1383,10 @@ function buildCanonicalProcessQuestions(
         ),
       };
     })
-    .filter((question): question is StudyQuestion => Boolean(question));
+    .filter((question): question is StudyQuestion => Boolean(question) &&
+      !practiceQuestionQualityIssue({
+        prompt:question!.prompt,answer:question!.answer,options:question!.options,kind:question!.kind,
+      }));
 }
 
 function isPhFormula(expression: string) {
@@ -1730,9 +1722,12 @@ function anchorAndCompleteChapterQuestions(
     // Dar cabida a relaciones antes de completar el resto con definiciones.
     addRelationships(2);
     const candidates = model.concepts.filter((concept) =>
+      !isAdministrativeCanonicalConcept(model, concept) &&
       cleanLine(concept.term).length >= 7 &&
       cleanLine(concept.detail).length >= 30 &&
-      (concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) &&
+      ((concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) ||
+        chunks.some((chunk) => chunk.pageStart === null &&
+          normalizeForDedupe(chunk.text).includes(normalizeForDedupe(concept.term)))) &&
       uniqueChapterForConcept(concept.term) === index
     );
     for (const [candidateIndex, concept] of candidates.entries()) {
@@ -1740,16 +1735,16 @@ function anchorAndCompleteChapterQuestions(
       const conceptKey = normalizeForDedupe(concept.term);
       if (usedConcepts.has(conceptKey)) continue;
       const correct = truncateAtWord(concept.detail, 210);
-      const distractors = rankSemanticItems(
-        `${concept.term} ${concept.detail}`, concept.pageReferences,
-        model.concepts.filter((item) =>
-          item !== concept && normalizeForDedupe(item.detail) !== normalizeForDedupe(concept.detail)
-        ),
-        (item) => `${item.term} ${item.detail}`,
-        (item) => item.pageReferences,
-        5
-      ).map((item) => truncateAtWord(item.detail, 210));
-      const options = placeCorrectOption(correct, distractors, candidateIndex % 4).slice(0, 4);
+      const correctEvidence:DocumentedOption={option:correct,label:concept.term,evidence:concept.detail};
+      const candidateConcepts=model.concepts.filter(item=>
+        item!==concept && !isAdministrativeCanonicalConcept(model,item) &&
+        normalizeForDedupe(item.detail)!==normalizeForDedupe(concept.detail));
+      const distractors=chooseDocumentedDistractors(correctEvidence,rankSemanticItems(
+        `${concept.term} ${concept.detail}`,concept.pageReferences,candidateConcepts,
+        item=>`${item.term} ${item.detail}`,item=>item.pageReferences,
+        Math.min(16,candidateConcepts.length)
+      ).map(item=>({option:truncateAtWord(item.detail,210),label:item.term,evidence:item.detail})));
+      const options=placeCorrectOption(correct,distractors.map(item=>item.option),candidateIndex%4).slice(0,4);
       const prompts = [
         `¿Qué significa “${concept.term}”?`,
         `¿Cuál de estas opciones define “${concept.term}”?`,
@@ -1766,7 +1761,7 @@ function anchorAndCompleteChapterQuestions(
         topic: concept.term,
         chapterTitle: chapter.title,
         prompt, options, answer: correct,
-        explanation: buildConceptFeedback(concept.term, correct, concept.pageReferences, model, chunks),
+        explanation: explainDocumentedOptions(concept.term,correctEvidence,distractors),
         reference,
       });
     }

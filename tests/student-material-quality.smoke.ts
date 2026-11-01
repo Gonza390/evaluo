@@ -1326,18 +1326,73 @@ const denseQuestionBankModel: CanonicalPedagogicalModel = {
     relevance: 'alta' as const,
     pageReferences: [i + 1],
   })),
-  concepts: Array.from({ length: 150 }, (_, i) => ({
-    term: `Concepto ${i + 1}`,
-    detail: `Definición diferenciada del concepto ${i + 1}, con efectos sobre el proceso educativo y relación con el conocimiento científico del tema.`,
-    kind: 'definicion' as const,
-    pageReferences: [(i % 94) + 1],
-  })),
-  relationships: Array.from({ length: 90 }, (_, i) => ({
-    source: `Concepto ${i + 1}`,
-    target: `Concepto ${i + 2}`,
-    description: `El concepto ${i + 1} favorece la comprensión del concepto ${i + 2} mediante un análisis científico verificable.`,
-    pageReferences: [(i % 94) + 1],
-  })),
+  concepts: Array.from({ length: 150 }, (_, i) => {
+    // A number inserted into the same generic sentence does not make 150
+    // semantically different concepts. Distinct domains AND methods make
+    // this a realistic fixture for evaluating distractor curation.
+    const domains = [
+      'microbiología', 'astronomía', 'botánica', 'historia', 'economía',
+      'lingüística', 'geología', 'ecología', 'psicología', 'matemática',
+    ];
+    const methods = [
+      'la observación del crecimiento de microorganismos en cultivos controlados',
+      'el estudio de espectros emitidos por objetos celestes distantes',
+      'la comparación de tejidos vegetales mediante microscopía',
+      'la contrastación de fuentes primarias de distintas épocas',
+      'la modelización de decisiones de consumo con restricciones presupuestarias',
+      'la interpretación de patrones sintácticos de lenguas naturales',
+      'la medición de minerales presentes en muestras de rocas',
+      'el seguimiento de relaciones entre especies y hábitats',
+      'la evaluación del comportamiento mediante escalas validadas',
+      'la demostración de propiedades de funciones continuas',
+      'la exploración de secuencias temporales con sensores calibrados',
+      'la clasificación de evidencias obtenidas en registros longitudinales',
+      'la construcción de modelos de predicción con datos observados',
+      'la comparación de protocolos de investigación bajo condiciones reproducibles',
+      'el registro de cambios en sistemas sometidos a perturbaciones',
+    ];
+    return {
+      term: `Concepto ${i + 1}`,
+      detail: `En el campo de ${domains[i % domains.length]}, se trabaja con ${methods[Math.floor(i / domains.length) % methods.length]} para estudiar un problema definido.`,
+      kind: 'definicion' as const,
+      pageReferences: [(i % 94) + 1],
+    };
+  }),
+  relationships: Array.from({ length: 90 }, (_, i) => {
+    // Model relationships also need distinct causal / conceptual evidence;
+    // adding a number to one shared sentence is not an educational contrast.
+    const relations = [
+      'la cooperación entre especies y la disponibilidad de nutrientes',
+      'el movimiento de las placas tectónicas y la formación de montañas',
+      'la migración de poblaciones y la urbanización de ciudades',
+      'la densidad poblacional y la propagación de agentes infecciosos',
+      'la alfabetización temprana y la comprensión de textos complejos',
+      'la inversión en infraestructura y el costo de transporte',
+      'la humedad atmosférica y la formación de nubes de tormenta',
+      'la calidad del sueño y la consolidación de recuerdos',
+      'la diversidad de cultivos y la resistencia a plagas agrícolas',
+      'el nivel de ruido ambiental y la concentración de estudiantes',
+      'la disponibilidad de agua dulce y la salud de humedales',
+      'la presión del mercado y la estrategia de precios comerciales',
+      'la erosión de suelos y la pérdida de cobertura vegetal',
+      'el acceso a bibliotecas y la frecuencia de lectura',
+      'el intercambio comercial y la especialización productiva',
+    ];
+    const relations2 = [
+      'debido al intercambio de recursos entre organismos',
+      'por medio de mediciones sísmicas y mapas geológicos',
+      'mediante registros censales de desplazamiento interno',
+      'a través del contacto cercano entre individuos',
+      'con ejercicios de lectura y análisis de vocabulario',
+      'cuando los tiempos de entrega modifican la producción',
+    ];
+    return {
+      source: `Concepto ${i + 1}`,
+      target: `Concepto ${i + 2}`,
+      description: `Se relacionan ${relations[i % relations.length]} ${relations2[Math.floor(i / relations.length) % relations2.length]}.`,
+      pageReferences: [(i % 94) + 1],
+    };
+  }),
   classifications: [],
   processes: [],
   formulas: [],
@@ -1468,7 +1523,16 @@ const enoughTopicModel: CanonicalPedagogicalModel = {
   concepts: ['A', 'B', 'C'].flatMap((letter, chapterIndex) =>
     Array.from({ length: 8 }, (_, i) => ({
       term: `Principio ${letter} ${i + 1}`,
-      detail: `El principio ${letter} ${i + 1} establece un criterio académico particular con consecuencias diferentes en el aprendizaje y la evaluación del contenido.`,
+      detail: [
+        'La práctica de recuperación exige recordar contenidos sin mirar los apuntes para detectar conocimientos incompletos.',
+        'La repetición espaciada distribuye sesiones entre varios días para contrarrestar el olvido progresivo.',
+        'La elaboración conceptual conecta una idea nueva con conocimientos previos mediante explicaciones propias.',
+        'El aprendizaje intercalado alterna tipos de problemas y obliga a reconocer qué procedimiento corresponde.',
+        'La retroalimentación correctiva identifica el error específico y explica cómo mejorar la respuesta.',
+        'La transferencia educativa aplica una regla estudiada a una situación nueva con datos diferentes.',
+        'La autoevaluación calibrada compara la confianza declarada con resultados obtenidos en ejercicios.',
+        'El contraste de hipótesis compara predicciones alternativas utilizando evidencias observables.',
+      ][i] + ` El ejercicio pertenece a la unidad ${letter} y al principio ${i + 1}.`,
       kind: 'definicion' as const,
       pageReferences: [chapterIndex * 8 + i + 1],
     }))
@@ -1604,9 +1668,128 @@ assert.ok(
   integratedLongArtifacts.flashcards.length >= 40,
   'La implementación activa v2 debe generar más de 30 tarjetas para un material extenso.'
 );
+// This intentionally repetitive fixture represents a source with 150 nearly
+// interchangeable definitions. It must NOT meet a numeric bank quota by
+// accepting several virtually indistinguishable answer options.
 assert.ok(
-  integratedLongArtifacts.questions.length > 43,
-  'La práctica real del wrapper v2 debe ampliar el banco canónico.'
+  (integratedLongArtifacts.integrity?.rejectedReasons ?? []).includes('near_equivalent_mcq_distractors'),
+  'Los distractores equivalentes deben descartarse aunque eso reduzca la cantidad de preguntas.'
+);
+
+// Exercise the same active v2 pipeline with distinct, source-labelled
+// categories and processes. Capacity must be demonstrated with distinguishable
+// answers, never by disabling the semantic safeguard above.
+const distinctPracticeModel: CanonicalPedagogicalModel = {
+  ...denseQuestionBankModel,
+  classifications: Array.from({ length: 54 }, (_, i) => ({
+    title: `Clasificación del módulo ${i + 1}`,
+    items: [
+      `Diagnóstico ${i + 1}: identifica las necesidades antes de tomar decisiones sobre el módulo.`,
+      `Planificación ${i + 1}: organiza los recursos para ejecutar las actividades previstas.`,
+      `Seguimiento ${i + 1}: contrasta los resultados obtenidos con los objetivos establecidos.`,
+    ],
+    pageReferences: [(i % 94) + 1],
+  })),
+  processes: [
+    {
+      title: 'Revisión bibliográfica',
+      steps: [
+        'Se consultan artículos publicados en bases de datos especializadas.',
+        'Se contrastan los hallazgos y limitaciones de las fuentes seleccionadas.',
+        'Se sintetizan las coincidencias y diferencias entre los trabajos analizados.',
+      ],
+      pageReferences: [8],
+    },
+    {
+      title: 'Diseño experimental',
+      steps: [
+        'Se formula una hipótesis que pueda ponerse a prueba con observaciones.',
+        'Se asignan participantes a condiciones comparables antes de medir.',
+        'Se registran los resultados y se evalúan las diferencias entre grupos.',
+      ],
+      pageReferences: [19],
+    },
+    {
+      title: 'Control de inventario',
+      steps: [
+        'Se cuentan las unidades físicas disponibles en el depósito.',
+        'Se cotejan las cantidades observadas con los registros del sistema.',
+        'Se investigan los faltantes y se corrigen las diferencias documentadas.',
+      ],
+      pageReferences: [31],
+    },
+    {
+      title: 'Auditoría financiera',
+      steps: [
+        'Se reúnen los comprobantes que respaldan las operaciones registradas.',
+        'Se cotejan los saldos contables con documentación independiente.',
+        'Se informan las desviaciones detectadas y la evidencia examinada.',
+      ],
+      pageReferences: [43],
+    },
+    {
+      title: 'Investigación etnográfica',
+      steps: [
+        'Se observan las interacciones cotidianas de una comunidad participante.',
+        'Se consignan testimonios y situaciones en notas de campo.',
+        'Se interpretan las prácticas compartidas a partir de registros contextualizados.',
+      ],
+      pageReferences: [61],
+    },
+    {
+      title: 'Planificación curricular',
+      steps: [
+        'Se establecen competencias de aprendizaje para un curso.',
+        'Se organizan actividades y recursos acordes con los objetivos seleccionados.',
+        'Se diseñan instrumentos para evaluar el logro de los resultados esperados.',
+      ],
+      pageReferences: [82],
+    },
+  ],
+};
+const distinctLongArtifacts = buildCurrentPedagogicalArtifacts({
+  summary: longSummaryWithChapters,
+  glossary: extensiveGlossary,
+  canonicalModel: distinctPracticeModel,
+  pageCount: 94,
+});
+assert.ok(
+  distinctLongArtifacts.questions.length > 43,
+  `La práctica debe ampliar el banco cuando hay respuestas realmente diferenciables; aceptadas=${distinctLongArtifacts.questions.length}, descartes=${JSON.stringify(distinctLongArtifacts.integrity ?? null)}`
+);
+assert.ok(
+  distinctLongArtifacts.questions.every(question =>
+    question.type !== 'multiple_choice' || new Set(question.options).size === question.options.length
+  ),
+  'Ninguna pregunta aceptada puede tener alternativas duplicadas.'
+);
+assert.ok(
+  distinctLongArtifacts.questions.filter(question => question.kind === 'process').length >= 4,
+  'Los procesos con secuencias distintas deben producir preguntas realmente discriminables.'
+);
+const duplicatedProcessModel: CanonicalPedagogicalModel = {
+  ...distinctPracticeModel,
+  processes: [
+    ...distinctPracticeModel.processes,
+    {
+      ...distinctPracticeModel.processes[0]!,
+      title: 'Otro proceso con los mismos pasos',
+    },
+  ],
+};
+const duplicatedProcessArtifacts = buildCurrentPedagogicalArtifacts({
+  summary: longSummaryWithChapters,
+  glossary: extensiveGlossary,
+  canonicalModel: duplicatedProcessModel,
+  pageCount: 94,
+});
+assert.ok(
+  !duplicatedProcessArtifacts.questions.some(question =>
+    question.kind === 'process' &&
+    (question.answer === 'Revisión bibliográfica' ||
+      question.answer === 'Otro proceso con los mismos pasos')
+  ),
+  'Dos procesos con idénticos pasos no autorizan respuestas diferentes para el mismo escenario.'
 );
 const integratedCardPages = integratedLongArtifacts.flashcards
   .map((card) => card.reference.pageStart)

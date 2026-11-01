@@ -1,6 +1,5 @@
 import './admin-theme.css';
 import Link from 'next/link';
-import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -37,20 +36,6 @@ type PanelKey =
   | 'usuarios'
   | 'mails'
   | 'ia';
-
-const adminSans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  display: 'swap',
-  variable: '--admin-font-sans',
-});
-
-const adminSerif = Source_Serif_4({
-  subsets: ['latin'],
-  weight: ['500', '600'],
-  display: 'swap',
-  variable: '--admin-font-serif',
-});
 
 const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'producto', label: 'Producto' },
@@ -311,7 +296,7 @@ export default async function AdministradorPage({
   }
 
   return (
-    <main className={`admin-shell ${adminSans.variable} ${adminSerif.variable}`}>
+    <main className="admin-shell" style={{ '--admin-font-sans': 'Arial, Helvetica, sans-serif', '--admin-font-serif': 'Georgia, serif' } as React.CSSProperties}>
       <div className="admin-layout">
         <aside className="admin-sidebar">
           <div className="admin-sidebar-inner">

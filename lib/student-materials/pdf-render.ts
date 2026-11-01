@@ -198,7 +198,20 @@ export async function renderPdfPagesToPngs(
           images.push(canvas.toBuffer('image/png'));
           renderedPageNumbers.push(pageNumber);
           if (isCanvasNearlyBlank(context, canvas.width, canvas.height)) {
-            blankPageNumbers.push(pageNumber);
+            // Pixel sampling can miss thin or anti-aliased text on a page.
+            // A PDF page containing selectable text is never truly blank,
+            // even when the renderer's sampled pixels look white.
+            let hasText = true; // fail open if PDF.js cannot inspect contents
+            try {
+              const content = await page.getTextContent();
+              hasText = content.items.some(item =>
+                'str' in item && typeof item.str === 'string' &&
+                item.str.trim().length > 0
+              );
+            } catch {
+              // Preserve the page rather than silently discard evidence.
+            }
+            if (!hasText) blankPageNumbers.push(pageNumber);
           }
           pagesProcessed += 1;
         } catch (pageError) {
