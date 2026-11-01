@@ -29,8 +29,10 @@ assert.match(cards, /data-flashcards-learning className="justify-self-center/,
   'Aprendiendo se centra.');
 assert.match(cards, /data-flashcards-good className="justify-self-end/,
   'Bien se alinea a la derecha.');
-assert.match(cards, /max-w-\[640px\] space-y-2\.5 pt-4 sm:pt-5/,
-  'El contenido de Flashcards por tema baja ligeramente sin cambiar la tarjeta.');
+assert.match(cards, /topicMode \? 'max-w-\[640px\] space-y-2\.5' : 'max-w-\[720px\] space-y-3'/,
+  'No desplazar el contenedor completo de Flashcards.');
+assert.equal(cards.match(/topicMode \? "pt-7 pb-3" : "py-3"/g)?.length, 2,
+  'Bajar suavemente el contenido dentro de ambas caras de la tarjeta.');
 
 assert.match(cards, /flex w-full items-center justify-between gap-3/,
   'Los botones de calificación se separan a extremos opuestos.');
