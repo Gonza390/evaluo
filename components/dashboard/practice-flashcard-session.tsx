@@ -92,9 +92,9 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
   },[approvedIndices.length,error,loading,fetchMore]);
 
   if (approvedIndices.length < MIN_CASES_PER_PRACTICE) return (
-    <main className="practice-screen-enter mx-auto max-w-[780px] px-4 py-7">
+    <main className="practice-screen-enter mx-auto max-w-[780px] px-3 py-4 sm:px-5 sm:py-5">
       <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
-      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
         <h1 className="text-lg font-medium text-slate-900">Preparando tus flashcards</h1>
         <p className="mt-2 text-sm text-slate-600">{approvedIndices.length} de {MIN_CASES_PER_PRACTICE} tarjetas verificadas.</p>
         {loading ? <p className="mt-2 text-sm text-slate-500" role="status">Buscando conceptos del material…</p> : null}
@@ -104,7 +104,7 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
       </section>
     </main>
   );
-  return <main className="practice-screen-enter mx-auto max-w-[960px] px-4 py-7">
+  return <main className="practice-screen-enter mx-auto max-w-[860px] px-3 py-4 sm:px-5 sm:py-5">
     <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
     <StudentMaterialFlashcards key={combined.length} cards={combined}
       allowedCardIndices={reviewLength === 'rapido' ? approvedIndices.slice(0, 6) : approvedIndices} persistentCardCount={cards.length}
