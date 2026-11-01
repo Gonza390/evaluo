@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, type DragEvent } from 'react';
-import { AudioLines, BookOpen, FileText, Upload } from 'lucide-react';
+import { AudioLines, BookOpen, Upload } from 'lucide-react';
 import { usePdfDropUpload, usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
 
 type Format = { title: string; label: string; color: string; icon?: 'book' | 'audio' };
