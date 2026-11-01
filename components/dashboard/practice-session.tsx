@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { MatchPracticeScreen, CasesPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
@@ -353,6 +354,28 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <p className="mt-3 text-xs text-slate-500">Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.</p>
     </section>
   ) : null;
+
+  if (ready && !finished && mode === 'unir') return <MatchPracticeScreen
+    materialTitle={materialTitle} pairs={exercisePairs} definitions={definitions}
+    selectedTerm={selectedTerm} onSelectTerm={setSelectedTerm} matches={matches}
+    onMatch={(term,definition) => {
+      // Incorrect associations stay editable until the student finds the right pair.
+      setMatches(old => {
+        const next={...old};
+        for(const key of Object.keys(next)) if(next[Number(key)]===definition) delete next[Number(key)];
+        next[term]=definition;
+        return next;
+      });
+      setSelectedTerm(null);
+    }} onFinish={() => setFinished(true)} />;
+  if (ready && !finished && mode === 'casos' && current?.type === 'question') return <CasesPracticeScreen
+    materialTitle={materialTitle} question={current.question}
+    index={step} total={total} value={responses[step] ?? ''} checked={checked}
+    correct={correctAt(step)} explanation={groundedPracticeExplanation(current.question,pairs)}
+    onSelect={setResponse} onNext={reviewOrNext}
+    onPrevious={() => { if(step>0)setStep(step-1); }}
+    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }}
+    onGenerate={() => { void generateNewCases(); }} generating={generating} />;
 
   return <main className="mx-auto w-full max-w-[780px] px-4 py-7 pb-24 sm:px-6 sm:py-9">
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
