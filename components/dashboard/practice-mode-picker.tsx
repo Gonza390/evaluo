@@ -71,53 +71,74 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
   return (
-    <main className="mx-auto w-full max-w-[1310px] px-4 pb-28 pt-6 sm:px-6 sm:pt-9 lg:px-8 lg:pt-12">
-      <div className="grid items-start gap-x-10 gap-y-11 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)] xl:gap-x-16">
-        <section aria-labelledby="practice-heading" className="min-w-0">
-          <h1 id="practice-heading" className="text-[27px] font-semibold tracking-[-0.055em] text-[#0F1B3D] sm:text-[30px]">Practicar</h1>
-          <p className="mt-1 text-[12px] text-slate-500">Elegí una modalidad para poner a prueba lo que aprendiste.</p>
+    <main className="mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:px-7 lg:pt-9">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+        <div className="min-w-0">
+          <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
+            Practicar
+          </h1>
+          <p className="mt-1 text-[12px] text-[#66758D]">Elegí cómo querés poner a prueba lo que aprendiste.</p>
+        </div>
+        {material && (
+          <div className="relative w-full min-w-0 sm:max-w-[340px]">
+            <label htmlFor="practice-material" className="sr-only">Material de estudio</label>
+            <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#2563EB]" />
+            <select id="practice-material" value={materialId} onChange={event => {
+              setMaterialId(event.target.value); setSelectedMode(null); setPrepareError('');
+            }}
+              className="min-h-11 w-full appearance-none truncate rounded-xl border border-[#E2E8F2] bg-white py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] outline-none transition-colors focus-visible:border-[#2563EB] focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 sm:text-[13px]">
+              {materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+            </select>
+            <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          </div>
+        )}
+      </header>
 
+      <div className="mt-6 grid items-start gap-7 lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)] lg:gap-6 xl:gap-9">
+        <section aria-labelledby="practice-modes-title" className="min-w-0">
           {material ? (
             <>
-              <div className="relative mt-5 max-w-[410px]">
-                <label htmlFor="practice-material" className="mb-1.5 block text-[11px] font-medium text-slate-600">Material de estudio</label>
-                <FileText aria-hidden="true" className="pointer-events-none absolute bottom-[14px] left-3 size-4 text-[#2563EB]" />
-                <select id="practice-material" value={materialId} onChange={event => {
-                  setMaterialId(event.target.value); setSelectedMode(null); setPrepareError('');
-                }} className="min-h-11 w-full appearance-none truncate rounded-xl border border-[#E2E8F2] bg-white py-2.5 pl-10 pr-9 text-[13px] font-medium text-slate-800 outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20">
-                  {materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
-                </select>
-                <ChevronDown aria-hidden="true" className="pointer-events-none absolute bottom-[14px] right-3 size-4 text-slate-400" />
-              </div>
-
-              <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3">
+              <h2 id="practice-modes-title" className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D]">
+                Elegí cómo practicar
+              </h2>
+              <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3">
                 {modes.map(({ title, description, Icon, color }) => {
                   const supported = available(title);
                   const selected = selectedMode === title;
                   return (
-                    <button key={title} type="button" aria-pressed={selected} onClick={() => { if (!supported) return; setSelectedMode(title); setSessionLength('rapido'); }}
-                      className={`group relative flex min-h-[112px] flex-col items-start rounded-[17px] border bg-gradient-to-br px-3.5 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-[1px] hover:shadow-[0_5px_15px_rgba(15,27,61,0.035)] focus-visible:ring-2 focus-visible:ring-[#2563EB] sm:min-h-[116px] sm:px-4 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
-                      <span className="flex w-full items-start justify-between gap-2">
-                        <Icon className="size-[17px] shrink-0" aria-hidden="true" strokeWidth={1.8} />
-                        {selected && <Check className="size-[16px] shrink-0 text-[#2563EB]" aria-hidden="true"/>}
+                    <button key={title} type="button" aria-pressed={selected} disabled={!supported}
+                      onClick={() => { setSelectedMode(title); setSessionLength('rapido'); }}
+                      className={`group flex min-h-[108px] min-w-0 flex-col items-start gap-2 rounded-[15px] border bg-gradient-to-br px-3 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 enabled:hover:-translate-y-[1px] enabled:hover:shadow-[0_5px_16px_rgba(15,27,61,0.05)] focus-visible:ring-2 focus-visible:ring-[#2563EB] disabled:cursor-not-allowed sm:min-h-[96px] sm:flex-row sm:gap-2.5 sm:px-3.5 sm:py-3 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
+                      <span className="flex size-[31px] shrink-0 items-center justify-center rounded-[10px] bg-white/60 sm:size-[34px]">
+                        <Icon className="size-[16px]" aria-hidden="true" strokeWidth={1.8} />
                       </span>
-                      <span className="mt-auto pt-3 text-[13px] font-semibold leading-[1.2]">{title}</span>
-                      <span className="mt-1 line-clamp-2 text-[11px] leading-[1.35] opacity-80">{description}</span>
-                      {!supported && <span className="mt-1 text-[10px] font-medium opacity-65">Próximamente</span>}
+                      <span className="flex min-w-0 flex-1 flex-col sm:pt-0.5">
+                        <span className="flex min-w-0 items-center justify-between gap-1 text-[12px] font-semibold leading-[1.3] sm:text-[13px]">
+                          {title}
+                          {selected && <Check className="size-3.5 shrink-0 text-[#2563EB]" aria-hidden="true" />}
+                        </span>
+                        <span className="mt-1 line-clamp-2 text-[10px] leading-[1.4] opacity-85 sm:text-[11px]">
+                          {description}
+                        </span>
+                        {!supported && <span className="mt-1 text-[10px] font-medium opacity-70">Próximamente</span>}
+                      </span>
                     </button>
                   );
                 })}
               </div>
-
+              <p className="mt-3 text-[11px] text-slate-500">
+                Elegí una actividad para definir tu repaso.
+              </p>
+              {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
             </>
           ) : (
-            <div className="mt-6 rounded-xl border border-[#E7EBF4] bg-slate-50 p-5 text-sm text-slate-600">
+            <div className="rounded-xl border border-[#E7EBF4] bg-slate-50 p-5 text-[13px] text-slate-600">
               Todavía no tenés materiales listos para practicar.
               <Link href="/dashboard" className="ml-1 font-medium text-[#2563EB] underline">Ir a Mi espacio</Link>
             </div>
           )}
         </section>
-        <PracticeHistoryPanel key={materialId} materialId={materialId} history={history} />
+        <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material?.title} history={history} />
       </div>
       {selectedMode && available(selectedMode) && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0F1B3D]/35 px-4 py-6 backdrop-blur-[2px]" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedMode(null);}}>
