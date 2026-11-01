@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Check, ChevronDown, ChevronRight, Clock3, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, Clock3, History, Layers3, ListChecks, Network, RotateCcw, Timer, TrendingUp, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 
 const modeLabels: Record<string, string> = {
@@ -48,8 +49,9 @@ function average(items: PracticeHistoryEntry[]) {
   return items.length ? Math.round(items.reduce((sum, item) => sum + percentOf(item), 0) / items.length) : 0;
 }
 
-export function PracticeHistoryPanel({ history, materialId, materialTitle }: {
+export function PracticeHistoryPanel({ history, materialId, materialTitle, onStartFlashcards }: {
   history: PracticeHistoryEntry[]; materialId: string; materialTitle?: string;
+  onStartFlashcards?: () => void;
 }) {
   const [mode, setMode] = useState('all');
   const [errorsOnly, setErrorsOnly] = useState(false);
@@ -80,6 +82,81 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle }: {
     else groups.push({ key, items: [entry] });
   }
   const hasErrors = sessions.some(item => item.correct < item.total);
+
+  // Estado inicial basado en el diseño proporcionado: mismo panel, sin filtros ni
+  // resultados simulados. El CTA usa el flujo real de Flashcards de Practicar.
+  if (sessions.length === 0) {
+    return (
+      <aside aria-labelledby="practice-history-title"
+        className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:sticky lg:top-5 lg:min-h-[min(630px,calc(100dvh-150px))]">
+        <div className="shrink-0 px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
+          <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
+            Prácticas realizadas
+          </h2>
+          <p className="mt-1 truncate text-[11px] text-[#66758D]" title={materialTitle}>
+            {materialTitle ? `De ${materialTitle}` : 'Historial de este material'}
+          </p>
+          <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
+            <div className="min-w-0 pr-2">
+              <p className="text-[10px] text-slate-500">Prácticas</p>
+              <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
+            </div>
+            <div className="min-w-0 px-3">
+              <p className="text-[10px] text-slate-500">Promedio</p>
+              <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">—</p>
+            </div>
+            <div className="min-w-0 pl-3">
+              <p className="text-[10px] text-slate-500">Para repasar</p>
+              <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex min-h-[270px] flex-1 flex-col items-center justify-center border-t border-[#EEF1F5] px-5 py-6 text-center sm:px-7 sm:py-7">
+          <Image src="/evi/evi-animo.svg" alt="Evi dando ánimo para empezar a practicar"
+            width={136} height={136} className="h-[116px] w-[116px] shrink-0 object-contain sm:h-[136px] sm:w-[136px]"/>
+          <h3 className="mt-2 text-[16px] font-semibold tracking-[-0.03em] text-[#0F1B3D] sm:text-[17px]">
+            Todavía no practicaste
+          </h3>
+          <p className="mt-2 max-w-[290px] text-[12px] leading-[1.55] text-[#526079]">
+            Hacé tu primera práctica y acá vas a ver cómo te fue y qué te conviene repasar.
+          </p>
+          {onStartFlashcards && (
+            <button type="button" onClick={onStartFlashcards}
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#2563EB] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_5px_15px_rgba(37,99,235,0.16)] transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+              Empezar con Flashcards <ArrowRight className="size-3.5" aria-hidden="true"/>
+            </button>
+          )}
+        </div>
+
+        <div className="shrink-0 border-t border-[#EEF1F5] px-4 py-4 sm:px-5">
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#344054]">
+            Qué vas a ver acá
+          </h3>
+          <div className="mt-3 space-y-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E8F0FD] text-[#2563EB]">
+                <ChartNoAxesColumnIncreasing className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
+              </span>
+              <p className="text-[11px] leading-4 text-[#344054]">Tu porcentaje de aciertos en cada práctica</p>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E4F8EE] text-[#12A05F]">
+                <TrendingUp className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
+              </span>
+              <p className="text-[11px] leading-4 text-[#344054]">Cómo vas mejorando de una a la otra</p>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#F0E9FD] text-[#7A3FE0]">
+                <RotateCcw className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
+              </span>
+              <p className="text-[11px] leading-4 text-[#344054]">Tus errores, para repasarlos con un clic</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside aria-labelledby="practice-history-title"
