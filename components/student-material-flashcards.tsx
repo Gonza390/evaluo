@@ -70,6 +70,12 @@ function buildSessionOrder(recall: Record<number, RecallResult>, length: number)
   return [...shuffledIndexes(difficult.length).map((index) => difficult[index]!), ...remaining];
 }
 
+function boundedProgress<T>(values: Record<number, T>, count: number): Record<number, T> {
+  return Object.fromEntries(
+    Object.entries(values).filter(([index]) => Number(index) < count)
+  ) as Record<number, T>;
+}
+
 export function StudentMaterialFlashcards({
   cards,
   materialId,
@@ -95,10 +101,6 @@ export function StudentMaterialFlashcards({
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
   const persistenceLimit = persistentCardCount ?? cards.length;
-  const persistentRecall = (entries: Record<number, RecallResult>) =>
-    Object.fromEntries(Object.entries(entries).filter(([index]) => Number(index) < persistenceLimit));
-  const persistentVotes = (entries: Record<number, QualityVote>) =>
-    Object.fromEntries(Object.entries(entries).filter(([index]) => Number(index) < persistenceLimit));
   // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
   // Los índices siguen siendo los del PDF completo para conservar su progreso.
   const [started, setStarted] = useState(demoMode || allowedCardIndices !== undefined);
@@ -275,27 +277,27 @@ export function StudentMaterialFlashcards({
           recall?: Record<number, RecallResult>;
           votes?: Record<number, QualityVote>;
         };
-        setRecallByCard(persistentRecall(parsed.recall ?? {}));
-        setVoteByCard(persistentVotes(parsed.votes ?? {}));
+        setRecallByCard(boundedProgress(parsed.recall ?? {}, persistenceLimit));
+        setVoteByCard(boundedProgress(parsed.votes ?? {}, persistenceLimit));
       }
     } catch {
       // El estudio sigue funcionando aunque el navegador bloquee storage.
     } finally {
       setHasLoadedProgress(true);
     }
-  }, [demoMode, storageKey]);
+  }, [demoMode, storageKey, persistenceLimit]);
 
   useEffect(() => {
     if (demoMode || !hasLoadedProgress) return;
     try {
       window.localStorage.setItem(
         storageKey,
-        JSON.stringify({ recall: persistentRecall(recallByCard), votes: persistentVotes(voteByCard) })
+        JSON.stringify({ recall: boundedProgress(recallByCard, persistenceLimit), votes: boundedProgress(voteByCard, persistenceLimit) })
       );
     } catch {
       // Persistencia opcional: nunca debe bloquear una sesión.
     }
-  }, [demoMode, hasLoadedProgress, recallByCard, storageKey, voteByCard]);
+  }, [demoMode, hasLoadedProgress, recallByCard, storageKey, voteByCard, persistenceLimit]);
 
   useEffect(() => {
     if (demoMode) return;
