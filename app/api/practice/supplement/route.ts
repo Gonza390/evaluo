@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const body = payload && typeof payload === 'object' && !Array.isArray(payload)
     ? payload as Record<string, unknown> : {};
   if (typeof body.materialId !== 'string' || !uuid.test(body.materialId) ||
-      !['unir','completar','flashcards'].includes(String(body.mode))) {
+      !['unir','completar','mixto','flashcards'].includes(String(body.mode))) {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
   const excludedTerms = Array.isArray(body.excludedTerms)
