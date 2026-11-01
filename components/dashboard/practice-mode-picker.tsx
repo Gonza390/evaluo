@@ -28,7 +28,7 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
   const material = materials.find(m => m.id === materialId);
   // Solamente las opciones ya implementadas conducen a una actividad real.
   const available = (title: string) => title !== 'Con tus palabras';
-  const routes: Record<string, string> = { 'Flashcards': `/materiales/${materialId}?tab=tarjetas`, 'Opciones': `/materiales/${materialId}?tab=ejercicios`, 'Unir conceptos': `/dashboard/practicar/${materialId}/unir`, 'Completar': `/dashboard/practicar/${materialId}/completar`, 'Casos': `/dashboard/practicar/${materialId}/casos`, 'Mixto': `/dashboard/practicar/${materialId}/mixto`, 'Simulacro de examen': `/dashboard/practicar/${materialId}/simulacro` };
+  const routes: Record<string, string> = { 'Flashcards': `/dashboard/practicar/${materialId}/flashcards`, 'Opciones': `/dashboard/practicar/${materialId}/opciones`, 'Unir conceptos': `/dashboard/practicar/${materialId}/unir`, 'Completar': `/dashboard/practicar/${materialId}/completar`, 'Casos': `/dashboard/practicar/${materialId}/casos`, 'Mixto': `/dashboard/practicar/${materialId}/mixto`, 'Simulacro de examen': `/dashboard/practicar/${materialId}/simulacro` };
   const href = selectedMode ? routes[selectedMode] ?? '#' : '#';
   async function startPractice() {
     if (!selectedMode || !materialId || preparing || selectedMode === 'Con tus palabras') return;
