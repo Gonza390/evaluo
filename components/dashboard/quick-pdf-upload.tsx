@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import './practice-motion.css';
 import { CheckCircle2, ImageIcon, Loader2, Upload } from 'lucide-react';
 import {
   cancelStudentMaterialUploadAction,
@@ -92,6 +93,8 @@ export function QuickPdfUpload({
   const [processingMaterialId, setProcessingMaterialId] = useState<string | null>(null);
   const [processingMessage, setProcessingMessage] = useState('Preparando tu material...');
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [processingDeparting, setProcessingDeparting] = useState(false);
+  const redirectingRef = useRef(false);
 
   const universityById = useMemo(
     () => new Map(universidades.map((item) => [item.id, item.nombre])),
@@ -166,8 +169,14 @@ export function QuickPdfUpload({
       setProcessingProgress(state.progress ?? 0);
 
       if (state.status === 'ready') {
-        router.replace(`${getStudentMaterialRoute(processingMaterialId)}?inicio=1`);
-        router.refresh();
+        if (redirectingRef.current) return;
+        redirectingRef.current = true;
+        setProcessingProgress(100);
+        setProcessingDeparting(true);
+        window.setTimeout(() => {
+          router.replace(`${getStudentMaterialRoute(processingMaterialId)}?inicio=1`);
+          router.refresh();
+        }, 210);
       } else if (state.status === 'failed') {
         setErrorMessage(state.error || 'No pudimos terminar de preparar el PDF.');
         setProcessingMaterialId(null);
@@ -332,7 +341,7 @@ export function QuickPdfUpload({
     const progress = Math.max(10, Math.min(processingProgress, 100));
 
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+      <section className={`${processingDeparting ? "practice-screen-leave" : "practice-screen-enter"} rounded-2xl border border-slate-200 bg-white p-5 sm:p-6`}>
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
             <Loader2 className="h-5 w-5 animate-spin" />
