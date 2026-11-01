@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
   groundedPracticeExplanation,
-  isCorrectWrittenAnswer, qualifiedQuestions, selectMixedQuestions,
+  distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, qualifiedQuestions, selectMixedQuestions,
   selectPracticePairs, type PracticePair, type PracticeQuestion,
 } from '@/lib/student-materials/practice-modes';
 
@@ -32,8 +32,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState('');
-  const contexts = useMemo(() => qualifiedQuestions([
-    ...generatedCases, ...questions.filter(q => q.level === 'aplicar'), ...cases,
+  const attempts = useRef(0);
+  const generatingRequest = useRef(false);
+  const contexts = useMemo(() => distinctApplicationCases([
+    ...generatedCases, ...cases, ...questions,
   ]), [questions, cases, generatedCases]);
   const [round, setRound] = useState(0);
   const [step, setStep] = useState(0);
@@ -67,7 +69,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }, [mode, pairs, options, contexts, round]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
-  const ready = mode === 'unir' ? exercisePairs.length >= 3 : mode === 'casos' ? contexts.length >= 2 :
+  const ready = mode === 'unir' ? exercisePairs.length >= 3 : mode === 'casos' ? contexts.length >= MIN_CASES_PER_PRACTICE :
     mode === 'completar' ? tasks.length >= 3 : tasks.length >= 4;
   const correctAt = (index: number) => {
     if (mode === 'unir') return matches[index] === index;
@@ -121,30 +123,46 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   // Only send on transition to completed; responses cannot change after completion.
   }, [finished]);
 
-  async function generateNewCases() {
-    if (generating) return;
+  const generateNewCases = useCallback(async () => {
+    if (generatingRequest.current) return;
+    generatingRequest.current = true;
+    attempts.current += 1;
     setGenerating(true); setGenerationError('');
     try {
       const response = await fetch('/api/practice/cases', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ materialId }),
+        body: JSON.stringify({
+          materialId, round: attempts.current - 1,
+          existingScenarios: contexts.map(q => q.prompt.split(/\n\s*\n/)[0]).slice(0, 24),
+        }),
+        signal: AbortSignal.timeout(65000),
       });
       const body: unknown = await response.json();
       if (!response.ok || !body || typeof body !== 'object' || !('cases' in body) ||
           !Array.isArray(body.cases) || body.cases.length < 1) {
         setGenerationError(response.status === 429
-          ? 'Ya usaste los intentos de generación con IA de hoy. Podés seguir con los casos del material.'
-          : 'No pudimos crear casos nuevos con evidencia suficiente. Podés continuar con los existentes.');
+          ? 'Se alcanzó el límite de generación por hoy. Este material todavía no tiene seis casos verificables.'
+          : 'No pudimos generar más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.');
         return;
       }
-      const newCases = (body.cases as PracticeQuestion[]);
-      setGeneratedCases(newCases);
-      setRound(value => value + 1); setStep(0); setResponses({}); setReviewed([]); setFinished(false);
+      setGeneratedCases(previous => distinctApplicationCases([
+        ...previous, ...(body.cases as PracticeQuestion[]),
+      ]));
     } catch {
-      setGenerationError('No pudimos conectarnos para crear casos nuevos. Reintentá más tarde.');
-    } finally { setGenerating(false); }
-  }
-  const aiCaseButton = mode === 'casos' && aiAvailable ? (
+      setGenerationError('No pudimos conectarnos para generar los casos. Podés reintentar.');
+    } finally {
+      generatingRequest.current = false;
+      setGenerating(false);
+    }
+  }, [materialId, contexts]);
+  // The student enters an actual six-case session only when enough verified
+  // applications exist. Try again with fresh source snippets if QA rejects any.
+  useEffect(() => {
+    if (mode !== 'casos' || !aiAvailable || contexts.length >= MIN_CASES_PER_PRACTICE ||
+        generating || generationError || attempts.current >= 6 || generatingRequest.current) return;
+    void generateNewCases();
+  }, [mode, aiAvailable, contexts.length, generating, generationError, generateNewCases]);
+  const aiCaseButton = mode === 'casos' && aiAvailable && (!ready || finished) ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -153,7 +171,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </p>
       <button type="button" disabled={generating} onClick={generateNewCases}
         className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-blue-700 disabled:opacity-50">
-        {generating ? 'Generando situaciones…' : generatedCases.length ? 'Generar otros casos con IA' : 'Generar casos con IA'}
+        {generating ? 'Generando situaciones…' : ready ? 'Generar más casos con IA' : 'Reintentar generar casos'}
       </button>
       {generationError && <p role="status" className="mt-2 text-xs text-amber-800">{generationError}</p>}
     </div>
@@ -234,9 +252,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     <h1 className="mt-4 text-[23px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
     <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-      <h2 className="font-medium text-slate-800">No hay suficientes ejercicios confiables</h2>
-      <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
-        No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>
+      <h2 className="font-medium text-slate-800">{mode === 'casos' && generating
+        ? 'Preparando tus casos prácticos…' : 'No hay suficientes ejercicios confiables'}</h2>
+      {mode === 'casos' ? <p className="mt-2">
+        {contexts.length} de {MIN_CASES_PER_PRACTICE} casos de aplicación verificados.
+        {generating ? ' Estamos creando situaciones nuevas a partir de tu material.' :
+          ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.'}
+      </p> : <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
+        No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>}
       {aiCaseButton}
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="mt-4 inline-block text-blue-600 underline">
         Practicar con opciones
