@@ -76,6 +76,7 @@ export function StudentMaterialFlashcards({
   onComplete,
   demoMode = false,
   allowedCardIndices,
+  persistentCardCount,
   topicTitle,
   onPracticeTopic,
   onReturnToTopic,
@@ -85,11 +86,19 @@ export function StudentMaterialFlashcards({
   onComplete?: () => void;
   demoMode?: boolean;
   allowedCardIndices?: number[];
+  /** On-demand cards are session-only; do not map their changing indices onto
+   * the persistent recall data for the original uploaded PDF/DOCX deck. */
+  persistentCardCount?: number;
   topicTitle?: string;
   onPracticeTopic?: () => void;
   onReturnToTopic?: () => void;
 }) {
   const scopedIndices = useMemo(() => allowedCardIndices ?? cards.map((_, index) => index), [allowedCardIndices, cards]);
+  const persistenceLimit = persistentCardCount ?? cards.length;
+  const persistentRecall = (entries: Record<number, RecallResult>) =>
+    Object.fromEntries(Object.entries(entries).filter(([index]) => Number(index) < persistenceLimit));
+  const persistentVotes = (entries: Record<number, QualityVote>) =>
+    Object.fromEntries(Object.entries(entries).filter(([index]) => Number(index) < persistenceLimit));
   // Desde el recorrido de un tema empezamos con sus tarjetas, sin otro paso inicial.
   // Los índices siguen siendo los del PDF completo para conservar su progreso.
   const [started, setStarted] = useState(demoMode || allowedCardIndices !== undefined);
@@ -266,8 +275,8 @@ export function StudentMaterialFlashcards({
           recall?: Record<number, RecallResult>;
           votes?: Record<number, QualityVote>;
         };
-        setRecallByCard(parsed.recall ?? {});
-        setVoteByCard(parsed.votes ?? {});
+        setRecallByCard(persistentRecall(parsed.recall ?? {}));
+        setVoteByCard(persistentVotes(parsed.votes ?? {}));
       }
     } catch {
       // El estudio sigue funcionando aunque el navegador bloquee storage.
@@ -281,7 +290,7 @@ export function StudentMaterialFlashcards({
     try {
       window.localStorage.setItem(
         storageKey,
-        JSON.stringify({ recall: recallByCard, votes: voteByCard })
+        JSON.stringify({ recall: persistentRecall(recallByCard), votes: persistentVotes(voteByCard) })
       );
     } catch {
       // Persistencia opcional: nunca debe bloquear una sesión.
@@ -322,7 +331,7 @@ export function StudentMaterialFlashcards({
     ]);
     if (indexes.size === 0) return;
 
-    const entries = [...indexes].map((cardIndex) => ({
+    const entries = [...indexes].filter(cardIndex => cardIndex < persistenceLimit).map((cardIndex) => ({
       cardIndex,
       recall: recallByCard[cardIndex] ?? null,
       vote: voteByCard[cardIndex] ?? null,
@@ -351,7 +360,7 @@ export function StudentMaterialFlashcards({
       window.clearTimeout(timer);
       if (retryTimer !== null) window.clearTimeout(retryTimer);
     };
-  }, [demoMode, hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
+  }, [demoMode, hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard, persistenceLimit]);
 
   const navigateBack = useCallback(() => {
     setPosition((current) => Math.max(0, current - 1));
