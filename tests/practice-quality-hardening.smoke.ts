@@ -125,9 +125,21 @@ assert.match(session,/contexts\.length < 1/);
 assert.match(session,/distinctApplicationCases\(contexts\)\.length >= 1/);
 assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, 8, round\)/);
 assert.match(session,/MIN_CASES_PER_PRACTICE/);
+// Cost reductions must preserve the same independent review gates and
+// avoid new Gemini requests when canonical Mixto concepts already suffice.
+const supplementEndpoint=read('app/api/practice/supplement/route.ts');
+assert.match(supplementEndpoint,/body\.mode === 'mixto' \? 2 : 6/);
+assert.match(supplementEndpoint,/local\.length >= minimumPairs/);
 const cEndpoint=read('app/api/practice/cases/route.ts');
 const tfEndpoint=read('app/api/practice/true-false/route.ts');
 assert.match(cEndpoint,/applyIndependentCaseReview\(candidates,reviewed,sources\)/);
+assert.match(cEndpoint,/const reviewSources = sources\.filter/);
+assert.match(cEndpoint,/const reviewSourceInput = reviewSources\.map/);
+assert.match(cEndpoint,/'FUENTES: '\+reviewSourceInput/);
+assert.match(tfEndpoint,/const adjudicationSources = fragments\.filter/);
+assert.match(tfEndpoint,/const adjudicationEvidence = adjudicationSources\.map/);
+assert.match(tfEndpoint,/'MATERIAL: '\+adjudicationEvidence/);
+
 assert.match(tfEndpoint,/applyIndependentTrueFalseReview\(candidates,judgments,fragments\)/);
 for(const endpoint of [cEndpoint,tfEndpoint]){
   assert.match(endpoint,/responseSchema/);
