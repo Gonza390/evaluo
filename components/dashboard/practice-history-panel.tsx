@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, Clock3, History, Layers3, ListChecks, Network, RotateCcw, Timer, TrendingUp, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
@@ -49,10 +50,12 @@ function average(items: PracticeHistoryEntry[]) {
   return items.length ? Math.round(items.reduce((sum, item) => sum + percentOf(item), 0) / items.length) : 0;
 }
 
-export function PracticeHistoryPanel({ history, materialId, materialTitle, onStartFlashcards }: {
+export function PracticeHistoryPanel({ history, materialId, materialTitle, onStartFlashcards, historyLoadError = false }: {
   history: PracticeHistoryEntry[]; materialId: string; materialTitle?: string;
   onStartFlashcards?: () => void;
+  historyLoadError?: boolean;
 }) {
+  const router = useRouter();
   const [mode, setMode] = useState('all');
   const [errorsOnly, setErrorsOnly] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -71,9 +74,11 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
   const totalToReview = sessions.reduce((sum, item) => sum + item.total - item.correct, 0);
   const averageScore = average(sessions);
   const recent = [...sessions].reverse().slice(-8);
-  const firstHalf = sessions.length >= 4 ? average(sessions.slice(-4)) : null;
-  const lastHalf = sessions.length >= 4 ? average(sessions.slice(0, 4)) : null;
-  const change = firstHalf !== null && lastHalf !== null ? lastHalf - firstHalf : null;
+  // Comparar bloques independientes. Con menos de ocho sesiones no existe
+  // un período anterior comparable: mostrar solo las barras observadas.
+  const previousFour = sessions.length >= 8 ? average(sessions.slice(4, 8)) : null;
+  const lastFour = sessions.length >= 8 ? average(sessions.slice(0, 4)) : null;
+  const change = previousFour !== null && lastFour !== null ? lastFour - previousFour : null;
   const groups: { key: string; items: PracticeHistoryEntry[] }[] = [];
   for (const entry of visible) {
     const key = dateLabel(entry.completedAt, now);
@@ -82,6 +87,28 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
     else groups.push({ key, items: [entry] });
   }
   const hasErrors = sessions.some(item => item.correct < item.total);
+
+  // Diferenciar una consulta fallida de un usuario que todavía no practicó.
+  if (historyLoadError) {
+    return (
+      <aside aria-labelledby="practice-history-title"
+        className="min-w-0 rounded-[18px] border border-[#E7EBF4] bg-white px-5 py-5 shadow-[0_5px_22px_rgba(15,27,61,0.035)]">
+        <h2 id="practice-history-title" className="text-[18px] font-semibold text-[#0F1B3D]">
+          Prácticas realizadas
+        </h2>
+        <div role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-5 text-center">
+          <p className="text-[13px] font-medium text-amber-900">No pudimos cargar tus prácticas.</p>
+          <p className="mt-1 text-[12px] leading-5 text-amber-800">
+            Podés seguir practicando. Reintentá para consultar tus resultados anteriores.
+          </p>
+          <button type="button" onClick={() => router.refresh()}
+            className="mt-3 min-h-10 rounded-lg bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8]">
+            Reintentar
+          </button>
+        </div>
+      </aside>
+    );
+  }
 
   // Estado inicial basado en el diseño proporcionado: mismo panel, sin filtros ni
   // resultados simulados. El CTA usa el flujo real de Flashcards de Practicar.
@@ -281,7 +308,7 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
                           </div>
                           <button type="button" onClick={() => setExpandedId(expanded ? null : item.id)}
                             className="shrink-0 text-[10px] font-semibold text-[#2563EB] hover:underline">
-                            {expanded ? 'Cerrar' : incorrect ? `Revisar ${incorrect}` : 'Ver detalle'}
+                            {expanded ? 'Cerrar' : item.answers?.length && incorrect ? `Revisar ${incorrect}` : 'Ver detalle'}
                           </button>
                         </div>
                         {expanded && (
@@ -326,9 +353,9 @@ export function PracticeHistoryPanel({ history, materialId, materialTitle, onSta
           </>
         )}
       </div>
-      {sessions.length >= 100 && (
+      {sessions.length >= 500 && (
         <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 text-[10px] text-slate-500">
-          Se muestran hasta 100 registros recientes.
+          Se muestran hasta 500 registros recientes.
         </div>
       )}
     </aside>
