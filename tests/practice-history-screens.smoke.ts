@@ -32,6 +32,8 @@ assert.match(practiceSession, /mode === 'opciones' \? \(/,
   'Opciones tiene encabezado propio para PDF en la misma línea');
 assert.match(practiceSession, /min-w-0 flex-1 truncate text-\[12px\]/,
   'Nombre de PDF truncado en pantallas pequeñas');
+assert.match(practiceSession, /mt-5 flex w-full items-center justify-between gap-2/,
+  'Anterior y Comprobar quedan uno en cada extremo en Opciones');
 assert.match(practiceSession, /mode === 'opciones' \? 'text-center ' : 'text-left '/,
   'Verdadero y Falso centrados, sin cambiar las otras modalidades');
 assert.match(picker, /data-practice-dual-pane/, 'Practicar identifica su layout de dos paneles');
