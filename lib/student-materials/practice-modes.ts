@@ -174,6 +174,36 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
     seen.add(key); return true;
   });
 }
+export const MIN_CASES_PER_PRACTICE = 6;
+
+/** A case session must be grounded in a new situation, not a classification
+ * lookup or a question upgraded to "aplicar" by its metadata alone. */
+export function distinctApplicationCases(items: PracticeQuestion[], limit = 24): PracticeQuestion[] {
+  const seen = new Set<string>();
+  const selected: PracticeQuestion[] = [];
+  for (const question of qualifiedQuestions(items)) {
+    if (question.level !== 'aplicar' ||
+        !['source-application', 'ai-source-backed'].includes(question.kind ?? '') ||
+        question.prompt.trim().length < 100 || question.explanation.trim().length < 80) continue;
+    const scenario = normalizedAnswer(question.prompt.split(/\n\s*\n/)[0] ?? '');
+    if (scenario.length < 65 || seen.has(scenario)) continue;
+    // Prevent near-identical rewrites from counting as separate cases.
+    const words = new Set(scenario.split(' ').filter(word => word.length > 3));
+    const similar = selected.some(existing => {
+      const other = new Set(normalizedAnswer(existing.prompt.split(/\n\s*\n/)[0] ?? '')
+        .split(' ').filter(word => word.length > 3));
+      const overlap = [...words].filter(word => other.has(word)).length;
+      return words.size >= 9 && other.size >= 9 &&
+        overlap / Math.min(words.size, other.size) >= 0.83;
+    });
+    if (similar) continue;
+    seen.add(scenario);
+    selected.push(question);
+    if (selected.length >= limit) break;
+  }
+  return selected;
+}
+
 /** Keep application separate from recognition and never repeat a question in Mixto. */
 export function selectMixedQuestions(
   options: PracticeQuestion[], cases: PracticeQuestion[], round = 0,
