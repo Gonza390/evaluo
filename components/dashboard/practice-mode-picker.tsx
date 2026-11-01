@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { PracticeHistoryPanel } from '@/components/dashboard/practice-history-panel';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
+import scrollbarStyles from './practice-history-scrollbar.module.css';
 import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, Layers3, ListChecks, Mic, Network, Timer, Zap } from 'lucide-react';
 
 type Material = { id: string; title: string };
@@ -122,8 +123,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   );
 
   return (
-    <main className="mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:px-7 lg:pt-9">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+    <main data-practice-dual-pane className="mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-7 lg:pb-5 lg:pt-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
           <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
             Practicar
@@ -145,14 +146,14 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         )}
       </header>
 
-      <div className={`mt-6 grid items-start gap-7 lg:gap-6 xl:gap-9 ${material ? 'lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]' : ''}`}>
-        <section aria-labelledby="practice-modes-title" className="min-w-0">
+      <div className={`mt-6 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? 'lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]' : ''}`}>
+        <section aria-labelledby="practice-modes-title" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
           {material ? (
             <>
-              <h2 id="practice-modes-title" className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D]">
+              <h2 id="practice-modes-title" className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D] lg:shrink-0">
                 Elegí cómo practicar
               </h2>
-              <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3">
+              <div tabIndex={0} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
                 {modes.map(({ title, description, Icon, color }) => {
                   const supported = available(title);
                   const selected = selectedMode === title;
@@ -177,7 +178,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
                   );
                 })}
               </div>
-              <p className="mt-3 text-[11px] text-slate-500">
+              <p className="mt-3 text-[11px] text-slate-500 lg:shrink-0">
                 Elegí una actividad para definir tu repaso.
               </p>
               {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
