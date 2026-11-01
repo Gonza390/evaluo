@@ -76,7 +76,7 @@ const session=file('components/dashboard/practice-session.tsx');
 const endpoint=file('app/api/practice/true-false/route.ts');
 const picker=file('components/dashboard/practice-mode-picker.tsx');
 const upload=file('lib/student-materials/processing-service.ts');
-assert.match(session,/mode === 'opciones'\s*\)?\s*return selectBalancedTrueFalse\(trueFalsePool, 8, round\)/);
+assert.match(session,/mode === 'opciones'\s*\)?\s*return selectBalancedTrueFalse\(trueFalsePool, reviewLength === 'rapido' \? 6 : 8, round\)/);
 assert.match(session,/sufficientTrueFalse\(trueFalsePool, MIN_CASES_PER_PRACTICE\)/);
 assert.match(session,/fetch\('\/api\/practice\/true-false'/);
 assert.match(endpoint,/export async function POST\(/);
