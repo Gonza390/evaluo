@@ -1604,9 +1604,53 @@ assert.ok(
   integratedLongArtifacts.flashcards.length >= 40,
   'La implementación activa v2 debe generar más de 30 tarjetas para un material extenso.'
 );
+// This intentionally repetitive fixture represents a source with 150 nearly
+// interchangeable definitions. It must NOT meet a numeric bank quota by
+// accepting several virtually indistinguishable answer options.
 assert.ok(
-  integratedLongArtifacts.questions.length > 43,
-  'La práctica real del wrapper v2 debe ampliar el banco canónico; aceptadas=' + integratedLongArtifacts.questions.length + '; descartes=' + JSON.stringify(integratedLongArtifacts.integrity ?? null)
+  (integratedLongArtifacts.integrity?.rejectedReasons ?? []).includes('near_equivalent_mcq_distractors'),
+  'Los distractores equivalentes deben descartarse aunque eso reduzca la cantidad de preguntas.'
+);
+
+// Exercise the same active v2 pipeline with distinct, source-labelled
+// categories and processes. Capacity must be demonstrated with distinguishable
+// answers, never by disabling the semantic safeguard above.
+const distinctPracticeModel: CanonicalPedagogicalModel = {
+  ...denseQuestionBankModel,
+  classifications: Array.from({ length: 54 }, (_, i) => ({
+    title: `Clasificación del módulo ${i + 1}`,
+    items: [
+      `Diagnóstico ${i + 1}: identifica las necesidades antes de tomar decisiones sobre el módulo.`,
+      `Planificación ${i + 1}: organiza los recursos para ejecutar las actividades previstas.`,
+      `Seguimiento ${i + 1}: contrasta los resultados obtenidos con los objetivos establecidos.`,
+    ],
+    pageReferences: [(i % 94) + 1],
+  })),
+  processes: Array.from({ length: 48 }, (_, i) => ({
+    title: `Procedimiento académico ${i + 1}`,
+    steps: [
+      'Se reconocen las condiciones iniciales de la tarea mediante observaciones registradas.',
+      'Se comparan los datos disponibles con criterios previamente establecidos.',
+      'Se documentan las conclusiones obtenidas y las acciones de seguimiento.',
+    ],
+    pageReferences: [(i % 94) + 1],
+  })),
+};
+const distinctLongArtifacts = buildCurrentPedagogicalArtifacts({
+  summary: longSummaryWithChapters,
+  glossary: extensiveGlossary,
+  canonicalModel: distinctPracticeModel,
+  pageCount: 94,
+});
+assert.ok(
+  distinctLongArtifacts.questions.length > 43,
+  `La práctica debe ampliar el banco cuando hay respuestas realmente diferenciables; aceptadas=${distinctLongArtifacts.questions.length}, descartes=${JSON.stringify(distinctLongArtifacts.integrity ?? null)}`
+);
+assert.ok(
+  distinctLongArtifacts.questions.every(question =>
+    question.type !== 'multiple_choice' || new Set(question.options).size === question.options.length
+  ),
+  'Ninguna pregunta aceptada puede tener alternativas duplicadas.'
 );
 const integratedCardPages = integratedLongArtifacts.flashcards
   .map((card) => card.reference.pageStart)
