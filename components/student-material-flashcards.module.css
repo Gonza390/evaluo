@@ -1,0 +1,24 @@
+/* Un cambio de tarjeta perceptible pero breve, sin alterar el giro 3D. */
+@keyframes flashcard-slide-out {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: .32; transform: translateX(-18px) scale(.988); }
+}
+@keyframes flashcard-slide-in {
+  from { opacity: .32; transform: translateX(18px) scale(.988); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+.cardLeaving {
+  animation: flashcard-slide-out 140ms ease-in both;
+  pointer-events: none;
+}
+.cardEntering {
+  animation: flashcard-slide-in 190ms ease-out both;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cardLeaving, .cardEntering {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}
