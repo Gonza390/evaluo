@@ -11,6 +11,13 @@ const migration = read('supabase/migrations/20261101140000_practice_mode_session
 
 assert.match(picker, /lg:grid-cols-\[minmax\(0,1\.22fr\)_minmax\(310px,0\.86fr\)\]/, 'Dos columnas en escritorio');
 assert.match(picker, /grid-cols-2 gap-2\.5/, 'Tarjetas compactas en móvil');
+assert.match(picker, /data-practice-dual-pane/, 'Practicar identifica su layout de dos paneles');
+assert.match(picker, /lg:h-\[calc\(100dvh-52px\)\]/, 'La altura desktop queda acotada al viewport');
+assert.match(picker, /lg:flex-1 lg:content-start lg:overflow-y-auto/, 'Las modalidades tienen scroll propio en escritorio');
+assert.match(picker, /aria-label="Modalidades de práctica: desplazate para ver todas"/, 'La zona desplazable es accesible');
+assert.match(picker, /scrollbarStyles\.scrollArea/, 'La barra de las modalidades queda oculta sin desactivar scroll');
+assert.match(panel, /lg:h-full lg:min-h-0/, 'El historial queda fijo dentro de la columna');
+assert.doesNotMatch(panel, /lg:sticky/, 'No depende del scroll general de página');
 assert.match(picker, /material && <PracticeHistoryPanel/, 'Sin PDF no se presenta un historial engañoso');
 assert.match(picker, /onStartFlashcards=\{\(\) => \{ setSessionLength\('rapido'\); setSelectedMode\('Flashcards'\); \}\}/,
   'El botón del vacío usa el flujo real de selección de Flashcards');
