@@ -18,7 +18,7 @@ assert.match(shell, /<PdfUploadTriggerContext.Provider value=\{openUploadPicker\
   'Every dashboard CTA should have a direct upload action.');
 assert.match(shell, /const openUploadPicker = useCallback/);
 assert.match(shell, /pickerRef\.current\?\.click\(\)/);
-assert.match(shell, /const \[open, setOpen\] = useState\(initialOpen\)/,
+assert.match(shell, /const \[open, setOpen\] = useState\(initialOpen && initialSource !== 'signup-direct'\)/,
   'Preserve upload deep-link behavior after removing text interception.');
 assert.match(shell, /trackMarketingEvent\('pdf_picker_opened'/,
   'Preserve picker analytics when called directly.');
