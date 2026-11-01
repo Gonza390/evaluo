@@ -517,6 +517,17 @@ export function MaterialStudyWorkspace({
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
+  // Las pestañas inactivas usan forceMount para preservar intentos, pero su
+  // contenido no debe montarse antes de la primera visita del estudiante.
+  const [visitedInteractiveTabs, setVisitedInteractiveTabs] = useState<StudyTabId[]>(() =>
+    [demo?.activeTab ?? (initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen'))]
+  );
+  useEffect(() => {
+    if (activeTab !== 'ejercicios' && activeTab !== 'tarjetas') return;
+    setVisitedInteractiveTabs(previous =>
+      previous.includes(activeTab) ? previous : [...previous, activeTab]
+    );
+  }, [activeTab]);
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
   const isDemo = Boolean(demo);
   const hasPendingStudyErrors = (demo?.pendingStudyErrorCount ?? pendingStudyErrorCount) > 0;
@@ -2266,6 +2277,7 @@ export function MaterialStudyWorkspace({
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
+            {(activeTab === 'tarjetas' || visitedInteractiveTabs.includes('tarjetas')) && (
             <StudentMaterialFlashcards
               key={flashcardTopicIndex === null ? 'general' : `topic-${flashcardTopicIndex}`}
               cards={studyArtifacts.flashcards}
@@ -2285,6 +2297,7 @@ export function MaterialStudyWorkspace({
               onComplete={demo ? undefined : () => { if (flashcardTopicIndex !== null) markActivity(materialId, flashcardTopicIndex, 'flashcards'); else requestExamDatePrompt(); }}
               demoMode={Boolean(demo)}
             />
+            )}
           </div>
         </Activity>
       </TabsContent>
@@ -2296,7 +2309,7 @@ export function MaterialStudyWorkspace({
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
-            {demo ? (
+            {(activeTab === 'ejercicios' || visitedInteractiveTabs.includes('ejercicios')) ? (demo ? (
               demo.practice
             ) : diagnosticMode ? (
               <StudentMaterialDiagnostic
@@ -2384,7 +2397,7 @@ export function MaterialStudyWorkspace({
                 materialId={materialId}
                 onComplete={() => { if (!demo && practiceSectionIndex !== undefined) markActivity(materialId, practiceSectionIndex, 'questions'); else if (practiceSectionIndex === undefined) requestExamDatePrompt(); }}
               />
-            )}
+            )) : null}
           </div>
         </Activity>
       </TabsContent>
