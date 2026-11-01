@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { PracticeHistoryPanel } from '@/components/dashboard/practice-history-panel';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
-import { ArrowRight, BookOpen, Check, ChevronDown, CircleHelp, FileText, Layers3, ListChecks, Mic, Network, Timer, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, Layers3, ListChecks, Mic, Network, Timer, Zap } from 'lucide-react';
 
 type Material = { id: string; title: string };
 const modes = [
@@ -30,6 +30,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [prepareError, setPrepareError] = useState('');
+  const [sessionLength,setSessionLength] = useState<'rapido'|'completo'>('rapido');
   const router = useRouter();
   const material = materials.find(m => m.id === materialId);
   const available = (title: string) => title !== 'Con tus palabras';
@@ -46,10 +47,11 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
 
   async function startPractice() {
     if (!selectedMode || !materialId || preparing || !available(selectedMode)) return;
+    const destination = href + '?repaso=' + sessionLength;
     setPrepareError('');
     if (!advancedPracticeEnabled || selectedMode === 'Flashcards' || selectedMode === 'Opciones' ||
         selectedMode === 'Unir conceptos' || selectedMode === 'Completar' || selectedMode === 'Casos') {
-      router.push(href);
+      router.push(destination);
       return;
     }
     setPreparing(true);
@@ -63,7 +65,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
       // Una preparación avanzada fallida no impide empezar la práctica básica.
     } finally {
       setPreparing(false);
-      router.push(href);
+      router.push(destination);
     }
   }
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
@@ -93,7 +95,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
                   const supported = available(title);
                   const selected = selectedMode === title;
                   return (
-                    <button key={title} type="button" aria-pressed={selected} onClick={() => setSelectedMode(title)}
+                    <button key={title} type="button" aria-pressed={selected} onClick={() => { if (!supported) return; setSelectedMode(title); setSessionLength('rapido'); }}
                       className={`group relative flex min-h-[112px] flex-col items-start rounded-[17px] border bg-gradient-to-br px-3.5 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-[1px] hover:shadow-[0_5px_15px_rgba(15,27,61,0.035)] focus-visible:ring-2 focus-visible:ring-[#2563EB] sm:min-h-[116px] sm:px-4 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
                       <span className="flex w-full items-start justify-between gap-2">
                         <Icon className="size-[17px] shrink-0" aria-hidden="true" strokeWidth={1.8} />
@@ -106,19 +108,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
                   );
                 })}
               </div>
-              <div className="mt-4">
-                {selectedMode && available(selectedMode) ? (
-                  <button type="button" disabled={preparing} onClick={() => void startPractice()}
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 text-[13px] font-medium text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
-                    {selectedMode === 'Flashcards' ? 'Practicar con flashcards' : 'Comenzar práctica'} <ArrowRight className="size-4" aria-hidden="true"/>
-                  </button>
-                ) : selectedMode ? (
-                  <p className="flex min-h-11 items-center gap-2 rounded-xl bg-slate-50 px-3 text-xs text-slate-600" role="status">
-                    <CircleHelp className="size-4 shrink-0" /> Esta modalidad estará disponible próximamente.
-                  </p>
-                ) : <p className="text-center text-[12px] text-slate-500">Seleccioná una modalidad para empezar.</p>}
-                {prepareError && <p role="alert" className="mt-2 text-xs text-amber-800">{prepareError}</p>}
-              </div>
+
             </>
           ) : (
             <div className="mt-6 rounded-xl border border-[#E7EBF4] bg-slate-50 p-5 text-sm text-slate-600">
@@ -129,6 +119,29 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
         </section>
         <PracticeHistoryPanel key={materialId} materialId={materialId} history={history} />
       </div>
+      {selectedMode && available(selectedMode) && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0F1B3D]/35 px-4 py-6 backdrop-blur-[2px]" onMouseDown={event=>{if(event.target===event.currentTarget)setSelectedMode(null);}}>
+          <section role="dialog" aria-modal="true" aria-labelledby="practice-intensity-title" className="w-full max-w-[410px] rounded-2xl border border-[#E7EBF4] bg-white p-5 shadow-[0_22px_70px_rgba(15,27,61,0.16)] sm:p-6">
+            <button type="button" onClick={()=>setSelectedMode(null)} className="mb-4 inline-flex items-center gap-1.5 text-[12px] text-slate-500 hover:text-slate-800"><ArrowLeft className="size-3.5"/> Volver a Practicar</button>
+            <span className="mb-3 inline-flex size-9 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#4F5DFF]"><Clock3 className="size-[18px]"/></span>
+            <h2 id="practice-intensity-title" className="text-[20px] font-semibold tracking-[-.035em] text-[#0F1B3D]">¿Cuánto querés practicar?</h2>
+            <p className="mt-1 text-[13px] leading-5 text-slate-500">Elegí cómo querés estudiar con {selectedMode.toLowerCase()}.</p>
+            <div className="mt-5 grid gap-2.5">
+              <button type="button" aria-pressed={sessionLength==='rapido'} onClick={()=>setSessionLength('rapido')} className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition ${sessionLength==='rapido'?'border-[#4F5DFF] bg-[#F6F7FF] ring-1 ring-[#4F5DFF]/20':'border-[#E7EBF4] bg-white hover:border-slate-300'}`}>
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#4F5DFF]"><Zap className="size-[18px]"/></span>
+                <span className="flex-1"><span className="block text-[13px] font-semibold text-slate-900">Repaso rápido</span><span className="mt-0.5 block text-[11px] leading-4 text-slate-500">Una sesión corta para practicar lo esencial</span></span>
+                <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${sessionLength==='rapido'?'border-[#4F5DFF] bg-[#4F5DFF]':'border-slate-300'}`}>{sessionLength==='rapido'&&<Check className="size-3 text-white"/>}</span>
+              </button>
+              <button type="button" aria-pressed={sessionLength==='completo'} onClick={()=>setSessionLength('completo')} className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition ${sessionLength==='completo'?'border-[#4F5DFF] bg-[#F6F7FF] ring-1 ring-[#4F5DFF]/20':'border-[#E7EBF4] bg-white hover:border-slate-300'}`}>
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F0F3F9] text-[#53647B]"><BookOpen className="size-[18px]"/></span>
+                <span className="flex-1"><span className="block text-[13px] font-semibold text-slate-900">Repaso completo</span><span className="mt-0.5 block text-[11px] leading-4 text-slate-500">Más ejercicios para profundizar en el material</span></span>
+                <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border ${sessionLength==='completo'?'border-[#4F5DFF] bg-[#4F5DFF]':'border-slate-300'}`}>{sessionLength==='completo'&&<Check className="size-3 text-white"/>}</span>
+              </button>
+            </div>
+            <button type="button" onClick={()=>void startPractice()} disabled={preparing} className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[13px] font-medium text-white transition hover:bg-[#1D4ED8] disabled:opacity-50">Empezar a practicar <ArrowRight className="size-4"/></button>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
