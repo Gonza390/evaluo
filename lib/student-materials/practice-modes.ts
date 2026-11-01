@@ -1,7 +1,7 @@
 import type { CanonicalPedagogicalModel } from './types';
 import { constructSourceBackedScenarios } from './practice-case-scenarios';
 
-export type PracticePair = { term: string; definition: string; chapterTitle: string | null; englishTerm?: string | null };
+export type PracticePair = { term: string; definition: string; chapterTitle: string | null; englishTerm?: string | null; pageStart?: number | null };
 export type PracticeQuestion = {
   id: string; prompt: string; options: string[]; answer: string; explanation: string;
   level: string; pageStart: number | null; chapterTitle?: string | null; kind?: string;
