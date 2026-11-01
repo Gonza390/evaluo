@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen } from '@/components/dashboard/practice-visual-screens';
+import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
@@ -368,6 +368,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       });
       setSelectedTerm(null);
     }} onFinish={() => setFinished(true)} />;
+  if (ready && !finished && mode === 'mixto' && current?.type === 'question') return <MixedPracticeScreen
+    materialTitle={materialTitle} prompt={current.question.prompt} options={current.question.options}
+    index={step} total={total} value={responses[step] ?? ''} checked={checked}
+    correct={correctAt(step)} answer={current.question.answer}
+    explanation={groundedPracticeExplanation(current.question,pairs)}
+    onSelect={setResponse} onConfirm={reviewOrNext}
+    onSkip={() => { if(step<tasks.length-1)setStep(step+1);else setFinished(true); }} />;
   if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <CompletePracticeScreen
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
