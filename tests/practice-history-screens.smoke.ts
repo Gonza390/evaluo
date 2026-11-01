@@ -10,7 +10,14 @@ const api = read('app/api/practice/session/route.ts');
 const migration = read('supabase/migrations/20261101140000_practice_mode_sessions.sql');
 
 assert.match(picker, /lg:grid-cols-\[minmax\(0,1\.22fr\)_minmax\(310px,0\.86fr\)\]/, 'Dos columnas en escritorio');
-assert.match(picker, /grid-cols-2 gap-2\.5/, 'Tarjetas compactas en móvil');
+assert.match(picker, /grid-cols-2 gap-3/, 'Tarjetas de Practicar con el espaciado de main');
+assert.match(picker, /sm:min-h-\[142px\] sm:p-4/, 'Tarjetas con altura y padding de main');
+assert.match(picker, /bg-\[#FCF2DF\] text-\[#9A712C\]/, 'Color Mixto idéntico a main');
+assert.match(picker, /bg-\[#E2F2F7\] text-\[#41839B\]/, 'Color Flashcards idéntico a main');
+assert.match(picker, /bg-transparent py-2\.5 pl-10/, 'Selector de PDF sin recuadro');
+assert.doesNotMatch(picker, /rounded-xl border border-\[#E2E8F2\] bg-white py-2\.5 pl-10/, 'El selector no vuelve a ser una tarjeta');
+assert.doesNotMatch(panel, /materialTitle|Historial de este material/, 'El historial no repite el nombre del PDF');
+assert.doesNotMatch(panel, /size-\[17px\] shrink-0 text-\[#71809A\]/, 'Sin ícono de historial en el encabezado');
 assert.match(picker, /data-practice-dual-pane/, 'Practicar identifica su layout de dos paneles');
 assert.match(picker, /lg:h-\[calc\(100dvh-52px\)\]/, 'La altura desktop queda acotada al viewport');
 assert.match(picker, /lg:flex-1 lg:content-start lg:overflow-y-auto/, 'Las modalidades tienen scroll propio en escritorio');
