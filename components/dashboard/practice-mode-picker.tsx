@@ -33,6 +33,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [leavingReview, setLeavingReview] = useState(false);
+  const [leavingPicker, setLeavingPicker] = useState(false);
   const [prepareError, setPrepareError] = useState('');
   const [sessionLength,setSessionLength] = useState<'rapido'|'completo'>('rapido');
   const router = useRouter();
@@ -49,6 +50,23 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   };
   const href = selectedMode ? routes[selectedMode] ?? '#' : '#';
 
+  function openReview(title:string) {
+    if (leavingPicker) return;
+    setSessionLength('rapido');
+    setLeavingPicker(true);
+    window.setTimeout(() => {
+      setSelectedMode(title);
+      setLeavingPicker(false);
+    }, 200);
+  }
+  function backToPicker() {
+    if (leavingReview) return;
+    setLeavingReview(true);
+    window.setTimeout(() => {
+      setSelectedMode(null);
+      setLeavingReview(false);
+    }, 200);
+  }
   async function startPractice() {
     if (!selectedMode || !materialId || preparing || leavingReview || !available(selectedMode)) return;
     const destination = href + '?repaso=' + sessionLength;
@@ -113,7 +131,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
           })}
         </div>
         <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
-          <button type="button" onClick={()=>setSelectedMode(null)} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
+          <button type="button" onClick={backToPicker} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">Volver</button>
           <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
             Continuar <ArrowRight className="size-4"/>
           </button>
@@ -123,7 +141,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   );
 
   return (
-    <main data-practice-dual-pane className="mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-7 lg:pb-5 lg:pt-6">
+    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-7 lg:pb-5 lg:pt-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
           <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
@@ -159,7 +177,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
                   const selected = selectedMode === title;
                   return (
                     <button key={title} type="button" aria-pressed={selected} disabled={!supported}
-                      onClick={() => { setSelectedMode(title); setSessionLength('rapido'); }}
+                      onClick={() => openReview(title)}
                       className={`group flex min-h-[108px] min-w-0 flex-col items-start gap-2 rounded-[15px] border px-3 py-3 text-left outline-none transition-[border-color,box-shadow,transform] duration-150 enabled:hover:-translate-y-[1px] enabled:hover:shadow-[0_5px_16px_rgba(15,27,61,0.05)] focus-visible:ring-2 focus-visible:ring-[#2563EB] disabled:cursor-not-allowed sm:min-h-[96px] sm:flex-row sm:gap-2.5 sm:px-3.5 sm:py-3 ${color} ${selected ? 'border-[#4F5DFF] ring-2 ring-[#4F5DFF]/20' : 'border-transparent'}`}>
                       <span className="flex size-[31px] shrink-0 items-center justify-center rounded-[10px] bg-white/60 sm:size-[34px]">
                         <Icon className="size-[16px]" aria-hidden="true" strokeWidth={1.8} />
@@ -192,7 +210,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         </section>
         {material && <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material.title} history={history}
           historyLoadError={historyLoadError}
-          onStartFlashcards={() => { setSessionLength('rapido'); setSelectedMode('Flashcards'); }} />}
+          onStartFlashcards={() => openReview('Flashcards')} />}
       </div>
     </main>
   );
