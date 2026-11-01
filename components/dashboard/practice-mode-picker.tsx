@@ -175,7 +175,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
             </div>
           )}
         </section>
-        <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material?.title} history={history} />
+        <PracticeHistoryPanel key={materialId} materialId={materialId} materialTitle={material?.title} history={history}
+          onStartFlashcards={material ? () => { setSessionLength('rapido'); setSelectedMode('Flashcards'); } : undefined} />
       </div>
     </main>
   );
