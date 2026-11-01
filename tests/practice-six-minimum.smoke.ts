@@ -69,7 +69,7 @@ assert.match(session,/fetch\('\/api\/practice\/supplement'/);
 assert.match(session,/fetch\('\/api\/practice\/cases'/);
 assert.match(session,/contexts\.length >= MIN_CASES_PER_PRACTICE/);
 const flashcards=read('components/dashboard/practice-flashcard-session.tsx');
-assert.match(flashcards,/combined\.length < MIN_CASES_PER_PRACTICE/);
+assert.match(flashcards,/approvedIndices\.length < MIN_CASES_PER_PRACTICE/);
 assert.match(flashcards,/StudentMaterialFlashcards/);
 
 const picker=read('components/dashboard/practice-mode-picker.tsx');
