@@ -101,17 +101,10 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         <p className="mx-auto mt-1 max-w-[370px] text-[11px] leading-[1.4] text-slate-500 sm:text-[12px]">
           Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo.
         </p>
-        <div className="mx-auto mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-2.5 py-1.5 text-left sm:mt-3.5">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><FileText className="size-3.5"/></span>
-          <span className="min-w-0">
-            <span className="block text-[9px] font-semibold tracking-[.08em] text-slate-500">MATERIAL</span>
-            <span className="block max-w-[min(58vw,260px)] truncate text-[11px] font-medium text-slate-900 sm:text-[12px]">{material?.title ?? 'Tu material'}</span>
-          </span>
-        </div>
         <div role="radiogroup" aria-label="Tipo de repaso" className="mt-3 grid gap-2 text-left sm:mt-4 sm:grid-cols-2 sm:gap-3">
           {([
-            {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',detail:'Conceptos clave y preguntas frecuentes',Icon:Zap,iconClass:'bg-[#FFF3D0] text-[#8B650F]'},
-            {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',detail:'Más preguntas y práctica en cada modalidad',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#2563EB]'},
+            {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',Icon:Zap,iconClass:'bg-[#FFF3D0] text-[#8B650F]'},
+            {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#2563EB]'},
           ]).map(option=>{
             const chosen=sessionLength===option.id;
             return <button key={option.id} type="button" role="radio" aria-checked={chosen}
@@ -123,9 +116,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               </span>
               <span aria-hidden="true" className={`absolute right-3 top-3 flex size-[18px] items-center justify-center rounded-full border ${chosen?'border-[#2563EB] bg-[#2563EB]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
               <span className="mt-2 block text-[11px] leading-[1.4] text-slate-600 sm:min-h-[32px]">{option.description}</span>
-              <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 pt-2 text-[10px] font-medium leading-[1.35] text-slate-700 sm:text-[11px]">
-                <span className="inline-flex shrink-0 items-center gap-1.5"><Clock3 className="size-3.5 shrink-0 text-slate-500"/>{option.time}</span>
-                <span className="inline-flex min-w-0 items-start gap-1.5"><ListChecks className="size-3.5 shrink-0 text-slate-500"/>{option.detail}</span>
+              <span className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-2 text-[10px] font-medium leading-[1.35] text-slate-700 sm:text-[11px]">
+                <Clock3 className="size-3.5 shrink-0 text-slate-500"/>{option.time}
               </span>
             </button>;
           })}
