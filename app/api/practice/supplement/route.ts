@@ -81,7 +81,8 @@ export async function POST(request: Request) {
       chapterTitle: match.sectionTitle, pageStart: match.pageStart });
   }
   const local = selectPracticePairs(fromModel, 18);
-  if (local.length >= 6) return NextResponse.json({ pairs: local, source: 'canonical' },
+  const minimumPairs = body.mode === 'mixto' ? 2 : 6;
+  if (local.length >= minimumPairs) return NextResponse.json({ pairs: local, source: 'canonical' },
     { headers: { 'Cache-Control': 'private, no-store' } });
 
   // IA runs exclusively after a student clicks a practice mode and only when
