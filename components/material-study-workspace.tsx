@@ -35,10 +35,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { StudyRichText } from '@/components/study-rich-text';
-import {
-  StudentMaterialDiagnostic,
-  emptyDiagnosticSession,
-} from '@/components/student-material-diagnostic';
+import type { DiagnosticSession } from '@/components/student-material-diagnostic';
 import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
@@ -57,7 +54,7 @@ import {
   completeFirstPdfOnboardingAction,
   skipFirstPdfOnboardingAction,
 } from '@/app/materiales/[id]/onboarding-actions';
-import { StudentMaterialExam } from '@/components/student-material-exam';
+
 import { PdfStudyStartGuide } from '@/components/study/pdf-study-start-guide';
 import { SummaryChapterFinish } from '@/components/study/summary-chapter-finish';
 import { getFirstTopicResourceInfo } from '@/lib/student-materials/first-topic-resources';
@@ -66,7 +63,7 @@ import {
   shouldOfferTopicGlossaryPractice,
 } from '@/lib/student-materials/topic-study-resources';
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
-import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/processing-actions';
@@ -157,6 +154,24 @@ function revealTourContent(step: RecommendedStudyStep, focus = false, behavior: 
   if (focus) target.focus({ preventScroll: true });
   return true;
 }
+
+// Estos módulos interactivos no se necesitan al abrir el resumen. Cargarlos
+// sólo al entrar en la actividad evita hidratar tres experiencias pesadas
+// durante el primer render del PDF y de la demostración pública.
+const StudentMaterialDiagnostic = dynamic(() =>
+  import('@/components/student-material-diagnostic').then(mod => mod.StudentMaterialDiagnostic)
+);
+const StudentMaterialExam = dynamic(() =>
+  import('@/components/student-material-exam').then(mod => mod.StudentMaterialExam)
+);
+const StudentMaterialFlashcards = dynamic(() =>
+  import('@/components/student-material-flashcards').then(mod => mod.StudentMaterialFlashcards)
+);
+const emptyDiagnosticSession: DiagnosticSession = {
+  currentIndex: 0,
+  selectedAnswers: {},
+  finished: false,
+};
 
 const SummaryTopicCheckPopup = dynamic(() =>
   import('@/components/study/summary-topic-check-popup').then(
