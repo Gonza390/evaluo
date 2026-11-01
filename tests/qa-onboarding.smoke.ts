@@ -44,6 +44,22 @@ assert.ok(analytics.indexOf('if (isQaAccount(user)) {') < analytics.indexOf("del
   'QA bypass must happen before any session deletion.');
 assert.ok(callback.includes('isAdminClientConfigured() && !qaAccount'));
 assert.ok(!callback.includes(".delete().eq('session_key'"), 'QA login must never delete arbitrary analytics sessions.');
-assert.ok(callback.includes("(isNewUser || qaAccount) && nextPath === '/dashboard'"));
+const signupDestination = readFileSync('lib/email-signup-destination.ts','utf8');
+const studySpace = readFileSync('components/dashboard/maeve-study-space.tsx','utf8');
+const dashboard = readFileSync('app/(es)/dashboard/page.tsx','utf8');
+const uploadShell = readFileSync('components/dashboard/pdf-first-upload-shell.tsx','utf8');
+assert.doesNotMatch(callback, /openUpload=1&source=signup-direct/,
+  'Google signup must not auto-open first PDF popup');
+assert.doesNotMatch(signupDestination, /openUpload=1&source=signup-direct/,
+  'Email signup must not auto-open first PDF popup');
+assert.match(signupDestination, /return path;/);
+assert.match(studySpace, /initialSource !== 'signup-direct'/,
+  'Old signup deep links must not re-open first PDF popup');
+assert.match(dashboard, /source !== 'signup-direct'/);
+assert.doesNotMatch(uploadShell, /Empecemos con tu primer material|isDirectSignupFirstPdf/,
+  'Special first PDF popup must not be rendered');
+assert.match(uploadShell, /initialOpen && initialSource !== 'signup-direct'/);
+assert.match(uploadShell, /pickerRef\.current\?\.click\(\)/,
+  'User initiated PDF upload must remain available');
 
 console.log('QA account authorization and safe onboarding replay smoke tests passed.');
