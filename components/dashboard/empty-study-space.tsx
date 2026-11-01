@@ -46,7 +46,7 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         width={112}
         height={112}
         priority
-        className={`${styles.floatingEvi} h-[72px] w-[72px] shrink-0 object-contain sm:h-[92px] sm:w-[92px] lg:h-[106px] lg:w-[106px]`}
+        className="h-[72px] w-[72px] shrink-0 object-contain sm:h-[92px] sm:w-[92px] lg:h-[106px] lg:w-[106px]"
       />
       <h1 className="mt-2 max-w-[800px] text-[24px] font-semibold leading-[1.14] tracking-[-0.035em] text-[#0f1623] sm:text-[30px] lg:text-[32px]">
         ¿Qué estudiamos hoy{firstName ? `, ${firstName}` : ''}?
@@ -75,9 +75,9 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
           Subir PDF
         </span>
         <span className="mt-3 flex w-full flex-wrap items-start justify-center gap-x-3 gap-y-1.5 sm:mt-4 sm:gap-x-5">
-          {illustratedFormats.map((format) => (
+          {illustratedFormats.map((format, index) => (
             <span key={format.title} className="flex min-w-[42px] flex-col items-center gap-1" title={format.title === 'PDF' ? 'PDF disponible' : 'Otros formatos: próximamente'}>
-              <span className={`flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`}>
+              <span className={`${styles.fileFormatIcon} flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`} style={{ animationDelay: `${index * 90}ms` }}>
                 {format.icon === 'book' ? <BookOpen className="size-[18px]" aria-hidden="true" />
                   : format.icon === 'audio' ? <AudioLines className="size-[18px]" aria-hidden="true" />
                     : <span className="text-[9px] font-bold">{format.title}</span>}
