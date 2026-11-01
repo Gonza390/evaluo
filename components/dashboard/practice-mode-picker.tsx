@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import './practice-motion.css';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
@@ -71,7 +72,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, adva
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
   if (selectedMode && available(selectedMode)) return (
-    <main className="mx-auto flex min-h-[calc(100dvh-100px)] w-full max-w-[1040px] items-center justify-center px-4 py-7 sm:px-6 sm:py-10">
+    <main className="practice-screen-enter mx-auto flex min-h-[calc(100dvh-100px)] w-full max-w-[1040px] items-center justify-center px-4 py-7 sm:px-6 sm:py-10">
       <div className="w-full max-w-[720px] text-center">
         <img src="/evi-pensando.svg" alt="Evi pensando" className="mx-auto mb-3 h-[112px] w-[112px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:h-[136px] sm:w-[136px]"/>
         <h1 className="text-[23px] font-semibold tracking-[-.045em] text-[#0F1B3D] sm:text-[26px]">¿Cómo querés repasar?</h1>
