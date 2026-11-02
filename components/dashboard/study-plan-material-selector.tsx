@@ -4,7 +4,7 @@ export function StudyPlanMaterialSelector({selectedId,materials}:{selectedId:str
  const router=useRouter();
  return <label className="flex items-center gap-2 text-[11px] text-slate-500">
   <span className="sr-only">Elegir PDF</span>
-  <select aria-label="Elegir PDF para el plan" value={selectedId} onChange={event=>router.push(`/dashboard/plan-de-estudio?material=${encodeURIComponent(event.target.value)}`)} className="min-w-0 max-w-[min(58vw,230px)] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] font-medium text-slate-700">
+  <select aria-label="Elegir PDF para el plan" value={selectedId} onChange={event=>router.push(`/dashboard/plan-de-estudio?material=${encodeURIComponent(event.target.value)}`)} className="min-w-0 max-w-[min(58vw,230px)] border-0 bg-transparent px-0 py-1 text-[12px] font-medium text-[#42506A] shadow-none outline-none hover:text-[#2563EB] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[#2563EB]/30">
    {materials.map(material=><option key={material.id} value={material.id}>{material.title}</option>)}
   </select>
  </label>;

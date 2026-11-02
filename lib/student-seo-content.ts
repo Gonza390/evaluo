@@ -146,7 +146,9 @@ export const SEO_HUBS:Record<string,SeoHub>={
   {title:'Mapa mental desde PDF',description:'Visualizá relaciones entre conceptos.',href:'/funciones/crear-mapa-mental-desde-pdf'},
   {title:'Simulacro de examen',description:'Practicá con preguntas y revisá los resultados.',href:'/funciones/simulacro-examen-con-ia'},
   {title:'Practicar por tema',description:'Comprobá lo aprendido después de estudiar un tema.',href:'/funciones/practicar-por-tema'},
-  {title:'Convertir PDF en preguntas',description:'Transformá apuntes en ejercicios de práctica.',href:'/convertir-pdf-en-preguntas'}],
+  {title:'Convertir PDF en preguntas',description:'Transformá apuntes en ejercicios de práctica.',href:'/convertir-pdf-en-preguntas'},
+  {title:'Verdadero o falso con IA',description:'Comprobá afirmaciones con explicaciones y repasá conceptos de tus apuntes.',href:'/funciones/verdadero-falso-con-ia'},
+  {title:'Unir conceptos con IA',description:'Relacioná términos y definiciones para detectar confusiones.',href:'/funciones/unir-conceptos-con-ia'}],
   steps:[{title:'Seleccioná un documento',detail:'Usá el material de tu clase.'},{title:'Elegí cómo estudiar',detail:'Alterná lectura, tarjetas y preguntas según el tipo de contenido.'},{title:'Reforzá errores',detail:'Volvé a los temas difíciles y comprobá tu progreso.'}]
  },
  comparar:{

@@ -11,6 +11,7 @@ import { getPendingStudyErrorTopicCount } from '@/lib/study-errors';
 import { getDashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { createClientServer } from '@/lib/supabase-server';
 import { isUuid } from '@/lib/uuid';
+import { logError } from '@/lib/observability';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -82,12 +83,13 @@ export default async function DashboardPage({
   try {
     // PDF-first: la pantalla no requiere descargar el catálogo académico.
     // Los datos de universidad/carrera se cargan solamente si se abre el formulario opcional.
-    const [materials, pendingReinforcementCount] = await Promise.all([
-      fetchStudentMaterialsByUser(supabase, user.id),
-      getPendingStudyErrorTopicCount(user.id),
-    ]);
+    const pendingReinforcementCount = getPendingStudyErrorTopicCount(user.id);
+    const materials = await fetchStudentMaterialsByUser(supabase, user.id);
 
-    const nextStudyAction = await getDashboardNextStudyAction(user.id, materials);
+    const nextStudyAction = getDashboardNextStudyAction(user.id, materials).catch((error) => {
+      logError('dashboard.nextStudyAction', error, { userId: user.id });
+      return null;
+    });
 
     // Preguntar los datos académicos sólo después de tener un PDF listo.
     // El formulario de carga inicial y la guía del primer PDF no se interrumpen.

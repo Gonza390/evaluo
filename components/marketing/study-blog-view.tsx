@@ -35,7 +35,7 @@ const words = {
     other: 'También puede interesarte',
     otherLocale: 'Read in English',
     optional: '¿Querés practicar con tus propios apuntes?',
-    optionalLink: 'Conocer Evaluo',
+    optionalLink: 'Subir mi material',
     optionalNote: 'Opcional: podés aplicar los ejercicios de estas guías sin crear una cuenta.',
     existing: 'Más recursos sobre técnicas de estudio',
     existingLink: 'Técnicas de estudio efectivas',
@@ -59,7 +59,7 @@ const words = {
     other: 'Keep reading',
     otherLocale: 'Leer en español',
     optional: 'Want to use your own study notes?',
-    optionalLink: 'Explore Evaluo',
+    optionalLink: 'Study my material',
     optionalNote: 'Optional: you can use the methods on this page without creating an account.',
     existing: 'More study resources',
     existingLink: 'Study PDFs with AI',
@@ -67,6 +67,26 @@ const words = {
     purpose: 'Free educational content',
   },
 } as const;
+
+
+const CONTEXTUAL_LINKS: Partial<Record<StudyBlogLocale, Record<string, {href:string;label:string;description:string}[]>>> = {
+ es:{
+  medicine:[{href:'/es/guias/como-estudiar-anatomia',label:'Guía de anatomía',description:'Repasá estructuras y mecanismos con esquemas.'},{href:'/funciones/practicar-por-tema',label:'Practicar por tema',description:'Reforzá cada unidad con preguntas de tu material.'}],
+  nursing:[{href:'/es/guias/como-estudiar-anatomia',label:'Estudiar anatomía',description:'Recuperá relaciones entre estructuras y funciones.'},{href:'/funciones/verdadero-falso-con-ia',label:'Verdadero o falso',description:'Comprobá afirmaciones de tus apuntes y revisá el razonamiento.'}],
+  engineering:[{href:'/blog/como-estudiar-estadistica',label:'Estudiar estadística',description:'Ejercitá cálculos, interpretación y supuestos.'},{href:'/funciones/practicar-por-tema',label:'Práctica por tema',description:'Separá los conceptos antes de un simulacro.'}],
+  statistics:[{href:'/blog/como-estudiar-ingenieria',label:'Estudiar ingeniería',description:'Aplicá unidades, modelos y comprobaciones.'},{href:'/funciones/unir-conceptos-con-ia',label:'Unir conceptos',description:'Distinguí términos y definiciones próximas.'}],
+  'exam-planning':[{href:'/planes-de-estudio/estudiar-en-7-dias',label:'Plan de estudio de siete días',description:'Organizá sesiones de diagnóstico, práctica y repaso.'},{href:'/funciones/simulacro-examen-con-ia',label:'Simulacro de examen',description:'Comprobá qué falta reforzar antes de rendir.'}],
+  'active-recall':[{href:'/blog/repeticion-espaciada-para-estudiar',label:'Repetición espaciada',description:'Aprendé cuándo retomar preguntas anteriores.'},{href:'/funciones/crear-flashcards-desde-pdf',label:'Flashcards de estudio',description:'Recuperá conceptos sin consultar primero las respuestas.'}]
+ },
+ en:{
+  medicine:[{href:'/en/blog/how-to-study-biology',label:'Study biology',description:'Reconstruct mechanisms and examine scientific explanations.'},{href:'/en/pdf-to-quiz',label:'Study questions from notes',description:'Explore quiz-based practice using your own learning material.'}],
+  nursing:[{href:'/en/blog/how-to-study-biology',label:'Biology study guide',description:'Review structures and processes before application.'},{href:'/en/ai-true-false-questions',label:'True-or-false practice',description:'Check the reasoning behind factual claims.'}],
+  engineering:[{href:'/en/blog/how-to-study-statistics',label:'Study statistics',description:'Interpret numerical results and assumptions.'},{href:'/en/pdf-to-quiz',label:'Quiz from your notes',description:'Explore retrieval practice with course material.'}],
+  statistics:[{href:'/en/blog/how-to-study-engineering',label:'Study engineering',description:'Work through models and unit checks.'},{href:'/en/match-concepts-with-ai',label:'Match concepts',description:'Practice distinguishing closely related definitions.'}],
+  'exam-planning':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Organize cumulative revision across multiple topics.'},{href:'/en/pdf-to-quiz',label:'Quiz-based practice',description:'Use questions to assess understanding.'}],
+  'active-recall':[{href:'/en/blog/spaced-repetition-for-studying',label:'Spaced repetition',description:'Review older material across study sessions.'},{href:'/en/pdf-to-flashcards',label:'Flashcards',description:'Practice retrieving concepts from your notes.'}]
+ }
+};
 
 function BlogHeader({ locale }: { locale: StudyBlogLocale }) {
   return (
@@ -148,16 +168,32 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
   const workshop = locale === 'es'
     ? STUDY_BLOG_WORKSHOPS_ES[article.key]
     : STUDY_BLOG_WORKSHOPS_EN[article.key];
-  const others = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key).slice(0, 3);
+  const relatedKeys: Record<string, string[]> = {
+    medicine: ['nursing','biology','exam-planning'],
+    nursing: ['medicine','biology','active-recall'],
+    engineering: ['statistics','exam-planning','active-recall'],
+    statistics: ['engineering','exam-planning','active-recall'],
+    'exam-planning': ['active-recall','medicine','engineering'],
+    'active-recall': ['exam-planning','statistics','nursing'],
+  };
+  const available = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key);
+  const preferences = relatedKeys[article.key] ?? [];
+  const others = [...available].sort((a,b) => {
+    const rank = (key:string) => { const index = preferences.indexOf(key); return index === -1 ? 100 : index; };
+    return rank(a.key) - rank(b.key);
+  }).slice(0, 3);
   const mainIndex = locale === 'es' ? '/' : '/en';
   const blogIndex = locale === 'es' ? '/blog' : '/en/blog';
+  const newArticleKeys = new Set(['medicine','nursing','engineering','statistics','exam-planning','active-recall']);
+  const articleDate = newArticleKeys.has(article.key) ? '2026-11-02' : '2026-10-30';
+  const articleDateLabel = newArticleKeys.has(article.key) ? (locale === 'es' ? '2 de noviembre de 2026' : 'November 2, 2026') : copy.published;
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: article.title,
     description: article.description,
-    datePublished: '2026-10-30',
-    dateModified: '2026-10-30',
+    datePublished: articleDate,
+    dateModified: articleDate,
     inLanguage: locale,
     author: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
     publisher: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
@@ -183,7 +219,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
             </Link>
             <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600">
               <span className="text-blue-700">{article.category}</span><span aria-hidden="true">·</span>
-              <time dateTime="2026-10-30">{copy.published}</time><span aria-hidden="true">·</span><span>{copy.purpose}</span>
+              <time dateTime={articleDate}>{articleDateLabel}</time><span aria-hidden="true">·</span><span>{copy.purpose}</span>
             </div>
             <h1 className="mt-4 max-w-[880px] text-[2.2rem] font-extrabold leading-[1.13] tracking-[-0.04em] sm:text-5xl">{article.title}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{article.lead}</p>
@@ -260,10 +296,23 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
                 ))}
               </ul>
             </section>
+            {CONTEXTUAL_LINKS[locale]?.[article.key] && (
+              <section aria-labelledby="related-resources" className="mt-12 border-t border-slate-200 pt-8">
+                <h2 id="related-resources" className="text-xl font-bold">{locale === 'es' ? 'Seguí estudiando este tema' : 'Continue learning this topic'}</h2>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {CONTEXTUAL_LINKS[locale]![article.key].map(link => (
+                    <Link key={link.href} href={link.href} className="rounded-xl border border-slate-200 p-4 hover:border-blue-300">
+                      <span className="block font-bold text-blue-700">{link.label} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></span>
+                      <span className="mt-2 block text-sm leading-6 text-slate-600">{link.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             <aside className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6">
               <h2 className="text-base font-bold">{copy.optional}</h2>
               <p className="mt-2 text-sm leading-7 text-slate-600">{copy.optionalNote}</p>
-              <Link href={locale === 'es' ? '/estudiar-pdf-con-ia' : '/en/study-pdf-with-ai'} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
+              <Link href={(locale === 'es' ? '/estudiar-pdf-con-ia' : '/en/study-pdf-with-ai') + '?source=blog-' + encodeURIComponent(article.slug)} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
                 {copy.optionalLink} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </aside>
@@ -275,9 +324,9 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
                 {article.sections.map((section, i) => (
                   <a className="text-sm leading-6 text-slate-600 hover:text-blue-700" key={section.heading} href={'#seccion-' + (i+1)}>{section.heading}</a>
                 ))}
-                <a href="#guia-practica" className="text-sm font-semibold text-blue-700 hover:underline">{locale === 'es' ? 'Guía práctica completa' : 'Complete worked guide'}</a>
-                <a href="#autoevaluacion" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Ejercicios con respuestas' : 'Exercises with answers'}</a>
-                <a href="#plantilla" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Plantilla para llevarte' : 'Reusable study template'}</a>
+                {workshop && <a href="#guia-practica" className="text-sm font-semibold text-blue-700 hover:underline">{locale === 'es' ? 'Guía práctica completa' : 'Complete worked guide'}</a>}
+                {workshop && <a href="#autoevaluacion" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Ejercicios con respuestas' : 'Exercises with answers'}</a>}
+                {workshop && <a href="#plantilla" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Plantilla para llevarte' : 'Reusable study template'}</a>}
                 <a href="#ejercicio" className="text-sm text-slate-600 hover:text-blue-700">{copy.workedExample}</a>
                 <a href="#errores" className="text-sm text-slate-600 hover:text-blue-700">{copy.mistakes}</a>
                 <a href="#preguntas" className="text-sm text-slate-600 hover:text-blue-700">{copy.faq}</a>
