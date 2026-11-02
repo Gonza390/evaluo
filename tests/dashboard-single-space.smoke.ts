@@ -11,6 +11,23 @@ const proxySource = readFileSync(resolve('proxy.ts'), 'utf8');
 const dashboardHeroSource = readFileSync(resolve('components/dashboard/maeve-study-hero.tsx'), 'utf8');
 const nextActionSource = readFileSync(resolve('lib/dashboard-next-study-action.ts'), 'utf8');
 
+assert.match(
+  nextActionSource,
+  /material_id:metadata->>material_id, flow_version:metadata->>flow_version/,
+  'La próxima acción debe proyectar solo los campos necesarios de analytics_events.'
+);
+assert.doesNotMatch(
+  nextActionSource,
+  /\.select\('event_name, metadata, created_at'\)/,
+  'La próxima acción no debe descargar el JSON completo de 600 eventos.'
+);
+assert.match(
+  nextActionSource,
+  /dashboardNextStudyAction\.slowStudyQueries/,
+  'Las consultas lentas del dashboard deben dejar una medición sin datos sensibles.'
+);
+
+
 assert.match(dashboardSource, /LazyMaeveStudySpace/);
 assert.match(dashboardSource, /source\?: string/);
 assert.match(dashboardSource, /dailyMinutes\?: string/);
