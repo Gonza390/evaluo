@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { ArrowRight, BookOpenText, CheckCircle2, ClipboardCheck, FileQuestion, Layers3 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
@@ -148,6 +149,7 @@ export function BilingualPracticeLanding({kind,locale}:{kind:PracticeLandingKind
  const ctaHref=english?'/en/study-pdf-with-ai':'/estudiar-pdf-con-ia';
  const secondaryHref=english?'/en/pdf-to-quiz':kind==='true-false'?'/funciones/simulacro-examen-con-ia':'/funciones/practicar-por-tema';
  return <div lang={locale} className="min-h-screen bg-white text-slate-950">
+  <InternationalDocumentLanguage lang={locale} />
   <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10"><PublicSiteHeader variant="landing" trackingLocation={'seo-'+kind+'-'+locale}/></div>
   <main>
    <section className="border-b border-slate-100 bg-[linear-gradient(155deg,#F5F7FF_0%,#FFFFFF_80%)]">
@@ -195,7 +197,7 @@ export function BilingualPracticeLanding({kind,locale}:{kind:PracticeLandingKind
      <TrackedLink href={ctaHref+'?source='+kind+'-'+locale+'-bottom'} eventName="cta_click" payload={{location:'seo-'+kind+'-'+locale+'-bottom',cta_name:'subir_material',destination:ctaHref}} className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white hover:bg-blue-500">{copy.cta}<ArrowRight className="h-4 w-4"/></TrackedLink>
     </section>
     <nav className="mt-9 flex flex-wrap items-center gap-4 text-sm font-bold">
-     <Link href={paths[other][kind]} lang={other} className="text-blue-700 hover:underline">{english?'Leer en español':'Read in English'}</Link>
+     <Link href={paths[other][kind]} lang={other} hrefLang={other} className="text-blue-700 hover:underline">{english?'Leer en español':'Read in English'}</Link>
      <Link href={english?'/en/blog':'/blog'} className="text-blue-700 hover:underline">{english?'Study blog':'Blog de estudio'}</Link>
     </nav>
    </div>
