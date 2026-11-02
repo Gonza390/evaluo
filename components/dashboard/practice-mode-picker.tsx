@@ -162,11 +162,11 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
             <img src="/evi-bienvenida.svg" alt="Evi te da la bienvenida" className="size-16 shrink-0 object-contain sm:size-20"/>
             <div className="min-w-0">
               <h2 className="text-[15px] font-semibold tracking-tight text-[#0F1B3D]">Tus prácticas empiezan con tu primer material</h2>
-              <p className="mt-1 text-[12px] leading-5 text-[#526079]">Subí un PDF o Word y desbloqueá las modalidades para practicar.</p>
+              <p className="mt-1 text-[12px] leading-5 text-[#526079]">Subí tu material y desbloqueá las modalidades para practicar.</p>
             </div>
           </div>
           <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8] sm:self-auto">
-            Subir material <ArrowRight className="size-4"/>
+            Subir mi material <ArrowRight className="size-4"/>
           </Link>
         </section>
       )}
