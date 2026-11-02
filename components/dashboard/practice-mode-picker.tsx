@@ -156,8 +156,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         )}
       </header>
 
-      <div className="mt-6 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"} lg:gap-6 xl:gap-9">
-        <section aria-label="Modalidades de práctica" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col ${!material ? 'lg:max-w-[690px]' : ''}">
+      <div className={`mt-6 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
+        <section aria-label="Modalidades de práctica" className={`min-w-0 lg:flex lg:min-h-0 lg:flex-col ${!material ? "lg:max-w-[690px]" : ""}`}>
           {!material && (
             <p className="mb-3 text-[12px] text-[#66758D]">
               Para comenzar, <Link href="/dashboard/materiales/subir" className="font-semibold text-[#2563EB] hover:underline">subí un material</Link>.
