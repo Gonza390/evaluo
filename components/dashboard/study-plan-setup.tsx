@@ -1,9 +1,10 @@
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { distributeStudyTopics } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
-type Material = { id: string; title: string; topicCount: number };
+type Material = { id: string; title: string; topicCount: number; topics: Array<{title:string;estimatedMinutes:number}> };
 const methods = [
   { id:'entender', title:'Entenderla bien', subtitle:'Resúmenes y conceptos', icon:BookOpen },
   { id:'memorizar', title:'Memorizarla', subtitle:'Flashcards y repasos', icon:Layers3 },
@@ -28,6 +29,8 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
   const offset = (new Date(month.getFullYear(),month.getMonth(),1).getDay()+6)%7;
   const currentMonth = month.getFullYear()===today.getFullYear() && month.getMonth()===today.getMonth();
   const chosen = materials.filter(m=>selected.includes(m.id));
+  const topics = chosen.flatMap(material=>material.topics.map(topic=>({...topic,materialId:material.id,materialTitle:material.title})));
+  const distribution = distributeStudyTopics(topics,exam,minutes??0,today);
   const toggle = (list:string[],id:string,save:(x:string[])=>void) => save(list.includes(id) ? list.filter(x=>x!==id) : [...list,id]);
   return <main className="mx-auto w-full max-w-[1240px] px-3 py-4 text-[#0F1B3D] sm:px-4 sm:py-5 lg:px-6">
     <div className="mx-auto max-w-[560px]">
@@ -86,16 +89,20 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
           <button type="button" disabled={!selectable} onClick={()=>step===3?setPreview(true):setStep(s=>s+1)} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?'Preparar mi plan':'Continuar'}<ArrowRight className="size-4"/></button>
         </div>
       </> : <section className="rounded-2xl border border-[#E7EBF4] bg-white p-5">
-        <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#2563EB]"><Check className="size-5"/></div>
-        <h1 className="text-[22px] font-semibold tracking-[-0.035em]">Tu plan está configurado</h1>
-        <p className="mt-2 text-[13px] text-[#42506A]">Esta es la vista previa de tus preferencias. La planificación diaria se conectará en una siguiente etapa.</p>
-        <dl className="mt-5 space-y-3 text-[13px]">
-          <div><dt className="text-[#7F8AA3]">Fecha del examen</dt><dd className="font-medium">{exam}</dd></div>
-          <div><dt className="text-[#7F8AA3]">Materiales</dt><dd className="font-medium">{chosen.map(m=>m.title).join(', ')}</dd></div>
-          <div><dt className="text-[#7F8AA3]">Tiempo disponible</dt><dd className="font-medium">{minutes} minutos por día</dd></div>
-          <div><dt className="text-[#7F8AA3]">Preferencias</dt><dd className="font-medium">{methods.filter(m=>preferences.includes(m.id)).map(m=>m.title).join(', ')}</dd></div>
-        </dl>
-        <button onClick={()=>{setPreview(false);setStep(3)}} className="mt-6 rounded-lg border border-[#E7EBF4] px-4 py-2.5 text-[12px] font-medium">Editar preferencias</button>
+        <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#2563EB]"><CalendarDays className="size-5"/></div>
+        <h1 className="text-[22px] font-semibold tracking-[-0.035em]">Tu distribución de temas</h1>
+        <p className="mt-2 text-[13px] leading-5 text-[#42506A]">Organizamos los temas de tus materiales según los días antes del examen y tus {minutes} minutos diarios. Por ahora no asignamos prácticas específicas.</p>
+        {topics.length===0 ? <p className="mt-5 rounded-xl bg-[#F5F7FB] p-4 text-[13px] text-[#42506A]">Los materiales seleccionados todavía no tienen temas extraídos. No podemos distribuirlos hasta que estén disponibles.</p> : <>
+          {distribution.days.filter(day=>day.topics.length>0).length===0 && <p className="mt-5 text-[13px] text-[#42506A]">No hay días disponibles antes del examen. Elegí una fecha posterior.</p>}
+          <div className="mt-5 space-y-3">
+            {distribution.days.filter(day=>day.topics.length>0).map(day=><div key={day.date} className="rounded-xl border border-[#E7EBF4] p-3.5">
+              <div className="mb-2 flex items-center justify-between gap-2"><h2 className="text-[13px] font-semibold capitalize">{new Date(`${day.date}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</h2><span className="shrink-0 text-[11px] text-[#7F8AA3]">{day.estimatedMinutes} min aprox.</span></div>
+              <ul className="space-y-2">{day.topics.map((topic,i)=><li key={`${topic.materialId}-${i}`} className="flex gap-2 text-[12px]"><BookOpen className="mt-0.5 size-4 shrink-0 text-[#2563EB]"/><span><span className="font-medium">{topic.title}</span><span className="block text-[11px] text-[#7F8AA3]">{topic.materialTitle} · {topic.estimatedMinutes} min estimados</span></span></li>)}</ul>
+            </div>)}
+          </div>
+          {distribution.unassigned.length>0 && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-900">Con el tiempo disponible quedan {distribution.unassigned.length} temas sin asignar. Podés ampliar el tiempo diario o elegir otra fecha.</p>}
+        </>}
+        <button type="button" onClick={()=>{setPreview(false);setStep(2)}} className="mt-6 rounded-lg border border-[#E7EBF4] px-4 py-2.5 text-[12px] font-medium">Modificar mi plan</button>
       </section>}
     </div>
   </main>
