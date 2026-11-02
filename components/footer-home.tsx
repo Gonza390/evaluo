@@ -133,9 +133,6 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Guías de estudio universitario
               </Link>
-              <Link href="/temas" className="text-xs text-white/80 transition hover:text-white">
-                Temas universitarios
-              </Link>
               <Link href="/examenes" className="text-xs text-white/80 transition hover:text-white">
                 Exámenes de práctica
               </Link>
@@ -147,9 +144,6 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               </Link>
               <Link href="/recursos" className="text-xs text-white/80 transition hover:text-white">
                 Plantillas para estudiar
-              </Link>
-              <Link href="/ejemplos" className="text-xs text-white/80 transition hover:text-white">
-                Probar una práctica
               </Link>
               <Link href="/funciones" className="text-xs text-white/80 transition hover:text-white">
                 Funciones de Evaluo
