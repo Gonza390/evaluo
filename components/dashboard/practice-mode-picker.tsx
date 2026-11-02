@@ -213,7 +213,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {modes.map(({title,description,Icon,color})=><div key={title} aria-disabled="true" className={`flex min-h-[122px] flex-col items-start rounded-2xl border border-transparent p-3.5 sm:min-h-[142px] sm:p-4 ${color}`}>
-                  <span className="flex w-full items-center justify-between"><Icon className="size-[16px]" aria-hidden="true"/><span className="text-[10px] font-medium opacity-60">Sin material</span></span>
+                  <span className="flex items-center"><Icon className="size-[16px]" aria-hidden="true"/></span>
                   <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
                   <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
                 </div>)}
