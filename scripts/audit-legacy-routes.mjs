@@ -77,18 +77,17 @@ for (const [route, sourcePath] of blockedRoutes) {
 }
 for (const path of removedModules) {
   const basename = path.split('/').at(-1).replace(/\.[^.]+$/, '');
-  // Only exact module specifiers count. Substrings can match unrelated components,
-  // e.g. "real-study-errors-preview" vs deleted "study-errors-preview".
-  const escaped = basename.replace(/[.*+?^\x24{}()|[\]\\]/g, '\\  const token = path.replace(/\.[^.]+$/, '');
-  const basename = path.split('/').at(-1).replace(/\.[^.]+$/, '');
-  const refPaths = [...new Set([...references(token, path), ...references(basename, path, true)])];');
-  const exactImport = new RegExp(
-    "['\`\\\"](?:@/|\\\\.\\\\.?/)(?:[^'\`\\\"]*/)?"
-    + escaped + "(?:\\\\.[jt]sx?)?['\`\\\"]"
-  );
+  // Check complete quoted module specifiers, not substrings of similar names.
+  // For example, real-study-errors-preview is NOT study-errors-preview.
   const refPaths = sources
     .filter(({ path: sourcePath, contents }) =>
-      sourcePath !== path && exactImport.test(contents)
+      sourcePath !== path
+      && [...contents.matchAll(/['"`]([^'"`\n]+)['"`]/g)].some((match) => {
+        const specifier = match[1];
+        return specifier.endsWith('/' + basename)
+          || specifier.endsWith('/' + basename + '.tsx')
+          || specifier.endsWith('/' + basename + '.ts');
+      })
     )
     .map(({ path: sourcePath }) => sourcePath);
   if (refPaths.length) {
@@ -98,6 +97,7 @@ for (const path of removedModules) {
     console.log('[legacy cleanup] No active source references to deleted component: ' + path);
   }
 }
+
 for (const path of reviewOnly) {
   const publicFile = path.startsWith('public/');
   const token = publicFile ? '/' + path.slice('public/'.length) : path.replace(/\.[^.]+$/, '');
