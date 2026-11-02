@@ -189,11 +189,11 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
             </>
           ) : (
             <div className="w-full">
-              <section aria-labelledby="empty-practice-title" className="flex flex-col items-center gap-4 rounded-[18px] border border-dashed border-[#C9D8F1] bg-[#EEF2FF] p-4 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left">
+              <section aria-labelledby="empty-practice-title" className="flex flex-col items-center gap-4 rounded-[18px] border border-dashed border-[#C9D8F1] bg-gradient-to-r from-[#EEF2FF] to-[#F8FAFF] p-4 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left lg:gap-6">
                 <img src="/evi-pensando.svg" alt="" aria-hidden="true" className="size-[68px] shrink-0 object-contain sm:size-[84px]" />
                 <div className="min-w-0 flex-1">
-                  <h2 id="empty-practice-title" className="text-[18px] font-semibold leading-tight tracking-[-0.035em] text-[#0F1B3D] sm:text-[20px]">Subí tu primer material para empezar a practicar</h2>
-                  <p className="mt-1.5 text-[12px] leading-[1.5] text-[#42506A] sm:text-[13px]">Elegí un PDF o documento Word. Evaluo prepara actividades a partir de tus apuntes.</p>
+                  <h2 id="empty-practice-title" className="text-[18px] font-semibold leading-tight tracking-[-0.035em] text-[#0F1B3D] sm:text-[20px]">Subí tu material para empezar a practicar</h2>
+                  <p className="mt-1.5 max-w-[480px] text-[12px] leading-[1.5] text-[#42506A] sm:text-[13px]">Elegí un PDF o documento Word. Evaluo prepara prácticas a partir de tus propios apuntes.</p>
                 </div>
                 <Link href="/dashboard/materiales/subir" className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:w-auto">
                   <FileText className="size-4" aria-hidden="true"/>Subir material<ArrowRight className="size-4" aria-hidden="true"/>
