@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, CalendarDays, Flag, LockKeyhole, Upload } from 'lucide-react';
+import { ArrowRight, CalendarDays, Flag, LockKeyhole, Sparkles, Upload } from 'lucide-react';
 
 export function EmptyStudyPlan() {
   return (
@@ -39,17 +39,32 @@ export function EmptyStudyPlan() {
           </section>
         </div>
         <aside className="min-w-0 space-y-5">
-          <section aria-labelledby="empty-exam-title" className="rounded-[18px] bg-[linear-gradient(135deg,#E9F0FF_0%,#F6F9FF_100%)] p-4 sm:p-5">
-            <div className="flex items-center gap-2 text-[12px] font-medium text-[#0B4FC0]"><span aria-hidden="true">✧</span>Prepará tu examen</div>
-            <h2 id="empty-exam-title" className="mt-2 text-[18px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#143C85] sm:text-[19px]">Tu estudio, organizado hasta el examen.</h2>
-            <p className="mt-2 text-[12px] leading-[18px] text-[#5473A2]">Elegí la fecha para organizar tus temas y prácticas.</p>
-            <label htmlFor="empty-plan-exam-date" className="mt-4 block text-[12px] font-medium text-[#344054]">Fecha de tu examen</label>
-            <div className="mt-1.5 flex h-11 items-center gap-2 rounded-xl border border-[#D9E0EC] bg-[#F3F5F9] px-3">
-              <CalendarDays className="size-4 text-[#7B8494]" aria-hidden="true"/>
-              <input id="empty-plan-exam-date" type="text" disabled placeholder="dd/mm/aaaa" className="min-w-0 flex-1 border-0 bg-transparent text-[12px] text-[#667085] outline-none disabled:cursor-not-allowed"/>
+          {/* Tarjeta original del HTML entregado: mantener sus medidas y estilos. */}
+          <section aria-labelledby="empty-exam-title" className="w-full max-w-[410px] rounded-[28px] bg-[linear-gradient(135deg,#e9f0ff_0%,#f6f9ff_100%)] px-[26px] pb-6 pt-[26px]">
+            <div className="flex items-center gap-2 text-[14px] font-semibold text-[#0b4fc0]">
+              <Sparkles className="size-[18px] text-[#0b63e5]" strokeWidth={1.8} aria-hidden="true"/>
+              Prepará tu examen
             </div>
-            <button type="button" disabled className="mt-3 flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-[#C9D3E6] px-4 text-[12px] font-medium text-[#5B6678]">Armar mi plan <ArrowRight className="size-4" aria-hidden="true"/></button>
-            <p className="mt-2.5 flex items-center gap-2 text-[11px] text-[#5473A2]"><LockKeyhole className="size-3.5 shrink-0" aria-hidden="true"/>Se habilita cuando subas tu primer PDF.</p>
+            <h2 id="empty-exam-title" className="mt-3 text-[24px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0b4fc0]">
+              Tu estudio, organizado hasta el examen.
+            </h2>
+            <p className="mt-2 text-[15px] leading-[1.5] text-[#4b5565]">
+              Elegí la fecha para organizar tus temas y prácticas.
+            </p>
+            <label htmlFor="empty-plan-exam-date" className="mt-[18px] block text-[13px] font-semibold text-[#344054]">
+              Fecha de tu examen
+            </label>
+            <div className="mt-1.5 flex h-12 items-center gap-2.5 rounded-[14px] border border-[#d9e0ec] bg-[#f3f5f9] px-4">
+              <CalendarDays className="size-[18px] shrink-0 text-[#7b8494]" strokeWidth={1.8} aria-hidden="true"/>
+              <input id="empty-plan-exam-date" type="text" disabled placeholder="dd/mm/aaaa" className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-[#667085] outline-none placeholder:text-[#aab3c3] disabled:cursor-not-allowed"/>
+            </div>
+            <button type="button" disabled className="mt-[14px] flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full border-0 bg-[#c9d3e6] text-[15px] font-semibold text-[#5b6678]">
+              Armar mi plan <ArrowRight className="size-[17px]" strokeWidth={2} aria-hidden="true"/>
+            </button>
+            <div className="mt-2.5 flex items-center gap-2 text-[13px] text-[#4b5565]">
+              <LockKeyhole className="size-[15px] shrink-0" strokeWidth={1.9} aria-hidden="true"/>
+              Se habilita cuando subas tu primer PDF.
+            </div>
           </section>
           <section aria-labelledby="empty-plan-next-title" className="px-1">
             <h2 id="empty-plan-next-title" className="text-[15px] font-medium tracking-tight">Tu próximo paso</h2>
