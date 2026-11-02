@@ -4,6 +4,7 @@ import { DemoFourStepStudy } from '@/components/demo-four-step-study';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 import demoArtifacts from '@/public/material-general-prueba.study.json';
+import { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 
 export const metadata: Metadata = {
   title: 'Probá Evaluo con un PDF de muestra',
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 
 const SUMMARY = demoArtifacts.summary as StudentMaterialSummary;
 const GLOSSARY = demoArtifacts.glossary as StudyGlossaryItem[];
+// Build deterministic practice artifacts on the server, not during browser hydration.
+const PRACTICE_ARTIFACTS = buildPedagogicalArtifacts({summary: SUMMARY, glossary: GLOSSARY, pageCount: demoArtifacts.pageCount});
 const UPLOAD_HREF = '/dashboard?openUpload=1&source=demo_four_step';
 const INTERNATIONAL_SOURCES = [
   'international-study-es', 'international-study-es-mx',
@@ -82,6 +85,7 @@ export default async function DemoMaterialEstudioPage({
           initialTab={!guided && start === 'ejercicios' ? 'ejercicios' : 'resumen'}
           internationalSource={internationalSource}
           summary={SUMMARY}
+          artifacts={PRACTICE_ARTIFACTS}
           glossary={GLOSSARY}
           pageCount={demoArtifacts.pageCount}
         />
