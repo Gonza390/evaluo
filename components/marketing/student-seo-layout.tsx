@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpenText, CheckCircle2, FileText, GraduationCap } from 'lucide-react';
+import { ArrowRight, BookOpenText, CheckCircle2, FileText } from 'lucide-react';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
 import { TrackedLink } from '@/components/marketing/tracked-link';
@@ -117,7 +117,7 @@ export function StudentSeoHub({hub}: {hub: SeoHub}) {
         <nav aria-label="Otras secciones de estudio" className="mt-12 border-t border-slate-200 pt-8">
           <h2 className="text-lg font-bold">También te puede servir</h2>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
-            {[{href:'/blog',title:'Blog'},{href:'/es/guias',title:'Guías'},{href:'/temas',title:'Temas'},{href:'/examenes',title:'Exámenes'},{href:'/planes-de-estudio',title:'Planes'},{href:'/funciones',title:'Funciones'}]
+            {[{href:'/blog',title:'Blog'},{href:'/es/guias',title:'Guías'},{href:'/examenes',title:'Exámenes'},{href:'/planes-de-estudio',title:'Planes'},{href:'/funciones',title:'Funciones'}]
               .filter(item=>item.href!==hub.path).map(item=>(
                 <Link key={item.href} href={item.href} className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-slate-700 hover:border-blue-300 hover:text-blue-700">{item.title}</Link>
               ))}
@@ -143,7 +143,6 @@ export function StudentArticleLayout({
           <div className="mt-5"><StudyCta source={source+'-bottom'} label="Estudiar mi PDF"/></div>
         </div>
         <div className="mt-10 flex flex-wrap gap-3 text-sm font-semibold">
-          <Link href="/temas" className="inline-flex min-h-11 items-center gap-2 text-blue-700 hover:underline"><GraduationCap className="h-4 w-4"/>Ver temas</Link>
           <Link href="/examenes" className="inline-flex min-h-11 items-center gap-2 text-blue-700 hover:underline">Mini exámenes<ArrowRight className="h-4 w-4"/></Link>
           <Link href="/planes-de-estudio" className="inline-flex min-h-11 items-center gap-2 text-blue-700 hover:underline">Planes de estudio<ArrowRight className="h-4 w-4"/></Link>
         </div>
