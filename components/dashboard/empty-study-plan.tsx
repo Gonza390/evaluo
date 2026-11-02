@@ -45,7 +45,7 @@ export function EmptyStudyPlan() {
               <Sparkles className="size-[18px] text-[#0b63e5]" strokeWidth={1.8} aria-hidden="true"/>
               Prepará tu examen
             </div>
-            <h2 id="empty-exam-title" className="mt-3 text-[24px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0b4fc0]">
+            <h2 id="empty-exam-title" className="mt-3 text-[24px] font-bold leading-[1.25] tracking-[-0.02em] text-[#0f1623]">
               Tu estudio, organizado hasta el examen.
             </h2>
             <p className="mt-2 text-[15px] leading-[1.5] text-[#4b5565]">
