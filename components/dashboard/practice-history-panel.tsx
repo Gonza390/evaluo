@@ -270,7 +270,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                     <p className="text-[10px] text-slate-500">{item.correct} de {item.total}</p>
                   </div>
                 </div>
-                {item.answers?.length ? <details key={item.id+expandedId} defaultOpen={expandedId===item.id} className="mt-2 rounded-lg bg-[#F8FAFD] px-3 py-2">
+                {item.answers?.length ? <details key={item.id+expandedId} open={expandedId===item.id} className="mt-2 rounded-lg bg-[#F8FAFD] px-3 py-2">
                   <summary className="cursor-pointer text-[11px] font-medium text-[#2563EB]">Ver respuestas</summary>
                   <ol className="mt-2 space-y-2">
                     {item.answers.map((answer,index)=><li key={index} className="border-t border-[#E7EBF4] pt-2 text-[11px] leading-[1.5]">
