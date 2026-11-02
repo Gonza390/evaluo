@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
+import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronRight, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
