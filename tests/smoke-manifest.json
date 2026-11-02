@@ -258,5 +258,9 @@
   {
     "file": "tests/catalog-pagination.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/personal-study-plan.smoke.ts",
+    "alias": false
   }
 ]
