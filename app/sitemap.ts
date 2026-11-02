@@ -3,7 +3,7 @@ import { createPublicClient } from '@/lib/supabase-public';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
 import { STUDY_GUIDES } from '@/lib/es-study-guides';
-import { PUBLIC_TOPICS, PUBLIC_EXAMS, PUBLIC_PLANS, PUBLIC_DOCS, SEO_HUBS } from '@/lib/student-seo-content';
+import { PUBLIC_EXAMS, PUBLIC_PLANS, PUBLIC_DOCS, SEO_HUBS } from '@/lib/student-seo-content';
 import { STUDY_BLOG_ARTICLES, getStudyBlogPath } from '@/lib/study-blog-articles';
 import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
@@ -125,9 +125,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Student discovery: publish only substantive public pages and working tools.
   for (const hub of Object.values(SEO_HUBS)) {
     routes.push({ url: `${baseUrl}${hub.path}` });
-  }
-  for (const topic of PUBLIC_TOPICS) {
-    routes.push({ url: `${baseUrl}/temas/${topic.subject}/${topic.slug}` });
   }
   for (const exam of PUBLIC_EXAMS) {
     routes.push({ url: `${baseUrl}/examenes/${exam.slug}` });
