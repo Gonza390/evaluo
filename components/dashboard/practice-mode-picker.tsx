@@ -178,14 +178,14 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
       )}
       <div className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
         <section aria-label="Modalidades de práctica" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
-          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF] ${!material ? "xl:grid-cols-4" : ""}`}>
+          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF] ${!material ? "lg:grid-cols-4" : ""}`}>
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
               const selected = selectedMode === title;
               return (
                 <button key={title} type="button" aria-pressed={selected} disabled={!material || !supported}
                   onClick={() => openReview(title)}
-                  className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${!material ? "xl:min-h-[120px] xl:p-3" : ""} ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
+                  className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${!material ? "lg:min-h-[120px] lg:p-3" : ""} ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
                   <span className="flex w-full items-center justify-between">
                     <span className={`${!material ? "flex size-8 items-center justify-center rounded-xl bg-white/70" : ""}`}><Icon className="size-[16px]" aria-hidden="true" /></span>
                     {!material && <LockKeyhole className="size-[13px] opacity-75" aria-hidden="true" />}
