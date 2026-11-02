@@ -126,17 +126,39 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Estudiar PDF con IA
               </Link>
-              <Link
-                href="/es/paises"
-                className="text-xs text-white/80 transition hover:text-white"
-              >
-                Guías de estudio por país
-              </Link>
+
               <Link
                 href="/es/guias"
                 className="text-xs text-white/80 transition hover:text-white"
               >
                 Guías de estudio universitario
+              </Link>
+              <Link href="/temas" className="text-xs text-white/80 transition hover:text-white">
+                Temas universitarios
+              </Link>
+              <Link href="/examenes" className="text-xs text-white/80 transition hover:text-white">
+                Exámenes de práctica
+              </Link>
+              <Link href="/planes-de-estudio" className="text-xs text-white/80 transition hover:text-white">
+                Planes de estudio
+              </Link>
+              <Link href="/herramientas" className="text-xs text-white/80 transition hover:text-white">
+                Herramientas gratuitas
+              </Link>
+              <Link href="/recursos" className="text-xs text-white/80 transition hover:text-white">
+                Plantillas para estudiar
+              </Link>
+              <Link href="/ejemplos" className="text-xs text-white/80 transition hover:text-white">
+                Probar una práctica
+              </Link>
+              <Link href="/funciones" className="text-xs text-white/80 transition hover:text-white">
+                Funciones de Evaluo
+              </Link>
+              <Link href="/comparar" className="text-xs text-white/80 transition hover:text-white">
+                Comparativas
+              </Link>
+              <Link href="/docs" className="text-xs text-white/80 transition hover:text-white">
+                Cómo usar Evaluo
               </Link>
               <Link href="/blog" className="text-xs text-white/80 transition hover:text-white">
                 Blog de estudio
