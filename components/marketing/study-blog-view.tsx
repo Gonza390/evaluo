@@ -35,7 +35,7 @@ const words = {
     other: 'También puede interesarte',
     otherLocale: 'Read in English',
     optional: '¿Querés practicar con tus propios apuntes?',
-    optionalLink: 'Conocer Evaluo',
+    optionalLink: 'Subir mi material',
     optionalNote: 'Opcional: podés aplicar los ejercicios de estas guías sin crear una cuenta.',
     existing: 'Más recursos sobre técnicas de estudio',
     existingLink: 'Técnicas de estudio efectivas',
@@ -59,7 +59,7 @@ const words = {
     other: 'Keep reading',
     otherLocale: 'Leer en español',
     optional: 'Want to use your own study notes?',
-    optionalLink: 'Explore Evaluo',
+    optionalLink: 'Study my material',
     optionalNote: 'Optional: you can use the methods on this page without creating an account.',
     existing: 'More study resources',
     existingLink: 'Study PDFs with AI',
@@ -171,13 +171,16 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
   const others = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key).slice(0, 3);
   const mainIndex = locale === 'es' ? '/' : '/en';
   const blogIndex = locale === 'es' ? '/blog' : '/en/blog';
+  const newArticleKeys = new Set(['medicine','nursing','engineering','statistics','exam-planning','active-recall']);
+  const articleDate = newArticleKeys.has(article.key) ? '2026-11-02' : '2026-10-30';
+  const articleDateLabel = newArticleKeys.has(article.key) ? (locale === 'es' ? '2 de noviembre de 2026' : 'November 2, 2026') : copy.published;
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: article.title,
     description: article.description,
-    datePublished: '2026-10-30',
-    dateModified: '2026-10-30',
+    datePublished: articleDate,
+    dateModified: articleDate,
     inLanguage: locale,
     author: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
     publisher: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
@@ -203,7 +206,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
             </Link>
             <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600">
               <span className="text-blue-700">{article.category}</span><span aria-hidden="true">·</span>
-              <time dateTime="2026-10-30">{copy.published}</time><span aria-hidden="true">·</span><span>{copy.purpose}</span>
+              <time dateTime={articleDate}>{articleDateLabel}</time><span aria-hidden="true">·</span><span>{copy.purpose}</span>
             </div>
             <h1 className="mt-4 max-w-[880px] text-[2.2rem] font-extrabold leading-[1.13] tracking-[-0.04em] sm:text-5xl">{article.title}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{article.lead}</p>
@@ -308,9 +311,9 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
                 {article.sections.map((section, i) => (
                   <a className="text-sm leading-6 text-slate-600 hover:text-blue-700" key={section.heading} href={'#seccion-' + (i+1)}>{section.heading}</a>
                 ))}
-                <a href="#guia-practica" className="text-sm font-semibold text-blue-700 hover:underline">{locale === 'es' ? 'Guía práctica completa' : 'Complete worked guide'}</a>
-                <a href="#autoevaluacion" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Ejercicios con respuestas' : 'Exercises with answers'}</a>
-                <a href="#plantilla" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Plantilla para llevarte' : 'Reusable study template'}</a>
+                {workshop && <a href="#guia-practica" className="text-sm font-semibold text-blue-700 hover:underline">{locale === 'es' ? 'Guía práctica completa' : 'Complete worked guide'}</a>}
+                {workshop && <a href="#autoevaluacion" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Ejercicios con respuestas' : 'Exercises with answers'}</a>}
+                {workshop && <a href="#plantilla" className="text-sm text-slate-600 hover:text-blue-700">{locale === 'es' ? 'Plantilla para llevarte' : 'Reusable study template'}</a>}
                 <a href="#ejercicio" className="text-sm text-slate-600 hover:text-blue-700">{copy.workedExample}</a>
                 <a href="#errores" className="text-sm text-slate-600 hover:text-blue-700">{copy.mistakes}</a>
                 <a href="#preguntas" className="text-sm text-slate-600 hover:text-blue-700">{copy.faq}</a>
