@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronDown, ChevronRight, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const modeLabels: Record<string, string> = {
   unir: 'Unir conceptos', completar: 'Completar', casos: 'Casos',
@@ -61,7 +62,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
   const [showAll, setShowAll] = useState(false);
   const now = useMemo(() => new Date(), []);
   const sessions = useMemo(() => history.filter(item => item.materialId === materialId), [history, materialId]);
-  const visible = showAll ? sessions : sessions.slice(0, 12);
+  const visible = sessions.slice(0, 2); // Keep the desktop history column stationary.
   const totalToReview = sessions.reduce((sum, item) => sum + item.total - item.correct, 0);
   const averageScore = average(sessions);
   const groups: { key: string; items: PracticeHistoryEntry[] }[] = [];
@@ -188,7 +189,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
           </div>
         </div>
       </div>
-      <div className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overscroll-contain`}>
+      <div className="min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overflow-hidden">
             {groups.map(group => (
               <div key={group.key}>
                 <h3 className="sticky top-0 z-10 bg-white py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
@@ -264,15 +265,52 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                 </div>
               </div>
             ))}
-            {sessions.length > visible.length && (
-              <button type="button" onClick={() => setShowAll(true)}
-                className="mt-3 flex min-h-9 items-center gap-1 text-[11px] font-medium text-[#2563EB] hover:underline">
-                Ver todas ({sessions.length}) <ChevronRight className="size-3" aria-hidden="true"/>
-              </button>
-            )}
-            {showAll && sessions.length > 12 && <button type="button" onClick={() => setShowAll(false)}
-              className="mt-2 text-[11px] font-medium text-slate-500 hover:underline">Ver menos</button>}
       </div>
+      {sessions.length > visible.length && (
+        <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 sm:px-5">
+          <button type="button" onClick={() => setShowAll(true)}
+            className="inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-[#2563EB] hover:underline">
+            Ver todas las prácticas ({sessions.length}) <ChevronRight className="size-3" aria-hidden="true"/>
+          </button>
+        </div>
+      )}
+      <Dialog open={showAll} onOpenChange={setShowAll}>
+        <DialogContent className="max-h-[85dvh] w-full overflow-y-auto sm:max-w-[620px]">
+          <DialogHeader>
+            <DialogTitle>Historial de prácticas</DialogTitle>
+            <DialogDescription>Todos tus resultados de este material, del más reciente al más antiguo.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {sessions.map(item=>{
+              const Icon=modeIcons[item.mode as keyof typeof modeIcons] ?? History;
+              const percent=percentOf(item);
+              return <div key={item.id} className="rounded-xl border border-[#E7EBF4] p-3">
+                <div className="flex items-center gap-2.5">
+                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${modePalette[item.mode] ?? 'bg-slate-100 text-slate-600'}`}><Icon className="size-4" aria-hidden="true"/></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-semibold text-[#0F1B3D]">{modeLabels[item.mode]??item.mode}</p>
+                    <p className="text-[10px] text-slate-500">{dateLabel(item.completedAt,now)} · {timeLabel(item.completedAt)}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-[13px] font-semibold tabular-nums">{percent}%</p>
+                    <p className="text-[10px] text-slate-500">{item.correct} de {item.total}</p>
+                  </div>
+                </div>
+                {item.answers?.length ? <details className="mt-2 rounded-lg bg-[#F8FAFD] px-3 py-2">
+                  <summary className="cursor-pointer text-[11px] font-medium text-[#2563EB]">Ver respuestas</summary>
+                  <ol className="mt-2 space-y-2">
+                    {item.answers.map((answer,index)=><li key={index} className="border-t border-[#E7EBF4] pt-2 text-[11px] leading-[1.5]">
+                      <p className="font-medium text-[#0F1B3D]">{index+1}. {answer.prompt}</p>
+                      <p className={answer.correct?'text-emerald-700':'text-rose-700'}>{answer.correct?'Correcta':'Para repasar'}</p>
+                      <p className="text-slate-600">Respuesta esperada: {answer.correctAnswer}</p>
+                    </li>)}
+                  </ol>
+                </details> : null}
+              </div>;
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
       {sessions.length >= 500 && (
         <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 text-[10px] text-slate-500">
           Se muestran hasta 500 registros recientes.
