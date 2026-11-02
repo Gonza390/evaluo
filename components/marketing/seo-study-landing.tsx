@@ -110,7 +110,7 @@ export function SeoStudyLanding({
   relatedIntro,
   relatedLinks,
   faqItems,
-  primaryCtaLabel = 'Subir mi PDF',
+  primaryCtaLabel = 'Subir mi material',
   secondaryCta,
   trackingPrefix,
 }: SeoStudyLandingProps) {

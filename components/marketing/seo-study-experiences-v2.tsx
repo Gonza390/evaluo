@@ -358,7 +358,7 @@ export function IaParaEstudiantesExperience() {
                   tool: 'Preguntas de práctica',
                   action: 'Resolvé ejercicios sin mirar el resumen. Revisá cada error, buscá el fundamento en los apuntes y volvé a intentarlo.',
                   href: '/estudiar-pdf-con-ia',
-                  label: 'Estudiar y practicar con tu PDF',
+                  label: 'Estudiar y practicar con tu material',
                 },
               ].map((item) => (
                 <article key={item.problem} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
@@ -825,7 +825,7 @@ export function ResumirPdfExperience() {
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a href="#elegir-pdf-para-resumir" className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)]">
                 <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
-                Elegir PDF para resumir
+                Elegir mi material
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </a>
                 <DemoCta trackingPrefix="seo_resumir_pdf_ia_v2" label="Ver un resumen dentro de Evaluo" />
@@ -1147,7 +1147,7 @@ export function FlashcardsPdfExperience() {
               payload={{ location: 'seo_flashcards_pdf_v2_steps', cta_name: 'elegir_pdf', destination: uploadHref }}
               className="from-brand to-brand-2 mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
-              Elegir mi PDF para crear flashcards <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              Elegir mi material para crear flashcards <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </TrackedLink>
           </div>
         </section>

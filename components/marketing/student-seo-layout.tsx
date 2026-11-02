@@ -140,7 +140,7 @@ export function StudentArticleLayout({
         <div className="mt-12 rounded-[26px] border border-blue-100 bg-[#F5F7FF] p-6 sm:p-8">
           <div className="flex items-center gap-3"><FileText className="h-6 w-6 text-blue-700"/><h2 className="text-2xl font-bold">Ahora usá el material de tu materia</h2></div>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">Estos ejercicios son ejemplos originales de estudio. En Evaluo podés seleccionar tus apuntes y practicar específicamente los temas que estás preparando.</p>
-          <div className="mt-5"><StudyCta source={source+'-bottom'} label="Estudiar mi PDF"/></div>
+          <div className="mt-5"><StudyCta source={source+'-bottom'} label="Estudiar mi material"/></div>
         </div>
         <div className="mt-10 flex flex-wrap gap-3 text-sm font-semibold">
           <Link href="/examenes" className="inline-flex min-h-11 items-center gap-2 text-blue-700 hover:underline">Mini exámenes<ArrowRight className="h-4 w-4"/></Link>
