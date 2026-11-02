@@ -1,4 +1,4 @@
-export type PlanTopic = { materialId:string; materialTitle:string; title:string; estimatedMinutes:number };
+export type PlanTopic = { materialId:string; materialTitle:string; topicIndex:number; title:string; estimatedMinutes:number };
 export type PlanDay = { date:string; topics:PlanTopic[]; estimatedMinutes:number };
 const dateKey=(date:Date)=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 export function distributeStudyTopics(topics:PlanTopic[], examDate:string, minutesPerDay:number, startDate:Date):{days:PlanDay[];unassigned:PlanTopic[]} {
