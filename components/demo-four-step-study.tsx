@@ -8,7 +8,7 @@ import {
   type StudyTabId,
 } from '@/components/material-study-workspace';
 import { emptyTopicPracticeContext } from '@/lib/student-materials/topic-practice';
-import { buildPedagogicalArtifacts, type StudyQuestion } from '@/lib/student-materials/pedagogy';
+import type { buildPedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import type { StudyErrorsPageData } from '@/lib/study-errors';
 import type { PdfTopicEvidence } from '@/lib/student-materials/progress';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
@@ -132,6 +132,7 @@ export function DemoFourStepStudy({
   guided = true,
   summary,
   glossary,
+  artifacts,
   pageCount,
   initialTab = 'resumen',
   internationalSource,
@@ -139,6 +140,7 @@ export function DemoFourStepStudy({
   guided?: boolean;
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
+  artifacts: ReturnType<typeof buildPedagogicalArtifacts>;
   pageCount: number;
   initialTab?: StudyTabId;
   internationalSource?: string;
@@ -151,10 +153,7 @@ export function DemoFourStepStudy({
   const [demoTopicIndex, setDemoTopicIndex] = useState<number | null>(null);
   const [demoTopicFinished, setDemoTopicFinished] = useState<TopicPracticeOutcome | null>(null);
   const [demoProgressTopicIndex, setDemoProgressTopicIndex] = useState<number | null>(null);
-  const artifacts = useMemo(
-    () => buildPedagogicalArtifacts({ summary, glossary, pageCount }),
-    [summary, glossary, pageCount]
-  );
+  // Artifacts are precomputed on the server to reduce initial main-thread work.
 
   const openPractice = () => {
     setDemoTopicFinished(null);
