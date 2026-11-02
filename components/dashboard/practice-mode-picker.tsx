@@ -8,7 +8,7 @@ import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { PracticeHistoryPanel } from '@/components/dashboard/practice-history-panel';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
-import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, Layers3, ListChecks, Mic, Network, Timer, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, Layers3, ListChecks, LockKeyhole, Mic, Network, Timer, Zap } from 'lucide-react';
 
 type Material = { id: string; title: string };
 const modes = [
@@ -162,31 +162,38 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
             <img src="/evi-bienvenida.svg" alt="Evi te da la bienvenida" className="size-16 shrink-0 object-contain sm:size-20"/>
             <div className="min-w-0">
               <h2 className="text-[15px] font-semibold tracking-tight text-[#0F1B3D]">Tus prácticas empiezan con tu primer material</h2>
-              <p className="mt-1 text-[12px] leading-5 text-[#526079]">Subí un PDF o Word y desbloqueá las modalidades para practicar.</p>
+              <p className="mt-1 text-[12px] leading-5 text-[#526079]">Subí tu material y desbloqueá las modalidades para practicar.</p>
             </div>
           </div>
           <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8] sm:self-auto">
-            Subir material <ArrowRight className="size-4"/>
+            Subir mi material <ArrowRight className="size-4"/>
           </Link>
         </section>
       )}
+      {!material && (
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <h2 className="text-[15px] font-semibold text-[#0F1B3D] sm:text-[16px]">Así vas a poder practicar</h2>
+          <p className="text-right text-[11px] text-[#66758D]">Se habilitan cuando subas tu primer material</p>
+        </div>
+      )}
       <div className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
-        <section aria-label="Modalidades de práctica" className={`min-w-0 lg:flex lg:min-h-0 lg:flex-col ${!material ? "lg:max-w-[690px]" : ""}`}>
-          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
+        <section aria-label="Modalidades de práctica" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
+          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF] ${!material ? "xl:grid-cols-4" : ""}`}>
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
               const selected = selectedMode === title;
               return (
                 <button key={title} type="button" aria-pressed={selected} disabled={!material || !supported}
                   onClick={() => openReview(title)}
-                  className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
+                  className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${!material ? "xl:min-h-[120px] xl:p-3" : ""} ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
                   <span className="flex w-full items-center justify-between">
-                    <Icon className="size-[16px]" aria-hidden="true" />
+                    <span className={`${!material ? "flex size-8 items-center justify-center rounded-xl bg-white/70" : ""}`}><Icon className="size-[16px]" aria-hidden="true" /></span>
+                    {!material && <LockKeyhole className="size-[13px] opacity-75" aria-hidden="true" />}
                     {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                   </span>
                   <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
                   <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
-                  {!supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">Próximamente</span> : null}
+                  {material && !supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">Próximamente</span> : null}
                 </button>
               );
             })}
