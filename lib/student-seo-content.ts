@@ -5,58 +5,6 @@ export type PublicQuestion = {
   explanation: string;
 };
 
-export type Topic = {
-  subject: string;
-  slug: string;
-  title: string;
-  lead: string;
-  description: string;
-  sections: { title: string; body: string }[];
-  practice: PublicQuestion;
-  relatedHref: string;
-};
-export const PUBLIC_TOPICS: Topic[] = [
-  {
-    subject: 'psicologia', slug: 'condicionamiento-clasico',
-    title: 'Condicionamiento clásico: explicación y ejemplo para estudiar',
-    description: 'Qué es el condicionamiento clásico, cómo identificar sus componentes y una pregunta resuelta para comprobar que lo entendiste.',
-    lead: 'El condicionamiento clásico describe un aprendizaje por asociación entre estímulos. Para entenderlo no alcanza con recordar el experimento de Pavlov: necesitás identificar qué provoca una respuesta antes y después del aprendizaje.',
-    sections: [
-      {title:'Cómo se forma una asociación',body:'Un estímulo incondicionado provoca una respuesta sin necesidad de aprendizaje previo. Si un estímulo inicialmente neutro aparece repetidamente junto a él, puede llegar a provocar una respuesta condicionada. La relación depende del contexto, de la experiencia y de otros factores; no es una regla automática en toda situación.'},
-      {title:'Cómo reconocer los componentes',body:'En un ejemplo introductorio, la comida puede provocar salivación sin entrenamiento. Un sonido inicialmente neutro se presenta junto con la comida; tras el aprendizaje, ese sonido puede provocar salivación. Es importante distinguir la respuesta original ante la comida de la respuesta aprendida ante el sonido.'},
-      {title:'Errores que aparecen en parciales',body:'No confundas el estímulo condicionado con la respuesta condicionada: uno es lo que se presenta y la otra es lo que ocurre. Tampoco uses el condicionamiento clásico para explicar cualquier conducta voluntaria; para eso quizá necesites estudiar otros mecanismos de aprendizaje.'}
-    ],
-    practice: {prompt:'Después de asociar repetidamente un sonido con comida, un perro saliva al escuchar el sonido solo. ¿Qué representa el sonido?',choices:['Estímulo condicionado','Respuesta incondicionada','Estímulo incondicionado'],correctIndex:0,explanation:'El sonido era neutro antes del aprendizaje y llega a provocar una respuesta por asociación. La salivación ante ese sonido es la respuesta condicionada.'},
-    relatedHref:'/es/guias/como-estudiar-psicologia'
-  },
-  {
-    subject: 'economia', slug: 'oferta-y-demanda',
-    title:'Oferta y demanda: qué cambia cuando se mueve una curva',
-    description:'Entendé oferta y demanda, distinguí desplazamientos de movimientos y practicá con una situación sencilla.',
-    lead:'El modelo de oferta y demanda ayuda a razonar qué ocurre con precios y cantidades cuando cambian las condiciones de un mercado. Su utilidad está en separar lo que cambia de lo que se supone constante.',
-    sections:[
-      {title:'Movimiento frente a desplazamiento',body:'Si cambia el precio del bien y los demás factores se mantienen, normalmente analizás un movimiento a lo largo de la curva de demanda. Si cambia otro determinante, como el ingreso o las preferencias, puede desplazarse la curva entera. En ambos casos necesitás declarar los supuestos del ejercicio.'},
-      {title:'Ejemplo guiado',body:'Imaginá un bien normal. Si aumenta el ingreso de los compradores y no cambian otros factores, la demanda puede desplazarse hacia la derecha. En un modelo competitivo básico, con oferta sin cambios y curvas habituales, esto tiende a aumentar el precio y la cantidad de equilibrio. El resultado depende del modelo utilizado.'},
-      {title:'Cómo estudiarlo',body:'Dibujá los ejes, nombrá las curvas y explicá por qué cambia una de ellas. Antes de memorizar el resultado, planteá una variación: ¿qué pasaría si aumentara el costo de producción en lugar del ingreso de los consumidores?'}
-    ],
-    practice:{prompt:'En un mercado básico, aumenta el precio del mismo bien y todo lo demás permanece constante. ¿Qué representa sobre la demanda?',choices:['Un desplazamiento de toda la demanda','Un movimiento a lo largo de la curva de demanda','Un desplazamiento obligatorio de la oferta'],correctIndex:1,explanation:'Si solo varía el precio del propio bien y el resto se mantiene, la cantidad demandada cambia a lo largo de la misma curva. Un desplazamiento requiere otro determinante.'},
-    relatedHref:'/es/guias/como-estudiar-economia'
-  },
-  {
-    subject:'biologia', slug:'mitocondria-y-atp',
-    title:'Mitocondrias y ATP: qué función cumplen en la célula',
-    description:'Explicación sencilla de la relación entre mitocondrias, respiración celular y ATP con un ejercicio de autocontrol.',
-    lead:'Para estudiar biología conviene conectar estructuras con procesos. La mitocondria participa en etapas esenciales de la respiración celular aeróbica y en la obtención de energía utilizable en forma de ATP.',
-    sections:[
-      {title:'La función central',body:'En células eucariotas, la mitocondria lleva a cabo etapas del metabolismo energético, incluido el ciclo del ácido cítrico y la fosforilación oxidativa. Estas actividades contribuyen a producir ATP, una molécula que la célula utiliza para impulsar numerosos procesos.'},
-      {title:'Qué no conviene simplificar',body:'No toda la producción de ATP ocurre en las mitocondrias: la glucólisis ocurre en el citosol. Tampoco todas las células o condiciones metabólicas funcionan de la misma manera. En un parcial, distinguí dónde transcurre cada etapa.'},
-      {title:'Cómo repasarlo',body:'Creá una tabla de proceso, localización y resultado. Después explicá con tus palabras qué cambia si una célula no dispone de oxígeno suficiente y contrastá la respuesta con el material de tu curso.'}
-    ],
-    practice:{prompt:'¿Cuál de estas afirmaciones es correcta en una célula eucariota típica?',choices:['Toda la producción de ATP ocurre en el núcleo','La mitocondria participa en la fosforilación oxidativa','Los ribosomas son la sede principal del ciclo del ácido cítrico'],correctIndex:1,explanation:'La fosforilación oxidativa se desarrolla en la membrana interna mitocondrial. Los ribosomas intervienen en síntesis de proteínas y la glucólisis aporta ATP fuera de la mitocondria.'},
-    relatedHref:'/es/guias/como-estudiar-anatomia'
-  }
-];
-
 export type PublicExam = {
   slug: string; title: string; description: string; intro: string;
   questions: PublicQuestion[]; nextHref: string;
@@ -143,14 +91,6 @@ export type SeoHub = {
   steps:{title:string;detail:string}[];
 };
 export const SEO_HUBS:Record<string,SeoHub>={
- temas:{
-  path:'/temas',kicker:'Biblioteca de temas',title:'Entendé un tema. Después comprobá si lo aprendiste.',
-  description:'Explicaciones de conceptos de psicología, economía y biología con ejemplos y preguntas de autocontrol.',
-  intro:'No todas las materias se estudian de la misma manera. Empezá con una explicación del concepto, comprobá sus relaciones y usá una pregunta concreta para descubrir qué necesitas reforzar.',
-  benefitTitle:'De un concepto a tus apuntes',benefit:'Estos ejemplos son educativos y generales. Para rendir, contrastá definiciones y ejercicios con el programa de tu cátedra y el material que te dieron.',
-  cards:PUBLIC_TOPICS.map(t=>({title:t.title,description:t.description,href:'/temas/'+t.subject+'/'+t.slug,label:'Explicación + ejercicio'})),
-  steps:[{title:'Comprendé',detail:'Leé la idea principal y seguí el ejemplo hasta poder explicarlo.'},{title:'Recuperá',detail:'Intentá responder antes de ver la solución.'},{title:'Aplicá',detail:'Abrí tus propios apuntes en Evaluo para profundizar y practicar.'}]
- },
  examenes:{
   path:'/examenes',kicker:'Práctica gratuita',title:'Mini exámenes para comprobar qué sabés',
   description:'Preguntas gratuitas de práctica con resultados y explicaciones. No son parciales ni exámenes oficiales.',
@@ -186,14 +126,6 @@ export const SEO_HUBS:Record<string,SeoHub>={
   {title:'Plan semanal de repaso',description:'Una propuesta de siete días para alternar temas y prácticas.',href:'/planes-de-estudio/estudiar-en-7-dias'},
   {title:'Guías de estudio',description:'Métodos por materia con ejercicios y recomendaciones.',href:'/es/guias'}],
   steps:[{title:'Anotá el error',detail:'Qué preguntaba el ejercicio y por qué fallaste.'},{title:'Escribí la corrección',detail:'Anotá el concepto con tus propias palabras.'},{title:'Reintentá',detail:'Respondé una variación sin consultar la solución.'}]
- },
- ejemplos:{
-  path:'/ejemplos',kicker:'Probá antes de registrarte',title:'Así se siente practicar con preguntas y explicaciones',
-  description:'Demostraciones gratuitas de preguntas de Psicología y Economía para conocer el método de práctica de Evaluo.',
-  intro:'Podés probar dos mini exámenes originales sin cargar ningún archivo. El objetivo es mostrar cómo responder, recibir una explicación y aprender de los errores.',
-  benefitTitle:'Ejemplos, no resultados personalizados',benefit:'Estas preguntas están escritas de antemano. Para practicar específicamente los temas de tu materia, ingresá tus propios apuntes en Evaluo.',
-  cards:PUBLIC_EXAMS.map(t=>({title:t.title,description:t.description,href:'/examenes/'+t.slug,label:'Práctica pública'})),
-  steps:[{title:'Elegí',detail:'Seleccioná una materia y respondé preguntas de ejemplo.'},{title:'Revisá',detail:'Leé la explicación y detectá dónde te confundiste.'},{title:'Personalizá',detail:'Usá tu PDF en Evaluo para practicar tus propios temas.'}]
  },
  docs:{
   path:'/docs',kicker:'Centro de ayuda',title:'Aprendé a utilizar Evaluo paso a paso',
