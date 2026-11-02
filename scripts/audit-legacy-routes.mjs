@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { extname, join, relative } from 'node:path';
+import { dirname, extname, join, normalize, relative } from 'node:path';
 
 const blockedRoutes = [
   ['/demo/carrera-sugerencias', 'app/(es)/demo/carrera-sugerencias/page.tsx'],
@@ -77,7 +77,8 @@ for (const [route, sourcePath] of blockedRoutes) {
 }
 for (const path of removedModules) {
   const token = path.replace(/\.[^.]+$/, '');
-  const refPaths = references(token, path);
+  const basename = path.split('/').at(-1).replace(/\.[^.]+$/, '');
+  const refPaths = [...new Set([...references(token, path), ...references(basename, path, true)])];
   if (refPaths.length) {
     invalid++;
     console.error('[legacy cleanup] Removed component still referenced: ' + path + ' -> ' + refPaths.join(', '));
@@ -91,4 +92,27 @@ for (const path of reviewOnly) {
   const refPaths = references(token, path);
   console.log('[legacy review] ' + path + ': ' + (refPaths.length ? refPaths.join(', ') : 'NO SOURCE REFERENCE FOUND (verify dynamic usage before deleting)'));
 }
+
+// Candidate inventory only: imports can be assembled dynamically, so never auto-delete.
+const sourceByPath = new Map(sources.map((entry) => [entry.path, entry]));
+const importedPaths = new Set();
+for (const { path, contents } of sources) {
+  for (const match of contents.matchAll(/['"`]((?:@\/|\.\.?\/)[^'"`\n]+)['"`]/g)) {
+    const importPath = match[1].startsWith('@/') ?
+      match[1].slice(2) :
+      normalize(join(dirname(path), match[1])).replaceAll('\\', '/');
+    for (const candidate of [importPath, importPath + '.ts', importPath + '.tsx', importPath + '/index.ts', importPath + '/index.tsx']) {
+      if (candidate !== path && sourceByPath.has(candidate)) importedPaths.add(candidate);
+    }
+  }
+}
+const possibleOrphans = sources
+  .filter(({ path }) => path.startsWith('components/') && /\.tsx?$/.test(path) && !importedPaths.has(path))
+  .sort((a, b) => b.contents.length - a.contents.length)
+  .slice(0, 20);
+console.log('[legacy review] Top 20 components without a static local import (not proof of disuse):');
+for (const candidate of possibleOrphans) {
+  console.log('[legacy review] candidate: ' + candidate.path + ' (' + candidate.contents.length + ' bytes)');
+}
+
 if (invalid) process.exitCode = 1;
