@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit obsolete routes and unused asset candidates
+        run: node scripts/audit-legacy-routes.mjs
+
       - name: Security audit
         run: npm audit --audit-level=high
 
