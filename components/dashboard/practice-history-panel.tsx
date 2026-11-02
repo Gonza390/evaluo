@@ -198,12 +198,11 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                 <div className="divide-y divide-[#F0F2F7]">
                   {group.items.map(item => {
                     const Icon = modeIcons[item.mode as keyof typeof modeIcons] ?? History;
-                    const expanded = expandedId === item.id;
                     const incorrect = item.total - item.correct;
                     const percent = percentOf(item);
                     return (
                       <article key={item.id} className="py-2.5">
-                        <button type="button" aria-expanded={expanded}
+                        <button type="button" aria-haspopup="dialog"
                           onClick={() => { setExpandedId(item.id); setShowAll(true); }}
                           className="flex w-full items-center gap-2.5 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-[#4F5DFF]">
                           <span className={`flex size-9 shrink-0 items-center justify-center rounded-[11px] ${modePalette[item.mode] ?? 'bg-slate-100 text-slate-600'}`}>
@@ -221,8 +220,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                             <span className="block text-[13px] font-semibold tabular-nums text-[#0F1B3D]">{percent}%</span>
                             <span className="block text-[10px] text-slate-500">{item.correct} de {item.total}</span>
                           </span>
-                          {expanded ? <ChevronDown className="size-3.5 text-slate-400" aria-hidden="true"/> :
-                            <ChevronRight className="size-3.5 text-slate-400" aria-hidden="true"/>}
+                          <ChevronRight className="size-3.5 text-slate-400" aria-hidden="true"/>
                         </button>
                         <div className="mt-2 flex items-center gap-3 pl-[46px]">
                           <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EDF1F6]">
@@ -231,7 +229,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                           </div>
                           <button type="button" onClick={() => { setExpandedId(item.id); setShowAll(true); }}
                             className="shrink-0 text-[10px] font-semibold text-[#2563EB] hover:underline">
-                            {expanded ? 'Cerrar' : item.answers?.length && incorrect ? `Revisar ${incorrect}` : 'Ver detalle'}
+                            {item.answers?.length && incorrect ? `Revisar ${incorrect}` : 'Ver detalle'}
                           </button>
                         </div>
 
