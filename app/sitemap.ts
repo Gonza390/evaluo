@@ -121,7 +121,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  routes.push({ url: `${baseUrl}/es/paises`, lastModified: new Date('2026-10-29') });
   for (const guide of COUNTRY_NICHE_GUIDES) {
     routes.push({
       url: `${baseUrl}/es/paises/${guide.slug}`,
