@@ -163,7 +163,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               Para comenzar, <Link href="/dashboard/materiales/subir" className="font-semibold text-[#2563EB] hover:underline">subí un material</Link>.
             </p>
           )}
-          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:content-start lg:pr-1.5 lg:pb-3 ${material ? 'lg:flex-1 lg:overflow-y-auto lg:overscroll-contain' : ''} focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
+          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
               const selected = selectedMode === title;
