@@ -48,9 +48,6 @@ export default function GuiasDeEstudioPage() {
               Cada guía incluye un procedimiento, un ejemplo y preguntas que puedes aplicar a tus propios apuntes.
               No necesitas seguir una técnica idéntica para todas las asignaturas.
             </p>
-            <Link href="/es/paises" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
-              Ver guías de estudio por país <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
             <div className="mt-7 flex flex-wrap gap-3">
               <TrackedLink
                 href="/es/estudiar-pdf-con-ia?source=guia-hub"
@@ -58,7 +55,7 @@ export default function GuiasDeEstudioPage() {
                 payload={{ location: 'es_study_guides_hero', cta_name: 'seleccionar_pdf', source: 'guia-hub', destination: '/es/estudiar-pdf-con-ia' }}
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-bold text-white transition hover:bg-blue-800"
               >
-                Estudiar mis apuntes en PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Estudiar mi material <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
               <a href="#guias" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 hover:border-blue-300">
                 Ver las ocho guías
@@ -113,7 +110,7 @@ export default function GuiasDeEstudioPage() {
               eventName="cta_click"
               payload={{ location: 'es_study_guides_bottom', cta_name: 'seleccionar_pdf', source: 'guia-hub', destination: '/es/estudiar-pdf-con-ia' }}
               className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-bold text-white transition hover:bg-blue-800"
-            >Elegir el PDF que voy a estudiar <ArrowRight className="h-4 w-4" aria-hidden="true" /></TrackedLink>
+            >Elegir mi material <ArrowRight className="h-4 w-4" aria-hidden="true" /></TrackedLink>
           </section>
           <div className="mt-10 rounded-2xl border border-slate-200 p-5 text-sm leading-7 text-slate-600">
             <p className="font-semibold text-slate-900">¿Por qué incluimos práctica y repaso?</p>

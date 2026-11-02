@@ -3,7 +3,7 @@ import { createPublicClient } from '@/lib/supabase-public';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
 import { STUDY_GUIDES } from '@/lib/es-study-guides';
-import { COUNTRY_NICHE_GUIDES } from '@/lib/es-country-niche-guides';
+import { PUBLIC_EXAMS, PUBLIC_PLANS, PUBLIC_DOCS, SEO_HUBS } from '@/lib/student-seo-content';
 import { STUDY_BLOG_ARTICLES, getStudyBlogPath } from '@/lib/study-blog-articles';
 import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
@@ -121,13 +121,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  routes.push({ url: `${baseUrl}/es/paises`, lastModified: new Date('2026-10-29') });
-  for (const guide of COUNTRY_NICHE_GUIDES) {
-    routes.push({
-      url: `${baseUrl}/es/paises/${guide.slug}`,
-      lastModified: new Date('2026-10-29'),
-    });
+
+  // Student discovery: publish only substantive public pages and working tools.
+  for (const hub of Object.values(SEO_HUBS)) {
+    routes.push({ url: `${baseUrl}${hub.path}` });
   }
+  for (const exam of PUBLIC_EXAMS) {
+    routes.push({ url: `${baseUrl}/examenes/${exam.slug}` });
+  }
+  for (const plan of PUBLIC_PLANS) {
+    routes.push({ url: `${baseUrl}/planes-de-estudio/${plan.slug}` });
+  }
+  for (const doc of PUBLIC_DOCS) {
+    routes.push({ url: `${baseUrl}/docs/${doc.slug}` });
+  }
+  routes.push({ url: `${baseUrl}/herramientas/calculadora-de-estudio` });
+  routes.push({ url: `${baseUrl}/recursos/registro-de-errores` });
 
   // Previews are not public/indexable. Their Supabase anon role can lack access
   // to production-only catalog views. Keep all dynamic sitemap validation on
