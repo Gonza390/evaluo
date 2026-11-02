@@ -156,70 +156,33 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         )}
       </header>
 
-      <div className={`mt-6 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? 'lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]' : ''}`}>
-        <section aria-labelledby="practice-modes-title" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
-          {material ? (
-            <>
-              <h2 id="practice-modes-title" className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D] lg:shrink-0">
-                Elegí cómo practicar
-              </h2>
-              <div tabIndex={0} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} mt-3 grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
-                {modes.map(({ title, description, Icon, color }) => {
-                  const supported = available(title);
-                  const selected = selectedMode === title;
-                  return (
-                    <button key={title} type="button" aria-pressed={selected} disabled={!supported}
-                      onClick={() => openReview(title)}
-                      className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
-                      <span className="flex w-full items-center justify-between">
-                        <Icon className="size-[16px]" aria-hidden="true" />
-                        {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
-                      </span>
-                      <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
-                      <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
-                      {!supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">Próximamente</span> : null}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-3 text-[11px] text-slate-500 lg:shrink-0">
-                Elegí una actividad para definir tu repaso.
-              </p>
-              {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
-            </>
-          ) : (
-            <div className="w-full">
-              <section aria-labelledby="empty-practice-title" className="flex flex-col items-center gap-4 rounded-[18px] border border-dashed border-[#C9D8F1] bg-gradient-to-r from-[#EEF2FF] to-[#F8FAFF] p-4 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left lg:gap-6">
-                <img src="/evi-pensando.svg" alt="" aria-hidden="true" className="size-[68px] shrink-0 object-contain sm:size-[84px]" />
-                <div className="min-w-0 flex-1">
-                  <h2 id="empty-practice-title" className="text-[18px] font-semibold leading-tight tracking-[-0.035em] text-[#0F1B3D] sm:text-[20px]">Subí tu material para empezar a practicar</h2>
-                  <p className="mt-1.5 max-w-[480px] text-[12px] leading-[1.5] text-[#42506A] sm:text-[13px]">Elegí un PDF o documento Word. Evaluo prepara prácticas a partir de tus propios apuntes.</p>
-                </div>
-                <Link href="/dashboard/materiales/subir" className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:w-auto">
-                  <FileText className="size-4" aria-hidden="true"/>Subir material<ArrowRight className="size-4" aria-hidden="true"/>
-                </Link>
-              </section>
-              <ol aria-label="Cómo empezar a practicar" className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-[#42506A]">
-                {['Subí tu material','Elegí cómo practicar','Repasá tus errores'].map((label,i)=><li key={label} className="flex items-center gap-2">
-                  {i>0&&<ArrowRight className="size-3.5 text-[#7F8AA3]" aria-hidden="true"/>}
-                  <span className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1.5 ${i===0?'border-[#C9D8F1] bg-[#EEF2FF] text-[#0F1B3D]':'border-[#E7EBF4] bg-white'}`}>
-                    <span className={`flex size-5 items-center justify-center rounded-full text-[10px] font-semibold ${i===0?'bg-[#2563EB] text-white':'bg-[#F5F7FB] text-[#42506A]'}`}>{i+1}</span>{label}
+      <div className="mt-6 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)] lg:items-stretch lg:gap-6 xl:gap-9">
+        <section aria-label="Modalidades de práctica" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
+          {!material && (
+            <p className="mb-3 text-[12px] text-[#66758D]">
+              Para comenzar, <Link href="/dashboard/materiales/subir" className="font-semibold text-[#2563EB] hover:underline">subí un material</Link>.
+            </p>
+          )}
+          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:content-start lg:pr-1.5 lg:pb-3 ${material ? 'lg:flex-1 lg:overflow-y-auto lg:overscroll-contain' : ''} focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
+            {modes.map(({ title, description, Icon, color }) => {
+              const supported = available(title);
+              const selected = selectedMode === title;
+              return (
+                <button key={title} type="button" aria-pressed={selected} disabled={!material || !supported}
+                  onClick={() => openReview(title)}
+                  className={`relative flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 enabled:hover:brightness-[0.985] enabled:hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed sm:min-h-[142px] sm:p-4 ${color} ${selected ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
+                  <span className="flex w-full items-center justify-between">
+                    <Icon className="size-[16px]" aria-hidden="true" />
+                    {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                   </span>
-                </li>)}
-              </ol>
-              <div className="mb-3 mt-7 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D]">Así vas a poder practicar</h2>
-                <p className="text-[11px] text-[#7F8AA3]">Se habilitan cuando subas tu material</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {modes.map(({title,description,Icon,color})=><div key={title} aria-disabled="true" className={`flex min-h-[122px] flex-col items-start rounded-2xl border border-transparent p-3.5 sm:min-h-[142px] sm:p-4 ${color}`}>
-                  <span className="flex items-center"><Icon className="size-[16px]" aria-hidden="true"/></span>
                   <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
                   <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
-                </div>)}
-              </div>
-            </div>
-          )}
+                  {!supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">Próximamente</span> : null}
+                </button>
+              );
+            })}
+          </div>
+          {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
         </section>
         {material && <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
           historyLoadError={historyLoadError}
