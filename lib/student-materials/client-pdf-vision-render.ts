@@ -88,8 +88,7 @@ export async function inspectPdfForClientVision(
       }
     }
 
-    const ratio =
-      samplePageNumbers.length > 0 ? lowTextPages / samplePageNumbers.length : 0;
+    const ratio = samplePageNumbers.length > 0 ? lowTextPages / samplePageNumbers.length : 0;
     const shouldPreRender = ratio >= SCAN_SAMPLE_RATIO;
 
     return {
@@ -121,6 +120,7 @@ function canvasToPngBlob(canvas: HTMLCanvasElement) {
 export async function renderPdfPagesForClientVision(input: {
   file: File;
   pageNumbers: number[];
+  signal?: AbortSignal;
   onPage: (pageNumber: number, blob: Blob) => Promise<void>;
 }) {
   let documentHandle: Awaited<ReturnType<typeof loadPdf>>['documentHandle'] | null = null;
@@ -131,11 +131,8 @@ export async function renderPdfPagesForClientVision(input: {
     documentHandle = loaded.documentHandle;
 
     for (const pageNumber of input.pageNumbers) {
-      if (
-        !Number.isInteger(pageNumber) ||
-        pageNumber < 1 ||
-        pageNumber > documentHandle.numPages
-      ) {
+      if (input.signal?.aborted) break;
+      if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > documentHandle.numPages) {
         continue;
       }
 
@@ -164,8 +161,12 @@ export async function renderPdfPagesForClientVision(input: {
           viewport,
         }).promise;
 
+        if (input.signal?.aborted) break;
+
         const blob = await canvasToPngBlob(canvas);
+        if (input.signal?.aborted) break;
         await input.onPage(pageNumber, blob);
+        if (input.signal?.aborted) break;
         completed.push(pageNumber);
       } finally {
         try {

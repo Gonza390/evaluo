@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, ShieldCheck, UploadCloud, X } from 'lucide-react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/validation';
 import { isUuid } from '@/lib/uuid';
 
 function formatBytes(bytes: number) {
@@ -65,19 +65,15 @@ export function PdfFirstLandingUploader({
   const selectFile = (selected: File | null) => {
     if (!selected) return;
 
-    const isPdf =
-      selected.name.toLowerCase().endsWith('.pdf') &&
-      (!selected.type || selected.type === 'application/pdf');
-
-    if (!isPdf) {
+    if (!isSupportedStudentMaterialFile(selected.name, selected.type)) {
       setFile(null);
-      setError('Por ahora solo aceptamos archivos PDF.');
+      setError('Este tipo de material no es compatible.');
       return;
     }
 
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
       setFile(null);
-      setError('El PDF supera el tamaño máximo permitido de 20 MB.');
+      setError('El material supera el tamaño máximo permitido de 20 MB.');
       return;
     }
 
@@ -119,7 +115,7 @@ export function PdfFirstLandingUploader({
       login.searchParams.set('next', nextPath);
       window.location.href = `${login.pathname}${login.search}`;
     } catch {
-      setError(isInternational ? 'No pudimos guardar el PDF. Inténtalo de nuevo.' : 'No pudimos conservar el PDF para continuar. Probá nuevamente.');
+      setError(isInternational ? 'No pudimos guardar el material. Inténtalo de nuevo.' : 'No pudimos conservar el material para continuar. Probá nuevamente.');
       setSaving(false);
     }
   };
@@ -131,7 +127,7 @@ export function PdfFirstLandingUploader({
         <div className="flex items-center justify-between gap-3 px-1 pb-4">
           <div>
             <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">{isInternational ? 'Empieza con tu archivo' : 'Empezá con tu archivo'}</p>
-            <p className="mt-1 text-sm font-bold text-slate-950">{isInternational ? 'Primero eliges el PDF. Después creas tu cuenta.' : 'Primero elegís el PDF. Después creás tu cuenta.'}</p>
+            <p className="mt-1 text-sm font-bold text-slate-950">{isInternational ? 'Primero eliges tu material. Después creas tu cuenta.' : 'Primero elegís tu material. Después creás tu cuenta.'}</p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -142,7 +138,7 @@ export function PdfFirstLandingUploader({
         <input
           ref={pickerRef}
           type="file"
-          accept=".pdf,application/pdf"
+          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           className="sr-only"
           onChange={(event) => {
             selectFile(event.currentTarget.files?.[0] ?? null);
@@ -159,8 +155,8 @@ export function PdfFirstLandingUploader({
             <span className="from-brand to-brand-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
               <UploadCloud className="h-6 w-6" aria-hidden="true" />
             </span>
-            <span className="mt-4 text-base font-bold text-slate-950">{isInternational ? 'Elige el PDF que vas a estudiar' : 'Elegí el PDF que vas a estudiar'}</span>
-            <span className="mt-1.5 text-xs leading-5 text-slate-500">{isInternational ? 'Selecciona un archivo · PDF · máximo 20 MB' : 'Tocá para buscar el archivo · PDF · máximo 20 MB'}</span>
+            <span className="mt-4 text-base font-bold text-slate-950">{isInternational ? 'Elige tu material de estudio' : 'Elegí tu material de estudio'}</span>
+            <span className="mt-1.5 text-xs leading-5 text-slate-500">{isInternational ? 'Selecciona tu material · máximo 20 MB' : 'Tocá para seleccionar tu material · máximo 20 MB'}</span>
           </button>
         ) : (
           <div>

@@ -15,10 +15,11 @@ EdTech web platform — Next.js 16 (App Router), React 19, TypeScript, Supabase,
 ## Commands
 
 - `npm run dev` / `build` / `start` — Next.js.
-- `npm run lint` — ESLint (flat config `eslint.config.mjs`). No separate `typecheck` script: `next build` is the type gate (CI runs it last).
-- `npm test` — runs exactly the 6 `tests/*.smoke.ts` files via `node --experimental-strip-types` + `tests/alias-loader.mjs` (resolves `@/` at runtime; Node can't use tsconfig paths). No dev server/Supabase needed. `tsconfig` excludes `tests/`, so type errors there won't surface in build; other `tests/` files (`probe-*.mts`, `analyze-material.ts`) are ad-hoc and not run by `npm test`.
+- `npm run lint` — ESLint (flat config `eslint.config.mjs`). CI also runs `npx tsc --noEmit` before the build.
+- `npm test` — runs the curated list in `tests/smoke-manifest.json` through `scripts/run-smoke-tests.mjs`. The runner preserves each test's alias-loader setting and uses Node's TypeScript stripping. Add a test to the manifest when it should gate CI; other `tests/` files can remain ad-hoc. `tsconfig` excludes `tests/`, so type errors there won't surface in build.
 - Prettier (`.prettierrc`: single quotes, printWidth 100, tailwind plugin) — no `format` script; run `npx prettier --write <path>`.
-- CI (`.github/workflows/ci.yml`) order: `lint` → `test` → `build`.
+- CI (`.github/workflows/ci.yml`) runs security and quality/SEO jobs; quality checks typecheck → lint → tests → build → performance budget → Lighthouse. Build jobs restore `.next/cache`.
+- Node 22 is required (`.nvmrc` and `package.json` engines). Run `npm ci` after switching versions.
 
 ## Path alias
 

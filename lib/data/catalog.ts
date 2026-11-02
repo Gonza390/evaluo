@@ -161,7 +161,7 @@ export async function fetchMateriasByCarrera(
   if (!isUuid(carreraId)) return [];
   const { data, error } = await client
     .from('materias')
-    .select('*, carrera_materias!inner(prioridad)')
+    .select('id, nombre, carrera_id, carrera_materias!inner(prioridad)')
     .eq('carrera_materias.carrera_id', carreraId);
 
   if (error) {
@@ -271,7 +271,6 @@ export async function fetchExplorarCatalogData(client: QueryClient): Promise<Exp
     throw carrerasResult.error;
   }
 
-  
   const universidades = (universidadesResult.data as CatalogUniversidad[] | null) ?? [];
   const carreras = (carrerasResult.data as CatalogCarrera[] | null) ?? [];
   const carreraMaterias = carreraMateriasResult;

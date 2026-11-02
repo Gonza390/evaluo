@@ -18,8 +18,8 @@ export type MaeveStudySpaceProps = {
   initialSource?: string;
   trackingMateriaId?: string;
   initialOpen?: boolean;
-  pendingReinforcementCount?: number;
-  nextStudyAction?: DashboardNextStudyAction | null;
+  pendingReinforcementCount?: Promise<number>;
+  nextStudyAction?: Promise<DashboardNextStudyAction | null>;
 };
 
 /**
@@ -36,8 +36,8 @@ export function MaeveStudySpace({
   initialSource = '',
   trackingMateriaId = '',
   initialOpen = false,
-  pendingReinforcementCount = 0,
-  nextStudyAction = null,
+  pendingReinforcementCount,
+  nextStudyAction,
 }: MaeveStudySpaceProps) {
   const primaryMaterial =
     materials.find((material) => material.processing_status === 'ready') ?? materials[0] ?? null;

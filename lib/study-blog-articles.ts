@@ -1,3 +1,4 @@
+import { MASTER_ES_BLOG, MASTER_EN_BLOG } from './study-blog-master-expansion';
 import { EXPANDED_ES_BLOG, EXPANDED_EN_BLOG } from './study-blog-expansion';
 export type StudyBlogLocale = 'es' | 'en';
 export type StudyBlogArticle = {
@@ -22,6 +23,7 @@ const toolbox = { title: 'Dunlosky (2013) · Strengthening the student toolbox',
 
 export const STUDY_BLOG_ARTICLES: Record<StudyBlogLocale, StudyBlogArticle[]> = {
   es: [
+    ...MASTER_ES_BLOG,
     ...EXPANDED_ES_BLOG,
     {
       key: 'accounting',
@@ -245,6 +247,7 @@ export const STUDY_BLOG_ARTICLES: Record<StudyBlogLocale, StudyBlogArticle[]> = 
     }
   ],
   en: [
+    ...MASTER_EN_BLOG,
     ...EXPANDED_EN_BLOG,
     {
       key: 'accounting',

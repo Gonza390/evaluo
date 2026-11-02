@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { MATERIAL_PRACTICE_FLOW_VERSION, SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
-import { logError } from '@/lib/observability';
+import { logError, logInfo } from '@/lib/observability';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 
 export type DashboardNextStudyAction = {
@@ -17,7 +17,8 @@ export type DashboardNextStudyAction = {
 
 type StudyEventRow = {
   event_name: string;
-  metadata: Record<string, unknown> | null;
+  material_id: string | null;
+  flow_version: string | null;
   created_at: string;
 };
 
@@ -29,13 +30,11 @@ type PendingErrorRow = {
 };
 
 function materialIdFromEvent(row: StudyEventRow) {
-  const value = row.metadata?.material_id;
-  return typeof value === 'string' ? value : null;
+  return row.material_id;
 }
 
 function eventFlowVersion(row: StudyEventRow) {
-  const value = row.metadata?.flow_version;
-  return typeof value === 'string' ? value : null;
+  return row.flow_version;
 }
 
 function timestamp(value: string | null | undefined) {
@@ -68,11 +67,16 @@ export async function getDashboardNextStudyAction(
   // Tabla de objetivos aún no incluida en el tipo generado de Supabase.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const objectivesDb = admin as any;
+  const objectiveStartedAt = Date.now();
   const { data: saved, error: savedError } = await objectivesDb.from('study_next_objectives')
     .select('id, material_id, kind, topic_title, topic_section_index, review_on, status')
     .eq('user_id', userId).in('material_id', readyIds)
     .in('status', ['pending', 'started']).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const objectiveDurationMs = Date.now() - objectiveStartedAt;
   if (savedError && savedError.code !== '42P01') logError('dashboardNextStudyAction.savedObjective', savedError, { userId });
+  if (objectiveDurationMs > 500) {
+    logInfo('dashboardNextStudyAction.slowObjectiveQuery', { durationMs: objectiveDurationMs, materialCount: readyIds.length });
+  }
   if (saved && readyById.has(saved.material_id)) {
     const material = readyById.get(saved.material_id)!;
     const params = new URLSearchParams({ tab: 'ejercicios' });
@@ -91,6 +95,7 @@ export async function getDashboardNextStudyAction(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = admin as any;
 
+  const queriesStartedAt = Date.now();
   const [errorsResult, eventsResult] = await Promise.all([
     db
       .from('study_errors')
@@ -102,7 +107,8 @@ export async function getDashboardNextStudyAction(
       .limit(300),
     admin
       .from('analytics_events')
-      .select('event_name, metadata, created_at')
+      // PostgREST proyecta solo las claves JSON usadas por esta pantalla.
+      .select('event_name, material_id:metadata->>material_id, flow_version:metadata->>flow_version, created_at')
       .eq('user_id', userId)
       .in('event_name', [
         'student_material_study_opened',
@@ -113,6 +119,16 @@ export async function getDashboardNextStudyAction(
       .order('created_at', { ascending: false })
       .limit(600),
   ]);
+
+  const queriesDurationMs = Date.now() - queriesStartedAt;
+  if (queriesDurationMs > 500) {
+    logInfo('dashboardNextStudyAction.slowStudyQueries', {
+      durationMs: queriesDurationMs,
+      materialCount: readyIds.length,
+      pendingErrorRows: errorsResult.data?.length ?? 0,
+      studyEventRows: eventsResult.data?.length ?? 0,
+    });
+  }
 
   if (errorsResult.error) {
     logError('dashboardNextStudyAction.errors', errorsResult.error, { userId });
