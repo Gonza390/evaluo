@@ -10,8 +10,18 @@ export default async function PrepareStudyPlanPage() {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard/plan-de-estudio/preparar');
-  const materials = (await fetchStudentMaterialsByUser(supabase,user.id))
-    .filter(material=>material.processing_status==='ready')
-    .map(material=>({id:material.id,title:material.title,topicCount:0}));
+  const ready = (await fetchStudentMaterialsByUser(supabase,user.id))
+    .filter(material=>material.processing_status==='ready');
+  const materials = await Promise.all(ready.map(async material => {
+    const {data}=await supabase.from('student_material_summaries')
+      .select('summary_sections').eq('student_material_id',material.id).maybeSingle();
+    const sections=Array.isArray(data?.summary_sections) ? data.summary_sections : [];
+    const topics=sections.map((section:unknown,index:number)=>{
+      const item=section as {title?:string;body?:string};
+      const words=(item.body??'').trim().split(/\s+/u).filter(Boolean).length;
+      return {title:item.title?.trim()||`Tema ${index+1}`,estimatedMinutes:Math.max(10,Math.ceil(words/180)+10)};
+    });
+    return {id:material.id,title:material.title,topicCount:topics.length,topics};
+  }));
   return <StudyPlanSetup materials={materials}/>;
 }
