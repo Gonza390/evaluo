@@ -6,9 +6,9 @@ import { StudyPlanExamCard } from '@/components/dashboard/study-plan-exam-card';
 export function EmptyStudyPlan() {
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
-      <h1 className="mb-4 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(310px,0.85fr)] lg:gap-5">
         <div className="min-w-0 space-y-5">
+          <h1 className="mb-4 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
           <section className="flex flex-col items-center gap-4 rounded-[18px] border border-[#E7EBF4] bg-[#F7FAFF] px-4 py-5 text-center sm:flex-row sm:px-5 sm:text-left">
             <Image src="/evi-bienvenida.svg" alt="" width={96} height={96} className="size-[76px] shrink-0 object-contain sm:size-[86px]"/>
             <div className="min-w-0 flex-1">

@@ -73,3 +73,12 @@
     gap: 1rem;
   }
 }
+
+
+/* Practicar: only the modalities list scrolls on desktop; the app shell owns the viewport. */
+@media (min-width: 1024px) {
+  .dashboard-responsive:has(> [data-practice-dual-pane]) {
+    height: 100%;
+    min-height: 0;
+  }
+}

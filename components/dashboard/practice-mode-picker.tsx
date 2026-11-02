@@ -133,7 +133,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   );
 
   return (
-    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:min-h-0 lg:flex-col lg:px-7 lg:pb-5 lg:pt-6 ${material ? "lg:h-[calc(100dvh-52px)] lg:overflow-hidden" : ""}`}>
+    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:min-h-0 lg:flex-col lg:px-7 lg:pb-5 lg:pt-6 lg:h-full lg:min-h-0 lg:overflow-hidden`}>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
           <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
@@ -156,13 +156,22 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         )}
       </header>
 
-      <div className={`mt-6 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
+      {!material && (
+        <section aria-label="Empezá a practicar con tus apuntes" className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E7EBF4] bg-[#F6F8FF] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <img src="/evi-bienvenida.svg" alt="Evi te da la bienvenida" className="size-16 shrink-0 object-contain sm:size-20"/>
+            <div className="min-w-0">
+              <h2 className="text-[15px] font-semibold tracking-tight text-[#0F1B3D]">Tus prácticas empiezan con tu primer material</h2>
+              <p className="mt-1 text-[12px] leading-5 text-[#526079]">Subí un PDF o Word y desbloqueá las modalidades para practicar.</p>
+            </div>
+          </div>
+          <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8] sm:self-auto">
+            Subir material <ArrowRight className="size-4"/>
+          </Link>
+        </section>
+      )}
+      <div className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
         <section aria-label="Modalidades de práctica" className={`min-w-0 lg:flex lg:min-h-0 lg:flex-col ${!material ? "lg:max-w-[690px]" : ""}`}>
-          {!material && (
-            <p className="mb-3 text-[12px] text-[#66758D]">
-              Para comenzar, <Link href="/dashboard/materiales/subir" className="font-semibold text-[#2563EB] hover:underline">subí un material</Link>.
-            </p>
-          )}
           <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF]`}>
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);

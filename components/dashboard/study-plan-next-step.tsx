@@ -36,7 +36,7 @@ export function StudyPlanNextStep({ materialId, topicActivities }: { materialId:
    return <>
     <h3 className="text-[14px] font-medium leading-snug tracking-tight text-slate-900">{topic.title || 'Tema '+(selection.topic+1)}</h3>
     <p className="text-[11px] leading-4 text-slate-500">{mode.description}</p>
-    <Link href={'/materiales/'+materialId+'?tab='+mode.tab+'&studyTopic='+selection.topic} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-[13px] font-medium text-white transition hover:bg-blue-700">
+    <Link href={'/materiales/'+materialId+'?tab='+mode.tab+'&studyTopic='+selection.topic} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#D7E3FB] bg-[#EEF2FF] px-4 text-[13px] font-semibold text-[#315DAB] transition-colors hover:border-[#BBCDF4] hover:bg-[#E2EAFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
       {progress.done===0?'Comenzar a estudiar':'Continuar ahora'} <ArrowRight className="size-4"/>
     </Link>
    </>;
