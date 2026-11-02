@@ -1,10 +1,11 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { distributeStudyTopics } from '@/lib/student-materials/study-plan-distribution';
+import { distributeStudyTopics, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
 type Material = { id: string; title: string; topicCount: number; topics: Array<{title:string;estimatedMinutes:number}> };
+type SavedPlan = { exam_date:string; daily_minutes:number; material_ids:string[]; preferences:string[]; schedule:PlanDay[]; updated_at:string };
 const methods = [
   { id:'entender', title:'Entenderla bien', subtitle:'Resúmenes y conceptos', icon:BookOpen, tone:'bg-[#EEF2FF]', iconTone:'bg-[#DCE7FF] text-[#2563EB]' },
   { id:'memorizar', title:'Memorizarla', subtitle:'Flashcards y repasos', icon:Layers3, tone:'bg-[#E7F5EC]', iconTone:'bg-[#D3EEDD] text-[#338458]' },
@@ -23,16 +24,77 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
   const [minutes,setMinutes] = useState<number|null>(null);
   const [preferences,setPreferences] = useState<string[]>(['entender','practicar']);
   const [preview,setPreview] = useState(false);
+  const [savedPlan,setSavedPlan] = useState<SavedPlan|null>(null);
+  const [completedKeys,setCompletedKeys] = useState<string[]>([]);
+  const [loading,setLoading] = useState(true);
+  const [saving,setSaving] = useState(false);
+  const [marking,setMarking] = useState<string|null>(null);
+  const [error,setError] = useState('');
+  useEffect(()=>{
+    let mounted=true;
+    void fetch('/api/study-plans',{cache:'no-store'}).then(async response=>{
+      if(!response.ok)throw new Error('No pudimos recuperar tu planificación.');
+      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[]}>;
+    }).then(data=>{
+      if(!mounted)return;
+      setSavedPlan(data.plan);
+      setCompletedKeys(data.completedKeys??[]);
+      if(data.plan){
+        setExam(data.plan.exam_date);
+        setSelected(data.plan.material_ids);
+        setMinutes(data.plan.daily_minutes);
+        setPreferences(data.plan.preferences);
+        setPreview(true);
+      }
+    }).catch((cause:unknown)=>{
+      if(mounted)setError(cause instanceof Error?cause.message:'No pudimos recuperar el plan.');
+    }).finally(()=>{if(mounted)setLoading(false)});
+    return ()=>{mounted=false};
+  },[]);
   const selectable = step===0 ? !!exam : step===1 ? selected.length>0 : step===2 ? minutes!==null : preferences.length>0;
   const monthLabel = new Intl.DateTimeFormat('es-AR',{month:'long',year:'numeric'}).format(month);
   const daysInMonth = new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
   const offset = (new Date(month.getFullYear(),month.getMonth(),1).getDay()+6)%7;
   const currentMonth = month.getFullYear()===today.getFullYear() && month.getMonth()===today.getMonth();
   const chosen = materials.filter(m=>selected.includes(m.id));
-  const topics = chosen.flatMap(material=>material.topics.map(topic=>({...topic,materialId:material.id,materialTitle:material.title})));
+  const topics = chosen.flatMap(material=>material.topics.map((topic,topicIndex)=>({...topic,topicIndex,materialId:material.id,materialTitle:material.title})));
   const distribution = distributeStudyTopics(topics,exam,minutes??0,today);
+  const days=savedPlan?.schedule??distribution.days;
+  const assignedKeys=new Set(days.flatMap(day=>day.topics.map(topic=>`${topic.materialId}:${topic.topicIndex}`)));
+  const completedCount=completedKeys.filter(key=>assignedKeys.has(key)).length;
+  async function savePlan() {
+    if(saving||!exam||!minutes||!selected.length||!preferences.length)return;
+    setSaving(true);setError('');
+    try {
+      const response=await fetch('/api/study-plans',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({examDate:exam,minutesPerDay:minutes,materialIds:selected,preferences,startDate:localDate(today)})
+      });
+      const result=await response.json() as {error?:string};
+      if(!response.ok)throw new Error(result.error||'No pudimos guardar el plan.');
+      const latest=await fetch('/api/study-plans',{cache:'no-store'});
+      if(!latest.ok)throw new Error('El plan se guardó, pero no pudimos recuperarlo.');
+      const data=await latest.json() as {plan:SavedPlan|null;completedKeys:string[]};
+      setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);setPreview(true);
+    }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el plan.')}
+    finally{setSaving(false)}
+  }
+  async function markCompleted(materialId:string,topicIndex:number) {
+    const key=`${materialId}:${topicIndex}`;
+    if(marking||completedKeys.includes(key))return;
+    setMarking(key);setError('');
+    try{
+      const response=await fetch('/api/study-plans',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({materialId,topicIndex})});
+      const result=await response.json() as {error?:string};
+      if(!response.ok)throw new Error(result.error||'No pudimos registrar esta actividad.');
+      setCompletedKeys(previous=>[...new Set([...previous,key])]);
+    }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el avance.')}
+    finally{setMarking(null)}
+  }
   const toggle = (list:string[],id:string,save:(x:string[])=>void) => save(list.includes(id) ? list.filter(x=>x!==id) : [...list,id]);
   return <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+    {loading&&<p role="status" className="mx-auto max-w-[500px] pb-3 text-[12px] text-[#7F8AA3]">Recuperando tu planificación…</p>}
+    {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
     <div className="relative mx-auto max-w-[500px]">
       {!preview && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
@@ -81,23 +143,34 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
           </div>}
         </section>
         <div className="mt-3 flex justify-end">
-          <button type="button" disabled={!selectable} onClick={()=>step===3?setPreview(true):setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?'Preparar mi plan':'Continuar'}<ArrowRight className="size-3.5"/></button>
+          <button type="button" disabled={!selectable||saving||loading} onClick={()=>step===3?void savePlan():setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?(saving?'Guardando…':'Preparar mi plan'):'Continuar'}<ArrowRight className="size-3.5"/></button>
         </div>
       </> : <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4">
         <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#2563EB]"><CalendarDays className="size-5"/></div>
-        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]">Tu distribución de temas</h1>
+        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]">Tu plan de estudio</h1>
+        {savedPlan&&<p className="mt-1 text-[11px] font-medium text-[#35816A]">Guardado en tu cuenta · {completedCount} de {assignedKeys.size} temas completados</p>}
         <p className="mt-2 text-[13px] leading-5 text-[#42506A]">Organizamos los temas de tus materiales según los días antes del examen y tus {minutes} minutos diarios. Por ahora no asignamos prácticas específicas.</p>
-        {topics.length===0 ? <p className="mt-5 rounded-xl bg-[#F5F7FB] p-4 text-[13px] text-[#42506A]">Los materiales seleccionados todavía no tienen temas extraídos. No podemos distribuirlos hasta que estén disponibles.</p> : <>
-          {distribution.days.filter(day=>day.topics.length>0).length===0 && <p className="mt-5 text-[13px] text-[#42506A]">No hay días disponibles antes del examen. Elegí una fecha posterior.</p>}
+        {!savedPlan&&topics.length===0 ? <p className="mt-5 rounded-xl bg-[#F5F7FB] p-4 text-[13px] text-[#42506A]">Los materiales seleccionados todavía no tienen temas extraídos. No podemos distribuirlos hasta que estén disponibles.</p> : <>
+          {days.filter(day=>day.topics.length>0).length===0 && <p className="mt-5 text-[13px] text-[#42506A]">No hay días disponibles antes del examen. Elegí una fecha posterior.</p>}
           <div className="mt-5 space-y-3">
-            {distribution.days.filter(day=>day.topics.length>0).map(day=><div key={day.date} className="rounded-xl border border-[#E7EBF4] p-3.5">
+            {days.filter(day=>day.topics.length>0).map(day=><div key={day.date} className="rounded-xl border border-[#E7EBF4] p-3.5">
               <div className="mb-2 flex items-center justify-between gap-2"><h2 className="text-[13px] font-semibold capitalize">{new Date(`${day.date}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</h2><span className="shrink-0 text-[11px] text-[#7F8AA3]">{day.estimatedMinutes} min aprox.</span></div>
-              <ul className="space-y-2">{day.topics.map((topic,i)=><li key={`${topic.materialId}-${i}`} className="flex gap-2 text-[12px]"><BookOpen className="mt-0.5 size-4 shrink-0 text-[#2563EB]"/><span><span className="font-medium">{topic.title}</span><span className="block text-[11px] text-[#7F8AA3]">{topic.materialTitle} · {topic.estimatedMinutes} min estimados</span></span></li>)}</ul>
+              <ul className="space-y-2">{day.topics.map((topic,i)=>{
+                const key=`${topic.materialId}:${topic.topicIndex}`;
+                const done=completedKeys.includes(key);
+                return <li key={key||i} className="flex items-start gap-2 text-[12px]">
+                  <BookOpen className="mt-0.5 size-4 shrink-0 text-[#2563EB]"/>
+                  <span className="min-w-0 flex-1"><span className="block font-medium">{topic.title}</span><span className="block text-[11px] text-[#7F8AA3]">{topic.materialTitle} · {topic.estimatedMinutes} min estimados</span>
+                    <Link href={`/materiales/${topic.materialId}?tab=resumen&studyTopic=${topic.topicIndex}`} className="mt-1 inline-flex text-[11px] font-medium text-[#2563EB] hover:underline">Estudiar este tema</Link>
+                  </span>
+                  <button type="button" disabled={!savedPlan||done||marking===key} onClick={()=>void markCompleted(topic.materialId,topic.topicIndex)} className={`shrink-0 rounded-lg px-2 py-1.5 text-[11px] font-medium ${done?'bg-[#E7F5EC] text-[#35816A]':'bg-[#EEF2FF] text-[#2563EB] disabled:opacity-50'}`}>{done?'Completado':marking===key?'Guardando…':'Marcar leído'}</button>
+                </li>;
+              })}</ul>
             </div>)}
           </div>
           {distribution.unassigned.length>0 && <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-900">Con el tiempo disponible quedan {distribution.unassigned.length} temas sin asignar. Podés ampliar el tiempo diario o elegir otra fecha.</p>}
         </>}
-        <button type="button" onClick={()=>{setPreview(false);setStep(2)}} className="mt-6 rounded-lg border border-[#E7EBF4] px-4 py-2.5 text-[12px] font-medium">Modificar mi plan</button>
+        <button type="button" onClick={()=>{setPreview(false);setStep(0);setSavedPlan(null)}} className="mt-6 rounded-lg border border-[#E7EBF4] px-4 py-2.5 text-[12px] font-medium">Modificar mi plan</button>
       </section>}
     </div>
   </main>
