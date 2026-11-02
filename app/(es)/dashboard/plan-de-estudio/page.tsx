@@ -47,6 +47,9 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
     });
   }
 
+  const {data:personalPlan}=await supabase.from('student_personal_study_plans' as never)
+    .select('exam_date').eq('user_id',user.id).maybeSingle();
+  const hasSavedPlan=Boolean(personalPlan);
   if (materials.length === 0) return <EmptyStudyPlan />;
 
   return (
@@ -72,7 +75,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
           </div>
 
           <div className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
-            <StudyPlanExamCard hasMaterials />
+            <StudyPlanExamCard hasMaterials hasSavedPlan={hasSavedPlan} />
 
             <section className="rounded-2xl bg-white p-3.5">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
