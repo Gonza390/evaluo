@@ -23,6 +23,12 @@ const nextConfig = {
       './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
     ],
   },
+  async redirects() {
+    return [
+      // Retire the generic country index without removing focused country guides.
+      { source: '/es/paises', destination: '/es/guias', permanent: true },
+    ];
+  },
   async headers() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
     const scriptSrc = [
