@@ -1,0 +1,47 @@
+# Evaluo
+
+> Evaluo is an AI-assisted study platform for university students. It helps turn PDF and Word (DOCX) study materials into summaries, flashcards and practice activities, with topic-based review and exam preparation.
+
+Official website: https://evaluoapp.com/
+Primary languages: Spanish and English.
+Audience: university students in Argentina and other Spanish-speaking countries, with English-language study resources.
+
+## Main study features
+
+- [Study a PDF with AI](https://evaluoapp.com/estudiar-pdf-con-ia): understand and practice material from uploaded PDFs.
+- [Summarize PDFs with AI](https://evaluoapp.com/funciones/resumir-pdf-con-ia): work with AI-assisted study summaries.
+- [Create flashcards from PDFs](https://evaluoapp.com/funciones/crear-flashcards-desde-pdf): use cards to review key concepts.
+- [Generate mind maps](https://evaluoapp.com/funciones/crear-mapa-mental-desde-pdf): visualize important concepts and relationships.
+- [Practice by topic](https://evaluoapp.com/funciones/practicar-por-tema): check understanding and reinforce weaker topics.
+- [AI exam simulation](https://evaluoapp.com/funciones/simulacro-examen-con-ia): prepare for exams using practice questions.
+- [Turn PDFs into questions](https://evaluoapp.com/convertir-pdf-en-preguntas): generate practice activities based on study material.
+
+PDF and DOCX files are supported. Availability and limits of individual tools depend on the plan and product flow; consult the website for current details.
+
+## Educational content
+
+- [Study guides in Spanish](https://evaluoapp.com/es/guias)
+- [Spanish study blog](https://evaluoapp.com/blog)
+- [English study blog](https://evaluoapp.com/en/blog)
+- [English study tools](https://evaluoapp.com/en)
+- [University practice question catalog](https://evaluoapp.com/pregunteros)
+- [Explore academic subjects](https://evaluoapp.com/explorar)
+
+## Product comparisons
+
+- [Evaluo vs ChatGPT](https://evaluoapp.com/comparar/evaluo-vs-chatgpt)
+- [Evaluo vs NotebookLM](https://evaluoapp.com/comparar/evaluo-vs-notebooklm)
+- [Evaluo vs Quizlet](https://evaluoapp.com/comparar/evaluo-vs-quizlet)
+
+## Pricing and availability
+
+- [Current plans](https://evaluoapp.com/pricing)
+
+## Crawling and privacy
+
+- [Robots policy](https://evaluoapp.com/robots.txt)
+- [XML sitemap](https://evaluoapp.com/sitemap.xml)
+
+Only public landing pages, guides and publicly listed academic resources should be considered for discovery and citation. User accounts, uploaded materials, private study sessions and other authenticated content are not publicly accessible and should not be indexed.
+
+This file is an informational guide to public resources, not a replacement for robots.txt, canonical URLs, or the actual page content.
