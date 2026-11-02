@@ -47,6 +47,17 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 type UniversidadOption = { id: string; nombre: string };
 type CarreraOption = { id: string; nombre: string; universidad_id: string | null };
 const MISSING_UNIVERSITY_VALUE = '__missing_university__';
+const CLIENT_VISION_FAST_MAX_PAGES = 8;
+const CLIENT_VISION_BUDGET_MS = 3000;
+
+function canPreRenderPdfOnDevice() {
+  if (!navigator.hardwareConcurrency || navigator.hardwareConcurrency < 4) return false;
+  const device = navigator as Navigator & {
+    deviceMemory?: number;
+    connection?: { saveData?: boolean };
+  };
+  return !(device.deviceMemory && device.deviceMemory < 4) && !device.connection?.saveData;
+}
 
 type Props = {
   children: ReactNode;
@@ -464,23 +475,24 @@ export function PdfFirstUploadShell({
           contentType: fileMetadata.mimeType,
         });
 
-      // Para escaneos cortos/medios movemos el render de páginas al navegador.
-      // Es una optimización best-effort: si el dispositivo no puede hacerlo,
-      // Vercel conserva el renderer del servidor como fallback.
+      const visionController = new AbortController();
+
+      // Sólo escaneos cortos en dispositivos capaces usan el render del navegador.
+      // Si no termina dentro del presupuesto, el servidor renderiza lo pendiente.
       const clientVisionPromise = (async () => {
         try {
-          if (studentMaterialFileKind(activeFile.name) !== 'pdf') return;
+          if (studentMaterialFileKind(activeFile.name) !== 'pdf' || !canPreRenderPdfOnDevice()) return;
           const plan = await inspectPdfForClientVision(
             activeFile,
-            CLIENT_VISION_MAX_PAGES
+            Math.min(CLIENT_VISION_FAST_MAX_PAGES, CLIENT_VISION_MAX_PAGES)
           );
-          if (!plan.shouldPreRender || plan.pageNumbers.length === 0) return;
+          if (visionController.signal.aborted || !plan.shouldPreRender || plan.pageNumbers.length === 0) return;
 
           const preparedVision = await preparePdfClientVisionUploadsAction({
             filePath: preparedFilePath,
             pageNumbers: plan.pageNumbers,
           });
-          if (!preparedVision.success || !preparedVision.uploads?.length) return;
+          if (visionController.signal.aborted || !preparedVision.success || !preparedVision.uploads?.length) return;
 
           const uploadsByPage = new Map(
             preparedVision.uploads.map((upload) => [upload.pageNumber, upload])
@@ -489,7 +501,9 @@ export function PdfFirstUploadShell({
           await renderPdfPagesForClientVision({
             file: activeFile,
             pageNumbers: plan.pageNumbers,
+            signal: visionController.signal,
             onPage: async (pageNumber, blob) => {
+              if (visionController.signal.aborted) return;
               const target = uploadsByPage.get(pageNumber);
               if (!target) return;
 
@@ -509,10 +523,24 @@ export function PdfFirstUploadShell({
         }
       })();
 
-      const [pdfUploadResult] = await Promise.all([
-        pdfUploadPromise,
-        clientVisionPromise,
-      ]);
+      let visionTimeout: ReturnType<typeof setTimeout>;
+      const visionBudget = new Promise<void>((resolve) => {
+        visionTimeout = setTimeout(() => {
+          visionController.abort();
+          resolve();
+        }, CLIENT_VISION_BUDGET_MS);
+      });
+      let pdfUploadResult: Awaited<typeof pdfUploadPromise>;
+      try {
+        pdfUploadResult = await pdfUploadPromise;
+        if (pdfUploadResult.error) visionController.abort();
+        else await Promise.race([clientVisionPromise, visionBudget]);
+      } catch (error) {
+        visionController.abort();
+        throw error;
+      } finally {
+        clearTimeout(visionTimeout!);
+      }
       if (pdfUploadResult.error) {
         throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
       }

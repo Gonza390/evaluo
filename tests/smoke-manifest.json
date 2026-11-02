@@ -1,0 +1,262 @@
+[
+  {
+    "file": "tests/routes.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-modes.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-case-formulation.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-six-minimum.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-true-false.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-true-false-diagnostics.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-gemini-key-fallback.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-quality-hardening.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-option-evidence.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-basic-mvp.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-pedagogical-corrections.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-on-demand.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-feedback-quality.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-ai-grounding.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-card-quality.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-docx-integration.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/dashboard-single-space.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/seo.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/seo-unlam.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/text-quality.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/flow.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/payment-webhook-retry.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/security-baseline.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/disaster-recovery.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/student-material-validation.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/student-material-upload-contract.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/student-material-quality.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-result-topics.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/pedagogical-integrity.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-metadata-block.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-question-source-quality.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/study-error-review-evidence.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/glossary-noise.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/pdf-study-artifacts.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/ai-pipeline.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/recommended-study.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/runtime-stability.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/pdf-ocr-batching.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/proxy-home.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/ai-key-health.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/onboarding-metrics.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/pdf-stage-checkpoints.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/first-pdf-onboarding-activation.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/qa-onboarding.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/dashboard-academic-defer.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/calendar-write-buffer-warning.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/provider-health.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/preguntero-query-cache.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/ai-usage-recovery.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/study-return-d1-material-id.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/stale-pdf-job-recovery.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/pedagogical-map-resumption.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/pricing-payment-contract.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/production-incident-recovery.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-entry-attribution.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/topic-practice-finish.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/topic-practice-result-actions.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/topic-resource-navigation.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/flashcards-3d-flip.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/flashcards-visible-faces.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/flashcards-compact-general.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/study-compact-layout.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/docx-upload.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/practice-history-screens.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/catalog-pagination.smoke.ts",
+    "alias": true
+  }
+]

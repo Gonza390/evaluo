@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode, RefObject } from 'react';
+import { Suspense, use, type ComponentProps, type ReactNode, type RefObject } from 'react';
 import { useRef } from 'react';
 import { usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
 import { MaeveStudyHero } from '@/components/dashboard/maeve-study-hero';
@@ -11,9 +11,22 @@ type Props = {
   materialsCount: number;
   primaryMaterialHref: string | null;
   primaryMaterialReady: boolean;
-  pendingReinforcementCount: number;
-  nextStudyAction: DashboardNextStudyAction | null;
+  pendingReinforcementCount?: Promise<number>;
+  nextStudyAction?: Promise<DashboardNextStudyAction | null>;
 };
+
+function ResolvedStudyHero({
+  nextStudyAction,
+  pendingReinforcementCount,
+  ...props
+}: Omit<ComponentProps<typeof MaeveStudyHero>, 'nextStudyAction' | 'pendingReinforcementCount'> & {
+  nextStudyAction: Promise<DashboardNextStudyAction | null>;
+  pendingReinforcementCount: Promise<number>;
+}) {
+  const count = use(pendingReinforcementCount);
+  const action = use(nextStudyAction);
+  return <MaeveStudyHero {...props} pendingReinforcementCount={count} nextStudyAction={action} />;
+}
 
 /**
  * Study-first dashboard chrome. The hero calls the explicit upload command
@@ -29,19 +42,46 @@ export function MaeveDashboardChrome({
 }: Props) {
   const heroRef = useRef<HTMLElement | null>(null);
   const openUploadPicker = usePdfUploadTrigger();
-  const openUpload = () => openUploadPicker(materialsCount === 0 ? 'dashboard_empty' : 'dashboard_hero');
+  const openUpload = () =>
+    openUploadPicker(materialsCount === 0 ? 'dashboard_empty' : 'dashboard_hero');
 
   return (
     <div className="min-w-0 space-y-3 overflow-x-clip">
-      <MaeveStudyHero
-        heroRef={heroRef as RefObject<HTMLElement | null>}
-        materialsCount={materialsCount}
-        primaryMaterialHref={primaryMaterialHref}
-        primaryMaterialReady={primaryMaterialReady}
-        pendingReinforcementCount={pendingReinforcementCount}
-        nextStudyAction={nextStudyAction}
-        onUploadClick={openUpload}
-      />
+      <Suspense
+        fallback={
+          <MaeveStudyHero
+            heroRef={heroRef as RefObject<HTMLElement | null>}
+            materialsCount={materialsCount}
+            primaryMaterialHref={primaryMaterialHref}
+            primaryMaterialReady={primaryMaterialReady}
+            pendingReinforcementCount={0}
+            nextStudyAction={null}
+            onUploadClick={openUpload}
+          />
+        }
+      >
+        {nextStudyAction && pendingReinforcementCount ? (
+          <ResolvedStudyHero
+            heroRef={heroRef as RefObject<HTMLElement | null>}
+            materialsCount={materialsCount}
+            primaryMaterialHref={primaryMaterialHref}
+            primaryMaterialReady={primaryMaterialReady}
+            pendingReinforcementCount={pendingReinforcementCount}
+            nextStudyAction={nextStudyAction}
+            onUploadClick={openUpload}
+          />
+        ) : (
+          <MaeveStudyHero
+            heroRef={heroRef as RefObject<HTMLElement | null>}
+            materialsCount={materialsCount}
+            primaryMaterialHref={primaryMaterialHref}
+            primaryMaterialReady={primaryMaterialReady}
+            pendingReinforcementCount={0}
+            nextStudyAction={null}
+            onUploadClick={openUpload}
+          />
+        )}
+      </Suspense>
       {materialsCount > 0 ? <div className="[&_button]:shadow-none">{children}</div> : null}
     </div>
   );

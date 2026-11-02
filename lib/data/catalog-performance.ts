@@ -26,6 +26,25 @@ type CarreraMateriaRow = {
   materia_id: string | null;
 };
 
+async function fetchAllCarreraMaterias(client: QueryClient): Promise<CarreraMateriaRow[]> {
+  const pageSize = 1000;
+  const rows: CarreraMateriaRow[] = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await client
+      .from('carrera_materias')
+      .select('carrera_id, materia_id')
+      .order('carrera_id')
+      .order('materia_id')
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    const page = (data ?? []) as CarreraMateriaRow[];
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+}
+
 export async function fetchCatalogContentSignalsRpc(
   client: QueryClient
 ): Promise<CatalogContentSignals> {
@@ -52,22 +71,18 @@ export async function fetchCatalogContentSignalsRpc(
 export async function fetchExplorarCatalogDataRpc(
   client: QueryClient
 ): Promise<ExplorarCatalogData> {
-  const [universidadesResult, carrerasResult, carreraMateriasResult, contentSignals] =
-    await Promise.all([
-      client.from('universidades').select('id, nombre').order('nombre'),
-      client.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-      client.from('carrera_materias').select('carrera_id, materia_id'),
-      fetchCatalogContentSignalsRpc(client),
-    ]);
+  const [universidadesResult, carrerasResult, carreraMaterias, contentSignals] = await Promise.all([
+    client.from('universidades').select('id, nombre').order('nombre'),
+    client.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+    fetchAllCarreraMaterias(client),
+    fetchCatalogContentSignalsRpc(client),
+  ]);
 
   if (universidadesResult.error) throw universidadesResult.error;
   if (carrerasResult.error) throw carrerasResult.error;
-  if (carreraMateriasResult.error) throw carreraMateriasResult.error;
 
   const universidades = (universidadesResult.data as CatalogUniversidad[] | null) ?? [];
   const carreras = (carrerasResult.data as CatalogCarrera[] | null) ?? [];
-  const carreraMaterias =
-    (carreraMateriasResult.data as CarreraMateriaRow[] | null) ?? [];
 
   const universityNameById = new Map(
     universidades.map((universidad) => [universidad.id, universidad.nombre])
