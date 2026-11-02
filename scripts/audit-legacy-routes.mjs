@@ -14,13 +14,16 @@ const blockedRoutes = [
 // Keep these active: marketing /demo/material-estudio, redirect /preview/primer-pdf,
 // responsive QA /preview/progreso-pdf + /preview/mis-errores/explicacion,
 // test coverage /preview/resultado-simulador, environment-gated previews.
+const removedModules = [
+  "components/demo/career-duplicate-suggestions-demo.tsx",
+  "components/preview/exam-date-plan-preview.tsx",
+  "components/preview/study-errors-preview.tsx",
+  "components/preview/pdf-processing-preview.tsx",
+  "components/preview/pdf-processing-material-preview.tsx",
+  "components/preview/pdf-processing-sample-study.ts"
+];
+
 const reviewOnly = [
-  'components/demo/career-duplicate-suggestions-demo.tsx',
-  'components/preview/exam-date-plan-preview.tsx',
-  'components/preview/study-errors-preview.tsx',
-  'components/preview/pdf-processing-preview.tsx',
-  'components/preview/pdf-processing-material-preview.tsx',
-  'components/preview/pdf-processing-sample-study.ts',
   'public/pdf.worker.min.mjs',
   'public/placeholder-logo.png',
   'public/placeholder-logo.svg',
@@ -70,6 +73,16 @@ for (const [route, sourcePath] of blockedRoutes) {
     console.error('[legacy cleanup] Still referenced: ' + route + ' -> ' + refPaths.join(', '));
   } else {
     console.log('[legacy cleanup] No active source references: ' + route);
+  }
+}
+for (const path of removedModules) {
+  const token = path.replace(/\.[^.]+$/, '');
+  const refPaths = references(token, path);
+  if (refPaths.length) {
+    invalid++;
+    console.error('[legacy cleanup] Removed component still referenced: ' + path + ' -> ' + refPaths.join(', '));
+  } else {
+    console.log('[legacy cleanup] No active source references to deleted component: ' + path);
   }
 }
 for (const path of reviewOnly) {
