@@ -290,7 +290,7 @@ export function EstudiarPdfExperience() {
                 Subí el documento que estás preparando y usá el mismo contenido para entender, organizar conceptos, repasar y practicar sin tener que volver a cargarlo en cada paso.
               </p>
               <div className="mt-8">
-                <PrimaryCta label="Estudiar mi PDF" trackingPrefix="seo_estudiar_pdf_ia" location="hero" />
+                <PrimaryCta label="Estudiar mi material" trackingPrefix="seo_estudiar_pdf_ia" location="hero" />
               </div>
             </div>
 
