@@ -168,7 +168,20 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
   const workshop = locale === 'es'
     ? STUDY_BLOG_WORKSHOPS_ES[article.key]
     : STUDY_BLOG_WORKSHOPS_EN[article.key];
-  const others = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key).slice(0, 3);
+  const relatedKeys: Record<string, string[]> = {
+    medicine: ['nursing','biology','exam-planning'],
+    nursing: ['medicine','biology','active-recall'],
+    engineering: ['statistics','exam-planning','active-recall'],
+    statistics: ['engineering','exam-planning','active-recall'],
+    'exam-planning': ['active-recall','medicine','engineering'],
+    'active-recall': ['exam-planning','statistics','nursing'],
+  };
+  const available = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key);
+  const preferences = relatedKeys[article.key] ?? [];
+  const others = [...available].sort((a,b) => {
+    const rank = (key:string) => { const index = preferences.indexOf(key); return index === -1 ? 100 : index; };
+    return rank(a.key) - rank(b.key);
+  }).slice(0, 3);
   const mainIndex = locale === 'es' ? '/' : '/en';
   const blogIndex = locale === 'es' ? '/blog' : '/en/blog';
   const newArticleKeys = new Set(['medicine','nursing','engineering','statistics','exam-planning','active-recall']);
@@ -299,7 +312,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
             <aside className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6">
               <h2 className="text-base font-bold">{copy.optional}</h2>
               <p className="mt-2 text-sm leading-7 text-slate-600">{copy.optionalNote}</p>
-              <Link href={locale === 'es' ? '/estudiar-pdf-con-ia' : '/en/study-pdf-with-ai'} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
+              <Link href={(locale === 'es' ? '/estudiar-pdf-con-ia' : '/en/study-pdf-with-ai') + '?source=blog-' + encodeURIComponent(article.slug)} className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 hover:underline">
                 {copy.optionalLink} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </aside>
