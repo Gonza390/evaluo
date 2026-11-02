@@ -76,9 +76,21 @@ for (const [route, sourcePath] of blockedRoutes) {
   }
 }
 for (const path of removedModules) {
-  const token = path.replace(/\.[^.]+$/, '');
   const basename = path.split('/').at(-1).replace(/\.[^.]+$/, '');
-  const refPaths = [...new Set([...references(token, path), ...references(basename, path, true)])];
+  // Only exact module specifiers count. Substrings can match unrelated components,
+  // e.g. "real-study-errors-preview" vs deleted "study-errors-preview".
+  const escaped = basename.replace(/[.*+?^\x24{}()|[\]\\]/g, '\\  const token = path.replace(/\.[^.]+$/, '');
+  const basename = path.split('/').at(-1).replace(/\.[^.]+$/, '');
+  const refPaths = [...new Set([...references(token, path), ...references(basename, path, true)])];');
+  const exactImport = new RegExp(
+    "['\`\\\"](?:@/|\\\\.\\\\.?/)(?:[^'\`\\\"]*/)?"
+    + escaped + "(?:\\\\.[jt]sx?)?['\`\\\"]"
+  );
+  const refPaths = sources
+    .filter(({ path: sourcePath, contents }) =>
+      sourcePath !== path && exactImport.test(contents)
+    )
+    .map(({ path: sourcePath }) => sourcePath);
   if (refPaths.length) {
     invalid++;
     console.error('[legacy cleanup] Removed component still referenced: ' + path + ' -> ' + refPaths.join(', '));
