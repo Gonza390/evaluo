@@ -71,14 +71,14 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
           </div>}
           {step===2 && <div className="grid grid-cols-2 gap-2.5">
             {[15,30,45,60].map((value,i)=><button type="button" key={value} onClick={()=>setMinutes(value)} aria-pressed={minutes===value} className={`flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-xl border transition-colors ${['bg-[#EEF2FF]','bg-[#E7F5EC]','bg-[#FFF0E6]','bg-[#F1EBFF]'][i]} ${minutes===value?'border-[#2563EB] ring-1 ring-[#2563EB]/20':'border-transparent hover:border-[#C9D8F1]'}`}><Clock3 className="size-4 text-[#2563EB]"/><span className="text-[13px] font-semibold text-[#0F1B3D]">{value} min</span></button>)}
-          </div>
+          </div>}
           {step===3 && <div className="grid grid-cols-2 gap-2.5">
             {methods.map(({id,title,subtitle,icon:Icon,tone,iconTone})=><button type="button" key={id} onClick={()=>toggle(preferences,id,setPreferences)} aria-pressed={preferences.includes(id)} className={`relative flex min-h-[112px] flex-col items-start rounded-xl border p-3 text-left transition-colors ${tone} ${preferences.includes(id)?'border-[#2563EB] ring-1 ring-[#2563EB]/15':'border-transparent hover:border-[#C9D8F1]'}`}>
               <span className={`mb-2 flex size-8 items-center justify-center rounded-lg ${iconTone}`}><Icon className="size-4" aria-hidden="true"/></span>
               <span className="block text-[12px] font-semibold leading-[16px] text-[#0F1B3D] sm:text-[13px]">{title}</span><span className="mt-1 block text-[11px] leading-[15px] text-[#42506A]">{subtitle}</span>
               {preferences.includes(id)&&<span className="absolute right-2 top-2 flex size-[18px] items-center justify-center rounded-full bg-[#2563EB] text-white"><Check className="size-3"/></span>}
             </button>)}
-          </div>
+          </div>}
         </section>
         <div className="mt-3 flex justify-end">
           <button type="button" disabled={!selectable} onClick={()=>step===3?setPreview(true):setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?'Preparar mi plan':'Continuar'}<ArrowRight className="size-3.5"/></button>
