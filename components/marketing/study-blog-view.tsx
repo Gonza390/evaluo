@@ -68,6 +68,26 @@ const words = {
   },
 } as const;
 
+
+const CONTEXTUAL_LINKS: Partial<Record<StudyBlogLocale, Record<string, {href:string;label:string;description:string}[]>>> = {
+ es:{
+  medicine:[{href:'/es/guias/como-estudiar-anatomia',label:'Guía de anatomía',description:'Repasá estructuras y mecanismos con esquemas.'},{href:'/funciones/practicar-por-tema',label:'Practicar por tema',description:'Reforzá cada unidad con preguntas de tu material.'}],
+  nursing:[{href:'/es/guias/como-estudiar-anatomia',label:'Estudiar anatomía',description:'Recuperá relaciones entre estructuras y funciones.'},{href:'/funciones/verdadero-falso-con-ia',label:'Verdadero o falso',description:'Comprobá afirmaciones de tus apuntes y revisá el razonamiento.'}],
+  engineering:[{href:'/blog/como-estudiar-estadistica',label:'Estudiar estadística',description:'Ejercitá cálculos, interpretación y supuestos.'},{href:'/funciones/practicar-por-tema',label:'Práctica por tema',description:'Separá los conceptos antes de un simulacro.'}],
+  statistics:[{href:'/blog/como-estudiar-ingenieria',label:'Estudiar ingeniería',description:'Aplicá unidades, modelos y comprobaciones.'},{href:'/funciones/unir-conceptos-con-ia',label:'Unir conceptos',description:'Distinguí términos y definiciones próximas.'}],
+  'exam-planning':[{href:'/planes-de-estudio/estudiar-en-7-dias',label:'Plan de estudio de siete días',description:'Organizá sesiones de diagnóstico, práctica y repaso.'},{href:'/funciones/simulacro-examen-con-ia',label:'Simulacro de examen',description:'Comprobá qué falta reforzar antes de rendir.'}],
+  'active-recall':[{href:'/blog/repeticion-espaciada-para-estudiar',label:'Repetición espaciada',description:'Aprendé cuándo retomar preguntas anteriores.'},{href:'/funciones/crear-flashcards-desde-pdf',label:'Flashcards de estudio',description:'Recuperá conceptos sin consultar primero las respuestas.'}]
+ },
+ en:{
+  medicine:[{href:'/en/blog/how-to-study-biology',label:'Study biology',description:'Reconstruct mechanisms and examine scientific explanations.'},{href:'/en/pdf-to-quiz',label:'Study questions from notes',description:'Explore quiz-based practice using your own learning material.'}],
+  nursing:[{href:'/en/blog/how-to-study-biology',label:'Biology study guide',description:'Review structures and processes before application.'},{href:'/en/ai-true-false-questions',label:'True-or-false practice',description:'Check the reasoning behind factual claims.'}],
+  engineering:[{href:'/en/blog/how-to-study-statistics',label:'Study statistics',description:'Interpret numerical results and assumptions.'},{href:'/en/pdf-to-quiz',label:'Quiz from your notes',description:'Explore retrieval practice with course material.'}],
+  statistics:[{href:'/en/blog/how-to-study-engineering',label:'Study engineering',description:'Work through models and unit checks.'},{href:'/en/match-concepts-with-ai',label:'Match concepts',description:'Practice distinguishing closely related definitions.'}],
+  'exam-planning':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Organize cumulative revision across multiple topics.'},{href:'/en/pdf-to-quiz',label:'Quiz-based practice',description:'Use questions to assess understanding.'}],
+  'active-recall':[{href:'/en/blog/spaced-repetition-for-studying',label:'Spaced repetition',description:'Review older material across study sessions.'},{href:'/en/pdf-to-flashcards',label:'Flashcards',description:'Practice retrieving concepts from your notes.'}]
+ }
+};
+
 function BlogHeader({ locale }: { locale: StudyBlogLocale }) {
   return (
     <>
@@ -260,6 +280,19 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
                 ))}
               </ul>
             </section>
+            {CONTEXTUAL_LINKS[locale]?.[article.key] && (
+              <section aria-labelledby="related-resources" className="mt-12 border-t border-slate-200 pt-8">
+                <h2 id="related-resources" className="text-xl font-bold">{locale === 'es' ? 'Seguí estudiando este tema' : 'Continue learning this topic'}</h2>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {CONTEXTUAL_LINKS[locale]![article.key].map(link => (
+                    <Link key={link.href} href={link.href} className="rounded-xl border border-slate-200 p-4 hover:border-blue-300">
+                      <span className="block font-bold text-blue-700">{link.label} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></span>
+                      <span className="mt-2 block text-sm leading-6 text-slate-600">{link.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             <aside className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6">
               <h2 className="text-base font-bold">{copy.optional}</h2>
               <p className="mt-2 text-sm leading-7 text-slate-600">{copy.optionalNote}</p>
