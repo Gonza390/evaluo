@@ -133,7 +133,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   );
 
   return (
-    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:h-[calc(100dvh-52px)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:px-7 lg:pb-5 lg:pt-6`}>
+    <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:min-h-0 lg:flex-col lg:px-7 lg:pb-5 lg:pt-6`}>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
           <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
@@ -188,17 +188,37 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
             </>
           ) : (
-            <section className="mx-auto flex min-h-[390px] max-w-[520px] flex-col items-center justify-center px-3 py-10 text-center sm:min-h-[450px]" aria-labelledby="empty-practice-title">
-              <div className="mb-5 flex size-[76px] items-center justify-center rounded-[24px] border border-[#E7EBF4] bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_8px_25px_rgba(15,27,61,0.05)]">
-                <BookOpen className="size-9" strokeWidth={1.6} aria-hidden="true" />
+            <div className="w-full">
+              <section aria-labelledby="empty-practice-title" className="flex flex-col items-center gap-4 rounded-[18px] border border-dashed border-[#C9D8F1] bg-[#EEF2FF] p-4 text-center sm:flex-row sm:gap-5 sm:p-5 sm:text-left">
+                <img src="/evi-pensando.svg" alt="" aria-hidden="true" className="size-[68px] shrink-0 object-contain sm:size-[84px]" />
+                <div className="min-w-0 flex-1">
+                  <h2 id="empty-practice-title" className="text-[18px] font-semibold leading-tight tracking-[-0.035em] text-[#0F1B3D] sm:text-[20px]">Subí tu primer material para empezar a practicar</h2>
+                  <p className="mt-1.5 text-[12px] leading-[1.5] text-[#42506A] sm:text-[13px]">Elegí un PDF o documento Word. Evaluo prepara actividades a partir de tus apuntes.</p>
+                </div>
+                <Link href="/dashboard/materiales/subir" className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:w-auto">
+                  <FileText className="size-4" aria-hidden="true"/>Subir material<ArrowRight className="size-4" aria-hidden="true"/>
+                </Link>
+              </section>
+              <ol aria-label="Cómo empezar a practicar" className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-[#42506A]">
+                {['Subí tu material','Elegí cómo practicar','Repasá tus errores'].map((label,i)=><li key={label} className="flex items-center gap-2">
+                  {i>0&&<ArrowRight className="size-3.5 text-[#7F8AA3]" aria-hidden="true"/>}
+                  <span className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1.5 ${i===0?'border-[#C9D8F1] bg-[#EEF2FF] text-[#0F1B3D]':'border-[#E7EBF4] bg-white'}`}>
+                    <span className={`flex size-5 items-center justify-center rounded-full text-[10px] font-semibold ${i===0?'bg-[#2563EB] text-white':'bg-[#F5F7FB] text-[#42506A]'}`}>{i+1}</span>{label}
+                  </span>
+                </li>)}
+              </ol>
+              <div className="mb-3 mt-7 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-[17px] font-medium tracking-[-0.025em] text-[#0F1B3D]">Así vas a poder practicar</h2>
+                <p className="text-[11px] text-[#7F8AA3]">Se habilitan cuando subas tu material</p>
               </div>
-              <h2 id="empty-practice-title" className="text-[22px] font-bold tracking-[-0.035em] text-[#0F1B3D] sm:text-[26px]">Tu próxima práctica empieza con un archivo</h2>
-              <p className="mt-3 max-w-[38ch] text-[14px] leading-6 text-[#64748B]">Subí tu PDF o documento Word y prepará actividades para poner a prueba lo que aprendiste.</p>
-              <Link href="/dashboard/materiales/subir" className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-6 text-[14px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:w-auto">
-                <FileText className="size-[18px]" aria-hidden="true" />Subir material<ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              <p className="mt-4 text-[12px] text-[#7F8AA3]">Cuando esté listo, vas a poder elegir cómo practicar.</p>
-            </section>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {modes.map(({title,description,Icon,color})=><div key={title} aria-disabled="true" className={`flex min-h-[122px] flex-col items-start rounded-2xl border border-transparent p-3.5 sm:min-h-[142px] sm:p-4 ${color}`}>
+                  <span className="flex w-full items-center justify-between"><Icon className="size-[16px]" aria-hidden="true"/><span className="text-[10px] font-medium opacity-60">Sin material</span></span>
+                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{title}</span>
+                  <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{description}</span>
+                </div>)}
+              </div>
+            </div>
           )}
         </section>
         {material && <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
