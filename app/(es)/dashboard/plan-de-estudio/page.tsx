@@ -48,7 +48,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
     });
   }
 
-  if (!first) return <EmptyStudyPlan />;
+  if (materials.length === 0) return <EmptyStudyPlan />;
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:h-[calc(100dvh-52px)] xl:overflow-hidden">
