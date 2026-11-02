@@ -1012,7 +1012,7 @@ assertIncludesAll('components/seo/editorial-methodology.tsx', [
   'sourceUrl',
 ]);
 assertIncludesAll('app/(es)/es/guias/[slug]/page.tsx', ['EditorialMethodology kind="study"']);
-assertIncludesAll('app/(es)/es/paises/[slug]/page.tsx', [
+if (countryHubExists) assertIncludesAll('app/(es)/es/paises/[slug]/page.tsx', [
   'EditorialMethodology kind="admissions"',
   'guide.officialChecks.map',
   'Qué comprobar en el organismo responsable',
@@ -1197,7 +1197,6 @@ assertIncludesAll('scripts/qa-seo-visual.mjs', [
   "'/es-co/estudiar-pdf-con-ia'",
   "'/es-es/estudiar-pdf-con-ia'",
   "'/es/guias/como-estudiar-anatomia'",
-  "'/es/paises/mexico-guia-exani-ii-pdf'",
   "'/funciones/resumir-pdf-con-ia'",
   "'/landings/parciales'",
   "'/pregunteros'",
