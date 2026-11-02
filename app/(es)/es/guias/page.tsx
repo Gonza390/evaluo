@@ -55,7 +55,7 @@ export default function GuiasDeEstudioPage() {
                 payload={{ location: 'es_study_guides_hero', cta_name: 'seleccionar_pdf', source: 'guia-hub', destination: '/es/estudiar-pdf-con-ia' }}
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-bold text-white transition hover:bg-blue-800"
               >
-                Estudiar mi material <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Estudiar mis apuntes en PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
               <a href="#guias" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 hover:border-blue-300">
                 Ver las ocho guías
