@@ -7,6 +7,7 @@ import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { StudyPlanNextStep } from '@/components/dashboard/study-plan-next-step';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
 import { StudyPlanRoadmap } from '@/components/dashboard/study-plan-roadmap';
+import { EmptyStudyPlan } from '@/components/dashboard/empty-study-plan';
 import { StudyPlanMaterialSelector } from '@/components/dashboard/study-plan-material-selector';
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { getTopicStudyResources, tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
@@ -46,6 +47,8 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       return { title: section.title || `Tema ${index + 1}`, questions: counts[index] > 0, flashcards: resources.flashcards.length > 0, glossary: resources.concepts.length > 0, readingMinutes: Math.max(1, Math.ceil((section.body?.trim().split(/\s+/u).filter(Boolean).length ?? 0) / 180)), questionsMinutes: Math.max(1, Math.ceil(counts[index] * 1.5)), flashcardsMinutes: Math.max(1, Math.ceil(resources.flashcards.length * 0.6)), glossaryMinutes: Math.max(1, Math.ceil(resources.concepts.length * 0.35)) };
     });
   }
+
+  if (!first) return <EmptyStudyPlan />;
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:h-[calc(100dvh-52px)] xl:overflow-hidden">
