@@ -52,8 +52,17 @@ assert.match(practiceSession, /mb-2 text-center text-xs font-medium text-slate-5
 assert.match(practiceSession, /mode === 'opciones' \? 'text-center ' : 'text-left '/,
   'Verdadero y Falso centrados, sin cambiar las otras modalidades');
 assert.match(picker, /data-practice-dual-pane/, 'Practicar identifica su layout de dos paneles');
-assert.match(picker, /lg:h-\[calc\(100dvh-52px\)\]/, 'La altura desktop queda acotada al viewport');
+assert.match(picker, /lg:h-full lg:min-h-0 lg:overflow-hidden/, 'Practicar ocupa la altura real del contenedor, sin estimar la del header');
 assert.match(picker, /lg:flex-1 lg:content-start lg:overflow-y-auto/, 'Las modalidades tienen scroll propio en escritorio');
+const shell = read('components/ClientLayoutClient.tsx');
+const responsiveCss = read('app/(es)/dashboard/dashboard-responsive.css');
+assert.match(shell, /const isDesktopPracticeHomeRoute = pathname === '\/dashboard\/practicar'/, 'El bloqueo del viewport se aplica solo a Practicar');
+assert.match(shell, /lg:h-dvh lg:min-h-0 lg:overflow-hidden/, 'El shell de Practicar se limita a la altura disponible');
+assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pane\]\)/, 'La altura se propaga al contenido solo en Practicar');
+assert.match(panel, /lg:overflow-hidden/, 'El historial queda inmóvil en escritorio');
+assert.match(panel, /Historial de prácticas/, 'Hay acceso al historial completo sin scroll del panel');
+assert.match(panel, /<Dialog open=\{showAll\}/, 'La lista larga se abre en un modal accesible');
+
 assert.match(picker, /aria-label="Modalidades de práctica: desplazate para ver todas"/, 'La zona desplazable es accesible');
 assert.match(picker, /scrollbarStyles\.scrollArea/, 'La barra de las modalidades queda oculta sin desactivar scroll');
 assert.match(panel, /lg:h-full lg:min-h-0/, 'El historial queda fijo dentro de la columna');
