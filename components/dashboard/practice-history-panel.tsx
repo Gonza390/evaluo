@@ -104,7 +104,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
           <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
             Prácticas realizadas
           </h2>
-          <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
+          <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4] pb-2">
             <div className="min-w-0 pr-2">
               <p className="text-[10px] text-slate-500">Prácticas</p>
               <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
@@ -173,7 +173,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
         <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
           Prácticas realizadas
         </h2>
-        <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
+        <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4] pb-2">
           <div className="min-w-0 pr-2">
             <p className="text-[10px] text-slate-500">Prácticas</p>
             <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#0F1B3D]">{sessions.length}</p>

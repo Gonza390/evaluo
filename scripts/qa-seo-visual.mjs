@@ -18,8 +18,6 @@ const CORE_ROUTES = [
   '/es-es/estudiar-pdf-con-ia',
   '/es/guias',
   '/es/guias/como-estudiar-anatomia',
-  '/es/paises',
-  '/es/paises/mexico-guia-exani-ii-pdf',
   '/ia-para-estudiantes',
   '/estudiar-pdf-con-ia',
   '/funciones/resumir-pdf-con-ia',
@@ -55,7 +53,6 @@ const ROUTES = [...new Set([
   ...CORE_ROUTES,
   ...await staticSitemapRoutes(),
   ...await guideRoutes('lib/es-study-guides.ts', '/es/guias/'),
-  ...await guideRoutes('lib/es-country-niche-guides.ts', '/es/paises/'),
 ])];
 
 // Academic pages are database-generated; test a real indexed example per
