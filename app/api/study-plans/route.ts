@@ -31,12 +31,13 @@ export async function GET() {
   if(!plan)return NextResponse.json({plan:null,completedKeys:[]});
   const ids=Array.isArray(plan.material_ids)?plan.material_ids:[];
   if(!ids.length)return NextResponse.json({plan,completedKeys:[]});
-  const result=await supabase.from('student_material_topic_activity_progress')
+  const result=await supabase.from('student_material_topic_activity_progress' as never)
     .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids);
   if(result.error)return fail('No pudimos consultar el progreso de tu plan.',503);
+  const entries=(result.data??[]) as Array<{material_id:string;topic_index:number}>;
   return NextResponse.json({
     plan,
-    completedKeys:(result.data??[]).map(row=>`${row.material_id}:${row.topic_index}`)
+    completedKeys:entries.map(row=>`${row.material_id}:${row.topic_index}`)
   });
 }
 export async function POST(request:NextRequest) {
@@ -108,9 +109,9 @@ export async function PATCH(request:NextRequest) {
   const authorized=Array.isArray(schedule)&&schedule.some(day=>Array.isArray(day.topics)&&
     day.topics.some(topic=>topic.materialId===materialId&&topic.topicIndex===topicIndex));
   if(!authorized)return fail('La actividad no forma parte de tu plan.',403);
-  const saved=await supabase.from('student_material_topic_activity_progress').upsert({
+  const saved=await supabase.from('student_material_topic_activity_progress' as never).upsert({
     user_id:user.id,material_id:materialId,topic_index:topicIndex as number,activity:'reading'
-  },{onConflict:'user_id,material_id,topic_index,activity',ignoreDuplicates:true});
+  } as never,{onConflict:'user_id,material_id,topic_index,activity',ignoreDuplicates:true});
   if(saved.error)return fail('No se pudo registrar la actividad.',503);
   return NextResponse.json({ok:true,key:`${materialId}:${topicIndex}`});
 }
