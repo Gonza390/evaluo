@@ -62,7 +62,7 @@ export function GlobalClientRuntime() {
   const pathname = usePathname();
   const shouldRunSessionGuard = !isLightweightPublicRoute(pathname);
   const shouldShowPdfNudge =
-    pathname === '/dashboard' || pathname.startsWith('/explorar/materia/');
+    pathname.startsWith('/explorar/materia/');
 
   return (
     <>
