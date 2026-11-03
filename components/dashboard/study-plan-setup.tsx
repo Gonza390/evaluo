@@ -185,10 +185,6 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
               <p className="mt-4 text-[11px] leading-4 text-[#42506A]">El avance indica temas leídos, no prácticas completadas.</p>
             </section>
             <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
-              <h2 className="text-[14px] font-medium tracking-tight">Entran al examen</h2>
-              <div className="mt-3 divide-y divide-[#E7EBF4]">{chosen.map(material=><div key={material.id} className="flex items-center gap-3 py-3"><FileText className="size-4 shrink-0 text-[#2563EB]"/><span className="min-w-0 flex-1 truncate text-[12px] text-[#42506A]">{material.title}</span><span className="text-[11px] text-[#7F8AA3]">{days.flatMap(day=>day.topics).filter(topic=>topic.materialId===material.id&&completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`)).length} de {days.flatMap(day=>day.topics).filter(topic=>topic.materialId===material.id).length}</span></div>)}</div>
-            </section>
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
               <h2 className="text-[14px] font-medium tracking-tight">Tu preparación</h2>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{completedCount}/{assignedKeys.size}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Temas leídos</p></div>
