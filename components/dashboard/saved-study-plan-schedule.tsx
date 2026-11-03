@@ -41,21 +41,22 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
       <h2 id="saved-study-plan-schedule-title" className="text-[15px] font-normal tracking-tight text-[#0F1B3D]">Tu plan de estudios</h2>
       <span className="text-[11px] text-[#7F8AA3]">{scheduled.length} {scheduled.length===1?'día planificado':'días planificados'}</span>
     </div>
-    <div className="overflow-hidden rounded-2xl border border-[#E7EBF4] bg-white">
-      <div className="divide-y divide-[#EFF2F7]">
+    <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
+      <div className="border-b border-slate-100 px-3 py-1.5 text-[11px] font-normal text-slate-500">Días hasta el examen</div>
+      <div className="divide-y divide-slate-100">
         {shown.map(day=>{
           const allRead=day.topics.every(topic=>completed.has(`${topic.materialId}:${topic.topicIndex}`));
           const selectedDay=day.date===selected?.date;
           const dayTitle=day.date===today?'Hoy':fullDate(day.date);
           return <div key={day.date}>
             <button type="button" onClick={()=>setSelectedDate(day.date)} aria-pressed={selectedDay}
-              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-[#F5F7FB] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#2563EB] ${selectedDay?'bg-[#F7F9FD]':''}`}>
-              <span className={`flex h-[47px] w-[48px] shrink-0 flex-col items-center justify-center rounded-xl ${selectedDay?'bg-[#EEF2FF]':'bg-[#F5F7FB]'}`}>
-                <span className="text-[10px] font-medium uppercase text-[#7F8AA3]">{weekday(day.date)}</span>
-                <span className="text-[19px] font-semibold leading-5 text-[#0F1B3D]">{dateObj(day.date).getDate()}</span>
+              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#2563EB] ${selectedDay?'bg-slate-50/70':''}`}>
+              <span className={`flex size-11 shrink-0 flex-col items-center justify-center rounded-lg ${selectedDay?'bg-[#EEF2FF]':'bg-[#F5F7FB]'}`}>
+                <span className="text-[9px] font-medium uppercase text-[#7F8AA3]">{weekday(day.date)}</span>
+                <span className="text-[17px] font-semibold leading-5 text-[#0F1B3D]">{dateObj(day.date).getDate()}</span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12px] font-semibold capitalize text-[#0F1B3D]">{dayTitle}</span>
+                <span className="block truncate text-[12px] font-medium capitalize text-[#0F1B3D]">{dayTitle}</span>
                 <span className="mt-0.5 block text-[11px] text-[#66758D]">{day.topics.length} {day.topics.length===1?'tema':'temas'} · {day.estimatedMinutes} min estimados</span>
               </span>
               {allRead?<Check className="size-4 shrink-0 text-[#35816A]" aria-label="Temas leídos"/>:<ArrowRight className={`size-4 shrink-0 ${selectedDay?'text-[#2563EB]':'text-[#9DA9BE]'}`}/>}
@@ -89,9 +90,9 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
           {showAll?'Ver menos':`+ ${scheduled.length-3} días más`}
         </button>}
         <div className="flex items-center gap-3 px-3.5 py-3">
-          <span className="flex size-[47px] shrink-0 items-center justify-center rounded-xl bg-[#FFF3E3] text-[#B8792E]"><Flag className="size-5" aria-hidden="true"/></span>
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#FFF3E3] text-[#B8792E]"><Flag className="size-4" aria-hidden="true"/></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[12px] font-semibold text-[#0F1B3D]">Examen</span>
+            <span className="block text-[12px] font-medium text-[#0F1B3D]">Examen</span>
             <span className="mt-0.5 block text-[11px] capitalize text-[#66758D]">{examDateLabel(examDate)}</span>
           </span>
         </div>
