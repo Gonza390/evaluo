@@ -219,7 +219,7 @@ export function StudentMaterialsWorkspace({
                 const isShared = material.visibility === 'shared';
                 const isFailed = material.processing_status === 'failed';
                 return (
-                  <article key={material.id} data-dashboard-material-option={material.id}
+                  <article key={material.id} data-evaluo-motion-card data-dashboard-material-option={material.id}
                     className={`flex min-w-0 items-center gap-2 rounded-2xl border bg-white p-2.5 transition-colors ${selected ? 'border-[#2563EB] bg-[#F7FAFF] ring-1 ring-[#DBE8FF]' : 'border-[#E7EBF4] hover:border-[#B9CAEC]'}`}>
                     <button type="button" onClick={() => setSelectedMaterialId(material.id)}
                       aria-pressed={selected}
