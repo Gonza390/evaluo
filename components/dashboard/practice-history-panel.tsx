@@ -1,13 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, CheckCircle2, ChevronRight, CircleAlert, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const modeLabels: Record<string, string> = {
   unir: 'Unir conceptos', completar: 'Completar', casos: 'Casos',
@@ -61,14 +60,12 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
   onBackToHistory?: () => void;
 }) {
   const router = useRouter();
-  const [showAll, setShowAll] = useState(false);
   const now = useMemo(() => new Date(), []);
   const sessions = useMemo(() => history.filter(item => item.materialId === materialId), [history, materialId]);
-  const visible = sessions.slice(0, 2); // Keep the desktop history column stationary.
   const totalToReview = sessions.reduce((sum, item) => sum + item.total - item.correct, 0);
   const averageScore = average(sessions);
   const groups: { key: string; items: PracticeHistoryEntry[] }[] = [];
-  for (const entry of visible) {
+  for (const entry of sessions) {
     const key = dateLabel(entry.completedAt, now);
     const last = groups[groups.length - 1];
     if (last?.key === key) last.items.push(entry);
@@ -243,7 +240,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
           </div>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto border-t border-[#EFF2F7] px-4 pb-4 sm:px-5 lg:overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-[#EFF2F7] px-4 pb-4 [scrollbar-color:#B8C6DC_transparent] [scrollbar-width:thin] sm:px-5">
             {groups.map(group => (
               <div key={group.key}>
                 <h3 className="sticky top-0 z-10 bg-white py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
@@ -294,44 +291,6 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
               </div>
             ))}
       </div>
-      {sessions.length > visible.length && (
-        <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 sm:px-5">
-          <button type="button" onClick={() => setShowAll(true)}
-            className="inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-[#2563EB] hover:underline">
-            Ver todas las prácticas ({sessions.length}) <ChevronRight className="size-3" aria-hidden="true"/>
-          </button>
-        </div>
-      )}
-      <Dialog open={showAll} onOpenChange={setShowAll}>
-        <DialogContent className="max-h-[85dvh] w-full overflow-y-auto sm:max-w-[620px]">
-          <DialogHeader>
-            <DialogTitle>Historial de prácticas</DialogTitle>
-            <DialogDescription>Todos tus resultados de este material, del más reciente al más antiguo.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            {sessions.map(item=>{
-              const Icon=modeIcons[item.mode as keyof typeof modeIcons] ?? History;
-              const percent=percentOf(item);
-              return <button type="button" key={item.id}
-                onClick={()=>{setShowAll(false);onSelectSession(item)}}
-                className="flex w-full items-center gap-3 rounded-xl border border-[#E7EBF4] p-3 text-left transition-colors hover:bg-[#F8FAFD] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
-                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${modePalette[item.mode]??'bg-slate-100 text-slate-600'}`}>
-                  <Icon className="size-4" aria-hidden="true"/>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-semibold text-[#0F1B3D]">{modeLabels[item.mode]??item.mode}</span>
-                  <span className="block text-[10px] text-slate-500">{dateLabel(item.completedAt,now)} · {timeLabel(item.completedAt)}</span>
-                </span>
-                <span className="shrink-0 text-right">
-                  <span className="block text-[13px] font-semibold tabular-nums">{percent}%</span>
-                  <span className="block text-[10px] text-slate-500">{item.correct} de {item.total}</span>
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-slate-400" aria-hidden="true"/>
-              </button>;
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
       {sessions.length >= 500 && (
         <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 text-[10px] text-slate-500">
           Se muestran hasta 500 registros recientes.
