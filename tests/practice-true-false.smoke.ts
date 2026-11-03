@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   verifyGeneratedTrueFalse, verifiedTrueFalsePool, sufficientTrueFalse, selectBalancedTrueFalse,
-  shuffleTrueFalseOrder,
+  shuffleTrueFalseOrder, selectTrueFalseFragments,
 } from '../lib/student-materials/practice-true-false.ts';
 
 const correct = [
@@ -111,6 +111,30 @@ assert.equal(verifyGeneratedTrueFalse({assertions:[word]},[{
 assert.equal(verifyGeneratedTrueFalse({assertions:[{
   ...word,sectionTitle:'Unidad 2: Teoría',
 }]},[{pageStart:null,sectionTitle:'Unidad 1: Metodología',text:fragments[0]!.text}]).length,0);
+const sourceCorpus=Array.from({length:174},(_,index)=>({
+  text:'Información académica verificable '+index,
+  pageStart:Math.floor(index/4)+1,
+  sectionTitle:null,
+}));
+const firstPageBatch=selectTrueFalseFragments(sourceCorpus,0);
+const secondPageBatch=selectTrueFalseFragments(sourceCorpus,1);
+const thirdPageBatch=selectTrueFalseFragments(sourceCorpus,2);
+assert.equal(firstPageBatch.length,10);
+assert.equal(new Set(firstPageBatch.map(item=>item.pageStart)).size,10,
+  'Each request must draw from different real source pages.');
+assert.equal(new Set([...firstPageBatch,...secondPageBatch,...thirdPageBatch].map(item=>item.pageStart)).size,30,
+  'Retries must explore fresh pages instead of rotating one fragment.');
+assert.ok(selectTrueFalseFragments(sourceCorpus,5).some(fragment=>
+  sourceCorpus.indexOf(fragment)>90),
+  'Retries should be able to reach fragments beyond the old 90-chunk limit.');
+assert.deepEqual(selectTrueFalseFragments(sourceCorpus,2),selectTrueFalseFragments(sourceCorpus,2),
+  'Source selection must remain stable for each attempt.');
+assert.deepEqual(selectTrueFalseFragments([],0),[]);
+const docxCorpus=Array.from({length:15},(_,i)=>({
+  text:'Apartado con evidencia original '+i,pageStart:null,sectionTitle:'Unidad '+i,
+}));
+assert.equal(new Set(selectTrueFalseFragments(docxCorpus,0).map(x=>x.sectionTitle)).size,10,
+  'DOCX should diversify source sections without inventing page references.');
 const file=(p:string)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const session=file('components/dashboard/practice-session.tsx');
 const endpoint=file('app/api/practice/true-false/route.ts');
