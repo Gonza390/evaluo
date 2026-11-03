@@ -1,0 +1,1 @@
+-- Historical compatibility patch. Its complete final definition is included in migration 20261103220617_admin_optimized_analytics_reproducible.sql.
