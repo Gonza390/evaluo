@@ -89,7 +89,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {tools.map((tool) => {
               const Icon = tool.icon;
-              const className = `flex min-h-[126px] w-full min-w-0 flex-col rounded-2xl border border-transparent p-3.5 text-left transition hover:border-current/15 hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${tool.background} ${tool.color}`;
+              const className = `flex min-h-[126px] w-full min-w-0 flex-col rounded-2xl ${tool.tab === 'progreso' ? 'col-span-2' : ''} border border-transparent p-3.5 text-left transition hover:border-current/15 hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${tool.background} ${tool.color}`;
               const content = (
                 <>
                   <Icon className="h-5 w-5" aria-hidden="true" />
