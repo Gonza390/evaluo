@@ -3,9 +3,9 @@ import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { getStudyErrorsPageData } from '@/lib/study-errors';
 import { StudyErrorsClient } from '@/components/dashboard/study-errors-client';
-import { StudyReadingCards } from '@/components/dashboard/study-reading-cards';
-import { StudyPlanSetup } from '@/components/dashboard/study-plan-setup';
-import { createAdminClient } from '@/lib/supabase-admin';
+import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { PracticeModePicker } from '@/components/dashboard/practice-mode-picker';
+import { getPracticeHistory } from '@/lib/student-materials/practice-history';
 import { isUuid } from '@/lib/uuid';
 import { pdfProgressReviewHref } from '@/lib/study-error-navigation';
 
@@ -31,70 +31,37 @@ export default async function StudyErrorsPage({
     redirect('/login?next=/dashboard/explicaciones');
   }
 
-  const data = await getStudyErrorsPageData(user.id);
   const params = (await searchParams) ?? {};
-  // The main Estudiar entry shows PDF reading cards. Deep links to error review stay intact.
+  // La entrada normal de Estudiar muestra las modalidades de práctica, no el plan ni las tarjetas.
+  // Los enlaces profundos para revisar errores conservan su comportamiento original.
   if (!params.error && !params.material) {
-    const materials = data.materials;
-    const ids = materials.map((material) => material.id);
-    const chaptersByMaterial = new Map<string, number>();
-    if (ids.length > 0) {
-      const { data: summaries, error: summaryError } = await createAdminClient()
-        .from('student_material_summaries')
-        .select('student_material_id, summary_sections')
-        .in('student_material_id', ids);
-      if (!summaryError) {
-        for (const summary of summaries ?? []) {
-          chaptersByMaterial.set(
-            summary.student_material_id,
-            Array.isArray(summary.summary_sections) ? summary.summary_sections.length : 0
-          );
-        }
-      }
-    }
-    // Last opened study material, rather than the latest upload.
+    const materials = (await fetchStudentMaterialsByUser(supabase, user.id))
+      .filter(material => material.processing_status === 'ready')
+      .map(material => ({ id: material.id, title: material.title }));
     let lastOpenedMaterialId: string | null = null;
-    if (ids.length > 0) {
-      const { data: recentOpens } = await supabase
-        .from('analytics_events')
-        .select('metadata')
-        .eq('user_id', user.id)
-        .eq('event_name', 'student_material_study_opened')
-        .order('created_at', { ascending: false })
-        .limit(40);
+    if (materials.length) {
+      const { data: recentOpens } = await supabase.from('analytics_events')
+        .select('metadata').eq('user_id', user.id)
+        .eq('event_name','student_material_study_opened')
+        .order('created_at',{ ascending:false }).limit(40);
+      const ids = new Set(materials.map(material=>material.id));
       lastOpenedMaterialId = (recentOpens ?? [])
-        .map((event) => event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)
-          ? (event.metadata as Record<string, unknown>).material_id
-          : null)
-        .find((id): id is string => typeof id === 'string' && ids.includes(id)) ?? null;
+        .map(event => event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)
+          ? (event.metadata as Record<string, unknown>).material_id : null)
+        .find((id): id is string => typeof id === 'string' && ids.has(id)) ?? null;
     }
-    const {data: personalPlan} = await supabase.from('student_personal_study_plans' as never)
-      .select('exam_date').eq('user_id',user.id).maybeSingle();
-    const planMaterials = personalPlan ? await Promise.all(materials.map(async material => {
-      const { data: summary } = await supabase.from('student_material_summaries')
-        .select('summary_sections').eq('student_material_id',material.id).maybeSingle();
-      const sections=Array.isArray(summary?.summary_sections)?summary.summary_sections:[];
-      const topics=sections.map((section:unknown,index:number)=>{
-        const item=section as {title?:string;body?:string};
-        const words=(item.body??'').trim().split(/\s+/u).filter(Boolean).length;
-        return {title:item.title?.trim()||`Tema ${index+1}`,estimatedMinutes:Math.max(10,Math.ceil(words/180)+10)};
-      });
-      return {id:material.id,title:material.title,topicCount:topics.length,topics};
-    })) : [];
-    return (
-      <>
-      {personalPlan ? <StudyPlanSetup materials={planMaterials} mode="view" /> : null}
-      <StudyReadingCards
-        lastOpenedMaterialId={lastOpenedMaterialId}
-        materials={materials.map((material) => ({
-          id: material.id,
-          title: material.title,
-          chapterCount: chaptersByMaterial.get(material.id) ?? 0,
-        }))}
-      />
-      </>
-    );
+    let history: Awaited<ReturnType<typeof getPracticeHistory>> = [];
+    let historyLoadError = false;
+    try {
+      history = await getPracticeHistory(user.id, materials.map(material=>material.id));
+    } catch {
+      historyLoadError = true;
+    }
+    return <PracticeModePicker materials={materials} initialMaterialId={lastOpenedMaterialId}
+      history={history} historyLoadError={historyLoadError}
+      advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
   }
+  const data = await getStudyErrorsPageData(user.id);
   const requestedErrorId = String(params.error ?? '').slice(0, 80) || null;
   const requestedError = [...data.pending, ...data.resolved].find(
     (item) => item.id === requestedErrorId
