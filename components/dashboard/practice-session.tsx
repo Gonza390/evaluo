@@ -11,7 +11,8 @@ import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
   groundedPracticeExplanation,
   distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, qualifiedQuestions, selectMixedQuestions,
-  selectPracticePairs, type PracticePair, type PracticeQuestion,
+  selectPracticePairs, shuffleMatchingDefinitions, shufflePracticeChoices, shufflePracticeItems,
+  type PracticePair, type PracticeQuestion,
 } from '@/lib/student-materials/practice-modes';
 
 type Mode = 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones';
@@ -72,25 +73,29 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const sessionIdRef = useRef<string | null>(null);
   const [historySaveFailed, setHistorySaveFailed] = useState(false);
   const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, reviewLength === 'rapido' ? 6 : 8), [pairs, round, reviewLength]);
-  const definitions = useMemo(() => rotate(
-    exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })), exercisePairs.length > 1 ? 2 : 0,
+  const definitions = useMemo(() => shuffleMatchingDefinitions(
+    exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })),
   ), [exercisePairs]);
 
   const tasks = useMemo<Task[]>(() => {
     if (mode === 'unir') return [];
     if (mode === 'completar')
-      return rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8).map(pair => ({ type: 'recall' as const, pair }));
+      return shufflePracticeItems(rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
+        .map(pair => ({ type: 'recall' as const, pair }));
     if (mode === 'casos')
-      return rotate(contexts, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8).map(question => ({ type: 'question' as const, question }));
+      return shufflePracticeItems(rotate(contexts, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
+        .map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     if (mode === 'simulacro')
-      return balancedQuestions(options, reviewLength === 'rapido' ? 6 : 10, round).map(question => ({ type: 'question' as const, question }));
+      return shufflePracticeItems(balancedQuestions(options, reviewLength === 'rapido' ? 6 : 10, round))
+        .map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     if (mode === 'opciones')
       return selectBalancedTrueFalse(trueFalsePool, reviewLength === 'rapido' ? 6 : 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
-    const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
+    const base = mixed.questions.map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
-    const applied = mixed.application ? [{ type: 'question' as const, question:mixed.application }] : [];
-    return [...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)].slice(0, reviewLength === 'rapido' ? 6 : 10);
+    const applied = mixed.application ? [{ type: 'question' as const, question:shufflePracticeChoices(mixed.application) }] : [];
+    return shufflePracticeItems([...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)]
+      .slice(0, reviewLength === 'rapido' ? 6 : 10));
   }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
