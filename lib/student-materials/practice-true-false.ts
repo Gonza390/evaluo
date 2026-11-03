@@ -107,9 +107,41 @@ export function sufficientTrueFalse(questions: PracticeQuestion[], minimum = 6):
     pool.filter(q => q.answer === 'Falso').length >= 2;
 }
 
-/** Keep both truth values in the actual displayed round, not merely in the bank. */
+/**
+ * Shuffle presentation order independently of the correct answer. The result
+ * remains fixed for a React practice round because the caller memoizes the
+ * selected questions. Randomness changes on a new session/round, not between
+ * answers or UI rerenders.
+ *
+ * Do not deliberately alternate Verdadero/Falso: that reveals a pattern.
+ * A perfectly alternating result can also arise by chance, so reject that
+ * particular arrangement without changing any answer keys.
+ */
+export function shuffleTrueFalseOrder(
+  selected: readonly PracticeQuestion[],
+  random: () => number = Math.random,
+): PracticeQuestion[] {
+  const shuffled = [...selected];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const sample = random();
+    const j = Math.floor((Number.isFinite(sample) ? Math.max(0, Math.min(sample, 0.999999999999)) : 0) * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+  }
+  if (shuffled.length >= 4 && shuffled.every((item, i) =>
+    i === 0 || item.answer !== shuffled[i-1]!.answer
+  )) {
+    // In an alternating sequence the first and third items have the same
+    // correct answer. Swapping the second and third breaks the pattern while
+    // preserving the exact question set and truth-value distribution.
+    [shuffled[1], shuffled[2]] = [shuffled[2]!, shuffled[1]!];
+  }
+  return shuffled;
+}
+
+/** Keep both truth values in each round; randomize their display order. */
 export function selectBalancedTrueFalse(
   questions: PracticeQuestion[], limit = 8, round = 0,
+  random: () => number = Math.random,
 ): PracticeQuestion[] {
   const pool = verifiedTrueFalsePool(questions);
   const selected = [
@@ -119,7 +151,7 @@ export function selectBalancedTrueFalse(
   const chosen = new Set(selected.map(q => q.id));
   const rest = balancedQuestions(pool.filter(q => !chosen.has(q.id)),
     Math.max(0, limit - selected.length), round);
-  return balancedQuestions([...selected, ...rest], limit, round);
+  return shuffleTrueFalseOrder(balancedQuestions([...selected, ...rest], limit, round), random);
 }
 
 
