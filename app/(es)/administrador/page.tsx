@@ -114,6 +114,7 @@ export default async function AdministradorPage({
     mailType?: string;
     mailPeriod?: string;
     productDate?: string;
+    unlam?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -139,6 +140,7 @@ export default async function AdministradorPage({
   const needsOverview = activePanel === 'resumen';
   const needsProduct = activePanel === 'producto';
   const needsAcquisition = activePanel === 'adquisicion';
+  const showUnlam = params.unlam === '1';
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsUsers = activePanel === 'usuarios';
@@ -168,7 +170,7 @@ export default async function AdministradorPage({
     needsAcquisition
       ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
       : Promise.resolve(null),
-    needsAcquisition ? obtenerEmbudoUnlamAdministrador(activePeriod) : Promise.resolve(null),
+    needsAcquisition && showUnlam ? obtenerEmbudoUnlamAdministrador(activePeriod) : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
@@ -205,10 +207,20 @@ export default async function AdministradorPage({
             activePeriod={activePeriod}
             selectedSource={selectedAcquisitionSource}
           />
-          {unlamFunnelResult?.success && unlamFunnelResult.stats ? (
-            <UnlamFunnelPanel stats={unlamFunnelResult.stats} />
+          {showUnlam ? (
+            unlamFunnelResult?.success && unlamFunnelResult.stats ? (
+              <UnlamFunnelPanel stats={unlamFunnelResult.stats} />
+            ) : (
+              <ErrorPanel message={unlamFunnelResult?.message ?? 'No pudimos cargar el embudo UNLaM.'} />
+            )
           ) : (
-            <ErrorPanel message={unlamFunnelResult?.message ?? 'No pudimos cargar el embudo UNLaM.'} />
+            <Link
+              href={`/administrador?panel=adquisicion&period=${activePeriod}&unlam=1`}
+              prefetch={false}
+              className="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700"
+            >
+              Ver embudo específico de UNLaM
+            </Link>
           )}
         </>
       ) : (
