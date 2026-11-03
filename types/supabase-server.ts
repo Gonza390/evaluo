@@ -32,6 +32,10 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_activation_cohort_v1: {
+    Args: Record<PropertyKey, never>;
+    Returns: import('@/app/(es)/administrador/activation-dashboard-types').ActivationCohortSnapshot;
+  };
   admin_acquisition_dashboard_v1: {
     Args: Record<PropertyKey, never>;
     Returns: import('@/app/(es)/administrador/acquisition-dashboard-types').AcquisitionSnapshot;
