@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
+import { recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 
 const MODES = new Set(['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards']);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -32,6 +33,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
   }
 
+  // A completed practice may be attributed to a saved-plan topic only when
+  // the same mode was actually recommended for that topic.
+  const planTopicIndex = p.planTopicIndex;
+  if (planTopicIndex !== undefined &&
+      (!Number.isInteger(planTopicIndex) || Number(planTopicIndex) < 0 || Number(planTopicIndex) > 399)) {
+    return NextResponse.json({ error: 'invalid_plan_topic' }, { status: 400 });
+  }
   const answers = p.answers === undefined ? [] : p.answers;
   if (!Array.isArray(answers) || answers.length > 100 || answers.length > p.total ||
       !answers.every(isHistoryAnswer) || JSON.stringify(answers).length > 120_000) {
@@ -64,6 +72,26 @@ export async function POST(request: Request) {
       path: '/dashboard/practicar/' + material.id + '/' + p.mode,
       metadata: { material_id: material.id, mode: p.mode, correct: p.correct, total: p.total, history_session_id: attemptId, source: 'client_self_reported' },
     });
+  }
+  if (planTopicIndex !== undefined) {
+    const {data:plan,error:planError}=await supabase.from('student_personal_study_plans' as never)
+      .select('schedule,preferences,daily_minutes').eq('user_id',user.id).maybeSingle();
+    if(planError || !plan)return NextResponse.json({error:'plan_not_found'},{status:409});
+    const saved=plan as {schedule:PlanDay[];preferences:string[];daily_minutes:number};
+    const topic=Array.isArray(saved.schedule)?saved.schedule.flatMap(day=>day.topics)
+      .find(item=>item.materialId===material.id && item.topicIndex===planTopicIndex):undefined;
+    if(!topic || !recommendTopicActivities(topic,saved.preferences,saved.daily_minutes)
+        .some(activity=>activity.id===p.mode)) {
+      return NextResponse.json({error:'practice_not_in_plan'},{status:403});
+    }
+    const trackingDb=createAdminClient() as unknown as {
+      from:(table:string)=>{upsert:(value:Record<string,unknown>,options:Record<string,unknown>)=>
+        PromiseLike<{error:{message:string}|null}>};
+    };
+    const tracked=await trackingDb.from('student_personal_study_plan_practice_progress').upsert({
+      user_id:user.id,material_id:material.id,topic_index:planTopicIndex,mode:p.mode,
+    },{onConflict:'user_id,material_id,topic_index,mode',ignoreDuplicates:true});
+    if(tracked.error)return NextResponse.json({error:'plan_progress_save_failed'},{status:503});
   }
   return NextResponse.json({ ok: true });
 }
