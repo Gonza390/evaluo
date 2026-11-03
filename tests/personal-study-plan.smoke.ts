@@ -8,6 +8,7 @@ const empty=code('components/dashboard/empty-study-plan.tsx');
 const filled=code('app/(es)/dashboard/plan-de-estudio/page.tsx');
 const card=code('components/dashboard/study-plan-exam-card.tsx');
 const setup=code('components/dashboard/study-plan-setup.tsx');
+const savedRoadmap=code('components/dashboard/saved-study-plan-roadmap.tsx');
 const api=code('app/api/study-plans/route.ts');
 const sql=code('supabase/migrations/20261102205803_student_personal_study_plans.sql');
 const demo=code('components/demo-four-step-study.tsx');
@@ -22,6 +23,14 @@ assert.doesNotMatch(empty,/empty-plan-exam-date|disabled placeholder="dd\/mm\/aa
 assert.match(setup,/fetch\('\/api\/study-plans'/);
 assert.match(setup,/method:'PATCH'/);
 assert.match(setup,/Marcar leído/);
+assert.match(filled,/if \(hasSavedPlan\)/, 'El nuevo recorrido exige un plan guardado.');
+assert.match(setup,/savedPlan && <div className="mb-5"><SavedStudyPlanRoadmap/, 'El recorrido solo aparece en la vista del plan persistido.');
+assert.match(savedRoadmap,/WINDOW_SIZE = 4/, 'Se muestran como máximo cuatro temas.');
+assert.match(savedRoadmap,/topics\.slice\(start, start \+ WINDOW_SIZE\)/, 'El recorrido pagina los temas, sin una línea interminable.');
+assert.match(savedRoadmap,/examLabel\(examDate\)/, 'El examen permanece como hito final.');
+assert.match(savedRoadmap,/completed\.has\(topic\.key\)/, 'Se respeta el avance real de lectura.');
+assert.match(savedRoadmap,/setWindowStart/, 'Se pueden recorrer los temas anteriores y siguientes.');
+
 assert.match(setup,/data-study-plan-time-options/, 'La etapa de tiempo debe tener opciones identificables.');
 assert.match(setup,/sm:grid-cols-4/, 'Las cuatro duraciones van en una fila en escritorio.');
 assert.match(setup,/grid-cols-2 gap-2\.5 sm:grid-cols-4/, 'En móvil se mantienen dos columnas.');
