@@ -256,7 +256,7 @@ export default async function AdministradorPage({
     panelContent = usersResult
       ? <UsersRetentionDashboard
           stats={usersResult.stats} segments={usersResult.segments} list={usersResult.list}
-          detail={usersResult.detail} filters={usersResult.filters} today={usersResult.today}
+          detail={usersResult.detail} filters={usersResult.filters} today={usersResult.today} minDay={usersResult.minDay}
         />
       : <ErrorPanel message="No se pudieron cargar los usuarios." />;
   } else if (activePanel === 'mails') {
@@ -328,7 +328,7 @@ export default async function AdministradorPage({
   if (needsUsers && usersResult) {
     return <UsersRetentionDashboard
       stats={usersResult.stats} segments={usersResult.segments} list={usersResult.list}
-      detail={usersResult.detail} filters={usersResult.filters} today={usersResult.today}
+      detail={usersResult.detail} filters={usersResult.filters} today={usersResult.today} minDay={usersResult.minDay}
     />;
   }
 
