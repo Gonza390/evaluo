@@ -29,8 +29,8 @@ const UNIVERSITY_SHARES: UniversityShare[] = [
 ];
 
 const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires';
-const MIN_STUDENTS = 5;
-const MAX_STUDENTS = 37;
+const MIN_STUDENTS = 15;
+const MAX_STUDENTS = 60;
 
 function hashString(value: string) {
   let hash = 2166136261;
