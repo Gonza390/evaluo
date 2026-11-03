@@ -268,6 +268,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       pathname === '/referidos' ||
       pathname.startsWith('/referidos/') ||
       pathname.startsWith('/materiales/'));
+  // Un solo efecto breve de entrada para todas las rutas de la aplicación autenticada.
+  // Conservamos la escala compacta exclusivamente donde ya existía; el fade no
+  // modifica medidas ni sustituye animaciones específicas dentro de las pantallas.
+  const hasPrivateRouteTransition = isCompactAppRoute || (Boolean(user) && !isLegalRoute);
   const isExploreExperienceRoute =
     pathname === '/explorar' ||
     pathname.startsWith('/universidad/') ||
@@ -605,7 +609,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
-            {isCompactAppRoute ? (
+            {hasPrivateRouteTransition ? (
               <div key={pathname} data-evaluo-route-enter className={`${isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : isDesktopStudyPlanRoute ? 'min-h-full w-full xl:h-full xl:min-h-0' : isDesktopPracticeHomeRoute ? 'min-h-full w-full lg:h-full lg:min-h-0' : 'min-h-full w-full'} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:overflow-hidden' : ''}`}>
                 {children}
               </div>
