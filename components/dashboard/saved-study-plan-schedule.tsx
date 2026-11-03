@@ -29,7 +29,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
   const today=dateKey(new Date());
   const initial=scheduled.find(day=>day.date===today)??scheduled.find(day=>day.date>today)??scheduled.find(day=>day.topics.some(topic=>!completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`)))??scheduled[0];
   const [selectedDate,setSelectedDate]=useState<string|null>(initial?.date??null);
-  const [showAll,setShowAll]=useState(false);
+  const [showAll,setShowAll]=useState(() => scheduled.findIndex(day=>day.date===initial?.date)>=3);
   const completed=new Set(completedKeys);
   const shown=showAll?scheduled:scheduled.slice(0,3);
   const selected=scheduled.find(day=>day.date===selectedDate)??initial;
@@ -85,7 +85,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
             </div>}
           </div>;
         })}
-        {scheduled.length>3&&<button type="button" onClick={()=>setShowAll(v=>!v)} className="flex min-h-10 w-full items-center px-3.5 text-left text-[12px] font-medium text-[#2563EB] hover:bg-[#F7F9FD]">
+        {scheduled.length>3&&<button type="button" onClick={()=>setShowAll(v=>{if(v && scheduled.slice(0,3).every(day=>day.date!==selectedDate))setSelectedDate(scheduled[0]?.date??null);return !v})} className="flex min-h-10 w-full items-center px-3.5 text-left text-[12px] font-medium text-[#2563EB] hover:bg-[#F7F9FD]">
           {showAll?'Ver menos':`+ ${scheduled.length-3} días más`}
         </button>}
         <div className="flex items-center gap-3 px-3.5 py-3">
