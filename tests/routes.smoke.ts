@@ -156,7 +156,7 @@ assert.match(materiaStudyHomeSource, /La práctica de esta materia está en prep
 assert.match(materiaStudyHomeSource, /Crear ejercicios con mi PDF/);
 assert.doesNotMatch(materiaStudyHomeSource, />Sin preguntas</);
 assert.match(dashboardPageSource, /LazyMaeveStudySpace/);
-assert.match(dashboardWorkspaceSource, /Tus materiales/);
+assert.match(dashboardWorkspaceSource, /title="Tus PDFs"/);
 assert.match(dashboardWorkspaceSource, /Subí tu primer material/);
 assert.doesNotMatch(dashboardWorkspaceSource, /GuidedTour/);
 assert.doesNotMatch(dashboardWorkspaceSource, /prepareStudentMaterialUploadAction/);
