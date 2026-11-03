@@ -11,7 +11,8 @@ import {
 import { obtenerConsumoPdfIAAdministrador } from './ai-cost-data';
 import { obtenerUltimaComprobacionClaves } from './ai-key-health-actions';
 import { AIKeyHealthPanel } from './ai-key-health-panel';
-import { obtenerUsuariosAdministradorPaginadoCacheado } from './cached-performance-actions';
+import { obtenerUsuariosRetencion } from './users-retention-actions';
+import { UsersRetentionDashboard } from './users-retention-dashboard';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
 import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
@@ -27,7 +28,6 @@ import {
   AICostPanel,
   AcademicUsagePanel,
   IAPanel,
-  UsersPanelV2,
 } from './lazy-panels';
 
 type PanelKey =
@@ -116,6 +116,14 @@ export default async function AdministradorPage({
     productDate?: string;
     unlam?: string;
     date?: string;
+    from?: string;
+    to?: string;
+    usersSearch?: string;
+    usersPlan?: string;
+    usersMaterials?: string;
+    usersCountry?: string;
+    usersUniversity?: string;
+    userId?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -174,7 +182,12 @@ export default async function AdministradorPage({
     needsAcquisition && showUnlam ? obtenerEmbudoUnlamAdministrador(activePeriod) : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
-    needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
+    needsUsers ? obtenerUsuariosRetencion({
+      period: activePeriod, from:params.from ?? null, to:params.to ?? null, page:usersPage,
+      search:params.usersSearch ?? '', plan:params.usersPlan ?? 'all',
+      materials:params.usersMaterials ?? 'all', country:params.usersCountry ?? 'all',
+      university:params.usersUniversity ?? 'all', selectedUserId:params.userId ?? null,
+    }) : Promise.resolve(null),
     needsMails
       ? obtenerMailsAdministrador({ type: activeMailType, days: activeMailPeriod })
       : Promise.resolve(null),
@@ -240,18 +253,12 @@ export default async function AdministradorPage({
         />
       );
   } else if (activePanel === 'usuarios') {
-    if (!usersResult?.success || !usersResult.stats || !usersResult.rows) {
-      panelContent = <ErrorPanel message={usersResult?.message ?? 'No pudimos cargar Usuarios.'} />;
-    } else {
-      panelContent = (
-        <UsersPanelV2
-          stats={usersResult.stats}
-          rows={usersResult.rows}
-          page={usersResult.page ?? usersPage}
-          totalPages={usersResult.totalPages ?? 1}
+    panelContent = usersResult
+      ? <UsersRetentionDashboard
+          stats={usersResult.stats} segments={usersResult.segments} list={usersResult.list}
+          detail={usersResult.detail} filters={usersResult.filters} today={usersResult.today}
         />
-      );
-    }
+      : <ErrorPanel message="No se pudieron cargar los usuarios." />;
   } else if (activePanel === 'mails') {
     if (mailResult?.success) {
       panelContent = (
@@ -317,6 +324,12 @@ export default async function AdministradorPage({
 
   if (needsOverview && overviewResult) {
     return <AdminHome data={overviewResult.snapshot} minDay={overviewResult.minDay} />;
+  }
+  if (needsUsers && usersResult) {
+    return <UsersRetentionDashboard
+      stats={usersResult.stats} segments={usersResult.segments} list={usersResult.list}
+      detail={usersResult.detail} filters={usersResult.filters} today={usersResult.today}
+    />;
   }
 
   return (
