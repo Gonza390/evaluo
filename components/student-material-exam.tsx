@@ -21,6 +21,7 @@ import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
   getDistinctEligibleExamQuestions,
   resolveExamSizeOptions,
+  shuffleStudyQuestionOptions,
   normalizeAnswer,
   levelLabel,
   sourceLabel,
@@ -283,7 +284,7 @@ export function StudentMaterialExam({
       id: savedDraft.entryId ?? null,
     };
     savedAnswerIdsRef.current = [...(savedDraft.savedAnswerIds ?? [])];
-    setQuestions(frozen);
+    setQuestions(frozen.map(question => shuffleStudyQuestionOptions(question, sessionIdRef.current!)));
     setSelectedSize(savedDraft.selectedSize);
     setCurrentIndex(savedDraft.currentIndex);
     setSelectedAnswers({ ...savedDraft.selectedAnswers });
@@ -331,9 +332,9 @@ export function StudentMaterialExam({
     };
   }, [openAssessments, questions, selectedAnswers]);
 
-  const clearAttempt = () => {
+  const clearAttempt = (newSessionId = crypto.randomUUID()) => {
     answerIds.current = {};
-    sessionIdRef.current = crypto.randomUUID();
+    sessionIdRef.current = newSessionId;
     savedAnswerIdsRef.current = [];
     objectiveRequestRef.current += 1;
     setNextObjective(null);
@@ -370,10 +371,11 @@ export function StudentMaterialExam({
       context,
       unansweredOnly: topicSectionIndex !== undefined,
     });
-    setQuestions(nextQuestions);
+    const nextSessionId = crypto.randomUUID();
+    setQuestions(nextQuestions.map(question => shuffleStudyQuestionOptions(question, nextSessionId)));
     setContextUnavailable(Boolean(context.loadError));
     setSavedDraft(null);
-    clearAttempt();
+    clearAttempt(nextSessionId);
     attemptEntryRef.current = { source: entrySource, id: entryId };
     setStarted(true);
     setPreparing(false);

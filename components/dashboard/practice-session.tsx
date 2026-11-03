@@ -11,7 +11,8 @@ import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
   groundedPracticeExplanation,
   distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, qualifiedQuestions, selectMixedQuestions,
-  selectPracticePairs, type PracticePair, type PracticeQuestion,
+  selectPracticePairs, shuffleMatchingDefinitions, shufflePracticeChoices, shufflePracticeItems,
+  type PracticePair, type PracticeQuestion,
 } from '@/lib/student-materials/practice-modes';
 
 type Mode = 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones';
@@ -50,6 +51,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const verifiedChapterCount = new Set(options.map(q => q.chapterTitle).filter(Boolean)).size;
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState('');
+  const [generationDiagnostic, setGenerationDiagnostic] = useState('');
   const attempts = useRef(0);
   const generatingRequest = useRef(false);
   const contexts = useMemo(() => distinctApplicationCases([
@@ -71,25 +73,29 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const sessionIdRef = useRef<string | null>(null);
   const [historySaveFailed, setHistorySaveFailed] = useState(false);
   const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, reviewLength === 'rapido' ? 6 : 8), [pairs, round, reviewLength]);
-  const definitions = useMemo(() => rotate(
-    exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })), exercisePairs.length > 1 ? 2 : 0,
+  const definitions = useMemo(() => shuffleMatchingDefinitions(
+    exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })),
   ), [exercisePairs]);
 
   const tasks = useMemo<Task[]>(() => {
     if (mode === 'unir') return [];
     if (mode === 'completar')
-      return rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8).map(pair => ({ type: 'recall' as const, pair }));
+      return shufflePracticeItems(rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
+        .map(pair => ({ type: 'recall' as const, pair }));
     if (mode === 'casos')
-      return rotate(contexts, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8).map(question => ({ type: 'question' as const, question }));
+      return shufflePracticeItems(rotate(contexts, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
+        .map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     if (mode === 'simulacro')
-      return balancedQuestions(options, reviewLength === 'rapido' ? 6 : 10, round).map(question => ({ type: 'question' as const, question }));
+      return shufflePracticeItems(balancedQuestions(options, reviewLength === 'rapido' ? 6 : 10, round))
+        .map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     if (mode === 'opciones')
       return selectBalancedTrueFalse(trueFalsePool, reviewLength === 'rapido' ? 6 : 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
-    const base = mixed.questions.map(question => ({ type: 'question' as const, question }));
+    const base = mixed.questions.map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
-    const applied = mixed.application ? [{ type: 'question' as const, question:mixed.application }] : [];
-    return [...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)].slice(0, reviewLength === 'rapido' ? 6 : 10);
+    const applied = mixed.application ? [{ type: 'question' as const, question:shufflePracticeChoices(mixed.application) }] : [];
+    return shufflePracticeItems([...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)]
+      .slice(0, reviewLength === 'rapido' ? 6 : 10));
   }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
@@ -182,7 +188,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     if (generatingRequest.current) return;
     generatingRequest.current = true;
     attempts.current += 1;
-    setGenerating(true); setGenerationError('');
+    setGenerating(true); setGenerationError(''); setGenerationDiagnostic('');
     try {
       const response = await fetch('/api/practice/cases', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -192,12 +198,25 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         }),
         signal: AbortSignal.timeout(65000),
       });
-      const body: unknown = await response.json();
+      const body: unknown = await response.json().catch(() => null);
       if (!response.ok || !body || typeof body !== 'object' || !('cases' in body) ||
           !Array.isArray(body.cases) || body.cases.length < 1) {
+        const code = body && typeof body === 'object' && 'error' in body &&
+          typeof body.error === 'string' ? body.error : 'unknown_response';
+        // A different batch of cited pages can yield valid exercises when
+        // Gemini could not ground or independently verify the first batch.
+        // Keep a strict budget: at most 3 automatic attempts per entry.
+        if (mode === 'casos' && response.status === 422 &&
+            ['ungrounded_generation','ambiguous_generation','insufficient_grounded_terms'].includes(code) &&
+            attempts.current < 3) return;
+        setGenerationDiagnostic('HTTP ' + response.status + ' · ' + code);
         setGenerationError(response.status === 429
           ? 'Se alcanzó el límite de generación por hoy. Este material todavía no tiene seis casos verificables.'
-          : 'No pudimos generar más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.');
+          : response.status === 401
+            ? 'Tu sesión venció. Iniciá sesión nuevamente.'
+          : response.status === 503 || response.status >= 500
+            ? 'El servicio de IA no pudo completar la generación o verificación. Podés reintentar.'
+          : 'No encontramos más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.');
         return;
       }
       const incoming = body.cases as PracticeQuestion[];
@@ -208,7 +227,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       } else {
         setGeneratedOptions(previous => qualifiedQuestions([...previous, ...incoming]));
       }
-    } catch {
+    } catch (error) {
+      setGenerationDiagnostic(error instanceof Error ? error.name : 'network_error');
       setGenerationError('No pudimos conectarnos para generar los casos. Podés reintentar.');
     } finally {
       generatingRequest.current = false;
@@ -223,10 +243,17 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       : mode === 'mixto' ? options.length < 4 || contexts.length < 1
       : mode === 'simulacro'
         ? options.length < MIN_CASES_PER_PRACTICE : false;
+    const automaticLimit = mode === 'casos' ? 3 : 6;
     if (!aiAvailable || !needsMore || generating || generationError ||
-        attempts.current >= 6 || generatingRequest.current) return;
+        attempts.current >= automaticLimit || generatingRequest.current) return;
     void generateNewCases();
   }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases]);
+  useEffect(() => {
+    if (mode === 'casos' && !generating && !generationError &&
+        attempts.current >= 3 && contexts.length < MIN_CASES_PER_PRACTICE) {
+      setGenerationError('No pudimos reunir seis casos distintos con respuestas verificadas. Podés reintentar con otras fuentes.');
+    }
+  }, [mode, generating, generationError, contexts.length]);
   const generateTrueFalse = useCallback(async () => {
     if (trueFalseBusy.current) return;
     trueFalseBusy.current = true;
@@ -335,11 +362,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         La IA puede proponer casos nuevos usando tu material. Solo mostramos los que pasan una
         comprobación de conceptos y citas; no reemplaza la revisión docente.
       </p>
-      <button type="button" disabled={generating} onClick={generateNewCases}
+      <button type="button" disabled={generating} onClick={() => { attempts.current=0;void generateNewCases(); }}
         className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-blue-700 disabled:opacity-50">
         {generating ? 'Generando situaciones…' : ready ? 'Generar más casos con IA' : 'Reintentar generar casos'}
       </button>
       {generationError && <p role="status" className="mt-2 text-xs text-amber-800">{generationError}</p>}
+      {generationDiagnostic && generationError &&
+        <p className="mt-1 text-[11px] text-slate-500" data-practice-case-diagnostic>{generationDiagnostic}</p>}
     </div>
   ) : null;
   function transitionTo(action:()=>void) {

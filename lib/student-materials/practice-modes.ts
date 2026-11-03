@@ -243,6 +243,40 @@ export function selectMixedQuestions(
   return { questions:base, application:chosen };
 }
 
+/** Fisher–Yates on a copy: never mutate the question bank or saved answer keys. */
+export function shufflePracticeItems<T>(items: readonly T[], random: () => number = Math.random): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const sample = random();
+    const safe = Number.isFinite(sample) ? Math.max(0, Math.min(sample, 0.999999999999)) : 0;
+    const j = Math.floor(safe * (i + 1));
+    [result[i], result[j]] = [result[j]!, result[i]!];
+  }
+  return result;
+}
+
+/** Reorder MCQ choices without changing their correct-answer string or evidence.
+ * True/False retains its familiar label order; its QUESTION order is shuffled separately. */
+export function shufflePracticeChoices(
+  question: PracticeQuestion, random: () => number = Math.random,
+): PracticeQuestion {
+  const isBoolean = question.options.length === 2 &&
+    question.options.every(option => /^(verdadero|falso)$/i.test(option.trim()));
+  if (isBoolean || question.options.length < 2) return question;
+  return { ...question, options: shufflePracticeItems(question.options, random) };
+}
+
+/** Match cards must not expose a fixed displacement or a row-for-row solution. */
+export function shuffleMatchingDefinitions<T extends { pairIndex: number }>(
+  definitions: readonly T[], random: () => number = Math.random,
+): T[] {
+  const shuffled = shufflePracticeItems(definitions, random);
+  if (shuffled.length > 1 && shuffled.every((item, index) => item.pairIndex === index)) {
+    [shuffled[0], shuffled[1]] = [shuffled[1]!, shuffled[0]!];
+  }
+  return shuffled;
+}
+
 /** Distribute exams across chapters instead of consuming the first ten generated questions. */
 export function balancedQuestions(questions: PracticeQuestion[], limit = 10, round = 0): PracticeQuestion[] {
   const buckets = new Map<string, PracticeQuestion[]>();

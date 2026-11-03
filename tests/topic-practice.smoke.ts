@@ -9,6 +9,7 @@ import { selectDiagnosticQuestions } from '../lib/student-materials/diagnostic-q
 import {
   getDistinctEligibleExamQuestions,
   resolveExamSizeOptions,
+  shuffleStudyQuestionOptions,
 } from '../lib/student-materials/practice-questions.ts';
 import {
   practiceBankSignature,
@@ -58,6 +59,26 @@ const questions = [
   question('c1', 2),
   question('c2', 2),
 ];
+const candidate = question('shuffle-test', 0);
+const attemptA = shuffleStudyQuestionOptions(candidate, 'attempt-1');
+const restored = shuffleStudyQuestionOptions(candidate, 'attempt-1');
+assert.deepEqual(attemptA.options, restored.options,
+  'An exam resumed from its attempt ID must retain the option order.');
+assert.deepEqual([...attemptA.options].sort(), [...candidate.options].sort(),
+  'Randomizing options must preserve every answer and distractor.');
+assert.equal(attemptA.answer, candidate.answer);
+assert.deepEqual(candidate.options, ['Respuesta shuffle-test', 'Otra alternativa', 'Tercera alternativa'],
+  'The source question bank must remain unchanged.');
+const positions = new Set<number>();
+for (let i=0;i<120;i++) {
+  const shuffled = shuffleStudyQuestionOptions(candidate, 'attempt-'+i);
+  positions.add(shuffled.options.indexOf(shuffled.answer));
+}
+assert.equal(positions.size, 3, 'Correct choice should appear in all positions over independent attempts.');
+const openCandidate = question('open-shuffle-test', 0, 'open');
+assert.equal(shuffleStudyQuestionOptions(openCandidate,'attempt-a'), openCandidate,
+  'Free-response questions should not be modified.');
+
 const fresh = selectTopicPracticeQuestions({ questions, targetCount: 3, sections });
 assert.deepEqual(
   new Set(fresh.map((item) => item.topic)),
@@ -433,13 +454,13 @@ const originalDraft: PracticeDraft = {
   contextUnavailable: false,
   savedAt: Date.now(),
 };
-const restored = readPracticeDraft(JSON.stringify(originalDraft), 'test-pdf', eightyUnique);
-assert.ok(restored, 'La práctica guardada debe poder reanudarse tras recargar.');
-assert.deepEqual(restored!.questionIds, originalDraft.questionIds,
+const restoredDraft = readPracticeDraft(JSON.stringify(originalDraft), 'test-pdf', eightyUnique);
+assert.ok(restoredDraft, 'La práctica guardada debe poder reanudarse tras recargar.');
+assert.deepEqual(restoredDraft!.questionIds, originalDraft.questionIds,
   'La práctica guardada debe conservar el orden aleatorio original.');
-assert.equal(restored!.currentIndex, 37);
-assert.deepEqual(restored!.openDrafts, originalDraft.openDrafts);
-assert.deepEqual(restored!.openAssessments, originalDraft.openAssessments);
+assert.equal(restoredDraft!.currentIndex, 37);
+assert.deepEqual(restoredDraft!.openDrafts, originalDraft.openDrafts);
+assert.deepEqual(restoredDraft!.openAssessments, originalDraft.openAssessments);
 const compatibleRegeneration = [
   ...eightyUnique,
   { ...eightyUnique[0]!, id: 'new-question-introduced-in-v12' },
@@ -451,7 +472,7 @@ const upgradedDraft = readPracticeDraft(
 assert.ok(upgradedDraft, 'Una regeneración debe preservar respuestas si las preguntas de la tanda siguen intactas.');
 assert.equal(upgradedDraft!.bankSignature, practiceBankSignature(compatibleRegeneration));
 assert.deepEqual(upgradedDraft!.questionIds, originalDraft.questionIds);
-assert.deepEqual(upgradedDraft!.selectedAnswers, restored!.selectedAnswers);
+assert.deepEqual(upgradedDraft!.selectedAnswers, restoredDraft!.selectedAnswers);
 
 assert.equal(practiceDraftKey('test-pdf'), 'evaluo:practice-draft:v1:test-pdf');
 assert.equal(readPracticeDraft(JSON.stringify(originalDraft), 'other-pdf', eightyUnique), null);

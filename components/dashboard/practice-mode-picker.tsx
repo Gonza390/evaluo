@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { PracticeHistoryPanel } from '@/components/dashboard/practice-history-panel';
+import { PracticeHistoryDetail } from '@/components/dashboard/practice-history-detail';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
 import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, Layers3, ListChecks, LockKeyhole, Mic, Network, Timer, Zap } from 'lucide-react';
@@ -35,6 +36,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   const [leavingReview, setLeavingReview] = useState(false);
   const [leavingPicker, setLeavingPicker] = useState(false);
   const [prepareError, setPrepareError] = useState('');
+  const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
   const [sessionLength,setSessionLength] = useState<'rapido'|'completo'>('rapido');
   const router = useRouter();
   const material = materials.find(m => m.id === materialId);
@@ -92,6 +94,11 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   }
   if (preparing) return <PracticePreparing mode={href.split('/').at(-1) ?? 'práctica'} />;
 
+  const activeHistoryEntry = history.find(item => item.id === activeHistoryId && item.materialId === materialId);
+  if (activeHistoryEntry) return (
+    <PracticeHistoryDetail key={activeHistoryEntry.id} session={activeHistoryEntry} onBack={() => setActiveHistoryId(null)} />
+  );
+
   if (selectedMode && available(selectedMode)) return (
     <main className={`${leavingReview ? "practice-screen-leave" : "practice-screen-enter"} mx-auto flex w-full max-w-[880px] items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5`}>
       <div className="w-full max-w-[650px] text-center">
@@ -146,7 +153,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
             <label htmlFor="practice-material" className="sr-only">Material de estudio</label>
             <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#2563EB]" />
             <select id="practice-material" value={materialId} onChange={event => {
-              setMaterialId(event.target.value); setSelectedMode(null); setPrepareError('');
+              setMaterialId(event.target.value); setSelectedMode(null); setActiveHistoryId(null); setPrepareError('');
             }}
               className="min-h-11 w-full appearance-none truncate border-0 bg-transparent py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] shadow-none outline-none transition-colors hover:text-[#2563EB] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[#2563EB]/25 sm:text-[13px]">
               {materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
@@ -202,6 +209,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         </section>
         {material && <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
           historyLoadError={historyLoadError}
+          onSelectSession={entry => setActiveHistoryId(entry.id)}
           onStartFlashcards={() => openReview('Flashcards')} />}
       </div>
     </main>

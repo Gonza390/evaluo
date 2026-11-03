@@ -58,6 +58,12 @@ assert.equal(sourceVerifiedPairs([{...term,page:undefined,sectionTitle:'Unidad 1
 const session = read('components/dashboard/practice-session.tsx');
 assert.match(session,/rotate\(pairs, round \* 6\)\.slice\(0, reviewLength === 'rapido' \? 6 : 8\)/,
   'Matching must show six pairs, not the old five.');
+assert.match(session,/shuffleMatchingDefinitions\(/,
+  'Matching must randomize definitions rather than using fixed displacement.');
+assert.match(session,/shufflePracticeChoices\(/,
+  'Multiple choice, cases and simulacros must randomize answer positions.');
+assert.match(session,/shufflePracticeItems\(/,
+  'Rounds must vary question order without losing answer mappings.');
 assert.match(session,/mode === 'unir' \? exercisePairs\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'completar' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'mixto' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
