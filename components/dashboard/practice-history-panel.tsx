@@ -81,7 +81,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
     const incorrect = Math.max(0, selectedSession.total - selectedSession.correct);
     return (
       <aside data-practice-history-inline-detail aria-labelledby="practice-history-detail-title"
-        className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0">
+        className="flex h-[min(72dvh,680px)] min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:max-h-full">
         <div className="shrink-0 border-b border-[#EFF2F7] px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
           <button type="button" onClick={onBackToHistory}
             className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[11px] font-semibold text-[#2563EB] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
@@ -100,7 +100,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
             <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`} style={{width:`${percent}%`}}/>
           </div>
         </div>
-        <div tabIndex={0} role="region" aria-label="Respuestas de la práctica" className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-5`}>
+        <div data-practice-history-answers tabIndex={0} role="region" aria-label="Respuestas de la práctica" className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 [scrollbar-color:#B8C6DC_transparent] [scrollbar-width:thin] sm:px-5">
           {selectedSession.answers?.length ? selectedSession.answers.map((answer,index)=>(
             <article key={index} className="rounded-xl border border-[#E7EBF4] bg-white p-3">
               <div className="flex items-center gap-2">

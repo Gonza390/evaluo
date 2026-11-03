@@ -81,7 +81,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
       if(!latest.ok)throw new Error('El plan se guardó, pero no pudimos recuperarlo.');
       const data=await latest.json() as {plan:SavedPlan|null;completedKeys:string[]};
       setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);
-      if(mode==='setup') router.push('/dashboard/explicaciones');
+      if(mode==='setup') router.push('/dashboard/plan-de-estudio');
       else setPreview(true);
     }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el plan.')}
     finally{setSaving(false)}

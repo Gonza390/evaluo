@@ -5,13 +5,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CircleAlert,
-  BookOpen,
-  BookText,
-  ChartNoAxesColumnIncreasing,
   FileText,
-  Layers3,
-  Network,
-  ArrowRight,
   Globe,
   Loader2,
   Search,
@@ -22,6 +16,7 @@ import { deleteStudentMaterialAction } from '@/app/dashboard/materiales/actions'
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
+import { AppPageHeader } from '@/components/ui/app-page-header';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import {
   Dialog,
@@ -59,22 +54,6 @@ export function StudentMaterialsWorkspace({
   const [isPending, startTransition] = useTransition();
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
   const [materialQuery, setMaterialQuery] = useState('');
-  const [selectedMaterialId, setSelectedMaterialId] = useState(
-    initialMaterials.find((material) => material.processing_status === 'ready')?.id ??
-      initialMaterials[0]?.id ?? ''
-  );
-  const selectedMaterial =
-    initialMaterials.find((material) => material.id === selectedMaterialId) ??
-    initialMaterials.find((material) => material.processing_status === 'ready') ??
-    initialMaterials[0];
-  const materialReady = selectedMaterial?.processing_status === 'ready';
-  const studyTools = [
-    { id: 'resumen', label: 'Resumen', description: 'Repasá lo esencial.', Icon: BookOpen, color: 'bg-[#E8F1FF] text-[#3068B3]' },
-    { id: 'tarjetas', label: 'Flashcards', description: 'Memorizá con tarjetas.', Icon: Layers3, color: 'bg-[#F0EAFE] text-[#7956C8]' },
-    { id: 'glosario', label: 'Glosario', description: 'Entendé los conceptos.', Icon: BookText, color: 'bg-[#E1F2F7] text-[#378CA6]' },
-    { id: 'mapa', label: 'Mapa mental', description: 'Conectá las ideas.', Icon: Network, color: 'bg-[#E7F4ED] text-[#34866B]' },
-    { id: 'progreso', label: 'Progreso', description: 'Revisá tu aprendizaje.', Icon: ChartNoAxesColumnIncreasing, color: 'bg-[#FFF1E5] text-[#C37535]' },
-  ] as const;
   const normalizedQuery = materialQuery
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -113,149 +92,141 @@ export function StudentMaterialsWorkspace({
 
   return (
     <>
-      <section data-dashboard-study-dual-pane className="mx-auto w-full max-w-[1190px] px-0 pb-4 pt-2 sm:pt-3">
-        <div className="mb-5">
-          <h2 className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
-            Tus materiales
-          </h2>
-          <p className="mt-1 text-[12px] text-[#66758D]">
-            Seleccioná un material y elegí cómo querés estudiarlo.
-          </p>
-        </div>
+      <section className="rounded-[1.25rem] border border-slate-200/80 bg-white p-3.5 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-4">
+        <AppPageHeader
+          as="h2"
+          size="compact"
+          className="gap-3 pb-3 sm:pb-3 [&_h2]:text-[19px] sm:[&_h2]:text-[20px] [&_h2]:tracking-[-0.04em]"
+          eyebrow="Tu estudio"
+          title="Tus PDFs"
+          visuallyHiddenTitle
+          description={
+            initialMaterials.length === 0
+              ? 'Subí tu primer material y empezá a estudiar desde la misma fuente.'
+              : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
+          }
+        />
 
-        <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)] lg:gap-6 xl:gap-9">
-          <section aria-label="Herramientas de estudio" className="order-2 min-w-0 lg:order-1">
-            <div className="mb-3">
-              <h3 className="text-[16px] font-semibold tracking-tight text-[#0F1B3D]">Herramientas de estudio</h3>
-              <p className="mt-1 line-clamp-2 text-[12px] text-[#66758D]">
-                {selectedMaterial ? `Herramientas para ${selectedMaterial.title}` : 'Elegí un material para empezar.'}
-              </p>
+        {initialMaterials.length >= 3 ? (
+          <div data-desktop-material-search className="mt-4 hidden items-center justify-between gap-4 lg:flex">
+            <div className="relative w-full max-w-[360px]">
+              <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                aria-label="Buscar entre tus PDFs"
+                value={materialQuery}
+                onChange={(event) => setMaterialQuery(event.target.value)}
+                placeholder="Buscar un PDF..."
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pr-10 pl-10 text-[13px] text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/15"
+              />
+              {materialQuery ? (
+                <button
+                  type="button"
+                  aria-label="Limpiar búsqueda"
+                  onClick={() => setMaterialQuery('')}
+                  className="absolute top-1/2 right-2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
             </div>
-            <div data-dashboard-study-tools className="grid grid-cols-2 gap-3">
-              {studyTools.map(({ id, label, description, Icon, color }) => {
-                const content = (
-                  <>
-                    <Icon aria-hidden="true" className="h-[19px] w-[19px]" strokeWidth={1.8} />
-                    <span className="mt-auto pt-5 text-[15px] font-semibold leading-5">{label}</span>
-                    <span className="mt-1 text-[12px] leading-[1.45] opacity-85">{description}</span>
-                    <span className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold">
-                      Abrir <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
-                    </span>
-                  </>
-                );
-                const styles = `flex min-h-[151px] min-w-0 flex-col items-start rounded-2xl p-4 text-left transition sm:min-h-[164px] ${color} ${id === 'progreso' ? 'col-span-2' : ''}`;
-                return materialReady && selectedMaterial ? (
-                  <Link
-                    key={id}
-                    href={`${getStudentMaterialRoute(selectedMaterial.id)}?tab=${id}`}
-                    className={styles + ' hover:brightness-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]'}
-                    aria-label={`Abrir ${label} de ${selectedMaterial.title}`}
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <div key={id} aria-disabled="true" className={`${styles} cursor-not-allowed opacity-55`}>
-                    {content}
-                  </div>
-                );
-              })}
-            </div>
-            {!materialReady && selectedMaterial ? (
-              <p className="mt-3 text-[12px] text-[#66758D]" role="status">
-                Las herramientas estarán disponibles cuando termine de procesarse el material.
-              </p>
-            ) : null}
-          </section>
+            <span className="shrink-0 text-[12px] font-medium text-slate-500" aria-live="polite">
+              {visibleMaterials.length} de {initialMaterials.length} PDFs
+            </span>
+          </div>
+        ) : null}
 
-          <section aria-label="Seleccionar material de estudio" className="order-1 min-w-0 lg:order-2">
-            <div className="mb-3 flex items-end justify-between gap-3">
-              <div>
-                <h3 className="text-[16px] font-semibold tracking-tight text-[#0F1B3D]">Mis materiales</h3>
-                <p className="mt-1 text-[12px] text-[#66758D]">
-                  {initialMaterials.length} {initialMaterials.length === 1 ? 'material' : 'materiales'} disponibles
-                </p>
-              </div>
+        <div className={`mt-3 ${initialMaterials.length >= 2 ? 'grid gap-3 xl:grid-cols-2' : 'space-y-2'}`}>
+          {initialMaterials.length === 0 ? (
+            <StudyStatePanel
+              icon={FileText}
+              eyebrow="Primer material"
+              title="Todavía no subiste un PDF"
+              description="Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá."
+              primaryActionLabel="Subí tu PDF"
+              onPrimaryAction={() => openUploadPicker('dashboard_empty_materials')}
+              secondaryActionLabel="Ver cómo funciona con un PDF de ejemplo"
+              secondaryActionHref="/preview/primer-pdf?source=dashboard_empty"
+              className="border-dashed"
+            />
+          ) : visibleMaterials.length === 0 ? (
+            <div className="col-span-full flex flex-col items-start gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6">
+              <p className="text-[13px] font-semibold text-slate-900">No encontramos PDFs con ese nombre.</p>
+              <p className="text-[12px] text-slate-600">Probá con otra palabra o volvé a mostrar todos tus materiales.</p>
               <button
                 type="button"
-                onClick={() => openUploadPicker('dashboard_materials')}
-                className="min-h-10 shrink-0 rounded-lg px-2 text-[12px] font-semibold text-[#2563EB] hover:bg-[#EEF2FF]"
+                onClick={() => setMaterialQuery('')}
+                className="text-brand mt-1 min-h-9 rounded-lg px-1 text-[12.5px] font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                Subir mi material
+                Mostrar todos
               </button>
             </div>
+          ) : (
+            visibleMaterials.map((material) => {
+              const isShared = material.visibility === 'shared';
+              const isFailed = material.processing_status === 'failed';
 
-            {initialMaterials.length >= 3 ? (
-              <div data-desktop-material-search className="relative mb-3">
-                <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input type="search" aria-label="Buscar entre tus materiales" value={materialQuery}
-                  onChange={(event) => setMaterialQuery(event.target.value)}
-                  placeholder="Buscar un material..."
-                  className="h-10 w-full rounded-xl border border-[#E7EBF4] bg-white py-2 pl-10 pr-10 text-[13px] text-[#0F1B3D] outline-none focus-visible:border-[#2563EB] focus-visible:ring-2 focus-visible:ring-[#2563EB]/15"
-                />
-                {materialQuery && (
-                  <button type="button" aria-label="Limpiar búsqueda" onClick={() => setMaterialQuery('')}
-                    className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100">
-                    <X className="size-4" />
-                  </button>
-                )}
-              </div>
-            ) : null}
-
-            <div data-dashboard-material-picker className="flex flex-col gap-2.5 lg:max-h-[520px] lg:overflow-y-auto lg:pr-1">
-              {visibleMaterials.length === 0 && initialMaterials.length > 0 ? (
-                <div className="rounded-xl border border-dashed border-[#E7EBF4] px-4 py-5 text-[12px] text-[#66758D]">
-                  No encontramos materiales con ese nombre.
-                  <button type="button" onClick={() => setMaterialQuery('')} className="ml-2 font-semibold text-[#2563EB]">Mostrar todos</button>
-                </div>
-              ) : null}
-              {initialMaterials.length === 0 ? (
-                <StudyStatePanel icon={FileText} eyebrow="Primer material" title="Todavía no subiste un material"
-                  description="Subí tu primer material para acceder a las herramientas de estudio."
-                  primaryActionLabel="Subir mi material"
-                  onPrimaryAction={() => openUploadPicker('dashboard_empty_materials')}
-                  className="border-dashed" />
-              ) : visibleMaterials.map((material) => {
-                const selected = material.id === selectedMaterial?.id;
-                const isShared = material.visibility === 'shared';
-                const isFailed = material.processing_status === 'failed';
-                return (
-                  <article key={material.id} data-evaluo-motion-card data-dashboard-material-option={material.id}
-                    className={`flex min-w-0 items-center gap-2 rounded-2xl border bg-white p-2.5 transition-colors ${selected ? 'border-[#2563EB] bg-[#F7FAFF] ring-1 ring-[#DBE8FF]' : 'border-[#E7EBF4] hover:border-[#B9CAEC]'}`}>
-                    <button type="button" onClick={() => setSelectedMaterialId(material.id)}
-                      aria-pressed={selected}
-                      aria-label={`Seleccionar ${material.title} para estudiar`}
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1.5 text-left focus-visible:outline-2 focus-visible:outline-[#2563EB]">
-                      <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#2563EB]">
-                        <FileText className="size-5" strokeWidth={1.8}/>
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block break-words text-[13px] font-semibold leading-5 text-[#0F1B3D]">{material.title}</span>
-                        <span className="mt-1 block text-[11px] text-[#66758D]">
-                          {formatDate(material.created_at)}
-                          {material.page_count ? ` · ${material.page_count} páginas` : ''}
-                        </span>
-                        {isShared ? <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-emerald-700"><Globe className="size-3"/> Compartido</span> : null}
-                        {isFailed ? <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-red-700"><CircleAlert className="size-3"/> Necesita revisión</span> : null}
-                        {!isFailed && material.processing_status !== 'ready' ? <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-amber-700"><Loader2 className="size-3 animate-spin"/> Procesando</span> : null}
-                      </span>
-                    </button>
-                    <div className="flex shrink-0 flex-col items-center gap-1">
-                      <Link href={getStudentMaterialRoute(material.id)}
-                        aria-label={`Abrir material ${material.title}`}
-                        className="inline-flex size-9 items-center justify-center rounded-lg text-[#2563EB] hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-[#2563EB]">
-                        <ArrowRight className="size-4" />
-                      </Link>
-                      <button type="button" onClick={() => setMaterialToDelete(material)} disabled={isPending}
-                        aria-label={`Eliminar material ${material.title}`} title="Eliminar material"
-                        className="inline-flex size-9 items-center justify-center rounded-lg text-[#9BA6BC] hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-[#2563EB] disabled:opacity-50">
-                        <Trash2 className="size-4"/>
-                      </button>
+              return (
+                <article
+                  data-evaluo-motion-card
+                  key={material.id}
+                  className="relative flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:px-3.5"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch xl:justify-start">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                        <FileText className="h-5 w-5" strokeWidth={1.8} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
+                          <Link
+                            href={getStudentMaterialRoute(material.id)}
+                            className="rounded-sm before:absolute before:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                            aria-label={`Abrir material ${material.title}`}
+                          >
+                            {material.title}
+                          </Link>
+                        </h3>
+                        {isShared ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            <Globe className="h-3.5 w-3.5" />
+                            Compartido
+                          </span>
+                        ) : null}
+                        {isFailed ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                            <CircleAlert className="h-3.5 w-3.5" />
+                            Necesita revisión
+                          </span>
+                        ) : material.processing_status !== 'ready' ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            Procesando
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
+                        <span>{formatDate(material.created_at)}</span>
+                        {material.page_count ? <span>{material.page_count} páginas</span> : null}
+                      </div>
+                      </div>
                     </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
+                    <button
+                      type="button"
+                      onClick={() => setMaterialToDelete(material)}
+                      disabled={isPending}
+                      aria-label={`Eliminar material ${material.title}`}
+                      title="Eliminar PDF"
+                      className="relative z-10 inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 sm:self-center xl:self-end"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </article>
+              );
+            })
+          )}
         </div>
       </section>
 
