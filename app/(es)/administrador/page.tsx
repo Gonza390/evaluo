@@ -1,6 +1,6 @@
 import './admin-theme.css';
-import { obtenerResumenAdministrador } from './overview-actions';
-import { OverviewPanel } from './overview-panel';
+import { obtenerTableroGeneral } from './admin-home-actions';
+import { AdminHome } from './admin-home';
 import Link from 'next/link';
 import {
   obtenerFeedbackExplicacionesAdmin,
@@ -115,6 +115,7 @@ export default async function AdministradorPage({
     mailPeriod?: string;
     productDate?: string;
     unlam?: string;
+    date?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -163,7 +164,7 @@ export default async function AdministradorPage({
     iaCostResult,
     aiKeyHealthResult,
   ] = await Promise.all([
-    needsOverview ? obtenerResumenAdministrador() : Promise.resolve(null),
+    needsOverview ? obtenerTableroGeneral(params.date) : Promise.resolve(null),
     needsProduct
       ? obtenerProductoDiarioAdministrador(requestedProductDate)
       : Promise.resolve(null),
@@ -187,11 +188,7 @@ export default async function AdministradorPage({
 
   let panelContent: React.ReactNode;
 
-  if (activePanel === 'resumen') {
-    panelContent = overviewResult?.success && overviewResult.rows
-      ? <OverviewPanel rows={overviewResult.rows} generatedAt={new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })} />
-      : <ErrorPanel message={overviewResult?.message ?? 'No pudimos cargar Resumen general.'} />;
-  } else if (activePanel === 'producto') {
+  if (activePanel === 'producto') {
     panelContent =
       productResult?.success && productResult.stats ? (
         <ProductPanel stats={productResult.stats} />
@@ -316,6 +313,10 @@ export default async function AdministradorPage({
         }
       />
     );
+  }
+
+  if (needsOverview && overviewResult) {
+    return <AdminHome data={overviewResult.snapshot} minDay={overviewResult.minDay} />;
   }
 
   return (
