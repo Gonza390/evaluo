@@ -1,6 +1,7 @@
 'use server';
 
 import { PINNED_GEMINI_SUMMARY_MODEL } from '@/lib/ai/providers';
+import { unstable_cache as nextCache } from 'next/cache';
 import { listAdminUserIds } from '@/lib/admin-users';
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -110,13 +111,12 @@ function buildWindow(
   };
 }
 
-export async function obtenerConsumoPdfIAAdministrador(): Promise<{
+async function loadCostosIAUncached(): Promise<{
   success: boolean;
   stats?: AdminPdfAiUsageStats;
   message?: string;
 }> {
   try {
-    await requireAdminAccess();
     const admin = createAdminClient();
 
     const { data: usageData, error: usageError } = await admin
@@ -202,4 +202,16 @@ export async function obtenerConsumoPdfIAAdministrador(): Promise<{
           : 'No pudimos calcular el consumo de IA de los materiales.',
     };
   }
+}
+
+
+const cachedloadCostosIAUncached = nextCache(
+  async () => loadCostosIAUncached(),
+  ['obtenerConsumoPdfIAAdministrador-optimized-v1'],
+  { revalidate: 900 }
+);
+
+export async function obtenerConsumoPdfIAAdministrador() {
+  await requireAdminAccess();
+  return cachedloadCostosIAUncached();
 }
