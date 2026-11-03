@@ -1,6 +1,23 @@
 import type { Database } from '@/types/supabase';
 
 type AdminPerformanceFunctions = {
+  admin_home_snapshot_v1: {
+    Args: { p_day?: string | null };
+    Returns: {
+      day: string; daily: Array<{ d: string; registrations: number; active_users: number; sessions: number; studied_users: number }>;
+      users: { total: number; new_7d: number };
+      activity: { active_7d: number };
+      study: { studying_7d: number; returning_7d: number };
+      cohort: { retained: number; cohort_users: number };
+      materials: { uploaded_7d: number; ready_7d: number; failed_7d: number; stuck_7d: number };
+      practice: { completed_7d: number };
+      plans: { created_7d: number };
+      activation: { activated: number };
+      premium: { active: number };
+      revenue: { ars: number; usd: number };
+      payments: { failed: number };
+    };
+  };
   admin_academic_usage_aggregates_v1: {
     Args: Record<PropertyKey, never>;
     Returns: Array<{
