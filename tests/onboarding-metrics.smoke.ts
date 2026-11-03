@@ -10,8 +10,8 @@ import {
 
 const root = (path: string) => readFileSync(path, 'utf8');
 const workspace = root('components/material-study-workspace.tsx');
-const adminActions = root('app/(es)/administrador/product-actions.ts');
-const adminPanel = root('app/(es)/administrador/product-panel.tsx');
+const adminActions = root('app/(es)/administrador/activation-dashboard-actions.ts');
+const adminPanel = root('app/(es)/administrador/activation-dashboard.tsx');
 const whitelist = root('lib/analytics-metadata.ts');
 const allowed = root('lib/analytics-events.ts');
 
@@ -19,11 +19,11 @@ assert.match(workspace, /first_pdf_guide_started/);
 assert.match(workspace, /first_pdf_guide_step_viewed/);
 assert.match(workspace, /first_pdf_guide_post_action/);
 assert.match(workspace, /getGuideMetadata\(\)/);
-assert.match(adminActions, /summarizeFirstPdfOnboarding\(productClientEvents\)/);
-assert.doesNotMatch(adminPanel, /④ Aprende — nuevo flujo del resumen/);
-assert.match(adminPanel, /Onboarding — primer PDF/);
-assert.match(adminPanel, /Estudiar por tema/);
-assert.match(adminPanel, /Sin cierre registrado/);
+assert.match(adminActions, /admin_activation_cohort_v1/);
+assert.doesNotMatch(adminPanel, /Datos de ejemplo/);
+assert.match(adminPanel, /Onboarding/);
+assert.match(adminPanel, /Primera experiencia de estudio/);
+assert.match(adminPanel, /Práctica iniciada pero no finalizada/);
 for (const event of ['first_pdf_guide_started','first_pdf_guide_step_viewed','first_pdf_guide_completed','first_pdf_guide_skipped','first_pdf_guide_post_action']) {
   assert.match(allowed, new RegExp("'" + event + "'"));
   assert.match(whitelist, new RegExp(event + ':'));
