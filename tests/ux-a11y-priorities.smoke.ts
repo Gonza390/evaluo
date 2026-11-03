@@ -50,7 +50,7 @@ assert.match(feedback, /finally \{\s*setSaving\(false\);/);
 
 const cards = source('components/dashboard/student-materials-workspace.tsx');
 assert.match(cards, /aria-label=\{`Abrir material \$\{material\.title\}`\}/);
-assert.match(cards, /<Link href=\{getStudentMaterialRoute\(material\.id\)\}/);
+assert.match(cards, /<Link\s+href=\{getStudentMaterialRoute\(material\.id\)\}/);
 assert.match(cards, /aria-label=\{`Seleccionar \$\{material\.title\} para estudiar`\}/);
 assert.match(cards, /aria-pressed=\{selected\}/);
 assert.doesNotMatch(cards, /onClick=\{\(\) => router\.push\(getStudentMaterialRoute\(material\.id\)\)\}/);
