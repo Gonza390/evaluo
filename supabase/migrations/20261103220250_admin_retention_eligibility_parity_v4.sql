@@ -1,0 +1,1 @@
+-- Historical eligibility patch. The final D7, D14 and D30 eligibility rules are defined by the subsequent admin_optimized_analytics_reproducible migration.
