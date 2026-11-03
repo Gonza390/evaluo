@@ -45,7 +45,11 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
   const start = parseDate(f.from);
   const end = parseDate(f.to);
   const todayStr = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  const validRange = !!start && !!end && start <= end && end.toISOString().slice(0,10) <= todayStr &&
+  const oldest = new Date(todayStr + 'T12:00:00Z');
+  oldest.setUTCDate(oldest.getUTCDate() - 90);
+  const minDay = oldest.toISOString().slice(0, 10);
+  const validRange = !!start && !!end && start <= end &&
+    start.toISOString().slice(0,10) >= minDay && end.toISOString().slice(0,10) <= todayStr &&
     (end.getTime() - start.getTime()) / 86_400_000 <= 29;
   const from = validRange ? f.from : null;
   const to = validRange ? f.to : null;
@@ -71,5 +75,5 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
     if (error) throw error;
     detail = data as UserDetail | null;
   }
-  return { stats, segments, list, detail, filters: { ...normalized, period:effectiveDays, from, to },today:todayStr };
+  return { stats, segments, list, detail, filters: { ...normalized, period:effectiveDays, from, to },today:todayStr,minDay };
 }
