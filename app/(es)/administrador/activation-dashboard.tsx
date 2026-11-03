@@ -21,8 +21,8 @@ const sum=(rows:ActivationCohortRow[],key:MetricKey)=>
 const addDays=(d:string,days:number)=>{const v=new Date(d+'T12:00:00Z');v.setUTCDate(v.getUTCDate()+days);return v.toISOString().slice(0,10)};
 const duration=(ms:number|null)=>ms===null?'—':ms>=60?Math.round(ms/60*10)/10+' h':Math.round(ms)+' min';
 function change(curr:number,prev:number,invert=false){
- if(!prev)return {label:curr?'Sin base anterior':'—',color:'#8B8B93'};
- const p=(curr-prev)/prev*100;return {label:(p>=0?'↑ ':'↓ ')+Math.abs(p).toFixed(1).replace('.',',')+'% vs. período anterior',
+ if(!prev)return {note:curr?'Sin base anterior':'—',color:'#8B8B93'};
+ const p=(curr-prev)/prev*100;return {note:(p>=0?'↑ ':'↓ ')+Math.abs(p).toFixed(1).replace('.',',')+'% vs. período anterior',
  color:(invert?p<=0:p>=0)?'#C8FF3A':'#FF5C4D'};
 }
 function SectionTitle({index,title,note,priority=false}:{index:string;title:string;note:string;priority?:boolean}){
@@ -76,7 +76,7 @@ export function ActivationDashboard({data}:{data:ActivationCohortSnapshot}){
   {label:'Primer material procesado OK',value:fmt(ready),suffix:' / '+fmt(uploaded),note:pct(ready,uploaded)+' listo · estado actual'},
   {label:'Empezaron a estudiar',value:fmt(firstStudy),...change(firstStudy,prevStarted)},
   {label:'Tasa de activación',value:pct(firstStudy,registered),note:'De esta cohorte registrada'},
-  {label:'Del registro al primer estudio',value:duration(firstMinutes),note:prevMinutes===null?'Solo usuarios con estudio registrado':change(firstMinutes??0,prevMinutes,true).label}
+  {label:'Del registro al primer estudio',value:duration(firstMinutes),note:prevMinutes===null?'Solo usuarios con estudio registrado':change(firstMinutes??0,prevMinutes,true).note}
  ].map(x=>({...x,color:'color' in x?x.color:undefined}));
  const funnel=[
    {label:'Registro completado',count:registered},
