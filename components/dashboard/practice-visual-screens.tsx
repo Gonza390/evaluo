@@ -107,7 +107,7 @@ export function CasesPracticeScreen({materialTitle,question,index,total,value,ch
     className="mt-4 scroll-mt-24 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[13px] leading-6 text-[#42506A] shadow-[0_5px_18px_rgba(15,23,42,0.025)] sm:p-5">
     <p className={correct ? 'font-semibold text-emerald-700' : 'font-semibold text-rose-700'}>{correct ? 'Bien resuelto' : 'Para reforzar'}</p>
     {!correct && <p className="mt-2 font-medium text-[#0F1B3D]">Respuesta correcta: {question.answer}</p>}
-    <p className="mt-2 whitespace-pre-line break-words text-[#42506A]">{explanation}</p>
+    {!correct && <p className="mt-2 whitespace-pre-line break-words text-[#42506A]">{explanation}</p>}
   </div>}
   <div className="mt-4 flex w-full items-center justify-between gap-2 border-t border-slate-100 pt-3 sm:justify-end">
    <button type="button" onClick={onPrevious} disabled={index===0} className="min-h-10 shrink-0 rounded-xl px-3 text-[13px] text-slate-600 disabled:opacity-30 sm:mr-0">Anterior</button>
