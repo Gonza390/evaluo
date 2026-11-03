@@ -110,3 +110,25 @@ export function additionalPlanPractice(
   }
   return extras;
 }
+
+/** Optional retrieval practice for a previously studied topic. Uses the same
+ * activity links and does not become a new completion requirement. */
+export function optionalPreviousTopicReviews(
+  days: readonly PlanDay[],preferences:string[],dailyMinutes:number,
+): Map<string,{topic:PlanTopic;activity:RecommendedStudyActivity}> {
+  const reviews=new Map<string,{topic:PlanTopic;activity:RecommendedStudyActivity}>();
+  const extras=additionalPlanPractice(days,preferences,dailyMinutes);
+  if(days.some(day=>day.estimatedMinutes>dailyMinutes))return reviews;
+  let previous:PlanTopic|undefined;
+  for(const day of [...days].sort((a,b)=>a.date.localeCompare(b.date))) {
+    const used=day.estimatedMinutes+day.topics.reduce((sum,topic)=>
+      sum+(extras.has(`${topic.materialId}:${topic.topicIndex}`)?8:0),0);
+    if(previous && day.topics.length && dailyMinutes-used>=8) {
+      const practice=recommendTopicActivities(previous,preferences,dailyMinutes)
+        .find(activity=>activity.id!=='resumen'&&activity.id!=='simulacro');
+      if(practice)reviews.set(day.date,{topic:previous,activity:practice});
+    }
+    if(day.topics.length)previous=day.topics[day.topics.length-1]!;
+  }
+  return reviews;
+}
