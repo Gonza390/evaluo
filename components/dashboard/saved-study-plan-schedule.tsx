@@ -22,8 +22,8 @@ const weekday=(key:string)=>new Intl.DateTimeFormat('es-AR',{weekday:'short'}).f
 const fullDate=(key:string)=>new Intl.DateTimeFormat('es-AR',{weekday:'long',day:'numeric',month:'long'}).format(dateObj(key));
 const examDateLabel=(key:string)=>new Intl.DateTimeFormat('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(dateObj(key));
 
-export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,dailyMinutes}: {
-  days:PlanDay[]; examDate:string; completedKeys:string[]; preferences:string[]; dailyMinutes:number;
+export function SavedStudyPlanSchedule({days,examDate,completedKeys,planCompletedKeys=[],preferences,dailyMinutes}: {
+  days:PlanDay[]; examDate:string; completedKeys:string[]; planCompletedKeys?:string[]; preferences:string[]; dailyMinutes:number;
 }) {
   const scheduled=days.filter(day=>day.topics.length>0).sort((a,b)=>a.date.localeCompare(b.date));
   const today=dateKey(new Date());
@@ -32,6 +32,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
   const [showAll,setShowAll]=useState(() => scheduled.findIndex(day=>day.date===initial?.date)>=3);
   const [expandedTopic,setExpandedTopic]=useState<{date:string;key:string}|null>(null);
   const completed=new Set(completedKeys);
+  const fullyCompleted=new Set(planCompletedKeys);
   const shown=showAll?scheduled:scheduled.slice(0,3);
   const selected=scheduled.find(day=>day.date===selectedDate)??initial;
   const nextTopic=selected?.topics.find(topic=>!completed.has(`${topic.materialId}:${topic.topicIndex}`))??selected?.topics[0];
@@ -48,7 +49,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
       <div className="border-b border-slate-100 px-3 py-1.5 text-[11px] font-normal text-slate-500">Días hasta el examen</div>
       <div className="divide-y divide-slate-100">
         {shown.map(day=>{
-          const allRead=day.topics.every(topic=>completed.has(`${topic.materialId}:${topic.topicIndex}`));
+          const allRead=day.topics.every(topic=>fullyCompleted.has(`${topic.materialId}:${topic.topicIndex}`));
           const selectedDay=day.date===selected?.date;
           const dayTitle=day.date===today?'Hoy':fullDate(day.date);
           return <div key={day.date}>
@@ -68,6 +69,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
               {day.topics.map((topic,topicPosition)=>{
                 const topicKey=`${topic.materialId}:${topic.topicIndex}`;
                 const read=completed.has(topicKey);
+                const fullyDone=fullyCompleted.has(topicKey);
                 const isExpanded=activeTopicKey===topicKey;
                 const panelId=`saved-plan-topic-${day.date}-${topic.materialId}-${topic.topicIndex}`;
                 return <div key={topicKey} className={topicPosition?'border-t border-[#EFF2F7]':''}>
@@ -76,15 +78,15 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
                     className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#2563EB] ${isExpanded?'bg-[#FAFBFD]':''}`}>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[12px] font-medium leading-5 text-[#0F1B3D]">{topic.title}</span>
-                      {isExpanded&&<span className="mt-0.5 block truncate text-[11px] text-[#66758D]">{topic.materialTitle} · {read?'Leído':`${topic.estimatedMinutes} min aprox.`}</span>}
+                      {isExpanded&&<span className="mt-0.5 block truncate text-[11px] text-[#66758D]">{topic.materialTitle} · {fullyDone?'Completado':read?'Lectura hecha':`${topic.estimatedMinutes} min aprox.`}</span>}
                     </span>
-                    {read&&<Check className="size-4 shrink-0 text-[#35816A]" aria-label="Leído"/>}
+                    {fullyDone&&<Check className="size-4 shrink-0 text-[#35816A]" aria-label="Tema completado"/>}
                     <ChevronDown className={`size-4 shrink-0 text-[#9DA9BE] transition-transform ${isExpanded?'rotate-180 text-[#2563EB]':''}`} aria-hidden="true"/>
                   </button>
                   {isExpanded&&<div id={panelId} data-saved-plan-topic-details className="border-t border-[#EFF2F7] bg-white">
                     {recommendTopicActivities(topic,preferences,dailyMinutes).map((step,index)=>{
                       const Icon=activityIcons[step.id];
-                      return <Link key={step.id} href={step.href} className="flex items-center gap-3 border-t border-[#F0F2F7] px-3.5 py-3 transition-colors first:border-t-0 hover:bg-[#F7F9FD]">
+                      return <Link key={step.id} href={step.id==='resumen'?step.href:`${step.href}&planTopic=${topic.topicIndex}`} className="flex items-center gap-3 border-t border-[#F0F2F7] px-3.5 py-3 transition-colors first:border-t-0 hover:bg-[#F7F9FD]">
                         <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${activityTones[step.id]}`}><Icon className="size-4" aria-hidden="true"/></span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-[12px] font-medium text-[#0F1B3D]">{step.label}</span>
