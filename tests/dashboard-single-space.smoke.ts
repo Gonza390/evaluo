@@ -282,8 +282,8 @@ const studyCardsSource = readFileSync(resolve('components/dashboard/study-readin
 const readingProgressSource = readFileSync(resolve('lib/reading-progress.ts'), 'utf8');
 const studyPageSource = readFileSync(resolve('app/(es)/dashboard/estudiar/page.tsx'), 'utf8');
 const studyWorkspaceSource = readFileSync(resolve('components/material-study-workspace.tsx'), 'utf8');
-assert.match(studyPageSource, /<PracticeModePicker/, 'Estudiar debe mostrar la práctica, sin agregar herramientas al dashboard.');
-assert.doesNotMatch(studyPageSource, /<StudyReadingCards|<StudyPlanSetup/);
+assert.match(studyPageSource, /<StudyReadingCards/, 'Estudiar debe mostrar los materiales y herramientas de estudio.');
+assert.doesNotMatch(studyPageSource, /<PracticeModePicker|<StudyPlanSetup/);
 assert.match(studyCardsSource, /grid-cols-2/);
 assert.match(studyCardsSource, /role="progressbar"/);
 assert.match(studyCardsSource, /readReadingProgress/);
