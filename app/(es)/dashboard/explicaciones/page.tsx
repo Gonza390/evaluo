@@ -4,6 +4,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { getStudyErrorsPageData } from '@/lib/study-errors';
 import { StudyErrorsClient } from '@/components/dashboard/study-errors-client';
 import { StudyReadingCards } from '@/components/dashboard/study-reading-cards';
+import { StudyPlanSetup } from '@/components/dashboard/study-plan-setup';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isUuid } from '@/lib/uuid';
 import { pdfProgressReviewHref } from '@/lib/study-error-navigation';
@@ -67,7 +68,22 @@ export default async function StudyErrorsPage({
           : null)
         .find((id): id is string => typeof id === 'string' && ids.includes(id)) ?? null;
     }
+    const {data: personalPlan} = await supabase.from('student_personal_study_plans' as never)
+      .select('exam_date').eq('user_id',user.id).maybeSingle();
+    const planMaterials = personalPlan ? await Promise.all(materials.map(async material => {
+      const { data: summary } = await supabase.from('student_material_summaries')
+        .select('summary_sections').eq('student_material_id',material.id).maybeSingle();
+      const sections=Array.isArray(summary?.summary_sections)?summary.summary_sections:[];
+      const topics=sections.map((section:unknown,index:number)=>{
+        const item=section as {title?:string;body?:string};
+        const words=(item.body??'').trim().split(/\s+/u).filter(Boolean).length;
+        return {title:item.title?.trim()||`Tema ${index+1}`,estimatedMinutes:Math.max(10,Math.ceil(words/180)+10)};
+      });
+      return {id:material.id,title:material.title,topicCount:topics.length,topics};
+    })) : [];
     return (
+      <>
+      {personalPlan ? <StudyPlanSetup materials={planMaterials} mode="view" /> : null}
       <StudyReadingCards
         lastOpenedMaterialId={lastOpenedMaterialId}
         materials={materials.map((material) => ({
@@ -76,6 +92,7 @@ export default async function StudyErrorsPage({
           chapterCount: chaptersByMaterial.get(material.id) ?? 0,
         }))}
       />
+      </>
     );
   }
   const requestedErrorId = String(params.error ?? '').slice(0, 80) || null;
