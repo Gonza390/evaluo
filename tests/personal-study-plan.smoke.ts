@@ -9,6 +9,7 @@ const filled=code('app/(es)/dashboard/plan-de-estudio/page.tsx');
 const card=code('components/dashboard/study-plan-exam-card.tsx');
 const setup=code('components/dashboard/study-plan-setup.tsx');
 const savedRoadmap=code('components/dashboard/saved-study-plan-roadmap.tsx');
+const normalRoadmap=code('components/dashboard/study-plan-roadmap.tsx');
 const savedSchedule=code('components/dashboard/saved-study-plan-schedule.tsx');
 const api=code('app/api/study-plans/route.ts');
 const sql=code('supabase/migrations/20261102205803_student_personal_study_plans.sql');
@@ -36,6 +37,19 @@ assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente 
 assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/, 'Cada día muestra actividades reales del generador.');
 assert.match(savedSchedule,/examDateLabel\(examDate\)/, 'El examen es el hito final de la lista.');
 assert.doesNotMatch(setup,/Los días que quedan|TU PRÓXIMA SESIÓN/, 'No duplicar bloques diarios anteriores.');
+const sameOuterPlanSizing=['max-w-[1240px]','px-3 py-3','sm:px-4 sm:py-4 lg:px-6 lg:py-5'];
+for(const token of sameOuterPlanSizing) {
+  assert.ok(filled.includes(token) && setup.includes(token), 'Ambas pantallas comparten el mismo contenedor: '+token);
+}
+const sameDesktopSizing=['xl:h-[calc(100dvh-52px)] xl:overflow-hidden','xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)]','xl:min-h-0 xl:flex-1 xl:overflow-hidden','xl:min-h-0 xl:flex-1 xl:overflow-y-auto'];
+for(const token of sameDesktopSizing) {
+  assert.ok(filled.includes(token) && setup.includes(token), 'Ambas pantallas comparten las mismas dimensiones de escritorio: '+token);
+}
+assert.match(setup,/lg:text-\[24px\]">Plan de estudio/, 'El título del plan guardado respeta la escala original.');
+assert.match(normalRoadmap,/text-\[14px\] font-normal/, 'La tarjeta original define el tamaño de título.');
+assert.match(savedRoadmap,/text-\[14px\] font-normal/, 'El recorrido guardado respeta el tamaño original.');
+assert.match(savedRoadmap,/border-slate-200\/90 bg-white px-3 py-2\.5 sm:px-4 sm:py-3\.5/, 'Ambos recorridos comparten borde y padding.');
+assert.match(setup,/min-h-\[210px\] rounded-\[18px\] bg-\[#EAF1FF\]/, 'La tarjeta del examen guardado utiliza el tamaño de referencia.');
 assert.match(savedRoadmap,/data-saved-roadmap-scroll/, 'Solo la fila central de temas tiene scroll horizontal.');
 assert.match(savedRoadmap,/topics\.map\(\(topic, index\)/, 'Todos los temas se recorren horizontalmente sin paginación.');
 assert.match(savedRoadmap,/examLabel\(examDate\)/, 'El examen permanece como hito final.');
