@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { completeStudySchedule, estimateTopicSessionMinutes, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { completedPlanTopics, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
 type SavedPlan = {
   exam_date: string;
@@ -28,16 +29,22 @@ export async function GET() {
     .eq('user_id',user.id).maybeSingle();
   if(error)return fail('No pudimos recuperar tu plan. Probá nuevamente.',503);
   const plan=data as SavedPlan|null;
-  if(!plan)return NextResponse.json({plan:null,completedKeys:[]});
+  if(!plan)return NextResponse.json({plan:null,completedKeys:[],planCompletedKeys:[]});
   const ids=Array.isArray(plan.material_ids)?plan.material_ids:[];
-  if(!ids.length)return NextResponse.json({plan,completedKeys:[]});
-  const result=await supabase.from('student_material_topic_activity_progress' as never)
-    .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids);
-  if(result.error)return fail('No pudimos consultar el progreso de tu plan.',503);
+  if(!ids.length)return NextResponse.json({plan,completedKeys:[],planCompletedKeys:[]});
+  const [result,practiceResult]=await Promise.all([
+    supabase.from('student_material_topic_activity_progress' as never)
+      .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids),
+    supabase.from('student_personal_study_plan_practice_progress' as never)
+      .select('material_id,topic_index,mode').eq('user_id',user.id).in('material_id',ids),
+  ]);
+  if(result.error || practiceResult.error)return fail('No pudimos consultar el progreso de tu plan.',503);
   const entries=(result.data??[]) as Array<{material_id:string;topic_index:number}>;
+  const completedKeys=entries.map(row=>`${row.material_id}:${row.topic_index}`);
+  const practice=(practiceResult.data??[]) as PlanPracticeCompletion[];
   return NextResponse.json({
-    plan,
-    completedKeys:entries.map(row=>`${row.material_id}:${row.topic_index}`)
+    plan,completedKeys,
+    planCompletedKeys:completedPlanTopics(plan.schedule,plan.preferences,plan.daily_minutes,completedKeys,practice),
   });
 }
 export async function POST(request:NextRequest) {
