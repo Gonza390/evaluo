@@ -72,6 +72,13 @@ assert.match(panel, /onClick=\{\(\)=>\{setShowAll\(false\);onSelectSession\(item
 assert.match(panel, /onClick=\{onBackToHistory\}/, 'El detalle permite regresar al historial');
 assert.match(panel, /selectedSession\.answers\?\.length \? selectedSession\.answers\.map/, 'El detalle muestra las respuestas almacenadas');
 assert.match(panel, /selectedSession\.answers\?\.length/, 'El detalle contempla sesiones sin respuestas guardadas');
+assert.match(picker, /data-practice-columns/, 'Las dos columnas quedan limitadas al viewport.');
+assert.match(picker, /data-practice-modes/, 'Solo las tarjetas de modalidades se desplazan al inicio.');
+assert.match(panel, /data-practice-history-inline-detail/, 'El resultado se abre dentro del panel derecho.');
+assert.match(panel, /data-practice-history-answers/, 'Solo las preguntas y respuestas tienen scroll en el detalle.');
+assert.match(responsiveCss, /\[data-practice-history-answers\] \{[\s\S]*?overflow-y: auto;/, 'Las respuestas pueden desplazarse independientemente.');
+assert.match(responsiveCss, /\[data-practice-dual-pane\] \{[\s\S]*?overflow: hidden;/, 'La página de Practicar no debe hacer scroll general.');
+
 assert.match(panel, /selectedSession && selectedSession\.materialId === materialId/, 'El detalle se muestra en el panel correspondiente');
 assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pane\]\)/, 'La vista de historial conserva el layout de dos columnas');
 
