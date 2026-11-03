@@ -4,6 +4,7 @@ import './practice-motion.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SavedStudyPlanRoadmap } from '@/components/dashboard/saved-study-plan-roadmap';
+import { SavedStudyPlanSchedule } from '@/components/dashboard/saved-study-plan-schedule';
 import { completeStudySchedule, estimateTopicSessionMinutes, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
@@ -170,49 +171,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
             {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={completedKeys}/>}
 
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div><p className="text-[11px] font-medium text-[#7F8AA3]">TU PRÓXIMA SESIÓN</p>
-                  <h2 className="mt-1 text-[15px] font-medium tracking-tight">Para estudiar</h2></div>
-                <span className="rounded-full bg-[#F5F7FB] px-3 py-1.5 text-[11px] font-medium text-[#42506A]"><Clock3 className="mr-1 inline size-3.5"/>{minutes} min por día</span>
-              </div>
-              {(()=>{
-                const next=days.flatMap(day=>day.topics.map(topic=>({...topic,date:day.date}))).find(topic=>!completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`));
-                if(!next)return <p className="mt-4 text-[12px] text-[#66758D]">{assignedKeys.size?'Ya marcaste como leídos todos los temas de este plan.':'Todavía no hay temas asignados. Editá tu plan para continuar.'}</p>;
-                return <div className="mt-4 rounded-xl border border-[#E7EBF4] p-3.5">
-                  <p className="text-[11px] capitalize text-[#7F8AA3]">{new Date(`${next.date}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</p>
-                  <h3 className="mt-2 text-[14px] font-semibold">{next.title}</h3>
-                  <p className="mt-1 text-[11px] text-[#7F8AA3]">{next.materialTitle} · {next.estimatedMinutes} min estimados</p>
-                  <div className="mt-4 space-y-3 border-t border-[#E7EBF4] pt-4">
-                    {recommendTopicActivities(next,preferences,minutes??15).map((activity,index)=><Link key={activity.id} href={activity.href} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[11px] font-semibold text-[#2563EB]">{index+1}</span>
-                      <span className="min-w-0 flex-1">{activity.label}</span><ArrowRight className="size-3.5 shrink-0"/>
-                    </Link>)}
-                  </div>
-                  <Link href={`/materiales/${next.materialId}?tab=resumen&studyTopic=${next.topicIndex}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8]">Empezar a estudiar <ArrowRight className="size-4"/></Link>
-                </div>;
-              })()}
-            </section>
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
-              <h2 className="text-[14px] font-medium tracking-tight">Los días que quedan</h2>
-              {days.filter(day=>day.topics.length>0).length===0&&<p className="mt-3 text-[12px] text-[#66758D]">No hay días disponibles antes del examen. Editá la fecha o el tiempo del plan.</p>}
-              <div className="mt-4 space-y-3">
-                {days.filter(day=>day.topics.length>0).map(day=><div key={day.date} className="rounded-xl border border-[#E7EBF4] p-3">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <h3 className="text-[12px] font-semibold capitalize">{new Date(`${day.date}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-                    <span className="shrink-0 text-[11px] text-[#7F8AA3]">{day.estimatedMinutes} min aprox.</span>
-                  </div>
-                  <ul className="space-y-3">{day.topics.map(topic=>{
-                    const key=`${topic.materialId}:${topic.topicIndex}`,done=completedKeys.includes(key);
-                    return <li key={key} className="flex items-start gap-2">
-                      <BookOpen className="mt-0.5 size-4 shrink-0 text-[#2563EB]"/>
-                      <div className="min-w-0 flex-1"><p className="text-[12px] font-medium">{topic.title}</p><p className="text-[11px] text-[#7F8AA3]">{topic.materialTitle}</p><Link href={`/materiales/${topic.materialId}?tab=resumen&studyTopic=${topic.topicIndex}`} className="mt-1 inline-flex text-[11px] font-medium text-[#2563EB] hover:underline">Estudiar este tema</Link></div>
-                      <button type="button" disabled={!savedPlan||done||marking===key} onClick={()=>void markCompleted(topic.materialId,topic.topicIndex)} className="shrink-0 rounded-lg bg-[#EEF2FF] px-2 py-1.5 text-[11px] font-medium text-[#2563EB] disabled:opacity-50">{done?'Completado':marking===key?'Guardando…':'Marcar leído'}</button>
-                    </li>;
-                  })}</ul>
-                </div>)}
-              </div>
-            </section>
+            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
           </div>
           <aside className="min-w-0 space-y-3">
             <section className="rounded-2xl bg-[#EAF1FF] p-3.5">
