@@ -28,6 +28,10 @@ assert.match(filled,/if \(hasSavedPlan\)/, 'El nuevo recorrido exige un plan gua
 assert.match(setup,/savedPlan && <SavedStudyPlanRoadmap/, 'El recorrido solo aparece en la vista del plan persistido.');
 assert.match(setup,/<SavedStudyPlanSchedule days=\{days\}/, 'La vista guardada utiliza días reales del plan.');
 assert.match(savedSchedule,/Tu plan de estudios/, 'Se utiliza el título solicitado.');
+assert.match(savedSchedule,/Días hasta el examen/, 'La tarjeta utiliza el encabezado de lista del diseño existente.');
+assert.match(savedSchedule,/flex size-11 shrink-0 flex-col/, 'Las fechas usan indicadores compactos.');
+assert.match(savedSchedule,/shown\.map\(day=>/, 'Las filas se generan por día planificado.');
+assert.match(savedSchedule,/onClick=\{\(\)=>setSelectedDate\(day.date\)\}/, 'Al elegir un día aparecen sus actividades.');
 assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente tres fechas.');
 assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/, 'Cada día muestra actividades reales del generador.');
 assert.match(savedSchedule,/examDateLabel\(examDate\)/, 'El examen es el hito final de la lista.');
