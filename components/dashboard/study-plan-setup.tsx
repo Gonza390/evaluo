@@ -31,6 +31,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
   const [preview,setPreview] = useState(false);
   const [savedPlan,setSavedPlan] = useState<SavedPlan|null>(null);
   const [completedKeys,setCompletedKeys] = useState<string[]>([]);
+  const [planCompletedKeys,setPlanCompletedKeys] = useState<string[]>([]);
   const [loading,setLoading] = useState(true);
   const [saving,setSaving] = useState(false);
   const [marking,setMarking] = useState<string|null>(null);
@@ -39,11 +40,12 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
     let mounted=true;
     void fetch('/api/study-plans',{cache:'no-store'}).then(async response=>{
       if(!response.ok)throw new Error('No pudimos recuperar tu planificación.');
-      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[]}>;
+      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[];planCompletedKeys?:string[]}>;
     }).then(data=>{
       if(!mounted)return;
       setSavedPlan(data.plan);
       setCompletedKeys(data.completedKeys??[]);
+      setPlanCompletedKeys(data.planCompletedKeys??[]);
       if(data.plan){
         setExam(data.plan.exam_date);
         setSelected(data.plan.material_ids);
@@ -169,10 +171,10 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
               <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-3.5"/> Editar plan</Link>
             </div>
             <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
-            {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={completedKeys}/>}
+            {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={planCompletedKeys}/>}
 
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
-            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
+            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} planCompletedKeys={planCompletedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
             </div>
           </div>
           <aside className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
