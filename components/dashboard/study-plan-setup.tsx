@@ -101,10 +101,10 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
     finally{setMarking(null)}
   }
   const toggle = (list:string[],id:string,save:(x:string[])=>void) => save(list.includes(id) ? list.filter(x=>x!==id) : [...list,id]);
-  return <main data-study-plan-shell className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+  return <main data-study-plan-shell className={`mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5 ${preview ? 'xl:h-[calc(100dvh-52px)] xl:overflow-hidden' : ''}`}>
     {loading&&<p role="status" className="mx-auto max-w-[500px] pb-3 text-[12px] text-[#7F8AA3]">Recuperando tu planificación…</p>}
     {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
-    {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.'}</div> : <div className={`relative mx-auto ${preview ? "w-full" : "max-w-[500px]"}`}>
+    {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.'}</div> : <div className={`relative mx-auto ${preview ? "w-full xl:h-full xl:min-h-0" : "max-w-[500px]"}`}>
       {!preview && step!==2 && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
         : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
@@ -161,20 +161,22 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
             <button type="button" disabled={!selectable||saving||loading} onClick={()=>step===3?void savePlan():setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?(saving?'Guardando…':'Preparar mi plan'):'Continuar'}<ArrowRight className="size-3.5"/></button>
           </div>
         )}
-      </div> : <section key="plan-preview" data-study-plan-dashboard className="practice-screen-enter pb-8">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:items-start">
-          <div className="min-w-0 space-y-3">
-            <div className="flex min-h-10 flex-wrap items-center justify-between gap-2">
+      </div> : <section key="plan-preview" data-study-plan-dashboard className="practice-screen-enter xl:flex xl:h-full xl:min-h-0 xl:flex-col">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
+          <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
+            <div className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-2">
               <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
               <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-3.5"/> Editar plan</Link>
             </div>
+            <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
             {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={completedKeys}/>}
 
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
             <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
+            </div>
           </div>
-          <aside className="min-w-0 space-y-3">
-            <section className="rounded-2xl bg-[#EAF1FF] p-3.5">
+          <aside className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
+            <section className="min-h-[210px] rounded-[18px] bg-[#EAF1FF] px-4 py-6 sm:min-h-[218px] sm:px-5 sm:py-7">
               <p className="flex items-center gap-2 text-[12px] font-medium text-[#2563EB]"><CalendarDays className="size-4"/> Próximo examen</p>
               <h2 className="mt-3 text-[27px] font-semibold tracking-[-0.045em]">{exam?`En ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} días`:'Sin fecha'}</h2>
               {exam&&<p className="mt-1 text-[12px] text-[#42506A]">{new Date(`${exam}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>}
