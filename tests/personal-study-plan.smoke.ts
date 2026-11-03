@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { additionalPlanPractice, optionalPreviousTopicReviews, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
+import { additionalPlanPractice, optionalPreviousTopicReviews, savePlanPracticeRecommendations, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
 import { completedPlanTopics } from '../lib/student-materials/study-plan-completion.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
@@ -40,7 +40,8 @@ assert.match(practiceEndpoint,/additionalPlanPractice\(saved\.schedule,saved\.pr
   'El servidor autoriza las prácticas extra con la misma regla del plan guardado.');
 assert.match(progressMigration,/enable row level security/, 'El progreso por modalidad queda protegido por RLS.');
 const sampleTopic={materialId:'12345678-1234-1234-1234-123456789abc',topicIndex:0,title:'Primer tema',materialTitle:'Material',estimatedMinutes:18};
-const sampleDays=[{date:'2026-11-03',topics:[sampleTopic],estimatedMinutes:18}];
+const sampleDays=savePlanPracticeRecommendations(
+ [{date:'2026-11-03',topics:[sampleTopic],estimatedMinutes:18}],['entender','practicar'],30);
 const bonus=additionalPlanPractice(sampleDays,['entender','practicar'],30).get(sampleTopic.materialId+':0')??0;
 const assigned=recommendTopicActivities(sampleTopic,['entender','practicar'],30,bonus).filter(step=>step.id!=='resumen');
 assert.equal(bonus,1,'A day with genuinely spare time can recommend one extra practice.');
@@ -154,19 +155,28 @@ assert.ok(quick.every(step=>!['casos','flashcards','simulacro'].includes(step.id
 const casesOnly=Array.from({length:9},(_,i)=>recommendTopicActivities({...sample[0]!,topicIndex:i},['casos'],30)[1]!.id);
 assert.ok(casesOnly.includes('casos')&&casesOnly.includes('opciones')&&casesOnly.includes('mixto'),
   'A cases preference must sometimes show cases and sometimes another exercise.');
-const comfortable=[{date:'2027-01-01',topics:[sample[0]!],estimatedMinutes:20},
+const baseComfortable=[{date:'2027-01-01',topics:[sample[0]!],estimatedMinutes:20},
  {date:'2027-01-02',topics:[sample[1]!],estimatedMinutes:20}];
+const comfortable=savePlanPracticeRecommendations(baseComfortable,combined,60);
+assert.equal(additionalPlanPractice(baseComfortable,combined,60).size,0,
+  'Existing saved plans must retain their original practice requirements.');
+assert.equal(optionalPreviousTopicReviews(baseComfortable,combined,60).size,0,
+  'Existing plans must not acquire new optional review rows retroactively.');
+assert.deepEqual(completedPlanTopics(baseComfortable,['practicar'],60,['a:0'],
+  recommendTopicActivities(sample[0]!,['practicar'],60).slice(1).map(step=>({
+    material_id:'a',topic_index:0,mode:step.id as 'opciones'|'mixto'|'unir'|'completar'|'simulacro',
+  }))),['a:0'],'Previously completed plans must stay completed.');
 const extras=additionalPlanPractice(comfortable,combined,60);
 assert.equal(extras.size,2,'Spare time adds an additional recommendation to each available day.');
 assert.equal(recommendTopicActivities(sample[0]!,combined,60,extras.get('a:0')??0).length,4,
   'Long sessions can show summary and three varied practices.');
-assert.equal(additionalPlanPractice(comfortable,combined,15).size,0,
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations(baseComfortable,combined,15),combined,15).size,0,
   'Insufficient time must never add practices.');
-assert.equal(additionalPlanPractice([{date:'2027-01-01',topics:sample,estimatedMinutes:60}],combined,60).size,0,
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations([{date:'2027-01-01',topics:sample,estimatedMinutes:60}],combined,60),combined,60).size,0,
   'A fully booked day cannot gain more work.');
-assert.equal(additionalPlanPractice([{date:'2027-01-01',topics:sample,estimatedMinutes:70}],combined,60).size,0,
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations([{date:'2027-01-01',topics:sample,estimatedMinutes:70}],combined,60),combined,60).size,0,
   'An overloaded plan must not gain more work.');
-assert.equal(additionalPlanPractice(comfortable,['entender'],60).size,0,
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations(baseComfortable,['entender'],60),['entender'],60).size,0,
   'Reading-only preferences must not silently add practice.');
 assert.deepEqual([...extras], [...additionalPlanPractice(comfortable,combined,60)],
   'Saved recommendations must remain stable across visits.');
@@ -176,9 +186,9 @@ const reviews=optionalPreviousTopicReviews(comfortable,combined,60);
 assert.equal(reviews.size,1,'A later day with spare time should offer one optional prior-topic review.');
 assert.equal(reviews.get('2027-01-02')?.topic.topicIndex,0,
   'The optional review must refer to an earlier topic, not the current one.');
-assert.equal(optionalPreviousTopicReviews(comfortable,combined,15).size,0,
+assert.equal(optionalPreviousTopicReviews(savePlanPracticeRecommendations(baseComfortable,combined,15),combined,15).size,0,
   'Short or overloaded plans must not include optional review work.');
-assert.equal(optionalPreviousTopicReviews(comfortable,['entender'],60).size,0,
+assert.equal(optionalPreviousTopicReviews(savePlanPracticeRecommendations(baseComfortable,['entender'],60),['entender'],60).size,0,
   'Reading-only plans do not need artificial practice recommendations.');
 assert.match(savedSchedule,/optionalPreviousTopicReviews\(days,preferences,dailyMinutes\)/,
   'Optional reviews use the existing day panel.');
@@ -195,4 +205,6 @@ assert.match(setup,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/data-study-plan-time-warning/);
 assert.match(savedSchedule,/additionalPlanPractice\(days,preferences,dailyMinutes\)/);
 assert.match(api,/completeStudySchedule\(topics,examDate,minutes,start\)/);
+assert.match(api,/savePlanPracticeRecommendations\(days\.filter\(day=>day\.topics\.length>0\),preferences as string\[\],minutes\)/,
+  'Only new plans freeze the recommended practice intensity.');
 console.log('Personal plan persistence, empty states and topic distribution OK');
