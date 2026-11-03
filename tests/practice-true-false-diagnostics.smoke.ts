@@ -34,4 +34,16 @@ assert.match(api,/verifyGeneratedTrueFalse\(parsed,fragments\)/);
 assert.match(api,/applyIndependentTrueFalseReview\(candidates,judgments,fragments\)/);
 assert.match(api,/enforceStrictRateLimit\(/,
   'Safety: authenticated generated practices retain the cost-limiting gate.');
+assert.match(api,/selectTrueFalseFragments\(sourceRows,round\)/,
+  'Each attempt should sample a different set of cited pages or sections.');
+assert.match(api,/\.limit\(400\)/,
+  'The generator must not stop at the first 90 PDF fragments.');
+assert.match(api,/source_gate_rejected/);
+assert.match(api,/review_gate_rejected/);
+assert.match(ui,/retryableSourceFailure/,
+  'Only recoverable generation and review failures should automatically retry.');
+assert.match(ui,/trueFalseAttempts\.current<6/,
+  'Repeated generation must have a hard cap to control AI costs.');
+assert.match(ui,/errorCode==='ungrounded_generation' \|\| errorCode==='ambiguous_generation'/,
+  'Provider, rate-limit and auth errors must never trigger extra AI requests.');
 console.log('True/False API + client: classified errors, safe server failure and source verification passed.');

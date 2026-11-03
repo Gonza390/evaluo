@@ -88,12 +88,27 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
  </main>;
 }
 export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,onSelect,onNext,onPrevious,onSkip,onGenerate,generating}:{materialTitle:string;question:CaseQuestion;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void;onGenerate:()=>void;generating:boolean}){
- return <main className="practice-step-enter mx-auto w-full max-w-[860px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
+ const explanationRef = React.useRef<HTMLDivElement>(null);
+ const previousChecked = React.useRef(checked);
+ React.useEffect(() => {
+  const justConfirmedIncorrect = checked && !previousChecked.current && !correct;
+  previousChecked.current = checked;
+  if (!justConfirmedIncorrect) return;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  explanationRef.current?.scrollIntoView({behavior: prefersReducedMotion ? 'instant' : 'smooth',block:'center'});
+ }, [checked,correct]);
+ return <main className="practice-step-enter mx-auto w-full max-w-[1120px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
   <Header title="Casos" materialTitle={materialTitle} icon="case" progress={index} total={total} accent="#8b4fd1"/>
   <div className="grid items-start gap-4 lg:grid-cols-[1.14fr_1fr] lg:gap-6">
    <section className="rounded-2xl border border-violet-200 bg-[#f7f3fd] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-4"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold tracking-[.08em] text-violet-900">SITUACIÓN</span><span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-medium text-violet-800"><Sparkles size={14}/> Generado con IA</span></div><p className="whitespace-pre-line text-[13px] leading-[1.65] text-[#272238] sm:text-[14px]">{question.prompt}</p></section>
-   <section><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">¿QUÉ CONCEPTO APLICA?</p><div className="space-y-2">{question.options.map((option,i)=><button key={i} type="button" disabled={checked} aria-pressed={value===option} onClick={()=>onSelect(option)} className={`flex min-h-[44px] w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-[13px] font-medium leading-5 transition sm:text-[13px] ${value===option?'border-blue-600 bg-blue-50 ring-1 ring-blue-600/20':'border-slate-200 bg-white text-slate-900 hover:border-blue-200'}`}><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${value===option?'bg-blue-600 text-white':'bg-slate-100 text-slate-600'}`}>{String.fromCharCode(65+i)}</span><span>{option}</span></button>)}</div>{checked&&<div role="status" className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] leading-5"><p className={correct?'font-medium text-emerald-700':'font-medium text-rose-700'}>{correct?'Bien resuelto':'Para reforzar'}</p>{!correct&&<p className="mt-1 text-slate-700">Respuesta: {question.answer}</p>}<p className="mt-1 text-slate-600">{explanation}</p></div>}</section>
+   <section><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">¿QUÉ CONCEPTO APLICA?</p><div className="space-y-2">{question.options.map((option,i)=><button key={i} type="button" disabled={checked} aria-pressed={value===option} onClick={()=>onSelect(option)} className={`flex min-h-[44px] w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-[13px] font-medium leading-5 transition sm:text-[13px] ${value===option?'border-blue-600 bg-blue-50 ring-1 ring-blue-600/20':'border-slate-200 bg-white text-slate-900 hover:border-blue-200'}`}><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${value===option?'bg-blue-600 text-white':'bg-slate-100 text-slate-600'}`}>{String.fromCharCode(65+i)}</span><span>{option}</span></button>)}</div></section>
   </div>
+  {checked && <div ref={explanationRef} role="status" aria-live="polite" data-case-explanation
+    className="mt-4 scroll-mt-24 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[13px] leading-6 text-[#42506A] shadow-[0_5px_18px_rgba(15,23,42,0.025)] sm:p-5">
+    <p className={correct ? 'font-semibold text-emerald-700' : 'font-semibold text-rose-700'}>{correct ? 'Bien resuelto' : 'Para reforzar'}</p>
+    {!correct && <p className="mt-2 font-medium text-[#0F1B3D]">Respuesta correcta: {question.answer}</p>}
+    {!correct && <p className="mt-2 whitespace-pre-line break-words text-[#42506A]">{explanation}</p>}
+  </div>}
   <div className="mt-4 flex w-full items-center justify-between gap-2 border-t border-slate-100 pt-3 sm:justify-end">
    <button type="button" onClick={onPrevious} disabled={index===0} className="min-h-10 shrink-0 rounded-xl px-3 text-[13px] text-slate-600 disabled:opacity-30 sm:mr-0">Anterior</button>
    <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">

@@ -90,6 +90,32 @@ export function verifyGeneratedTrueFalse(
   return qualifiedQuestions(verified);
 }
 
+/** Select different cited pages/sections for each regeneration attempt.
+ * Avoid asking the AI about nearly identical contiguous chunks repeatedly. */
+export function selectTrueFalseFragments(
+  fragments: readonly TrueFalseFragment[], round: number, maxFragments = 10,
+): TrueFalseFragment[] {
+  if (!fragments.length || maxFragments <= 0) return [];
+  const groups = new Map<string, TrueFalseFragment[]>();
+  for (const fragment of fragments) {
+    const key = fragment.pageStart === null
+      ? 'section:' + fragment.sectionTitle
+      : 'page:' + fragment.pageStart;
+    const group = groups.get(key) ?? [];
+    group.push(fragment);
+    groups.set(key, group);
+  }
+  const entries = [...groups.values()];
+  const count = Math.min(maxFragments, entries.length);
+  const safeRound = Math.max(0, Math.floor(Number.isFinite(round) ? round : 0));
+  const start = (safeRound * count) % entries.length;
+  const passage = Math.floor((safeRound * count) / entries.length);
+  return Array.from({length:count}, (_,i) => {
+    const group = entries[(start+i)%entries.length]!;
+    return group[passage % group.length]!;
+  });
+}
+
 export function verifiedTrueFalsePool(questions: PracticeQuestion[]): PracticeQuestion[] {
   return qualifiedQuestions(questions.filter(q =>
     q.kind === 'true-false-source-backed' &&

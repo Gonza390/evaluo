@@ -257,57 +257,64 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const generateTrueFalse = useCallback(async () => {
     if (trueFalseBusy.current) return;
     trueFalseBusy.current = true;
-    trueFalseAttempts.current += 1;
     setTrueFalseLoading(true);
     setTrueFalseError('');
     setTrueFalseDiagnostic('');
+    let accumulated=verifiedTrueFalsePool(trueFalsePool);
     try {
-      const response = await fetch('/api/practice/true-false', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          materialId,
-          round:trueFalseAttempts.current - 1,
-          previous:trueFalsePool.map(q => q.prompt),
-        }),
-        signal:AbortSignal.timeout(65000),
-      });
-      // An error route may return HTML (for instance a missing local API
-      // route). Keep the HTTP status instead of losing it in response.json().
-      const data:unknown = await response.json().catch(() => null);
-      const errorCode = data && typeof data === 'object' && 'error' in data &&
-        typeof data.error === 'string' ? data.error : 'unknown_response';
-      if (!response.ok || !data || typeof data !== 'object' ||
-          !('questions' in data) || !Array.isArray(data.questions)) {
-        setTrueFalseDiagnostic('HTTP ' + response.status + ' · ' + errorCode);
-        setTrueFalseError(
-          response.status === 401
-            ? 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.'
-          : response.status === 403
-            ? 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.'
-          : response.status === 404 && errorCode === 'material_not_found'
-            ? 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.'
-          : response.status === 404
-            ? 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá master y reiniciá el entorno local.'
-          : response.status === 429
-            ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
-          : response.status === 422
-            ? 'No encontramos suficientes afirmaciones comprobables en estos apartados. Reintentá con otras páginas.'
-          : response.status === 503
-            ? 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.'
-          : response.status === 500
-            ? 'Se produjo un error interno al preparar Verdadero o Falso.'
-          : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.'
-        );
-        return;
+      // Retry only source-verification failures, using different pages on each
+      // attempt. Auth, rate-limit, provider and network failures stop immediately.
+      for (let retry=0; retry<3 && trueFalseAttempts.current<6; retry++) {
+        const round=trueFalseAttempts.current++;
+        const response = await fetch('/api/practice/true-false', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            materialId,round,
+            previous:accumulated.map(q => q.prompt),
+          }),
+          signal:AbortSignal.timeout(65000),
+        });
+        // Preserve HTTP status even for non-JSON reverse-proxy responses.
+        const data:unknown = await response.json().catch(() => null);
+        const errorCode = data && typeof data === 'object' && 'error' in data &&
+          typeof data.error === 'string' ? data.error : 'unknown_response';
+        if (!response.ok || !data || typeof data !== 'object' ||
+            !('questions' in data) || !Array.isArray(data.questions)) {
+          setTrueFalseDiagnostic('HTTP ' + response.status + ' · ' + errorCode);
+          const retryableSourceFailure=response.status===422 &&
+            (errorCode==='ungrounded_generation' || errorCode==='ambiguous_generation');
+          if (retryableSourceFailure && retry<2 && trueFalseAttempts.current<6) continue;
+          setTrueFalseError(
+            response.status === 401
+              ? 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.'
+            : response.status === 403
+              ? 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.'
+            : response.status === 404 && errorCode === 'material_not_found'
+              ? 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.'
+            : response.status === 404
+              ? 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá la página y reintentá.'
+            : response.status === 429
+              ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
+            : response.status === 422
+              ? 'No conseguimos suficientes afirmaciones verificadas. Probamos distintos apartados; podés reintentar con otras páginas.'
+            : response.status === 503
+              ? 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.'
+            : response.status === 500
+              ? 'Se produjo un error interno al preparar Verdadero o Falso.'
+            : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.'
+          );
+          break;
+        }
+        const incoming=verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
+        accumulated=verifiedTrueFalsePool([...accumulated,...incoming]);
+        if (sufficientTrueFalse(accumulated,MIN_CASES_PER_PRACTICE)) break;
       }
-      const incoming = verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
-      const unique = verifiedTrueFalsePool([...trueFalsePool,...incoming]);
-      if (unique.length === trueFalsePool.length) {
-        setTrueFalseError('La IA no encontró afirmaciones nuevas y diferentes. Podés reintentar con otros apartados.');
-        return;
+      if (accumulated.length> trueFalsePool.length) setGeneratedTrueFalse(accumulated);
+      if (!sufficientTrueFalse(accumulated,MIN_CASES_PER_PRACTICE) &&
+          trueFalseAttempts.current>=6) {
+        setTrueFalseError('No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.');
       }
-      setGeneratedTrueFalse(unique);
     } catch (error) {
       setTrueFalseDiagnostic(error instanceof Error ? error.name : 'network_error');
       setTrueFalseError('La conexión se interrumpió mientras preparábamos Verdadero o Falso. Revisá tu conexión y reintentá.');
@@ -355,7 +362,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     void generatePairs();
   },[mode,pairs.length,pairLoading,pairError,generatePairs]);
 
-  const aiCaseButton = mode === 'casos' && aiAvailable && (!ready || finished) ? (
+  const aiCaseButton = mode === 'casos' && aiAvailable && !ready ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -431,10 +438,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             </p>
             <p className="mt-1 text-slate-800">{prompt}</p>
             {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {responses[i] || 'Sin responder'}</p>}
-            <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>
+            {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>}
             {diagnosticFor(i) && <p className="mt-1 text-slate-700">{diagnosticFor(i)}</p>}
             {task.type === 'question' && <>
-              <p className="mt-1 text-slate-600">{groundedPracticeExplanation(task.question,pairs)}</p>
+              {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-600">{groundedPracticeExplanation(task.question,pairs)}</p>}
               {task.question.pageStart && <Link className="mt-2 inline-block text-blue-600 underline"
                 href={'/materiales/' + materialId + '?tab=resumen&page=' + task.question.pageStart}>
                 Revisar el material · página {task.question.pageStart}
@@ -443,13 +450,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           </article>;
         })}
       </div>
-      {aiCaseButton}
+      
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={anotherRound}
           className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? 'Nuevo simulacro' : 'Practicar otra vez'}</button>
-        <Link href={'/materiales/' + materialId + '?tab=resumen'}
+        <Link href={mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen'}
           className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
-          Volver al resumen
+          {mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}
         </Link>
       </div>
       {historySaveFailed && <div role="alert" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-amber-800">
@@ -511,7 +518,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   if (ready && !finished && mode === 'casos' && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><CasesPracticeScreen key={step}
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
-    correct={correctAt(step)} explanation={groundedPracticeExplanation(current.question,pairs)}
+    correct={correctAt(step)} explanation={correctAt(step) ? '' : groundedPracticeExplanation(current.question,pairs)}
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
