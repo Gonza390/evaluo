@@ -24,10 +24,10 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex }: {
   mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
-  aiAvailable?: boolean; isWord?: boolean;
+  aiAvailable?: boolean; isWord?: boolean; planTopicIndex?: number;
 }) {
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
@@ -165,7 +165,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         }));
     void fetch('/api/practice/session', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
-      body: JSON.stringify({ sessionId: sessionIdRef.current, materialId, mode, correct: score, total, answers }),
+      body: JSON.stringify({ sessionId: sessionIdRef.current, materialId, mode, correct: score, total, answers, planTopicIndex }),
     }).then((response) => {
       if (!response.ok) throw new Error('save_failed');
       if (posted.current === attempt) setHistorySaveFailed(false);
