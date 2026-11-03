@@ -97,15 +97,15 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
     {loading&&<p role="status" className="mx-auto max-w-[500px] pb-3 text-[12px] text-[#7F8AA3]">Recuperando tu planificación…</p>}
     {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
     <div className="relative mx-auto max-w-[500px]">
-      {!preview && (step===0
+      {!preview && step!==2 && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
         : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
       {!preview ? <div key={`plan-step-${step}`} className="practice-screen-enter">
-        <div className="mb-4 pr-[76px]">
+        <div className={step===2 ? 'mb-6 text-center sm:mb-7' : 'mb-4 pr-[76px]'}>
           <h1 className="text-[20px] font-semibold leading-tight tracking-[-0.035em] sm:text-[22px]">{['¿Cuándo es tu examen?','¿Qué vas a estudiar?','¿Cuánto tiempo tenés por día?','¿Cómo querés estudiar?'][step]}</h1>
           <p className="mt-1.5 text-[12px] leading-[18px] text-[#42506A]">{['Elegí la fecha para organizar tu estudio.','Elegí los materiales que entran en el examen.','Armo tu plan con ese tiempo.','Elegí qué actividades querés priorizar.'][step]}</p>
         </div>
-        <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3 sm:p-4">
+        <section className={step===2 ? 'bg-white' : 'rounded-2xl border border-[#E7EBF4] bg-white p-3 sm:p-4'}>
           {step===0 && <div>
             <div className="mx-auto mb-2 flex max-w-[364px] items-center justify-between">
               <button type="button" aria-label="Mes anterior" disabled={currentMonth} onClick={()=>setMonth(new Date(month.getFullYear(),month.getMonth()-1,1))} className="flex size-8 items-center justify-center rounded-lg border border-[#E7EBF4] text-[16px] disabled:opacity-30">‹</button>
@@ -132,8 +132,8 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
             </button>)}
             <Link href="/dashboard" className="inline-flex items-center gap-1.5 pt-2 text-[12px] font-medium text-[#2563EB]">+ Subir otro material</Link>
           </div>}
-          {step===2 && <div className="grid grid-cols-2 gap-2.5">
-            {[15,30,45,60].map((value,i)=><button type="button" key={value} onClick={()=>setMinutes(value)} aria-pressed={minutes===value} className={`flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-xl border transition-colors ${['bg-[#EEF2FF]','bg-[#E7F5EC]','bg-[#FFF0E6]','bg-[#F1EBFF]'][i]} ${minutes===value?'border-[#2563EB] ring-1 ring-[#2563EB]/20':'border-transparent hover:border-[#C9D8F1]'}`}><Clock3 className="size-4 text-[#2563EB]"/><span className="text-[13px] font-semibold text-[#0F1B3D]">{value} min</span></button>)}
+          {step===2 && <div data-study-plan-time-options role="group" aria-label="Tiempo disponible por día" className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+            {[15,30,45,60].map(value=><button type="button" key={value} onClick={()=>setMinutes(value)} aria-pressed={minutes===value} className={`flex min-h-[50px] items-center justify-center rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-colors sm:min-h-[52px] ${minutes===value?'border-[#2563EB] bg-[#EEF2FF] text-[#2563EB] ring-1 ring-[#2563EB]/15':'border-[#E7EBF4] bg-white text-[#42506A] hover:border-[#2563EB]/40'}`}>{value} min</button>)}
           </div>}
           {step===3 && <div className="grid grid-cols-2 gap-2.5">
             {methods.map(({id,title,subtitle,icon:Icon,tone,iconTone})=><button type="button" key={id} onClick={()=>toggle(preferences,id,setPreferences)} aria-pressed={preferences.includes(id)} className={`relative flex min-h-[112px] flex-col items-start rounded-xl border p-3 text-left transition-colors ${tone} ${preferences.includes(id)?'border-[#2563EB] ring-1 ring-[#2563EB]/15':'border-transparent hover:border-[#C9D8F1]'}`}>
@@ -143,9 +143,16 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
             </button>)}
           </div>}
         </section>
-        <div className="mt-3 flex justify-end">
-          <button type="button" disabled={!selectable||saving||loading} onClick={()=>step===3?void savePlan():setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?(saving?'Guardando…':'Preparar mi plan'):'Continuar'}<ArrowRight className="size-3.5"/></button>
-        </div>
+        {step===2 ? (
+          <div data-study-plan-time-actions className="mt-6 flex items-center justify-center gap-3 sm:mt-7">
+            <button type="button" onClick={()=>setStep(1)} className="inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]">Atrás</button>
+            <button type="button" disabled={!selectable||saving||loading} onClick={()=>setStep(3)} className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#2563EB] px-6 text-[12px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">Continuar</button>
+          </div>
+        ) : (
+          <div className="mt-3 flex justify-end">
+            <button type="button" disabled={!selectable||saving||loading} onClick={()=>step===3?void savePlan():setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?(saving?'Guardando…':'Preparar mi plan'):'Continuar'}<ArrowRight className="size-3.5"/></button>
+          </div>
+        )}
       </div> : <section key="plan-preview" className="practice-screen-enter rounded-2xl border border-[#E7EBF4] bg-white p-4">
         <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#2563EB]"><CalendarDays className="size-5"/></div>
         <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]">Tu plan de estudio</h1>

@@ -22,6 +22,18 @@ assert.doesNotMatch(empty,/empty-plan-exam-date|disabled placeholder="dd\/mm\/aa
 assert.match(setup,/fetch\('\/api\/study-plans'/);
 assert.match(setup,/method:'PATCH'/);
 assert.match(setup,/Marcar leído/);
+assert.match(setup,/data-study-plan-time-options/, 'La etapa de tiempo debe tener opciones identificables.');
+assert.match(setup,/sm:grid-cols-4/, 'Las cuatro duraciones van en una fila en escritorio.');
+assert.match(setup,/grid-cols-2 gap-2\.5 sm:grid-cols-4/, 'En móvil se mantienen dos columnas.');
+assert.match(setup,/\[15,30,45,60\]\.map\(value=>/, 'Conservar las duraciones originales.');
+assert.match(setup,/minutes===value\?'border-\[#2563EB\] bg-\[#EEF2FF\]/,
+  'La opción elegida conserva el azul de Evaluo.');
+assert.match(setup,/data-study-plan-time-actions/, 'Acciones debajo de las opciones.');
+assert.match(setup,/onClick=\{\(\)=>setStep\(1\)\}/, 'Atrás retorna a selección de materiales.');
+assert.match(setup,/onClick=\{\(\)=>setStep\(3\)\}/, 'Continuar conserva preferencias como cuarto paso.');
+assert.match(setup,/step===3\?void savePlan\(\):setStep\(s=>s\+1\)/,
+  'Solo se guarda el plan después de escoger preferencias.');
+
 assert.match(api,/export async function GET/);
 assert.match(api,/export async function POST/);
 assert.match(api,/export async function PATCH/);
