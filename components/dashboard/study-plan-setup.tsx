@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import './practice-motion.css';
 import Link from 'next/link';
 import { distributeStudyTopics, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
@@ -99,7 +100,7 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
       {!preview && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
         : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
-      {!preview ? <>
+      {!preview ? <div key={`plan-step-${step}`} className="practice-screen-enter">
         <div className="mb-4 pr-[76px]">
           <h1 className="text-[20px] font-semibold leading-tight tracking-[-0.035em] sm:text-[22px]">{['¿Cuándo es tu examen?','¿Qué vas a estudiar?','¿Cuánto tiempo tenés por día?','¿Cómo querés estudiar?'][step]}</h1>
           <p className="mt-1.5 text-[12px] leading-[18px] text-[#42506A]">{['Elegí la fecha para organizar tu estudio.','Elegí los materiales que entran en el examen.','Armo tu plan con ese tiempo.','Elegí qué actividades querés priorizar.'][step]}</p>
@@ -145,7 +146,7 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
         <div className="mt-3 flex justify-end">
           <button type="button" disabled={!selectable||saving||loading} onClick={()=>step===3?void savePlan():setStep(s=>s+1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40">{step===3?(saving?'Guardando…':'Preparar mi plan'):'Continuar'}<ArrowRight className="size-3.5"/></button>
         </div>
-      </> : <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4">
+      </div> : <section key="plan-preview" className="practice-screen-enter rounded-2xl border border-[#E7EBF4] bg-white p-4">
         <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-[#EEF2FF] text-[#2563EB]"><CalendarDays className="size-5"/></div>
         <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]">Tu plan de estudio</h1>
         {savedPlan&&<p className="mt-1 text-[11px] font-medium text-[#35816A]">Guardado en tu cuenta · {completedCount} de {assignedKeys.size} temas completados</p>}
