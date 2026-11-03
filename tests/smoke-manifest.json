@@ -36,6 +36,10 @@
     "alias": true
   },
   {
+    "file": "tests/practice-case-source-selection.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/practice-basic-mvp.smoke.ts",
     "alias": true
   },
