@@ -49,6 +49,9 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
     (end.getTime() - start.getTime()) / 86_400_000 <= 29;
   const from = validRange ? f.from : null;
   const to = validRange ? f.to : null;
+  const effectiveDays = validRange && start && end
+    ? Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1
+    : days;
   const normalized = {
     page: Number.isSafeInteger(f.page) ? Math.max(1,Math.min(100000,f.page)) : 1,
     search: f.search.slice(0,120),
@@ -58,7 +61,7 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
     university: f.university.slice(0,100) || 'all',
   };
   const [stats, segments, list] = await Promise.all([
-    getAggregatesCached(days,from,to),
+    getAggregatesCached(effectiveDays,from,to),
     getSegmentsCached(),
     getListCached(normalized),
   ]);
@@ -68,5 +71,5 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
     if (error) throw error;
     detail = data as UserDetail | null;
   }
-  return { stats, segments, list, detail, filters: { ...normalized, period:days, from, to },today:todayStr };
+  return { stats, segments, list, detail, filters: { ...normalized, period:effectiveDays, from, to },today:todayStr };
 }
