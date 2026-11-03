@@ -52,13 +52,13 @@ function average(items: PracticeHistoryEntry[]) {
   return items.length ? Math.round(items.reduce((sum, item) => sum + percentOf(item), 0) / items.length) : 0;
 }
 
-export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, historyLoadError = false }: {
+export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, onSelectSession, historyLoadError = false }: {
   history: PracticeHistoryEntry[]; materialId: string;
   onStartFlashcards?: () => void;
+  onSelectSession: (entry: PracticeHistoryEntry) => void;
   historyLoadError?: boolean;
 }) {
   const router = useRouter();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const now = useMemo(() => new Date(), []);
   const sessions = useMemo(() => history.filter(item => item.materialId === materialId), [history, materialId]);
@@ -202,8 +202,8 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                     const percent = percentOf(item);
                     return (
                       <article key={item.id} className="py-2.5">
-                        <button type="button" aria-haspopup="dialog"
-                          onClick={() => { setExpandedId(item.id); setShowAll(true); }}
+                        <button type="button" aria-label={`Ver el detalle de ${modeLabels[item.mode] ?? item.mode}, ${percentOf(item)}%`}
+                          onClick={() => onSelectSession(item)}
                           className="flex w-full items-center gap-2.5 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-[#4F5DFF]">
                           <span className={`flex size-9 shrink-0 items-center justify-center rounded-[11px] ${modePalette[item.mode] ?? 'bg-slate-100 text-slate-600'}`}>
                             <Icon className="size-[17px]" strokeWidth={1.8} aria-hidden="true"/>
@@ -227,7 +227,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
                             <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`}
                               style={{ width: `${percent}%` }}/>
                           </div>
-                          <button type="button" onClick={() => { setExpandedId(item.id); setShowAll(true); }}
+                          <button type="button" onClick={() => onSelectSession(item)}
                             className="shrink-0 text-[10px] font-semibold text-[#2563EB] hover:underline">
                             {item.answers?.length && incorrect ? `Revisar ${incorrect}` : 'Ver detalle'}
                           </button>
@@ -258,30 +258,22 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, h
             {sessions.map(item=>{
               const Icon=modeIcons[item.mode as keyof typeof modeIcons] ?? History;
               const percent=percentOf(item);
-              return <div key={item.id} className="rounded-xl border border-[#E7EBF4] p-3">
-                <div className="flex items-center gap-2.5">
-                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${modePalette[item.mode] ?? 'bg-slate-100 text-slate-600'}`}><Icon className="size-4" aria-hidden="true"/></span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[12px] font-semibold text-[#0F1B3D]">{modeLabels[item.mode]??item.mode}</p>
-                    <p className="text-[10px] text-slate-500">{dateLabel(item.completedAt,now)} · {timeLabel(item.completedAt)}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[13px] font-semibold tabular-nums">{percent}%</p>
-                    <p className="text-[10px] text-slate-500">{item.correct} de {item.total}</p>
-                  </div>
-                </div>
-                {item.answers?.length ? <details key={item.id+expandedId} open={expandedId===item.id} className="mt-2 rounded-lg bg-[#F8FAFD] px-3 py-2">
-                  <summary className="cursor-pointer text-[11px] font-medium text-[#2563EB]">Ver respuestas</summary>
-                  <ol className="mt-2 space-y-2">
-                    {item.answers.map((answer,index)=><li key={index} className="border-t border-[#E7EBF4] pt-2 text-[11px] leading-[1.5]">
-                      <p className="font-medium text-[#0F1B3D]">{index+1}. {answer.prompt}</p>
-                      <p className={answer.correct?'text-emerald-700':'text-rose-700'}>{answer.correct?'Correcta':'Para repasar'}</p>
-                      {item.mode !== 'flashcards' && <p className="text-slate-600">Tu respuesta: {answer.selectedAnswer || 'Sin responder'}</p>}
-                      <p className="text-slate-600">Respuesta esperada: {answer.correctAnswer}</p>
-                    </li>)}
-                  </ol>
-                </details> : null}
-              </div>;
+              return <button type="button" key={item.id}
+                onClick={()=>{setShowAll(false);onSelectSession(item)}}
+                className="flex w-full items-center gap-3 rounded-xl border border-[#E7EBF4] p-3 text-left transition-colors hover:bg-[#F8FAFD] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+                <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${modePalette[item.mode]??'bg-slate-100 text-slate-600'}`}>
+                  <Icon className="size-4" aria-hidden="true"/>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-semibold text-[#0F1B3D]">{modeLabels[item.mode]??item.mode}</span>
+                  <span className="block text-[10px] text-slate-500">{dateLabel(item.completedAt,now)} · {timeLabel(item.completedAt)}</span>
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="block text-[13px] font-semibold tabular-nums">{percent}%</span>
+                  <span className="block text-[10px] text-slate-500">{item.correct} de {item.total}</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-slate-400" aria-hidden="true"/>
+              </button>;
             })}
           </div>
         </DialogContent>
