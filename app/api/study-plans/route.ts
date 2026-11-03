@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
-import { completeStudySchedule, estimateTopicSessionMinutes, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { completeStudySchedule, estimateTopicSessionMinutes, savePlanPracticeRecommendations, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
 import { completedPlanTopics, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
 type SavedPlan = {
@@ -96,7 +96,7 @@ export async function POST(request:NextRequest) {
   const withinOneDay=Number.isFinite(dateFromClient.getTime())&&Math.abs(dateFromClient.getTime()-serverDay.getTime())<=86400000;
   const start=withinOneDay?dateFromClient:serverDay;
   const {days,overloadedTopics}=completeStudySchedule(topics,examDate,minutes,start);
-  const schedule=days.filter(day=>day.topics.length>0);
+  const schedule=savePlanPracticeRecommendations(days.filter(day=>day.topics.length>0),preferences as string[],minutes);
   if(!schedule.length)return fail('No hay días para estudiar antes del examen.');
   const {error}=await supabase.from('student_personal_study_plans' as never).upsert({
     user_id:user.id,exam_date:examDate,daily_minutes:minutes,material_ids:materialIds,
