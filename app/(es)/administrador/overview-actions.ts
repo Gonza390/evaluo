@@ -42,7 +42,7 @@ const loadOverview = nextCache(
   { revalidate: 900, tags: ['admin-overview-daily'] }
 );
 
-export async function obtenerResumenAdministrador() {
+export async function obtenerResumenAdministrador(): Promise<{ success: boolean; rows?: AdminDailyOverview[]; message?: string }> {
   try {
     await requireAdminAccess();
     return { success: true as const, rows: await loadOverview() };
