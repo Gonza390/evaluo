@@ -13,8 +13,8 @@ export function EmptyStudyPlan() {
             <Image src="/evi-bienvenida.svg" alt="" width={96} height={96} className="size-[76px] shrink-0 object-contain sm:size-[86px]"/>
             <div className="min-w-0 flex-1">
               <h2 className="text-[16px] font-semibold leading-snug tracking-[-0.025em] text-[#0F1B3D] sm:text-[17px]">Tu plan arranca con tu primer material</h2>
-              <p className="mt-1 text-[12px] leading-[1.5] text-[#42506A]">Subí un PDF y Evaluo ordena los temas por vos, para que sepas qué estudiar cada día.</p>
-              <Link href="/dashboard/materiales/subir" className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"><Upload className="size-4" aria-hidden="true"/>Subir PDF</Link>
+              <p className="mt-1 text-[12px] leading-[1.5] text-[#42506A]">Subí tu material y Evaluo ordena los temas por vos, para que sepas qué estudiar cada día.</p>
+              <Link href="/dashboard/materiales/subir" className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"><Upload className="size-4" aria-hidden="true"/>Subir mi material</Link>
             </div>
           </section>
           <section aria-labelledby="plan-preview-title" className="min-w-0">
@@ -44,7 +44,7 @@ export function EmptyStudyPlan() {
           <section aria-labelledby="empty-plan-next-title" className="px-1">
             <h2 id="empty-plan-next-title" className="text-[15px] font-medium tracking-tight">Tu próximo paso</h2>
             <ol className="mt-3 space-y-3">
-              {['Subí tu primer PDF','Elegí la fecha de tu examen','Seguí tu plan día a día'].map((label,i)=><li key={label} className="flex items-center gap-2.5 text-[12px] text-[#42506A]"><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium ${i===0?'bg-[#2563EB] text-white':'bg-[#EEF2F7] text-[#42506A]'}`}>{i+1}</span><span className={i===0?'font-semibold text-[#0F1B3D]':''}>{label}</span></li>)}
+              {['Subí tu primer material','Elegí la fecha de tu examen','Seguí tu plan día a día'].map((label,i)=><li key={label} className="flex items-center gap-2.5 text-[12px] text-[#42506A]"><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium ${i===0?'bg-[#2563EB] text-white':'bg-[#EEF2F7] text-[#42506A]'}`}>{i+1}</span><span className={i===0?'font-semibold text-[#0F1B3D]':''}>{label}</span></li>)}
             </ol>
           </section>
         </aside>
