@@ -240,7 +240,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
           </div>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-[#EFF2F7] px-4 pb-4 [scrollbar-color:#B8C6DC_transparent] [scrollbar-width:thin] sm:px-5">
+      <div tabIndex={0} role="region" aria-label="Historial de prácticas, desplazate para ver todas" className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-[#EFF2F7] px-4 pb-4 sm:px-5`}>
             {groups.map(group => (
               <div key={group.key}>
                 <h3 className="sticky top-0 z-10 bg-white py-2.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
