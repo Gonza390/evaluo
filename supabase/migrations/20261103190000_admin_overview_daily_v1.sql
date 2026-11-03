@@ -36,11 +36,11 @@ begin
     group by 1
   ), events_by_day as (
     select (e.created_at at time zone 'America/Argentina/Buenos_Aires')::date as d,
-           count(distinct e.user_id)::bigint filter (where e.user_id is not null and coalesce(p.role, 'student') <> 'admin') as active_count,
-           count(distinct e.session_key)::bigint filter (where e.session_key is not null
+           count(distinct e.user_id) filter (where e.user_id is not null and coalesce(p.role, 'student') <> 'admin') ::bigint as active_count,
+           count(distinct e.session_key) filter (where e.session_key is not null
               and e.device_type is distinct from 'server'
               and e.session_key not like 'server:%'
-              and (e.user_id is null or coalesce(p.role, 'student') <> 'admin')) as session_count
+              and (e.user_id is null or coalesce(p.role, 'student') <> 'admin')) ::bigint as session_count
     from public.analytics_events e
     left join public.profiles p on p.id = e.user_id
     cross join bounds b
