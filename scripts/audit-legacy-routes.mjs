@@ -25,6 +25,11 @@ const removedModules = [
 
 const reviewOnly = [
   'public/pdf.worker.min.mjs',
+];
+
+// Starter assets were removed from public/. Prevent accidental broken references
+// when restoring old layouts or importing components from earlier versions.
+const removedStarterAssets = [
   'public/placeholder-logo.png',
   'public/placeholder-logo.svg',
   'public/placeholder-user.jpg',
@@ -63,6 +68,14 @@ function references(token, sourcePath, checkRoute = false) {
   }).map(({ path }) => path);
 }
 let invalid = 0;
+for (const assetPath of removedStarterAssets) {
+  const token = '/' + assetPath.slice('public/'.length);
+  const refPaths = references(token, assetPath);
+  if (refPaths.length) {
+    invalid++;
+    console.error('[legacy cleanup] Deleted starter asset still referenced: ' + token + ' -> ' + refPaths.join(', '));
+  }
+}
 for (const [route, sourcePath] of blockedRoutes) {
   const refPaths = [...new Set([
     ...references(route, sourcePath, true),
