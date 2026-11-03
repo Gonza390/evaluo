@@ -82,21 +82,27 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
     return (
       <aside data-practice-history-inline-detail aria-labelledby="practice-history-detail-title"
         className="flex h-[min(72dvh,680px)] min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:max-h-full">
-        <div className="shrink-0 border-b border-[#EFF2F7] px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
+        <div className="shrink-0 border-b border-[#EFF2F7] px-4 pb-3 pt-3 sm:px-5 sm:pt-4">
           <button type="button" onClick={onBackToHistory}
             className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[11px] font-semibold text-[#2563EB] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
             <ArrowLeft className="size-3.5" aria-hidden="true"/> Volver a prácticas realizadas
           </button>
-          <h2 id="practice-history-detail-title" className="mt-2 text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
-            {modeLabels[selectedSession.mode] ?? selectedSession.mode}
-          </h2>
-          <p className="mt-1 text-[11px] text-[#66758D]">{dateLabel(selectedSession.completedAt,now)} · {timeLabel(selectedSession.completedAt)}</p>
-          <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
-            <div className="pr-2"><p className="text-[10px] text-[#66758D]">Resultado</p><p className="mt-1 text-[20px] font-semibold text-[#0F1B3D]">{percent}%</p></div>
-            <div className="px-3"><p className="text-[10px] text-[#66758D]">Correctas</p><p className="mt-1 text-[20px] font-semibold text-[#0F1B3D]">{selectedSession.correct} de {selectedSession.total}</p></div>
-            <div className="pl-3"><p className="text-[10px] text-[#66758D]">Para revisar</p><p className="mt-1 text-[20px] font-semibold text-[#0F1B3D]">{incorrect}</p></div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="min-w-0 flex-1">
+              <h2 id="practice-history-detail-title" className="text-[17px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[18px]">
+                {modeLabels[selectedSession.mode] ?? selectedSession.mode}
+              </h2>
+              <p className="mt-0.5 text-[10px] text-[#66758D]">{dateLabel(selectedSession.completedAt,now)} · {timeLabel(selectedSession.completedAt)}</p>
+            </div>
+            <div aria-label="Resultado de la práctica" className="flex shrink-0 items-center gap-2.5 sm:gap-3">
+              <div className="text-center"><p className="text-[9px] text-[#66758D]">Resultado</p><p className="text-[15px] font-semibold leading-5 text-[#0F1B3D]">{percent}%</p></div>
+              <span className="h-7 w-px bg-[#E7EBF4]" aria-hidden="true"/>
+              <div className="text-center"><p className="text-[9px] text-[#66758D]">Correctas</p><p className="text-[15px] font-semibold leading-5 text-[#0F1B3D]">{selectedSession.correct}/{selectedSession.total}</p></div>
+              <span className="h-7 w-px bg-[#E7EBF4]" aria-hidden="true"/>
+              <div className="text-center"><p className="text-[9px] text-[#66758D]">Revisar</p><p className="text-[15px] font-semibold leading-5 text-[#0F1B3D]">{incorrect}</p></div>
+            </div>
           </div>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EDF1F6]">
+          <div className="mt-3 h-1 overflow-hidden rounded-full bg-[#EDF1F6]" role="progressbar" aria-label="Porcentaje de respuestas correctas" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
             <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`} style={{width:`${percent}%`}}/>
           </div>
         </div>
