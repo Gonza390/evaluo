@@ -178,9 +178,9 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
           <p className="text-right text-[11px] text-[#66758D]">Se habilitan cuando subas tu primer material</p>
         </div>
       )}
-      <div className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
+      <div data-practice-columns className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
         <section aria-label="Modalidades de práctica" className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
-          <div tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF] ${!material ? "lg:grid-cols-4" : ""}`}>
+          <div data-practice-modes tabIndex={material ? 0 : -1} role="region" aria-label="Modalidades de práctica: desplazate para ver todas" className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF] ${!material ? "lg:grid-cols-4" : ""}`}>
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
               const selected = selectedMode === title;
