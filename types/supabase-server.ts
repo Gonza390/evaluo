@@ -32,6 +32,12 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_learning_dashboard_v2: {
+    Args: { p_days?:number; p_from?:string|null; p_to?:string|null;
+      p_university?:string|null; p_career?:string|null;
+      p_subject?:string|null; p_plan?:string };
+    Returns: import('@/app/(es)/administrador/learning-dashboard-types').LearningSnapshot;
+  };
   admin_activation_cohort_v1: {
     Args: Record<PropertyKey, never>;
     Returns: import('@/app/(es)/administrador/activation-dashboard-types').ActivationCohortSnapshot;
