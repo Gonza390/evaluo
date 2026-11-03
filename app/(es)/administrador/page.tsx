@@ -20,11 +20,11 @@ import { AcquisitionDashboard } from './acquisition-dashboard';
 import { obtenerActivacionRecorrido } from './activation-dashboard-actions';
 import { ActivationDashboard } from './activation-dashboard';
 import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
-import { obtenerUsoAcademicoAdministrador } from './academic-usage-actions';
+import { obtenerAprendizajePracticas } from './learning-dashboard-actions';
+import { LearningDashboard } from './learning-dashboard';
 import { MailPanel } from './mail-panel';
 import {
   AICostPanel,
-  AcademicUsagePanel,
   IAPanel,
 } from './lazy-panels';
 
@@ -114,6 +114,13 @@ export default async function AdministradorPage({
     usersCountry?: string;
     usersUniversity?: string;
     userId?: string;
+    academicPeriod?: string;
+    academicFrom?: string;
+    academicTo?: string;
+    academicUniversity?: string;
+    academicCareer?: string;
+    academicSubject?: string;
+    academicPlan?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -158,7 +165,7 @@ export default async function AdministradorPage({
     needsProduct ? obtenerActivacionRecorrido() : Promise.resolve(null),
     needsAcquisition ? obtenerDashboardAdquisicion() : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
-    needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
+    needsBiblioteca ? obtenerAprendizajePracticas(params) : Promise.resolve(null),
     needsUsers ? obtenerUsuariosRetencion({
       period: activePeriod, from:params.from ?? null, to:params.to ?? null, page:usersPage,
       search:params.usersSearch ?? '', plan:params.usersPlan ?? 'all',
@@ -194,14 +201,10 @@ export default async function AdministradorPage({
         <ErrorPanel message={referralResult?.message ?? 'No pudimos cargar Referidos.'} />
       );
   } else if (activePanel === 'biblioteca') {
-    panelContent =
-      academicUsageResult?.success && academicUsageResult.stats ? (
-        <AcademicUsagePanel stats={academicUsageResult.stats} />
-      ) : (
-        <ErrorPanel
-          message={academicUsageResult?.message ?? 'No pudimos cargar Uso académico.'}
-        />
-      );
+    panelContent = academicUsageResult
+      ? <LearningDashboard data={academicUsageResult.data} filters={academicUsageResult.filters}
+          earliest={academicUsageResult.earliest} today={academicUsageResult.today} />
+      : <ErrorPanel message="No pudimos cargar Aprendizaje y prácticas." />;
   } else if (activePanel === 'usuarios') {
     panelContent = usersResult
       ? <UsersRetentionDashboard
@@ -280,6 +283,10 @@ export default async function AdministradorPage({
   }
   if (needsAcquisition && acquisitionResult) {
     return <AcquisitionDashboard data={acquisitionResult} />;
+  }
+  if (needsBiblioteca && academicUsageResult) {
+    return <LearningDashboard data={academicUsageResult.data} filters={academicUsageResult.filters}
+      earliest={academicUsageResult.earliest} today={academicUsageResult.today} />;
   }
   if (needsUsers && usersResult) {
     return <UsersRetentionDashboard
