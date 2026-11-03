@@ -282,7 +282,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         if (!response.ok || !data || typeof data !== 'object' ||
             !('questions' in data) || !Array.isArray(data.questions)) {
           setTrueFalseDiagnostic('HTTP ' + response.status + ' · ' + errorCode);
-          if (response.status === 422 && retry<2 && trueFalseAttempts.current<6) continue;
+          const retryableSourceFailure=response.status===422 &&
+            (errorCode==='ungrounded_generation' || errorCode==='ambiguous_generation');
+          if (retryableSourceFailure && retry<2 && trueFalseAttempts.current<6) continue;
           setTrueFalseError(
             response.status === 401
               ? 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.'
