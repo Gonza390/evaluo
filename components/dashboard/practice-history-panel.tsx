@@ -100,7 +100,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
             <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`} style={{width:`${percent}%`}}/>
           </div>
         </div>
-        <div tabIndex={0} role="region" aria-label="Respuestas de la práctica" className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 [scrollbar-color:#B8C6DC_transparent] [scrollbar-width:thin] sm:px-5">
+        <div data-practice-history-answers tabIndex={0} role="region" aria-label="Respuestas de la práctica" className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 [scrollbar-color:#B8C6DC_transparent] [scrollbar-width:thin] sm:px-5">
           {selectedSession.answers?.length ? selectedSession.answers.map((answer,index)=>(
             <article key={index} className="rounded-xl border border-[#E7EBF4] bg-white p-3">
               <div className="flex items-center gap-2">
