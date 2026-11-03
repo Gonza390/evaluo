@@ -100,7 +100,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
   return <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
     {loading&&<p role="status" className="mx-auto max-w-[500px] pb-3 text-[12px] text-[#7F8AA3]">Recuperando tu planificación…</p>}
     {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
-    <div className={`relative mx-auto ${preview ? "max-w-[1190px]" : "max-w-[500px]"}`}>
+    {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.'}</div> : <div className={`relative mx-auto ${preview ? "max-w-[1190px]" : "max-w-[500px]"}`}>
       {!preview && step!==2 && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
         : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
@@ -162,7 +162,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
           <div><p className="text-[11px] font-medium text-[#7F8AA3]">MI ESPACIO / PLAN DE ESTUDIOS</p>
             <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.035em] sm:text-[25px]">Mi plan de estudio</h1>
             <p className="mt-1 text-[12px] text-[#66758D]">Tus temas organizados hasta el examen.</p></div>
-          <button type="button" onClick={()=>{setPreview(false);setStep(0);setSavedPlan(null)}} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-4"/> Editar plan</button>
+          <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-4"/> Editar plan</Link>
         </div>
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(310px,0.85fr)] lg:gap-6">
           <div className="min-w-0 space-y-5">
@@ -233,6 +233,6 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
           </aside>
         </div>
       </section>}
-    </div>
+    </div>}
   </main>
 }
