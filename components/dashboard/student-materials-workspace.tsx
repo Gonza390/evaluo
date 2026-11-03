@@ -143,7 +143,7 @@ export function StudentMaterialsWorkspace({
                     </span>
                   </>
                 );
-                const styles = `flex min-h-[151px] min-w-0 flex-col items-start rounded-2xl p-4 text-left transition sm:min-h-[164px] ${color} ${id === 'progreso' ? 'col-span-2 sm:col-span-1' : ''}`;
+                const styles = `flex min-h-[151px] min-w-0 flex-col items-start rounded-2xl p-4 text-left transition sm:min-h-[164px] ${color} ${id === 'progreso' ? 'col-span-2' : ''}`;
                 return materialReady && selectedMaterial ? (
                   <Link
                     key={id}
