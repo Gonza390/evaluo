@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
-import { distributeStudyTopics, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { completeStudySchedule, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
 
 type SavedPlan = {
   exam_date: string;
@@ -84,7 +84,7 @@ export async function POST(request:NextRequest) {
   const dateFromClient=new Date(`${proposedDay}T12:00:00Z`);
   const withinOneDay=Number.isFinite(dateFromClient.getTime())&&Math.abs(dateFromClient.getTime()-serverDay.getTime())<=86400000;
   const start=withinOneDay?dateFromClient:serverDay;
-  const {days,unassigned}=distributeStudyTopics(topics,examDate,minutes,start);
+  const {days,overloadedTopics}=completeStudySchedule(topics,examDate,minutes,start);
   const schedule=days.filter(day=>day.topics.length>0);
   if(!schedule.length)return fail('No hay días para estudiar antes del examen.');
   const {error}=await supabase.from('student_personal_study_plans' as never).upsert({
@@ -92,7 +92,7 @@ export async function POST(request:NextRequest) {
     preferences,schedule,updated_at:new Date().toISOString()
   } as never,{onConflict:'user_id'});
   if(error)return fail('No pudimos guardar tu planificación. Intentá nuevamente.',503);
-  return NextResponse.json({ok:true,unassigned:unassigned.length});
+  return NextResponse.json({ok:true,unassigned:overloadedTopics});
 }
 export async function PATCH(request:NextRequest) {
   const {supabase,user}=await userDb();
