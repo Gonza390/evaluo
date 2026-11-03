@@ -74,7 +74,7 @@ assert.match(shell, /const isDesktopPracticeHomeRoute = pathname === '\/dashboar
 assert.match(shell, /lg:h-dvh lg:min-h-0 lg:overflow-hidden/, 'El shell de Practicar se limita a la altura disponible');
 assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pane\]\)/, 'La altura se propaga al contenido solo en Practicar');
 assert.match(panel, /lg:overflow-hidden/, 'El historial queda inmóvil en escritorio');
-assert.doesNotMatch(panel, /Historial de prácticas|Ver todas las prácticas/, 'El historial completo se consulta sin modal ni botón adicional');
+assert.doesNotMatch(panel, />Historial de prácticas<|>Ver todas las prácticas</, 'El historial no agrega un título o botón visual redundante; conserva la etiqueta accesible');
 assert.doesNotMatch(panel, /<Dialog open=\{showAll\}/, 'No debe abrirse un modal para ver prácticas anteriores');
 assert.match(picker, /activeHistoryEntry/, 'El panel central usa la práctica elegida');
 assert.match(picker, /selectedSession=\{activeHistoryEntry\}/, 'El historial recibe la sesión elegida para mostrar su detalle');
