@@ -11,7 +11,7 @@ const getAggregatesCached = nextCache(async (days: number, from: string | null, 
   });
   if (error || !data) throw error ?? new Error('Sin datos de retención');
   return data as UsersRetentionSnapshot;
-}, ['admin-users-retention-v2'], { revalidate: 600 });
+}, ['admin-users-retention-v2-inactivity-fixed-20261103'], { revalidate: 600 });
 
 const getSegmentsCached = nextCache(async () => {
   const { data, error } = await createAdminClient().rpc('admin_users_segments_v1', { p_days: 30 });
@@ -30,7 +30,7 @@ const getListCached = nextCache(async (f: Omit<RetentionFilters,'selectedUserId'
   });
   if (error || !data) throw error ?? new Error('Sin listado de usuarios');
   return data as UserListResult;
-}, ['admin-users-list-v1'], { revalidate: 120 });
+}, ['admin-users-list-v1-study-evidence-20261103'], { revalidate: 120 });
 
 function parseDate(value: string | null): Date | null {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
