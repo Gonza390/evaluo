@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { completeStudySchedule, distributeStudyTopics, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
+import { completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
 const practice=code('components/dashboard/practice-mode-picker.tsx');
@@ -87,6 +87,14 @@ assert.ok(quick.every(step=>!['casos','flashcards','simulacro'].includes(step.id
 const casesOnly=Array.from({length:9},(_,i)=>recommendTopicActivities({...sample[0]!,topicIndex:i},['casos'],30)[1]!.id);
 assert.ok(casesOnly.includes('casos')&&casesOnly.includes('opciones')&&casesOnly.includes('mixto'),
   'A cases preference must sometimes show cases and sometimes another exercise.');
+assert.equal(estimateTopicSessionMinutes(10,['entender'],15),10,
+  'Reading-only plans must not invent practice time.');
+assert.equal(estimateTopicSessionMinutes(10,['entender','practicar'],15),16,
+  'Short plans must include one practice in the capacity estimate.');
+assert.equal(estimateTopicSessionMinutes(10,['casos'],60),22,
+  'Long plans must budget the second recommended practice.');
+assert.match(api,/estimateTopicSessionMinutes\(/);
+assert.match(setup,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/data-study-plan-time-warning/);
 assert.match(setup,/recommendTopicActivities\(next,preferences,minutes\?\?15\)/);
 assert.match(api,/completeStudySchedule\(topics,examDate,minutes,start\)/);
