@@ -28,7 +28,7 @@ export function PracticeHistoryDetail({ session, onBack }: {
     ? new Intl.DateTimeFormat('es-AR',{timeZone:TIME_ZONE,day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(when)
     : 'Fecha no disponible';
   return (
-    <main className="practice-screen-enter mx-auto flex h-full min-h-0 w-full max-w-[1190px] flex-col px-3 pb-20 pt-4 text-[#0F1B3D] sm:px-5 sm:pt-6 lg:overflow-hidden lg:px-7 lg:pb-5" aria-labelledby="practice-detail-title">
+    <main data-practice-detail className="practice-screen-enter mx-auto flex h-full min-h-0 w-full max-w-[1190px] flex-col px-3 pb-20 pt-4 text-[#0F1B3D] sm:px-5 sm:pt-6 lg:overflow-hidden lg:px-7 lg:pb-5" aria-labelledby="practice-detail-title">
       <div className="shrink-0">
         <button type="button" onClick={onBack}
           className="inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-[12px] font-medium text-[#42506A] transition-colors hover:bg-[#EEF2FF] hover:text-[#2563EB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
