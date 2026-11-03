@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
-import { completeStudySchedule, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { completeStudySchedule, estimateTopicSessionMinutes, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
 
 type SavedPlan = {
   exam_date: string;
@@ -76,7 +76,7 @@ export async function POST(request:NextRequest) {
       const words=typeof info.body==='string'?info.body.trim().split(/\s+/u).filter(Boolean).length:0;
       return {materialId:material.id,materialTitle:material.title,topicIndex:index,
         title:typeof info.title==='string'&&info.title.trim()?info.title.trim():`Tema ${index+1}`,
-        estimatedMinutes:Math.max(10,Math.ceil(words/180)+10)};
+        estimatedMinutes:estimateTopicSessionMinutes(Math.max(10,Math.ceil(words/180)+10),preferences as string[],minutes)};
     });
   }).slice(0,400);
   if(!topics.length)return fail('Los archivos seleccionados todavía no tienen temas disponibles.',422);
