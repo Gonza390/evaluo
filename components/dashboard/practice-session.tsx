@@ -362,7 +362,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     void generatePairs();
   },[mode,pairs.length,pairLoading,pairError,generatePairs]);
 
-  const aiCaseButton = mode === 'casos' && aiAvailable && (!ready || finished) ? (
+  const aiCaseButton = mode === 'casos' && aiAvailable && !ready ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -450,13 +450,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           </article>;
         })}
       </div>
-      {aiCaseButton}
+      
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={anotherRound}
           className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? 'Nuevo simulacro' : 'Practicar otra vez'}</button>
-        <Link href={'/materiales/' + materialId + '?tab=resumen'}
+        <Link href={mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen'}
           className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
-          Volver al resumen
+          {mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}
         </Link>
       </div>
       {historySaveFailed && <div role="alert" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-amber-800">
