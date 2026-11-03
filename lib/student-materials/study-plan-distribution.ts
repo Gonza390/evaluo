@@ -56,7 +56,10 @@ export function recommendTopicActivities(
   const summary=`/materiales/${encodeURIComponent(topic.materialId)}?tab=resumen&studyTopic=${topic.topicIndex}`;
   const bank:Array<RecommendedStudyActivity['id']>=[];
   if(preferences.includes('memorizar'))bank.push('flashcards','unir','completar');
-  if(preferences.includes('practicar'))bank.push('opciones','mixto','completar','unir');
+  if(preferences.includes('practicar')) {
+    bank.push('opciones','mixto','completar','unir');
+    if(minutesPerDay>=45)bank.push('simulacro');
+  }
   if(preferences.includes('casos'))bank.push('casos','opciones','mixto');
   const unique=[...new Set(bank)];
   const labels:Record<RecommendedStudyActivity['id'],string>={
