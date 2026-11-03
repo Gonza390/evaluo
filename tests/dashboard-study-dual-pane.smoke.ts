@@ -14,8 +14,8 @@ assert.match(workspace, /getStudentMaterialRoute\(material\.id\)/,
   'Cada PDF debe abrir su propio espacio de lectura.');
 assert.match(workspace, /setMaterialToDelete\(material\)/);
 assert.match(workspace, /dashboard_empty_materials/);
-assert.match(estudiar, /<PracticeModePicker/);
-assert.doesNotMatch(estudiar, /<StudyPlanSetup|<StudyReadingCards/);
+assert.match(estudiar, /<StudyReadingCards/);
+assert.doesNotMatch(estudiar, /<StudyPlanSetup|<PracticeModePicker/);
 assert.match(practice, /data-practice-dual-pane/,
   'Practicar conserva sus modalidades y su historial.');
 console.log('Dashboard original y navegación de estudio OK.');
