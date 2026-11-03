@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import {
   balancedQuestions, buildSourceBackedCases, hasAmbiguousDistractors, isCorrectWrittenAnswer,
-  qualifiedQuestions, selectPracticePairs, type PracticeQuestion,
+  qualifiedQuestions, selectPracticePairs, shuffleMatchingDefinitions, shufflePracticeChoices,
+  shufflePracticeItems, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
 import { verifyGeneratedPracticeCases } from '../lib/student-materials/practice-ai-cases.ts';
@@ -36,6 +37,47 @@ assert.equal(qualifiedQuestions(questions).length, 9);
 const exam = balancedQuestions(questions, 6);
 assert.equal(exam.length, 6);
 assert.equal(new Set(exam.map(q => q.chapterTitle)).size, 3, 'Exams should cover all chapters.');
+// A single source bank must never reveal a consistent correct-choice position.
+const seeded = (seed:number) => {
+  let state = seed >>> 0;
+  return () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 0x100000000; };
+};
+const mcq = { ...questions[0]!, options: ['A', 'B', 'C', 'D'], answer: 'C' };
+const keyPositions = new Set<number>();
+const optionOrders = new Set<string>();
+for (let i = 1; i <= 80; i++) {
+  const randomized = shufflePracticeChoices(mcq, seeded(i));
+  assert.equal(randomized.answer, mcq.answer, 'MCQ correct answer must not change.');
+  assert.deepEqual([...randomized.options].sort(), [...mcq.options].sort(),
+    'Every MCQ choice must be kept exactly once.');
+  assert.deepEqual(mcq.options, ['A', 'B', 'C', 'D'], 'Do not mutate source MCQ options.');
+  keyPositions.add(randomized.options.indexOf(randomized.answer));
+  optionOrders.add(randomized.options.join('/'));
+}
+assert.equal(keyPositions.size, 4, 'Correct answer must appear in A, B, C and D across rounds.');
+assert.ok(optionOrders.size >= 10, 'MCQ must produce varied choice orders.');
+const boolean = { ...mcq, options:['Verdadero','Falso'], answer:'Falso' };
+assert.deepEqual(shufflePracticeChoices(boolean).options, ['Verdadero','Falso'],
+  'Keep True/False button labels in familiar order.');
+const matching = Array.from({length:6}, (_, pairIndex) => ({pairIndex, definition:'Definition '+pairIndex}));
+const matchingOrders = new Set<string>();
+for (let i=1;i<=80;i++) {
+  const shuffled = shuffleMatchingDefinitions(matching, seeded(i));
+  assert.deepEqual(shuffled.map(item=>item.pairIndex).sort((a,b)=>a-b), [0,1,2,3,4,5]);
+  assert.ok(shuffled.some((item,index)=>item.pairIndex!==index),
+    'Matching definitions must never appear in row-for-row solution order.');
+  matchingOrders.add(shuffled.map(item=>item.pairIndex).join(','));
+}
+assert.ok(matchingOrders.size >= 10, 'Matching should not use a fixed rotation.');
+const questionOrders = new Set<string>();
+for (let i=1;i<=40;i++) {
+  const shuffled = shufflePracticeItems(exam, seeded(i));
+  assert.deepEqual(shuffled.map(q=>q.id).sort(), exam.map(q=>q.id).sort(),
+    'Question randomization must not lose or duplicate content.');
+  questionOrders.add(shuffled.map(q=>q.id).join(','));
+}
+assert.ok(questionOrders.size >= 10, 'Exam rounds must vary question presentation order.');
+
 const model = {
   classifications: [
     { title: 'Estrategias de la matriz', pageReferences: [7],
