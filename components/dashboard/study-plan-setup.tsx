@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './practice-motion.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { SavedStudyPlanRoadmap } from '@/components/dashboard/saved-study-plan-roadmap';
 import { completeStudySchedule, estimateTopicSessionMinutes, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
@@ -166,6 +167,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
             <p className="mt-1 text-[12px] text-[#66758D]">Tus temas organizados hasta el examen.</p></div>
           <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-4"/> Editar plan</Link>
         </div>
+        {savedPlan && <div className="mb-5"><SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={completedKeys}/></div>}
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(310px,0.85fr)] lg:gap-6">
           <div className="min-w-0 space-y-5">
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
