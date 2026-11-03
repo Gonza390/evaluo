@@ -74,14 +74,14 @@ assert.match(shell, /const isDesktopPracticeHomeRoute = pathname === '\/dashboar
 assert.match(shell, /lg:h-dvh lg:min-h-0 lg:overflow-hidden/, 'El shell de Practicar se limita a la altura disponible');
 assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pane\]\)/, 'La altura se propaga al contenido solo en Practicar');
 assert.match(panel, /lg:overflow-hidden/, 'El historial queda inmóvil en escritorio');
-assert.match(panel, /Historial de prácticas/, 'Hay acceso al historial completo sin scroll del panel');
-assert.match(panel, /<Dialog open=\{showAll\}/, 'La lista larga se abre en un modal accesible');
+assert.doesNotMatch(panel, /Historial de prácticas|Ver todas las prácticas/, 'El historial completo se consulta sin modal ni botón adicional');
+assert.doesNotMatch(panel, /<Dialog open=\{showAll\}/, 'No debe abrirse un modal para ver prácticas anteriores');
 assert.match(picker, /activeHistoryEntry/, 'El panel central usa la práctica elegida');
 assert.match(picker, /selectedSession=\{activeHistoryEntry\}/, 'El historial recibe la sesión elegida para mostrar su detalle');
 assert.match(panel, /if \(selectedSession && selectedSession\.materialId === materialId\)/, 'El detalle se muestra dentro del panel de historial');
 assert.match(picker, /onSelectSession=\{entry => setActiveHistoryId\(entry\.id\)\}/, 'Seleccionar una práctica abre su detalle');
 assert.match(panel, /onClick=\{\(\) => onSelectSession\(item\)\}/, 'El historial abre el detalle sin ventanas emergentes');
-assert.match(panel, /onClick=\{\(\)=>\{setShowAll\(false\);onSelectSession\(item\)\}\}/, 'Desde el historial completo también se abre el detalle');
+assert.match(panel, /for \(const entry of sessions\)/, 'Todas las prácticas se muestran en el historial interno');
 assert.match(panel, /onClick=\{onBackToHistory\}/, 'El detalle permite regresar al historial');
 assert.match(panel, /selectedSession\.answers\?\.length \? selectedSession\.answers\.map/, 'El detalle muestra las respuestas almacenadas');
 assert.match(panel, /selectedSession\.answers\?\.length/, 'El detalle contempla sesiones sin respuestas guardadas');
@@ -114,7 +114,7 @@ assert.doesNotMatch(panel, /Evolución|previousFour|Filtrar por modalidad|Ver pr
 assert.match(panel, /groups\.map\(group => \(/, 'Se mantiene la lista de prácticas');
 assert.match(panel, /scrollbarStyles\.scrollArea/, 'La lista mantiene scroll con barra invisible');
 assert.match(panel, /router\.refresh\(\)/, 'Hay recuperación tras error');
-assert.match(panel, /sessions\.length > visible\.length/, 'Historial largo tiene paginación');
+assert.match(panel, /flex-1 overflow-y-auto overscroll-contain border-t/, 'Solo la lista del historial tiene scroll interno');
 assert.match(page, /historyLoadError=\{historyLoadError\}/, 'El error llega al panel');
 assert.match(history, /throw new Error\('practice_history_unavailable'\)/);
 assert.match(history, /history_session_id/, 'Los eventos antiguos y actuales no se duplican por heurística amplia');
