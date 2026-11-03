@@ -36,6 +36,8 @@ assert.match(setup,/completedKeys=\{planCompletedKeys\}/, 'El recorrido se pinta
 assert.match(savedSchedule,/planTopic=\$\{topic.topicIndex\}/, 'La práctica conserva el tema del plan.');
 assert.match(practicePage,/planTopicIndex=\{planTopicIndex\}/, 'El contexto del plan llega a la sesión.');
 assert.match(practiceEndpoint,/practice_not_in_plan/, 'Solo se acredita una actividad recomendada por el plan.');
+assert.match(practiceEndpoint,/additionalPlanPractice\(saved\.schedule,saved\.preferences,saved\.daily_minutes\)/,
+  'El servidor autoriza las prácticas extra con la misma regla del plan guardado.');
 assert.match(progressMigration,/enable row level security/, 'El progreso por modalidad queda protegido por RLS.');
 const sampleTopic={materialId:'12345678-1234-1234-1234-123456789abc',topicIndex:0,title:'Primer tema',materialTitle:'Material',estimatedMinutes:18};
 const sampleDays=[{date:'2026-11-03',topics:[sampleTopic],estimatedMinutes:18}];
