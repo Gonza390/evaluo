@@ -46,7 +46,7 @@ const mcq = { ...questions[0]!, options: ['A', 'B', 'C', 'D'], answer: 'C' };
 const keyPositions = new Set<number>();
 const optionOrders = new Set<string>();
 for (let i = 1; i <= 80; i++) {
-  const randomized = shufflePracticeChoices(mcq, seeded(i));
+  const randomized = shufflePracticeChoices(mcq, seeded(i * 1009));
   assert.equal(randomized.answer, mcq.answer, 'MCQ correct answer must not change.');
   assert.deepEqual([...randomized.options].sort(), [...mcq.options].sort(),
     'Every MCQ choice must be kept exactly once.');
