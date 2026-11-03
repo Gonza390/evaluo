@@ -88,8 +88,8 @@ assert.match(appPageHeaderSource, /visuallyHiddenTitle && 'sr-only'/,
   'The section heading must be visually hidden, not left as a blank row.');
 assert.match(dashboardMaterialsSource, /text-\[13px\] font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
-assert.doesNotMatch(dashboardMaterialsSource, /material\.file_name/,
-  'PDF cards should not repeat the uploaded filename below the title.');
+assert.doesNotMatch(dashboardMaterialsSource.split('      <Dialog')[0], /material\.file_name/,
+  'Las tarjetas no repiten el nombre del archivo; el modal de eliminación conserva su detalle.');
 assert.doesNotMatch(dashboardMaterialsSource, />Privado<|: 'Privado'/,
   'Private PDFs are the default and should not display a redundant visibility tag.');
 assert.match(dashboardMaterialsSource, /isShared \? /,
