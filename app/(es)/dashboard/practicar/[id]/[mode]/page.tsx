@@ -13,9 +13,10 @@ import {
 } from '@/lib/student-materials/practice-on-demand';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 
-export default async function PracticeModePage({ params, searchParams }: { params: Promise<{ id: string; mode: string }>; searchParams: Promise<{ repaso?: string }> }) {
+export default async function PracticeModePage({ params, searchParams }: { params: Promise<{ id: string; mode: string }>; searchParams: Promise<{ repaso?: string; planTopic?: string }> }) {
   const { id, mode } = await params;
-  const { repaso } = await searchParams;
+  const { repaso, planTopic } = await searchParams;
+  const planTopicIndex = planTopic !== undefined && /^\\d{1,3}$/.test(planTopic) ? Number(planTopic) : undefined;
   const reviewLength = repaso === 'rapido' ? 'rapido' : 'completo';
   const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards'];
   if (!supported.includes(mode) || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
@@ -40,7 +41,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
     admin, materialId: material.id, summary: studySummary, glossary,
   });
   if (mode === 'flashcards') return <PracticeFlashcardSession
-    materialId={material.id} cards={artifacts.flashcards} reviewLength={reviewLength} />;
+    materialId={material.id} cards={artifacts.flashcards} reviewLength={reviewLength} planTopicIndex={planTopicIndex} />;
 
   const { data: modelRow } = mode === 'casos' || mode === 'mixto'
     ? await admin.from('student_materials').select('pedagogical_model').eq('id', material.id).maybeSingle()
@@ -68,7 +69,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
     }
   }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
-    materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} cases={savedBank?.cases.length ? savedBank.cases : cases}
+    materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={true}
     isWord={material.file_name.toLowerCase().endsWith('.docx')}
     glossary={glossary.map(item => ({ term: item.term, definition: item.definition, chapterTitle: item.chapterTitle ?? null, englishTerm: item.englishTerm ?? null }))}

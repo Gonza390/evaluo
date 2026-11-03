@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
+import { additionalPlanPractice, optionalPreviousTopicReviews, savePlanPracticeRecommendations, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
+import { completedPlanTopics } from '../lib/student-materials/study-plan-completion.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
 const practice=code('components/dashboard/practice-mode-picker.tsx');
@@ -13,6 +14,9 @@ const normalRoadmap=code('components/dashboard/study-plan-roadmap.tsx');
 const savedSchedule=code('components/dashboard/saved-study-plan-schedule.tsx');
 const api=code('app/api/study-plans/route.ts');
 const sql=code('supabase/migrations/20261102205803_student_personal_study_plans.sql');
+const progressMigration=code('supabase/migrations/20261103175000_personal_study_plan_practice_progress.sql');
+const practiceEndpoint=code('app/api/practice/session/route.ts');
+const practicePage=code('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
 const demo=code('components/demo-four-step-study.tsx');
 const demoPage=code('app/(es)/demo/material-estudio/page.tsx');
 
@@ -28,13 +32,42 @@ assert.match(api,/method:'PATCH'|export async function PATCH/, 'La API conserva 
 assert.match(filled,/if \(hasSavedPlan\)/, 'El nuevo recorrido exige un plan guardado.');
 assert.match(setup,/savedPlan && <SavedStudyPlanRoadmap/, 'El recorrido solo aparece en la vista del plan persistido.');
 assert.match(setup,/<SavedStudyPlanSchedule days=\{days\}/, 'La vista guardada utiliza días reales del plan.');
+assert.match(setup,/completedKeys=\{planCompletedKeys\}/, 'El recorrido se pinta solo con finalizaciones completas.');
+assert.match(savedSchedule,/planTopic=\$\{topic.topicIndex\}/, 'La práctica conserva el tema del plan.');
+assert.match(practicePage,/planTopicIndex=\{planTopicIndex\}/, 'El contexto del plan llega a la sesión.');
+assert.match(practiceEndpoint,/practice_not_in_plan/, 'Solo se acredita una actividad recomendada por el plan.');
+assert.match(practiceEndpoint,/additionalPlanPractice\(saved\.schedule,saved\.preferences,saved\.daily_minutes\)/,
+  'El servidor autoriza las prácticas extra con la misma regla del plan guardado.');
+assert.match(progressMigration,/enable row level security/, 'El progreso por modalidad queda protegido por RLS.');
+const sampleTopic={materialId:'12345678-1234-1234-1234-123456789abc',topicIndex:0,title:'Primer tema',materialTitle:'Material',estimatedMinutes:18};
+const sampleDays=savePlanPracticeRecommendations(
+ [{date:'2026-11-03',topics:[sampleTopic],estimatedMinutes:18}],['entender','practicar'],30);
+const bonus=additionalPlanPractice(sampleDays,['entender','practicar'],30).get(sampleTopic.materialId+':0')??0;
+const assigned=recommendTopicActivities(sampleTopic,['entender','practicar'],30,bonus).filter(step=>step.id!=='resumen');
+assert.equal(bonus,1,'A day with genuinely spare time can recommend one extra practice.');
+assert.equal(assigned.length,2,'Extra time expands the existing activity list without a new screen.');
+assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],
+  assigned.slice(0,1).map(step=>({material_id:sampleTopic.materialId,topic_index:0,mode:step.id as 'opciones'|'unir'}))).length,0,
+  'The topic must not complete until the added practice is also done.');
+assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[],[]).length,0,'Sin lectura, no se completa.');
+assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],[]).length,0,'La lectura sola no completa un plan con práctica.');
+assert.deepEqual(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],
+  assigned.map(step=>({material_id:sampleTopic.materialId,topic_index:0,mode:step.id as 'unir'|'opciones'|'completar'|'mixto'|'casos'|'flashcards'|'simulacro'}))),[sampleTopic.materialId+':0'],'Al terminar toda la práctica asignada, el tema se completa.');
+assert.deepEqual(completedPlanTopics(sampleDays,['entender'],30,[sampleTopic.materialId+':0'],[]),[sampleTopic.materialId+':0'],'En planes solo de lectura, la lectura es suficiente.');
+
 assert.match(savedSchedule,/Tu plan de estudios/, 'Se utiliza el título solicitado.');
 assert.match(savedSchedule,/Días hasta el examen/, 'La tarjeta utiliza el encabezado de lista del diseño existente.');
 assert.match(savedSchedule,/flex size-11 shrink-0 flex-col/, 'Las fechas usan indicadores compactos.');
 assert.match(savedSchedule,/shown\.map\(day=>/, 'Las filas se generan por día planificado.');
+assert.match(savedSchedule,/selected\?\.topics\.find\(topic=>!fullyCompleted\.has/, 'Se abre el primer tema que todavía no completó todas las actividades.');
+assert.match(savedSchedule,/data-saved-plan-topic-toggle aria-expanded=\{isExpanded\}/, 'Cada tema se muestra como una fila expandible y accesible.');
+assert.match(savedSchedule,/activeTopicKey===topicKey/, 'Solo un tema puede mostrar sus actividades a la vez.');
+assert.match(savedSchedule,/isExpanded&&<div id=\{panelId\} data-saved-plan-topic-details/, 'Las actividades solo aparecen debajo del tema elegido.');
+assert.match(savedSchedule,/onClick=\{\(\)=>setExpandedTopic\(\{date:day.date,key:topicKey\}\)\}/, 'La selección de un tema cambia el detalle abierto.');
+
 assert.match(savedSchedule,/onClick=\{\(\)=>setSelectedDate\(day.date\)\}/, 'Al elegir un día aparecen sus actividades.');
 assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente tres fechas.');
-assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/, 'Cada día muestra actividades reales del generador.');
+assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes,bonusActivities\.get\(topicKey\)\?\?0\)/, 'Cada día muestra actividades acordes al tiempo disponible.');
 assert.match(savedSchedule,/examDateLabel\(examDate\)/, 'El examen es el hito final de la lista.');
 assert.doesNotMatch(setup,/Los días que quedan|TU PRÓXIMA SESIÓN/, 'No duplicar bloques diarios anteriores.');
 const sameOuterPlanSizing=['max-w-[1240px]','px-3 py-3','sm:px-4 sm:py-4 lg:px-6 lg:py-5'];
@@ -122,6 +155,45 @@ assert.ok(quick.every(step=>!['casos','flashcards','simulacro'].includes(step.id
 const casesOnly=Array.from({length:9},(_,i)=>recommendTopicActivities({...sample[0]!,topicIndex:i},['casos'],30)[1]!.id);
 assert.ok(casesOnly.includes('casos')&&casesOnly.includes('opciones')&&casesOnly.includes('mixto'),
   'A cases preference must sometimes show cases and sometimes another exercise.');
+const baseComfortable=[{date:'2027-01-01',topics:[sample[0]!],estimatedMinutes:20},
+ {date:'2027-01-02',topics:[sample[1]!],estimatedMinutes:20}];
+const comfortable=savePlanPracticeRecommendations(baseComfortable,combined,60);
+assert.equal(additionalPlanPractice(baseComfortable,combined,60).size,0,
+  'Existing saved plans must retain their original practice requirements.');
+assert.equal(optionalPreviousTopicReviews(baseComfortable,combined,60).size,0,
+  'Existing plans must not acquire new optional review rows retroactively.');
+assert.deepEqual(completedPlanTopics(baseComfortable,['practicar'],60,['a:0'],
+  recommendTopicActivities(sample[0]!,['practicar'],60).slice(1).map(step=>({
+    material_id:'a',topic_index:0,mode:step.id as 'opciones'|'mixto'|'unir'|'completar'|'simulacro',
+  }))),['a:0'],'Previously completed plans must stay completed.');
+const extras=additionalPlanPractice(comfortable,combined,60);
+assert.equal(extras.size,2,'Spare time adds an additional recommendation to each available day.');
+assert.equal(recommendTopicActivities(sample[0]!,combined,60,extras.get('a:0')??0).length,4,
+  'Long sessions can show summary and three varied practices.');
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations(baseComfortable,combined,15),combined,15).size,0,
+  'Insufficient time must never add practices.');
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations([{date:'2027-01-01',topics:sample,estimatedMinutes:60}],combined,60),combined,60).size,0,
+  'A fully booked day cannot gain more work.');
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations([{date:'2027-01-01',topics:sample,estimatedMinutes:70}],combined,60),combined,60).size,0,
+  'An overloaded plan must not gain more work.');
+assert.equal(additionalPlanPractice(savePlanPracticeRecommendations(baseComfortable,['entender'],60),['entender'],60).size,0,
+  'Reading-only preferences must not silently add practice.');
+assert.deepEqual([...extras], [...additionalPlanPractice(comfortable,combined,60)],
+  'Saved recommendations must remain stable across visits.');
+assert.match(code('lib/student-materials/study-plan-completion.ts'),/additionalPlanPractice\(days,preferences,dailyMinutes\)/,
+  'Completion follows the same time-aware activity allocations as the UI.');
+const reviews=optionalPreviousTopicReviews(comfortable,combined,60);
+assert.equal(reviews.size,1,'A later day with spare time should offer one optional prior-topic review.');
+assert.equal(reviews.get('2027-01-02')?.topic.topicIndex,0,
+  'The optional review must refer to an earlier topic, not the current one.');
+assert.equal(optionalPreviousTopicReviews(savePlanPracticeRecommendations(baseComfortable,combined,15),combined,15).size,0,
+  'Short or overloaded plans must not include optional review work.');
+assert.equal(optionalPreviousTopicReviews(savePlanPracticeRecommendations(baseComfortable,['entender'],60),['entender'],60).size,0,
+  'Reading-only plans do not need artificial practice recommendations.');
+assert.match(savedSchedule,/optionalPreviousTopicReviews\(days,preferences,dailyMinutes\)/,
+  'Optional reviews use the existing day panel.');
+assert.match(savedSchedule,/Repaso opcional/,
+  'Earlier-topic reviews are clearly labeled optional.');
 assert.equal(estimateTopicSessionMinutes(10,['entender'],15),10,
   'Reading-only plans must not invent practice time.');
 assert.equal(estimateTopicSessionMinutes(10,['entender','practicar'],15),16,
@@ -131,6 +203,8 @@ assert.equal(estimateTopicSessionMinutes(10,['casos'],60),22,
 assert.match(api,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/data-study-plan-time-warning/);
-assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/);
+assert.match(savedSchedule,/additionalPlanPractice\(days,preferences,dailyMinutes\)/);
 assert.match(api,/completeStudySchedule\(topics,examDate,minutes,start\)/);
+assert.match(api,/savePlanPracticeRecommendations\(days\.filter\(day=>day\.topics\.length>0\),preferences as string\[\],minutes\)/,
+  'Only new plans freeze the recommended practice intensity.');
 console.log('Personal plan persistence, empty states and topic distribution OK');

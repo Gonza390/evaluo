@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
-import { completeStudySchedule, estimateTopicSessionMinutes, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { completeStudySchedule, estimateTopicSessionMinutes, savePlanPracticeRecommendations, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { completedPlanTopics, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
 type SavedPlan = {
   exam_date: string;
@@ -28,16 +29,26 @@ export async function GET() {
     .eq('user_id',user.id).maybeSingle();
   if(error)return fail('No pudimos recuperar tu plan. Probá nuevamente.',503);
   const plan=data as SavedPlan|null;
-  if(!plan)return NextResponse.json({plan:null,completedKeys:[]});
+  if(!plan)return NextResponse.json({plan:null,completedKeys:[],planCompletedKeys:[]});
   const ids=Array.isArray(plan.material_ids)?plan.material_ids:[];
-  if(!ids.length)return NextResponse.json({plan,completedKeys:[]});
-  const result=await supabase.from('student_material_topic_activity_progress' as never)
-    .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids);
+  if(!ids.length)return NextResponse.json({plan,completedKeys:[],planCompletedKeys:[]});
+  const [result,practiceResult]=await Promise.all([
+    supabase.from('student_material_topic_activity_progress' as never)
+      .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids),
+    supabase.from('student_personal_study_plan_practice_progress' as never)
+      .select('material_id,topic_index,mode').eq('user_id',user.id).in('material_id',ids),
+  ]);
   if(result.error)return fail('No pudimos consultar el progreso de tu plan.',503);
+  // Graceful rollout: an uninstalled tracking table must never hide an existing plan.
+  // Without practice evidence nothing is marked complete for practice-based plans.
+  if(practiceResult.error && !['42P01','PGRST205'].includes(practiceResult.error.code??''))
+    return fail('No pudimos consultar el progreso de las prácticas.',503);
   const entries=(result.data??[]) as Array<{material_id:string;topic_index:number}>;
+  const completedKeys=entries.map(row=>`${row.material_id}:${row.topic_index}`);
+  const practice=(practiceResult.data??[]) as PlanPracticeCompletion[];
   return NextResponse.json({
-    plan,
-    completedKeys:entries.map(row=>`${row.material_id}:${row.topic_index}`)
+    plan,completedKeys,
+    planCompletedKeys:completedPlanTopics(plan.schedule,plan.preferences,plan.daily_minutes,completedKeys,practice),
   });
 }
 export async function POST(request:NextRequest) {
@@ -85,7 +96,7 @@ export async function POST(request:NextRequest) {
   const withinOneDay=Number.isFinite(dateFromClient.getTime())&&Math.abs(dateFromClient.getTime()-serverDay.getTime())<=86400000;
   const start=withinOneDay?dateFromClient:serverDay;
   const {days,overloadedTopics}=completeStudySchedule(topics,examDate,minutes,start);
-  const schedule=days.filter(day=>day.topics.length>0);
+  const schedule=savePlanPracticeRecommendations(days.filter(day=>day.topics.length>0),preferences as string[],minutes);
   if(!schedule.length)return fail('No hay días para estudiar antes del examen.');
   const {error}=await supabase.from('student_personal_study_plans' as never).upsert({
     user_id:user.id,exam_date:examDate,daily_minutes:minutes,material_ids:materialIds,

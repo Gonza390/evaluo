@@ -31,6 +31,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
   const [preview,setPreview] = useState(false);
   const [savedPlan,setSavedPlan] = useState<SavedPlan|null>(null);
   const [completedKeys,setCompletedKeys] = useState<string[]>([]);
+  const [planCompletedKeys,setPlanCompletedKeys] = useState<string[]>([]);
   const [loading,setLoading] = useState(true);
   const [saving,setSaving] = useState(false);
   const [marking,setMarking] = useState<string|null>(null);
@@ -39,11 +40,12 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
     let mounted=true;
     void fetch('/api/study-plans',{cache:'no-store'}).then(async response=>{
       if(!response.ok)throw new Error('No pudimos recuperar tu planificación.');
-      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[]}>;
+      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[];planCompletedKeys?:string[]}>;
     }).then(data=>{
       if(!mounted)return;
       setSavedPlan(data.plan);
       setCompletedKeys(data.completedKeys??[]);
+      setPlanCompletedKeys(data.planCompletedKeys??[]);
       if(data.plan){
         setExam(data.plan.exam_date);
         setSelected(data.plan.material_ids);
@@ -169,24 +171,19 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
               <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-3.5"/> Editar plan</Link>
             </div>
             <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
-            {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={completedKeys}/>}
+            {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={planCompletedKeys}/>}
 
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
-            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
+            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} planCompletedKeys={planCompletedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
             </div>
           </div>
           <aside className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
-            <section className="min-h-[210px] rounded-[18px] bg-[#EAF1FF] px-4 py-6 sm:min-h-[218px] sm:px-5 sm:py-7">
+            <section className="h-[210px] overflow-hidden rounded-[18px] bg-[#EAF1FF] px-4 py-5 sm:h-[218px] sm:px-5 sm:py-6">
               <p className="flex items-center gap-2 text-[12px] font-medium text-[#2563EB]"><CalendarDays className="size-4"/> Próximo examen</p>
-              <h2 className="mt-3 text-[27px] font-semibold tracking-[-0.045em]">{exam?`En ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} días`:'Sin fecha'}</h2>
+              <h2 className="mt-2 text-[23px] font-semibold leading-tight tracking-[-0.045em]">{exam?`En ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} días`:'Sin fecha'}</h2>
               {exam&&<p className="mt-1 text-[12px] text-[#42506A]">{new Date(`${exam}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>}
-              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#D8E3FF]"><div className="h-full rounded-full bg-[#4F5DFF]" style={{width:`${assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%`}}/></div>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#D8E3FF]"><div className="h-full rounded-full bg-[#4F5DFF]" style={{width:`${assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%`}}/></div>
               <div className="mt-2 flex justify-between text-[11px] text-[#66758D]"><span>{completedCount} de {assignedKeys.size} temas leídos</span><span>{assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%</span></div>
-              <p className="mt-4 text-[11px] leading-4 text-[#42506A]">El avance indica temas leídos, no prácticas completadas.</p>
-            </section>
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
-              <h2 className="text-[14px] font-medium tracking-tight">Entran al examen</h2>
-              <div className="mt-3 divide-y divide-[#E7EBF4]">{chosen.map(material=><div key={material.id} className="flex items-center gap-3 py-3"><FileText className="size-4 shrink-0 text-[#2563EB]"/><span className="min-w-0 flex-1 truncate text-[12px] text-[#42506A]">{material.title}</span><span className="text-[11px] text-[#7F8AA3]">{days.flatMap(day=>day.topics).filter(topic=>topic.materialId===material.id&&completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`)).length} de {days.flatMap(day=>day.topics).filter(topic=>topic.materialId===material.id).length}</span></div>)}</div>
             </section>
             <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
               <h2 className="text-[14px] font-medium tracking-tight">Tu preparación</h2>

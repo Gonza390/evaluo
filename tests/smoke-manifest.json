@@ -273,6 +273,6 @@
   },
   {
     "file": "tests/personal-study-plan.smoke.ts",
-    "alias": false
+    "alias": true
   }
 ]

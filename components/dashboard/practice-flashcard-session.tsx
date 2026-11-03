@@ -8,8 +8,8 @@ import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-qu
 import { MIN_CASES_PER_PRACTICE, normalizedAnswer, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
-export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo' }: {
-  materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo';
+export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo', planTopicIndex }: {
+  materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo'; planTopicIndex?: number;
 }) {
   const [supplement, setSupplement] = useState<StudyFlashcard[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
   const tries = useRef(0);
   const [saveError, setSaveError] = useState(false);
   type SavedFlashcardResult = { correct: number; total: number; answers: { prompt: string; selectedAnswer: string; correctAnswer: string; correct: boolean }[] };
-  const latestAttempt = useRef<(SavedFlashcardResult & { sessionId: string; materialId: string; mode: 'flashcards' }) | null>(null);
+  const latestAttempt = useRef<(SavedFlashcardResult & { sessionId: string; materialId: string; mode: 'flashcards'; planTopicIndex?: number }) | null>(null);
   const persistSession = useCallback(async (payload: NonNullable<typeof latestAttempt.current>) => {
     try {
       const response = await fetch('/api/practice/session', {
@@ -32,10 +32,10 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
     }
   }, []);
   const onSessionComplete = useCallback((result: SavedFlashcardResult) => {
-    const payload = { sessionId: crypto.randomUUID(), materialId, mode: 'flashcards' as const, ...result };
+    const payload = { sessionId: crypto.randomUUID(), materialId, mode: 'flashcards' as const, planTopicIndex, ...result };
     latestAttempt.current = payload;
     void persistSession(payload);
-  }, [materialId, persistSession]);
+  }, [materialId, planTopicIndex, persistSession]);
   // Retain the original card indexes; stored recall answers must always map
   // back to the same source deck, even if some source cards fail quality QA.
   const combined = useMemo(() => [...cards, ...supplement], [cards, supplement]);
