@@ -124,7 +124,7 @@ assert.equal(new Set(firstPageBatch.map(item=>item.pageStart)).size,10,
   'Each request must draw from different real source pages.');
 assert.equal(new Set([...firstPageBatch,...secondPageBatch,...thirdPageBatch].map(item=>item.pageStart)).size,30,
   'Retries must explore fresh pages instead of rotating one fragment.');
-assert.ok(selectTrueFalseFragments(sourceCorpus,5).some(fragment=>
+assert.ok(selectTrueFalseFragments(sourceCorpus,3).some(fragment=>
   sourceCorpus.indexOf(fragment)>90),
   'Retries should be able to reach fragments beyond the old 90-chunk limit.');
 assert.deepEqual(selectTrueFalseFragments(sourceCorpus,2),selectTrueFalseFragments(sourceCorpus,2),
