@@ -109,7 +109,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
               </div>
               <p className="mt-2 break-words text-[12px] font-semibold leading-5 text-[#0F1B3D]">{answer.prompt}</p>
               {selectedSession.mode!=='flashcards'&&<p className="mt-2 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">Tu respuesta:</span> {answer.selectedAnswer||'Sin responder'}</p>}
-              <p className="mt-1 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">Respuesta esperada:</span> {answer.correctAnswer}</p>
+              {(selectedSession.mode !== 'casos' || !answer.correct) && <p className="mt-1 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">Respuesta esperada:</span> {answer.correctAnswer}</p>}
             </article>
           )) : (
             <p className="rounded-xl bg-[#F5F7FB] p-3 text-[12px] leading-5 text-[#42506A]">
