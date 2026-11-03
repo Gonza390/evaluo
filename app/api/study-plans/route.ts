@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { completeStudySchedule, estimateTopicSessionMinutes, savePlanPracticeRecommendations, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
-import { completedPlanTopics, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
+import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
 type SavedPlan = {
   exam_date: string;
@@ -29,9 +29,9 @@ export async function GET() {
     .eq('user_id',user.id).maybeSingle();
   if(error)return fail('No pudimos recuperar tu plan. Probá nuevamente.',503);
   const plan=data as SavedPlan|null;
-  if(!plan)return NextResponse.json({plan:null,completedKeys:[],planCompletedKeys:[]});
+  if(!plan)return NextResponse.json({plan:null,completedKeys:[],planCompletedKeys:[],preparationProgress:{completed:0,total:0,percent:0}});
   const ids=Array.isArray(plan.material_ids)?plan.material_ids:[];
-  if(!ids.length)return NextResponse.json({plan,completedKeys:[],planCompletedKeys:[]});
+  if(!ids.length)return NextResponse.json({plan,completedKeys:[],planCompletedKeys:[],preparationProgress:{completed:0,total:0,percent:0}});
   const [result,practiceResult]=await Promise.all([
     supabase.from('student_material_topic_activity_progress' as never)
       .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids),
@@ -49,6 +49,7 @@ export async function GET() {
   return NextResponse.json({
     plan,completedKeys,
     planCompletedKeys:completedPlanTopics(plan.schedule,plan.preferences,plan.daily_minutes,completedKeys,practice),
+    preparationProgress:planPreparationProgress(plan.schedule,plan.preferences,plan.daily_minutes,completedKeys,practice),
   });
 }
 export async function POST(request:NextRequest) {

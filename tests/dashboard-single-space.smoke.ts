@@ -260,6 +260,12 @@ assert.match(appChromeSource, /data-evaluo-mobile-nav-item="true"/);
 assert.match(appChromeSource, /setPendingDestination\(\{ href: item.href, fromPath: pathname \}\)/);
 assert.match(appChromeSource, /aria-current=\{isActive \? 'page' : undefined\}/);
 assert.match(appChromeSource, /key=\{pathname\} data-evaluo-route-enter/);
+assert.match(appChromeSource, /hasPrivateRouteTransition = isCompactAppRoute \|\| \(Boolean\(user\) && !isLegalRoute\)/,
+  'The existing screen transition must cover every authenticated app route, not only compact dashboards.');
+assert.match(appChromeSource, /\{hasPrivateRouteTransition \? \(/,
+  'Page entering uses the shared route wrapper for all authenticated screens.');
+assert.doesNotMatch(appChromeSource, /\{isCompactAppRoute \? \(\s*<div key=\{pathname\} data-evaluo-route-enter/,
+  'Do not restrict global page transitions to the compact route subset.');
 assert.match(navbarSource, /data-evaluo-sidebar-indicator/);
 assert.match(navbarSource, /new ResizeObserver\(syncPosition\)/);
 assert.match(dashboardHeroSource, /data-evaluo-motion-card/);

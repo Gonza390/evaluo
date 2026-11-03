@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { additionalPlanPractice, optionalPreviousTopicReviews, savePlanPracticeRecommendations, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
-import { completedPlanTopics } from '../lib/student-materials/study-plan-completion.ts';
+import { completedPlanTopics, planPreparationProgress } from '../lib/student-materials/study-plan-completion.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
 const practice=code('components/dashboard/practice-mode-picker.tsx');
@@ -33,6 +33,12 @@ assert.match(filled,/if \(hasSavedPlan\)/, 'El nuevo recorrido exige un plan gua
 assert.match(setup,/savedPlan && <SavedStudyPlanRoadmap/, 'El recorrido solo aparece en la vista del plan persistido.');
 assert.match(setup,/<SavedStudyPlanSchedule days=\{days\}/, 'La vista guardada utiliza días reales del plan.');
 assert.match(setup,/completedKeys=\{planCompletedKeys\}/, 'El recorrido se pinta solo con finalizaciones completas.');
+assert.match(setup,/Temas completados/, 'Tu preparación muestra la cantidad de temas totalmente finalizados.');
+assert.match(setup,/Preparación completada/, 'Tu preparación informa el porcentaje de actividades realizadas.');
+assert.doesNotMatch(setup,/Días planificados/, 'Tu preparación ya no muestra los días planificados.');
+assert.match(setup,/preparationProgress\?\.percent\?\?0/, 'El porcentaje se obtiene de progreso persistido.');
+assert.match(api,/preparationProgress:planPreparationProgress/, 'La API devuelve progreso de lectura y prácticas reales.');
+
 assert.match(savedSchedule,/planTopic=\$\{topic.topicIndex\}/, 'La práctica conserva el tema del plan.');
 assert.match(practicePage,/planTopicIndex=\{planTopicIndex\}/, 'El contexto del plan llega a la sesión.');
 assert.match(practiceEndpoint,/practice_not_in_plan/, 'Solo se acredita una actividad recomendada por el plan.');
@@ -50,6 +56,16 @@ assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleT
   assigned.slice(0,1).map(step=>({material_id:sampleTopic.materialId,topic_index:0,mode:step.id as 'opciones'|'unir'}))).length,0,
   'The topic must not complete until the added practice is also done.');
 assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[],[]).length,0,'Sin lectura, no se completa.');
+const emptyPreparation=planPreparationProgress(sampleDays,['entender','practicar'],30,[],[]);
+assert.deepEqual(emptyPreparation,{completed:0,total:3,percent:0},'Sin acciones registradas, la preparación es 0%.');
+const partialPreparation=planPreparationProgress(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],[]);
+assert.deepEqual(partialPreparation,{completed:1,total:3,percent:33},'Una lectura parcial cuenta sin finalizar el tema.');
+const donePractice=assigned.map(step=>({material_id:sampleTopic.materialId,topic_index:0,mode:step.id as 'unir'|'opciones'|'completar'|'mixto'|'casos'|'flashcards'|'simulacro'}));
+assert.deepEqual(planPreparationProgress(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],donePractice),
+  {completed:3,total:3,percent:100},'Todas las actividades finalizadas dan 100%.');
+assert.deepEqual(planPreparationProgress(sampleDays,['entender','practicar'],30,[],donePractice),
+  {completed:2,total:3,percent:67},'Haber practicado sin leer todavía no completa el tema.');
+
 assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],[]).length,0,'La lectura sola no completa un plan con práctica.');
 assert.deepEqual(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],
   assigned.map(step=>({material_id:sampleTopic.materialId,topic_index:0,mode:step.id as 'unir'|'opciones'|'completar'|'mixto'|'casos'|'flashcards'|'simulacro'}))),[sampleTopic.materialId+':0'],'Al terminar toda la práctica asignada, el tema se completa.');

@@ -32,6 +32,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
   const [savedPlan,setSavedPlan] = useState<SavedPlan|null>(null);
   const [completedKeys,setCompletedKeys] = useState<string[]>([]);
   const [planCompletedKeys,setPlanCompletedKeys] = useState<string[]>([]);
+  const [preparationPercent,setPreparationPercent] = useState(0);
   const [loading,setLoading] = useState(true);
   const [saving,setSaving] = useState(false);
   const [marking,setMarking] = useState<string|null>(null);
@@ -40,12 +41,13 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
     let mounted=true;
     void fetch('/api/study-plans',{cache:'no-store'}).then(async response=>{
       if(!response.ok)throw new Error('No pudimos recuperar tu planificación.');
-      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[];planCompletedKeys?:string[]}>;
+      return response.json() as Promise<{plan:SavedPlan|null;completedKeys:string[];planCompletedKeys?:string[];preparationProgress?:{completed:number;total:number;percent:number}}>;
     }).then(data=>{
       if(!mounted)return;
       setSavedPlan(data.plan);
       setCompletedKeys(data.completedKeys??[]);
       setPlanCompletedKeys(data.planCompletedKeys??[]);
+      setPreparationPercent(data.preparationProgress?.percent??0);
       if(data.plan){
         setExam(data.plan.exam_date);
         setSelected(data.plan.material_ids);
@@ -83,8 +85,10 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
       if(!response.ok)throw new Error(result.error||'No pudimos guardar el plan.');
       const latest=await fetch('/api/study-plans',{cache:'no-store'});
       if(!latest.ok)throw new Error('El plan se guardó, pero no pudimos recuperarlo.');
-      const data=await latest.json() as {plan:SavedPlan|null;completedKeys:string[]};
+      const data=await latest.json() as {plan:SavedPlan|null;completedKeys:string[];planCompletedKeys?:string[];preparationProgress?:{completed:number;total:number;percent:number}};
       setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);
+      setPlanCompletedKeys(data.planCompletedKeys??[]);
+      setPreparationPercent(data.preparationProgress?.percent??0);
       if(mode==='setup') router.push('/dashboard/plan-de-estudio');
       else setPreview(true);
     }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el plan.')}
@@ -188,8 +192,8 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
             <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
               <h2 className="text-[14px] font-medium tracking-tight">Tu preparación</h2>
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{completedCount}/{assignedKeys.size}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Temas leídos</p></div>
-                <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{days.filter(day=>day.topics.length>0).length}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Días planificados</p></div>
+                <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{planCompletedKeys.filter(key=>assignedKeys.has(key)).length}/{assignedKeys.size}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Temas completados</p></div>
+                <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{preparationPercent}%</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Preparación completada</p></div>
               </div>
             </section>
 
