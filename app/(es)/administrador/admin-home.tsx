@@ -81,7 +81,7 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
     </header>
     <section className="eh-heading">
       <div><div className="eh-eyebrow">Evaluo / Tablero general</div><h1>Tablero general</h1><p>El estado de Evaluo en una sola pantalla. El detalle de cada área vive en su propio panel.</p></div>
-      <label className="eh-date"><span>Hoy</span><input aria-label="Fecha del tablero" type="date" min={minDay} max={data.today} value={data.day} onChange={e=>{
+      <label className="eh-date"><span>{data.day===data.today?'Hoy':'Fecha'}</span><input aria-label="Fecha del tablero" type="date" min={minDay} max={data.today} value={data.day} onChange={e=>{
         const date=e.target.value;
         if(date && date>=minDay && date<=data.today) window.location.assign('/administrador?panel=resumen&date='+encodeURIComponent(date));
       }}/></label>
@@ -93,12 +93,12 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
       </div>
       <div className="eh-grid-row">
         <section className="eh-panel eh-wide" aria-label="Evolución">
-          <div className="eh-section-head eh-between"><div className="eh-head-content"><span className="eh-index">03</span><h2>Evolución</h2><small>Actividad diaria</small></div>
+          <div className="eh-section-head eh-between"><div className="eh-head-content"><span className="eh-index">03</span><h2>Evolución</h2><small>Usuarios activos diarios · totales en usuario-días</small></div>
             <div className="eh-period" role="group" aria-label="Período">{([7,14,30] as const).map(v=><button type="button" key={v} aria-pressed={days===v} className={days===v?'eh-picked':''} onClick={()=>setDays(v)}>{v} días</button>)}</div>
           </div>
           <div className="eh-comparison">
-            <div><span className="eh-subtitle"><i className="eh-line-current"/>Período actual</span><strong>{fmt(graph.currentTotal)}</strong></div>
-            <div><span className="eh-subtitle"><i className="eh-line-prev"/>Período anterior</span><strong className="eh-muted">{fmt(graph.previousTotal)}</strong></div>
+            <div><span className="eh-subtitle"><i className="eh-line-current"/>Período actual · usuario-días</span><strong>{fmt(graph.currentTotal)}</strong></div>
+            <div><span className="eh-subtitle"><i className="eh-line-prev"/>Período anterior · usuario-días</span><strong className="eh-muted">{fmt(graph.previousTotal)}</strong></div>
             <div><span className="eh-subtitle">Variación vs. los {days} días anteriores</span><strong className={graph.change===null?'eh-muted':graph.change<0?'eh-red':'eh-green'}>{graph.change===null?'—':(graph.change>=0?'+':'−')+Math.abs(graph.change).toFixed(1).replace('.', ',')+'%'}</strong></div>
           </div>
           <div className="eh-chart"><svg viewBox="0 0 1000 240" preserveAspectRatio="none" role="img" aria-label="Comparación de usuarios activos diarios reales">
