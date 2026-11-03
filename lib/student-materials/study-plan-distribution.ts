@@ -24,3 +24,54 @@ export function distributeStudyTopics(topics:PlanTopic[], examDate:string, minut
   const assigned=days.reduce((sum,day)=>sum+day.topics.length,0);
   return {days,unassigned:topics.slice(assigned)};
 }
+
+
+/** Keep the full calendar visible even when the available minutes are insufficient.
+ * Overflow is distributed over existing study dates; the UI warns about overload. */
+export function completeStudySchedule(
+  topics:PlanTopic[], examDate:string, minutesPerDay:number, startDate:Date,
+): {days:PlanDay[];overloadedTopics:number} {
+  const initial=distributeStudyTopics(topics,examDate,minutesPerDay,startDate);
+  const days=initial.days.map(day=>({...day,topics:[...day.topics]}));
+  if(!days.length)return {days,overloadedTopics:initial.unassigned.length};
+  for(const topic of initial.unassigned) {
+    const day=days.reduce((least,current)=>current.estimatedMinutes<least.estimatedMinutes?current:least,days[0]!);
+    day.topics.push(topic);
+    day.estimatedMinutes+=Math.max(1,topic.estimatedMinutes);
+  }
+  return {days,overloadedTopics:initial.unassigned.length};
+}
+
+export type RecommendedStudyActivity = {
+  id:'resumen'|'flashcards'|'unir'|'completar'|'opciones'|'casos'|'mixto'|'simulacro';
+  label:string;href:string;
+};
+
+/** Stable activity rotation per topic; preferences are priorities, not a fixed recipe.
+ * This recommendation layer does not generate AI content or change material progress. */
+export function recommendTopicActivities(
+  topic:Pick<PlanTopic,'materialId'|'topicIndex'>,preferences:string[],minutesPerDay:number,
+): RecommendedStudyActivity[] {
+  const root=`/dashboard/practicar/${encodeURIComponent(topic.materialId)}`;
+  const summary=`/materiales/${encodeURIComponent(topic.materialId)}?tab=resumen&studyTopic=${topic.topicIndex}`;
+  const bank:Array<RecommendedStudyActivity['id']>=[];
+  if(preferences.includes('memorizar'))bank.push('flashcards','unir','completar');
+  if(preferences.includes('practicar'))bank.push('opciones','mixto','completar','unir');
+  if(preferences.includes('casos'))bank.push('casos','opciones','mixto');
+  const unique=[...new Set(bank)];
+  const labels:Record<RecommendedStudyActivity['id'],string>={
+    resumen:'Leer el resumen',flashcards:'Repasar flashcards',unir:'Unir conceptos',
+    completar:'Completar conceptos',opciones:'Verdadero o falso',casos:'Resolver casos',
+    mixto:'Práctica mixta',simulacro:'Simulacro de examen',
+  };
+  const activities:RecommendedStudyActivity[]=[{id:'resumen',label:labels.resumen,href:summary}];
+  if(!unique.length)return activities;
+  // Include one practice at 15–30 min, and two different practices at 45–60 min.
+  const count=minutesPerDay>=45?2:1;
+  const offset=(topic.topicIndex+topic.materialId.length)%unique.length;
+  for(let i=0;i<Math.min(count,unique.length);i++) {
+    const id=unique[(offset+i)%unique.length]!;
+    activities.push({id,label:labels[id],href:`${root}/${id}?repaso=rapido`});
+  }
+  return activities;
+}
