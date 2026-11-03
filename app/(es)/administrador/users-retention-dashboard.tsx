@@ -179,6 +179,7 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
    <section className="eh-panel"><Heading index="05" title="Segmentación de estudiantes" subtitle="Filtrá y compará los indicadores por segmento"/>
      <form action="/administrador" className="ur-seg-filters">
        <input type="hidden" name="panel" value="usuarios"/><input type="hidden" name="period" value={filters.period}/>
+       {filters.from&&filters.to&&<><input type="hidden" name="from" value={filters.from}/><input type="hidden" name="to" value={filters.to}/></>}
        <label>Universidad<select name="usersUniversity" defaultValue={filters.university}><option value="all">Todas</option>{universities.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
        <label>País<select name="usersCountry" defaultValue={filters.country}><option value="all">Todos</option>{countries.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
        <label>Plan<select name="usersPlan" defaultValue={filters.plan}><option value="all">Todos</option><option value="free">Free</option><option value="premium">Premium</option></select></label>
@@ -196,6 +197,7 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
    <section className="eh-panel"><Heading index="06" title="Listado de usuarios" subtitle="Seleccioná un usuario para abrir su detalle"/>
      <form action="/administrador" className="ur-searchbar"><input type="hidden" name="panel" value="usuarios"/>
        <input type="hidden" name="period" value={filters.period}/><input type="hidden" name="usersPlan" value={filters.plan}/>
+       {filters.from&&filters.to&&<><input type="hidden" name="from" value={filters.from}/><input type="hidden" name="to" value={filters.to}/></>}
        <input type="hidden" name="usersMaterials" value={filters.materials}/><input type="hidden" name="usersCountry" value={filters.country}/>
        <input type="hidden" name="usersUniversity" value={filters.university}/>
        <input type="search" name="usersSearch" defaultValue={filters.search} placeholder="Buscar por nombre o correo" aria-label="Buscar usuarios"/>
