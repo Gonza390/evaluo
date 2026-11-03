@@ -5,11 +5,23 @@ type AdminRetentionFunctions = {
     Args: { p_days?: number; p_from?: string | null; p_to?: string | null };
     Returns: import('@/app/(es)/administrador/users-retention-types').UsersRetentionSnapshot;
   };
+  admin_users_retention_v4: {
+    Args: { p_days?: number; p_from?: string | null; p_to?: string | null };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UsersRetentionSnapshot;
+  };
   admin_users_segments_v1: {
     Args: { p_days?: number };
     Returns: import('@/app/(es)/administrador/users-retention-types').UsersSegment[];
   };
+  admin_users_segments_v2: {
+    Args: { p_days?: number };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UsersSegment[];
+  };
   admin_users_list_v1: {
+    Args: { p_page?: number; p_search?: string; p_plan?: string; p_material?: string; p_country?: string; p_university?: string };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UserListResult;
+  };
+  admin_users_list_v3: {
     Args: { p_page?: number; p_search?: string; p_plan?: string; p_material?: string; p_country?: string; p_university?: string };
     Returns: import('@/app/(es)/administrador/users-retention-types').UserListResult;
   };
@@ -21,6 +33,23 @@ type AdminRetentionFunctions = {
 
 type AdminPerformanceFunctions = {
   admin_home_snapshot_v1: {
+    Args: { p_day?: string | null };
+    Returns: {
+      day: string; daily: Array<{ d: string; registrations: number; active_users: number; sessions: number; studied_users: number }>;
+      users: { total: number; new_7d: number };
+      activity: { active_7d: number };
+      study: { studying_7d: number; returning_7d: number };
+      cohort: { retained: number; cohort_users: number };
+      materials: { uploaded_7d: number; ready_7d: number; failed_7d: number; stuck_7d: number };
+      practice: { completed_7d: number };
+      plans: { created_7d: number };
+      activation: { activated: number };
+      premium: { active: number };
+      revenue: { ars: number; usd: number };
+      payments: { failed: number };
+    };
+  };
+  admin_home_snapshot_v2: {
     Args: { p_day?: string | null };
     Returns: {
       day: string; daily: Array<{ d: string; registrations: number; active_users: number; sessions: number; studied_users: number }>;
