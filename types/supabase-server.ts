@@ -1,6 +1,21 @@
 import type { Database } from '@/types/supabase';
 
 type AdminPerformanceFunctions = {
+  admin_academic_usage_aggregates_v1: {
+    Args: Record<PropertyKey, never>;
+    Returns: Array<{
+      university_id: string;
+      university_name: string;
+      users: number;
+      active_users_7d: number;
+      engagement_users_7d: number;
+      engagement_ms_7d: number;
+      pdfs: number;
+      flashcard_sessions_started: number;
+      pdf_simulators_started: number;
+      last_activity_at: string | null;
+    }>;
+  };
   admin_overview_daily_v1: {
     Args: { p_days?: number };
     Returns: Array<{
