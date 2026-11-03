@@ -1,0 +1,26 @@
+name: SEO domain migration QA
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - scripts/verify-seo-migration-live.mjs
+      - .github/workflows/seo-domain-migration-qa.yml
+      - lib/international-study-landings.ts
+      - lib/english-seo-metadata.ts
+      - vercel.json
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out master
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c # v4.2.2
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Audit redirects, indexable canonicals and bilingual/regional hreflang
+        run: node scripts/verify-seo-migration-live.mjs --strict
