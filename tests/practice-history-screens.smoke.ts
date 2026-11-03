@@ -123,4 +123,16 @@ assert.match(api, /\.eq\('user_id', user\.id\)/);
 assert.match(migration, /enable row level security/);
 assert.match(migration, /user_id = \(select auth\.uid\(\)\)/);
 
+const finishedReport = practiceSession.slice(
+  practiceSession.indexOf('const fullReport = finished ? ('),
+  practiceSession.indexOf('const [revealPractice')
+);
+assert.doesNotMatch(finishedReport, /\{aiCaseButton\}/,
+  'Al finalizar Casos no debe ofrecer generar más casos con IA.');
+assert.match(practiceSession, /const aiCaseButton = mode === 'casos' && aiAvailable && !ready \? \(/,
+  'La generación de casos queda disponible únicamente para recuperar una práctica que no pudo iniciar.');
+assert.match(finishedReport, /mode === 'casos' \? '\/dashboard\/practicar'/,
+  'El enlace final de Casos debe llevar al selector de Practicar.');
+assert.match(finishedReport, /mode === 'casos' \? 'Volver a Practicar' : 'Volver al resumen'/,
+  'El texto Volver a Practicar se aplica solo a Casos, sin alterar las otras modalidades.');
 console.log('Practicar: empty/history screens, routing, metrics, recovery, security — OK');
