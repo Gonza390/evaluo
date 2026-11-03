@@ -46,7 +46,7 @@ type NavConfigItem = {
 };
 
 function isNavItemActive(pathname: string, href: string) {
-  if (href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso') return true;
+  if (href === '/dashboard/estudiar' && pathname === '/dashboard/progreso') return true;
   if (href === '/dashboard') {
     // El lector de materiales es parte de Mi espacio.
     return pathname === href || pathname.startsWith('/materiales/');
@@ -57,7 +57,7 @@ function isNavItemActive(pathname: string, href: string) {
 
 const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home, iconTone: 'bg-blue-50 text-blue-700' },
-  { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen, iconTone: 'bg-sky-50 text-sky-700' },
+  { label: 'Estudiar', href: '/dashboard/estudiar', icon: BookOpen, iconTone: 'bg-sky-50 text-sky-700' },
   { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks, iconTone: 'bg-emerald-50 text-emerald-700' },
   { label: 'Plan de estudio', href: '/dashboard/plan-de-estudio', icon: ClipboardList, iconTone: 'bg-violet-50 text-violet-700' },
   { label: 'Calendario', href: '/calendario', icon: CalendarDays, iconTone: 'bg-amber-50 text-amber-700' },
@@ -226,7 +226,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 compact={compact}
                 active={!item.disabled && isNavItemActive(pathname, item.href)}
                 dataTourAttr={
-                  item.href === '/dashboard/explicaciones' ? 'data-recommended-errors' : undefined
+                  item.href === '/dashboard/estudiar' ? 'data-recommended-errors' : undefined
                 }
               />
             ))}
