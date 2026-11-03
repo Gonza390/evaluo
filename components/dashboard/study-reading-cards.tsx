@@ -66,16 +66,12 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
         <div className="min-w-0">
           <h1 className="mb-5 text-[20px] font-semibold tracking-[-0.035em] text-slate-900 sm:text-[22px] lg:text-[24px]">Estudiar</h1>
           {activeMaterial ? (
-            <div className="space-y-5">
-              <div>
+            <div>
+              <h2 className="mb-2 text-[12px] font-medium text-slate-500">Tus archivos</h2>
+              <div className="space-y-2.5">
                 {renderMaterial(activeMaterial)}
+                {otherMaterials.map(renderMaterial)}
               </div>
-              {otherMaterials.length > 0 && (
-                <div>
-                  <h2 className="mb-2 text-[12px] font-medium text-slate-500">Tus archivos</h2>
-                  <div className="space-y-2.5">{otherMaterials.map(renderMaterial)}</div>
-                </div>
-              )}
             </div>
           ) : (
             <div className="rounded-xl border border-slate-200 p-5 text-[12px] text-slate-600">
