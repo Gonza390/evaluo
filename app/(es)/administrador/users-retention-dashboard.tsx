@@ -17,7 +17,7 @@ const nav = [
 ] as const;
 type Props = {
  stats:UsersRetentionSnapshot;segments:UsersSegment[];list:UserListResult;detail:UserDetail|null;
- filters:Omit<RetentionFilters,'selectedUserId'>;today:string;
+ filters:Omit<RetentionFilters,'selectedUserId'>;today:string;minDay:string;
 };
 function Heading({index,title,subtitle,priority}:{index:string;title:string;subtitle?:string;priority?:boolean}) {
  return <div className="eh-section-head ur-heading"><div className="eh-head-content">
@@ -71,7 +71,7 @@ function Detail({person,back}:{person:UserDetail;back:string}) {
       <p className="eh-note">No tiene un plan personal guardado.</p>}</section>
   </div></section></div>;
 }
-export function UsersRetentionDashboard({stats,segments,list,detail,filters,today}:Props) {
+export function UsersRetentionDashboard({stats,segments,list,detail,filters,today,minDay}:Props) {
  const [dimension,setDimension]=useState<'university'|'country'|'plan'|'materials'>('university');
  const [showCustom,setShowCustom]=useState(Boolean(filters.from&&filters.to));
  const q=(values:Record<string,string|number|null|undefined>={})=>{
@@ -112,9 +112,9 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
      <button className={showCustom?'eh-picked':''} onClick={()=>setShowCustom(v=>!v)} type="button">Personalizado</button></div>
     {showCustom&&<form className="ur-custom" action="/administrador">
       <input type="hidden" name="panel" value="usuarios"/><input type="hidden" name="period" value="7"/>
-      <input type="date" name="from" aria-label="Desde" defaultValue={filters.from??''} max={today} required/>
-      <span>→</span><input type="date" name="to" aria-label="Hasta" defaultValue={filters.to??today} max={today} required/>
-      <button type="submit">Aplicar</button><small>Máximo 30 días</small></form>}
+      <input type="date" name="from" aria-label="Desde" defaultValue={filters.from??''} min={minDay} max={today} required/>
+      <span>→</span><input type="date" name="to" aria-label="Hasta" defaultValue={filters.to??today} min={minDay} max={today} required/>
+      <button type="submit">Aplicar</button><small>Máximo 30 días · historial de 90 días</small></form>}
     <span className="ur-live-label">Datos de Supabase</span>
   </section>
   <div className="eh-grid">
