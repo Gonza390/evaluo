@@ -153,7 +153,7 @@ function BottomNav() {
   const bottomNavItems = studentNav
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
-        { label: 'Estudiar', href: '/dashboard/explicaciones', icon: BookOpen },
+        { label: 'Estudiar', href: '/dashboard/estudiar', icon: BookOpen },
         { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks },
         { label: 'Mi plan', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
       ]
@@ -179,7 +179,7 @@ function BottomNav() {
           const Icon = item.icon;
           const isActive = pendingHref !== null
             ? pendingHref === item.href
-            : item.href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso'
+            : item.href === '/dashboard/estudiar' && pathname === '/dashboard/progreso'
               ? true
               : item.href === '/' || item.href === '/dashboard'
                 ? pathname === item.href
@@ -194,7 +194,7 @@ function BottomNav() {
               aria-current={isActive ? 'page' : undefined}
               aria-label={item.label}
               data-recommended-errors={
-                item.href === '/dashboard/explicaciones' ? 'true' : undefined
+                item.href === '/dashboard/estudiar' ? 'true' : undefined
               }
               className={
                 item.variant === 'cta'
