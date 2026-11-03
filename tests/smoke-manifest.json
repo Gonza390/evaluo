@@ -228,6 +228,10 @@
     "alias": false
   },
   {
+    "file": "tests/topic-practice.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/topic-practice-finish.smoke.ts",
     "alias": false
   },
