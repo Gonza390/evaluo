@@ -28,6 +28,9 @@ jobs:
       - name: Audit obsolete routes and unused asset candidates
         run: node scripts/audit-legacy-routes.mjs
 
+      - name: Inventory possibly unused components (non-destructive)
+        run: node scripts/audit-unused-components.mjs
+
       - name: Security audit
         run: npm audit --audit-level=high
 

@@ -23,9 +23,9 @@ const removedModules = [
   "components/preview/pdf-processing-sample-study.ts"
 ];
 
-const reviewOnly = [
-  'public/pdf.worker.min.mjs',
-];
+// These assets require manual inspection before any potential removal.
+const reviewOnly = [];
+const removedPdfAssets = ['public/pdf.worker.min.mjs'];
 
 // Starter assets were removed from public/. Prevent accidental broken references
 // when restoring old layouts or importing components from earlier versions.
@@ -68,6 +68,16 @@ function references(token, sourcePath, checkRoute = false) {
   }).map(({ path }) => path);
 }
 let invalid = 0;
+// Prevent re-introducing runtime references to the retired PDF.js 3 worker.
+// PDF.js 5 uses the versioned React-PDF worker and the server package worker.
+for (const assetPath of removedPdfAssets) {
+  const token = '/' + assetPath.slice('public/'.length);
+  const refPaths = references(token, assetPath);
+  if (refPaths.length) {
+    invalid++;
+    console.error('[legacy cleanup] Deleted PDF asset still referenced: ' + token + ' -> ' + refPaths.join(', '));
+  }
+}
 for (const assetPath of removedStarterAssets) {
   const token = '/' + assetPath.slice('public/'.length);
   const refPaths = references(token, assetPath);
