@@ -1,4 +1,6 @@
 import './admin-theme.css';
+import { obtenerResumenAdministrador } from './overview-actions';
+import { OverviewPanel } from './overview-panel';
 import Link from 'next/link';
 import {
   obtenerFeedbackExplicacionesAdmin,
@@ -29,6 +31,7 @@ import {
 } from './lazy-panels';
 
 type PanelKey =
+  | 'resumen'
   | 'producto'
   | 'adquisicion'
   | 'referidos'
@@ -38,6 +41,7 @@ type PanelKey =
   | 'ia';
 
 const PANELS: Array<{ key: PanelKey; label: string }> = [
+  { key: 'resumen', label: 'Resumen general' },
   { key: 'producto', label: 'Producto' },
   { key: 'adquisicion', label: 'Adquisición' },
   { key: 'referidos', label: 'Referidos' },
@@ -114,7 +118,7 @@ export default async function AdministradorPage({
 }) {
   const params = (await searchParams) ?? {};
   const requestedPanel = params.panel;
-  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'producto';
+  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'resumen';
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
@@ -132,6 +136,7 @@ export default async function AdministradorPage({
     ? (requestedSource as AcquisitionSourceKey)
     : null;
 
+  const needsOverview = activePanel === 'resumen';
   const needsProduct = activePanel === 'producto';
   const needsAcquisition = activePanel === 'adquisicion';
   const needsReferrals = activePanel === 'referidos';
@@ -141,6 +146,7 @@ export default async function AdministradorPage({
   const needsIA = activePanel === 'ia';
 
   const [
+    overviewResult,
     productResult,
     acquisitionResult,
     unlamFunnelResult,
@@ -155,6 +161,7 @@ export default async function AdministradorPage({
     iaCostResult,
     aiKeyHealthResult,
   ] = await Promise.all([
+    needsOverview ? obtenerResumenAdministrador() : Promise.resolve(null),
     needsProduct
       ? obtenerProductoDiarioAdministrador(requestedProductDate)
       : Promise.resolve(null),
@@ -178,7 +185,11 @@ export default async function AdministradorPage({
 
   let panelContent: React.ReactNode;
 
-  if (activePanel === 'producto') {
+  if (activePanel === 'resumen') {
+    panelContent = overviewResult?.success && overviewResult.rows
+      ? <OverviewPanel rows={overviewResult.rows} generatedAt={new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })} />
+      : <ErrorPanel message={overviewResult?.message ?? 'No pudimos cargar Resumen general.'} />;
+  } else if (activePanel === 'producto') {
     panelContent =
       productResult?.success && productResult.stats ? (
         <ProductPanel stats={productResult.stats} />
