@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Check, Flag } from 'lucide-react';
+import { Check, Flag } from 'lucide-react';
 import type { PlanDay, PlanTopic } from '@/lib/student-materials/study-plan-distribution';
 
-const WINDOW_SIZE = 4;
 type Topic = PlanTopic & { key: string };
 
 function examLabel(date: string) {
@@ -29,13 +28,13 @@ export function SavedStudyPlanRoadmap({
   const completed = new Set(completedKeys);
   const finished = topics.filter(topic => completed.has(topic.key)).length;
   const current = topics.findIndex(topic => !completed.has(topic.key));
-  const active = current < 0 ? Math.max(0, topics.length - 1) : current;
-  const maxStart = Math.max(0, topics.length - WINDOW_SIZE);
-  const [windowStart, setWindowStart] = useState(() => Math.min(Math.max(0, active - 1), maxStart));
-  const start = Math.min(windowStart, maxStart);
-  const visible = topics.slice(start, start + WINDOW_SIZE);
-  const hasPrevious = start > 0;
-  const hasNext = start + WINDOW_SIZE < topics.length;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller || current < 0) return;
+    const currentNode = scroller.querySelector<HTMLElement>(`[data-saved-roadmap-topic="${current}"]`);
+    if (currentNode) scroller.scrollLeft = Math.max(0, currentNode.offsetLeft - scroller.offsetLeft - scroller.clientWidth / 4);
+  }, [current]);
 
   if (!topics.length) return null;
 
@@ -46,14 +45,15 @@ export function SavedStudyPlanRoadmap({
         <h2 className="text-[14px] font-normal text-[#0F1B3D]">Tu recorrido</h2>
         <span className="text-[11px] text-[#7F8AA3]">{finished} de {topics.length} temas</span>
       </div>
-      <div className="grid items-start gap-1 sm:gap-2" style={{ gridTemplateColumns: `repeat(${visible.length + 1}, minmax(0, 1fr))` }}>
-        {visible.map((topic, offset) => {
-          const index = start + offset;
+      <div className="flex min-w-0 items-start">
+        <div ref={scrollRef} data-saved-roadmap-scroll tabIndex={0} role="region" aria-label="Temas del recorrido: desplazate horizontalmente" className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-max items-start">
+        {topics.map((topic, index) => {
           const done = completed.has(topic.key);
           const isCurrent = index === current;
           return (
-            <div key={topic.key} className="relative min-w-0 text-center">
-              {offset > 0 && <span aria-hidden="true" className="absolute right-1/2 top-[13px] h-px w-full bg-[#E7EBF4]"/>}
+            <div key={topic.key} data-saved-roadmap-topic={index} className="relative w-[112px] shrink-0 text-center">
+              {index > 0 && <span aria-hidden="true" className="absolute right-1/2 top-[13px] h-px w-full bg-[#E7EBF4]"/>}
               <Link href={`/materiales/${topic.materialId}?tab=resumen&studyTopic=${topic.topicIndex}`}
                 aria-label={`Tema ${index + 1}: ${topic.title}. ${done ? 'Leído' : isCurrent ? 'Estás acá' : 'Pendiente'}`}
                 className="relative z-10 flex min-w-0 flex-col items-center gap-2 rounded-lg px-0.5 py-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
@@ -66,7 +66,9 @@ export function SavedStudyPlanRoadmap({
             </div>
           );
         })}
-        <div className="relative min-w-0 text-center">
+          </div>
+        </div>
+        <div className="relative w-[96px] shrink-0 text-center sm:w-[112px]">
           <span aria-hidden="true" className="absolute right-1/2 top-[13px] h-px w-full bg-[#E7EBF4]"/>
           <div className="relative z-10 flex min-w-0 flex-col items-center gap-2 px-0.5 py-0.5">
             <span className="flex size-[27px] shrink-0 items-center justify-center rounded-full border-2 border-[#E3B46C] bg-[#FFF3E3] text-[#B8792E]">
@@ -77,19 +79,7 @@ export function SavedStudyPlanRoadmap({
           </div>
         </div>
       </div>
-      {topics.length > WINDOW_SIZE && (
-        <div className="mt-4 flex items-center justify-between gap-2 border-t border-[#E7EBF4] pt-3">
-          <button type="button" disabled={!hasPrevious} onClick={() => setWindowStart(value => Math.max(0, value - 1))}
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[11px] font-medium text-[#42506A] hover:bg-[#F5F7FB] disabled:opacity-35">
-            <ArrowLeft className="size-3.5" aria-hidden="true"/> Anterior
-          </button>
-          <span className="text-center text-[11px] tabular-nums text-[#7F8AA3]">Temas {start + 1}–{start + visible.length} de {topics.length}</span>
-          <button type="button" disabled={!hasNext} onClick={() => setWindowStart(value => Math.min(maxStart, value + 1))}
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[11px] font-medium text-[#42506A] hover:bg-[#F5F7FB] disabled:opacity-35">
-            Siguiente <ArrowRight className="size-3.5" aria-hidden="true"/>
-          </button>
-        </div>
-      )}
+
     </section>
   );
 }
