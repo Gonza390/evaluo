@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
+import { additionalPlanPractice, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
 import { completedPlanTopics } from '../lib/student-materials/study-plan-completion.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
@@ -39,7 +39,13 @@ assert.match(practiceEndpoint,/practice_not_in_plan/, 'Solo se acredita una acti
 assert.match(progressMigration,/enable row level security/, 'El progreso por modalidad queda protegido por RLS.');
 const sampleTopic={materialId:'12345678-1234-1234-1234-123456789abc',topicIndex:0,title:'Primer tema',materialTitle:'Material',estimatedMinutes:18};
 const sampleDays=[{date:'2026-11-03',topics:[sampleTopic],estimatedMinutes:18}];
-const assigned=recommendTopicActivities(sampleTopic,['entender','practicar'],30).filter(step=>step.id!=='resumen');
+const bonus=additionalPlanPractice(sampleDays,['entender','practicar'],30).get(sampleTopic.materialId+':0')??0;
+const assigned=recommendTopicActivities(sampleTopic,['entender','practicar'],30,bonus).filter(step=>step.id!=='resumen');
+assert.equal(bonus,1,'A day with genuinely spare time can recommend one extra practice.');
+assert.equal(assigned.length,2,'Extra time expands the existing activity list without a new screen.');
+assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],
+  assigned.slice(0,1).map(step=>({material_id:sampleTopic.materialId,topic_index:0,mode:step.id as 'opciones'|'unir'}))).length,0,
+  'The topic must not complete until the added practice is also done.');
 assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[],[]).length,0,'Sin lectura, no se completa.');
 assert.equal(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],[]).length,0,'La lectura sola no completa un plan con práctica.');
 assert.deepEqual(completedPlanTopics(sampleDays,['entender','practicar'],30,[sampleTopic.materialId+':0'],
@@ -58,7 +64,7 @@ assert.match(savedSchedule,/onClick=\{\(\)=>setExpandedTopic\(\{date:day.date,ke
 
 assert.match(savedSchedule,/onClick=\{\(\)=>setSelectedDate\(day.date\)\}/, 'Al elegir un día aparecen sus actividades.');
 assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente tres fechas.');
-assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/, 'Cada día muestra actividades reales del generador.');
+assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes,bonusActivities\.get\(topicKey\)\?\?0\)/, 'Cada día muestra actividades acordes al tiempo disponible.');
 assert.match(savedSchedule,/examDateLabel\(examDate\)/, 'El examen es el hito final de la lista.');
 assert.doesNotMatch(setup,/Los días que quedan|TU PRÓXIMA SESIÓN/, 'No duplicar bloques diarios anteriores.');
 const sameOuterPlanSizing=['max-w-[1240px]','px-3 py-3','sm:px-4 sm:py-4 lg:px-6 lg:py-5'];
@@ -146,6 +152,24 @@ assert.ok(quick.every(step=>!['casos','flashcards','simulacro'].includes(step.id
 const casesOnly=Array.from({length:9},(_,i)=>recommendTopicActivities({...sample[0]!,topicIndex:i},['casos'],30)[1]!.id);
 assert.ok(casesOnly.includes('casos')&&casesOnly.includes('opciones')&&casesOnly.includes('mixto'),
   'A cases preference must sometimes show cases and sometimes another exercise.');
+const comfortable=[{date:'2027-01-01',topics:[sample[0]!],estimatedMinutes:20},
+ {date:'2027-01-02',topics:[sample[1]!],estimatedMinutes:20}];
+const extras=additionalPlanPractice(comfortable,combined,60);
+assert.equal(extras.size,2,'Spare time adds an additional recommendation to each available day.');
+assert.equal(recommendTopicActivities(sample[0]!,combined,60,extras.get('a:0')??0).length,4,
+  'Long sessions can show summary and three varied practices.');
+assert.equal(additionalPlanPractice(comfortable,combined,15).size,0,
+  'Insufficient time must never add practices.');
+assert.equal(additionalPlanPractice([{date:'2027-01-01',topics:sample,estimatedMinutes:60}],combined,60).size,0,
+  'A fully booked day cannot gain more work.');
+assert.equal(additionalPlanPractice([{date:'2027-01-01',topics:sample,estimatedMinutes:70}],combined,60).size,0,
+  'An overloaded plan must not gain more work.');
+assert.equal(additionalPlanPractice(comfortable,['entender'],60).size,0,
+  'Reading-only preferences must not silently add practice.');
+assert.deepEqual([...extras], [...additionalPlanPractice(comfortable,combined,60)],
+  'Saved recommendations must remain stable across visits.');
+assert.match(code('lib/student-materials/study-plan-completion.ts'),/additionalPlanPractice\(days,preferences,dailyMinutes\)/,
+  'Completion follows the same time-aware activity allocations as the UI.');
 assert.equal(estimateTopicSessionMinutes(10,['entender'],15),10,
   'Reading-only plans must not invent practice time.');
 assert.equal(estimateTopicSessionMinutes(10,['entender','practicar'],15),16,
@@ -155,6 +179,6 @@ assert.equal(estimateTopicSessionMinutes(10,['casos'],60),22,
 assert.match(api,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/data-study-plan-time-warning/);
-assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/);
+assert.match(savedSchedule,/additionalPlanPractice\(days,preferences,dailyMinutes\)/);
 assert.match(api,/completeStudySchedule\(topics,examDate,minutes,start\)/);
 console.log('Personal plan persistence, empty states and topic distribution OK');
