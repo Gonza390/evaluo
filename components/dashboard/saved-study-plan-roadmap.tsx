@@ -40,7 +40,7 @@ export function SavedStudyPlanRoadmap({
 
   return (
     <section data-saved-study-plan-roadmap aria-label="Tu recorrido hasta el examen"
-      className="min-w-0 rounded-2xl border border-[#E7EBF4] bg-white px-3 py-2.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)] sm:px-4 sm:py-3.5">
+      className="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
       <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
         <h2 className="text-[14px] font-normal text-[#0F1B3D]">Tu recorrido</h2>
         <span className="text-[11px] text-[#7F8AA3]">{finished} de {topics.length} temas</span>
