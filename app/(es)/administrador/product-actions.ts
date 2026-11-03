@@ -1,6 +1,7 @@
 'use server';
 
 import { requireAdminAccess } from '@/lib/auth';
+import { unstable_cache as nextCache } from 'next/cache';
 import { listAdminUserIds } from '@/lib/admin-users';
 import { summarizeFirstPdfOnboarding, type FirstPdfOnboardingStats } from '@/lib/onboarding-funnel';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -170,7 +171,7 @@ async function fetchAllEvents(
   return rows;
 }
 
-export async function obtenerProductoDiarioAdministrador(
+async function loadProductoDiarioUncached(
   requestedDateKey?: string | null
 ): Promise<{
   success: boolean;
@@ -178,7 +179,6 @@ export async function obtenerProductoDiarioAdministrador(
   message?: string;
 }> {
   try {
-    await requireAdminAccess();
     const admin = createAdminClient();
     const adminUserIds = new Set(await listAdminUserIds());
     const now = new Date();
@@ -500,4 +500,17 @@ export async function obtenerProductoDiarioAdministrador(
         error instanceof Error ? error.message : 'No pudimos cargar el resumen diario de Producto.',
     };
   }
+}
+
+
+// Cache the DB-only work; always authorize before reading the shared cache.
+const cachedloadProductoDiarioUncached = nextCache(
+  async (requestedDateKey?: string | null) => loadProductoDiarioUncached(requestedDateKey),
+  ['obtenerProductoDiarioAdministrador-optimized-v1'],
+  { revalidate: 300 }
+);
+
+export async function obtenerProductoDiarioAdministrador(requestedDateKey?: string | null) {
+  await requireAdminAccess();
+  return cachedloadProductoDiarioUncached(requestedDateKey);
 }
