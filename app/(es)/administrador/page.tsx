@@ -15,10 +15,8 @@ import { obtenerUsuariosRetencion } from './users-retention-actions';
 import { UsersRetentionDashboard } from './users-retention-dashboard';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
-import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
-import { AcquisitionPanel } from './acquisition-panel';
-import { obtenerEmbudoUnlamAdministrador } from './unlam-funnel-actions';
-import { UnlamFunnelPanel } from './unlam-funnel-panel';
+import { obtenerDashboardAdquisicion } from './acquisition-dashboard-actions';
+import { AcquisitionDashboard } from './acquisition-dashboard';
 import { obtenerProductoDiarioAdministrador } from './product-actions';
 import { ProductPanel } from './product-panel';
 import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
@@ -57,14 +55,6 @@ const PERIOD_OPTIONS = [
   { value: 14, label: '14 días' },
   { value: 30, label: '30 días' },
 ] as const;
-
-const ACQUISITION_SOURCE_KEYS: AcquisitionSourceKey[] = [
-  'google',
-  'whatsapp',
-  'instagram',
-  'linkedin',
-  'reddit',
-];
 
 function ErrorPanel({ message }: { message: string }) {
   return (
@@ -133,23 +123,16 @@ export default async function AdministradorPage({
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
   const requestedProductDate = String(params.productDate ?? '').trim();
-  const requestedSource = String(params.source ?? '').trim().toLowerCase();
   const requestedMailType = String(params.mailType ?? 'all').trim().toLowerCase();
   const activeMailType: MailFilterType =
     requestedMailType === 'exam' || requestedMailType === 'ready' || requestedMailType === 'campaign'
       ? requestedMailType
       : 'all';
   const activeMailPeriod: 7 | 30 = Number(params.mailPeriod ?? 7) === 30 ? 30 : 7;
-  const selectedAcquisitionSource = ACQUISITION_SOURCE_KEYS.includes(
-    requestedSource as AcquisitionSourceKey
-  )
-    ? (requestedSource as AcquisitionSourceKey)
-    : null;
 
   const needsOverview = activePanel === 'resumen';
   const needsProduct = activePanel === 'producto';
   const needsAcquisition = activePanel === 'adquisicion';
-  const showUnlam = params.unlam === '1';
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsUsers = activePanel === 'usuarios';
@@ -160,7 +143,6 @@ export default async function AdministradorPage({
     overviewResult,
     productResult,
     acquisitionResult,
-    unlamFunnelResult,
     referralResult,
     academicUsageResult,
     usersResult,
@@ -176,10 +158,7 @@ export default async function AdministradorPage({
     needsProduct
       ? obtenerProductoDiarioAdministrador(requestedProductDate)
       : Promise.resolve(null),
-    needsAcquisition
-      ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
-      : Promise.resolve(null),
-    needsAcquisition && showUnlam ? obtenerEmbudoUnlamAdministrador(activePeriod) : Promise.resolve(null),
+    needsAcquisition ? obtenerDashboardAdquisicion() : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosRetencion({
@@ -209,33 +188,9 @@ export default async function AdministradorPage({
         <ErrorPanel message={productResult?.message ?? 'No pudimos cargar Producto.'} />
       );
   } else if (activePanel === 'adquisicion') {
-    panelContent =
-      acquisitionResult?.success && acquisitionResult.stats ? (
-        <>
-          <AcquisitionPanel
-            stats={acquisitionResult.stats}
-            activePeriod={activePeriod}
-            selectedSource={selectedAcquisitionSource}
-          />
-          {showUnlam ? (
-            unlamFunnelResult?.success && unlamFunnelResult.stats ? (
-              <UnlamFunnelPanel stats={unlamFunnelResult.stats} />
-            ) : (
-              <ErrorPanel message={unlamFunnelResult?.message ?? 'No pudimos cargar el embudo UNLaM.'} />
-            )
-          ) : (
-            <Link
-              href={`/administrador?panel=adquisicion&period=${activePeriod}&unlam=1`}
-              prefetch={false}
-              className="inline-flex rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700"
-            >
-              Ver embudo específico de UNLaM
-            </Link>
-          )}
-        </>
-      ) : (
-        <ErrorPanel message={acquisitionResult?.message ?? 'No pudimos cargar Adquisición.'} />
-      );
+    panelContent = acquisitionResult
+      ? <AcquisitionDashboard data={acquisitionResult} />
+      : <ErrorPanel message="No pudimos cargar Adquisición y SEO." />;
   } else if (activePanel === 'referidos') {
     panelContent =
       referralResult?.success && referralResult.data ? (
@@ -324,6 +279,9 @@ export default async function AdministradorPage({
 
   if (needsOverview && overviewResult) {
     return <AdminHome data={overviewResult.snapshot} minDay={overviewResult.minDay} />;
+  }
+  if (needsAcquisition && acquisitionResult) {
+    return <AcquisitionDashboard data={acquisitionResult} />;
   }
   if (needsUsers && usersResult) {
     return <UsersRetentionDashboard
