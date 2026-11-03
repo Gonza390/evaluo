@@ -1,5 +1,24 @@
 import type { Database } from '@/types/supabase';
 
+type AdminRetentionFunctions = {
+  admin_users_retention_v2: {
+    Args: { p_days?: number; p_from?: string | null; p_to?: string | null };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UsersRetentionSnapshot;
+  };
+  admin_users_segments_v1: {
+    Args: { p_days?: number };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UsersSegment[];
+  };
+  admin_users_list_v1: {
+    Args: { p_page?: number; p_search?: string; p_plan?: string; p_material?: string; p_country?: string; p_university?: string };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UserListResult;
+  };
+  admin_user_detail_v1: {
+    Args: { p_user_id: string };
+    Returns: import('@/app/(es)/administrador/users-retention-types').UserDetail | null;
+  };
+};
+
 type AdminPerformanceFunctions = {
   admin_home_snapshot_v1: {
     Args: { p_day?: string | null };
@@ -135,6 +154,6 @@ type AdminPerformanceFunctions = {
 
 export type ServerDatabase = Omit<Database, 'public'> & {
   public: Omit<Database['public'], 'Functions'> & {
-    Functions: Database['public']['Functions'] & AdminPerformanceFunctions;
+    Functions: Database['public']['Functions'] & AdminPerformanceFunctions & AdminRetentionFunctions;
   };
 };
