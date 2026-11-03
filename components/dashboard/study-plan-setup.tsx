@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import './practice-motion.css';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { distributeStudyTopics, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
@@ -16,7 +17,8 @@ const methods = [
 const week = ['L','M','X','J','V','S','D'];
 const pad = (n:number) => String(n).padStart(2,'0');
 const localDate = (date:Date) => `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
-export function StudyPlanSetup({ materials }: { materials:Material[] }) {
+export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Material[]; mode?: 'setup' | 'view' }) {
+  const router = useRouter();
   const today = useMemo(()=>new Date(),[]);
   const [step,setStep] = useState(0);
   const [month,setMonth] = useState(new Date(today.getFullYear(),today.getMonth(),1));
@@ -45,7 +47,7 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
         setSelected(data.plan.material_ids);
         setMinutes(data.plan.daily_minutes);
         setPreferences(data.plan.preferences);
-        setPreview(true);
+        setPreview(mode==='view');
       }
     }).catch((cause:unknown)=>{
       if(mounted)setError(cause instanceof Error?cause.message:'No pudimos recuperar el plan.');
@@ -76,7 +78,9 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
       const latest=await fetch('/api/study-plans',{cache:'no-store'});
       if(!latest.ok)throw new Error('El plan se guardó, pero no pudimos recuperarlo.');
       const data=await latest.json() as {plan:SavedPlan|null;completedKeys:string[]};
-      setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);setPreview(true);
+      setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);
+      if(mode==='setup') router.push('/dashboard/plan-de-estudio');
+      else setPreview(true);
     }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el plan.')}
     finally{setSaving(false)}
   }
