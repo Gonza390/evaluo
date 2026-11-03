@@ -38,7 +38,7 @@ assert.match(caseScreen, /ml-auto flex shrink-0 items-center gap-1/,
 assert.match(caseScreen, /onClick=\{onPrevious\}/);
 assert.match(caseScreen, /onClick=\{onSkip\}/);
 assert.match(caseScreen, /onClick=\{onNext\}/);
-assert.match(caseScreen, /max-w-\\[1120px\\]/, 'Casos usa un ancho mayor para la corrección.');
+assert.match(caseScreen, /max-w-\[1120px\]/, 'Casos usa un ancho mayor para la corrección.');
 assert.match(caseScreen, /data-case-explanation/, 'La explicación ocupa una fila completa bajo ambas columnas.');
 assert.match(caseScreen, /!correct && <p className="mt-2 whitespace-pre-line/,
   'Casos no muestra explicaciones cuando la respuesta es correcta.');
