@@ -178,13 +178,12 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
             </div>
           </div>
           <aside className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
-            <section className="min-h-[210px] rounded-[18px] bg-[#EAF1FF] px-4 py-6 sm:min-h-[218px] sm:px-5 sm:py-7">
+            <section className="h-[210px] overflow-hidden rounded-[18px] bg-[#EAF1FF] px-4 py-5 sm:h-[218px] sm:px-5 sm:py-6">
               <p className="flex items-center gap-2 text-[12px] font-medium text-[#2563EB]"><CalendarDays className="size-4"/> Próximo examen</p>
-              <h2 className="mt-3 text-[27px] font-semibold tracking-[-0.045em]">{exam?`En ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} días`:'Sin fecha'}</h2>
+              <h2 className="mt-2 text-[23px] font-semibold leading-tight tracking-[-0.045em]">{exam?`En ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} días`:'Sin fecha'}</h2>
               {exam&&<p className="mt-1 text-[12px] text-[#42506A]">{new Date(`${exam}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>}
-              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#D8E3FF]"><div className="h-full rounded-full bg-[#4F5DFF]" style={{width:`${assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%`}}/></div>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#D8E3FF]"><div className="h-full rounded-full bg-[#4F5DFF]" style={{width:`${assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%`}}/></div>
               <div className="mt-2 flex justify-between text-[11px] text-[#66758D]"><span>{completedCount} de {assignedKeys.size} temas leídos</span><span>{assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%</span></div>
-              <p className="mt-4 text-[11px] leading-4 text-[#42506A]">El avance indica temas leídos, no prácticas completadas.</p>
             </section>
             <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
               <h2 className="text-[14px] font-medium tracking-tight">Tu preparación</h2>
