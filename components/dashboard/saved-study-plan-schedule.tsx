@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Check, Flag, Layers3, ListChecks, Network, PencilLine, Zap } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronDown, Flag, Layers3, ListChecks, Network, PencilLine, Zap } from 'lucide-react';
 import { recommendTopicActivities, type PlanDay, type RecommendedStudyActivity } from '@/lib/student-materials/study-plan-distribution';
 
 type ActivityId = RecommendedStudyActivity['id'];
@@ -30,9 +30,12 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
   const initial=scheduled.find(day=>day.date===today)??scheduled.find(day=>day.date>today)??scheduled.find(day=>day.topics.some(topic=>!completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`)))??scheduled[0];
   const [selectedDate,setSelectedDate]=useState<string|null>(initial?.date??null);
   const [showAll,setShowAll]=useState(() => scheduled.findIndex(day=>day.date===initial?.date)>=3);
+  const [expandedTopic,setExpandedTopic]=useState<{date:string;key:string}|null>(null);
   const completed=new Set(completedKeys);
   const shown=showAll?scheduled:scheduled.slice(0,3);
   const selected=scheduled.find(day=>day.date===selectedDate)??initial;
+  const nextTopic=selected?.topics.find(topic=>!completed.has(`${topic.materialId}:${topic.topicIndex}`))??selected?.topics[0];
+  const activeTopicKey=expandedTopic?.date===selected?.date?expandedTopic.key:(nextTopic?`${nextTopic.materialId}:${nextTopic.topicIndex}`:null);
 
   if(!scheduled.length)return <section aria-label="Tu plan de estudios" className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5 text-[12px] text-[#66758D]">Todavía no hay días de estudio asignados a este plan.</section>;
 
@@ -63,24 +66,34 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,preferences,
             </button>
             {selectedDay&&<div className="border-t border-[#EFF2F7] bg-white">
               {day.topics.map((topic,topicPosition)=>{
-                const read=completed.has(`${topic.materialId}:${topic.topicIndex}`);
-                const steps=recommendTopicActivities(topic,preferences,dailyMinutes);
-                return <div key={`${topic.materialId}:${topic.topicIndex}`} className={topicPosition?'border-t border-[#EFF2F7]':''}>
-                  <div className="flex flex-wrap items-center justify-between gap-2 bg-[#FAFBFD] px-3.5 py-2 text-[11px] text-[#66758D]">
-                    <span className="min-w-0 font-medium">{topic.title} <span className="font-normal">· {topic.materialTitle}</span></span>
-                    <span className="shrink-0">{read?'Leído':`${topic.estimatedMinutes} min aprox.`}</span>
-                  </div>
-                  {steps.map((step,index)=>{
-                    const Icon=activityIcons[step.id];
-                    return <Link key={step.id} href={step.href} className="flex items-center gap-3 border-t border-[#F0F2F7] px-3.5 py-3 transition-colors hover:bg-[#F7F9FD]">
-                      <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${activityTones[step.id]}`}><Icon className="size-4" aria-hidden="true"/></span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[12px] font-medium text-[#0F1B3D]">{step.label}</span>
-                        <span className="mt-0.5 block text-[11px] text-[#66758D]">{index===0?'Contenido del tema':'Actividad recomendada'}</span>
-                      </span>
-                      <ArrowRight className="size-4 shrink-0 text-[#9DA9BE]" aria-hidden="true"/>
-                    </Link>;
-                  })}
+                const topicKey=`${topic.materialId}:${topic.topicIndex}`;
+                const read=completed.has(topicKey);
+                const isExpanded=activeTopicKey===topicKey;
+                const panelId=`saved-plan-topic-${day.date}-${topic.materialId}-${topic.topicIndex}`;
+                return <div key={topicKey} className={topicPosition?'border-t border-[#EFF2F7]':''}>
+                  <button type="button" data-saved-plan-topic-toggle aria-expanded={isExpanded} aria-controls={panelId}
+                    onClick={()=>setExpandedTopic({date:day.date,key:topicKey})}
+                    className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#2563EB] ${isExpanded?'bg-[#FAFBFD]':''}`}>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12px] font-medium leading-5 text-[#0F1B3D]">{topic.title}</span>
+                      {isExpanded&&<span className="mt-0.5 block truncate text-[11px] text-[#66758D]">{topic.materialTitle} · {read?'Leído':`${topic.estimatedMinutes} min aprox.`}</span>}
+                    </span>
+                    {read&&<Check className="size-4 shrink-0 text-[#35816A]" aria-label="Leído"/>}
+                    <ChevronDown className={`size-4 shrink-0 text-[#9DA9BE] transition-transform ${isExpanded?'rotate-180 text-[#2563EB]':''}`} aria-hidden="true"/>
+                  </button>
+                  {isExpanded&&<div id={panelId} data-saved-plan-topic-details className="border-t border-[#EFF2F7] bg-white">
+                    {recommendTopicActivities(topic,preferences,dailyMinutes).map((step,index)=>{
+                      const Icon=activityIcons[step.id];
+                      return <Link key={step.id} href={step.href} className="flex items-center gap-3 border-t border-[#F0F2F7] px-3.5 py-3 transition-colors first:border-t-0 hover:bg-[#F7F9FD]">
+                        <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${activityTones[step.id]}`}><Icon className="size-4" aria-hidden="true"/></span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[12px] font-medium text-[#0F1B3D]">{step.label}</span>
+                          <span className="mt-0.5 block text-[11px] text-[#66758D]">{index===0?'Contenido del tema':'Actividad recomendada'}</span>
+                        </span>
+                        <ArrowRight className="size-4 shrink-0 text-[#9DA9BE]" aria-hidden="true"/>
+                      </Link>;
+                    })}
+                  </div>}
                 </div>;
               })}
             </div>}
