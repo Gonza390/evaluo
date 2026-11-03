@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import type { RetentionFilters, UserDetail, UserListResult, UsersRetentionSnapshot, UsersSegment } from './users-retention-types';
 
 const getAggregatesCached = nextCache(async (days: number, from: string | null, to: string | null) => {
-  const { data, error } = await createAdminClient().rpc('admin_users_retention_v2', {
+  const { data, error } = await createAdminClient().rpc('admin_users_retention_v4', {
     p_days: days, p_from: from, p_to: to,
   });
   if (error || !data) throw error ?? new Error('Sin datos de retención');
@@ -14,13 +14,13 @@ const getAggregatesCached = nextCache(async (days: number, from: string | null, 
 }, ['admin-users-retention-v2-inactivity-fixed-20261103'], { revalidate: 600 });
 
 const getSegmentsCached = nextCache(async () => {
-  const { data, error } = await createAdminClient().rpc('admin_users_segments_v1', { p_days: 30 });
+  const { data, error } = await createAdminClient().rpc('admin_users_segments_v2', { p_days: 30 });
   if (error) throw error;
   return (data ?? []) as UsersSegment[];
 }, ['admin-users-segments-v1'], { revalidate: 900 });
 
 const getListCached = nextCache(async (f: Omit<RetentionFilters,'selectedUserId'|'period'|'from'|'to'>) => {
-  const { data, error } = await createAdminClient().rpc('admin_users_list_v1', {
+  const { data, error } = await createAdminClient().rpc('admin_users_list_v3', {
     p_page: f.page,
     p_search: f.search,
     p_plan: f.plan,
