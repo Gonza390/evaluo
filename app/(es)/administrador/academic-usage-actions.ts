@@ -1,6 +1,7 @@
 'use server';
 
 import { requireAdminAccess } from '@/lib/auth';
+import { unstable_cache as nextCache } from 'next/cache';
 import { listAdminUserIds } from '@/lib/admin-users';
 import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -81,13 +82,12 @@ function newestDate(current: string | null, candidate: string | null | undefined
   return new Date(candidate).getTime() > new Date(current).getTime() ? candidate : current;
 }
 
-export async function obtenerUsoAcademicoAdministrador(): Promise<{
+async function loadAcademicUsageUncached(): Promise<{
   success: boolean;
   stats?: AcademicUsageStats;
   message?: string;
 }> {
   try {
-    await requireAdminAccess();
 
     const admin = createAdminClient();
     const adminUserIds = new Set(await listAdminUserIds());
@@ -352,4 +352,17 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
       message: error instanceof Error ? error.message : 'No pudimos cargar Uso académico.',
     };
   }
+}
+
+
+// Cache the DB-only work; always authorize before reading the shared cache.
+const cachedloadAcademicUsageUncached = nextCache(
+  async () => loadAcademicUsageUncached(),
+  ['obtenerUsoAcademicoAdministrador-optimized-v1'],
+  { revalidate: 900 }
+);
+
+export async function obtenerUsoAcademicoAdministrador() {
+  await requireAdminAccess();
+  return cachedloadAcademicUsageUncached();
 }
