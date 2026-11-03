@@ -35,7 +35,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
   const fullyCompleted=new Set(planCompletedKeys);
   const shown=showAll?scheduled:scheduled.slice(0,3);
   const selected=scheduled.find(day=>day.date===selectedDate)??initial;
-  const nextTopic=selected?.topics.find(topic=>!completed.has(`${topic.materialId}:${topic.topicIndex}`))??selected?.topics[0];
+  const nextTopic=selected?.topics.find(topic=>!fullyCompleted.has(`${topic.materialId}:${topic.topicIndex}`))??selected?.topics[0];
   const activeTopicKey=expandedTopic?.date===selected?.date?expandedTopic.key:(nextTopic?`${nextTopic.materialId}:${nextTopic.topicIndex}`:null);
 
   if(!scheduled.length)return <section aria-label="Tu plan de estudios" className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5 text-[12px] text-[#66758D]">Todavía no hay días de estudio asignados a este plan.</section>;
