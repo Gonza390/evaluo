@@ -72,6 +72,10 @@
     "alias": true
   },
   {
+    "file": "tests/dashboard-study-dual-pane.smoke.ts",
+    "alias": false
+  },
+  {
     "file": "tests/seo.smoke.ts",
     "alias": true
   },
