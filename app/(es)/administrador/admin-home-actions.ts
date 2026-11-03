@@ -24,7 +24,7 @@ const getSnapshot = nextCache(async (date: string) => {
   const { data, error } = await createAdminClient().rpc('admin_home_snapshot_v1', { p_day: date });
   if (error || !data) throw error ?? new Error('No se encontró el resumen');
   return data as Omit<AdminHomeSnapshot, 'today'>;
-}, ['admin-home-snapshot-v1'], { revalidate: 900 });
+}, ['admin-home-snapshot-v1-cohort-parity-20261103'], { revalidate: 900 });
 
 export async function obtenerTableroGeneral(date?: string) {
   await requireAdminAccess();
