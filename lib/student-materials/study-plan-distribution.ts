@@ -1,4 +1,4 @@
-export type PlanTopic = { materialId:string; materialTitle:string; topicIndex:number; title:string; estimatedMinutes:number };
+export type PlanTopic = { materialId:string; materialTitle:string; topicIndex:number; title:string; estimatedMinutes:number; activityPlanVersion?:2; extraPractice?:0|1 };
 export type PlanDay = { date:string; topics:PlanTopic[]; estimatedMinutes:number };
 const dateKey=(date:Date)=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 export function distributeStudyTopics(topics:PlanTopic[], examDate:string, minutesPerDay:number, startDate:Date):{days:PlanDay[];unassigned:PlanTopic[]} {
@@ -91,7 +91,7 @@ export function estimateTopicSessionMinutes(
 /** Use genuinely free time on planned days to suggest one more activity per topic.
  * Never add work to an already overloaded plan, and never add an unavailable
  * mode. Derived from the persisted schedule so reloads and progress agree. */
-export function additionalPlanPractice(
+function allocateAdditionalPlanPractice(
   days: readonly PlanDay[],preferences:string[],dailyMinutes:number,
 ): Map<string,number> {
   const extras=new Map<string,number>();
@@ -111,12 +111,37 @@ export function additionalPlanPractice(
   return extras;
 }
 
+/** Freeze the chosen intensity inside the schedule JSON when a NEW plan is saved.
+ * Existing plans have no version marker and keep their original requirements. */
+export function savePlanPracticeRecommendations(
+  days: readonly PlanDay[],preferences:string[],dailyMinutes:number,
+): PlanDay[] {
+  const extras=allocateAdditionalPlanPractice(days,preferences,dailyMinutes);
+  return days.map(day=>({...day,topics:day.topics.map(topic=>({
+    ...topic,activityPlanVersion:2 as const,
+    extraPractice:(extras.get(`${topic.materialId}:${topic.topicIndex}`)??0) as 0|1,
+  }))}));
+}
+
+/** Read only the practice intensity frozen on plan creation. */
+export function additionalPlanPractice(
+  days: readonly PlanDay[],_preferences:string[],_dailyMinutes:number,
+): Map<string,number> {
+  const assigned=new Map<string,number>();
+  for(const day of days) for(const topic of day.topics) {
+    if(topic.activityPlanVersion===2 && topic.extraPractice===1)
+      assigned.set(`${topic.materialId}:${topic.topicIndex}`,1);
+  }
+  return assigned;
+}
+
 /** Optional retrieval practice for a previously studied topic. Uses the same
  * activity links and does not become a new completion requirement. */
 export function optionalPreviousTopicReviews(
   days: readonly PlanDay[],preferences:string[],dailyMinutes:number,
 ): Map<string,{topic:PlanTopic;activity:RecommendedStudyActivity}> {
   const reviews=new Map<string,{topic:PlanTopic;activity:RecommendedStudyActivity}>();
+  if(!days.some(day=>day.topics.some(topic=>topic.activityPlanVersion===2)))return reviews;
   const extras=additionalPlanPractice(days,preferences,dailyMinutes);
   if(days.some(day=>day.estimatedMinutes>dailyMinutes))return reviews;
   let previous:PlanTopic|undefined;
