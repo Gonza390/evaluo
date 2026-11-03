@@ -1,6 +1,17 @@
 import type { Database } from '@/types/supabase';
 
 type AdminPerformanceFunctions = {
+  admin_overview_daily_v1: {
+    Args: { p_days?: number };
+    Returns: Array<{
+      day: string;
+      registrations: number;
+      active_users: number;
+      sessions: number;
+      pdfs_uploaded: number;
+      practices_completed: number;
+    }>;
+  };
   admin_biblioteca_question_counts: {
     Args: Record<PropertyKey, never>;
     Returns: Array<{
