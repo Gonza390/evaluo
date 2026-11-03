@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
-import { StudyPlanSetup } from '@/components/dashboard/study-plan-setup';
 import { StudyPlanNextStep } from '@/components/dashboard/study-plan-next-step';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
 import { StudyPlanRoadmap } from '@/components/dashboard/study-plan-roadmap';
@@ -52,21 +51,6 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
     .select('exam_date').eq('user_id',user.id).maybeSingle();
   const hasSavedPlan=Boolean(personalPlan);
   if (materials.length === 0) return <EmptyStudyPlan />;
-  // El plan guardado se consulta dentro de Estudiar; /preparar queda reservado a la configuración.
-  if (hasSavedPlan) {
-    const planMaterials = await Promise.all(materials.map(async material => {
-      const {data} = await supabase.from('student_material_summaries')
-        .select('summary_sections').eq('student_material_id',material.id).maybeSingle();
-      const sections = Array.isArray(data?.summary_sections) ? data.summary_sections : [];
-      const topics = sections.map((section:unknown,index:number)=>{
-        const item=section as {title?:string;body?:string};
-        const words=(item.body??'').trim().split(/\\s+/u).filter(Boolean).length;
-        return {title:item.title?.trim()||`Tema ${index+1}`,estimatedMinutes:Math.max(10,Math.ceil(words/180)+10)};
-      });
-      return {id:material.id,title:material.title,topicCount:topics.length,topics};
-    }));
-    return <StudyPlanSetup materials={planMaterials} mode="view" />;
-  }
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:h-[calc(100dvh-52px)] xl:overflow-hidden">
