@@ -79,32 +79,33 @@ assert.match(dashboardHeroSource, /h-11.*text-\[14px\]/);
 assert.match(dashboardHeroSource, /nextStudyAction\?\.href \?\? primaryMaterialHref/);
 assert.match(dashboardHeroSource, /onClick=\{onUploadClick\}/);
 assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
-assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
-assert.match(dashboardMaterialsSource, /title="Tus PDFs"\s+visuallyHiddenTitle/,
-  'Keep an accessible section label without repeating Tus PDFs visually.');
+assert.match(dashboardMaterialsSource, /data-dashboard-study-dual-pane/,
+  'Mi espacio presenta materiales y herramientas en dos paneles.');
+assert.match(dashboardMaterialsSource, /aria-label="Seleccionar material de estudio"/,
+  'El selector de materiales mantiene su nombre accesible.');
 const appPageHeaderSource = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
 assert.match(appPageHeaderSource, /visuallyHiddenTitle && 'sr-only'/,
   'The section heading must be visually hidden, not left as a blank row.');
-assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
+assert.match(dashboardMaterialsSource, /text-\[13px\] font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
 assert.doesNotMatch(dashboardMaterialsSource, /material\.file_name/,
   'PDF cards should not repeat the uploaded filename below the title.');
 assert.doesNotMatch(dashboardMaterialsSource, />Privado<|: 'Privado'/,
   'Private PDFs are the default and should not display a redundant visibility tag.');
-assert.match(dashboardMaterialsSource, /\{isShared \? \(/,
+assert.match(dashboardMaterialsSource, /isShared \? /,
   'Shared PDFs should still show their meaningful visibility state.');
-assert.match(dashboardMaterialsSource, /\{formatDate\(material\.created_at\)\}/,
+assert.match(dashboardMaterialsSource, /formatDate\(material\.created_at\)/,
   'PDF cards must retain their upload date.');
 assert.match(dashboardMaterialsSource, /data-desktop-material-search/,
   'The PDF library should offer desktop search when enough materials exist.');
 assert.match(dashboardMaterialsSource, /initialMaterials\.length >= 3/,
   'A single material should not introduce an unnecessary search box.');
-assert.match(dashboardMaterialsSource, /Buscar entre tus PDFs/,
+assert.match(dashboardMaterialsSource, /Buscar entre tus materiales/,
   'Search must be accessible by label.');
 assert.match(dashboardMaterialsSource, /visibleMaterials\.map\(\(material\)/,
   'The visible PDF cards must respond to the search query.');
-assert.match(dashboardMaterialsSource, /xl:grid-cols-2/,
-  'Desktop should make use of available width without modifying the mobile layout.');
+assert.match(dashboardMaterialsSource, /lg:grid-cols-\[minmax\(0,1\.22fr\)_minmax\(310px,0\.86fr\)\]/,
+  'Desktop utiliza dos columnas con las proporciones de Practicar.');
 assert.match(dashboardMaterialsSource, /Mostrar todos/,
   'Empty search results should have a clear recovery action.');
 assert.match(navbarSource, /pathname\.startsWith\('\/materiales\/'\)/,
@@ -112,13 +113,13 @@ assert.match(navbarSource, /pathname\.startsWith\('\/materiales\/'\)/,
 
 assert.doesNotMatch(dashboardMaterialsSource, /dashboard_materials_header/,
   'Tus PDFs must not display a redundant upload CTA in the section header.');
-assert.match(dashboardMaterialsSource, /primaryActionLabel="Subí tu PDF"/,
-  'The empty materials state must keep the PDF upload CTA.');
+assert.match(dashboardMaterialsSource, /primaryActionLabel="Subir mi material"/,
+  'El estado vacío permite subir un material.');
 assert.match(dashboardMaterialsSource, /onPrimaryAction=\{\(\) => openUploadPicker\('dashboard_empty_materials'\)\}/,
   'The empty-state upload CTA must still explicitly open the picker.');
 assert.match(dashboardHeroSource, /Subir otro PDF/,
   'The dashboard hero must keep its upload action for students with existing PDFs.');
-assert.match(dashboardMaterialsSource, /flex h-10 w-10 shrink-0/);
+assert.match(dashboardMaterialsSource, /flex size-10 shrink-0/);
 assert.match(appChromeSource, /const isCompactAppRoute =/);
 assert.match(appChromeSource, /Boolean\(user\)/);
 assert.match(appChromeSource, /data-app-footer/);
