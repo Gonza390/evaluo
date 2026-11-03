@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import './practice-motion.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { SavedStudyPlanRoadmap } from '@/components/dashboard/saved-study-plan-roadmap';
+import { SavedStudyPlanSchedule } from '@/components/dashboard/saved-study-plan-schedule';
 import { completeStudySchedule, estimateTopicSessionMinutes, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
@@ -99,10 +101,10 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
     finally{setMarking(null)}
   }
   const toggle = (list:string[],id:string,save:(x:string[])=>void) => save(list.includes(id) ? list.filter(x=>x!==id) : [...list,id]);
-  return <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+  return <main data-study-plan-shell className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
     {loading&&<p role="status" className="mx-auto max-w-[500px] pb-3 text-[12px] text-[#7F8AA3]">Recuperando tu planificación…</p>}
     {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
-    {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.'}</div> : <div className={`relative mx-auto ${preview ? "max-w-[1190px]" : "max-w-[500px]"}`}>
+    {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.'}</div> : <div className={`relative mx-auto ${preview ? "w-full" : "max-w-[500px]"}`}>
       {!preview && step!==2 && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
         : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
@@ -160,61 +162,19 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
           </div>
         )}
       </div> : <section key="plan-preview" data-study-plan-dashboard className="practice-screen-enter pb-8">
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-          <div><p className="text-[11px] font-medium text-[#7F8AA3]">MI ESPACIO / PLAN DE ESTUDIOS</p>
-            <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.035em] sm:text-[25px]">Mi plan de estudio</h1>
-            <p className="mt-1 text-[12px] text-[#66758D]">Tus temas organizados hasta el examen.</p></div>
-          <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-4"/> Editar plan</Link>
-        </div>
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(310px,0.85fr)] lg:gap-6">
-          <div className="min-w-0 space-y-5">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:items-start">
+          <div className="min-w-0 space-y-3">
+            <div className="flex min-h-10 flex-wrap items-center justify-between gap-2">
+              <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Plan de estudio</h1>
+              <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-3.5"/> Editar plan</Link>
+            </div>
+            {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={completedKeys}/>}
+
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div><p className="text-[11px] font-medium text-[#7F8AA3]">TU PRÓXIMA SESIÓN</p>
-                  <h2 className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]">Para estudiar</h2></div>
-                <span className="rounded-full bg-[#F5F7FB] px-3 py-1.5 text-[11px] font-medium text-[#42506A]"><Clock3 className="mr-1 inline size-3.5"/>{minutes} min por día</span>
-              </div>
-              {(()=>{
-                const next=days.flatMap(day=>day.topics.map(topic=>({...topic,date:day.date}))).find(topic=>!completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`));
-                if(!next)return <p className="mt-4 text-[12px] text-[#66758D]">{assignedKeys.size?'Ya marcaste como leídos todos los temas de este plan.':'Todavía no hay temas asignados. Editá tu plan para continuar.'}</p>;
-                return <div className="mt-4 rounded-xl border border-[#E7EBF4] p-3.5">
-                  <p className="text-[11px] capitalize text-[#7F8AA3]">{new Date(`${next.date}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</p>
-                  <h3 className="mt-2 text-[14px] font-semibold">{next.title}</h3>
-                  <p className="mt-1 text-[11px] text-[#7F8AA3]">{next.materialTitle} · {next.estimatedMinutes} min estimados</p>
-                  <div className="mt-4 space-y-3 border-t border-[#E7EBF4] pt-4">
-                    {recommendTopicActivities(next,preferences,minutes??15).map((activity,index)=><Link key={activity.id} href={activity.href} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[11px] font-semibold text-[#2563EB]">{index+1}</span>
-                      <span className="min-w-0 flex-1">{activity.label}</span><ArrowRight className="size-3.5 shrink-0"/>
-                    </Link>)}
-                  </div>
-                  <Link href={`/materiales/${next.materialId}?tab=resumen&studyTopic=${next.topicIndex}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8]">Empezar a estudiar <ArrowRight className="size-4"/></Link>
-                </div>;
-              })()}
-            </section>
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5">
-              <h2 className="text-[16px] font-semibold tracking-tight">Los días que quedan</h2>
-              {days.filter(day=>day.topics.length>0).length===0&&<p className="mt-3 text-[12px] text-[#66758D]">No hay días disponibles antes del examen. Editá la fecha o el tiempo del plan.</p>}
-              <div className="mt-4 space-y-3">
-                {days.filter(day=>day.topics.length>0).map(day=><div key={day.date} className="rounded-xl border border-[#E7EBF4] p-3">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <h3 className="text-[12px] font-semibold capitalize">{new Date(`${day.date}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-                    <span className="shrink-0 text-[11px] text-[#7F8AA3]">{day.estimatedMinutes} min aprox.</span>
-                  </div>
-                  <ul className="space-y-3">{day.topics.map(topic=>{
-                    const key=`${topic.materialId}:${topic.topicIndex}`,done=completedKeys.includes(key);
-                    return <li key={key} className="flex items-start gap-2">
-                      <BookOpen className="mt-0.5 size-4 shrink-0 text-[#2563EB]"/>
-                      <div className="min-w-0 flex-1"><p className="text-[12px] font-medium">{topic.title}</p><p className="text-[11px] text-[#7F8AA3]">{topic.materialTitle}</p><Link href={`/materiales/${topic.materialId}?tab=resumen&studyTopic=${topic.topicIndex}`} className="mt-1 inline-flex text-[11px] font-medium text-[#2563EB] hover:underline">Estudiar este tema</Link></div>
-                      <button type="button" disabled={!savedPlan||done||marking===key} onClick={()=>void markCompleted(topic.materialId,topic.topicIndex)} className="shrink-0 rounded-lg bg-[#EEF2FF] px-2 py-1.5 text-[11px] font-medium text-[#2563EB] disabled:opacity-50">{done?'Completado':marking===key?'Guardando…':'Marcar leído'}</button>
-                    </li>;
-                  })}</ul>
-                </div>)}
-              </div>
-            </section>
+            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
           </div>
-          <aside className="min-w-0 space-y-5">
-            <section className="rounded-2xl bg-[#EAF1FF] p-4 sm:p-5">
+          <aside className="min-w-0 space-y-3">
+            <section className="rounded-2xl bg-[#EAF1FF] p-3.5">
               <p className="flex items-center gap-2 text-[12px] font-medium text-[#2563EB]"><CalendarDays className="size-4"/> Próximo examen</p>
               <h2 className="mt-3 text-[27px] font-semibold tracking-[-0.045em]">{exam?`En ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} días`:'Sin fecha'}</h2>
               {exam&&<p className="mt-1 text-[12px] text-[#42506A]">{new Date(`${exam}T12:00:00`).toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>}
@@ -222,12 +182,12 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
               <div className="mt-2 flex justify-between text-[11px] text-[#66758D]"><span>{completedCount} de {assignedKeys.size} temas leídos</span><span>{assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%</span></div>
               <p className="mt-4 text-[11px] leading-4 text-[#42506A]">El avance indica temas leídos, no prácticas completadas.</p>
             </section>
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5">
-              <h2 className="text-[16px] font-semibold tracking-tight">Entran al examen</h2>
+            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
+              <h2 className="text-[14px] font-medium tracking-tight">Entran al examen</h2>
               <div className="mt-3 divide-y divide-[#E7EBF4]">{chosen.map(material=><div key={material.id} className="flex items-center gap-3 py-3"><FileText className="size-4 shrink-0 text-[#2563EB]"/><span className="min-w-0 flex-1 truncate text-[12px] text-[#42506A]">{material.title}</span><span className="text-[11px] text-[#7F8AA3]">{days.flatMap(day=>day.topics).filter(topic=>topic.materialId===material.id&&completedKeys.includes(`${topic.materialId}:${topic.topicIndex}`)).length} de {days.flatMap(day=>day.topics).filter(topic=>topic.materialId===material.id).length}</span></div>)}</div>
             </section>
-            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5">
-              <h2 className="text-[16px] font-semibold tracking-tight">Tu preparación</h2>
+            <section className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5">
+              <h2 className="text-[14px] font-medium tracking-tight">Tu preparación</h2>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{completedCount}/{assignedKeys.size}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Temas leídos</p></div>
                 <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{days.filter(day=>day.topics.length>0).length}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Días planificados</p></div>
