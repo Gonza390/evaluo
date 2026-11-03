@@ -78,3 +78,12 @@ export function recommendTopicActivities(
   }
   return activities;
 }
+
+/** Account for the recommended practice in the daily budget, not just reading. */
+export function estimateTopicSessionMinutes(
+  readingMinutes:number, preferences:string[], minutesPerDay:number,
+): number {
+  const hasPractice=preferences.some(value=>['memorizar','practicar','casos'].includes(value));
+  const practiceMinutes=hasPractice?(minutesPerDay>=45?12:6):0;
+  return Math.max(1,Math.ceil(readingMinutes))+practiceMinutes;
+}
