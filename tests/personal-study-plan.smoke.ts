@@ -32,9 +32,9 @@ assert.match(api,/method:'PATCH'|export async function PATCH/, 'La API conserva 
 assert.match(filled,/if \(hasSavedPlan\)/, 'El nuevo recorrido exige un plan guardado.');
 assert.match(setup,/savedPlan && <SavedStudyPlanRoadmap/, 'El recorrido solo aparece en la vista del plan persistido.');
 assert.match(setup,/<SavedStudyPlanSchedule days=\{days\}/, 'La vista guardada utiliza días reales del plan.');
-assert.match(setup,/completedKeys=\\{planCompletedKeys\\}/, 'El recorrido se pinta solo con finalizaciones completas.');
-assert.match(savedSchedule,/planTopic=\\$\\{topic.topicIndex\\}/, 'La práctica conserva el tema del plan.');
-assert.match(practicePage,/planTopicIndex=\\{planTopicIndex\\}/, 'El contexto del plan llega a la sesión.');
+assert.match(setup,/completedKeys=\{planCompletedKeys\}/, 'El recorrido se pinta solo con finalizaciones completas.');
+assert.match(savedSchedule,/planTopic=\$\{topic.topicIndex\}/, 'La práctica conserva el tema del plan.');
+assert.match(practicePage,/planTopicIndex=\{planTopicIndex\}/, 'El contexto del plan llega a la sesión.');
 assert.match(practiceEndpoint,/practice_not_in_plan/, 'Solo se acredita una actividad recomendada por el plan.');
 assert.match(progressMigration,/enable row level security/, 'El progreso por modalidad queda protegido por RLS.');
 const sampleTopic={materialId:'12345678-1234-1234-1234-123456789abc',topicIndex:0,title:'Primer tema',materialTitle:'Material',estimatedMinutes:18};
@@ -50,11 +50,11 @@ assert.match(savedSchedule,/Tu plan de estudios/, 'Se utiliza el título solicit
 assert.match(savedSchedule,/Días hasta el examen/, 'La tarjeta utiliza el encabezado de lista del diseño existente.');
 assert.match(savedSchedule,/flex size-11 shrink-0 flex-col/, 'Las fechas usan indicadores compactos.');
 assert.match(savedSchedule,/shown\.map\(day=>/, 'Las filas se generan por día planificado.');
-assert.match(savedSchedule,/selected\\?\\.topics\\.find\\(topic=>!fullyCompleted\\.has/, 'Se abre el primer tema que todavía no completó todas las actividades.');
-assert.match(savedSchedule,/data-saved-plan-topic-toggle aria-expanded=\\{isExpanded\\}/, 'Cada tema se muestra como una fila expandible y accesible.');
+assert.match(savedSchedule,/selected\?\.topics\.find\(topic=>!fullyCompleted\.has/, 'Se abre el primer tema que todavía no completó todas las actividades.');
+assert.match(savedSchedule,/data-saved-plan-topic-toggle aria-expanded=\{isExpanded\}/, 'Cada tema se muestra como una fila expandible y accesible.');
 assert.match(savedSchedule,/activeTopicKey===topicKey/, 'Solo un tema puede mostrar sus actividades a la vez.');
-assert.match(savedSchedule,/isExpanded&&<div id=\\{panelId\\} data-saved-plan-topic-details/, 'Las actividades solo aparecen debajo del tema elegido.');
-assert.match(savedSchedule,/onClick=\\{\\(\\)=>setExpandedTopic\\(\\{date:day.date,key:topicKey\\}\\)\\}/, 'La selección de un tema cambia el detalle abierto.');
+assert.match(savedSchedule,/isExpanded&&<div id=\{panelId\} data-saved-plan-topic-details/, 'Las actividades solo aparecen debajo del tema elegido.');
+assert.match(savedSchedule,/onClick=\{\(\)=>setExpandedTopic\(\{date:day.date,key:topicKey\}\)\}/, 'La selección de un tema cambia el detalle abierto.');
 
 assert.match(savedSchedule,/onClick=\{\(\)=>setSelectedDate\(day.date\)\}/, 'Al elegir un día aparecen sus actividades.');
 assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente tres fechas.');
