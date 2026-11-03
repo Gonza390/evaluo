@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
-import { recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
+import { additionalPlanPractice, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 
 const MODES = new Set(['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards']);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -80,7 +80,9 @@ export async function POST(request: Request) {
     const saved=plan as {schedule:PlanDay[];preferences:string[];daily_minutes:number};
     const topic=Array.isArray(saved.schedule)?saved.schedule.flatMap(day=>day.topics)
       .find(item=>item.materialId===material.id && item.topicIndex===planTopicIndex):undefined;
-    if(!topic || !recommendTopicActivities(topic,saved.preferences,saved.daily_minutes)
+    const extras=additionalPlanPractice(saved.schedule,saved.preferences,saved.daily_minutes);
+    if(!topic || !recommendTopicActivities(topic,saved.preferences,saved.daily_minutes,
+        extras.get(`${material.id}:${planTopicIndex}`)??0)
         .some(activity=>activity.id===p.mode)) {
       return NextResponse.json({error:'practice_not_in_plan'},{status:403});
     }
