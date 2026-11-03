@@ -32,6 +32,10 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_acquisition_dashboard_v1: {
+    Args: Record<PropertyKey, never>;
+    Returns: import('@/app/(es)/administrador/acquisition-dashboard-types').AcquisitionSnapshot;
+  };
   admin_home_snapshot_v1: {
     Args: { p_day?: string | null };
     Returns: {
