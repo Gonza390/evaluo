@@ -56,7 +56,7 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
  const kpis=[
   {label:'Estudiantes que practicaron',value:number(overall.students),sub:'Con práctica o finalización registrada',note:'Usuarios únicos'},
   {label:'Prácticas iniciadas',value:number(overall.started_events),sub:'Eventos de inicio deduplicados',note:'No todas las modalidades informan inicios'},
-  {label:'Prácticas completadas',value:number(totalCompleted),sub:number(overall.completed_events)+' eventos y '+number(overall.completed_mode_sessions)+' sesiones',note:'Fuentes distintas; posible solapamiento',priority:true},
+  {label:'Prácticas completadas',value:number(totalCompleted),sub:number(overall.completed_events)+' eventos y '+number(overall.completed_mode_sessions)+' sesiones',note:'Fuentes distintas, incluida autodeclaración; posible solapamiento',priority:true},
   {label:'Preguntas respondidas',value:number(overall.questions),sub:'Con corrección evaluada',note:'Excluye autoevaluaciones'},
   {label:'Rendimiento general',value:accuracy,sub:number(overall.correct)+' de '+number(overall.questions)+' respuestas evaluadas',note:'No incluye flashcards autodeclaradas'},
   {label:'Mejora del aprendizaje',value:improvement,sub:pairedEnough?'Primera vs. última respuesta del mismo ítem':'Muestra insuficiente: '+number(overall.repeated_users)+' estudiantes con reintentos',note:'Cambio observado, no efecto causal',priority:true}
@@ -189,6 +189,6 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
     </p>
    </section>
   </div>
-  <footer className="eh-footer">Fuente: Supabase · datos agregados, sin identificadores personales · caché de 60 minutos · resultados por respuestas evaluadas · los planes son estados actuales · la mejora se calcula solo si hay 5 o más estudiantes con reintentos comparables. La instrumentación incompleta se presenta como sin dato.</footer>
+  <footer className="eh-footer">Fuente: Supabase · datos agregados, sin identificadores personales · caché de 60 minutos · resultados por respuestas evaluadas · los planes son estados actuales · universidad/carrera identifican estudiantes vinculados, no atribuyen cada respuesta a esa institución · la mejora se calcula solo si hay 5 o más estudiantes con reintentos comparables. La instrumentación incompleta se presenta como sin dato.</footer>
  </main>;
 }
