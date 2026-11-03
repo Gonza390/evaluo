@@ -91,8 +91,8 @@ export function OverviewPanel({ rows, generatedAt }: { rows: AdminDailyOverview[
         </div>
       </div>
       <p className="admin-footnote">
-        Última consulta cacheada: {generatedAt}. Los indicadores se actualizan como máximo cada 15 minutos
-        cuando se consulta esta pantalla. Los usuarios activos corresponden al último día y no a usuarios únicos
+        Pantalla consultada: {generatedAt}. Los datos pueden permanecer en caché hasta 15 minutos
+        y se actualizan al realizar una consulta posterior a su vencimiento. Los usuarios activos corresponden al último día y no a usuarios únicos
         acumulados en todo el período. Las prácticas incluyen solamente sesiones guardadas en practice_mode_sessions.
       </p>
     </section>
