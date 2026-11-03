@@ -1,6 +1,7 @@
 'use server';
 
 import { requireAdminAccess } from '@/lib/auth';
+import { unstable_cache as nextCache } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { getActiveMailCampaigns, type ActiveMailCampaign } from '@/lib/email/campaign-registry';
 
@@ -155,12 +156,11 @@ function contextText(context: Record<string, unknown> | null, key: string) {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
-export async function obtenerMailsAdministrador(input?: {
+async function loadMailsUncached(input?: {
   type?: MailFilterType;
   days?: 7 | 30;
 }): Promise<{ success: true; data: AdminMailData } | { success: false; message: string }> {
   try {
-    await requireAdminAccess();
 
     const activeType: MailFilterType =
       input?.type === 'exam' || input?.type === 'ready' || input?.type === 'campaign'
@@ -600,4 +600,17 @@ export async function obtenerMailsAdministrador(input?: {
       message: error instanceof Error ? error.message : 'No pudimos cargar el historial de mails.',
     };
   }
+}
+
+
+// Cache the DB-only work; always authorize before reading the shared cache.
+const cachedloadMailsUncached = nextCache(
+  async (input?: { type?: MailFilterType; days?: 7 | 30 }) => loadMailsUncached(input),
+  ['obtenerMailsAdministrador-optimized-v1'],
+  { revalidate: 300 }
+);
+
+export async function obtenerMailsAdministrador(input?: { type?: MailFilterType; days?: 7 | 30 }) {
+  await requireAdminAccess();
+  return cachedloadMailsUncached(input);
 }
