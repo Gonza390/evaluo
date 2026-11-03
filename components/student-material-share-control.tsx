@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, Link2, Loader2, Share2, X } from 'lucide-react';
+import { Link2, Loader2, Share2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { updateStudentMaterialVisibilityAction } from '@/app/dashboard/materiales/actions';
 import { useToast } from '@/components/ui/use-toast';
@@ -34,7 +34,6 @@ export function StudentMaterialShareControl({
   const [visibility, setVisibility] = useState<MaterialVisibility>(initialVisibility);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const shareImagePath = buildStudentMaterialShareImagePath({ title });
 
   useEffect(() => {
@@ -57,8 +56,6 @@ export function StudentMaterialShareControl({
       textarea.remove();
     }
 
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
     toast({ description: 'Copiamos el enlace del material.' });
   };
 
@@ -98,15 +95,6 @@ export function StudentMaterialShareControl({
     }
   };
 
-  const handleShare = () => {
-    if (visibility === 'private') {
-      if (isOwner) setConfirmOpen(true);
-      return;
-    }
-
-    void shareCurrentLink();
-  };
-
   useEffect(() => {
     const onMobileShare = (event: Event) => {
       const detail = (event as CustomEvent<{ materialId?: string }>).detail;
@@ -125,7 +113,7 @@ export function StudentMaterialShareControl({
   return (
     <div
       data-student-material-share-control
-      className="fixed right-4 bottom-20 z-40 flex items-center gap-2 md:right-6 md:bottom-6"
+      className="fixed right-4 bottom-20 z-40 flex items-center gap-2 md:hidden"
     >
       {confirmOpen && isOwner ? (
         <div className="absolute right-0 bottom-[calc(100%+12px)] w-[min(360px,calc(100vw-2rem))] rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
@@ -178,27 +166,6 @@ export function StudentMaterialShareControl({
         </div>
       ) : null}
 
-      <button
-        type="button"
-        onClick={handleShare}
-        disabled={loading || (!isOwner && visibility !== 'shared')}
-        aria-label={
-          loading ? 'Preparando enlace' : copied ? 'Enlace copiado' : 'Compartir este PDF'
-        }
-        title={copied ? 'Enlace copiado' : 'Compartir este PDF'}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring hidden md:inline-flex size-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60"
-      >
-        {loading ? (
-          <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-        ) : copied ? (
-          <Check aria-hidden="true" className="h-4 w-4" />
-        ) : (
-          <Share2 aria-hidden="true" className="h-4 w-4" />
-        )}
-        <span role="status" className="sr-only">
-          {copied ? 'Enlace copiado' : ''}
-        </span>
-      </button>
     </div>
   );
 }
