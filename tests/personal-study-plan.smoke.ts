@@ -32,11 +32,12 @@ assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente 
 assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/, 'Cada día muestra actividades reales del generador.');
 assert.match(savedSchedule,/examDateLabel\(examDate\)/, 'El examen es el hito final de la lista.');
 assert.doesNotMatch(setup,/Los días que quedan|TU PRÓXIMA SESIÓN/, 'No duplicar bloques diarios anteriores.');
-assert.match(savedRoadmap,/WINDOW_SIZE = 4/, 'Se muestran como máximo cuatro temas.');
-assert.match(savedRoadmap,/topics\.slice\(start, start \+ WINDOW_SIZE\)/, 'El recorrido pagina los temas, sin una línea interminable.');
+assert.match(savedRoadmap,/data-saved-roadmap-scroll/, 'Solo la fila central de temas tiene scroll horizontal.');
+assert.match(savedRoadmap,/topics\.map\(\(topic, index\)/, 'Todos los temas se recorren horizontalmente sin paginación.');
 assert.match(savedRoadmap,/examLabel\(examDate\)/, 'El examen permanece como hito final.');
 assert.match(savedRoadmap,/completed\.has\(topic\.key\)/, 'Se respeta el avance real de lectura.');
-assert.match(savedRoadmap,/setWindowStart/, 'Se pueden recorrer los temas anteriores y siguientes.');
+assert.doesNotMatch(savedRoadmap,/setWindowStart|Anterior|Siguiente/, 'El recorrido no muestra controles de paginación.');
+assert.match(savedRoadmap,/overflow-x-auto/, 'Se conserva el desplazamiento horizontal interno.');
 
 assert.match(setup,/data-study-plan-time-options/, 'La etapa de tiempo debe tener opciones identificables.');
 assert.match(setup,/sm:grid-cols-4/, 'Las cuatro duraciones van en una fila en escritorio.');
