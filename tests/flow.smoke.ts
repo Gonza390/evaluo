@@ -504,19 +504,19 @@ assert.deepEqual(
   }
 );
 
-const dashboardMaterialsSource = readFileSync(
-  resolve('components/dashboard/student-materials-workspace.tsx'),
+const emptyDashboardSource = readFileSync(
+  resolve('components/dashboard/empty-study-space.tsx'),
   'utf8'
 );
-assert.match(
-  dashboardMaterialsSource,
-  /initialMaterials\.length === 0[\s\S]*Ver cómo funciona con un PDF de ejemplo/,
-  'La muestra completa debe ofrecerse sólo en el estado sin PDFs.'
+const dashboardShellSource = readFileSync(
+  resolve('components/dashboard/maeve-study-space.tsx'),
+  'utf8'
 );
-assert.match(
-  dashboardMaterialsSource,
-  /secondaryActionHref="\/preview\/primer-pdf\?source=dashboard_empty"/
-);
+assert.match(dashboardShellSource, /materials\.length === 0 \? \(/);
+assert.match(dashboardShellSource, /<EmptyStudySpace firstName=\{firstName\} \/>/);
+assert.match(emptyDashboardSource, /data-empty-study-space/);
+assert.match(emptyDashboardSource, /onClick=\{openPicker\}/);
+assert.match(emptyDashboardSource, /usePdfDropUpload/);
 
 const homeHeroSource = readFileSync(resolve('components/marketing/home-redesign.tsx'), 'utf8');
 assert.match(homeHeroSource, /HomePdfPickerButton/);
