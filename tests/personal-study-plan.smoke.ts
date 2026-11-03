@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { additionalPlanPractice, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
+import { additionalPlanPractice, optionalPreviousTopicReviews, completeStudySchedule, distributeStudyTopics, estimateTopicSessionMinutes, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
 import { completedPlanTopics } from '../lib/student-materials/study-plan-completion.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
@@ -170,6 +170,18 @@ assert.deepEqual([...extras], [...additionalPlanPractice(comfortable,combined,60
   'Saved recommendations must remain stable across visits.');
 assert.match(code('lib/student-materials/study-plan-completion.ts'),/additionalPlanPractice\(days,preferences,dailyMinutes\)/,
   'Completion follows the same time-aware activity allocations as the UI.');
+const reviews=optionalPreviousTopicReviews(comfortable,combined,60);
+assert.equal(reviews.size,1,'A later day with spare time should offer one optional prior-topic review.');
+assert.equal(reviews.get('2027-01-02')?.topic.topicIndex,0,
+  'The optional review must refer to an earlier topic, not the current one.');
+assert.equal(optionalPreviousTopicReviews(comfortable,combined,15).size,0,
+  'Short or overloaded plans must not include optional review work.');
+assert.equal(optionalPreviousTopicReviews(comfortable,['entender'],60).size,0,
+  'Reading-only plans do not need artificial practice recommendations.');
+assert.match(savedSchedule,/optionalPreviousTopicReviews\(days,preferences,dailyMinutes\)/,
+  'Optional reviews use the existing day panel.');
+assert.match(savedSchedule,/Repaso opcional/,
+  'Earlier-topic reviews are clearly labeled optional.');
 assert.equal(estimateTopicSessionMinutes(10,['entender'],15),10,
   'Reading-only plans must not invent practice time.');
 assert.equal(estimateTopicSessionMinutes(10,['entender','practicar'],15),16,
