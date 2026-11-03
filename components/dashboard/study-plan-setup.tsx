@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './practice-motion.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { completeStudySchedule, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
+import { completeStudySchedule, estimateTopicSessionMinutes, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
 type Material = { id: string; title: string; topicCount: number; topics: Array<{title:string;estimatedMinutes:number}> };
@@ -60,7 +60,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
   const offset = (new Date(month.getFullYear(),month.getMonth(),1).getDay()+6)%7;
   const currentMonth = month.getFullYear()===today.getFullYear() && month.getMonth()===today.getMonth();
   const chosen = materials.filter(m=>selected.includes(m.id));
-  const topics = chosen.flatMap(material=>material.topics.map((topic,topicIndex)=>({...topic,topicIndex,materialId:material.id,materialTitle:material.title})));
+  const topics = chosen.flatMap(material=>material.topics.map((topic,topicIndex)=>({...topic,topicIndex,materialId:material.id,materialTitle:material.title,estimatedMinutes:estimateTopicSessionMinutes(topic.estimatedMinutes,preferences,minutes??15)})));
   const distribution = completeStudySchedule(topics,exam,minutes??0,today);
   const days=savedPlan?.schedule??distribution.days;
   const overloaded=days.some(day=>day.estimatedMinutes>(savedPlan?.daily_minutes??minutes??0)) ||
