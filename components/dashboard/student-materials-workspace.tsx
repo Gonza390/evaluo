@@ -143,12 +143,12 @@ export function StudentMaterialsWorkspace({
                     </span>
                   </>
                 );
-                const styles = `flex min-h-[151px] min-w-0 flex-col items-start rounded-2xl p-4 text-left transition enabled:hover:brightness-[0.985] sm:min-h-[164px] ${color} ${id === 'progreso' ? 'col-span-2 sm:col-span-1' : ''}`;
+                const styles = `flex min-h-[151px] min-w-0 flex-col items-start rounded-2xl p-4 text-left transition sm:min-h-[164px] ${color} ${id === 'progreso' ? 'col-span-2 sm:col-span-1' : ''}`;
                 return materialReady && selectedMaterial ? (
                   <Link
                     key={id}
                     href={`${getStudentMaterialRoute(selectedMaterial.id)}?tab=${id}`}
-                    className={styles.replace('enabled:hover:', 'hover:') + ' focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]'}
+                    className={styles + ' hover:brightness-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]'}
                     aria-label={`Abrir ${label} de ${selectedMaterial.title}`}
                   >
                     {content}
@@ -172,7 +172,7 @@ export function StudentMaterialsWorkspace({
               <div>
                 <h3 className="text-[16px] font-semibold tracking-tight text-[#0F1B3D]">Mis materiales</h3>
                 <p className="mt-1 text-[12px] text-[#66758D]">
-                  {initialMaterials.length} ${initialMaterials.length === 1 ? 'material' : 'materiales'} disponibles
+                  {initialMaterials.length} {initialMaterials.length === 1 ? 'material' : 'materiales'} disponibles
                 </p>
               </div>
               <button
