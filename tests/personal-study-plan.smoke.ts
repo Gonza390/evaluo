@@ -32,6 +32,12 @@ assert.match(savedSchedule,/Tu plan de estudios/, 'Se utiliza el título solicit
 assert.match(savedSchedule,/Días hasta el examen/, 'La tarjeta utiliza el encabezado de lista del diseño existente.');
 assert.match(savedSchedule,/flex size-11 shrink-0 flex-col/, 'Las fechas usan indicadores compactos.');
 assert.match(savedSchedule,/shown\.map\(day=>/, 'Las filas se generan por día planificado.');
+assert.match(savedSchedule,/selected\\?\\.topics\\.find\\(topic=>!completed\\.has/, 'Se abre inicialmente el primer tema pendiente del día.');
+assert.match(savedSchedule,/data-saved-plan-topic-toggle aria-expanded=\\{isExpanded\\}/, 'Cada tema se muestra como una fila expandible y accesible.');
+assert.match(savedSchedule,/activeTopicKey===topicKey/, 'Solo un tema puede mostrar sus actividades a la vez.');
+assert.match(savedSchedule,/isExpanded&&<div id=\\{panelId\\} data-saved-plan-topic-details/, 'Las actividades solo aparecen debajo del tema elegido.');
+assert.match(savedSchedule,/onClick=\\{\\(\\)=>setExpandedTopic\\(\\{date:day.date,key:topicKey\\}\\)\\}/, 'La selección de un tema cambia el detalle abierto.');
+
 assert.match(savedSchedule,/onClick=\{\(\)=>setSelectedDate\(day.date\)\}/, 'Al elegir un día aparecen sus actividades.');
 assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente tres fechas.');
 assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes\)/, 'Cada día muestra actividades reales del generador.');
