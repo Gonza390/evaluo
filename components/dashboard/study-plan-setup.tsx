@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './practice-motion.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { distributeStudyTopics, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
+import { completeStudySchedule, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
 type Material = { id: string; title: string; topicCount: number; topics: Array<{title:string;estimatedMinutes:number}> };
@@ -61,8 +61,10 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
   const currentMonth = month.getFullYear()===today.getFullYear() && month.getMonth()===today.getMonth();
   const chosen = materials.filter(m=>selected.includes(m.id));
   const topics = chosen.flatMap(material=>material.topics.map((topic,topicIndex)=>({...topic,topicIndex,materialId:material.id,materialTitle:material.title})));
-  const distribution = distributeStudyTopics(topics,exam,minutes??0,today);
+  const distribution = completeStudySchedule(topics,exam,minutes??0,today);
   const days=savedPlan?.schedule??distribution.days;
+  const overloaded=days.some(day=>day.estimatedMinutes>(savedPlan?.daily_minutes??minutes??0)) ||
+    new Set(days.flatMap(day=>day.topics.map(topic=>`${topic.materialId}:${topic.topicIndex}`))).size<topics.length;
   const assignedKeys=new Set(days.flatMap(day=>day.topics.map(topic=>`${topic.materialId}:${topic.topicIndex}`)));
   const completedCount=completedKeys.filter(key=>assignedKeys.has(key)).length;
   async function savePlan() {
@@ -166,6 +168,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
         </div>
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(310px,0.85fr)] lg:gap-6">
           <div className="min-w-0 space-y-5">
+            {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
             <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div><p className="text-[11px] font-medium text-[#7F8AA3]">TU PRÓXIMA SESIÓN</p>
@@ -180,9 +183,10 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
                   <h3 className="mt-2 text-[14px] font-semibold">{next.title}</h3>
                   <p className="mt-1 text-[11px] text-[#7F8AA3]">{next.materialTitle} · {next.estimatedMinutes} min estimados</p>
                   <div className="mt-4 space-y-3 border-t border-[#E7EBF4] pt-4">
-                    <Link href={`/materiales/${next.materialId}?tab=resumen&studyTopic=${next.topicIndex}`} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]"><BookOpen className="size-4 text-[#2563EB]"/> Leer el resumen <ArrowRight className="ml-auto size-3.5"/></Link>
-                    {preferences.includes('memorizar')&&<Link href={`/materiales/${next.materialId}?tab=tarjetas&studyTopic=${next.topicIndex}`} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]"><Layers3 className="size-4 text-[#2563EB]"/> Repasar con flashcards <ArrowRight className="ml-auto size-3.5"/></Link>}
-                    {preferences.includes('practicar')&&<Link href={`/materiales/${next.materialId}?tab=ejercicios&studyTopic=${next.topicIndex}`} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]"><ListChecks className="size-4 text-[#2563EB]"/> Practicar el tema <ArrowRight className="ml-auto size-3.5"/></Link>}
+                    {recommendTopicActivities(next,preferences,minutes??15).map((activity,index)=><Link key={activity.id} href={activity.href} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[11px] font-semibold text-[#2563EB]">{index+1}</span>
+                      <span className="min-w-0 flex-1">{activity.label}</span><ArrowRight className="size-3.5 shrink-0"/>
+                    </Link>)}
                   </div>
                   <Link href={`/materiales/${next.materialId}?tab=resumen&studyTopic=${next.topicIndex}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8]">Empezar a estudiar <ArrowRight className="size-4"/></Link>
                 </div>;
@@ -229,7 +233,7 @@ export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Materi
                 <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{days.filter(day=>day.topics.length>0).length}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Días planificados</p></div>
               </div>
             </section>
-            {distribution.unassigned.length>0&&<p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-900">Con el tiempo disponible quedan {distribution.unassigned.length} temas sin asignar. Podés ampliar el tiempo diario o elegir otra fecha.</p>}
+
           </aside>
         </div>
       </section>}
