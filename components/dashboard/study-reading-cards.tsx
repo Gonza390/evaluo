@@ -68,7 +68,6 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
           {activeMaterial ? (
             <div className="space-y-5">
               <div>
-                <h2 className="mb-2 text-[12px] font-medium text-slate-500">Donde lo dejaste</h2>
                 {renderMaterial(activeMaterial)}
               </div>
               {otherMaterials.length > 0 && (
