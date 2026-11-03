@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Check, ChevronDown, Flag, Layers3, ListChecks, Network, PencilLine, Zap } from 'lucide-react';
-import { recommendTopicActivities, type PlanDay, type RecommendedStudyActivity } from '@/lib/student-materials/study-plan-distribution';
+import { additionalPlanPractice, recommendTopicActivities, type PlanDay, type RecommendedStudyActivity } from '@/lib/student-materials/study-plan-distribution';
 
 type ActivityId = RecommendedStudyActivity['id'];
 const activityIcons: Record<ActivityId, typeof BookOpen> = {
@@ -31,6 +31,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
   const [selectedDate,setSelectedDate]=useState<string|null>(initial?.date??null);
   const [showAll,setShowAll]=useState(() => scheduled.findIndex(day=>day.date===initial?.date)>=3);
   const [expandedTopic,setExpandedTopic]=useState<{date:string;key:string}|null>(null);
+  const bonusActivities=additionalPlanPractice(days,preferences,dailyMinutes);
   const completed=new Set(completedKeys);
   const fullyCompleted=new Set(planCompletedKeys);
   const shown=showAll?scheduled:scheduled.slice(0,3);
@@ -61,7 +62,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12px] font-medium capitalize text-[#0F1B3D]">{dayTitle}</span>
-                <span className="mt-0.5 block text-[11px] text-[#66758D]">{day.topics.length} {day.topics.length===1?'tema':'temas'} · {day.estimatedMinutes} min estimados</span>
+                <span className="mt-0.5 block text-[11px] text-[#66758D]">{day.topics.length} {day.topics.length===1?'tema':'temas'} · {day.estimatedMinutes+day.topics.filter(topic=>bonusActivities.has(`${topic.materialId}:${topic.topicIndex}`)).length*8} min estimados</span>
               </span>
               {allRead?<Check className="size-4 shrink-0 text-[#35816A]" aria-label="Temas leídos"/>:<ArrowRight className={`size-4 shrink-0 ${selectedDay?'text-[#2563EB]':'text-[#9DA9BE]'}`}/>}
             </button>
@@ -84,7 +85,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
                     <ChevronDown className={`size-4 shrink-0 text-[#9DA9BE] transition-transform ${isExpanded?'rotate-180 text-[#2563EB]':''}`} aria-hidden="true"/>
                   </button>
                   {isExpanded&&<div id={panelId} data-saved-plan-topic-details className="border-t border-[#EFF2F7] bg-white">
-                    {recommendTopicActivities(topic,preferences,dailyMinutes).map((step,index)=>{
+                    {recommendTopicActivities(topic,preferences,dailyMinutes,bonusActivities.get(topicKey)??0).map((step,index)=>{
                       const Icon=activityIcons[step.id];
                       return <Link key={step.id} href={step.id==='resumen'?step.href:`${step.href}&planTopic=${topic.topicIndex}`} className="flex items-center gap-3 border-t border-[#F0F2F7] px-3.5 py-3 transition-colors first:border-t-0 hover:bg-[#F7F9FD]">
                         <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${activityTones[step.id]}`}><Icon className="size-4" aria-hidden="true"/></span>
