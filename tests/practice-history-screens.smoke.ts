@@ -40,6 +40,13 @@ assert.match(caseScreen, /onClick=\{onSkip\}/);
 assert.match(caseScreen, /onClick=\{onNext\}/);
 assert.match(caseScreen, /max-w-\\[1120px\\]/, 'Casos usa un ancho mayor para la corrección.');
 assert.match(caseScreen, /data-case-explanation/, 'La explicación ocupa una fila completa bajo ambas columnas.');
+assert.match(caseScreen, /!correct && <p className="mt-2 whitespace-pre-line/,
+  'Casos no muestra explicaciones cuando la respuesta es correcta.');
+assert.match(caseScreen, /!correct && <p className="mt-2 font-medium[^\n]*Respuesta correcta:/,
+  'Casos mantiene la respuesta correcta cuando hay un error.');
+assert.match(practiceSession, /mode !== 'casos' \|\| !correctAt\(i\)/,
+  'Los resultados tampoco explican casos respondidos correctamente.');
+
 assert.match(caseScreen, /scrollIntoView/, 'Al confirmar un error, se desliza hacia la explicación.');
 assert.match(caseScreen, /justConfirmedIncorrect/, 'El scroll no se dispara en respuestas correctas.');
 assert.match(caseScreen, /prefers-reduced-motion/, 'Respeta la preferencia de movimiento reducido.');
