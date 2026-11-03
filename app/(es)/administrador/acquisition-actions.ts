@@ -1,5 +1,7 @@
 'use server';
 
+import { requireAdminAccess } from '@/lib/auth';
+import { unstable_cache as nextCache } from 'next/cache';
 import { listAdminUserIds } from '@/lib/admin-users';
 import { createAdminClient } from '@/lib/supabase-admin';
 
@@ -573,7 +575,7 @@ async function buildSourceDetail({
   };
 }
 
-export async function obtenerAdquisicionAdministrador(
+async function loadAdquisicionUncached(
   rangeDays = 7,
   selectedSource: AcquisitionSourceKey | null = null
 ): Promise<{
@@ -703,4 +705,16 @@ export async function obtenerAdquisicionAdministrador(
       message: error instanceof Error ? error.message : 'No se pudo cargar adquisición.',
     };
   }
+}
+
+
+const cachedloadAdquisicionUncached = nextCache(
+  async (rangeDays = 7, selectedSource: AcquisitionSourceKey | null = null) => loadAdquisicionUncached(rangeDays, selectedSource),
+  ['obtenerAdquisicionAdministrador-optimized-v1'],
+  { revalidate: 900 }
+);
+
+export async function obtenerAdquisicionAdministrador(rangeDays = 7, selectedSource: AcquisitionSourceKey | null = null) {
+  await requireAdminAccess();
+  return cachedloadAdquisicionUncached(rangeDays, selectedSource);
 }
