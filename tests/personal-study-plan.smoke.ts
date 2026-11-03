@@ -36,7 +36,7 @@ assert.match(setup,/completedKeys=\{planCompletedKeys\}/, 'El recorrido se pinta
 assert.match(setup,/Temas completados/, 'Tu preparación muestra la cantidad de temas totalmente finalizados.');
 assert.match(setup,/Preparación completada/, 'Tu preparación informa el porcentaje de actividades realizadas.');
 assert.doesNotMatch(setup,/Días planificados/, 'Tu preparación ya no muestra los días planificados.');
-assert.match(setup,/preparationProgress\\?\\.percent\\?\\?0/, 'El porcentaje se obtiene de progreso persistido.');
+assert.match(setup,/preparationProgress\?\.percent\?\?0/, 'El porcentaje se obtiene de progreso persistido.');
 assert.match(api,/preparationProgress:planPreparationProgress/, 'La API devuelve progreso de lectura y prácticas reales.');
 
 assert.match(savedSchedule,/planTopic=\$\{topic.topicIndex\}/, 'La práctica conserva el tema del plan.');
