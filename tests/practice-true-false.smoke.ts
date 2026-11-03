@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   verifyGeneratedTrueFalse, verifiedTrueFalsePool, sufficientTrueFalse, selectBalancedTrueFalse,
+  shuffleTrueFalseOrder,
 } from '../lib/student-materials/practice-true-false.ts';
 
 const correct = [
@@ -42,6 +43,45 @@ const balanced = selectBalancedTrueFalse(verified);
 assert.equal(balanced.length,6);
 assert.equal(balanced.filter(q=>q.answer==='Verdadero').length,3);
 assert.equal(balanced.filter(q=>q.answer==='Falso').length,3);
+
+// Presentation must never reveal a deterministic True/False alternation.
+// Verify many independently seeded rounds (not a single lucky shuffle).
+const seeded = (seed:number) => {
+  let state = seed >>> 0;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+};
+const originalKeys = new Map(verified.map(q=>[q.id,q.answer]));
+const sequences = new Set<string>();
+const displayOrders = new Set<string>();
+for (let i=1;i<=80;i++) {
+  const chosen = selectBalancedTrueFalse(verified,6,0,seeded(i));
+  assert.equal(chosen.length,6);
+  assert.equal(new Set(chosen.map(q=>q.id)).size,6,'Questions cannot repeat.');
+  assert.ok(chosen.every(q=>originalKeys.get(q.id)===q.answer),
+    'Shuffling must never change a correct answer.');
+  assert.equal(chosen.filter(q=>q.answer==='Verdadero').length,3);
+  assert.equal(chosen.filter(q=>q.answer==='Falso').length,3);
+  const answers = chosen.map(q=>q.answer);
+  assert.ok(answers.some((answer,j)=>j>0 && answer===answers[j-1]),
+    'A round should not show a perfectly alternating answer sequence.');
+  sequences.add(answers.join('/'));
+  displayOrders.add(chosen.map(q=>q.id).join('/'));
+}
+assert.ok(sequences.size>=5,'Multiple non-predictable True/False patterns should occur.');
+assert.ok(displayOrders.size>=10,'Repeated sessions should vary the question order.');
+const alternating = [
+  verified.find(q=>q.answer==='Verdadero')!,
+  verified.find(q=>q.answer==='Falso')!,
+  verified.filter(q=>q.answer==='Verdadero')[1]!,
+  verified.filter(q=>q.answer==='Falso')[1]!,
+];
+const corrected = shuffleTrueFalseOrder(alternating,()=>0.999999);
+assert.deepEqual(corrected.map(q=>q.id).sort(),alternating.map(q=>q.id).sort());
+assert.ok(corrected.some((q,j)=>j>0 && q.answer===corrected[j-1]!.answer),
+  'Even a perfectly alternating random draw is repaired without modifying answer keys.');
 const longPool = [...verified, ...correct.slice(0,3).map((text,i) => ({
  ...verified[i]!, id:'extra-'+i,
  prompt:text+' El dato adicional corresponde a la clase de este semestre.',
