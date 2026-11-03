@@ -431,10 +431,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             </p>
             <p className="mt-1 text-slate-800">{prompt}</p>
             {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {responses[i] || 'Sin responder'}</p>}
-            <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>
+            {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>}
             {diagnosticFor(i) && <p className="mt-1 text-slate-700">{diagnosticFor(i)}</p>}
             {task.type === 'question' && <>
-              <p className="mt-1 text-slate-600">{groundedPracticeExplanation(task.question,pairs)}</p>
+              {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-600">{groundedPracticeExplanation(task.question,pairs)}</p>}
               {task.question.pageStart && <Link className="mt-2 inline-block text-blue-600 underline"
                 href={'/materiales/' + materialId + '?tab=resumen&page=' + task.question.pageStart}>
                 Revisar el material · página {task.question.pageStart}
