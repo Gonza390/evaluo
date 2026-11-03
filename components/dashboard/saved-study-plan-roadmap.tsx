@@ -46,14 +46,14 @@ export function SavedStudyPlanRoadmap({
         <h2 className="text-[15px] font-semibold tracking-tight text-[#0F1B3D]">Tu recorrido</h2>
         <span className="text-[11px] text-[#7F8AA3]">{finished} de {topics.length} temas</span>
       </div>
-      <div className="grid grid-cols-5 items-start gap-1 sm:gap-2">
+      <div className="grid items-start gap-1 sm:gap-2" style={{ gridTemplateColumns: `repeat(${visible.length + 1}, minmax(0, 1fr))` }}>
         {visible.map((topic, offset) => {
           const index = start + offset;
           const done = completed.has(topic.key);
           const isCurrent = index === current;
           return (
             <div key={topic.key} className="relative min-w-0 text-center">
-              {offset > 0 && <span aria-hidden="true" className="absolute right-1/2 top-[17px] -z-0 h-px w-full bg-[#E7EBF4]"/>}
+              {offset > 0 && <span aria-hidden="true" className="absolute right-1/2 top-[17px] h-px w-full bg-[#E7EBF4]"/>}
               <Link href={`/materiales/${topic.materialId}?tab=resumen&studyTopic=${topic.topicIndex}`}
                 aria-label={`Tema ${index + 1}: ${topic.title}. ${done ? 'Leído' : isCurrent ? 'Estás acá' : 'Pendiente'}`}
                 className="relative z-10 flex min-w-0 flex-col items-center gap-2 rounded-lg px-0.5 py-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
