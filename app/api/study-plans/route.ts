@@ -38,7 +38,11 @@ export async function GET() {
     supabase.from('student_personal_study_plan_practice_progress' as never)
       .select('material_id,topic_index,mode').eq('user_id',user.id).in('material_id',ids),
   ]);
-  if(result.error || practiceResult.error)return fail('No pudimos consultar el progreso de tu plan.',503);
+  if(result.error)return fail('No pudimos consultar el progreso de tu plan.',503);
+  // Graceful rollout: an uninstalled tracking table must never hide an existing plan.
+  // Without practice evidence nothing is marked complete for practice-based plans.
+  if(practiceResult.error && !['42P01','PGRST205'].includes(practiceResult.error.code??''))
+    return fail('No pudimos consultar el progreso de las prácticas.',503);
   const entries=(result.data??[]) as Array<{material_id:string;topic_index:number}>;
   const completedKeys=entries.map(row=>`${row.material_id}:${row.topic_index}`);
   const practice=(practiceResult.data??[]) as PlanPracticeCompletion[];
