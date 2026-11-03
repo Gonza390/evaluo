@@ -17,8 +17,8 @@ import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
 import { obtenerDashboardAdquisicion } from './acquisition-dashboard-actions';
 import { AcquisitionDashboard } from './acquisition-dashboard';
-import { obtenerProductoDiarioAdministrador } from './product-actions';
-import { ProductPanel } from './product-panel';
+import { obtenerActivacionRecorrido } from './activation-dashboard-actions';
+import { ActivationDashboard } from './activation-dashboard';
 import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
 import { obtenerUsoAcademicoAdministrador } from './academic-usage-actions';
 import { MailPanel } from './mail-panel';
@@ -155,9 +155,7 @@ export default async function AdministradorPage({
     aiKeyHealthResult,
   ] = await Promise.all([
     needsOverview ? obtenerTableroGeneral(params.date) : Promise.resolve(null),
-    needsProduct
-      ? obtenerProductoDiarioAdministrador(requestedProductDate)
-      : Promise.resolve(null),
+    needsProduct ? obtenerActivacionRecorrido() : Promise.resolve(null),
     needsAcquisition ? obtenerDashboardAdquisicion() : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
@@ -181,12 +179,9 @@ export default async function AdministradorPage({
   let panelContent: React.ReactNode;
 
   if (activePanel === 'producto') {
-    panelContent =
-      productResult?.success && productResult.stats ? (
-        <ProductPanel stats={productResult.stats} />
-      ) : (
-        <ErrorPanel message={productResult?.message ?? 'No pudimos cargar Producto.'} />
-      );
+    panelContent = productResult
+      ? <ActivationDashboard data={productResult} />
+      : <ErrorPanel message="No pudimos cargar Activación y recorrido." />;
   } else if (activePanel === 'adquisicion') {
     panelContent = acquisitionResult
       ? <AcquisitionDashboard data={acquisitionResult} />
@@ -280,6 +275,9 @@ export default async function AdministradorPage({
   if (needsOverview && overviewResult) {
     return <AdminHome data={overviewResult.snapshot} minDay={overviewResult.minDay} />;
   }
+  if (needsProduct && productResult) {
+    return <ActivationDashboard data={productResult} />;
+  }
   if (needsAcquisition && acquisitionResult) {
     return <AcquisitionDashboard data={acquisitionResult} />;
   }
@@ -299,9 +297,7 @@ export default async function AdministradorPage({
             <PanelNavigation
               activePanel={activePanel}
               activePeriod={activePeriod}
-              productDate={productResult?.success && productResult.stats
-                ? productResult.stats.dateKey
-                : requestedProductDate}
+              productDate={requestedProductDate}
             />
             <div className="admin-sidebar-links">
               <Link href="/administrador/feedback" prefetch={false}>Feedback</Link>
