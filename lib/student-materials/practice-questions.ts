@@ -1,5 +1,23 @@
 import type { StudyQuestion } from './pedagogy';
 
+/** Randomize MCQ positions per attempt, reproducibly for resumed saved exams.
+ * The answer is stored as a string, so reordering never changes the answer key. */
+export function shuffleStudyQuestionOptions(question: StudyQuestion, attemptId: string): StudyQuestion {
+  if (question.type !== 'multiple_choice' || question.options.length < 2) return question;
+  let state = 2166136261;
+  const key = attemptId + ':' + question.id;
+  for (let i = 0; i < key.length; i++) {
+    state = Math.imul(state ^ key.charCodeAt(i), 16777619) >>> 0;
+  }
+  const options = [...question.options];
+  for (let i = options.length - 1; i > 0; i--) {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    const j = Math.floor((state / 0x100000000) * (i + 1));
+    [options[i], options[j]] = [options[j]!, options[i]!];
+  }
+  return { ...question, options };
+}
+
 export type ExamSizeOption = {
   count: number;
   mode: 'brief' | 'coverage' | 'complete';
