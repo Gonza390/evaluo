@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { AdminHomeSnapshot } from './admin-home-actions';
 import './admin-home.css';
 
@@ -19,7 +19,7 @@ function Points({values,ceiling}:{values:number[];ceiling:number}) {
     (values.length===1?500:(i*1000/(values.length-1))).toFixed(1) + ' ' +
     (220-200*v/ceiling).toFixed(1)).join('');
 }
-function Title({number,children,note}:{number:string;children:React.ReactNode;note?:string}) {
+function Title({number,children,note}:{number:string;children:ReactNode;note?:string}) {
   return <div className="eh-section-head"><div className="eh-head-content"><span className="eh-index">{number}</span><h2>{children}</h2>{note&&<small>{note}</small>}</div></div>;
 }
 function StatRows({items}:{items:Item[]}) {
@@ -61,7 +61,7 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
   ];
   const rev = currency(data.revenue.ars,'ARS')+(data.revenue.usd?' · '+currency(data.revenue.usd,'USD'):'');
   const money:Item[]=[
-    {label:'Suscripciones Premium activas',value:fmt(data.premium.active),note:'Estado de suscripciones registrado'},
+    {label:'Suscripciones Premium activas',value:data.day===data.today?fmt(data.premium.active):'—',note:data.day===data.today?'Estado vigente de suscripciones':'Sin snapshot histórico de suscripciones'},
     {label:'Ingresos cobrados',value:rev,note:'Pagos acreditados · últimos 7 días'},
   ];
   const alerts=[
