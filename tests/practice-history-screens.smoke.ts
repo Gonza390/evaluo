@@ -6,6 +6,7 @@ const picker = read('components/dashboard/practice-mode-picker.tsx');
 const exerciseScreens = read('components/dashboard/practice-visual-screens.tsx');
 const practiceSession = read('components/dashboard/practice-session.tsx');
 const panel = read('components/dashboard/practice-history-panel.tsx');
+const detail = read('components/dashboard/practice-history-detail.tsx');
 const page = read('app/(es)/dashboard/practicar/page.tsx');
 const history = read('lib/student-materials/practice-history.ts');
 const api = read('app/api/practice/session/route.ts');
@@ -62,6 +63,17 @@ assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pa
 assert.match(panel, /lg:overflow-hidden/, 'El historial queda inmóvil en escritorio');
 assert.match(panel, /Historial de prácticas/, 'Hay acceso al historial completo sin scroll del panel');
 assert.match(panel, /<Dialog open=\{showAll\}/, 'La lista larga se abre en un modal accesible');
+assert.match(picker, /activeHistoryEntry/, 'El panel central usa la práctica elegida');
+assert.match(picker, /<PracticeHistoryDetail key=\{activeHistoryEntry\.id\}/, 'La vista de detalle reemplaza a las tarjetas y al historial');
+assert.match(picker, /onSelectSession=\{entry => setActiveHistoryId\(entry\.id\)\}/, 'Seleccionar una práctica abre su detalle');
+assert.match(panel, /onClick=\{\(\) => onSelectSession\(item\)\}/, 'El historial abre el detalle sin ventanas emergentes');
+assert.match(panel, /onClick=\{\(\)=>\{setShowAll\(false\);onSelectSession\(item\)\}\}/, 'Desde el historial completo también se abre el detalle');
+assert.match(detail, /Volver a Practicar/, 'La pantalla de detalle tiene navegación de regreso');
+assert.match(detail, /session\.answers\.map/, 'El detalle muestra respuestas almacenadas');
+assert.match(detail, /Esta práctica se guardó con su puntuación/, 'Los intentos antiguos sin respuestas muestran un estado honesto');
+assert.match(detail, /data-practice-detail/, 'La vista de detalle usa el layout correcto en escritorio');
+assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-detail\]\)/, 'El detalle ocupa el área central sin hacer scroll de toda la página');
+
 
 assert.match(picker, /aria-label="Modalidades de práctica: desplazate para ver todas"/, 'La zona desplazable es accesible');
 assert.match(picker, /scrollbarStyles\.scrollArea/, 'La barra de las modalidades queda oculta sin desactivar scroll');
