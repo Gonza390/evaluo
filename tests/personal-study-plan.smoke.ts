@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { distributeStudyTopics } from '../lib/student-materials/study-plan-distribution.ts';
+import { completeStudySchedule, distributeStudyTopics, recommendTopicActivities } from '../lib/student-materials/study-plan-distribution.ts';
 
 const code=(path:string)=>readFileSync(path,'utf8');
 const practice=code('components/dashboard/practice-mode-picker.tsx');
@@ -57,4 +57,37 @@ assert.deepEqual(result.days.map(day=>day.topics.length),[1,1,1]);
 assert.equal(result.unassigned.length,0);
 const insufficient=distributeStudyTopics(sample,'2027-01-02',30,new Date(2027,0,1));
 assert.equal(insufficient.unassigned.length,2);
+const full=completeStudySchedule(sample,'2027-01-02',30,new Date(2027,0,1));
+assert.equal(full.days.flatMap(day=>day.topics).length,sample.length,
+  'Even with insufficient time, the complete study plan must show every topic.');
+assert.equal(full.overloadedTopics,2,'Overflow is reported rather than silently discarded.');
+assert.ok(full.days.some(day=>day.estimatedMinutes>30),
+  'An overloaded day must be detectable for the small warning.');
+const normal=completeStudySchedule(sample,'2027-01-04',30,new Date(2027,0,1));
+assert.equal(normal.overloadedTopics,0);
+assert.ok(normal.days.every(day=>day.estimatedMinutes<=30));
+const combined=['entender','memorizar','practicar','casos'];
+const seen=new Set<string>();
+for(let i=0;i<24;i++) {
+  const steps=recommendTopicActivities({...sample[0]!,topicIndex:i},combined,60);
+  assert.equal(steps[0]?.id,'resumen','Every session starts with the topic summary.');
+  assert.equal(steps.length,3,'Long sessions recommend exactly two distinct practice activities.');
+  assert.equal(new Set(steps.map(step=>step.id)).size,steps.length);
+  assert.ok(steps.every(step=>step.href.includes('a')));
+  assert.deepEqual(steps,recommendTopicActivities({...sample[0]!,topicIndex:i},combined,60),
+    'Reloading a study plan must keep recommendations stable.');
+  steps.slice(1).forEach(step=>seen.add(step.id));
+}
+assert.deepEqual(seen,new Set(['flashcards','unir','completar','opciones','mixto','casos','simulacro']),
+  'Preferences must vary across all available practice modalities.');
+const quick=recommendTopicActivities(sample[0]!,['practicar'],15);
+assert.equal(quick.length,2,'A 15-minute session must not add extra practice activities.');
+assert.ok(quick.every(step=>!['casos','flashcards','simulacro'].includes(step.id)),
+  'Unselected specialties and long simulations should not be forced on short sessions.');
+const casesOnly=Array.from({length:9},(_,i)=>recommendTopicActivities({...sample[0]!,topicIndex:i},['casos'],30)[1]!.id);
+assert.ok(casesOnly.includes('casos')&&casesOnly.includes('opciones')&&casesOnly.includes('mixto'),
+  'A cases preference must sometimes show cases and sometimes another exercise.');
+assert.match(setup,/data-study-plan-time-warning/);
+assert.match(setup,/recommendTopicActivities\(next,preferences,minutes\?\?15\)/);
+assert.match(api,/completeStudySchedule\(topics,examDate,minutes,start\)/);
 console.log('Personal plan persistence, empty states and topic distribution OK');
