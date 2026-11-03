@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import './practice-motion.css';
 import Link from 'next/link';
-import { distributeStudyTopics, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
+import { useRouter } from 'next/navigation';
+import { completeStudySchedule, estimateTopicSessionMinutes, recommendTopicActivities, type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen, Layers3, ListChecks, Brain } from 'lucide-react';
 
 type Material = { id: string; title: string; topicCount: number; topics: Array<{title:string;estimatedMinutes:number}> };
@@ -16,7 +17,8 @@ const methods = [
 const week = ['L','M','X','J','V','S','D'];
 const pad = (n:number) => String(n).padStart(2,'0');
 const localDate = (date:Date) => `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
-export function StudyPlanSetup({ materials }: { materials:Material[] }) {
+export function StudyPlanSetup({ materials, mode = 'setup' }: { materials:Material[]; mode?: 'setup' | 'view' }) {
+  const router = useRouter();
   const today = useMemo(()=>new Date(),[]);
   const [step,setStep] = useState(0);
   const [month,setMonth] = useState(new Date(today.getFullYear(),today.getMonth(),1));
@@ -45,7 +47,7 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
         setSelected(data.plan.material_ids);
         setMinutes(data.plan.daily_minutes);
         setPreferences(data.plan.preferences);
-        setPreview(true);
+        setPreview(mode==='view');
       }
     }).catch((cause:unknown)=>{
       if(mounted)setError(cause instanceof Error?cause.message:'No pudimos recuperar el plan.');
@@ -58,9 +60,11 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
   const offset = (new Date(month.getFullYear(),month.getMonth(),1).getDay()+6)%7;
   const currentMonth = month.getFullYear()===today.getFullYear() && month.getMonth()===today.getMonth();
   const chosen = materials.filter(m=>selected.includes(m.id));
-  const topics = chosen.flatMap(material=>material.topics.map((topic,topicIndex)=>({...topic,topicIndex,materialId:material.id,materialTitle:material.title})));
-  const distribution = distributeStudyTopics(topics,exam,minutes??0,today);
+  const topics = chosen.flatMap(material=>material.topics.map((topic,topicIndex)=>({...topic,topicIndex,materialId:material.id,materialTitle:material.title,estimatedMinutes:estimateTopicSessionMinutes(topic.estimatedMinutes,preferences,minutes??15)})));
+  const distribution = completeStudySchedule(topics,exam,minutes??0,today);
   const days=savedPlan?.schedule??distribution.days;
+  const overloaded=days.some(day=>day.estimatedMinutes>(savedPlan?.daily_minutes??minutes??0)) ||
+    new Set(days.flatMap(day=>day.topics.map(topic=>`${topic.materialId}:${topic.topicIndex}`))).size<topics.length;
   const assignedKeys=new Set(days.flatMap(day=>day.topics.map(topic=>`${topic.materialId}:${topic.topicIndex}`)));
   const completedCount=completedKeys.filter(key=>assignedKeys.has(key)).length;
   async function savePlan() {
@@ -76,7 +80,9 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
       const latest=await fetch('/api/study-plans',{cache:'no-store'});
       if(!latest.ok)throw new Error('El plan se guardó, pero no pudimos recuperarlo.');
       const data=await latest.json() as {plan:SavedPlan|null;completedKeys:string[]};
-      setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);setPreview(true);
+      setSavedPlan(data.plan);setCompletedKeys(data.completedKeys??[]);
+      if(mode==='setup') router.push('/dashboard/explicaciones');
+      else setPreview(true);
     }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el plan.')}
     finally{setSaving(false)}
   }
@@ -96,7 +102,7 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
   return <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-[#0F1B3D] sm:px-4 sm:py-4 lg:px-6 lg:py-5">
     {loading&&<p role="status" className="mx-auto max-w-[500px] pb-3 text-[12px] text-[#7F8AA3]">Recuperando tu planificación…</p>}
     {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
-    <div className={`relative mx-auto ${preview ? "max-w-[1190px]" : "max-w-[500px]"}`}>
+    {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.'}</div> : <div className={`relative mx-auto ${preview ? "max-w-[1190px]" : "max-w-[500px]"}`}>
       {!preview && step!==2 && (step===0
         ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
         : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
@@ -158,10 +164,11 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
           <div><p className="text-[11px] font-medium text-[#7F8AA3]">MI ESPACIO / PLAN DE ESTUDIOS</p>
             <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.035em] sm:text-[25px]">Mi plan de estudio</h1>
             <p className="mt-1 text-[12px] text-[#66758D]">Tus temas organizados hasta el examen.</p></div>
-          <button type="button" onClick={()=>{setPreview(false);setStep(0);setSavedPlan(null)}} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-4"/> Editar plan</button>
+          <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-4"/> Editar plan</Link>
         </div>
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(310px,0.85fr)] lg:gap-6">
           <div className="min-w-0 space-y-5">
+            {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-900">Con {minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.</p>}
             <section className="rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div><p className="text-[11px] font-medium text-[#7F8AA3]">TU PRÓXIMA SESIÓN</p>
@@ -176,9 +183,10 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
                   <h3 className="mt-2 text-[14px] font-semibold">{next.title}</h3>
                   <p className="mt-1 text-[11px] text-[#7F8AA3]">{next.materialTitle} · {next.estimatedMinutes} min estimados</p>
                   <div className="mt-4 space-y-3 border-t border-[#E7EBF4] pt-4">
-                    <Link href={`/materiales/${next.materialId}?tab=resumen&studyTopic=${next.topicIndex}`} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]"><BookOpen className="size-4 text-[#2563EB]"/> Leer el resumen <ArrowRight className="ml-auto size-3.5"/></Link>
-                    {preferences.includes('memorizar')&&<Link href={`/materiales/${next.materialId}?tab=tarjetas&studyTopic=${next.topicIndex}`} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]"><Layers3 className="size-4 text-[#2563EB]"/> Repasar con flashcards <ArrowRight className="ml-auto size-3.5"/></Link>}
-                    {preferences.includes('practicar')&&<Link href={`/materiales/${next.materialId}?tab=ejercicios&studyTopic=${next.topicIndex}`} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]"><ListChecks className="size-4 text-[#2563EB]"/> Practicar el tema <ArrowRight className="ml-auto size-3.5"/></Link>}
+                    {recommendTopicActivities(next,preferences,minutes??15).map((activity,index)=><Link key={activity.id} href={activity.href} className="flex items-center gap-3 text-[12px] text-[#42506A] hover:text-[#2563EB]">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[11px] font-semibold text-[#2563EB]">{index+1}</span>
+                      <span className="min-w-0 flex-1">{activity.label}</span><ArrowRight className="size-3.5 shrink-0"/>
+                    </Link>)}
                   </div>
                   <Link href={`/materiales/${next.materialId}?tab=resumen&studyTopic=${next.topicIndex}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8]">Empezar a estudiar <ArrowRight className="size-4"/></Link>
                 </div>;
@@ -225,10 +233,10 @@ export function StudyPlanSetup({ materials }: { materials:Material[] }) {
                 <div className="rounded-xl bg-[#F5F7FB] p-3"><p className="text-[20px] font-semibold">{days.filter(day=>day.topics.length>0).length}</p><p className="mt-1 text-[11px] text-[#7F8AA3]">Días planificados</p></div>
               </div>
             </section>
-            {distribution.unassigned.length>0&&<p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-900">Con el tiempo disponible quedan {distribution.unassigned.length} temas sin asignar. Podés ampliar el tiempo diario o elegir otra fecha.</p>}
+
           </aside>
         </div>
       </section>}
-    </div>
+    </div>}
   </main>
 }

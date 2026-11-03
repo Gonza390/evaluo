@@ -64,15 +64,16 @@ assert.match(panel, /lg:overflow-hidden/, 'El historial queda inmóvil en escrit
 assert.match(panel, /Historial de prácticas/, 'Hay acceso al historial completo sin scroll del panel');
 assert.match(panel, /<Dialog open=\{showAll\}/, 'La lista larga se abre en un modal accesible');
 assert.match(picker, /activeHistoryEntry/, 'El panel central usa la práctica elegida');
-assert.match(picker, /<PracticeHistoryDetail key=\{activeHistoryEntry\.id\}/, 'La vista de detalle reemplaza a las tarjetas y al historial');
+assert.match(picker, /selectedSession=\{activeHistoryEntry\}/, 'El historial recibe la sesión elegida para mostrar su detalle');
+assert.match(panel, /if \(selectedSession && selectedSession\.materialId === materialId\)/, 'El detalle se muestra dentro del panel de historial');
 assert.match(picker, /onSelectSession=\{entry => setActiveHistoryId\(entry\.id\)\}/, 'Seleccionar una práctica abre su detalle');
 assert.match(panel, /onClick=\{\(\) => onSelectSession\(item\)\}/, 'El historial abre el detalle sin ventanas emergentes');
 assert.match(panel, /onClick=\{\(\)=>\{setShowAll\(false\);onSelectSession\(item\)\}\}/, 'Desde el historial completo también se abre el detalle');
-assert.match(detail, /Volver a Practicar/, 'La pantalla de detalle tiene navegación de regreso');
-assert.match(detail, /session\.answers\.map/, 'El detalle muestra respuestas almacenadas');
-assert.match(detail, /Esta práctica se guardó con su puntuación/, 'Los intentos antiguos sin respuestas muestran un estado honesto');
-assert.match(detail, /data-practice-detail/, 'La vista de detalle usa el layout correcto en escritorio');
-assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-detail\]\)/, 'El detalle ocupa el área central sin hacer scroll de toda la página');
+assert.match(panel, /onClick=\{onBackToHistory\}/, 'El detalle permite regresar al historial');
+assert.match(panel, /selectedSession\.answers\?\.length \? selectedSession\.answers\.map/, 'El detalle muestra las respuestas almacenadas');
+assert.match(panel, /selectedSession\.answers\?\.length/, 'El detalle contempla sesiones sin respuestas guardadas');
+assert.match(panel, /selectedSession && selectedSession\.materialId === materialId/, 'El detalle se muestra en el panel correspondiente');
+assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pane\]\)/, 'La vista de historial conserva el layout de dos columnas');
 
 
 assert.match(picker, /aria-label="Modalidades de práctica: desplazate para ver todas"/, 'La zona desplazable es accesible');

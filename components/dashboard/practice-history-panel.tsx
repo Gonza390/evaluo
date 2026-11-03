@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, ChevronRight, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, ChartNoAxesColumnIncreasing, Check, CheckCircle2, ChevronRight, CircleAlert, History, Layers3, ListChecks, Network, RotateCcw, Timer, Zap } from 'lucide-react';
 import type { PracticeHistoryEntry } from '@/lib/student-materials/practice-history';
 import scrollbarStyles from './practice-history-scrollbar.module.css';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -52,11 +52,13 @@ function average(items: PracticeHistoryEntry[]) {
   return items.length ? Math.round(items.reduce((sum, item) => sum + percentOf(item), 0) / items.length) : 0;
 }
 
-export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, onSelectSession, historyLoadError = false }: {
+export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, onSelectSession, historyLoadError = false, selectedSession = null, onBackToHistory }: {
   history: PracticeHistoryEntry[]; materialId: string;
   onStartFlashcards?: () => void;
   onSelectSession: (entry: PracticeHistoryEntry) => void;
   historyLoadError?: boolean;
+  selectedSession?: PracticeHistoryEntry | null;
+  onBackToHistory?: () => void;
 }) {
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
@@ -71,6 +73,52 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
     const last = groups[groups.length - 1];
     if (last?.key === key) last.items.push(entry);
     else groups.push({ key, items: [entry] });
+  }
+
+  // El detalle se abre en el mismo panel, sin sustituir la pantalla de Practicar.
+  if (selectedSession && selectedSession.materialId === materialId) {
+    const percent = percentOf(selectedSession);
+    const incorrect = Math.max(0, selectedSession.total - selectedSession.correct);
+    return (
+      <aside data-practice-history-inline-detail aria-labelledby="practice-history-detail-title"
+        className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0">
+        <div className="shrink-0 border-b border-[#EFF2F7] px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
+          <button type="button" onClick={onBackToHistory}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[11px] font-semibold text-[#2563EB] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+            <ArrowLeft className="size-3.5" aria-hidden="true"/> Volver a prácticas realizadas
+          </button>
+          <h2 id="practice-history-detail-title" className="mt-2 text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
+            {modeLabels[selectedSession.mode] ?? selectedSession.mode}
+          </h2>
+          <p className="mt-1 text-[11px] text-[#66758D]">{dateLabel(selectedSession.completedAt,now)} · {timeLabel(selectedSession.completedAt)}</p>
+          <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4]">
+            <div className="pr-2"><p className="text-[10px] text-[#66758D]">Resultado</p><p className="mt-1 text-[20px] font-semibold text-[#0F1B3D]">{percent}%</p></div>
+            <div className="px-3"><p className="text-[10px] text-[#66758D]">Correctas</p><p className="mt-1 text-[20px] font-semibold text-[#0F1B3D]">{selectedSession.correct} de {selectedSession.total}</p></div>
+            <div className="pl-3"><p className="text-[10px] text-[#66758D]">Para revisar</p><p className="mt-1 text-[20px] font-semibold text-[#0F1B3D]">{incorrect}</p></div>
+          </div>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#EDF1F6]">
+            <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`} style={{width:`${percent}%`}}/>
+          </div>
+        </div>
+        <div tabIndex={0} role="region" aria-label="Respuestas de la práctica" className={`${scrollbarStyles.scrollArea} min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-5`}>
+          {selectedSession.answers?.length ? selectedSession.answers.map((answer,index)=>(
+            <article key={index} className="rounded-xl border border-[#E7EBF4] bg-white p-3">
+              <div className="flex items-center gap-2">
+                {answer.correct ? <CheckCircle2 className="size-4 shrink-0 text-[#358458]"/> : <CircleAlert className="size-4 shrink-0 text-[#B86A36]"/>}
+                <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#66758D]">Pregunta {index+1} · {answer.correct?'Correcta':'Para repasar'}</span>
+              </div>
+              <p className="mt-2 break-words text-[12px] font-semibold leading-5 text-[#0F1B3D]">{answer.prompt}</p>
+              {selectedSession.mode!=='flashcards'&&<p className="mt-2 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">Tu respuesta:</span> {answer.selectedAnswer||'Sin responder'}</p>}
+              <p className="mt-1 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">Respuesta esperada:</span> {answer.correctAnswer}</p>
+            </article>
+          )) : (
+            <p className="rounded-xl bg-[#F5F7FB] p-3 text-[12px] leading-5 text-[#42506A]">
+              Esta práctica se guardó con su puntuación, pero sin el detalle individual de las respuestas.
+            </p>
+          )}
+        </div>
+      </aside>
+    );
   }
 
   // Diferenciar una consulta fallida de un usuario que todavía no practicó.
