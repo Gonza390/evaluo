@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import {useMemo,useState,type ReactNode} from 'react';
+import {useEffect,useMemo,useState,type ReactNode} from 'react';
+import {useRouter} from 'next/navigation';
 import type {CommunicationsFilters,CommunicationsSnapshot} from './communications-dashboard-types';
 import './admin-home.css';
 import './communications-dashboard.css';
@@ -77,11 +78,21 @@ function Name({title,subtitle}:{title:string;subtitle:string}){
 }
 type Props={snapshot:CommunicationsSnapshot;filters:CommunicationsFilters;today:string;earliest:string};
 export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props){
+ const router=useRouter();
  const [period,setPeriod]=useState<CommunicationsFilters['period']>(filters.period);
  const [from,setFrom]=useState(filters.from??'');
  const [to,setTo]=useState(filters.to??today);
  const [sortBy,setSortBy]=useState<'sent'|'study'|'returned'|'name'>('sent');
  const m=snapshot.summary,impact=snapshot.impact;
+ useEffect(()=>{
+  if(period!=='custom'||!from||!to||from>to||from<earliest||to>today||
+   (Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000>29||
+   (filters.from===from&&filters.to===to))return;
+  const query=new URLSearchParams(window.location.search);
+  query.set('panel','mails');query.set('commPeriod','custom');
+  query.set('commFrom',from);query.set('commTo',to);
+  router.replace('/administrador?'+query.toString());
+ },[period,from,to,earliest,today,filters.from,filters.to,router]);
  const sortedTemplates=useMemo(()=>{
   const rows=[...snapshot.templates];
   if(sortBy==='sent')rows.sort((a,b)=>b.sent-a.sent);
@@ -158,14 +169,27 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
   </header>
   <section className="cm-intro"><span className="cm-kicker">Evaluo / Comunicaciones</span>
     <h1>Comunicaciones</h1><p>Los correos automáticos de Evaluo: si se envían, si llegan y, sobre todo, si los estudiantes vuelven a estudiar.</p></section>
-  <form className="cm-filters" action="/administrador" method="get">
+  <form className="cm-filters" action="/administrador" method="get"
+    onChange={e=>{if(e.target instanceof HTMLSelectElement)e.currentTarget.requestSubmit();}}>
    <input type="hidden" name="panel" value="mails"/>
-   <div className="cm-filter"><span className="cm-kicker">Período</span>
+   <div className="cm-filter-top">
+    <div className="cm-filter"><span className="cm-kicker">Período</span>
     <div className="cm-segment" role="group" aria-label="Período">
      {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([v,label])=>
-      <button type="button" key={v} onClick={()=>setPeriod(v)} aria-pressed={period===v}
+      <button type="button" key={v} onClick={()=>{
+        setPeriod(v);
+        if(v!=='custom'){
+         const query=new URLSearchParams(window.location.search);
+         query.set('panel','mails');query.set('commPeriod',v);
+         query.delete('commFrom');query.delete('commTo');
+         router.push('/administrador?'+query.toString());
+        }
+       }} aria-pressed={period===v}
        className={period===v?'cm-picked':''}>{label}</button>)}</div>
     <input type="hidden" name="commPeriod" value={period}/></div>
+    <span className="cm-tag">Datos reales · Supabase</span>
+   </div>
+   <div className="cm-filter-second">
    <label className="cm-filter"><span className="cm-kicker">Tipo de correo</span>
     <select name="commType" defaultValue={filters.type}>{types.map(([v,label])=>
       <option key={v} value={v}>{label}</option>)}</select></label>
@@ -186,8 +210,7 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
    <label className="cm-filter"><span className="cm-kicker">Campaña</span>
     <select name="commCampaign" defaultValue={filters.campaign}>{campaignLabels.map(([v,label])=>
       <option key={v} value={v}>{label}</option>)}</select></label>
-   <button className="cm-apply" type="submit">Aplicar filtros</button>
-   <span className="cm-spacer"/><span className="cm-tag">Datos reales · Supabase</span>
+   </div>
    {period==='custom'&&<div className="cm-custom"><label>Desde<input required type="date" value={from}
       min={earliest} max={today} name="commFrom" onChange={e=>setFrom(e.target.value)}/></label>
      <label>Hasta<input required type="date" value={to} min={earliest}
