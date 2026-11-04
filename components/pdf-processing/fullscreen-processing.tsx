@@ -229,11 +229,11 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
       </div>
     </header>
     <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-7 px-4 py-7 sm:gap-8 sm:px-6 lg:px-9" data-processing-content>
-      {failed? <section role="alert" className="mx-auto w-full max-w-[650px] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-7 text-center">
+      {failed? <section data-processing-final-motion role="alert" className="mx-auto w-full max-w-[650px] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-7 text-center">
         <h1 className="text-[25px] font-bold">No pudimos procesar tu material</h1>
         <p className="text-[14px] text-[#4b5565]">{state.error||state.message}</p>
         <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-6 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> Reintentar</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-6 text-sm font-semibold">Volver a Mi espacio</Link></div>
-      </section> : ready? <section data-processing-ready className="mx-auto flex w-full max-w-[880px] flex-col items-center rounded-[32px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-8 text-center sm:px-10 sm:py-11">
+      </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[880px] flex-col items-center rounded-[32px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-8 text-center sm:px-10 sm:py-11">
         <Image src="/evi-bienvenida.svg" alt="" width={128} height={128} className="h-24 w-24 object-contain sm:h-32 sm:w-32"/>
         <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#abefc6] bg-[#ecfdf3] px-4 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> Procesamiento completo</span>
         <h1 className="mt-4 text-[27px] font-bold leading-tight tracking-[-.03em] sm:text-[40px]">Tu material está listo para estudiar</h1>
