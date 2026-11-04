@@ -32,6 +32,14 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_monetization_dashboard_v1: {
+    Args: {
+      p_days?: number; p_from?: string | null; p_to?: string | null;
+      p_university?: string; p_career?: string; p_country?: string;
+      p_provider?: string; p_state?: string;
+    };
+    Returns: import('@/app/(es)/administrador/monetization-dashboard-types').MonetizationSnapshot;
+  };
   admin_study_plans_dashboard_v1: {
     Args: { p_days?: number; p_from?: string|null; p_to?: string|null;
       p_university?:string|null; p_career?:string|null; p_subject?:string|null;
