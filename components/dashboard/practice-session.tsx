@@ -240,21 +240,23 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   // applications exist. Try again with fresh source snippets if QA rejects any.
   useEffect(() => {
     const needsMore = mode === 'casos'
-      ? contexts.length < MIN_CASES_PER_PRACTICE
+      ? contexts.length < (freeV2 ? 2 : MIN_CASES_PER_PRACTICE)
       : mode === 'mixto' ? options.length < 4 || contexts.length < 1
       : mode === 'simulacro'
-        ? options.length < MIN_CASES_PER_PRACTICE : false;
+        ? options.length < (freeV2 ? 20 : MIN_CASES_PER_PRACTICE) : false;
     const automaticLimit = mode === 'casos' ? 3 : 6;
     if (!aiAvailable || !needsMore || generating || generationError ||
         attempts.current >= automaticLimit || generatingRequest.current) return;
     void generateNewCases();
-  }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases]);
+  }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases, freeV2]);
   useEffect(() => {
     if (mode === 'casos' && !generating && !generationError &&
-        attempts.current >= 3 && contexts.length < MIN_CASES_PER_PRACTICE) {
-      setGenerationError('No pudimos reunir seis casos distintos con respuestas verificadas. Podés reintentar con otras fuentes.');
+        attempts.current >= 3 && contexts.length < (freeV2 ? 2 : MIN_CASES_PER_PRACTICE)) {
+      setGenerationError(freeV2
+        ? 'No pudimos preparar los dos casos gratuitos con evidencia suficiente. Podés reintentar.'
+        : 'No pudimos reunir seis casos distintos con respuestas verificadas. Podés reintentar con otras fuentes.');
     }
-  }, [mode, generating, generationError, contexts.length]);
+  }, [mode, generating, generationError, contexts.length, freeV2]);
   const generateTrueFalse = useCallback(async () => {
     if (trueFalseBusy.current) return;
     trueFalseBusy.current = true;
@@ -309,10 +311,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         }
         const incoming=verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
         accumulated=verifiedTrueFalsePool([...accumulated,...incoming]);
-        if (sufficientTrueFalse(accumulated,MIN_CASES_PER_PRACTICE)) break;
+        if (sufficientTrueFalse(accumulated,freeV2 ? 1 : MIN_CASES_PER_PRACTICE)) break;
       }
       if (accumulated.length> trueFalsePool.length) setGeneratedTrueFalse(accumulated);
-      if (!sufficientTrueFalse(accumulated,MIN_CASES_PER_PRACTICE) &&
+      if (!sufficientTrueFalse(accumulated,freeV2 ? 1 : MIN_CASES_PER_PRACTICE) &&
           trueFalseAttempts.current>=6) {
         setTrueFalseError('No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.');
       }
@@ -323,14 +325,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       trueFalseBusy.current=false;
       setTrueFalseLoading(false);
     }
-  },[materialId,trueFalsePool]);
+  },[materialId,trueFalsePool,freeV2]);
   useEffect(() => {
     if (mode !== 'opciones' || !aiAvailable ||
-        sufficientTrueFalse(trueFalsePool, MIN_CASES_PER_PRACTICE) ||
+        sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) ||
         trueFalseBusy.current || trueFalseLoading || trueFalseError ||
         trueFalseAttempts.current >= 6) return;
     void generateTrueFalse();
-  },[mode,aiAvailable,trueFalsePool,trueFalseLoading,trueFalseError,generateTrueFalse]);
+  },[mode,aiAvailable,trueFalsePool,trueFalseLoading,trueFalseError,generateTrueFalse,freeV2]);
 
   const [pairLoading, setPairLoading] = useState(false);
   const [pairError, setPairError] = useState('');
@@ -363,7 +365,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     void generatePairs();
   },[mode,pairs.length,pairLoading,pairError,generatePairs]);
 
-  const aiCaseButton = mode === 'casos' && aiAvailable && !ready ? (
+  const aiCaseButton = mode === 'casos' && aiAvailable && !ready && !freeV2 ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
