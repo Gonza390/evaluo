@@ -322,5 +322,9 @@
   {
     "file": "tests/pomodoro-timer.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/free-practice-limit-screen.smoke.ts",
+    "alias": false
   }
 ]
