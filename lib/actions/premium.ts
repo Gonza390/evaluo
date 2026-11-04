@@ -4,7 +4,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 
-export async function getPremiumStatus(): Promise<{ isPremium: boolean }> {
+export async function getPremiumStatus(): Promise<{ isPremium: boolean; unavailable?: boolean }> {
   try {
     const supabase = await createClientServer();
     const {
@@ -14,6 +14,6 @@ export async function getPremiumStatus(): Promise<{ isPremium: boolean }> {
     return { isPremium: await hasPremiumAccess(user.id) };
   } catch (error) {
     logError('actions.getPremiumStatus', error);
-    return { isPremium: false };
+    return { isPremium: false, unavailable: true };
   }
 }
