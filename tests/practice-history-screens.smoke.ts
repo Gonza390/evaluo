@@ -129,7 +129,7 @@ const finishedReport = practiceSession.slice(
 );
 assert.doesNotMatch(finishedReport, /\{aiCaseButton\}/,
   'Al finalizar Casos no debe ofrecer generar más casos con IA.');
-assert.match(practiceSession, /const aiCaseButton = mode === 'casos' && aiAvailable && !ready \? \(/,
+assert.match(practiceSession, /const aiCaseButton = mode === 'casos' && aiAvailable && !ready && !freeV2 \? \(/,
   'La generación de casos queda disponible únicamente para recuperar una práctica que no pudo iniciar.');
 assert.match(finishedReport, /mode === 'casos' \? '\/dashboard\/practicar'/,
   'El enlace final de Casos debe llevar al selector de Practicar.');
