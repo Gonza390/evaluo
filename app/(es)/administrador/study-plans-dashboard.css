@@ -11,3 +11,7 @@
 .sp-table-scroll{overflow-x:auto;padding:0 28px 24px;scrollbar-color:#48484F #141417}.sp-row{display:grid;align-items:center;gap:16px;padding:13px 0;border-top:1px solid #1F1F23;min-width:760px;font-size:13.5px}.sp-row-head{border-top:0;padding:0 0 10px;font:11.5px 'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#8B8B93}.sp-row.sp-friction{grid-template-columns:2.6fr 1fr 1fr 2fr}.sp-row.sp-comparison{grid-template-columns:2.6fr 1fr 1fr 1fr 1fr 1.7fr}.sp-row>div{min-width:0}.sp-descr{display:flex;flex-direction:column;gap:3px}.sp-descr strong{font-weight:500}.sp-descr small{font:11.5px/1.45 'JetBrains Mono',monospace;color:#8B8B93}.sp-progress-with-value{display:flex;align-items:center;gap:12px}.sp-progress-with-value .sp-bar{flex:1}.sp-progress-with-value .sp-mono{flex:0 0 52px;text-align:right}
 .sp-page select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:850px){.sp-intro{padding:32px 20px 24px}.sp-intro h1{font-size:48px}.sp-filters{padding:0 20px 24px}.sp-empty-banner{margin:0 20px 18px}.sp-board{margin:0 20px 28px}.sp-section-heading,.sp-note,.sp-cell,.sp-half{padding-left:20px;padding-right:20px}.sp-steps{padding:0 20px 8px}.sp-step-label{flex:1 1 230px}.sp-step>.sp-mono{flex:0 0 60px}.sp-table-scroll{padding:0 20px 20px}}
+
+
+/* Exact summary .cell proportions in Planes.dc.html. */
+.sp-cell{flex:1 1 180px;gap:9px;min-height:0;justify-content:initial}
