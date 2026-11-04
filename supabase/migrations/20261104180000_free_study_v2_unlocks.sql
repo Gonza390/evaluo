@@ -23,7 +23,7 @@ on conflict (user_id) do nothing;
 -- La carga fallida no consume el único material Free.
 create or replace function public.remember_free_study_v2_upload()
 returns trigger language plpgsql security definer set search_path = ''
-as $
+as $$
 begin
   if new.processing_status = 'ready' then
     insert into public.free_study_v2_upload_claims(user_id, first_material_id)
@@ -32,7 +32,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 revoke all on function public.remember_free_study_v2_upload() from public, anon, authenticated;
 drop trigger if exists trg_free_study_v2_ready_upload on public.student_materials;
 create trigger trg_free_study_v2_ready_upload
