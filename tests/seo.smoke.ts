@@ -1276,3 +1276,20 @@ assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
   'href="/funciones/resumir-pdf-con-ia"',
   'const PDF_HREF',
 ]);
+
+
+// A career simulator must use the same public source of truth as the sitemap,
+// never the restricted raw question-bank view (which returns noindex on failure).
+assertIncludesAll('app/(es)/simulador-parcial/[carrera]/page.tsx', [
+  'get_public_preguntero_catalog',
+  'getIndexableSimulatorCareerIds',
+  'unstable_cache',
+  'robots: { index: hasPublicPractice, follow: true }',
+]);
+assert.ok(!source('app/(es)/simulador-parcial/[carrera]/page.tsx').includes(".from('preguntas_banco_public')"),
+  'Public simulator metadata may not query the private question bank.');
+assertIncludesAll('scripts/audit-live-domain-migration.mjs', [
+  'RETIRED_COUNTRY_ROUTES',
+  'retired route HTTP 410',
+  'sitemap excludes retired country pages',
+]);
