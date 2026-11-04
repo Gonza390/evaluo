@@ -307,7 +307,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     }
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
-    const freeStudyV2 = isFreeStudyV2Active() && isOwner && !isPremium;
+    const freeStudyV2 = isFreeStudyV2Active() && Boolean(user?.id) && !isPremium;
     const hasFullAcademicContext = Boolean(
       academicProfile.universidadId && academicProfile.carreraId && material.materia_id
     );
@@ -429,12 +429,12 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       summary: studySummary,
       glossary: topicGlossary,
     });
-    // En Free V2 no se envían razonamientos bloqueados al componente del navegador.
-    // Las explicaciones de errores se consultan y descuentan en el backend.
+    // El punto 4 (límite de explicaciones de errores) fue rechazado:
+    // conservar íntegra la corrección pedagógica y sus explicaciones.
     const clientPedagogicalArtifacts = freeStudyV2 ? {
       ...pedagogicalArtifacts,
       flashcards: pedagogicalArtifacts.flashcards.slice(0, FREE_STUDY_V2.flashcards),
-      questions: pedagogicalArtifacts.questions.map(question => ({...question, explanation:''})),
+      questions: pedagogicalArtifacts.questions,
     } : pedagogicalArtifacts;
     const otherPdfOptions: Array<{ id: string; title: string }> = [];
     if (isOwner && user) {
@@ -546,7 +546,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           canRegenerate={canRegenerate}
           fileName={material.file_name}
           isPremium={isPremium}
-          freeStudyV2={freeStudyV2}
           materialId={material.id}
           materiaId={material.materia_id ?? undefined}
           isOwner={isOwner}
