@@ -1,8 +1,8 @@
 import { PaymentResult } from '@/components/pricing/PaymentResult';
+import { safePremiumReturnTo } from '@/lib/premium-flow';
 
 function parseReturnTo(value: string | undefined) {
-  const candidate = String(value ?? '').slice(0, 600);
-  return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : undefined;
+  return safePremiumReturnTo(value);
 }
 
 function parseParcial(value: string | undefined) {
