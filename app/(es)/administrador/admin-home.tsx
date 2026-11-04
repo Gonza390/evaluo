@@ -11,7 +11,7 @@ const navigation = [
   ['Tablero general','resumen'],['Usuarios y retención','usuarios'],['Adquisición y SEO','adquisicion'],
   ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],
   ['Planes de estudio','planes'],['Monetización','monetizacion'],['Comunicaciones','mails'],
-  ['Sistema e IA','ia'],['Gestión','usuarios']
+  ['Sistema e IA','ia'],['Gestión','gestion']
 ] as const;
 type Item = {label:string; value:string; note:string; suffix?:string; highlight?:boolean};
 function Points({values,ceiling}:{values:number[];ceiling:number}) {
