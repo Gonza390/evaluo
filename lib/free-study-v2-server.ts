@@ -87,3 +87,38 @@ export async function listFreeStudyUnlockedKeys(input: {
   if (error) throw error;
   return new Set((data ?? []).map((entry) => (entry as {item_key: string}).item_key));
 }
+
+export type FreeStudyBankMode = 'true_false' | 'cases' | 'matching' | 'flashcards';
+
+/** First validated bank wins, even when concurrent requests finish in a different order. */
+export async function getFreeStudyBank<T>(input: {
+  userId: string; materialId: string; mode: FreeStudyBankMode;
+}): Promise<T[] | null> {
+  const { data, error } = await createAdminClient()
+    .from('free_study_v2_banks' as never)
+    .select('payload')
+    .eq('user_id', input.userId)
+    .eq('material_id', input.materialId)
+    .eq('mode', input.mode)
+    .maybeSingle();
+  if (error) throw error;
+  const bank = (data as { payload?: unknown } | null)?.payload;
+  return Array.isArray(bank) ? bank as T[] : null;
+}
+
+export async function saveFirstFreeStudyBank<T>(input: {
+  userId: string; materialId: string; mode: FreeStudyBankMode; items: T[];
+}): Promise<T[]> {
+  if (!input.items.length) throw new Error('empty_free_study_bank');
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from('free_study_v2_banks' as never)
+    .upsert({
+      user_id: input.userId, material_id: input.materialId,
+      mode: input.mode, payload: input.items,
+    } as never, { onConflict: 'user_id,material_id,mode', ignoreDuplicates: true });
+  if (error) throw error;
+  const stored = await getFreeStudyBank<T>(input);
+  if (!stored) throw new Error('free_study_bank_unavailable');
+  return stored;
+}
