@@ -11,7 +11,7 @@ const tabs:[string,string][]=[
  ['Adquisición y SEO','adquisicion'],['Activación y recorrido','producto'],
  ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
  ['Monetización','monetizacion'],['Comunicaciones','mails'],['Sistema e IA','ia'],
- ['Gestión','usuarios'],
+ ['Gestión','gestion'],
 ];
 const num=(n:number|null|undefined)=>n===null||n===undefined?'—':Math.round(n).toLocaleString('es-AR');
 const percent=(n:number,d:number)=>d>0?(100*n/d).toFixed(1).replace('.',',')+'%':'—';
