@@ -48,3 +48,24 @@ const click = sanitizeAnalyticsMetadata('summary_next_step_clicked', {
 }) as Record<string, unknown>;
 assert.equal(click.action, 'practice');
 assert.equal(click.entry_source, 'summary_popup');
+
+for (const name of ['page_view', 'signup_completed', 'pdf_uploaded', 'first_pdf_practice_opened'] as const) {
+  const sanitized = sanitizeAnalyticsMetadata(name, {
+    attribution: {
+      source: 'google',
+      latest_source: 'google',
+      landing_path: '/ia-para-estudiantes',
+      utm_campaign: 'seo-organic',
+      referrer: 'https://google.com/search?q=private-query',
+      unknown_field: 'must be dropped',
+    },
+    unknown_field: 'must be dropped',
+  }) as Record<string, unknown>;
+  const attribution = sanitized.attribution as Record<string, unknown>;
+  assert.equal(attribution.source, 'google', name);
+  assert.equal(attribution.latest_source, 'google', name);
+  assert.equal(attribution.landing_path, '/ia-para-estudiantes', name);
+  assert.equal(attribution.referrer, undefined, 'Do not persist referrer search queries.');
+  assert.equal(attribution.unknown_field, undefined, 'Keep attribution allowlisted.');
+  assert.equal(sanitized.unknown_field, undefined);
+}
