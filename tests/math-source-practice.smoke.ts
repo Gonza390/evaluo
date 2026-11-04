@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { buildVerifiedMathPractice } from '../lib/student-materials/math-source-practice.ts';
+import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
 import { analyzeQuestionBankCoverage } from '../lib/student-materials/question-bank.ts';
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
 
@@ -55,6 +56,32 @@ assert.equal(buildVerifiedMathPractice(tangentModel,tangentSources.slice(0,1)).l
   'No crear ejercicios de tangencia si la función no figura en el original.');
 assert.equal(buildVerifiedMathPractice({...tangentModel,examples:[]},tangentSources).length,0,
   'La fuente documental aislada no basta sin la función del modelo canónico.');
+const major='Trastorno de Depresión Mayor';
+const persistent='Trastorno Depresivo Persistente';
+const majorDetail='Requiere al menos dos semanas con cambios del afecto y otros síntomas específicos.';
+const persistentDetail='Presenta síntomas depresivos persistentes durante un mínimo de dos años en adultos.';
+const theoryPage=`${major}: ${majorDetail} ${persistent}: ${persistentDetail}`;
+const theoryModel:CanonicalPedagogicalModel={
+  ...model,formulas:[],concepts:[
+    {term:major,detail:majorDetail,kind:'definicion',pageReferences:[4]},
+    {term:persistent,detail:persistentDetail,kind:'definicion',pageReferences:[4]},
+  ],
+};
+const theoryQuestions=buildPedagogicalArtifacts({
+  summary:{
+    shortSummary:'Diferencias entre trastornos depresivos.',
+    keyPoints:[],sections:[{title:'Diagnóstico diferencial',body:theoryPage}],
+    hasContent:true,status:'ready',provider:'test',errorMessage:null,sourceChunksCount:1,
+  },
+  glossary:[],canonicalModel:theoryModel,pageCount:4,
+  chunks:[{text:theoryPage.repeat(2),pageStart:4,pageEnd:4,
+    sectionTitle:'Diagnóstico diferencial',excerpt:''}],
+}).questions;
+assert.ok(theoryQuestions.some(q=>
+  q.type==='open' && q.kind==='relationship' &&
+  q.prompt.includes(major) && q.prompt.includes(persistent) &&
+  q.answer.includes(majorDetail) && q.answer.includes(persistentDetail)),
+  'La teoría con dos conceptos relacionados y fuentes explícitas debe proponer una comparación sustentada.');
 const sections=[{title:'Determinantes',body:'Definición y fórmula de determinantes.'},
 {title:'Multiplicación',body:'Producto matricial fila por columna.'}];
 const coverage=analyzeQuestionBankCoverage(worked,sections,3);
