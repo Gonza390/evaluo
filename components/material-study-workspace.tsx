@@ -204,6 +204,7 @@ type MaterialStudyWorkspaceProps = {
   fileName: string;
   canRegenerate: boolean;
   isPremium: boolean;
+  freeStudyV2?: boolean;
   materialId: string;
   materiaId?: string;
   isOwner: boolean;
@@ -339,6 +340,7 @@ export function MaterialStudyWorkspace({
   canRegenerate,
   fileName,
   isPremium,
+  freeStudyV2 = false,
   materialId,
   materiaId,
   isOwner,
@@ -2392,6 +2394,7 @@ export function MaterialStudyWorkspace({
                     : undefined
                 }
                 artifacts={studyArtifacts}
+                freeStudyV2={freeStudyV2}
                 sections={studySummary.sections}
                 glossary={studyGlossary}
                 materialId={materialId}
