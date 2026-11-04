@@ -62,6 +62,7 @@ type StudentMaterialExamProps = {
   entryId?: string | null;
   artifacts: PedagogicalArtifacts;
   materialId: string;
+  freeStudyV2?: boolean;
   onComplete?: () => void;
   /** Entrega el resultado de la tanda al contenedor para reutilizar la vista de Progreso. */
   onTopicFinished?: (outcome: TopicPracticeOutcome) => void;
@@ -84,6 +85,7 @@ type OpenAssessment = 'got_it' | 'review';
 export function StudentMaterialExam({
   artifacts,
   materialId,
+  freeStudyV2 = false,
   entrySource = 'direct_tab',
   entryId = null,
   onComplete,
@@ -109,6 +111,7 @@ export function StudentMaterialExam({
   const [supplementalBankLoadedFor, setSupplementalBankLoadedFor] = useState<string | null>(null);
   const [supplementalQuestions, setSupplementalQuestions] = useState<StudyQuestion[]>([]);
   const [topicGenerationUnavailable, setTopicGenerationUnavailable] = useState(false);
+  const [freeQuotaReached, setFreeQuotaReached] = useState(false);
   const eligibleQuestions = useMemo(
     () =>
       getDistinctEligibleExamQuestions([...artifacts.questions,...supplementalQuestions]).filter(
@@ -458,13 +461,37 @@ export function StudentMaterialExam({
       context,
       unansweredOnly: topicSectionIndex !== undefined,
     });
-    if(!nextQuestions.length){
-      setTopicGenerationUnavailable(true);
+    // En Free V2 cada pregunta distinta se desbloquea en el servidor
+    // y el mismo ID puede repasarse sin volver a gastar cupo.
+    let accessibleQuestions = nextQuestions;
+    if (freeStudyV2 && !simulation) {
+      const grants:StudyQuestion[] = [];
+      for (const question of nextQuestions) {
+        // El banco debe ser validado por el servidor; no aceptar permisos locales.
+        if (question.type !== 'multiple_choice') continue;
+        try {
+          const response = await fetch('/api/free-study-v2/claim', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({materialId,kind:'multiple_choice',itemKey:question.id}),
+          });
+          if (!response.ok) continue;
+          const result:unknown = await response.json();
+          if (result && typeof result === 'object' && 'allowed' in result &&
+            result.allowed === true) grants.push(question);
+        } catch {
+          // Fail closed; no nuevas preguntas ante un error de la cuota.
+        }
+      }
+      accessibleQuestions = grants;
+      setFreeQuotaReached(grants.length < nextQuestions.length);
+    }
+    if(!accessibleQuestions.length){
+      if (!freeStudyV2) setTopicGenerationUnavailable(true);
       setPreparing(false);
       return;
     }
     const nextSessionId = crypto.randomUUID();
-    setQuestions(nextQuestions.map(question => shuffleStudyQuestionOptions(question, nextSessionId)));
+    setQuestions(accessibleQuestions.map(question => shuffleStudyQuestionOptions(question, nextSessionId)));
     setContextUnavailable(Boolean(context.loadError));
     setSavedDraft(null);
     clearAttempt(nextSessionId);
@@ -704,7 +731,12 @@ export function StudentMaterialExam({
           })}
         </div>
 
-        <div className="border-border flex justify-end border-t pt-5">
+        {freeQuotaReached && freeStudyV2 ? (
+        <p role="status" className="mb-3 text-sm text-slate-600">
+          Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las ya desbloqueadas o continuar con Premium.
+        </p>
+      ) : null}
+      <div className="border-border flex justify-end border-t pt-5">
           <Button
             type="button"
             disabled={preparing}
