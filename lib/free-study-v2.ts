@@ -14,7 +14,6 @@ export const FREE_STUDY_V2 = Object.freeze({
   flashcards: 25,
   simulatorSessions: 1,
   simulatorQuestions: 20,
-  incorrectAnswerExplanations: 15,
   studyPlans: 1,
 });
 
