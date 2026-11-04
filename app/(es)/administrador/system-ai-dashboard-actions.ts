@@ -5,10 +5,10 @@ import {createAdminClient} from '@/lib/supabase-admin';
 import type {SystemAiSnapshot} from './system-ai-dashboard-types';
 
 const cachedSystem=nextCache(async(days:1|7|14|30)=>{
- const {data,error}=await createAdminClient().rpc('admin_system_ai_dashboard_v1',{p_days:days});
+ const {data,error}=await createAdminClient().rpc('admin_system_ai_dashboard_v2',{p_days:days});
  if(error||!data)throw error??new Error('No hay mediciones disponibles de Sistema e IA.');
  return data as SystemAiSnapshot;
-},['admin-system-ai-v1'],{revalidate:900});
+},['admin-system-ai-v2-sampled-vitals'],{revalidate:900});
 
 export async function obtenerDashboardSistemaIA(params:Record<string,string|undefined>){
  await requireAdminAccess(); 
