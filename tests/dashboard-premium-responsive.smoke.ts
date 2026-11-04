@@ -25,7 +25,7 @@ for(const text of [
   'Volver al estudio sin comprar',
   'Pago seguro con Mercado Pago',
 ])assert.ok(screen.includes(text),'Original Premium screen copy changed: '+text);
-assert.match(screen,/ManualReferralCode offerCode=\{referralPlan\}/,
+assert.match(screen,/ManualReferralCode offerCode="monthly" variant="compact" hideHeading/,
   'Coupon flow must reuse the real referral validator.');
 assert.match(screen,/fetch\('\/api\/payments\/offer'/,
   'Never invent live offer amounts.');
