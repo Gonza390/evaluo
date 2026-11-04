@@ -17,6 +17,11 @@ export async function GET(request: Request) {
     ? rawAttemptId
     : null;
 
+  if (rawAttemptId && !attemptId) {
+    return NextResponse.json({error:'invalid_checkout_attempt'}, {status:400,
+      headers:{'Cache-Control':'private, no-store'}});
+  }
+
   const checkoutAttemptQuery = paymentsDb
     .from('payment_checkout_attempts')
     .select('id, status, offer_code, amount_ars, created_at, updated_at')
@@ -87,8 +92,9 @@ export async function GET(request: Request) {
         .maybeSingle()
     : { data: null, error: null };
 
-  if (transactionError) return NextResponse.json({error:'payment_status_unavailable'}, {status:503,
-    headers:{'Cache-Control':'private, no-store'}});
+  // El historial de transacciones es auxiliar; si falla, nunca esconder una
+  // suscripción vigente confirmada por el proveedor.
+  const safeTransaction = transactionError ? null : transaction;
 
   return NextResponse.json({
     plan: premiumIsActive ? 'premium' : 'free',
@@ -111,12 +117,13 @@ export async function GET(request: Request) {
     checkoutAmountArs: latestCheckoutAttempt?.amount_ars ?? null,
     checkoutUpdatedAt:
       latestCheckoutAttempt?.updated_at ?? latestCheckoutAttempt?.created_at ?? null,
-    lastPayment: transaction
+    paymentHistoryUnavailable: Boolean(transactionError),
+    lastPayment: safeTransaction
       ? {
-          status: transaction.status,
-          amountArs: transaction.amount_ars,
-          currency: transaction.currency,
-          paidAt: transaction.paid_at ?? transaction.created_at,
+          status: safeTransaction.status,
+          amountArs: safeTransaction.amount_ars,
+          currency: safeTransaction.currency,
+          paidAt: safeTransaction.paid_at ?? safeTransaction.created_at,
         }
       : null,
   });
