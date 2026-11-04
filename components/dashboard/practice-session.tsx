@@ -35,6 +35,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [trueFalseLoading, setTrueFalseLoading] = useState(false);
   const [trueFalseError, setTrueFalseError] = useState('');
   const [trueFalseDiagnostic, setTrueFalseDiagnostic] = useState('');
+  const [freeExplanationById, setFreeExplanationById] = useState<Record<string,string|null>>({});
+  const requestedFreeExplanations = useRef(new Set<string>());
   const trueFalseBusy = useRef(false);
   const trueFalseAttempts = useRef(0);
   const trueFalsePool = useMemo(() => verifiedTrueFalsePool(generatedTrueFalse), [generatedTrueFalse]);
@@ -105,6 +107,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
     mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && distinctApplicationCases(contexts).length >= 1 :
     mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
+    mode === 'simulacro' && freeV2 ? tasks.length >= 20 :
     tasks.length >= MIN_CASES_PER_PRACTICE;
   const correctAt = (index: number) => {
     if (mode === 'unir') return matches[index] === index;
@@ -125,7 +128,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }))].slice(0, 4);
   const diagnosticFor = (index: number): string | null => {
     const task = tasks[index];
-    if (!task || correctAt(index) || mode === 'opciones') return null;
+    if (!task || correctAt(index) || mode === 'opciones' || freeV2) return null;
     const response = responses[index] ?? '';
     return task.type === 'recall'
       ? groundedPracticeContrast(response, task.pair.term, pairs)
@@ -133,6 +136,36 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   };
   const current = tasks[step];
   const checked = reviewed.includes(step);
+  const explanationFor = (question:PracticeQuestion) =>
+    freeV2 ? (freeExplanationById[question.id] ?? '') : groundedPracticeExplanation(question,pairs);
+
+  // A Free V2 se le explica automáticamente el error, hasta 15 veces.
+  // Repetir el mismo ejercicio reutiliza la explicación ya desbloqueada.
+  useEffect(() => {
+    if (!freeV2) return;
+    const toExplain = finished
+      ? tasks.map((task,index)=>({task,index}))
+      : checked && current ? [{task:current,index:step}] : [];
+    for(const {task,index} of toExplain){
+      if(task.type !== 'question' || !responses[index] ||
+         responses[index] === task.question.answer ||
+         requestedFreeExplanations.current.has(task.question.id)) continue;
+      const questionId = task.question.id;
+      requestedFreeExplanations.current.add(questionId);
+      void (async()=>{
+        try {
+          const response = await fetch('/api/free-study-v2/explanation', {
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({materialId,questionId,selectedAnswer:responses[index]}),
+          });
+          const body:unknown = await response.json();
+          const explanation = body && typeof body === 'object' && 'explanation' in body &&
+            typeof body.explanation === 'string' ? body.explanation : null;
+          setFreeExplanationById(old=>({...old,[questionId]:response.ok ? explanation : null}));
+        } catch {setFreeExplanationById(old=>({...old,[questionId]:null}));}
+      })();
+    }
+  },[freeV2,finished,checked,current,step,tasks,responses,materialId]);
 
   useEffect(() => {
     if (mode !== 'simulacro' || !ready || finished || !examStarted) return;
@@ -394,7 +427,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }
   function anotherRound() {
     posted.current = '';
-    setRound(value => value + 1);
+    setRound(value => freeV2 ? value : value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
     setReviewed([]); setMarkedForReview([]); setFinished(false); setSecondsLeft(15 * 60); setDeadline(null); setExamStarted(false);
     sessionIdRef.current = null;
@@ -444,7 +477,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>}
             {diagnosticFor(i) && <p className="mt-1 text-slate-700">{diagnosticFor(i)}</p>}
             {task.type === 'question' && <>
-              {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-600">{groundedPracticeExplanation(task.question,pairs)}</p>}
+              {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-600">{explanationFor(task.question)}</p>}
               {task.question.pageStart && <Link className="mt-2 inline-block text-blue-600 underline"
                 href={'/materiales/' + materialId + '?tab=resumen&page=' + task.question.pageStart}>
                 Revisar el material · página {task.question.pageStart}
@@ -456,7 +489,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={anotherRound}
-          className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? 'Nuevo simulacro' : 'Practicar otra vez'}</button>
+          className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'}</button>
         <Link href={mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen'}
           className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
           {mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}
@@ -521,7 +554,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   if (ready && !finished && mode === 'casos' && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><CasesPracticeScreen key={step}
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
-    correct={correctAt(step)} explanation={correctAt(step) ? '' : groundedPracticeExplanation(current.question,pairs)}
+    correct={correctAt(step)} explanation={correctAt(step) ? '' : explanationFor(current.question)}
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
@@ -693,7 +726,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             </p>}
           <p className="mt-1 text-slate-700">{mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: '}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
-          {current.type === 'question' && <p className="mt-1 text-slate-600">{groundedPracticeExplanation(current.question,pairs)}</p>}
+          {current.type === 'question' && <p className="mt-1 text-slate-600">{explanationFor(current.question)}</p>}
           {current.type === 'recall' && current.pair.pageStart && <Link
             href={'/materiales/' + materialId + '?tab=resumen&page=' + current.pair.pageStart}
             className="mt-2 inline-block text-blue-600 underline">Revisar el concepto en el material · página {current.pair.pageStart}</Link>}
