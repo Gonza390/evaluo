@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  safePremiumReturnTo, premiumPricingHref, premiumUpgradeForLimit,
+  safePremiumReturnTo, premiumPricingHref, premiumDashboardHref, premiumUpgradeForLimit,
   FreeStudyV2UploadLimitError, type PremiumGateReason,
 } from '../lib/premium-flow.ts';
 import {
@@ -24,6 +24,12 @@ assert.equal(parsed.searchParams.get('returnTo'),original);
 assert.equal(parsed.searchParams.get('materia'),materialId);
 assert.equal(parsed.searchParams.get('parcial'),'2');
 assert.equal(parsed.hash,'#elegir-plan');
+// /pricing stays public; only in-app Premium upgrades use the attached HTML screen.
+const inApp = new URL(premiumDashboardHref({source:'free_v2_case_limit',materiaId:materialId,parcial:2,returnTo:original}), 'https://evaluoapp.com');
+assert.equal(inApp.pathname,'/dashboard/premium');
+assert.equal(inApp.searchParams.get('returnTo'),original);
+assert.equal(inApp.searchParams.get('materia'),materialId);
+assert.equal(inApp.hash,'');
 
 const cases:Record<PremiumGateReason,string>={
   material_upload:'/dashboard/materiales',
@@ -40,6 +46,7 @@ for(const [reason,returnTo] of Object.entries(cases)){
   const upgrade=premiumUpgradeForLimit(reason as PremiumGateReason,{materialId});
   assert.equal(upgrade.returnTo,returnTo);
   assert.equal(upgrade.reason,reason);
+  assert.equal(new URL(upgrade.href,'https://evaluoapp.com').pathname,'/dashboard/premium');
   assert.equal(new URL(upgrade.href,'https://evaluoapp.com').searchParams.get('returnTo'),returnTo);
 }
 assert.equal(premiumUpgradeForLimit('case',{materialId,returnTo:original}).returnTo,original);
@@ -78,6 +85,7 @@ assert.match(result,/premiumPaymentResultState\(details\)/);
 assert.match(result,/notifyPremiumAccessChanged\(\)/);
 assert.match(result,/cta: 'Continuar estudiando'/);
 assert.match(result,/premiumPricingHref\(\{source, materiaId, parcial, returnTo\}\)/);
+assert.match(result,/premiumDashboardHref\(\{source, materiaId, parcial, returnTo\}\)/);
 assert.match(status,/subscriptionsError \|\| checkoutError/);
 assert.match(status,/subscription_status_unavailable/);
 assert.match(status,/\.limit\(100\)/);
