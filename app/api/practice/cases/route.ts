@@ -1,8 +1,12 @@
+import type { PracticeQuestion } from '@/lib/student-materials/practice-modes';
 import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
+import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
+import { hasPremiumAccess } from '@/lib/premium';
+import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
 import { applyIndependentCaseReview, verifyGeneratedPracticeCases, type SourceFragment } from '@/lib/student-materials/practice-ai-cases';
 import { sourceBackedPracticeTerms } from '@/lib/student-materials/practice-classification-terms';
 import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
@@ -69,6 +73,12 @@ export async function POST(request: Request) {
     .select('id,processing_status').eq('id', materialId).eq('user_id', user.id).maybeSingle();
   if (!material || material.processing_status !== 'ready')
     return NextResponse.json({ error: 'material_not_found' }, { status: 404 });
+  const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
+  if (freeV2) {
+    const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:'cases' });
+    if (saved) return NextResponse.json({cases:saved,source:'free_sample_cached'},
+      {headers:{'Cache-Control':'private, no-store'}});
+  }
 
   // This route is explicitly invoked by a student choosing Casos. It does
   // not depend on the optional practice_bank table or the legacy enhancement
@@ -199,7 +209,11 @@ export async function POST(request: Request) {
     const reviewed:unknown=JSON.parse(review.content);
     const cases=applyIndependentCaseReview(candidates,reviewed,sources);
     if(!cases.length) return NextResponse.json({error:'ambiguous_generation'},{status:422});
-    return NextResponse.json({ cases, source: 'independently_verified_against_document' },
+    const bounded = freeV2
+      ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:'cases' as const,
+          items:cases.slice(0,FREE_STUDY_V2.cases)})
+      : cases;
+    return NextResponse.json({ cases:bounded, source: 'independently_verified_against_document' },
       { headers: { 'Cache-Control': 'private, no-store' } });
   } catch {
     return NextResponse.json({ error: 'provider_unavailable' }, { status: 503 });
