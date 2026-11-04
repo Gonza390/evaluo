@@ -45,6 +45,8 @@ import {
   getPracticeTopicPerformance,
 } from '@/lib/student-materials/practice-result-topics';
 import { practiceScope, type PracticeEntrySource } from '@/lib/student-materials/practice-entry';
+import { premiumUpgradeForLimit } from '@/lib/premium-flow';
+import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
 import {
   topicPracticeResultActions,
   type TopicPracticeResultAction,
@@ -525,6 +527,34 @@ export function StudentMaterialExam({
     topicAutoStartRequested.current = true;
     startTopicPractice();
   }, [topicSectionIndex, draftLoaded, supplementalBankLoadedFor, supplementalCacheKey, savedDraft, started, preparing, eligibleQuestions.length]);
+
+  // Reuse the user's centered HTML only after the API has actually denied a
+  // verified Free question. In particular, a 503, network error, or a short
+  // pedagogical question bank must NOT be represented as a quota exhaustion.
+  if (freeStudyV2 && freeQuotaReached && !simulation) {
+    const practicePath = '/materiales/' + materialId + '?tab=ejercicios' +
+      (topicSectionIndex !== undefined ? '&studyTopic=' + topicSectionIndex : '');
+    const backPath = topicSectionIndex !== undefined
+      ? '/materiales/' + materialId + '?tab=resumen&studyTopic=' + topicSectionIndex
+      : '/materiales/' + materialId + '?tab=ejercicios';
+    return <FreePracticeLimitScreen
+      kind="multiple_choice"
+      materialTitle="Tu material"
+      topicLabel={topicTitle}
+      premiumHref={premiumUpgradeForLimit('multiple_choice', {
+        materialId, returnTo:practicePath,
+      }).href}
+      backHref={backPath}
+      backLabel={topicSectionIndex !== undefined ? 'Volver al tema' : 'Volver a la práctica'}
+      onBack={() => {
+        setFreeQuotaReached(false);
+        if (topicSectionIndex !== undefined) {
+          if (onReturnToTopic) onReturnToTopic(false);
+          else router.push(backPath);
+        } else resetExam();
+      }}
+    />;
+  }
 
   if ((eligibleQuestions.length === 0 || sizeOptions.length === 0) && !preparing) {
     return (
