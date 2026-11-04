@@ -4,6 +4,7 @@ const ANALYTICS_EVENT_NAMES = [
   'pdf_lifecycle_email_landing_viewed',
   'session_ping',
   'client_error',
+  'product_web_vital',
   'ui_horizontal_overflow_detected',
   'cta_click',
   'dashboard_next_action_viewed',
