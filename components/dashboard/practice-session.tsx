@@ -24,10 +24,10 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false }: {
   mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
-  aiAvailable?: boolean; isWord?: boolean; planTopicIndex?: number;
+  aiAvailable?: boolean; isWord?: boolean; planTopicIndex?: number; freeV2?: boolean;
 }) {
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
@@ -54,9 +54,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [generationDiagnostic, setGenerationDiagnostic] = useState('');
   const attempts = useRef(0);
   const generatingRequest = useRef(false);
-  const contexts = useMemo(() => distinctApplicationCases([
-    ...generatedCases, ...cases, ...questions,
-  ]), [questions, cases, generatedCases]);
+  const contexts = useMemo(() => {
+    const all = distinctApplicationCases([...generatedCases, ...cases, ...questions]);
+    return freeV2 ? all.slice(0, 2) : all;
+  }, [questions, cases, generatedCases, freeV2]);
   const [round, setRound] = useState(0);
   const [step, setStep] = useState(0);
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
@@ -72,7 +73,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const posted = useRef('');
   const sessionIdRef = useRef<string | null>(null);
   const [historySaveFailed, setHistorySaveFailed] = useState(false);
-  const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, reviewLength === 'rapido' ? 6 : 8), [pairs, round, reviewLength]);
+  const exercisePairs = useMemo(() => rotate(pairs, round * 6).slice(0, freeV2 ? 6 : reviewLength === 'rapido' ? 6 : 8), [pairs, round, reviewLength, freeV2]);
   const definitions = useMemo(() => shuffleMatchingDefinitions(
     exercisePairs.map((pair, pairIndex) => ({ pair, pairIndex })),
   ), [exercisePairs]);
@@ -83,27 +84,27 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       return shufflePracticeItems(rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
         .map(pair => ({ type: 'recall' as const, pair }));
     if (mode === 'casos')
-      return shufflePracticeItems(rotate(contexts, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
+      return shufflePracticeItems(rotate(contexts, round * 5).slice(0, freeV2 ? 2 : reviewLength === 'rapido' ? 6 : 8))
         .map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     if (mode === 'simulacro')
-      return shufflePracticeItems(balancedQuestions(options, reviewLength === 'rapido' ? 6 : 10, round))
+      return shufflePracticeItems(balancedQuestions(options, freeV2 ? 20 : reviewLength === 'rapido' ? 6 : 10, round))
         .map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     if (mode === 'opciones')
-      return selectBalancedTrueFalse(trueFalsePool, reviewLength === 'rapido' ? 6 : 8, round).map(question => ({ type: 'question' as const, question }));
+      return selectBalancedTrueFalse(trueFalsePool, freeV2 ? 10 : reviewLength === 'rapido' ? 6 : 8, round).map(question => ({ type: 'question' as const, question }));
     const mixed = selectMixedQuestions(options, contexts, round);
     const base = mixed.questions.map(question => ({ type: 'question' as const, question: shufflePracticeChoices(question) }));
     const recalled = rotate(pairs, round * 3).slice(0, 2).map(pair => ({ type: 'recall' as const, pair }));
     const applied = mixed.application ? [{ type: 'question' as const, question:shufflePracticeChoices(mixed.application) }] : [];
     return shufflePracticeItems([...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)]
       .slice(0, reviewLength === 'rapido' ? 6 : 10));
-  }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength]);
+  }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength, freeV2]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
   const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
-    mode === 'casos' ? contexts.length >= MIN_CASES_PER_PRACTICE :
+    mode === 'casos' ? contexts.length >= (freeV2 ? 2 : MIN_CASES_PER_PRACTICE) :
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
     mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && distinctApplicationCases(contexts).length >= 1 :
-    mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, MIN_CASES_PER_PRACTICE) :
+    mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
     tasks.length >= MIN_CASES_PER_PRACTICE;
   const correctAt = (index: number) => {
     if (mode === 'unir') return matches[index] === index;
@@ -522,7 +523,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
-    onGenerate={() => { void generateNewCases(); }} generating={generating} /></div>;
+    onGenerate={freeV2 ? undefined : () => { void generateNewCases(); }} generating={generating} /></div>;
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
