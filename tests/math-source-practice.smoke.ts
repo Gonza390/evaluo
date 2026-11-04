@@ -31,6 +31,30 @@ assert.equal(buildVerifiedMathPractice(model,[]).length,0,
 assert.equal(buildVerifiedMathPractice(model,[{...chunks[0]!,pageStart:6},chunks[1]!]).length,3,
   'Una cita de la página equivocada debe invalidar solo la familia afectada.');
 
+const tangentModel:CanonicalPedagogicalModel={
+  ...model,
+  formulas:[{
+    expression:'Plano tangente genérico',
+    description:'z = f(x0, y0) + fx(x0, y0)(x - x0) + fy(x0, y0)(y - y0)',
+    pageReferences:[4],
+  }],
+  examples:['f(x, y) = x^2 + 2y'],
+};
+const tangentSources=[
+  {text:'El plano tangente es z = f(x0, y0) + fx(x0, y0)(x - x0) + fy(x0, y0)(y - y0). '.repeat(2),
+    pageStart:4,pageEnd:4,sectionTitle:'Plano tangente',excerpt:''},
+  {text:'Calcular el plano tangente para f(x, y) = x^2 + 2y y comprobar la solución.',
+    pageStart:5,pageEnd:5,sectionTitle:'Ejercicios',excerpt:''},
+];
+const tangent=buildVerifiedMathPractice(tangentModel,tangentSources);
+assert.equal(tangent.length,2,'Las funciones con fórmula acreditada permiten ejercicios de plano tangente.');
+assert.deepEqual(tangent.map(q=>q.answer),
+  ['z = 2x + 2y - 1','z = 4x + 2y - 4']);
+assert.ok(tangent.every(q=>q.options.includes(q.answer)&&q.level==='aplicar'));
+assert.equal(buildVerifiedMathPractice(tangentModel,tangentSources.slice(0,1)).length,0,
+  'No crear ejercicios de tangencia si la función no figura en el original.');
+assert.equal(buildVerifiedMathPractice({...tangentModel,examples:[]},tangentSources).length,0,
+  'La fuente documental aislada no basta sin la función del modelo canónico.');
 const sections=[{title:'Determinantes',body:'Definición y fórmula de determinantes.'},
 {title:'Multiplicación',body:'Producto matricial fila por columna.'}];
 const coverage=analyzeQuestionBankCoverage(worked,sections,3);
