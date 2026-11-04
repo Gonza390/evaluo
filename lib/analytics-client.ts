@@ -180,12 +180,14 @@ export async function trackClientAnalyticsEvent(input: {
 
   const pathname = input.path ?? window.location.pathname;
   const pageType = getAnalyticsPageType(pathname);
-  const metadata = {
-    attribution: getAttributionSnapshot(),
-    anonymous_id: getAnalyticsAnonymousId(),
-    page_type: pageType,
-    ...input.metadata,
-  };
+  const metadata = input.eventName === 'product_web_vital'
+    ? { ...input.metadata }
+    : {
+        attribution: getAttributionSnapshot(),
+        anonymous_id: getAnalyticsAnonymousId(),
+        page_type: pageType,
+        ...input.metadata,
+      };
 
   analyticsQueue.push({
     event_name: input.eventName,
