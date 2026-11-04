@@ -4,6 +4,10 @@
     "alias": true
   },
   {
+    "file": "tests/admin-management-atomic.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/topic-practice-ai.smoke.ts",
     "alias": true
   },

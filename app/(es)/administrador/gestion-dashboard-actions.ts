@@ -1,15 +1,8 @@
 'use server';
 
 import {unstable_cache as nextCache,updateTag,revalidatePath} from 'next/cache';
-import type {SupabaseClient} from '@supabase/supabase-js';
 import {getAdminAccessContext} from '@/lib/access-control';
 import {createAdminClient} from '@/lib/supabase-admin';
-import {
-  aprobarSolicitudUniversidadAdministrador,
-  rechazarSolicitudUniversidadAdministrador,
-  aprobarEntidadAcademicaPendienteAdministrador,
-  rechazarEntidadAcademicaPendienteAdministrador,
-} from './solicitudes/actions';
 import type {GestionSnapshot} from './gestion-dashboard-types';
 import {DAILY_FREE_LIMIT} from '@/lib/ai/daily-limit';
 import {FREE_ERRORS_REVIEWS_PER_WEEK} from '@/lib/premium';
@@ -62,35 +55,27 @@ export async function gestionActualizarFeedback(input:{
 export async function gestionResolverCatalogo(input:{
  id:string;kind:'university'|'career'|'subject';decision:'approve'|'reject';
 }):Promise<{success:boolean;message:string}>{
- try{
+ try {
   const actor=await actorId();
   if(!validId(input.id)||!['university','career','subject'].includes(input.kind)||
      !['approve','reject'].includes(input.decision))
    return {success:false,message:'Solicitud inválida.'};
-  const data=new FormData();
-  if(input.kind==='university'){
-   data.set('requestId',input.id);
-   if(input.decision==='approve')await aprobarSolicitudUniversidadAdministrador(data);
-   else await rechazarSolicitudUniversidadAdministrador(data);
-  }else{
-   data.set('kind',input.kind);
-   data.set('id',input.id);
-   if(input.decision==='approve')await aprobarEntidadAcademicaPendienteAdministrador(data);
-   else await rechazarEntidadAcademicaPendienteAdministrador(data);
-  }
-  const database=createAdminClient() as unknown as SupabaseClient;
-  const {error:auditError}=await database.from('admin_management_audit').insert({
-   actor_id:actor,action:input.decision==='approve'?'catalog_approved':'catalog_rejected',
-   object_type:input.kind,object_id:input.id,
-   before_state:{status:'pending'},
-   after_state:{status:input.kind==='university'?(input.decision==='approve'?'added':'rejected'):
-      (input.decision==='approve'?'approved':'rejected')},
-   result:'success',
+
+  // One PostgreSQL transaction: catalog decision + audit. Never report success
+  // when an audit record is missing (the database rolls back both changes).
+  const {data,error}=await createAdminClient().rpc('admin_management_resolve_catalog_v1',{
+   p_actor:actor,p_kind:input.kind,p_id:input.id,p_decision:input.decision,
   });
+  if(error)throw new Error(error.message);
+  if(!data?.audited)throw new Error('La operación no confirmó su auditoría.');
   refresh();
-  if(auditError){
-   return {success:true,message:'Solicitud procesada, pero no se pudo registrar en la auditoría. Revisá el historial antes de continuar.'};
-  }
+  updateTag('explorar-catalog');
+  updateTag('universidad-data');
+  revalidatePath('/explorar');
+  revalidatePath('/universidad/[id]','page');
+  revalidatePath('/materias');
+  revalidatePath('/empezar');
+  revalidatePath('/dashboard/materiales');
   return {success:true,message:input.decision==='approve'?
    'Solicitud aprobada y cambio registrado.':'Solicitud rechazada y cambio registrado.'};
  }catch(e){

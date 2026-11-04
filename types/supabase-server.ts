@@ -56,6 +56,10 @@ type AdminPerformanceFunctions = {
     Args:{p_actor:string;p_source:string;p_feedback_id:string;p_expected:string;p_next:string};
     Returns:{status:string};
   };
+  admin_management_resolve_catalog_v1:{
+    Args:{p_actor:string;p_kind:'university'|'career'|'subject';p_id:string;p_decision:'approve'|'reject'};
+    Returns:{status:string;audited:boolean};
+  };
   admin_communications_dashboard_v1: {
     Args: {p_days?:number;p_from?:string|null;p_to?:string|null;p_type?:string;p_template?:string;p_status?:string;p_campaign?:string};
     Returns: import('@/app/(es)/administrador/communications-dashboard-types').CommunicationsSnapshot;
