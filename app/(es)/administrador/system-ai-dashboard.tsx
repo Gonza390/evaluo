@@ -127,8 +127,8 @@ export function SystemAiDashboard({data,days}:Props){
    <h1>Sistema e IA</h1>
    <p>Si la plataforma funciona, cuánto consumimos y qué conviene resolver antes de que afecte a los estudiantes. Acá no medimos crecimiento: medimos estabilidad, consumo, errores y eficiencia.</p>
   </section>
-  <form className="si-filters" method="get" action="/administrador">
-   <input type="hidden" name="panel" value="ia"/>
+  <form className="si-filters" method="get" action="/administrador/ia">
+   
    <div className="si-filter"><span className="si-lab">Período</span>
     <div className="si-seg">{([['1','24 h'],['7','7 días'],['14','14 días'],['30','30 días']] as const).map(([n,name])=>
       <button key={n} name="systemPeriod" value={n} type="submit" aria-pressed={Number(n)===days}

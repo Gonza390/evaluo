@@ -65,9 +65,9 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
     {label:'Ingresos cobrados',value:rev,note:'Pagos acreditados · últimos 7 días'},
   ];
   const alerts=[
-    {title:'Errores de procesamiento de PDF/DOCX',note:fmt(data.materials.failed_7d)+' fallidos · '+fmt(data.materials.stuck_7d)+' en proceso +15 min',count:data.materials.failed_7d+data.materials.stuck_7d,href:'/administrador?panel=ia',link:'Ver en Sistema e IA'},
-    {title:'Fallos de IA',note:'Todavía no existe un conteo fiable separado por proveedor',count:null,href:'/administrador?panel=ia',link:'Ver en Sistema e IA'},
-    {title:'Problemas con pagos',note:'Intentos de checkout fallidos · últimos 7 días',count:data.payments.failed,href:'/administrador?panel=monetizacion',link:'Ver en Monetización'},
+    {title:'Errores de procesamiento de PDF/DOCX',note:fmt(data.materials.failed_7d)+' fallidos · '+fmt(data.materials.stuck_7d)+' en proceso +15 min',count:data.materials.failed_7d+data.materials.stuck_7d,href:'/administrador/ia',link:'Ver en Sistema e IA'},
+    {title:'Fallos de IA',note:'Todavía no existe un conteo fiable separado por proveedor',count:null,href:'/administrador/ia',link:'Ver en Sistema e IA'},
+    {title:'Problemas con pagos',note:'Intentos de checkout fallidos · últimos 7 días',count:data.payments.failed,href:'/administrador/monetizacion',link:'Ver en Monetización'},
   ];
   const xLabels=graph.current.filter((_,i)=>i===0||i===days-1||i%Math.max(1,Math.floor(days/5))===0);
   return <main className="ehome">
@@ -83,7 +83,7 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
       <div><div className="eh-eyebrow">Evaluo / Tablero general</div><h1>Tablero general</h1><p>El estado de Evaluo en una sola pantalla. El detalle de cada área vive en su propio panel.</p></div>
       <label className="eh-date"><span>{data.day===data.today?'Hoy':'Fecha'}</span><input aria-label="Fecha del tablero" type="date" min={minDay} max={data.today} value={data.day} onChange={e=>{
         const date=e.target.value;
-        if(date && date>=minDay && date<=data.today) window.location.assign('/administrador?panel=resumen&date='+encodeURIComponent(date));
+        if(date && date>=minDay && date<=data.today) window.location.assign('/administrador/resumen?date='+encodeURIComponent(date));
       }}/></label>
     </section>
     <div className="eh-grid">

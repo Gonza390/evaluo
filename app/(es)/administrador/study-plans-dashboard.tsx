@@ -62,9 +62,9 @@ export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
     (Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000>29||
     (filters.from===from&&filters.to===to))return;
   const query=new URLSearchParams(window.location.search);
-  query.set('panel','planes');query.set('planPeriod','custom');
+  query.set('planPeriod','custom');
   query.set('planFrom',from);query.set('planTo',to);
-  router.replace('/administrador?'+query.toString());
+  router.replace('/administrador/planes?'+query.toString());
  },[period,from,to,earliest,today,filters.from,filters.to,router]);
  const m=snapshot.summary;
  const anyPlans=m.plans>0;
@@ -150,18 +150,18 @@ export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
     prefetch={false} className={'eh-tab'+(i===5?' eh-active':'')} aria-current={i===5?'page':undefined}>{name}</Link>)}</nav></header>
   <section className="sp-intro"><span className="sp-label">Evaluo / Planes de estudio</span><h1>Planes de estudio</h1>
    <p>Si los estudiantes crean planes, los siguen y llegan avanzados a sus exámenes. Importa si el plan ayuda a mantener una rutina, no cuántos se generan.</p></section>
-  <form className="sp-filters" action="/administrador" method="get"
+  <form className="sp-filters" action="/administrador/planes" method="get"
     onChange={e=>{if(e.target instanceof HTMLSelectElement)e.currentTarget.requestSubmit();}}>
-   <input type="hidden" name="panel" value="planes"/>
+   
    <div className="sp-filter"><span className="sp-label">Período</span><div className="sp-segment" role="group" aria-label="Período">
     {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([v,label])=>
      <button key={v} type="button" className={period===v?'sp-selected':''} aria-pressed={period===v} onClick={()=>{
        setPeriod(v);
        if(v!=='custom'){
         const query=new URLSearchParams(window.location.search);
-        query.set('panel','planes');query.set('planPeriod',v);
+        query.set('planPeriod',v);
         query.delete('planFrom');query.delete('planTo');
-        router.push('/administrador?'+query.toString());
+        router.push('/administrador/planes?'+query.toString());
        }
       }}>{label}</button>)}
    </div><input type="hidden" name="planPeriod" value={period}/></div>

@@ -56,9 +56,9 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
      (Date.parse(customTo+'T12:00:00Z')-Date.parse(customFrom+'T12:00:00Z'))/86400000>29||
      (filters.from===customFrom&&filters.to===customTo))return;
   const query=new URLSearchParams(window.location.search);
-  query.set('panel','biblioteca');query.set('academicPeriod','custom');
+  query.set('academicPeriod','custom');
   query.set('academicFrom',customFrom);query.set('academicTo',customTo);
-  router.replace('/administrador?'+query.toString());
+  router.replace('/administrador/biblioteca?'+query.toString());
  },[selectedPeriod,customFrom,customTo,earliest,today,filters.from,filters.to,router]);
  const overall=data.overall;
  const totalCompleted=overall.completed_mode_sessions+overall.completed_events;
@@ -133,9 +133,9 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
   <section className="lp-intro"><div className="lp-kicker">Evaluo / Aprendizaje y prácticas</div>
    <h1>Aprendizaje y prácticas</h1><p>Cómo estudian realmente los usuarios, qué herramientas usan, qué les cuesta y si mejoran después de practicar. Medimos aprendizaje, no solo uso.</p>
   </section>
-  <form className="lp-filters" action="/administrador" method="get"
+  <form className="lp-filters" action="/administrador/biblioteca" method="get"
    onChange={e=>{if(e.target instanceof HTMLSelectElement && e.target.name)e.currentTarget.requestSubmit();}}>
-   <input type="hidden" name="panel" value="biblioteca"/>
+   
    <div className="lp-filter"><span className="lp-kicker">Período</span><div className="lp-segment" role="group" aria-label="Período">
     {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([v,label])=>
       <button type="button" aria-pressed={selectedPeriod===v} className={selectedPeriod===v?'lp-picked':''} key={v}
@@ -143,9 +143,9 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
        setSelectedPeriod(v);
        if(v!=='custom'){
         const query=new URLSearchParams(window.location.search);
-        query.set('panel','biblioteca');query.set('academicPeriod',v);
+        query.set('academicPeriod',v);
         query.delete('academicFrom');query.delete('academicTo');
-        router.push('/administrador?'+query.toString());
+        router.push('/administrador/biblioteca?'+query.toString());
        }
       }}>{label}</button>)}
    </div><input type="hidden" name="academicPeriod" value={selectedPeriod}/></div>

@@ -89,9 +89,9 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
    (Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000>29||
    (filters.from===from&&filters.to===to))return;
   const query=new URLSearchParams(window.location.search);
-  query.set('panel','mails');query.set('commPeriod','custom');
+  query.set('commPeriod','custom');
   query.set('commFrom',from);query.set('commTo',to);
-  router.replace('/administrador?'+query.toString());
+  router.replace('/administrador/mails?'+query.toString());
  },[period,from,to,earliest,today,filters.from,filters.to,router]);
  const sortedTemplates=useMemo(()=>{
   const rows=[...snapshot.templates];
@@ -169,9 +169,9 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
   </header>
   <section className="cm-intro"><span className="cm-kicker">Evaluo / Comunicaciones</span>
     <h1>Comunicaciones</h1><p>Los correos automáticos de Evaluo: si se envían, si llegan y, sobre todo, si los estudiantes vuelven a estudiar.</p></section>
-  <form className="cm-filters" action="/administrador" method="get"
+  <form className="cm-filters" action="/administrador/mails" method="get"
     onChange={e=>{if(e.target instanceof HTMLSelectElement)e.currentTarget.requestSubmit();}}>
-   <input type="hidden" name="panel" value="mails"/>
+   
    <div className="cm-filter-top">
     <div className="cm-filter"><span className="cm-kicker">Período</span>
     <div className="cm-segment" role="group" aria-label="Período">
@@ -180,9 +180,9 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
         setPeriod(v);
         if(v!=='custom'){
          const query=new URLSearchParams(window.location.search);
-         query.set('panel','mails');query.set('commPeriod',v);
+         query.set('commPeriod',v);
          query.delete('commFrom');query.delete('commTo');
-         router.push('/administrador?'+query.toString());
+         router.push('/administrador/mails?'+query.toString());
         }
        }} aria-pressed={period===v}
        className={period===v?'cm-picked':''}>{label}</button>)}</div>

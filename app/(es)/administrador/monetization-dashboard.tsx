@@ -179,9 +179,9 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
     (Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000>29||
     (filters.from===from&&filters.to===to))return;
   const query=new URLSearchParams(window.location.search);
-  query.set('panel','monetizacion');query.set('moneyPeriod','custom');
+  query.set('moneyPeriod','custom');
   query.set('moneyFrom',from);query.set('moneyTo',to);
-  router.replace('/administrador?'+query.toString());
+  router.replace('/administrador/monetizacion?'+query.toString());
  },[period,from,to,earliest,today,filters.from,filters.to,router]);
  return <main className="ehome mo-dashboard">
   <header className="eh-header"><div className="eh-top"><span className="eh-logo">evaluo<span>.</span></span>
@@ -194,9 +194,9 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
   </header>
   <section className="mo-intro"><span className="mo-label">Evaluo / Monetización</span>
    <h1>Monetización</h1><p>Cuántos estudiantes pasan de Free a Premium, cuánto dinero genera Evaluo y dónde estamos perdiendo oportunidades de venta.</p></section>
-  <form className="mo-filters" action="/administrador" method="get"
+  <form className="mo-filters" action="/administrador/monetizacion" method="get"
     onChange={e=>{if(e.target instanceof HTMLSelectElement)e.currentTarget.requestSubmit();}}>
-   <input type="hidden" name="panel" value="monetizacion"/>
+   
    <div className="mo-filter-period"><span className="mo-label">Período</span>
     <div className="mo-segment" role="group" aria-label="Período">
     {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([value,label])=>
@@ -204,9 +204,9 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
         setPeriod(value);
         if(value!=='custom'){
          const query=new URLSearchParams(window.location.search);
-         query.set('panel','monetizacion');query.set('moneyPeriod',value);
+         query.set('moneyPeriod',value);
          query.delete('moneyFrom');query.delete('moneyTo');
-         router.push('/administrador?'+query.toString());
+         router.push('/administrador/monetizacion?'+query.toString());
         }
        }} aria-pressed={period===value}
         className={period===value?'mo-selected':''}>{label}</button>)}</div>

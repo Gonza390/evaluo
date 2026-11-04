@@ -38,4 +38,26 @@ assert.ok(source('app/(es)/administrador/communications-dashboard.tsx').includes
 assert.ok(source('app/(es)/administrador/system-ai-dashboard.tsx').includes('eh-tabs'));
 assert.ok(source('app/(es)/administrador/gestion-dashboard.tsx').includes('eh-tabs'));
 for(const legacy of ['ia-herramientas','ReferralsPanel','IAPanel','admin-sidebar','admin-theme.css']) assert.ok(!root.includes(legacy));
+
+const fixedPanelRoutes: Array<[string,string]> = [
+  ['admin-home.tsx','resumen'],
+  ['users-retention-dashboard.tsx','usuarios'],
+  ['learning-dashboard.tsx','biblioteca'],
+  ['study-plans-dashboard.tsx','planes'],
+  ['monetization-dashboard.tsx','monetizacion'],
+  ['communications-dashboard.tsx','mails'],
+  ['system-ai-dashboard.tsx','ia'],
+];
+for(const [component, panel] of fixedPanelRoutes){
+  const markup=source('app/(es)/administrador/'+component);
+  assert.ok(!markup.includes('/administrador?panel='),component+' must not navigate through the legacy query route');
+  assert.ok(!markup.includes('action="/administrador"'),component+' must not submit filters to the legacy root');
+  assert.ok(!markup.includes("router.push('/administrador?'"),component+' must keep client filters in their panel');
+  assert.ok(!markup.includes("router.replace('/administrador?'"),component+' must keep date ranges in their panel');
+  if (markup.includes('<form')) {
+    assert.ok(markup.includes('action="/administrador/'+panel+'"') || component === 'admin-home.tsx',
+      component+' form submissions must target the dedicated panel route');
+  }
+}
+
 console.log('Redesigned admin: ten isolated routes and old links preserved.');
