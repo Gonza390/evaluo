@@ -106,7 +106,7 @@ export function StudentMaterialExam({
     (topicSectionIndex === undefined ? '' : `:topic:${topicSectionIndex}`);
   const supplementalCacheKey = 'evaluo:topic-practice-source:v1:' + materialId +
     ':' + (topicSectionIndex ?? 'global');
-  const [supplementalBankLoaded, setSupplementalBankLoaded] = useState(false);
+  const [supplementalBankLoadedFor, setSupplementalBankLoadedFor] = useState<string | null>(null);
   const [supplementalQuestions, setSupplementalQuestions] = useState<StudyQuestion[]>([]);
   const [topicGenerationUnavailable, setTopicGenerationUnavailable] = useState(false);
   const eligibleQuestions = useMemo(
@@ -195,27 +195,32 @@ export function StudentMaterialExam({
   // tab, so an interrupted attempt can still resolve its saved question IDs.
   // Never place PDF excerpts in persistent localStorage.
   useEffect(() => {
+    // A new topic must never reuse another topic's generated answer bank or
+    // draft readiness. Changing the same section object does not reset it.
+    setDraftLoaded(false);
+    topicAutoStartRequested.current = false;
     if (topicSectionIndex === undefined || isSimulation) {
-      setSupplementalBankLoaded(true);
+      setSupplementalQuestions([]);
+      setSupplementalBankLoadedFor(supplementalCacheKey);
       return;
     }
+    let recovered:StudyQuestion[]=[];
     try {
       const raw = window.sessionStorage.getItem(supplementalCacheKey);
       if (raw) {
         const parsed:unknown = JSON.parse(raw);
-        const chapter = sections[topicSectionIndex]?.title;
-        if (Array.isArray(parsed) && chapter) {
-          const verified = getDistinctEligibleExamQuestions(parsed as StudyQuestion[])
-            .filter(q => q.chapterTitle === chapter && isReliableTopicQuestion(q))
+        if (Array.isArray(parsed) && topicTitle) {
+          recovered = getDistinctEligibleExamQuestions(parsed as StudyQuestion[])
+            .filter(q => q.chapterTitle === topicTitle && isReliableTopicQuestion(q))
             .slice(0,24);
-          setSupplementalQuestions(verified);
         }
       }
     } catch {
       // Session storage may be disabled. The practice remains usable.
     }
-    setSupplementalBankLoaded(true);
-  }, [materialId, topicSectionIndex, isSimulation, sections, supplementalCacheKey]);
+    setSupplementalQuestions(recovered);
+    setSupplementalBankLoadedFor(supplementalCacheKey);
+  }, [topicSectionIndex, isSimulation, supplementalCacheKey, topicTitle]);
 
   const bankSignature = useMemo(
     () => practiceBankSignature(eligibleQuestions),
@@ -223,7 +228,7 @@ export function StudentMaterialExam({
   );
 
   useEffect(() => {
-    if (!supplementalBankLoaded) return;
+    if (supplementalBankLoadedFor !== supplementalCacheKey) return;
     if (isSimulation) {
       setDraftLoaded(true);
       return;
@@ -238,7 +243,7 @@ export function StudentMaterialExam({
       setSavedDraft(null);
     }
     setDraftLoaded(true);
-  }, [materialId, bankSignature, eligibleQuestions, isSimulation, draftStorageKey, supplementalBankLoaded]);
+  }, [materialId, bankSignature, eligibleQuestions, isSimulation, draftStorageKey, supplementalBankLoadedFor, supplementalCacheKey]);
 
   // Guardado automático en este dispositivo. No persistir contenidos del PDF
   // ni hacer una llamada al servidor por cada tecla del estudiante.
@@ -497,6 +502,7 @@ export function StudentMaterialExam({
     if (
       topicSectionIndex === undefined ||
       !draftLoaded ||
+      supplementalBankLoadedFor !== supplementalCacheKey ||
       savedDraft ||
       started ||
       preparing ||
@@ -504,7 +510,7 @@ export function StudentMaterialExam({
     ) return;
     topicAutoStartRequested.current = true;
     startTopicPractice();
-  }, [topicSectionIndex, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
+  }, [topicSectionIndex, draftLoaded, supplementalBankLoadedFor, supplementalCacheKey, savedDraft, started, preparing, eligibleQuestions.length]);
 
   if ((eligibleQuestions.length === 0 || sizeOptions.length === 0) && !preparing) {
     return (
