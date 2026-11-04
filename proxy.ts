@@ -125,6 +125,19 @@ export async function proxy(request: NextRequest) {
     return persistReferralCookie(request, apiProtectionBlock);
   }
 
+  // Ruta de inspección UI, sin datos del usuario ni procesamiento real.
+  // Sólo en next dev y exclusivamente para este path: el resto de /dashboard
+  // continúa autenticado. En producción el proxy no hace ninguna excepción
+  // y la propia página devuelve 404.
+  if (
+    process.env.NODE_ENV === 'development' &&
+    (pathname === '/dashboard/procesando/demo' ||
+      pathname === '/dashboard/procesando/demo/')
+  ) {
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
+  }
+
   const isRegularSimulatorRoute =
     pathname === '/simulador' || /^\/simulador\/[^/]+\/\d+$/.test(pathname);
   const isProtectedSimulatorRoute =
