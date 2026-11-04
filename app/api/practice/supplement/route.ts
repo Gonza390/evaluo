@@ -5,7 +5,7 @@ import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, claimFreeStudyPairSample } from '@/lib/free-study-v2-server';
 import { normalizedAnswer, selectPracticePairs, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 import { sourceVerifiedPairs } from '@/lib/student-materials/practice-source-pairs';
@@ -59,8 +59,13 @@ export async function POST(request: Request) {
     if (body.mode !== 'unir' && body.mode !== 'flashcards')
       return NextResponse.json({error:'free_study_mode_unavailable'},{status:403});
     const cached = await getFreeStudyBank<PracticePair>({userId:user.id,materialId:material.id,mode:freeMode});
-    if (cached) return NextResponse.json({pairs:cached,source:'free_sample_cached'},
-      {headers:{'Cache-Control':'private, no-store'}});
+    if (cached) {
+      const allowed = await claimFreeStudyPairSample({
+        userId:user.id,materialId:material.id,mode:freeMode,items:cached,
+      });
+      return NextResponse.json({pairs:allowed,source:'free_sample_cached'},
+        {headers:{'Cache-Control':'private, no-store'}});
+    }
   }
 
   const admin = createAdminClient();
@@ -97,7 +102,10 @@ export async function POST(request: Request) {
   if (local.length >= minimumPairs) {
     const pairs = freeV2 ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:freeMode,
       items:local.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)}) : local;
-    return NextResponse.json({pairs,source:'canonical'}, {headers:{'Cache-Control':'private, no-store'}});
+    const allowed = freeV2 ? await claimFreeStudyPairSample({
+      userId:user.id,materialId:material.id,mode:freeMode,items:pairs,
+    }) : pairs;
+    return NextResponse.json({pairs:allowed,source:'canonical'}, {headers:{'Cache-Control':'private, no-store'}});
   }
 
   // IA runs exclusively after a student clicks a practice mode and only when
@@ -129,7 +137,15 @@ export async function POST(request: Request) {
       prompt:instructions, temperature:0.1, maxOutputTokens:3600,
       responseSchema:isWord ? docxSchema : schema,
     });
-    if (!response?.content) return NextResponse.json({pairs:local,source:'canonical_only'});
+    if (!response?.content) {
+      if (!freeV2) return NextResponse.json({pairs:local,source:'canonical_only'});
+      const bank = local.length
+        ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,
+          mode:freeMode,items:local.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)})
+        : [];
+      const allowed = await claimFreeStudyPairSample({userId:user.id,materialId:material.id,mode:freeMode,items:bank});
+      return NextResponse.json({pairs:allowed,source:'canonical_only'});
+    }
     const parsed: unknown = JSON.parse(response.content);
     const raw = parsed && typeof parsed === 'object' && 'terms' in parsed
       ? (parsed as {terms:unknown}).terms : [];
@@ -139,9 +155,14 @@ export async function POST(request: Request) {
       ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:freeMode,
           items:selected.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)})
       : selected;
-    return NextResponse.json({pairs,source:'ai_verified'}, {headers:{'Cache-Control':'private, no-store'}});
+    const allowed = freeV2 ? await claimFreeStudyPairSample({
+      userId:user.id,materialId:material.id,mode:freeMode,items:pairs,
+    }) : pairs;
+    return NextResponse.json({pairs:allowed,source:'ai_verified'}, {headers:{'Cache-Control':'private, no-store'}});
   } catch {
-    return NextResponse.json({pairs:local,source:'canonical_only'},
+    if (!freeV2) return NextResponse.json({pairs:local,source:'canonical_only'},
       {headers:{'Cache-Control':'private, no-store'}});
+    return NextResponse.json({pairs:[],error:'free_study_sample_unavailable'},
+      {status:503,headers:{'Cache-Control':'private, no-store'}});
   }
 }
