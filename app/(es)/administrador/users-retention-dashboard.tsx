@@ -99,7 +99,7 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
  return <main className="ehome ur-dashboard">
   <header className="eh-header"><div className="eh-top"><span className="eh-logo">evaluo<span>.</span></span>
     <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link>
-      <Link href="/administrador/solicitudes" className="eh-primary-link">Solicitudes universidades →</Link></div></div>
+      <Link href="/administrador/solicitudes" className="eh-primary-link">Solicitudes universidades <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></Link></div></div>
     <nav className="eh-tabs" aria-label="Paneles">{nav.map(([label,panel],i)=>
       <Link href={'/administrador?panel='+panel} key={label} prefetch={false} className={'eh-tab'+(i===1?' eh-active':'')} aria-current={i===1?'page':undefined}>{label}</Link>)}</nav></header>
   <section className="eh-heading"><div><div className="eh-eyebrow">Evaluo / Usuarios y retención</div>
