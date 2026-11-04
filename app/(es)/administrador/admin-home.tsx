@@ -65,9 +65,9 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
     {label:'Ingresos cobrados',value:rev,note:'Pagos acreditados · últimos 7 días'},
   ];
   const alerts=[
-    {title:'Errores de procesamiento de PDF/DOCX',note:fmt(data.materials.failed_7d)+' fallidos · '+fmt(data.materials.stuck_7d)+' en proceso +15 min',count:data.materials.failed_7d+data.materials.stuck_7d,href:'/administrador?panel=producto',link:'Ver en Sistema e IA'},
+    {title:'Errores de procesamiento de PDF/DOCX',note:fmt(data.materials.failed_7d)+' fallidos · '+fmt(data.materials.stuck_7d)+' en proceso +15 min',count:data.materials.failed_7d+data.materials.stuck_7d,href:'/administrador?panel=ia',link:'Ver en Sistema e IA'},
     {title:'Fallos de IA',note:'Todavía no existe un conteo fiable separado por proveedor',count:null,href:'/administrador?panel=ia',link:'Ver en Sistema e IA'},
-    {title:'Problemas con pagos',note:'Intentos de checkout fallidos · últimos 7 días',count:data.payments.failed,href:'/administrador?panel=referidos',link:'Ver en Monetización'},
+    {title:'Problemas con pagos',note:'Intentos de checkout fallidos · últimos 7 días',count:data.payments.failed,href:'/administrador?panel=monetizacion',link:'Ver en Monetización'},
   ];
   const xLabels=graph.current.filter((_,i)=>i===0||i===days-1||i%Math.max(1,Math.floor(days/5))===0);
   return <main className="ehome">
