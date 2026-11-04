@@ -268,7 +268,6 @@ export function SystemAiDashboard({data,days}:Props){
    </section>
   </div>
   <footer className="eh-footer">Fuente: Supabase · consulta agregada cacheada 15 minutos · acceso administrativo · los importes, límites de los proveedores y tiempos de pantalla sin medición aparecen como no disponibles.
-    <Link href="/administrador?panel=ia-herramientas" prefetch={false} className="si-tools-link">Herramientas antiguas de IA y comprobación de claves →</Link>
   </footer>
  </main>;
 }
