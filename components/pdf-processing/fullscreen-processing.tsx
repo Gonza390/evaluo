@@ -156,7 +156,7 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
   const [elapsed,setElapsed]=useState(0);
   const [visibleScene,setVisibleScene]=useState(0);
   const [sceneExiting,setSceneExiting]=useState(false);
-  const sceneTransitionRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const sceneTransitionRef=useRef<number|null>(null);
   const [retrying,setRetrying]=useState(false);
   const [connectionIssues,setConnectionIssues]=useState(false);
   const [poller]=useState(()=>createSingleFlightPolling<StudentMaterialProcessingState|null>());
