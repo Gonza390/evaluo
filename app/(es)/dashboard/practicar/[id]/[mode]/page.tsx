@@ -70,11 +70,11 @@ export default async function PracticeModePage({ params, searchParams }: { param
   }
   const glossary = tagGlossaryChapters(studyGlossary, studySummary.sections);
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
-  if (freeV2 && mode === 'completar') {
+  if (freeV2 && (mode === 'completar' || mode === 'mixto')) {
     return <main className="mx-auto max-w-xl p-6">
-      <h1 className="text-xl font-semibold">Continuá practicando con Premium</h1>
-      <p className="mt-2 text-sm text-slate-600">Esta modalidad no forma parte del plan Free.</p>
-      <Link href="/pricing" className="mt-4 inline-block text-blue-600 underline">Ver Premium</Link>
+      <h1 className="text-xl font-semibold">Esta modalidad no está incluida en Free</h1>
+      <p className="mt-2 text-sm text-slate-600">Podés usar las actividades disponibles con tu material.</p>
+      <Link href="/dashboard/practicar" className="mt-4 inline-block text-blue-600 underline">Volver a Practicar</Link>
     </main>;
   }
   const artifacts = await loadOrBuildPedagogicalArtifacts({
@@ -119,8 +119,8 @@ export default async function PracticeModePage({ params, searchParams }: { param
     if (!matching.allowed) {
       return <main className="mx-auto max-w-xl p-6">
         <h1 className="text-xl font-semibold">Completaste la ronda gratuita de unir conceptos</h1>
-        <p className="mt-2 text-sm text-slate-600">Con Premium podés desbloquear nuevas rondas.</p>
-        <Link href="/pricing" className="mt-4 inline-block text-blue-600 underline">Ver Premium</Link>
+        <p className="mt-2 text-sm text-slate-600">Ya completaste tu ronda gratuita. Podés volver a repasar los conceptos guardados.</p>
+        <Link href="/dashboard/practicar" className="mt-4 inline-block text-blue-600 underline">Volver a Practicar</Link>
       </main>;
     }
   }
@@ -132,7 +132,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
     if (!simulator.allowed) {
       return <main className="mx-auto max-w-xl p-6">
         <h1 className="text-xl font-semibold">Ya utilizaste tu simulacro gratuito</h1>
-        <Link href="/pricing" className="mt-4 inline-block text-blue-600 underline">Ver Premium</Link>
+        <Link href="/dashboard/practicar" className="mt-4 inline-block text-blue-600 underline">Volver a Practicar</Link>
       </main>;
     }
   }
