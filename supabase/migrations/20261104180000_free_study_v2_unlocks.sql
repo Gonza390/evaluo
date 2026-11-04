@@ -143,6 +143,31 @@ alter table public.free_study_v2_banks enable row level security;
 revoke all on public.free_study_v2_banks from public, anon, authenticated;
 grant select, insert on public.free_study_v2_banks to service_role;
 
+-- Switch de base de datos separado del feature flag de Vercel.
+-- Instalar migraciones no debe activar restricciones ni alterar producción.
+create table if not exists public.free_study_v2_rollout (
+  id boolean primary key default true check (id),
+  enabled boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+insert into public.free_study_v2_rollout(id,enabled)
+values(true,false) on conflict (id) do nothing;
+alter table public.free_study_v2_rollout enable row level security;
+revoke all on public.free_study_v2_rollout from public, anon, authenticated;
+grant select, update on public.free_study_v2_rollout to service_role;
+
+create or replace function public.is_free_study_v2_rollout_enabled()
+returns boolean language sql stable security definer set search_path = ''
+as $rollout$
+  select coalesce((
+    select enabled from public.free_study_v2_rollout where id = true
+  ),false);
+$rollout$;
+revoke all on function public.is_free_study_v2_rollout_enabled()
+  from public, anon;
+grant execute on function public.is_free_study_v2_rollout_enabled()
+  to authenticated, service_role;
+
 -- El navegador puede llamar directamente a Supabase con JWT. Por eso la
 -- validación de cupos no puede depender sólo de Server Actions / rutas Next.js.
 -- Los siguientes triggers se instalan junto con el lanzamiento de Free V2.
@@ -178,6 +203,7 @@ declare
   v_unlimited boolean;
   v_daily integer;
 begin
+  if not public.is_free_study_v2_rollout_enabled() then return new; end if;
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended('free-v2-material:' || new.user_id::text, 0)
   );
@@ -232,6 +258,7 @@ create or replace function public.guard_free_study_v2_failed_material_retry()
 returns trigger language plpgsql security definer set search_path = ''
 as $guard_retry$
 begin
+  if not public.is_free_study_v2_rollout_enabled() then return new; end if;
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended('free-v2-material:' || new.user_id::text, 0)
   );
