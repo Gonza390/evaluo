@@ -70,7 +70,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   }
   async function startPractice() {
     if (!selectedMode || !materialId || preparing || leavingReview || !available(selectedMode)) return;
-    const destination = href + '?repaso=' + sessionLength;
+    const returnTo = '/dashboard/practicar?materialId=' + encodeURIComponent(materialId);
+    const destination = href + '?repaso=' + sessionLength + '&returnTo=' + encodeURIComponent(returnTo);
     const requiresPreparation = advancedPracticeEnabled &&
       !['Flashcards','Opciones','Unir conceptos','Completar','Casos'].includes(selectedMode);
     const prepareMode = href.split('/').at(-1);
