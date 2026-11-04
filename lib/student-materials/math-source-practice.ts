@@ -105,7 +105,7 @@ export function buildVerifiedMathPractice(
   if (tangent && hasSupportedFunction && sourceWithFunction) {
     const reference=referenceFor(tangent,/plano tangente|linealizacion/);
     if (reference) {
-      for (const [index,x0,y0] of [[0,1,0],[1,2,1]]) {
+      for (const [index,x0,y0] of [[0,1,0],[1,2,1]] as Array<[number,number,number]>) {
         const value=x0*x0+2*y0, slopeX=2*x0, slopeY=2;
         const constant=value-slopeX*x0-slopeY*y0;
         const solution=`z = ${slopeX}x + ${slopeY}y ${constant < 0 ? '-' : '+'} ${Math.abs(constant)}`;
