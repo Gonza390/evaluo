@@ -20,6 +20,10 @@ const helper=read('lib/free-study-v2-server.ts');
 const schema=read('supabase/migrations/20261104180000_free_study_v2_unlocks.sql');
 assert.doesNotMatch(helper,/error_explanation|incorrectAnswerExplanations/);
 assert.doesNotMatch(schema,/error_explanation/);
+// Las correcciones existentes siguen disponibles; no ocultar explicaciones.
+assert.doesNotMatch(read('app/(es)/materiales/[id]/page.tsx'),
+  /questions:\s*pedagogicalArtifacts\.questions\.map\(question\s*=>\s*\(\{\.\.\.question,\s*explanation:\s*''/);
+
 assert.ok(!existsSync(new URL('../app/api/free-study-v2/explanation/route.ts',import.meta.url)));
 
 // Los previews de master nunca pueden cobrar cupos v2 por error.
