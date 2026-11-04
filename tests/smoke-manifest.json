@@ -1,5 +1,9 @@
 [
   {
+    "file": "tests/admin-redesign.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/topic-practice-ai.smoke.ts",
     "alias": true
   },

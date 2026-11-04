@@ -124,24 +124,17 @@ requireAll('lib/analytics-metadata.ts', [
   'seo_unlam_practice_mode_selected',
   'seo_unlam_practice_completed',
 ]);
-requireAll('app/(es)/administrador/unlam-funnel-actions.ts', [
-  'getAdminAccessContext',
-  'listAdminUserIds',
-  "eq('path', PATH)",
-  'seo_unlam_practice_started',
-  'seo_unlam_practice_completed',
-  'pdf_selected',
-  'signup_completed',
+// The ten-screen redesign replaces the old UNLaM-only admin widget.
+// Landing attribution stays in the existing acquisition-by-page report.
+requireAll('app/(es)/administrador/acquisition-dashboard.tsx', [
+  'Rendimiento por página',
+  'r=>r.landing',
+  'pageGroups',
+  'registered',
+  'activated',
 ]);
-requireAll('app/(es)/administrador/unlam-funnel-panel.tsx', [
-  'Ingreso UNLaM · Embudo de adquisición',
-  'stats.steps.map',
-  'Search Console',
-]);
-requireAll('app/(es)/administrador/page.tsx', [
-  'obtenerEmbudoUnlamAdministrador(activePeriod)',
-  'UnlamFunnelPanel',
-]);
+assert.ok(!source('app/(es)/administrador/page.tsx').includes('UnlamFunnelPanel'),
+  'The retired UNLaM panel must not reappear in the redesigned administrator');
 assert.ok(source('app/sitemap.ts').includes('/como-estudiar-ingreso-unlam'), 'Landing must be in sitemap');
 assert.ok(source('components/footer-home.tsx').includes('href="/como-estudiar-ingreso-unlam"'), 'Landing needs an internal link');
 console.log('UNLaM SEO, content and funnel smoke tests passed.');
