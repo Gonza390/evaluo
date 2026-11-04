@@ -5,6 +5,7 @@ import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { isPremiumFunnelDismissReturn } from '@/lib/premium-funnel-return';
+import { premiumPricingHref } from '@/lib/premium-flow';
 
 interface PremiumUpsellProps {
   title: string;
@@ -94,9 +95,9 @@ export function PremiumUpsell({
 
     if (openContextualFlow()) return;
 
-    const params = new URLSearchParams({ source });
-    if (materiaId) params.set('materia', materiaId);
-    window.location.assign(`/pricing?${params.toString()}#elegir-plan`);
+    window.location.assign(premiumPricingHref({
+      source, materiaId, parcial, returnTo: currentReturnTo(),
+    }));
   };
 
   if (flow && !flowDismissed) {
