@@ -6,7 +6,7 @@ import { StudyPlanSetup } from '@/components/dashboard/study-plan-setup';
 
 export const metadata: Metadata = { title:'Preparar mi plan | Evaluo', robots:{index:false,follow:false} };
 
-export default async function PrepareStudyPlanPage() {
+export default async function PrepareStudyPlanPage({ searchParams }: { searchParams?: Promise<{ material?: string }> }) {
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard/plan-de-estudio/preparar');
@@ -23,5 +23,6 @@ export default async function PrepareStudyPlanPage() {
     });
     return {id:material.id,title:material.title,topicCount:topics.length,topics};
   }));
-  return <StudyPlanSetup materials={materials}/>;
+  const materialId = (await searchParams)?.material;
+  return <StudyPlanSetup materials={materials} initialMaterialId={materials.some(m => m.id === materialId) ? materialId : undefined}/>;
 }
