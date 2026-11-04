@@ -54,6 +54,14 @@ export function premiumPricingHref(context: {
   return '/pricing' + (query ? '?' + query : '') + '#elegir-plan';
 }
 
+/** Pantalla Premium dentro de Evaluo, con el mismo contexto de regreso.
+ * La página pública /pricing conserva su diseño y acceso para visitantes.
+ */
+export function premiumDashboardHref(context: Parameters<typeof premiumPricingHref>[0]): string {
+  const pricingHref = premiumPricingHref(context);
+  return '/dashboard/premium' + pricingHref.slice('/pricing'.length).replace(/#elegir-plan$/, '');
+}
+
 const GATE_MODES: Record<PremiumGateReason, string | null> = {
   material_upload: null,
   multiple_choice: null,
@@ -82,7 +90,7 @@ export function premiumUpgradeForLimit(
     : '/dashboard/practicar';
   const returnTo = safePremiumReturnTo(options.returnTo) ?? destination;
   const source = 'free_v2_' + reason + '_limit';
-  return { reason, source, returnTo, href: premiumPricingHref({source, materiaId:materialId, returnTo}) };
+  return { reason, source, returnTo, href: premiumDashboardHref({source, materiaId:materialId, returnTo}) };
 }
 
 /** Error distinguible de red/validación: sólo una cuota Free real habilita upgrade. */
