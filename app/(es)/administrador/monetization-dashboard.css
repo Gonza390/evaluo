@@ -68,3 +68,18 @@
  .mo-evolution-subscriptions,.mo-evolution-currencies,
  .mo-evolution-right>.mo-provider-revenue{padding-left:20px;padding-right:20px}
 }
+
+
+/* Original status ribbon and payment-problem column proportions. */
+.mo-status-layout{padding:22px 28px 24px;display:flex;flex-direction:column;gap:14px}
+.mo-status-bar{height:12px;gap:2px;background:transparent;border-radius:0}
+.mo-status-bar>span{min-width:0}
+.mo-status-labels{display:flex;flex-wrap:wrap;gap:12px 36px;margin-top:0;color:#D6D6DB;font-size:13.5px}
+.mo-status-labels>div{display:flex;flex-direction:row;gap:6px;align-items:baseline}
+.mo-status-labels>div::before{content:'';display:inline-block;flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#596171}
+.mo-status-labels>div:first-child::before{background:var(--accent)}
+.mo-status-labels>div:last-child::before{background:#FF5C4D}
+.mo-status-labels strong{font-size:13px}
+.mo-problem-rate{flex:1.4 1 420px;padding:24px 28px;gap:16px}
+.mo-problem-cards{flex:1 1 560px}
+.mo-provider-errors{padding:22px 28px 24px}
