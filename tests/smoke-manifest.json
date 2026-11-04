@@ -302,5 +302,9 @@
   {
     "file": "tests/personal-study-plan.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/pdf-fullscreen-processing.smoke.ts",
+    "alias": false
   }
 ]
