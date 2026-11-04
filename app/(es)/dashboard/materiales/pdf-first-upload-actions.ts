@@ -7,6 +7,7 @@ import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
+import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
@@ -140,9 +141,13 @@ async function assertStudentMaterialQuota(userId: string) {
       );
     }
   } else if (!hasUnlimitedUploads) {
-    const used = (materialsResult.data ?? []).filter(
-      (material) => material.processing_status !== 'failed'
-    ).length;
+    const activeIds = (materialsResult.data ?? [])
+      .filter(material => material.processing_status !== 'failed')
+      .map(material => material.id);
+    const historicalIds = await historicalFreeStudyMaterialIds(userId);
+    const used = isFreeStudyV2Active()
+      ? new Set([...activeIds, ...historicalIds]).size
+      : activeIds.length;
     if (used >= (isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT)) {
       throw new Error(
         isFreeStudyV2Active()
