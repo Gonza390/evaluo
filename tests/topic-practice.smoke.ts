@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import type { StudyQuestion, PedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
 import {
   selectTopicPracticeQuestions,
@@ -484,4 +485,13 @@ assert.equal(readPracticeDraft(JSON.stringify({
   ...originalDraft, questionIds: [...originalDraft.questionIds, originalDraft.questionIds[0]],
 }), 'test-pdf', eightyUnique), null,
   'No recuperar una práctica con preguntas duplicadas o alteradas.');
+const topicPracticeScreen = readFileSync(
+  new URL('../components/student-material-exam.tsx',import.meta.url),'utf8'
+);
+assert.match(topicPracticeScreen,/verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS/,
+  'El estudiante debe conocer la cobertura real cuando su tema no tiene seis ejercicios.');
+assert.match(topicPracticeScreen,/isReliableTopicQuestion/,
+  'Solo ejercicios verificables deben contar para la alerta de cobertura.');
+assert.match(topicPracticeScreen,/Podés practicar con las disponibles/,
+  'Un tema corto sigue siendo practicable; no se inventan ejercicios para llegar a seis.');
 console.log('topic-practice.smoke: OK');
