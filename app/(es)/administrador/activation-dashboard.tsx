@@ -11,7 +11,7 @@ type MetricKey = keyof ActivationCohortRow;
 const nav:[string,string][]=[
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],
  ['Adquisición y SEO','adquisicion'],['Activación y recorrido','producto'],
- ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','biblioteca'],
+ ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
  ['Monetización','referidos'],['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','usuarios']];
 const sources:[string,string][]=[['all','Todas'],['google','Google'],['social','Instagram y TikTok'],['whatsapp','WhatsApp'],['facebook','Facebook'],['unknown','Directo / sin atribución'],['other','Otros'],['reddit','Reddit'],['ai_referral','Referidos IA']];
 const fmt=(n:number)=>Math.round(n).toLocaleString('es-AR');
