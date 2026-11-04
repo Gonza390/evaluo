@@ -62,12 +62,12 @@ function TopicsExample() {
   </section>;
 }
 function SceneOrganize() {
-  return <div className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
-    <ExampleDocument/><div aria-hidden="true" className="flex items-center justify-center text-[#0b63e5] lg:-mx-1"><ArrowRight className="size-6 rotate-90 lg:rotate-0"/></div><TopicsExample/>
+  return <div data-processing-layout="organize" className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
+    <ExampleDocument/><div data-processing-arrow aria-hidden="true" className="flex items-center justify-center text-[#0b63e5] lg:-mx-1"><ArrowRight className="size-6 rotate-90 lg:rotate-0"/></div><TopicsExample/>
   </div>;
 }
 function SceneUnderstand() {
-  return <div className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
+  return <div data-processing-layout="understand" className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
     <section aria-label="Ejemplo de resumen de un tema" className="flex min-w-0 flex-[1.6] flex-col gap-4 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-6 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:px-8 sm:py-7">
       <div className="flex flex-wrap items-center justify-between gap-3"><Label>TEMA 2 · RESUMEN</Label><ExampleTag/></div>
       <h2 className="text-[23px] font-bold leading-[1.2] tracking-[-.02em] text-[#0f1623] sm:text-[28px]">Elasticidad precio de la demanda</h2>
@@ -93,8 +93,8 @@ function SceneUnderstand() {
   </div>;
 }
 function SceneMemorize() {
-  return <div className="mx-auto flex w-full max-w-[1040px] flex-col items-start justify-center gap-7 lg:flex-row">
-    <section aria-label="Ejemplo de flashcard" className="min-w-0 flex-[1.5] pb-6 lg:max-w-[600px]">
+  return <div data-processing-layout="memorize" className="mx-auto flex w-full max-w-[1040px] flex-col items-start justify-center gap-7 lg:flex-row">
+    <section aria-label="Ejemplo de flashcard" className="w-full min-w-0 flex-[1.5] pb-6 lg:max-w-[600px]">
       <div className="flex min-h-[300px] flex-col justify-between gap-6 rounded-[32px] border border-[#cfdcf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-7 shadow-[0_14px_0_-6px_#dbe6f8,0_26px_0_-12px_#eaf0fb,0_18px_40px_rgba(20,60,140,0.08)] sm:min-h-[330px] sm:px-8 sm:py-8">
         <div className="flex items-center justify-between gap-3"><Label>PREGUNTA</Label><ExampleTag/></div>
         <p className="text-[24px] font-bold leading-[1.25] tracking-[-.025em] sm:text-[30px]">¿Qué mide la elasticidad precio de la demanda?</p>
@@ -104,7 +104,7 @@ function SceneMemorize() {
         </div>
       </div>
     </section>
-    <section aria-label="Ejemplo de glosario" className="flex min-w-0 flex-1 flex-col rounded-[28px] border border-[#e8ecf2] bg-white px-5 pb-2 pt-6 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:px-[26px] lg:max-w-[400px]">
+    <section aria-label="Ejemplo de glosario" className="flex w-full min-w-0 flex-1 flex-col rounded-[28px] border border-[#e8ecf2] bg-white px-5 pb-2 pt-6 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:px-[26px] lg:max-w-[400px]">
       <div className="pb-3.5"><Label>GLOSARIO</Label></div>
       {[
         ['Elasticidad','Sensibilidad de la cantidad demandada ante un cambio en el precio.'],
@@ -118,7 +118,7 @@ function SceneMemorize() {
   </div>;
 }
 function ScenePractice() {
-  return <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
+  return <div data-processing-layout="practice" className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
     <section className="min-w-0 flex-[1.6] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-2"><Label>PRÁCTICA · PREGUNTA 3</Label><ExampleTag/></div>
       <h2 className="text-[19px] font-bold leading-7 tracking-[-.02em] text-[#0f1623] sm:text-[22px]">Si la demanda de un bien es elástica y su precio sube, ¿qué pasa con la cantidad demandada?</h2>
