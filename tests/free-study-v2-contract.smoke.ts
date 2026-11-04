@@ -32,6 +32,10 @@ assert.match(schema,/guard_free_study_v2_failed_material_retry/);
 assert.match(schema,/pg_catalog\.pg_advisory_xact_lock/);
 assert.match(schema,/free_study_v2_is_premium_account/);
 assert.match(schema,/created_at := pg_catalog\.now\(\)/);
+assert.match(schema,/study_material_v2_upload_ledger/);
+assert.match(schema,/remember_study_material_v2_upload/);
+assert.match(schema,/from public\.study_material_v2_upload_ledger l/);
+
 assert.match(read('app/(es)/materiales/[id]/page.tsx'),/clientPedagogicalArtifacts/);
 // No introducir diseños/upsells mientras el usuario diseña esas pantallas.
 assert.doesNotMatch(read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx'),/href="\/pricing"/);
