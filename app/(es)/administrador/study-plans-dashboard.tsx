@@ -33,11 +33,11 @@ function TileGrid({items}:{items:Array<{title:string;value:string;sub:string;not
   <strong className="sp-number">{x.value}</strong>
   <span className="sp-foot">{x.sub}</span><span className="sp-foot">{x.note}</span></div>)}</div>;
 }
-function Buckets({title,rows,total}:{title:string;rows:Array<{name:string;value:number}>;total:number}){
+function Buckets({title,rows,total}:{title:string;rows:Array<{name:string;value:number;total?:number}>;total:number}){
  return <div className="sp-half"><span className="sp-label">{title}</span>
  {rows.map(x=><div className="sp-bucket" key={x.name}><span className="sp-bucket-title">{x.name}</span>
- <Bar height={14} value={total?100*x.value/total:0} light={x.value>0}/><strong className="sp-mono">{num(x.value)}</strong>
- <span className="sp-mono sp-muted">{percent(x.value,total)}</span></div>)}
+ <Bar height={14} value={(x.total??total)?100*x.value/(x.total??total):0} light={x.value>0}/><strong className="sp-mono">{num(x.value)}</strong>
+ <span className="sp-mono sp-muted">{percent(x.value,x.total??total)}</span></div>)}
  </div>;
 }
 function ReportTable({head,rows,format='friction'}:{head:string[];rows:ReactNode[][];format?:'friction'|'comparison'}){
@@ -181,7 +181,7 @@ export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
    <section className="sp-section"><Section n="03" title="Seguimiento del plan" important detail="Lecturas programadas y completadas; las prácticas completadas se muestran aparte, sin presentar una finalización integral ficticia."/>
      <TileGrid items={follow}/>
      <div className="sp-split">
-      <Buckets title="Cumplimiento por semana del plan · lecturas" rows={weekRows.map(x=>({name:x.name,value:x.value}))}
+      <Buckets title="Cumplimiento por semana del plan · lecturas" rows={weekRows.map(x=>({name:x.name,value:x.value,total:x.total}))}
        total={Math.max(1,...weekRows.map(x=>x.total))}/>
       <Buckets title="Planes según avance de lectura · incluye sin comenzar" rows={distRows} total={m.plans}/>
      </div>
