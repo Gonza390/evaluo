@@ -736,7 +736,7 @@ export function StudentMaterialExam({
 
         {freeQuotaReached && freeStudyV2 ? (
         <p role="status" className="mb-3 text-sm text-slate-600">
-          Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las ya desbloqueadas o continuar con Premium.
+          Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las que ya desbloqueaste.
         </p>
       ) : null}
       <div className="border-border flex justify-end border-t pt-5">
