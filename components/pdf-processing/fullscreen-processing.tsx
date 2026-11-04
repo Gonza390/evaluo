@@ -70,8 +70,8 @@ function SceneUnderstand() {
     <section className="min-w-0 flex-[1.6] rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-3"><Label>TEMA 2 · RESUMEN</Label><ExampleTag/></div>
       <h2 className="mt-5 text-[22px] font-bold tracking-[-.02em] text-[#0f1623] sm:text-[25px]">Elasticidad precio de la demanda</h2>
-      <p className="mt-4 text-[15px] leading-7 text-[#344054]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio.</p>
-      <div className="mt-5 rounded-2xl border-l-4 border-[#0b63e5] bg-[#f7faff] p-4 text-[15px] leading-6 text-[#344054]">Si una pequeña suba de precio provoca una gran caída en la cantidad demandada, la demanda es <strong>elástica</strong>.</div>
+      <p className="mt-4 text-[15px] leading-7 text-[#344054]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <strong>elástica</strong>, una pequeña suba de precio reduce mucho las ventas.</p>
+      <div className="mt-5 rounded-2xl border-l-4 border-[#0b63e5] bg-[#f7faff] p-4 text-[15px] leading-6 text-[#344054]">En cambio, si es <strong>inelástica</strong>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</div>
       <div className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[14px] font-semibold text-white" aria-label="Ejemplo de botón, no disponible durante el procesamiento">Practicar este tema <ArrowRight size={16}/></div>
     </section>
     <section className="flex min-w-0 flex-1 flex-col gap-4 rounded-[28px] border border-[#e8ecf2] bg-white p-5 sm:p-6">
@@ -86,16 +86,16 @@ function SceneUnderstand() {
 function SceneMemorize() {
   return <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
     <section className="flex min-w-0 flex-[1.2] flex-col items-center justify-center rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 text-center sm:p-8">
-      <div className="mb-5 flex w-full items-center justify-between"><Label>FLASHCARD</Label><ExampleTag/></div>
+      <div className="mb-5 flex w-full items-center justify-between"><Label>PREGUNTA</Label><ExampleTag/></div>
       <div className="flex min-h-[235px] w-full max-w-[460px] flex-col items-center justify-center gap-5 rounded-[24px] border border-[#dbe6f8] bg-white px-6 py-9 shadow-[0_12px_34px_rgba(47,75,255,.07)]">
         <Layers3 className="size-7 text-[#0b63e5]"/>
-        <p className="text-[20px] font-bold leading-7 text-[#0f1623] sm:text-[24px]">¿Qué significa que la demanda de un bien sea elástica?</p>
+        <p className="text-[20px] font-bold leading-7 text-[#0f1623] sm:text-[24px]">¿Qué mide la elasticidad precio de la demanda?</p>
       </div>
       <div className="mt-5 inline-flex min-h-[50px] items-center gap-2 rounded-full bg-[#0b63e5] px-7 text-[14px] font-semibold text-white" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta <ArrowRight size={16}/></div>
     </section>
     <section className="min-w-0 flex-1 space-y-5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 sm:p-7">
       <Label>GLOSARIO</Label>
-      {[['Elasticidad','Sensibilidad de la cantidad demandada frente a un cambio en el precio.'],['Demanda elástica','La cantidad demandada cambia proporcionalmente más que el precio.'],['Demanda inelástica','La cantidad demandada cambia proporcionalmente menos que el precio.']].map(([term,definition],i)=><div className="border-b border-[#e8ecf2] pb-4 last:border-0" key={term}>
+      {[['Elasticidad','Sensibilidad de la cantidad demandada ante un cambio en el precio.'],['Demanda inelástica','Los compradores casi no ajustan su consumo cuando el precio cambia.'],['Bien sustituto','Producto que puede reemplazar a otro cuando este se encarece.']].map(([term,definition],i)=><div className="border-b border-[#e8ecf2] pb-4 last:border-0" key={term}>
         <span className="text-[12px] font-semibold text-[#0b63e5]">0{i+1}</span>
         <h3 className="mt-1 text-[16px] font-bold text-[#0f1623]">{term}</h3>
         <p className="mt-1.5 text-[14px] leading-6 text-[#667085]">{definition}</p>
@@ -106,7 +106,7 @@ function SceneMemorize() {
 function ScenePractice() {
   return <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
     <section className="min-w-0 flex-[1.6] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 sm:p-7">
-      <div className="flex flex-wrap items-center justify-between gap-2"><Label>PRACTICÁ CON TU MATERIAL</Label><ExampleTag/></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><Label>PRÁCTICA · PREGUNTA 3</Label><ExampleTag/></div>
       <h2 className="text-[19px] font-bold leading-7 tracking-[-.02em] text-[#0f1623] sm:text-[22px]">Si la demanda de un bien es elástica y su precio sube, ¿qué pasa con la cantidad demandada?</h2>
       <div className="space-y-2.5">
         {['Aumenta','Se mantiene igual','Disminuye bastante'].map((answer,index)=><div key={answer} className={`flex items-center gap-3.5 rounded-2xl border-[1.5px] p-3 text-left text-[14px] font-medium ${index===1?'border-[#fda29b] bg-[#fff1f0] text-[#b42318]':'border-[#d0d5dd] bg-white text-[#344054]'}`}>
@@ -116,7 +116,7 @@ function ScenePractice() {
       </div>
       <div className="space-y-2.5 rounded-[20px] border border-[#dbe6f8] bg-[#f7faff] p-4 sm:p-5">
         <p className="flex items-center gap-2 text-[15px] font-bold text-[#0f1623]"><Lightbulb size={18} className="text-[#0b63e5]"/> Casi. Así se razona esta pregunta</p>
-        <p className="text-[14px] leading-6 text-[#344054]">Cuando la demanda es elástica, los compradores reaccionan mucho al precio. Por eso, si el precio sube, la cantidad demandada disminuye bastante.</p>
+        <p className="text-[14px] leading-6 text-[#344054]">Cuando la demanda es elástica, los compradores reaccionan mucho al precio. Por eso, si el precio sube, la cantidad demandada baja más que proporcionalmente.</p>
         <p className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#0b63e5]">Repasar en el resumen del tema <ArrowRight size={15}/></p>
       </div>
     </section>
