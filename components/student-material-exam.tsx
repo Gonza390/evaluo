@@ -1825,7 +1825,7 @@ export function StudentMaterialExam({
                       const reply: unknown = await response.json();
                       if (!response.ok || !reply || typeof reply !== 'object' ||
                           !('allowed' in reply) || reply.allowed !== true) {
-                        if (response.ok && 'allowed' in reply && reply.allowed === false)
+                        if (response.ok && reply && typeof reply === 'object' && 'allowed' in reply && reply.allowed === false)
                           setFreeQuotaReached(true);
                         setFreeQuotaMessage(response.status === 503
                           ? 'No pudimos comprobar tu cupo. Reintentá.'
