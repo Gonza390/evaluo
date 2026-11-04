@@ -49,3 +49,22 @@
 .mo-problem-rate>strong{font-size:84px;line-height:.9}
 .mo-mini>strong{font-size:44px;line-height:.9}
 @media(min-width:1024px){.mo-dashboard{min-height:4100px}}
+
+
+/* Restore original 2:1 Ingresos y evolución column structure. */
+.mo-evolution-layout{display:flex;flex-wrap:wrap;gap:1px;background:var(--mo-border);border-top:1px solid var(--mo-border)}
+.mo-evolution-left{flex:2 1 700px;min-width:0;background:#000;display:flex;flex-direction:column}
+.mo-evolution-right{flex:1 1 360px;min-width:0;background:#000;display:flex;flex-direction:column}
+.mo-evolution-left>.mo-chart-grid{border-top:0;flex:1;padding:0 28px}
+.mo-evolution-left .mo-chart-summary{padding:22px 0 4px;gap:16px 44px}
+.mo-evolution-subscriptions{border-top:1px solid var(--mo-border);margin-top:12px;padding:20px 28px 24px}
+.mo-evolution-subscriptions h3{margin:0}
+.mo-evolution-subscriptions>p{margin:6px 0 18px;color:var(--mo-muted);font-size:13px;line-height:1.45}
+.mo-evolution-currencies{padding:22px 28px 14px}
+.mo-evolution-currencies>p{margin:6px 0 14px;color:var(--mo-muted);font-size:13px;line-height:1.45}
+.mo-evolution-right>.mo-provider-revenue{padding:22px 28px 20px;border-top:1px solid var(--mo-border)}
+@media(max-width:850px){
+ .mo-evolution-left>.mo-chart-grid,
+ .mo-evolution-subscriptions,.mo-evolution-currencies,
+ .mo-evolution-right>.mo-provider-revenue{padding-left:20px;padding-right:20px}
+}
