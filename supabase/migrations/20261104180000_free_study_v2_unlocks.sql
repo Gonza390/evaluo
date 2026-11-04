@@ -45,7 +45,7 @@ create table if not exists public.free_study_v2_unlocks (
   material_id uuid not null,
   kind text not null check (kind in (
     'multiple_choice','true_false','matching_round','case','flashcard',
-    'simulator'
+    'simulator','error_explanation'
   )),
   item_key text not null check (length(item_key) between 1 and 300),
   created_at timestamptz not null default now(),
@@ -80,6 +80,7 @@ begin
     when 'case' then 2
     when 'flashcard' then 25
     when 'simulator' then 1
+    when 'error_explanation' then 15
     else null
   end;
 
