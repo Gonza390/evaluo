@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
+import { createAdminClient } from '@/lib/supabase-admin';
+import { hasPremiumAccess } from '@/lib/premium';
+import { isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { completeStudySchedule, estimateTopicSessionMinutes, savePlanPracticeRecommendations, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
 import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
@@ -99,11 +102,27 @@ export async function POST(request:NextRequest) {
   const {days,overloadedTopics}=completeStudySchedule(topics,examDate,minutes,start);
   const schedule=savePlanPracticeRecommendations(days.filter(day=>day.topics.length>0),preferences as string[],minutes);
   if(!schedule.length)return fail('No hay días para estudiar antes del examen.');
-  const {error}=await supabase.from('student_personal_study_plans' as never).upsert({
-    user_id:user.id,exam_date:examDate,daily_minutes:minutes,material_ids:materialIds,
-    preferences,schedule,updated_at:new Date().toISOString()
-  } as never,{onConflict:'user_id'});
-  if(error)return fail('No pudimos guardar tu planificación. Intentá nuevamente.',503);
+  if (isFreeStudyV2Active() && !(await hasPremiumAccess(user.id))) {
+    // Free v2: creación y consumo irreversible en una sola transacción.
+    // Se permite editar el plan existente; eliminarlo no otorga otro.
+    const admin = createAdminClient();
+    const { data, error } = await admin.rpc('save_free_study_v2_plan' as never, {
+      p_user_id: user.id,
+      p_exam_date: examDate,
+      p_daily_minutes: minutes,
+      p_material_ids: materialIds,
+      p_preferences: preferences,
+      p_schedule: schedule,
+    } as never);
+    if (error) return fail('No pudimos verificar tu cupo de planes. Intentá nuevamente.',503);
+    if (data !== true) return fail('Ya utilizaste tu plan de estudio gratuito. Podés continuar con Premium.',403);
+  } else {
+    const {error}=await supabase.from('student_personal_study_plans' as never).upsert({
+      user_id:user.id,exam_date:examDate,daily_minutes:minutes,material_ids:materialIds,
+      preferences,schedule,updated_at:new Date().toISOString()
+    } as never,{onConflict:'user_id'});
+    if(error)return fail('No pudimos guardar tu planificación. Intentá nuevamente.',503);
+  }
   return NextResponse.json({ok:true,unassigned:overloadedTopics});
 }
 export async function PATCH(request:NextRequest) {
