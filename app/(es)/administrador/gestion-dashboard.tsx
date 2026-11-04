@@ -225,7 +225,6 @@ export function GestionDashboard({snapshot,actor,limits}:{
    </section>
    <section className="gm-sec" aria-label="Configuración del producto">
     <Title n="05" title="Configuración del producto" note="Límites Free y Premium y funciones habilitadas. Solo se muestran valores realmente aplicados por la aplicación."/>
-    <p className="gm-readonly">Configuración en modo lectura. Los límites se definen en código y todavía no existe un sistema central para aplicarlos de forma segura. Por eso los controles de edición están deshabilitados: no se crean borradores ni cambios ficticios.</p>
     <div className="gm-table gm-limits">
      <div className="gm-row gm-head"><span>Límite</span><span>Free</span><span>Premium</span></div>
      {configuration.map(x=><div className="gm-row" key={x.name}>
