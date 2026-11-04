@@ -307,7 +307,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     }
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
-    const freeStudyV2 = isFreeStudyV2Active() && Boolean(user?.id) && !isPremium;
+    const freeStudyV2 = isFreeStudyV2Active() && isOwner && !isPremium;
     const hasFullAcademicContext = Boolean(
       academicProfile.universidadId && academicProfile.carreraId && material.materia_id
     );
