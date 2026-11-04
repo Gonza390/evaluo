@@ -1,5 +1,9 @@
 [
   {
+    "file": "tests/topic-practice-ai.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/routes.smoke.ts",
     "alias": true
   },
@@ -233,10 +237,6 @@
   },
   {
     "file": "tests/topic-practice.smoke.ts",
-    "alias": true
-  },
-  {
-    "file": "tests/topic-practice-ai.smoke.ts",
     "alias": true
   },
   {
