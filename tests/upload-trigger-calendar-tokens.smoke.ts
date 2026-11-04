@@ -36,7 +36,7 @@ assert.doesNotMatch(materials, /dashboard_materials_header/,
 assert.match(materials, /onPrimaryAction=\{\(\) => openUploadPicker\('dashboard_empty_materials'\)\}/);
 assert.match(panel, /onClick=\{onPrimaryAction\}/,
   'Empty-state primary action must remain a functional button.');
-assert.match(materials, /href=\{getStudentMaterialRoute\(material\.id\)\}/,
+assert.match(materials, /material\.processing_status === 'ready' \? getStudentMaterialRoute\(material\.id\) : `\/dashboard\/procesando\/\$\{material\.id\}`/,
   'PDF opening links must not be repurposed as upload triggers.');
 assert.match(materials, /setMaterialToDelete\(material\)/,
   'Deleting PDFs must remain independent of the picker.');
