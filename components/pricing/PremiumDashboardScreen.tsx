@@ -222,12 +222,12 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
           <table className="w-full min-w-0 table-fixed border-collapse text-[11px] sm:text-[14px]">
             <colgroup><col style={{width:'39.4%'}}/><col style={{width:'30.3%'}}/><col style={{width:'30.3%'}}/></colgroup>
             <thead><tr className="text-[11px] font-bold tracking-[.05em] text-[#5b6475]">
-              <th scope="col" className="px-2.5 py-3 text-left sm:px-[22px]">FUNCIONALIDAD</th><th scope="col" className="px-2 py-3 text-center">FREE</th><th scope="col" className="px-2 py-3 text-center text-[#2a49c9]">PREMIUM</th>
+              <th scope="col" className="px-2.5 py-[13px] text-left sm:px-[22px]">FUNCIONALIDAD</th><th scope="col" className="px-2 py-3 text-center">FREE</th><th scope="col" className="px-2 py-3 text-center text-[#2a49c9]">PREMIUM</th>
             </tr></thead>
             <tbody>{comparison.map(([name,free,premium])=><tr key={name} className="border-t border-[#eef1f6]">
-              <th scope="row" className="px-2.5 py-3 text-left font-semibold leading-[1.4] break-words sm:px-[22px]">{name}</th>
-              <td className="px-1.5 py-3 text-center leading-[1.4] break-words text-[#5b6475] sm:px-2">{free}</td>
-              <td className="px-1.5 py-3 text-center font-bold leading-[1.4] break-words text-[#2a49c9] sm:px-2">{premium}</td>
+              <th scope="row" className="px-2.5 py-[13px] text-left font-semibold leading-[1.4] break-words sm:px-[22px]">{name}</th>
+              <td className="px-1.5 py-[13px] text-center leading-[1.4] break-words text-[#5b6475] sm:px-2">{free}</td>
+              <td className="px-1.5 py-[13px] text-center font-bold leading-[1.4] break-words text-[#2a49c9] sm:px-2">{premium}</td>
             </tr>)}</tbody>
           </table>
         </div>
@@ -238,8 +238,8 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
         <h2 id="premium-faq" className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">Preguntas frecuentes</h2>
         <div className="mt-[22px] overflow-hidden rounded-[20px] border border-[#e6eaf2] bg-white text-left">
           {faq.map(([question,answer],i)=><details key={question} className="border-t border-[#eef1f6] first:border-0" open={i===0}>
-            <summary className="cursor-pointer px-4 py-3.5 text-[13px] font-bold sm:px-5 sm:text-[14px]">{question}</summary>
-            <p className="px-4 pb-4 text-[12px] leading-[1.6] text-[#475569] sm:px-5 sm:text-[13px]">{answer}</p>
+            <summary className="cursor-pointer px-4 py-4 text-[13px] font-bold sm:px-[22px] sm:text-[14px]">{question}</summary>
+            <p className="px-4 pb-4 text-[12px] leading-[1.55] text-[#475569] sm:px-[22px] sm:text-[14px]">{answer}</p>
           </details>)}
         </div>
       </section>
