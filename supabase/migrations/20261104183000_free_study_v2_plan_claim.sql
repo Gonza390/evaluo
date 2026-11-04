@@ -62,10 +62,20 @@ revoke all on function public.save_free_study_v2_plan(uuid,date,integer,uuid[],t
 grant execute on function public.save_free_study_v2_plan(uuid,date,integer,uuid[],text[],jsonb)
  to service_role;
 
--- Los permisos RLS de la tabla permitían llamar a Supabase directamente
--- para borrar el plan y volver a insertarlo. Sólo la ruta autenticada del
--- backend y la RPC transaccional pueden crear/editar planes tras Free V2.
-revoke insert, update, delete on public.student_personal_study_plans
-  from public, anon, authenticated;
-grant select, insert, update, delete on public.student_personal_study_plans
-  to service_role;
+-- Las políticas originales de SELECT y escritura siguen funcionando
+-- mientras el rollout de BD está APAGADO. Al activarlo, estas políticas
+-- RESTRICTIVE se combinan con RLS para bloquear escrituras JWT directas,
+-- sin bloquear la lectura del plan. El backend usa service_role.
+drop policy if exists free_v2_plan_insert_guard on public.student_personal_study_plans;
+create policy free_v2_plan_insert_guard on public.student_personal_study_plans
+  as restrictive for insert to authenticated
+  with check (not public.is_free_study_v2_rollout_enabled());
+drop policy if exists free_v2_plan_update_guard on public.student_personal_study_plans;
+create policy free_v2_plan_update_guard on public.student_personal_study_plans
+  as restrictive for update to authenticated
+  using (not public.is_free_study_v2_rollout_enabled())
+  with check (not public.is_free_study_v2_rollout_enabled());
+drop policy if exists free_v2_plan_delete_guard on public.student_personal_study_plans;
+create policy free_v2_plan_delete_guard on public.student_personal_study_plans
+  as restrictive for delete to authenticated
+  using (not public.is_free_study_v2_rollout_enabled());
