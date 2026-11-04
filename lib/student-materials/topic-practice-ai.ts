@@ -72,9 +72,11 @@ export function verifyTopicPracticeCandidates(
       new Set(options.map(norm)).size!==4||options.filter(option=>norm(option)===norm(answer)).length!==1||
       seen.has(norm(prompt)))continue;
     const matching=sources.filter(source=>
-      q.page===source.pageStart&&
-      (source.pageStart!==null||
-        (typeof q.sectionTitle==='string'&&q.sectionTitle===source.sectionTitle))&&
+      (source.pageStart!==null
+        ? q.page===source.pageStart
+        : (q.page===null||q.page===undefined) &&
+          typeof q.sectionTitle==='string' &&
+          q.sectionTitle===source.sectionTitle)&&
       sameQuote(source.text,q.evidence as string)
     );
     if(matching.length!==1)continue;
