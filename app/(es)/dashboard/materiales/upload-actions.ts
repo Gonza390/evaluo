@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
+import { PREMIUM_STUDY_LIMITS } from '@/lib/study-commercial-entitlements';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -28,8 +29,8 @@ import {
   type StudentMaterialUploadMetadata,
 } from '@/lib/student-materials/validation';
 
-const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = 3;
-const MAX_PENDING_STUDENT_MATERIALS = 1;
+const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = PREMIUM_STUDY_LIMITS.materialsPerUtcDay;
+const MAX_PENDING_STUDENT_MATERIALS = PREMIUM_STUDY_LIMITS.maxSimultaneousProcessing;
 const FREE_MATERIAL_UPLOAD_INTERVAL_DAYS = 15;
 const FREE_MATERIAL_UPLOAD_LIMIT = 2;
 const DAY_MS = 24 * 60 * 60 * 1000;
