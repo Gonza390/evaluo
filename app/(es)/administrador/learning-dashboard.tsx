@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import {useState} from 'react';
+import {useEffect,useState} from 'react';
+import {useRouter} from 'next/navigation';
 import type {LearningSnapshot,LearningFilters} from './learning-dashboard-types';
 import './admin-home.css';
 import './learning-dashboard.css';
@@ -44,10 +45,21 @@ function Table({cols,layout,rows,empty='Sin datos registrados para estos filtros
 }
 type Props={data:LearningSnapshot;filters:LearningFilters;earliest:string;today:string};
 export function LearningDashboard({data,filters,earliest,today}:Props){
+ const router=useRouter();
  const [selectedPeriod,setSelectedPeriod]=useState(filters.period);
  const [selectedMode,setSelectedMode]=useState('all');
  const [customFrom,setCustomFrom]=useState(filters.from??'');
  const [customTo,setCustomTo]=useState(filters.to??today);
+ useEffect(()=>{
+  if(selectedPeriod!=='custom'||!customFrom||!customTo||customFrom>customTo||
+     customFrom<earliest||customTo>today||
+     (Date.parse(customTo+'T12:00:00Z')-Date.parse(customFrom+'T12:00:00Z'))/86400000>29||
+     (filters.from===customFrom&&filters.to===customTo))return;
+  const query=new URLSearchParams(window.location.search);
+  query.set('panel','biblioteca');query.set('academicPeriod','custom');
+  query.set('academicFrom',customFrom);query.set('academicTo',customTo);
+  router.replace('/administrador?'+query.toString());
+ },[selectedPeriod,customFrom,customTo,earliest,today,filters.from,filters.to,router]);
  const overall=data.overall;
  const totalCompleted=overall.completed_mode_sessions+overall.completed_events;
  const accuracy=overall.questions?percentage(overall.correct,overall.questions):'—';
@@ -121,12 +133,21 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
   <section className="lp-intro"><div className="lp-kicker">Evaluo / Aprendizaje y prácticas</div>
    <h1>Aprendizaje y prácticas</h1><p>Cómo estudian realmente los usuarios, qué herramientas usan, qué les cuesta y si mejoran después de practicar. Medimos aprendizaje, no solo uso.</p>
   </section>
-  <form className="lp-filters" action="/administrador" method="get">
+  <form className="lp-filters" action="/administrador" method="get"
+   onChange={e=>{if(e.target instanceof HTMLSelectElement && e.target.name)e.currentTarget.requestSubmit();}}>
    <input type="hidden" name="panel" value="biblioteca"/>
    <div className="lp-filter"><span className="lp-kicker">Período</span><div className="lp-segment" role="group" aria-label="Período">
     {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([v,label])=>
       <button type="button" aria-pressed={selectedPeriod===v} className={selectedPeriod===v?'lp-picked':''} key={v}
-      onClick={()=>setSelectedPeriod(v)}>{label}</button>)}
+      onClick={()=>{
+       setSelectedPeriod(v);
+       if(v!=='custom'){
+        const query=new URLSearchParams(window.location.search);
+        query.set('panel','biblioteca');query.set('academicPeriod',v);
+        query.delete('academicFrom');query.delete('academicTo');
+        router.push('/administrador?'+query.toString());
+       }
+      }}>{label}</button>)}
    </div><input type="hidden" name="academicPeriod" value={selectedPeriod}/></div>
    <label className="lp-filter"><span className="lp-kicker">Universidad</span><select name="academicUniversity" defaultValue={filters.university??''}>
     <option value="">Todas</option>{data.options.universities.map(x=><option value={x.value} key={x.value}>{x.label}</option>)}</select></label>
@@ -138,8 +159,7 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
     <option value="all">Todas</option>{data.tools.map(t=><option key={t.name} value={t.name}>{t.name}</option>)}</select></label>
    <label className="lp-filter"><span className="lp-kicker">Plan actual</span><select name="academicPlan" defaultValue={filters.plan}>
     <option value="all">Free y Premium</option><option value="free">Free</option><option value="premium">Premium</option></select></label>
-   <button className="lp-apply" type="submit">Aplicar filtros</button>
-   <span className="lp-tag">Muestra para comparaciones: 30 estudiantes</span><span className="lp-tag">Datos reales · Supabase</span>
+   <span className="lp-tag">Datos reales · Supabase</span>
    {selectedPeriod==='custom'&&<div className="lp-custom">
     <label>Desde <input required name="academicFrom" type="date" min={earliest} max={today} value={customFrom} onChange={e=>setCustomFrom(e.target.value)}/></label>
     <label>Hasta <input required name="academicTo" type="date" min={earliest} max={today} value={customTo} onChange={e=>setCustomTo(e.target.value)}/></label>
