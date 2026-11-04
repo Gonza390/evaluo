@@ -8,8 +8,8 @@ import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-qu
 import { MIN_CASES_PER_PRACTICE, normalizedAnswer, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
-export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo', planTopicIndex }: {
-  materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo'; planTopicIndex?: number;
+export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo', planTopicIndex, freeV2 = false }: {
+  materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo'; planTopicIndex?: number; freeV2?: boolean;
 }) {
   const [supplement, setSupplement] = useState<StudyFlashcard[]>([]);
   const [loading, setLoading] = useState(false);
@@ -86,7 +86,7 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
     }
   },[materialId,combined]);
   useEffect(()=>{
-    if (approvedIndices.length >= MIN_CASES_PER_PRACTICE || error || loading ||
+    if ((freeV2 && approvedIndices.length >= 25) || approvedIndices.length >= MIN_CASES_PER_PRACTICE || error || loading ||
         busy.current || tries.current >= 6) return;
     void fetchMore();
   },[approvedIndices.length,error,loading,fetchMore]);
@@ -107,7 +107,7 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
   return <main className="practice-screen-enter mx-auto max-w-[860px] px-3 py-4 sm:px-5 sm:py-5">
     <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
     <StudentMaterialFlashcards key={combined.length} cards={combined}
-      allowedCardIndices={reviewLength === 'rapido' ? approvedIndices.slice(0, 6) : approvedIndices} persistentCardCount={cards.length}
+      allowedCardIndices={reviewLength === 'rapido' ? approvedIndices.slice(0, 6) : freeV2 ? approvedIndices.slice(0, 25) : approvedIndices} persistentCardCount={cards.length}
       materialId={materialId} onSessionComplete={onSessionComplete}/>
     {saveError && <p role="alert" className="mt-3 text-sm text-amber-800">
       No pudimos guardar esta sesión en Tus prácticas.
