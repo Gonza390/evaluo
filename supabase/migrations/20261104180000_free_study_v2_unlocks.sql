@@ -1,5 +1,44 @@
 -- Nuevo Free: desbloqueos globales por cuenta, sin vencimiento ni renovación.
 -- Preparada en master. NO aplicar sobre Supabase hasta el despliegue de producción.
+
+-- Registro irreversible del primer archivo procesado, aun si el usuario lo borra.
+create table if not exists public.free_study_v2_upload_claims (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  first_material_id uuid not null,
+  claimed_at timestamptz not null default now()
+);
+alter table public.free_study_v2_upload_claims enable row level security;
+revoke all on public.free_study_v2_upload_claims from public, anon, authenticated;
+grant select, insert on public.free_study_v2_upload_claims to service_role;
+
+-- Conservar usos históricos para no regalar cupos tras una eliminación.
+insert into public.free_study_v2_upload_claims(user_id, first_material_id, claimed_at)
+select distinct on (m.user_id) m.user_id, m.id, m.created_at
+from public.student_materials m
+join auth.users u on u.id = m.user_id
+where m.processing_status = 'ready'
+order by m.user_id, m.created_at
+on conflict (user_id) do nothing;
+
+-- La carga fallida no consume el único material Free.
+create or replace function public.remember_free_study_v2_upload()
+returns trigger language plpgsql security invoker set search_path = ''
+as $
+begin
+  if new.processing_status = 'ready' then
+    insert into public.free_study_v2_upload_claims(user_id, first_material_id)
+    values(new.user_id,new.id)
+    on conflict (user_id) do nothing;
+  end if;
+  return new;
+end;
+$;
+revoke all on function public.remember_free_study_v2_upload() from public, anon, authenticated;
+drop trigger if exists trg_free_study_v2_ready_upload on public.student_materials;
+create trigger trg_free_study_v2_ready_upload
+after insert or update of processing_status on public.student_materials
+for each row execute function public.remember_free_study_v2_upload();
+
 create table if not exists public.free_study_v2_unlocks (
   user_id uuid not null references auth.users(id) on delete cascade,
   -- Sin FK: borrar un material NO puede devolver los usos ya desbloqueados.
