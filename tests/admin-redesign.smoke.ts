@@ -29,8 +29,8 @@ assert.ok(source('app/(es)/administrador/gestion/page.tsx').includes('<GestionDa
 assert.ok(source('app/(es)/administrador/gestion/page.tsx').includes('obtenerDashboardGestion'));
 assert.ok(source('app/(es)/administrador/admin-home.tsx').includes('eh-tabs'));
 assert.ok(source('app/(es)/administrador/users-retention-dashboard.tsx').includes('eh-tabs'));
-assert.ok(source('app/(es)/administrador/packed-acquisition-dashboard.tsx').includes('eh-tabs'));
-assert.ok(source('app/(es)/administrador/packed-activation-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/acquisition-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/activation-dashboard.tsx').includes('eh-tabs'));
 assert.ok(source('app/(es)/administrador/learning-dashboard.tsx').includes('eh-tabs'));
 assert.ok(source('app/(es)/administrador/study-plans-dashboard.tsx').includes('eh-tabs'));
 assert.ok(source('app/(es)/administrador/monetization-dashboard.tsx').includes('eh-tabs'));
