@@ -164,7 +164,9 @@ export default async function AdministradorPage({
 }) {
   const params = (await searchParams) ?? {};
   const requestedPanel = params.panel;
-  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'resumen';
+  const activePanel: PanelKey = requestedPanel === 'ia-herramientas'
+    ? 'ia-herramientas'
+    : PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'resumen';
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
