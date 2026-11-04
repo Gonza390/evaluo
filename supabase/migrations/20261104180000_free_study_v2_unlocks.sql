@@ -168,6 +168,39 @@ revoke all on function public.is_free_study_v2_rollout_enabled()
 grant execute on function public.is_free_study_v2_rollout_enabled()
   to authenticated, service_role;
 
+-- Registro inmutable de CADA alta de material, independiente de su borrado.
+-- Un Premium no puede recuperar 3 altas/día borrando PDFs desde Supabase.
+create table if not exists public.study_material_v2_upload_ledger (
+  material_id uuid primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  claimed_at timestamptz not null
+);
+create index if not exists idx_study_material_v2_upload_daily
+  on public.study_material_v2_upload_ledger(user_id, claimed_at);
+alter table public.study_material_v2_upload_ledger enable row level security;
+revoke all on public.study_material_v2_upload_ledger from public, anon, authenticated;
+grant select, insert on public.study_material_v2_upload_ledger to service_role;
+insert into public.study_material_v2_upload_ledger(material_id,user_id,claimed_at)
+select id,user_id,created_at from public.student_materials
+on conflict (material_id) do nothing;
+
+create or replace function public.remember_study_material_v2_upload()
+returns trigger language plpgsql security definer set search_path = ''
+as $ledger$
+begin
+  insert into public.study_material_v2_upload_ledger(material_id,user_id,claimed_at)
+  values(new.id,new.user_id,new.created_at)
+  on conflict (material_id) do nothing;
+  return new;
+end;
+$ledger$;
+revoke all on function public.remember_study_material_v2_upload()
+  from public, anon, authenticated;
+drop trigger if exists trg_remember_study_material_v2_upload on public.student_materials;
+create trigger trg_remember_study_material_v2_upload
+after insert on public.student_materials for each row
+execute function public.remember_study_material_v2_upload();
+
 -- El navegador puede llamar directamente a Supabase con JWT. Por eso la
 -- validación de cupos no puede depender sólo de Server Actions / rutas Next.js.
 -- Los siguientes triggers se instalan junto con el lanzamiento de Free V2.
@@ -224,9 +257,9 @@ begin
 
   if public.free_study_v2_is_premium_account(new.user_id) then
     select count(*)::integer into v_daily
-    from public.student_materials m
-    where m.user_id = new.user_id
-      and m.created_at >= (pg_catalog.date_trunc('day', pg_catalog.now() at time zone 'UTC') at time zone 'UTC');
+    from public.study_material_v2_upload_ledger l
+    where l.user_id = new.user_id
+      and l.claimed_at >= (pg_catalog.date_trunc('day', pg_catalog.now() at time zone 'UTC') at time zone 'UTC');
     if v_daily >= 3 then
       raise exception 'premium_daily_upload_limit' using errcode = 'P0001';
     end if;
