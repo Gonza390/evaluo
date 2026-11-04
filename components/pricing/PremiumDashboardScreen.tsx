@@ -157,35 +157,35 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const backHref=returnTo??'/dashboard';
 
   const monthlyButton=(position:'main'|'final')=>
-    mainAction?<Link href={mainAction} className="flex min-h-[44px] w-full items-center justify-center rounded-full bg-[#1a5cff] px-5 py-3 text-[14px] font-bold text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff]">{monthlyCta}</Link>
-    :<button type="button" disabled={monthlyDisabled} onClick={()=>void checkout('monthly')} data-premium-purchase={position} className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-[#1a5cff] px-5 py-3 text-[14px] font-bold text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff] disabled:cursor-not-allowed disabled:opacity-60">{loading==='monthly'?<Loader2 className="size-4 animate-spin"/>:null}{loading==='monthly'?'Abriendo Mercado Pago…':monthlyCta}</button>;
-  return <main data-premium-dashboard className="mx-auto w-full max-w-[1240px] px-3 py-5 text-[#0f172a] sm:px-4 sm:py-6 lg:px-6 lg:py-8">
+    mainAction?<Link href={mainAction} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff]">{monthlyCta}</Link>
+    :<button type="button" disabled={monthlyDisabled} onClick={()=>void checkout('monthly')} data-premium-purchase={position} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff] disabled:cursor-not-allowed disabled:opacity-60">{loading==='monthly'?<Loader2 className="size-4 animate-spin"/>:null}{loading==='monthly'?'Abriendo Mercado Pago…':monthlyCta}</button>;
+  return <main data-premium-dashboard className="mx-auto w-full max-w-[1240px] px-3 py-7 text-[#0f172a] sm:px-4 sm:py-9 lg:px-6 lg:pb-16 lg:pt-12">
     <div className="mx-auto w-full max-w-[680px] min-w-0">
       <header className="text-center">
-        <span className="inline-flex rounded-full bg-[#eef3ff] px-3 py-1 text-[11px] font-bold text-[#2a49c9]">Evaluo Premium</span>
-        <h1 className="mx-auto mt-3 max-w-[650px] text-[25px] font-bold leading-[1.2] tracking-[-.025em] sm:text-[30px] lg:text-[32px]">Estudiá más. Practicá mejor.<span className="block">Llegá preparado a tu examen.</span></h1>
-        <p className="mx-auto mb-7 mt-3 max-w-[520px] text-[13px] leading-[1.6] text-[#475569] sm:text-[14px]">Todo lo que necesitás para estudiar, practicar y preparar tus exámenes.</p>
+        <span className="inline-flex rounded-full bg-[#eef3ff] px-[14px] py-[5px] text-[12px] font-bold text-[#2a49c9]">Evaluo Premium</span>
+        <h1 className="mx-auto mt-4 max-w-[680px] text-[28px] font-extrabold leading-[1.15] tracking-[-.02em] sm:text-[36px] lg:text-[40px]">Estudiá más. Practicá mejor.<span className="block">Llegá preparado a tu examen.</span></h1>
+        <p className="mx-auto mb-9 mt-[14px] max-w-[540px] text-[14px] leading-[1.55] text-[#475569] sm:text-[16px]">Todo lo que necesitás para estudiar, practicar y preparar tus exámenes.</p>
       </header>
 
-      <section aria-label="Premium mensual" className="relative rounded-[20px] border-2 border-[#1a5cff] bg-[#f5f8ff] px-4 pb-5 pt-7 sm:px-6 sm:pb-6 sm:pt-7">
+      <section aria-label="Premium mensual" className="relative rounded-[24px] border-2 border-[#1a5cff] bg-[#f5f8ff] px-5 pb-6 pt-7 sm:px-7 sm:pb-[26px] sm:pt-7">
         <span className="absolute -top-3 left-5 rounded-full bg-[#1a5cff] px-3 py-1 text-[11px] font-bold text-white">Premium mensual</span>
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-[36px] font-extrabold tracking-[-.03em] sm:text-[40px]" aria-label="Precio mensual">{priceMonthly}</span>
-          <span className="text-[13px] text-[#5b6475]">ARS por mes</span>
+          <span className="text-[38px] font-extrabold tracking-[-.02em] sm:text-[44px]" aria-label="Precio mensual">{priceMonthly}</span>
+          <span className="text-[13px] text-[#5b6475] sm:text-[14px]">ARS por mes</span>
         </div>
-        <p className="mb-4 mt-1 text-[12px] leading-[1.55] text-[#5b6475] sm:text-[13px]">Renovación automática. Cancelás cuando quieras y conservás el acceso hasta el fin del período pagado.</p>
-        <ul className="mb-5 space-y-2.5">
+        <p className="mb-5 mt-1 text-[13px] leading-[1.55] text-[#5b6475]">Renovación automática. Cancelás cuando quieras y conservás el acceso hasta el fin del período pagado.</p>
+        <ul className="mb-6 space-y-2.5">
           {benefits.map(item=><li key={item} className="flex items-start gap-2.5 text-[13px] leading-[1.55] sm:text-[14px]">
             <Check className="mt-0.5 size-4 shrink-0 text-[#16774f]" strokeWidth={2.6} aria-hidden="true"/><span>{item}</span>
           </li>)}
         </ul>
         {monthlyButton('main')}
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-[#475569]"><LockKeyhole className="size-4 shrink-0" aria-hidden="true"/> Pago seguro con Mercado Pago</p>
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold sm:text-[13px] text-[#475569]"><LockKeyhole className="size-4 shrink-0" aria-hidden="true"/> Pago seguro con Mercado Pago</p>
       </section>
 
-      <details className="group mt-3 text-center" data-premium-semester>
-        <summary className="cursor-pointer text-[13px] text-[#475569] marker:hidden [&::-webkit-details-marker]:hidden">¿Preferís pagar una sola vez? <strong className="text-[#2a49c9]">Ver plan semestral</strong></summary>
-        <div className="mt-3 flex flex-col items-stretch gap-3 rounded-[18px] border border-[#e6eaf2] bg-white p-4 text-left sm:flex-row sm:items-center">
+      <details className="group mt-[14px] text-center" data-premium-semester>
+        <summary className="cursor-pointer text-[13px] text-[#475569] marker:hidden sm:text-[14px] [&::-webkit-details-marker]:hidden">¿Preferís pagar una sola vez? <strong className="text-[#2a49c9]">Ver plan semestral</strong></summary>
+        <div className="mt-3 flex flex-col items-stretch gap-3 rounded-[20px] border border-[#e6eaf2] bg-white p-4 text-left sm:flex-row sm:items-center sm:px-5">
           <div className="min-w-0 flex-1">
             <h2 className="text-[13px] font-bold sm:text-[14px]">Premium semestral · {priceSemester} ARS</h2>
             <p className="mt-1 text-[12px] leading-[1.5] text-[#5b6475] sm:text-[13px]">Pago único por seis meses, sin renovación automática. Equivale a {formatArs(offer?.semesterEquivalentMonthlyArs??7500)} por mes.</p>
@@ -197,7 +197,7 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
 
       <details className="mt-2 text-center" data-premium-referral>
         <summary className="cursor-pointer py-1.5 text-[12px] text-[#5b6475] marker:hidden [&::-webkit-details-marker]:hidden">¿Tenés un código de descuento?</summary>
-        <div className="mx-auto mt-2 max-w-[520px] rounded-[16px] border border-[#e6eaf2] bg-white p-4 text-left">
+        <div className="mx-auto mt-2 max-w-[680px] bg-white text-left">
           <ManualReferralCode offerCode="monthly" variant="compact" hideHeading/>
         </div>
       </details>
@@ -205,38 +205,38 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
       {error?<p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-[12px] text-red-700">{error}</p>:null}
       {checkoutUrl?<button type="button" onClick={()=>window.open(checkoutUrl,'evaluo-mercadopago')} className="mx-auto mt-2 block text-[12px] font-semibold text-[#2a49c9] underline">Volver a abrir Mercado Pago</button>:null}
 
-      <section className="mt-11 text-center sm:mt-14" aria-labelledby="premium-reasons">
-        <h2 id="premium-reasons" className="text-[21px] font-bold tracking-[-.025em] sm:text-[23px]">Tres razones para pasarte a Premium</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          {reasons.map(item=><article key={item.title} className="min-w-0 rounded-[17px] border border-[#e6eaf2] bg-white p-4 text-left">
+      <section className="mt-12 text-center sm:mt-16" aria-labelledby="premium-reasons">
+        <h2 id="premium-reasons" className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">Tres razones para pasarte a Premium</h2>
+        <div className="mt-[22px] grid gap-3 sm:grid-cols-3">
+          {reasons.map(item=><article key={item.title} className="min-w-0 rounded-[20px] border border-[#e6eaf2] bg-white p-5 text-left">
             <span className="flex size-9 items-center justify-center rounded-[10px]" style={{background:item.bg}}><item.icon className="size-5" color={item.color} strokeWidth={1.9} aria-hidden="true"/></span>
-            <h3 className="mt-3 text-[14px] font-bold" style={{color:item.color}}>{item.title}</h3>
+            <h3 className="mt-[14px] text-[15px] font-extrabold" style={{color:item.color}}>{item.title}</h3>
             <p className="mt-1 text-[12px] leading-[1.55] text-[#5b6475] sm:text-[13px]">{item.description}</p>
           </article>)}
         </div>
       </section>
 
-      <section className="mt-11 text-center sm:mt-12" aria-labelledby="premium-comparison">
-        <h2 id="premium-comparison" className="text-[21px] font-bold tracking-[-.025em] sm:text-[23px]">Free vs. Premium</h2>
-        <div className="mt-5 w-full overflow-x-auto rounded-[17px] border border-[#e6eaf2] bg-white" tabIndex={0} aria-label="Tabla comparativa, desplazable en pantallas pequeñas">
-          <table className="w-full min-w-[480px] table-fixed border-collapse text-[12px] sm:min-w-0 sm:text-[13px]">
-            <colgroup><col style={{width:'42%'}}/><col style={{width:'26%'}}/><col style={{width:'32%'}}/></colgroup>
+      <section className="mt-12 text-center sm:mt-14" aria-labelledby="premium-comparison">
+        <h2 id="premium-comparison" className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">Free vs. Premium</h2>
+        <div className="mt-[22px] w-full overflow-x-auto rounded-[20px] border border-[#e6eaf2] bg-white" tabIndex={0} aria-label="Tabla comparativa, desplazable en pantallas pequeñas">
+          <table className="w-full min-w-0 table-fixed border-collapse text-[11px] sm:text-[14px]">
+            <colgroup><col style={{width:'39.4%'}}/><col style={{width:'30.3%'}}/><col style={{width:'30.3%'}}/></colgroup>
             <thead><tr className="text-[11px] font-bold tracking-[.05em] text-[#5b6475]">
-              <th scope="col" className="px-3 py-3 text-left sm:px-5">FUNCIONALIDAD</th><th scope="col" className="px-2 py-3 text-center">FREE</th><th scope="col" className="px-2 py-3 text-center text-[#2a49c9]">PREMIUM</th>
+              <th scope="col" className="px-2.5 py-3 text-left sm:px-[22px]">FUNCIONALIDAD</th><th scope="col" className="px-2 py-3 text-center">FREE</th><th scope="col" className="px-2 py-3 text-center text-[#2a49c9]">PREMIUM</th>
             </tr></thead>
             <tbody>{comparison.map(([name,free,premium])=><tr key={name} className="border-t border-[#eef1f6]">
-              <th scope="row" className="px-3 py-3 text-left font-semibold leading-[1.4] sm:px-5">{name}</th>
-              <td className="px-2 py-3 text-center leading-[1.4] text-[#5b6475]">{free}</td>
-              <td className="px-2 py-3 text-center font-bold leading-[1.4] text-[#2a49c9]">{premium}</td>
+              <th scope="row" className="px-2.5 py-3 text-left font-semibold leading-[1.4] break-words sm:px-[22px]">{name}</th>
+              <td className="px-1.5 py-3 text-center leading-[1.4] break-words text-[#5b6475] sm:px-2">{free}</td>
+              <td className="px-1.5 py-3 text-center font-bold leading-[1.4] break-words text-[#2a49c9] sm:px-2">{premium}</td>
             </tr>)}</tbody>
           </table>
         </div>
         <p className="mt-3 text-left text-[11px] leading-[1.55] text-[#5b6475]">Los cupos Free no se reinician al eliminar materiales. Resúmenes, glosario y explicaciones de errores también están en Free.</p>
       </section>
 
-      <section className="mt-11 text-center sm:mt-12" aria-labelledby="premium-faq">
-        <h2 id="premium-faq" className="text-[21px] font-bold tracking-[-.025em] sm:text-[23px]">Preguntas frecuentes</h2>
-        <div className="mt-5 overflow-hidden rounded-[17px] border border-[#e6eaf2] bg-white text-left">
+      <section className="mt-12 text-center sm:mt-14" aria-labelledby="premium-faq">
+        <h2 id="premium-faq" className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">Preguntas frecuentes</h2>
+        <div className="mt-[22px] overflow-hidden rounded-[20px] border border-[#e6eaf2] bg-white text-left">
           {faq.map(([question,answer],i)=><details key={question} className="border-t border-[#eef1f6] first:border-0" open={i===0}>
             <summary className="cursor-pointer px-4 py-3.5 text-[13px] font-bold sm:px-5 sm:text-[14px]">{question}</summary>
             <p className="px-4 pb-4 text-[12px] leading-[1.6] text-[#475569] sm:px-5 sm:text-[13px]">{answer}</p>
@@ -244,9 +244,9 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
         </div>
       </section>
 
-      <section className="mt-11 rounded-[20px] bg-[#eaf0ff] px-5 py-6 text-center sm:px-7" aria-label="Activar Premium">
-        <h2 className="text-[21px] font-bold tracking-[-.025em] sm:text-[23px]">Empezá hoy por {priceMonthly} al mes</h2>
-        <p className="mb-4 mt-1 text-[13px] text-[#475569]">Cancelás cuando quieras.</p>
+      <section className="mt-12 rounded-[24px] bg-[#eaf0ff] px-5 py-7 text-center sm:px-8 sm:py-8" aria-label="Activar Premium">
+        <h2 className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">Empezá hoy por {priceMonthly} al mes</h2>
+        <p className="mb-5 mt-1 text-[13px] text-[#475569] sm:text-[14px]">Cancelás cuando quieras.</p>
         {monthlyButton('final')}
         <p className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#475569]"><LockKeyhole className="size-4 shrink-0" aria-hidden="true"/> Pago seguro con Mercado Pago</p>
       </section>
