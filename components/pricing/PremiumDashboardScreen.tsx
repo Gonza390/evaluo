@@ -207,7 +207,7 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
 
       <section className="mt-12 text-center sm:mt-16" aria-labelledby="premium-reasons">
         <h2 id="premium-reasons" className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">Tres razones para pasarte a Premium</h2>
-        <div className="mt-[22px] grid gap-3 sm:grid-cols-3">
+        <div className="mt-[22px] grid gap-3 min-[850px]:grid-cols-3">
           {reasons.map(item=><article key={item.title} className="min-w-0 rounded-[20px] border border-[#e6eaf2] bg-white p-5 text-left">
             <span className="flex size-9 items-center justify-center rounded-[10px]" style={{background:item.bg}}><item.icon className="size-5" color={item.color} strokeWidth={1.9} aria-hidden="true"/></span>
             <h3 className="mt-[14px] text-[15px] font-extrabold" style={{color:item.color}}>{item.title}</h3>
