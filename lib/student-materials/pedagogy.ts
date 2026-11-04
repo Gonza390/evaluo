@@ -22,7 +22,7 @@ import {
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
 import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 15;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 16;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
