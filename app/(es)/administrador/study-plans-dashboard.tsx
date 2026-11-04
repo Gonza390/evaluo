@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import {useState,type ReactNode} from 'react';
+import {useEffect,useState,type ReactNode} from 'react';
+import {useRouter} from 'next/navigation';
 import type {StudyPlanAdminSnapshot,StudyPlanAdminFilters} from './study-plans-dashboard-types';
 import './admin-home.css';
 import './study-plans-dashboard.css';
@@ -52,9 +53,19 @@ function Detail({title,subtitle}:{title:string;subtitle:string}){
 export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
  snapshot:StudyPlanAdminSnapshot;filters:StudyPlanAdminFilters;today:string;earliest:string;
 }){
+ const router=useRouter();
  const [period,setPeriod]=useState<StudyPlanAdminFilters['period']>(filters.period);
  const [from,setFrom]=useState(filters.from??'');
  const [to,setTo]=useState(filters.to??today);
+ useEffect(()=>{
+  if(period!=='custom'||!from||!to||from>to||from<earliest||to>today||
+    (Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000>29||
+    (filters.from===from&&filters.to===to))return;
+  const query=new URLSearchParams(window.location.search);
+  query.set('panel','planes');query.set('planPeriod','custom');
+  query.set('planFrom',from);query.set('planTo',to);
+  router.replace('/administrador?'+query.toString());
+ },[period,from,to,earliest,today,filters.from,filters.to,router]);
  const m=snapshot.summary;
  const anyPlans=m.plans>0;
  const filtered=!!(filters.university||filters.career||filters.subject||
@@ -139,11 +150,20 @@ export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
     prefetch={false} className={'eh-tab'+(i===5?' eh-active':'')} aria-current={i===5?'page':undefined}>{name}</Link>)}</nav></header>
   <section className="sp-intro"><span className="sp-label">Evaluo / Planes de estudio</span><h1>Planes de estudio</h1>
    <p>Si los estudiantes crean planes, los siguen y llegan avanzados a sus exámenes. Importa si el plan ayuda a mantener una rutina, no cuántos se generan.</p></section>
-  <form className="sp-filters" action="/administrador" method="get">
+  <form className="sp-filters" action="/administrador" method="get"
+    onChange={e=>{if(e.target instanceof HTMLSelectElement)e.currentTarget.requestSubmit();}}>
    <input type="hidden" name="panel" value="planes"/>
    <div className="sp-filter"><span className="sp-label">Período</span><div className="sp-segment" role="group" aria-label="Período">
     {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([v,label])=>
-     <button key={v} type="button" className={period===v?'sp-selected':''} aria-pressed={period===v} onClick={()=>setPeriod(v)}>{label}</button>)}
+     <button key={v} type="button" className={period===v?'sp-selected':''} aria-pressed={period===v} onClick={()=>{
+       setPeriod(v);
+       if(v!=='custom'){
+        const query=new URLSearchParams(window.location.search);
+        query.set('panel','planes');query.set('planPeriod',v);
+        query.delete('planFrom');query.delete('planTo');
+        router.push('/administrador?'+query.toString());
+       }
+      }}>{label}</button>)}
    </div><input type="hidden" name="planPeriod" value={period}/></div>
    <label className="sp-filter"><span className="sp-label">Universidad</span><select name="planUniversity" defaultValue={filters.university??''}>
      <option value="">Todas</option>{snapshot.options.universities.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
@@ -157,14 +177,11 @@ export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
     <option value="all">Todos</option><option value="active">Activo</option>
     <option disabled value="completed">Completado · sin dato</option><option value="not_started">Sin comenzar</option>
     <option value="interrupted">Interrumpido</option></select></label>
-   <button className="sp-apply" type="submit">Aplicar</button>
-   <span className="sp-tag">Muestra mínima: 30 estudiantes</span>
    <span className="sp-tag">Datos reales · Supabase</span>
    {period==='custom'&&<div className="sp-custom"><label>Desde<input required name="planFrom" type="date" value={from} min={earliest} max={today} onChange={e=>setFrom(e.target.value)}/></label>
      <label>Hasta<input required name="planTo" type="date" value={to} min={earliest} max={today} onChange={e=>setTo(e.target.value)}/></label>
      <span>Hasta 30 días</span></div>}
   </form>
-  {!anyPlans&&<p className="sp-empty-banner">No hay planes guardados por estudiantes en este período y con estos filtros. Los planes de cuentas administrativas o de prueba no se incluyen.</p>}
   <div className="sp-board">
    <section className="sp-section"><Section n="01" title="Resumen general" detail={snapshot.from+' al '+snapshot.through+' · comparación con el período anterior cuando corresponde.'}/>
      <TileGrid items={summary}/></section>
