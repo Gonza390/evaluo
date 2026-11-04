@@ -14,17 +14,19 @@ assert.equal(FREE_STUDY_V2.simulatorSessions,1);
 assert.equal(FREE_STUDY_V2.simulatorQuestions,20);
 assert.equal(FREE_STUDY_V2.studyPlans,1);
 
-// El usuario rechazó explícitamente el punto 4: NO limitar 15 explicaciones.
-assert.ok(!('incorrectAnswerExplanations' in FREE_STUDY_V2));
+// Se descartó la pantalla de promoción, NO las 15 explicaciones de errores.
+assert.equal(FREE_STUDY_V2.incorrectAnswerExplanations,15);
 const helper=read('lib/free-study-v2-server.ts');
 const schema=read('supabase/migrations/20261104180000_free_study_v2_unlocks.sql');
-assert.doesNotMatch(helper,/error_explanation|incorrectAnswerExplanations/);
-assert.doesNotMatch(schema,/error_explanation/);
-// Las correcciones existentes siguen disponibles; no ocultar explicaciones.
-assert.doesNotMatch(read('app/(es)/materiales/[id]/page.tsx'),
-  /questions:\s*pedagogicalArtifacts\.questions\.map\(question\s*=>\s*\(\{\.\.\.question,\s*explanation:\s*''/);
-
-assert.ok(!existsSync(new URL('../app/api/free-study-v2/explanation/route.ts',import.meta.url)));
+assert.match(helper,/error_explanation/);
+assert.match(schema,/error_explanation/);
+assert.match(schema,/when 'error_explanation' then 15/);
+assert.match(schema,/remember_free_study_v2_upload\(\)[\s\S]*?as \$\$[\s\S]*?end;\s*\$\$/);
+assert.match(read('app/(es)/materiales/[id]/page.tsx'),/clientPedagogicalArtifacts/);
+assert.ok(existsSync(new URL('../app/api/free-study-v2/explanation/route.ts',import.meta.url)));
+assert.match(read('components/student-material-exam.tsx'),/\/api\/free-study-v2\/explanation/);
+// El Free nuevo no agrega pantallas de venta o enlaces de pago al agotar cupos.
+assert.doesNotMatch(read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx'),/href="\/pricing"/);
 
 // Los previews de master nunca pueden cobrar cupos v2 por error.
 const oldEnvironment=process.env.VERCEL_ENV;
@@ -50,4 +52,4 @@ assert.match(schema,/claim_free_study_v2_unlock/);
 assert.match(read('app/api/study-plans/route.ts'),/save_free_study_v2_plan/);
 assert.match(read('app\/(es)\/dashboard\/materiales\/upload-actions.ts'),/historicalFreeStudyMaterialIds/);
 assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts'),/historicalFreeStudyMaterialIds/);
-console.log('Free v2 contract and excluded explanation rule smoke tests passed.');
+console.log('Free v2 contract, explanation cap and no-upsell smoke tests passed.');
