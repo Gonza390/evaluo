@@ -104,15 +104,17 @@ export function StudentMaterialExam({
   const draftStorageKey =
     practiceDraftKey(materialId) +
     (topicSectionIndex === undefined ? '' : `:topic:${topicSectionIndex}`);
+  const [supplementalQuestions, setSupplementalQuestions] = useState<StudyQuestion[]>([]);
+  const [topicGenerationUnavailable, setTopicGenerationUnavailable] = useState(false);
   const eligibleQuestions = useMemo(
     () =>
-      getDistinctEligibleExamQuestions(artifacts.questions).filter(
+      getDistinctEligibleExamQuestions([...artifacts.questions,...supplementalQuestions]).filter(
         (question) =>
           topicSectionIndex === undefined ||
           (question.type === 'multiple_choice' &&
             findSummarySectionForQuestion(question, sections) === topicSectionIndex)
       ),
-    [artifacts.questions, sections, topicSectionIndex]
+    [artifacts.questions, supplementalQuestions, sections, topicSectionIndex]
   );
   const eligibleIds = useMemo(
     () => new Set(eligibleQuestions.map((question) => question.id)),
@@ -359,6 +361,43 @@ export function StudentMaterialExam({
   const startExam = async () => {
     if (preparing) return;
     setPreparing(true);
+    setTopicGenerationUnavailable(false);
+    let pool=eligibleQuestions;
+    if (topicSectionIndex !== undefined && !simulation &&
+        verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) {
+      const additions:StudyQuestion[]=[];
+      // The student explicitly opened Practicar for this topic. Do not
+      // consume AI during PDF ingestion or for already complete topics.
+      for(let round=0;round<2 &&
+        getDistinctEligibleExamQuestions([...pool,...additions].filter(isReliableTopicQuestion)).length <
+          MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS;round++){
+        try {
+          const response=await fetch('/api/practice/topic-supplement',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              materialId,topicIndex:topicSectionIndex,round,
+              previous:[...pool,...additions].map(q=>q.prompt).slice(0,30),
+            }),
+            signal:AbortSignal.timeout(65000),
+          });
+          if(!response.ok) {setTopicGenerationUnavailable(true);break;}
+          const data:unknown=await response.json();
+          if(!data||typeof data!=='object'||!('questions'in data)||
+            !Array.isArray(data.questions)) {setTopicGenerationUnavailable(true);break;}
+          const incoming=getDistinctEligibleExamQuestions(data.questions as StudyQuestion[])
+            .filter(q=>q.chapterTitle===sections[topicSectionIndex]?.title);
+          if(incoming.length===0) {setTopicGenerationUnavailable(true);break;}
+          additions.push(...incoming);
+        }catch{
+          setTopicGenerationUnavailable(true);
+          break;
+        }
+      }
+      if(additions.length){
+        setSupplementalQuestions(previous=>getDistinctEligibleExamQuestions([...previous,...additions]));
+        pool=getDistinctEligibleExamQuestions([...pool,...additions]);
+      }
+    }
     const context =
       simulation?.context ??
       (await getStudentMaterialPracticeContextAction(materialId).catch(() => ({
@@ -366,9 +405,10 @@ export function StudentMaterialExam({
         loadError: true,
       })));
     const nextQuestions = selectTopicPracticeQuestions({
-      questions: eligibleQuestions,
+      questions: pool,
       preferredQuestionIds,
-      targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize : topicPracticeCount,
+      targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize :
+        topicPracticeQuestionCount(pool.length),
       complete:
         topicSectionIndex === undefined &&
         sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode ===
@@ -377,6 +417,11 @@ export function StudentMaterialExam({
       context,
       unansweredOnly: topicSectionIndex !== undefined,
     });
+    if(!nextQuestions.length){
+      setTopicGenerationUnavailable(true);
+      setPreparing(false);
+      return;
+    }
     const nextSessionId = crypto.randomUUID();
     setQuestions(nextQuestions.map(question => shuffleStudyQuestionOptions(question, nextSessionId)));
     setContextUnavailable(Boolean(context.loadError));
@@ -385,7 +430,7 @@ export function StudentMaterialExam({
     attemptEntryRef.current = { source: entrySource, id: entryId };
     setStarted(true);
     setPreparing(false);
-    if (!simulation && nextQuestions.length > 0)
+    if (!simulation)
       void trackClientAnalyticsEvent({
         eventName: 'student_material_exam_started',
         metadata: {
@@ -419,23 +464,44 @@ export function StudentMaterialExam({
       savedDraft ||
       started ||
       preparing ||
-      topicAutoStartRequested.current ||
-      eligibleQuestions.length === 0
+      topicAutoStartRequested.current
     ) return;
     topicAutoStartRequested.current = true;
     startTopicPractice();
   }, [topicSectionIndex, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
 
-  if (eligibleQuestions.length === 0 || sizeOptions.length === 0) {
+  if ((eligibleQuestions.length === 0 || sizeOptions.length === 0) && !preparing) {
     return (
       <div className="border-border border-y py-10 text-center">
         <p className="text-foreground text-sm font-medium">
-          Todavía no hay preguntas suficientes
+          {topicSectionIndex !== undefined ? 'Preparación de práctica' : 'Todavía no hay preguntas suficientes'}
         </p>
         <p className="text-muted-foreground mt-1 text-[13px] leading-5">
           {topicSectionIndex === undefined
             ? 'El PDF necesita más contenido estructurado para armar una práctica útil.'
-            : 'Podés estudiar este tema con tu resumen. Todavía no hay preguntas fiables asociadas para practicarlo.'}
+            : 'Estamos intentando crear ejercicios desde las fuentes del tema. Si no se pudieron verificar, podés estudiar el resumen y volver a intentar.'}
+        </p>
+        {topicSectionIndex !== undefined && (
+          <div className="mt-4 flex items-center justify-center gap-3">
+            <Button type="button" onClick={() => void startExam()}>
+              Generar práctica con IA
+            </Button>
+            {onReturnToTopic && (
+              <button type="button" onClick={() => onReturnToTopic(false)}
+                className="text-primary text-sm underline">Volver al tema</button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (preparing && topicSectionIndex !== undefined && !started) {
+    return (
+      <div className="mx-auto max-w-[940px] space-y-2 px-2 py-8" role="status">
+        <p className="text-foreground text-sm font-medium">Preparando la práctica de este tema…</p>
+        <p className="text-muted-foreground text-xs">
+          Estamos seleccionando y verificando preguntas a partir del material.
         </p>
       </div>
     );
@@ -461,6 +527,11 @@ export function StudentMaterialExam({
             {topicTitle}
           </h2>
         </div>
+        {topicGenerationUnavailable && topicSectionIndex !== undefined && (
+          <p role="status" className="text-muted-foreground text-xs leading-5">
+            No pudimos verificar más ejercicios de este tema ahora. Seguís practicando con las preguntas disponibles.
+          </p>
+        )}
         {verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
           <p role="status" className="text-muted-foreground text-xs leading-5">
             Este tema tiene {verifiedTopicCount} de {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} preguntas verificadas.
