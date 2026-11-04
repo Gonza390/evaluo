@@ -75,6 +75,13 @@ assert.match(helper,/export async function claimFreeStudyPairSample/);
 const supplement=read('app/api/practice/supplement/route.ts');
 assert.match(supplement,/claimFreeStudyPairSample/);
 assert.match(supplement,/free_study_sample_unavailable/);
+const topicApi=read('app/api/practice/topic-supplement/route.ts');
+assert.match(topicApi,/saveFirstFreeStudyBank/);
+assert.match(topicApi,/verified_topic_cached/);
+const claimApi=read('app/api/free-study-v2/claim/route.ts');
+assert.match(claimApi,/\.like\('mode','topic:%'\)/);
+assert.match(schema,/topic:\[0-9\]\{1,3\}:round:\[0-4\]/);
+
 
 const modes=read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
 assert.match(modes,/if \(mode === 'flashcards'\) \{/);
