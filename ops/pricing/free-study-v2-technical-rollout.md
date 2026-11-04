@@ -51,3 +51,16 @@ No borrar tablas, claims, planes ni ejercicios ante un rollback; conservar histo
 - Un fallo de Supabase no debe degradar silenciosamente Premium a Free ni consumir cupos.
 - Previews de `master` siempre operan sin cobro de cupos Free V2.
 - No tocar vistas de precios, diseños, estilos, upsells ni pantallas: quedan a cargo del diseñador del producto.
+
+## Contrato técnico para tus nuevas pantallas
+
+- `GET /api/free-study-v2/quota?materialId=<UUID propio>` requiere autenticación y devuelve los cupos globales de la cuenta, por modalidad. Sólo ofrece `upgrade` cuando un cupo realmente está agotado. En un preview devuelve `active:false`; en Premium, `quotas:null`. Si falla Supabase devuelve 503, nunca un cupo inventado.
+- `POST /api/free-study-v2/claim`: al agotar un ejercicio devuelve `allowed:false` y `upgrade` (`reason`, `source`, `returnTo`, `href`). Un error de autenticación, red o verificación de material nunca se confunde con venta.
+- `POST /api/study-plans`: al agotar el único plan gratuito devuelve 403 con `upgrade`. Editar el plan ya creado sigue permitido.
+- Ambas Server Actions de carga devuelven `upgrade` únicamente ante `FreeStudyV2UploadLimitError`, no ante errores de formato, servicio o procesamiento.
+- `lib/premium-flow.ts` valida el retorno a rutas internas y preserva materia, modalidad, tema y ancla en `returnTo` cuando los provea la pantalla. No admite URLs externas ni retornos a loops de checkout.
+- `/pricing` propaga `source`, `materia`, `parcial` y `returnTo` en las ofertas. `/api/payments/checkout` los traslada a la URL de retorno de Mercado Pago.
+- `/pricing/resultado` muestra éxito sólo si el acceso Premium es efectivo. Una suscripción antigua vencida no invalida un intento de compra nuevo pendiente. Confirmar un pago emite `PREMIUM_ACCESS_CHANGED_EVENT` y las pantallas activas revalidan sus permisos.
+- `/api/payments/status` devuelve 503 si falla el chequeo de suscripción; un fallo del historial auxiliar de pagos no oculta un Premium legítimo. `hooks/usePremium.tsx` invalida la caché tras pago, cancelación o regreso a la pestaña.
+
+**Pendiente para el lanzamiento:** conectar los estados visuales a estos contratos con los diseños del usuario, verificar sandbox y webhooks reales, probar ambas migraciones en Supabase aislado, y pedir autorización antes de pasar a `main` o activar el nuevo modelo en producción.
