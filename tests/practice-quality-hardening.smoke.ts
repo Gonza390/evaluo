@@ -145,7 +145,7 @@ assert.match(flashBase,/cardIndex < persistenceLimit/);
 const session=read('components/dashboard/practice-session.tsx');
 assert.match(session,/contexts\.length < 1/);
 assert.match(session,/distinctApplicationCases\(contexts\)\.length >= 1/);
-assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, reviewLength === 'rapido' \? 6 : 8, round\)/);
+assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, freeV2 \? 10 : reviewLength === 'rapido' \? 6 : 8, round\)/);
 assert.match(session,/MIN_CASES_PER_PRACTICE/);
 // Cost reductions must preserve the same independent review gates and
 // avoid new Gemini requests when canonical Mixto concepts already suffice.
