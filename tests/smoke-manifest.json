@@ -16,6 +16,10 @@
     "alias": true
   },
   {
+    "file": "tests/admin-legacy-cleanup.smoke.ts",
+    "alias": false
+  },
+  {
     "file": "tests/admin-management-atomic.smoke.ts",
     "alias": true
   },

@@ -199,7 +199,8 @@ assert.doesNotMatch(clientLayoutSource, /getAppShellBootstrap/);
 const performanceBudget = readFileSync(resolve('performance-budget.json'), 'utf8');
 const performanceScript = readFileSync(resolve('scripts/check-performance-budget.mjs'), 'utf8');
 const ciSource = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
-const adminActionsSource = readFileSync(resolve('app/(es)/administrador/actions.ts'), 'utf8');
+const adminHomeActionsSource = readFileSync(resolve('app/(es)/administrador/admin-home-actions.ts'), 'utf8');
+const adminMonetizationActionsSource = readFileSync(resolve('app/(es)/administrador/monetization-dashboard-actions.ts'), 'utf8');
 const adminLoadingSource = readFileSync(resolve('app/(es)/administrador/loading.tsx'), 'utf8');
 const rootLayoutSource = readFileSync(resolve('app/(es)/layout.tsx'), 'utf8');
 const seoLandingSource = readFileSync(resolve('app/(es)/landings/estudiar/[materia]/page.tsx'), 'utf8');
@@ -208,11 +209,18 @@ assert.match(performanceBudget, /"\/administrador"/);
 assert.match(performanceScript, /gzipSync/);
 assert.match(performanceScript, /process\.exitCode = 1/);
 assert.match(ciSource, /npm run performance:budget/);
-assert.match(adminActionsSource, /\['admin-conversion-v2'\]/);
-assert.match(adminActionsSource, /revalidate: 60/);
+// The redesigned admin uses isolated service-role RPCs, not the retired
+// conversion action from the original dashboard.
+assert.match(adminHomeActionsSource, /admin_home_snapshot_v2/);
+assert.match(adminHomeActionsSource, /revalidate: 900/);
 assert.match(
-  adminActionsSource,
-  /export async function obtenerConversionAdministrador[\s\S]*await requireAdminAccess\(\)[\s\S]*obtenerConversionAdministradorCached/
+  adminHomeActionsSource,
+  /export async function obtenerTableroGeneral[\s\S]*await requireAdminAccess\(\)/
+);
+assert.match(adminMonetizationActionsSource, /admin_monetization_dashboard_v1/);
+assert.match(
+  adminMonetizationActionsSource,
+  /export async function obtenerDashboardMonetizacion[\s\S]*await requireAdminAccess\(\)/
 );
 assert.match(adminLoadingSource, /aria-busy="true"/);
 assert.match(rootLayoutSource, /@vercel\/speed-insights\/next/);
