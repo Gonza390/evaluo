@@ -93,4 +93,16 @@ for (const path of [
   'app/(es)/dashboard/materiales/pdf-first-upload-actions.ts',
 ]) assert.match(read(path),/premiumUpgradeForLimit/);
 
+
+const quotaApi=read('app/api/free-study-v2/quota/route.ts');
+assert.match(quotaApi,/getUser\(\)/);
+assert.match(quotaApi,/eq\('user_id',user\.id\)/);
+assert.match(quotaApi,/premiumUpgradeForLimit\(reason,\{materialId\}\)/);
+assert.match(quotaApi,/free_study_v2_unlocks/);
+assert.match(quotaApi,/free_study_v2_plan_claims/);
+assert.match(quotaApi,/free_study_v2_upload_claims/);
+assert.match(quotaApi,/Cache-Control': 'private, no-store/);
+assert.match(quotaApi,/quotas:null/);
+assert.match(quotaApi,/status:503/);
+
 console.log('Premium: contexto de regreso, permisos, estados de pago y gates Free V2 verificados.');
