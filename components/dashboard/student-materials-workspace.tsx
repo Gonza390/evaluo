@@ -181,7 +181,7 @@ export function StudentMaterialsWorkspace({
                         <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
                           <Link
-                            href={getStudentMaterialRoute(material.id)}
+                            href={material.processing_status === 'ready' ? getStudentMaterialRoute(material.id) : `/dashboard/procesando/${material.id}`}
                             className="rounded-sm before:absolute before:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                             aria-label={`Abrir material ${material.title}`}
                           >
