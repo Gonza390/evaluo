@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -49,7 +49,7 @@ export function FreePracticeLimitScreen({
 
   const mode = modes[kind];
   const place = topicLabel || materialTitle || 'Tu material';
-  const backControl = (className: string, children: React.ReactNode, ariaLabel?: string) =>
+  const backControl = (className: string, children: ReactNode, ariaLabel?: string) =>
     onBack
       ? <button type="button" onClick={onBack} className={className} aria-label={ariaLabel}>{children}</button>
       : <Link href={backHref} className={className} aria-label={ariaLabel}>{children}</Link>;
