@@ -33,4 +33,21 @@ for(const [file,labels] of Object.entries(sections)){
 const css=readFileSync(new URL('../app/(es)/administrador/admin-home.css',import.meta.url),'utf8');
 for(const signature of ['#C8FF3A','Bricolage Grotesque','Inter Tight','JetBrains Mono','@media'])
  assert.ok(css.includes(signature),'Original HTML visual signature missing: '+signature);
+
+/* The ten exported HTML references all use #FAFAFA on #000 as the inherited
+   foreground. Tailwind's global base sets a dark foreground on headings and
+   slate on paragraphs, so without this scoped reset the artboards are illegible.
+   The low-specificity :where rule must leave explicit per-panel colors intact. */
+assert.match(css,/\.ehome\s+:where\(h1,h2,h3,h4,h5,h6,p\)\s*\{\s*color:\s*inherit\s*\}/);
+assert.match(css,/\.ehome\{[^}]*color:#FAFAFA/);
+for(const file of [
+ 'activation-dashboard.css','acquisition-dashboard.css','learning-dashboard.css',
+ 'study-plans-dashboard.css','monetization-dashboard.css','communications-dashboard.css',
+ 'system-ai-dashboard.css','gestion-dashboard.css',
+]){
+ const content=readFileSync(new URL('../app/(es)/administrador/'+file,import.meta.url),'utf8');
+ assert.ok(/color:(?:#FAFAFA|var\(--[a-z-]+-muted\))/.test(content),
+    'Original panel typography colors missing from '+file);
+}
+
 console.log('Admin ten-HTML headings and visual tokens are intact.');
