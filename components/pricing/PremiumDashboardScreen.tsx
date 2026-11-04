@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Check, Flag, ListChecks, LockKeyhole, Loader2, ShieldCheck } from 'lucide-react';
+import { BookOpen, Check, Flag, ListChecks, LockKeyhole, Loader2 } from 'lucide-react';
 import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { premiumPurchaseDisplayState } from '@/lib/payments/status';
 import { PREMIUM_MONTHLY_PRICE_ARS, PREMIUM_SEMESTER_PRICE_ARS } from '@/lib/payments/offers';
