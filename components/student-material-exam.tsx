@@ -104,6 +104,9 @@ export function StudentMaterialExam({
   const draftStorageKey =
     practiceDraftKey(materialId) +
     (topicSectionIndex === undefined ? '' : `:topic:${topicSectionIndex}`);
+  const supplementalCacheKey = 'evaluo:topic-practice-source:v1:' + materialId +
+    ':' + (topicSectionIndex ?? 'global');
+  const [supplementalBankLoaded, setSupplementalBankLoaded] = useState(false);
   const [supplementalQuestions, setSupplementalQuestions] = useState<StudyQuestion[]>([]);
   const [topicGenerationUnavailable, setTopicGenerationUnavailable] = useState(false);
   const eligibleQuestions = useMemo(
@@ -188,12 +191,39 @@ export function StudentMaterialExam({
     )?.scrollTo({ top: 0, behavior: 'instant' });
   }, [finished, topicSectionIndex, isSimulation]);
 
+  // Keep server-verified supplemental questions across page refreshes in this
+  // tab, so an interrupted attempt can still resolve its saved question IDs.
+  // Never place PDF excerpts in persistent localStorage.
+  useEffect(() => {
+    if (topicSectionIndex === undefined || isSimulation) {
+      setSupplementalBankLoaded(true);
+      return;
+    }
+    try {
+      const raw = window.sessionStorage.getItem(supplementalCacheKey);
+      if (raw) {
+        const parsed:unknown = JSON.parse(raw);
+        const chapter = sections[topicSectionIndex]?.title;
+        if (Array.isArray(parsed) && chapter) {
+          const verified = getDistinctEligibleExamQuestions(parsed as StudyQuestion[])
+            .filter(q => q.chapterTitle === chapter && isReliableTopicQuestion(q))
+            .slice(0,24);
+          setSupplementalQuestions(verified);
+        }
+      }
+    } catch {
+      // Session storage may be disabled. The practice remains usable.
+    }
+    setSupplementalBankLoaded(true);
+  }, [materialId, topicSectionIndex, isSimulation, sections, supplementalCacheKey]);
+
   const bankSignature = useMemo(
     () => practiceBankSignature(eligibleQuestions),
     [eligibleQuestions]
   );
 
   useEffect(() => {
+    if (!supplementalBankLoaded) return;
     if (isSimulation) {
       setDraftLoaded(true);
       return;
@@ -208,7 +238,7 @@ export function StudentMaterialExam({
       setSavedDraft(null);
     }
     setDraftLoaded(true);
-  }, [materialId, bankSignature, eligibleQuestions, isSimulation, draftStorageKey]);
+  }, [materialId, bankSignature, eligibleQuestions, isSimulation, draftStorageKey, supplementalBankLoaded]);
 
   // Guardado automático en este dispositivo. No persistir contenidos del PDF
   // ni hacer una llamada al servidor por cada tecla del estudiante.
@@ -394,7 +424,13 @@ export function StudentMaterialExam({
         }
       }
       if(additions.length){
-        setSupplementalQuestions(previous=>getDistinctEligibleExamQuestions([...previous,...additions]));
+        const merged=getDistinctEligibleExamQuestions([...supplementalQuestions,...additions]);
+        setSupplementalQuestions(merged);
+        try {
+          window.sessionStorage.setItem(supplementalCacheKey,JSON.stringify(merged.slice(0,24)));
+        } catch {
+          // Private browsing or quota exhaustion must not block practice.
+        }
         pool=getDistinctEligibleExamQuestions([...pool,...additions]);
       }
     }
