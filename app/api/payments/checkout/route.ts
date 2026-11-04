@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { safePremiumReturnTo } from '@/lib/premium-flow';
+import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -34,11 +36,7 @@ function checkoutContext(value: unknown, fallback: string) {
 }
 
 function checkoutReturnPath(value: unknown) {
-  if (typeof value !== 'string') return '';
-  const normalized = value.trim().slice(0, 600);
-  if (!normalized.startsWith('/') || normalized.startsWith('//')) return '';
-  if (/[\u0000-\u001F\u007F]/u.test(normalized)) return '';
-  return normalized;
+  return safePremiumReturnTo(value) ?? '';
 }
 
 async function semesterHasCapacity(admin: SupabaseClient) {
@@ -156,14 +154,19 @@ export async function POST(request: Request) {
     .single();
   if (planError || !plan) return NextResponse.json({ error: 'plan_unavailable' }, { status: 503 });
 
-  const { data: active } = await admin
+  const { data: existing, error: existingError } = await admin
     .from('user_subscriptions')
-    .select('id')
+    .select('id,status,expires_at')
     .eq('user_id', user.id)
     .eq('plan_id', plan.id)
-    .in('status', ['active', 'approved', 'authorized', 'trialing', 'past_due', 'paused'])
-    .limit(1);
-  if (active?.length) return NextResponse.json({ error: 'already_subscribed' }, { status: 409 });
+    .in('status', ['active', 'approved', 'authorized', 'trialing', 'canceled', 'past_due', 'paused'])
+    .limit(100);
+  if (existingError) return NextResponse.json({error:'subscription_unavailable'}, {status:503});
+  const hasEntitlementOrPendingPayment = (existing ?? []).some(subscription =>
+    hasPremiumSubscriptionAccess(subscription.status, subscription.expires_at) ||
+    ['past_due', 'paused'].includes(subscription.status));
+  if (hasEntitlementOrPendingPayment)
+    return NextResponse.json({ error: 'already_subscribed' }, { status: 409 });
 
   const checkoutWindowStart = new Date(Date.now() - 30 * 60_000).toISOString();
   const { data: recentAttempt } = await admin
