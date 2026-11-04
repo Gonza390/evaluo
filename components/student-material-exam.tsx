@@ -464,29 +464,13 @@ export function StudentMaterialExam({
       context,
       unansweredOnly: topicSectionIndex !== undefined,
     });
-    // En Free V2 cada pregunta distinta se desbloquea en el servidor
-    // y el mismo ID puede repasarse sin volver a gastar cupo.
+    // El cupo Free se consume al COMPROBAR la respuesta (más abajo).
+    // Abrir la práctica o navegar por preguntas nunca debe gastar créditos.
+    // El backend valida el ID canónico antes de confirmar cada nueva pregunta.
     let accessibleQuestions = nextQuestions;
     if (freeStudyV2 && !simulation) {
-      const grants:StudyQuestion[] = [];
-      for (const question of nextQuestions) {
-        // El banco debe ser validado por el servidor; no aceptar permisos locales.
-        if (question.type !== 'multiple_choice') continue;
-        try {
-          const response = await fetch('/api/free-study-v2/claim', {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({materialId,kind:'multiple_choice',itemKey:question.id}),
-          });
-          if (!response.ok) continue;
-          const result:unknown = await response.json();
-          if (result && typeof result === 'object' && 'allowed' in result &&
-            result.allowed === true) grants.push(question);
-        } catch {
-          // Fail closed; no nuevas preguntas ante un error de la cuota.
-        }
-      }
-      accessibleQuestions = grants;
-      setFreeQuotaReached(grants.length < nextQuestions.length);
+      accessibleQuestions = nextQuestions.filter(question => question.type === 'multiple_choice');
+      setFreeQuotaReached(false);
     }
     if(!accessibleQuestions.length){
       if (!freeStudyV2) setTopicGenerationUnavailable(true);
@@ -1841,6 +1825,8 @@ export function StudentMaterialExam({
                       const reply: unknown = await response.json();
                       if (!response.ok || !reply || typeof reply !== 'object' ||
                           !('allowed' in reply) || reply.allowed !== true) {
+                        if (response.ok && 'allowed' in reply && reply.allowed === false)
+                          setFreeQuotaReached(true);
                         setFreeQuotaMessage(response.status === 503
                           ? 'No pudimos comprobar tu cupo. Reintentá.'
                           : 'Ya resolviste tus 12 preguntas gratuitas. Podés repetir las anteriores.');
