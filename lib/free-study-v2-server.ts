@@ -122,6 +122,32 @@ export async function saveFirstFreeStudyBank<T>(input: {
   return stored;
 }
 
+/**
+ * For server-owned, source-verified AI banks. Unlock at most the account's
+ * remaining distinct items, not 10/2 new exercises for every old Premium file.
+ * An existing key remains repeatable at no additional cost.
+ */
+export async function claimVerifiedFreeStudySample<T extends { id: string }>(input: {
+  userId: string;
+  materialId: string;
+  kind: 'true_false' | 'case';
+  items: T[];
+}): Promise<T[]> {
+  const result: T[] = [];
+  const limit = FREE_STUDY_KIND_LIMIT[input.kind];
+  for (const item of input.items.slice(0, limit)) {
+    if (!item || typeof item.id !== 'string' || !item.id.trim() ||
+        item.id.length > 200) continue;
+    const unlock = await claimFreeStudyUnlock({
+      userId: input.userId, materialId: input.materialId,
+      kind: input.kind, itemKey: input.materialId + ':' + item.id,
+      premium: false,
+    });
+    if (unlock.allowed) result.push(item);
+  }
+  return result;
+}
+
 /** La primera carga lista sigue consumida aunque se elimine su material. */
 export async function hasFreeStudyV2UploadClaim(userId: string): Promise<boolean> {
   if (!isFreeStudyV2Active()) return false;
