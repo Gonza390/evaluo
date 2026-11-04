@@ -15,6 +15,9 @@ import {
   type MaterialAnswerInput,
 } from '@/lib/student-materials/answer-evidence';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import type { StudyQuestion } from '@/lib/student-materials/pedagogy';
+import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
+import { isReliableTopicQuestion } from '@/lib/student-materials/question-bank';
 import { sanitizePedagogicalArtifacts } from '@/lib/student-materials/pedagogical-integrity';
 import type { StudySummarySection } from '@/lib/student-materials/types';
 import { getPdfAssessmentData, type PdfAssessmentData } from '@/lib/student-materials/answer-events';
@@ -103,7 +106,32 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
       material.pedagogical_artifacts as unknown as PedagogicalArtifacts,
       sections
     );
-    const canonical = resolveMaterialAnswer(input, safeArtifacts, sections);
+    let canonical = resolveMaterialAnswer(input, safeArtifacts, sections);
+    if (!canonical && input.sourceType === 'exercise' &&
+        /^exercise:ai-topic-[a-z0-9-]{1,240}$/i.test(input.itemKey)) {
+      // Supplements are not part of the PDF's original saved artifacts.
+      // Verify against the server-owned, independently reviewed bank rather
+      // than trusting the prompt, answer key or reference sent by the client.
+      const questionId = input.itemKey.slice('exercise:'.length);
+      const { data: banks, error: bankError } = await admin
+        .from('free_study_v2_banks' as never)
+        .select('payload')
+        .eq('user_id', user.id)
+        .eq('material_id', material.id)
+        .like('mode', 'topic:%')
+        .limit(200);
+      if (bankError) throw bankError;
+      const supplement = (banks ?? [])
+        .flatMap(row => Array.isArray((row as {payload?:unknown}).payload)
+          ? (row as {payload:StudyQuestion[]}).payload : [])
+        .find(q => q.id === questionId && q.type === 'multiple_choice');
+      if (supplement && getDistinctEligibleExamQuestions([supplement]).length === 1 &&
+          isReliableTopicQuestion(supplement)) {
+        canonical = resolveMaterialAnswer(input, {
+          ...safeArtifacts, questions:[...safeArtifacts.questions, supplement],
+        }, sections);
+      }
+    }
     if (!canonical) return { success: false };
     const event = {
       id: input.resultId ?? randomUUID(),
