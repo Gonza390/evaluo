@@ -81,15 +81,21 @@ export default async function PracticeModePage({ params, searchParams }: { param
       : '/dashboard/practicar?materialId=' + id;
   const backLabel = backHref.startsWith('/dashboard/plan-de-estudio')
     ? 'Volver al plan'
+    : backHref.includes('tab=tarjetas') ? 'Volver a flashcards'
+    : backHref.includes('tab=ejercicios') ? 'Volver a la práctica'
     : backHref.startsWith('/materiales/') ? 'Volver al tema'
     : backHref.startsWith('/dashboard') && !backHref.startsWith('/dashboard/practicar')
       ? 'Volver a Mi espacio' : 'Volver a Practicar';
+  // Premium must take the student BACK TO THE INTENDED ACTIVITY after checkout.
+  // The secondary button returns to the source screen instead.
+  const practiceHref = '/dashboard/practicar/' + id + '/' + mode +
+    '?repaso=' + reviewLength + (planTopicIndex !== undefined ? '&planTopic=' + planTopicIndex : '');
   const topicLabel = planTopicIndex !== undefined
     ? studySummary.sections[planTopicIndex]?.title : undefined;
   const exhausted = (kind: FreePracticeLimitKind) =>
     <FreePracticeLimitScreen kind={kind} materialTitle={material.title}
       topicLabel={topicLabel} backHref={backHref} backLabel={backLabel}
-      premiumHref={premiumUpgradeForLimit(kind, {materialId:material.id, returnTo:backHref}).href}/>;
+      premiumHref={premiumUpgradeForLimit(kind, {materialId:material.id, returnTo:practiceHref}).href}/>;
 
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   if (freeV2 && (mode === 'completar' || mode === 'mixto')) {
