@@ -481,6 +481,13 @@ export default function ParcialesUbaXxiPage() {
                 <PrimaryCta location="seo_uba_xxi_parciales_study" label="Elegir mi PDF y empezar" />
               </div>
               <p className="mt-3 text-xs text-slate-300">Primero seleccionás el PDF; después creás tu cuenta.</p>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-200">
+                Si todavía estás organizando los textos de IPC o ICSE, podés empezar por aprender{' '}
+                <Link href="/funciones/resumir-pdf-con-ia" className="font-semibold text-white underline underline-offset-4 hover:text-blue-100">
+                  cómo resumir un PDF sin perder conceptos importantes
+                </Link>
+                {' '}y después pasar a la práctica.
+              </p>
             </div>
             <div className="rounded-2xl border border-white/15 bg-white/10 p-5 sm:p-7">
               <div className="flex items-center gap-3">
