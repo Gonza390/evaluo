@@ -11,7 +11,7 @@ const nav:[string,string][]=[
  ['Adquisición y SEO','adquisicion'],['Activación y recorrido','producto'],
  ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
  ['Monetización','monetizacion'],['Comunicaciones','mails'],
- ['Sistema e IA','ia'],['Gestión','usuarios'],
+ ['Sistema e IA','ia'],['Gestión','gestion'],
 ];
 const number=(n:number|null|undefined)=>n===undefined||n===null?'—':Math.round(n).toLocaleString('es-AR');
 const money=(n:number|null|undefined)=>n===undefined||n===null?'—':new Intl.NumberFormat('es-AR',{
