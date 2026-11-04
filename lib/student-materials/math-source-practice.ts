@@ -91,5 +91,41 @@ export function buildVerifiedMathPractice(
       });
     }
   }
+  // A narrow symbolic family: f(x,y)=x²+2y, with tangent-plane formula
+  // explicitly present. Both ingredients must occur in the original pages.
+  const tangent=model.formulas.find(formula=>
+    /plano tangente/i.test(formula.expression + ' '+formula.description) &&
+    /f\s*\(\s*x0\s*,\s*y0\s*\)|fx\s*\(/i.test(formula.description)
+  );
+  const hasSupportedFunction=model.examples.some(example=>
+    /f\s*\(\s*x\s*,\s*y\s*\)\s*=\s*x\s*(?:\^2|²)\s*\+\s*2\s*y/i.test(example));
+  const sourceWithFunction=chunks.some(chunk=>
+    /f\s*\(\s*x\s*,\s*y\s*\)\s*=\s*x\s*(?:\^2|²)\s*\+\s*2\s*y/i.test(chunk.text)
+  );
+  if (tangent && hasSupportedFunction && sourceWithFunction) {
+    const reference=referenceFor(tangent,/plano tangente|linealizacion/);
+    if (reference) {
+      for (const [index,x0,y0] of [[0,1,0],[1,2,1]]) {
+        const value=x0*x0+2*y0, slopeX=2*x0, slopeY=2;
+        const constant=value-slopeX*x0-slopeY*y0;
+        const solution=`z = ${slopeX}x + ${slopeY}y ${constant < 0 ? '-' : '+'} ${Math.abs(constant)}`;
+        const alternatives=[
+          solution,
+          `z = ${slopeX+1}x + ${slopeY}y ${constant<0?'-':'+'} ${Math.abs(constant)}`,
+          `z = ${slopeX}x + ${slopeY+1}y ${constant<0?'-':'+'} ${Math.abs(constant)}`,
+          `z = ${slopeX}x + ${slopeY}y ${constant+1<0?'-':'+'} ${Math.abs(constant+1)}`,
+        ];
+        results.push({
+          id:`worked-tangent-${index}`,type:'multiple_choice',level:'aplicar',
+          kind:'formula',topic:'Plano tangente para f(x,y)',
+          prompt:`Dada f(x,y) = x² + 2y, calculá el plano tangente a z=f(x,y) en (x,y)=(${x0},${y0}). ¿Cuál es la ecuación?`,
+          options:[...alternatives.slice(index+1),solution,...alternatives.slice(1,index+1)],
+          answer:solution,
+          explanation:`f(${x0},${y0})=${value}, fx=2x y fy=2. Entonces z=${value}+${slopeX}(x-${x0})+2(y-${y0}), que se simplifica a ${solution}.`,
+          reference,
+        });
+      }
+    }
+  }
   return results;
 }
