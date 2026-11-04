@@ -2,7 +2,8 @@
 -- Preparada en master. NO aplicar sobre Supabase hasta el despliegue de producción.
 create table if not exists public.free_study_v2_unlocks (
   user_id uuid not null references auth.users(id) on delete cascade,
-  material_id uuid not null references public.student_materials(id) on delete cascade,
+  -- Sin FK: borrar un material NO puede devolver los usos ya desbloqueados.
+  material_id uuid not null,
   kind text not null check (kind in (
     'multiple_choice','true_false','matching_round','case','flashcard',
     'simulator'
