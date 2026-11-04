@@ -132,7 +132,9 @@ export async function proxy(request: NextRequest) {
   if (
     process.env.NODE_ENV === 'development' &&
     (pathname === '/dashboard/procesando/demo' ||
-      pathname === '/dashboard/procesando/demo/')
+      pathname === '/dashboard/procesando/demo/' ||
+      pathname === '/dashboard/practicar/limite-demo' ||
+      pathname === '/dashboard/practicar/limite-demo/')
   ) {
     response.headers.set('Cache-Control', 'private, no-store');
     return response;
