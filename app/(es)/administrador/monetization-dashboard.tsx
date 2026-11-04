@@ -258,7 +258,8 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
      <div className="mo-segment" role="group" aria-label="Agrupación del gráfico">{([['day','Día'],['week','Semana'],['month','Mes']] as const).map(([x,label])=>
        <button key={x} type="button" aria-pressed={granularity===x} className={granularity===x?'mo-selected':''}
          onClick={()=>setGranularity(x)}>{label}</button>)}</div></div>
-    <div className="mo-chart-grid"><div className="mo-chart-summary"><div><span className="mo-label">Período actual</span><strong>{revenue}</strong></div>
+    <div className="mo-evolution-layout">
+     <div className="mo-evolution-left"><div className="mo-chart-grid"><div className="mo-chart-summary"><div><span className="mo-label">Período actual</span><strong>{revenue}</strong></div>
       <div><span className="mo-label">Período anterior</span><strong>{prevRevenue}</strong></div>
       <div><span className="mo-label">Variación</span><strong>{currency==='ARS'?sign(fin.revenue_ars,fin.previous_ars):'—'}</strong></div></div>
      <div className="mo-plot">
@@ -270,21 +271,19 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
      </div>
      <div className="mo-axis"><span>{displayChart.length?detailFor(displayChart[0].date):snapshot.from}</span>
        <span>{displayChart.length?detailFor(displayChart[displayChart.length-1].date):snapshot.through}</span></div></div>
-    <div className="mo-split">
-     <div className="mo-split-cell"><h3>Nuevas suscripciones</h3><p>{number(fin.new_subs)} activaciones vigentes en total · según fecha de inicio</p>
+     <div className="mo-evolution-subscriptions"><h3>Nuevas suscripciones</h3><p>{number(fin.new_subs)} activaciones vigentes en total · según fecha de inicio</p>
       <div className="mo-new-bars">{displayChart.map(d=><div key={d.date} title={d.date+': '+number(d.subs)} className="mo-new-bar"><span style={{height:Math.max(0,d.subs/chartSubs*100)+'%'}}/></div>)}</div>
-      <span className="mo-tiny">La gráfica omite suscripciones pendientes y canceladas.</span></div>
-     <div className="mo-split-cell"><h3>Ingresos por moneda</h3><p>Siempre separadas; nunca se suman ni se convierten.</p>
+     </div></div>
+     <div className="mo-evolution-right"><div className="mo-evolution-currencies"><h3>Ingresos por moneda</h3><p>Siempre separadas; nunca se suman ni se convierten.</p>
       {financialLabels.map(x=><div className="mo-currency-row" key={x.label}>
        <div><strong>{x.label}</strong><small>{x.sub}</small></div><span className="mo-mono">{x.value}</span></div>)}</div>
-    </div>
     <div className="mo-provider-revenue"><h3>Ingresos por proveedor de pagos</h3><p>{currency} · {periodText} · solo transacciones cobradas.</p>
       {providers.length?providers.map(p=><div className="mo-provider-line" key={p.provider}>
        <span>{p.provider}</span><Bar percent={totalProviderRevenue>0?100*p.revenue_ars/totalProviderRevenue:0} light/>
        <strong className="mo-mono">{currency==='ARS'?money(p.revenue_ars):'—'}</strong>
        <small className="mo-mono mo-muted">{totalProviderRevenue>0?pct(p.revenue_ars,totalProviderRevenue):'—'}</small></div>):
        <p className="mo-empty">No hay proveedores con pagos o checkouts recientes.</p>}
-    </div>
+    </div></div></div>
    </section>
    <section className="mo-section"><Section id="04" title="Suscripciones y cancelaciones" note="Estado actual registrado; la serie histórica de renovaciones aún no está completa."/>
      <div className="mo-status-layout"><div className="mo-status-top">
