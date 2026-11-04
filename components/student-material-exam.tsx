@@ -73,7 +73,6 @@ type StudentMaterialExamProps = {
   sections?: StudySummarySection[];
   glossary?: StudyGlossaryItem[];
   topicSectionIndex?: number;
-  freeStudyV2?: boolean;
   simulation?: {
     context: TopicPracticeContext;
     onAnswer: (question: StudyQuestion, wasCorrect: boolean) => void;
@@ -99,7 +98,6 @@ export function StudentMaterialExam({
   glossary = [],
   simulation,
   topicSectionIndex,
-  freeStudyV2 = false,
 }: StudentMaterialExamProps) {
   const router = useRouter();
   const [tomorrowStatus, setTomorrowStatus] = useState<'idle' | 'saving' | 'error'>('idle');
