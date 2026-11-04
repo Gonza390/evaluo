@@ -36,7 +36,7 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 function ExampleDocument() {
   const lines = [56,94,88,92,60,42,90,96,70,48,93,86,52];
-  return <section className="flex min-w-0 flex-1 flex-col gap-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-5 sm:p-[22px]">
+  return <section className="flex min-w-0 flex-1 flex-col gap-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-5 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:p-[22px]">
     <Label>TU DOCUMENTO</Label>
     <div aria-hidden="true" className="relative flex min-h-[225px] flex-1 flex-col gap-2 overflow-hidden rounded-2xl border border-[#dbe6f8] bg-white p-6 sm:min-h-[300px]">
       {lines.map((width, index) => <div key={index} className={`shrink-0 rounded-[5px] ${index === 0 || index === 5 || index === 9 ? 'h-3 bg-[#c9d1e0]' : index===6||index===7 ? 'h-2 bg-[#ffe28a]' : 'h-2 bg-[#e8ecf2]'}`} style={{ width: `${width}%` }} />)}
@@ -119,7 +119,7 @@ function SceneMemorize() {
 }
 function ScenePractice() {
   return <div data-processing-layout="practice" className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
-    <section className="min-w-0 flex-[1.6] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 sm:p-7">
+    <section className="min-w-0 flex-[1.6] space-y-5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-2"><Label>PRÁCTICA · PREGUNTA 3</Label><ExampleTag/></div>
       <h2 className="text-[19px] font-bold leading-7 tracking-[-.02em] text-[#0f1623] sm:text-[22px]">Si la demanda de un bien es elástica y su precio sube, ¿qué pasa con la cantidad demandada?</h2>
       <div className="space-y-2.5">
