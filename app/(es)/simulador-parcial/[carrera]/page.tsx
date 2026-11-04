@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { BookOpen, Clock3, Target } from 'lucide-react';
@@ -14,6 +15,32 @@ import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/serv
 import { createPublicClient } from '@/lib/supabase-public';
 
 export const revalidate = 600;
+
+type PublicCareerPracticeRow = {
+  carrera_id: string | null;
+  question_count: number | null;
+};
+
+// Share one bounded, cached public catalog check across career pages. The raw
+// question bank is intentionally not SELECT-able by anonymous visitors.
+const getIndexableSimulatorCareerIds = unstable_cache(
+  async (): Promise<string[]> => {
+    const client = createPublicClient() as unknown as {
+      rpc: (name: 'get_public_preguntero_catalog') => Promise<{
+        data: PublicCareerPracticeRow[] | null;
+        error: { message: string } | null;
+      }>;
+    };
+    const { data, error } = await client.rpc('get_public_preguntero_catalog');
+    if (error) throw error;
+    return Array.from(new Set(
+      (data ?? []).filter((row) => Number(row.question_count ?? 0) > 0 && row.carrera_id)
+        .map((row) => row.carrera_id as string)
+    ));
+  },
+  ['simulator-indexable-careers-public-catalog-v1'],
+  { revalidate: 600, tags: ['materia-bootstrap', 'preguntero-stats'] }
+);
 
 type PageProps = {
   params: Promise<{
@@ -44,16 +71,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? await getUniversidadById(carrera.universidad_id)
       : null;
     const materias = await getMateriasByCarrera(carrera.id);
-    let hasPublicPractice = false;
-    if (materias.length > 0) {
-      const { data, error } = await createPublicClient()
-        .from('preguntas_banco_public')
-        .select('materia_id')
-        .in('materia_id', materias.map((materia) => materia.id))
-        .limit(1);
-      if (error) throw error;
-      hasPublicPractice = (data?.length ?? 0) > 0;
-    }
+    const hasPublicPractice = materias.length > 0 &&
+      (await getIndexableSimulatorCareerIds()).includes(carrera.id);
 
     const description = buildSimulatorLandingDescription({
       carreraNombre: carrera.nombre,
