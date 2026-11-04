@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { safePremiumReturnTo, premiumPricingHref } from '@/lib/premium-flow';
+import { safePremiumReturnTo, premiumPricingHref, premiumDashboardHref } from '@/lib/premium-flow';
 import { premiumPaymentResultState } from '@/lib/payments/status';
 import { notifyPremiumAccessChanged } from '@/lib/premium-access-events';
 import {
@@ -93,6 +93,9 @@ function contextualPremiumRoute(
   if (source === 'simulator_explanations') return `/premium/explicaciones${suffix}`;
   if (source === 'errores_review') return `/premium/errores${suffix}`;
   if (source === 'premium_simulator') return `/premium/simulador${suffix}`;
+  if (source.startsWith('free_v2_') || source === 'dashboard_premium') {
+    return premiumDashboardHref({source, materiaId, parcial, returnTo});
+  }
   return premiumPricingHref({source, materiaId, parcial, returnTo});
 }
 
