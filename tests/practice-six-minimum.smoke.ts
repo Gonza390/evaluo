@@ -56,7 +56,7 @@ assert.equal(sourceVerifiedPairs([{...term,page:undefined,sectionTitle:'Unidad 1
 }]).length,0,'Unrelated DOCX headings cannot support answers.');
 
 const session = read('components/dashboard/practice-session.tsx');
-assert.match(session,/rotate\(pairs, round \* 6\)\.slice\(0, reviewLength === 'rapido' \? 6 : 8\)/,
+assert.match(session,/rotate\(pairs, round \* 6\)\.slice\(0, freeV2 \? 6 : reviewLength === 'rapido' \? 6 : 8\)/,
   'Matching must show six pairs, not the old five.');
 assert.match(session,/shuffleMatchingDefinitions\(/,
   'Matching must randomize definitions rather than using fixed displacement.');
@@ -68,12 +68,12 @@ assert.match(session,/mode === 'unir' \? exercisePairs\.length >= MIN_CASES_PER_
 assert.match(session,/mode === 'completar' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'mixto' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
 assert.match(session,/mode === 'opciones'/);
-assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, reviewLength === 'rapido' \? 6 : 8, round\)/);
-assert.match(session,/sufficientTrueFalse\(trueFalsePool, MIN_CASES_PER_PRACTICE\)/);
-assert.match(session,/balancedQuestions\(options, reviewLength === 'rapido' \? 6 : 10, round\)/);
+assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, freeV2 \? 10 : reviewLength === 'rapido' \? 6 : 8, round\)/);
+assert.match(session,/sufficientTrueFalse\(trueFalsePool, freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(session,/balancedQuestions\(options, freeV2 \? 20 : reviewLength === 'rapido' \? 6 : 10, round\)/);
 assert.match(session,/fetch\('\/api\/practice\/supplement'/);
 assert.match(session,/fetch\('\/api\/practice\/cases'/);
-assert.match(session,/contexts\.length >= MIN_CASES_PER_PRACTICE/);
+assert.match(session,/contexts\.length >= \(freeV2 \? 2 : MIN_CASES_PER_PRACTICE\)/);
 const flashcards=read('components/dashboard/practice-flashcard-session.tsx');
 assert.match(flashcards,/approvedIndices\.length < MIN_CASES_PER_PRACTICE/);
 assert.match(flashcards,/StudentMaterialFlashcards/);
