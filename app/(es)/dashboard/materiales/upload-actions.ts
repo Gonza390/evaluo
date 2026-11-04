@@ -6,7 +6,7 @@ import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { PREMIUM_STUDY_LIMITS } from '@/lib/study-commercial-entitlements';
-import { premiumUpgradeForLimit, type PremiumUpgrade } from '@/lib/premium-flow';
+import { premiumUpgradeForLimit, FreeStudyV2UploadLimitError, type PremiumUpgrade } from '@/lib/premium-flow';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -39,6 +39,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 type ActionResult = {
   success: boolean;
   message: string;
+  upgrade?: PremiumUpgrade;
 };
 
 export type StudentMaterialUploadQuota = {
@@ -233,11 +234,12 @@ async function assertStudentMaterialQuota(userId: string) {
       );
     }
   } else if (!hasUnlimitedUploads && (quota.remaining ?? 0) <= 0) {
-    throw new Error(
-      isFreeStudyV2Active()
-        ? 'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.'
-        : 'Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.'
-    );
+    if (isFreeStudyV2Active()) {
+      throw new FreeStudyV2UploadLimitError(
+        'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.'
+      );
+    }
+    throw new Error('Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.');
   }
 
   if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
@@ -352,6 +354,8 @@ export async function prepareStudentMaterialUploadAction(
         : error instanceof Error
           ? error.message
           : 'No pudimos preparar la subida del PDF.',
+      ...(error instanceof FreeStudyV2UploadLimitError
+        ? { upgrade: premiumUpgradeForLimit('material_upload') } : {}),
     };
   }
 }
@@ -527,6 +531,8 @@ export async function finalizeStudentMaterialUploadAction(
         : error instanceof Error
           ? error.message
           : 'No pudimos registrar el PDF subido.',
+      ...(error instanceof FreeStudyV2UploadLimitError
+        ? { upgrade: premiumUpgradeForLimit('material_upload') } : {}),
     };
   }
 }
