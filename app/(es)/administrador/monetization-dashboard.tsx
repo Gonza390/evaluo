@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import {useMemo,useState,type ReactNode} from 'react';
+import {useEffect,useMemo,useState,type ReactNode} from 'react';
+import {useRouter} from 'next/navigation';
 import type {MonetizationSnapshot,MonetizationFilters} from './monetization-dashboard-types';
 import './admin-home.css';
 import './monetization-dashboard.css';
@@ -60,6 +61,7 @@ type Props={snapshot:MonetizationSnapshot;filters:MonetizationFilters;today:stri
 type Dimension='university'|'career'|'country'|'source'|'provider';
 type Granularity='day'|'week'|'month';
 export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
+ const router=useRouter();
  const [period,setPeriod]=useState<MonetizationFilters['period']>(filters.period);
  const [from,setFrom]=useState(filters.from??'');
  const [to,setTo]=useState(filters.to??today);
@@ -172,7 +174,15 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
    <span className="mo-mono">{x.users>=10&&!scopedProvider?pct(x.premium,x.users):'—'}</span></div>,
   <span key="revenue" className="mo-mono">{currency==='ARS'?money(x.revenue_ars):'—'}</span>,
  ]);
- const hasRecentFinance=fin.revenue_ars>0||co.attempts>0||activeSub>0;
+ useEffect(()=>{
+  if(period!=='custom'||!from||!to||from>to||from<earliest||to>today||
+    (Date.parse(to+'T12:00:00Z')-Date.parse(from+'T12:00:00Z'))/86400000>29||
+    (filters.from===from&&filters.to===to))return;
+  const query=new URLSearchParams(window.location.search);
+  query.set('panel','monetizacion');query.set('moneyPeriod','custom');
+  query.set('moneyFrom',from);query.set('moneyTo',to);
+  router.replace('/administrador?'+query.toString());
+ },[period,from,to,earliest,today,filters.from,filters.to,router]);
  return <main className="ehome mo-dashboard">
   <header className="eh-header"><div className="eh-top"><span className="eh-logo">evaluo<span>.</span></span>
     <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link>
@@ -184,18 +194,28 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
   </header>
   <section className="mo-intro"><span className="mo-label">Evaluo / Monetización</span>
    <h1>Monetización</h1><p>Cuántos estudiantes pasan de Free a Premium, cuánto dinero genera Evaluo y dónde estamos perdiendo oportunidades de venta.</p></section>
-  <form className="mo-filters" action="/administrador" method="get">
+  <form className="mo-filters" action="/administrador" method="get"
+    onChange={e=>{if(e.target instanceof HTMLSelectElement)e.currentTarget.requestSubmit();}}>
    <input type="hidden" name="panel" value="monetizacion"/>
    <div className="mo-filter-period"><span className="mo-label">Período</span>
     <div className="mo-segment" role="group" aria-label="Período">
     {([['1','Hoy'],['7','7 días'],['14','14 días'],['30','30 días'],['custom','Personalizado']] as const).map(([value,label])=>
-      <button key={value} type="button" onClick={()=>setPeriod(value)} aria-pressed={period===value}
+      <button key={value} type="button" onClick={()=>{
+        setPeriod(value);
+        if(value!=='custom'){
+         const query=new URLSearchParams(window.location.search);
+         query.set('panel','monetizacion');query.set('moneyPeriod',value);
+         query.delete('moneyFrom');query.delete('moneyTo');
+         router.push('/administrador?'+query.toString());
+        }
+       }} aria-pressed={period===value}
         className={period===value?'mo-selected':''}>{label}</button>)}</div>
     <input type="hidden" name="moneyPeriod" value={period}/></div>
    <div className="mo-filter-period"><span className="mo-label">Moneda</span>
     <div className="mo-segment" role="group" aria-label="Moneda">{(['ARS','USD'] as const).map(v=>
       <button key={v} type="button" className={currency===v?'mo-selected':''} aria-pressed={currency===v}
         onClick={()=>setCurrency(v)}>{v}</button>)}</div></div>
+   <span className="mo-tag">Datos reales · Supabase</span>
    <div className="mo-filter-second">
     <label className="mo-select"><span className="mo-label">País</span><select name="moneyCountry" defaultValue={filters.country}>
       <option value="all">Todos</option>{snapshot.options.countries.map(x=><option key={x} value={x}>{x}</option>)}</select></label>
@@ -209,8 +229,7 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
       <option value="all">Todos</option><option value="free">Free</option><option value="active">Activa</option>
       <option value="pending">Pendiente</option><option value="expired">Vencida</option><option value="canceled">Cancelada</option>
     </select></label>
-    <button className="mo-apply" type="submit">Aplicar filtros</button>
-    <span className="mo-spacer"/><span className="mo-tag">Datos reales · Supabase</span>
+ 
    </div>
    {period==='custom'&&<div className="mo-custom">
      <label>Desde<input aria-label="Fecha desde" type="date" required min={earliest} max={today}
@@ -219,10 +238,12 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
        value={to} onChange={e=>setTo(e.target.value)} name="moneyTo"/></label>
      <span>Máximo 30 días, dentro de los últimos 90</span></div>}
   </form>
-  {!hasRecentFinance&&<p className="mo-info">Todavía no hay ingresos cobrados, checkouts recientes ni suscripciones Premium activas de estudiantes para esta selección. Los importes de ejemplo del diseño no se utilizan.</p>}
   <div className="mo-board">
    <section className="mo-section"><Section id="01" title="Resumen financiero" note={periodText+' · '+currency+' · estados Premium actuales'}/>
-    <div className="mo-tiles">{financeTiles.map(x=><Tile key={x.title} {...x}/>)}</div></section>
+    <div className="mo-tiles">
+      <div className="mo-tile-row mo-large-row">{financeTiles.slice(0,3).map(x=><Tile key={x.title} {...x}/>)}</div>
+      <div className="mo-tile-row mo-small-row">{financeTiles.slice(3).map(x=><Tile key={x.title} {...x}/>)}</div>
+    </div></section>
    <section className="mo-section"><Section id="02" title="Embudo de conversión a Premium" note={'Señales verificables de '+periodText+'; no se inventa un recorrido continuo.'}/>
     <div className="mo-funnel">{funnel.map((f,i)=><div className="mo-funnel-row" key={f.label}>
      <div className="mo-funnel-name"><span className="mo-mono mo-muted">{String(i+1).padStart(2,'0')}</span>
