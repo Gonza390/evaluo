@@ -10,6 +10,8 @@ import {
   rechazarEntidadAcademicaPendienteAdministrador,
 } from './solicitudes/actions';
 import type {GestionSnapshot} from './gestion-dashboard-types';
+import {DAILY_FREE_LIMIT} from '@/lib/ai/daily-limit';
+import {FREE_ERRORS_REVIEWS_PER_WEEK} from '@/lib/premium';
 
 const SNAPSHOT_TAG='admin-gestion-snapshot-v1';
 const validId=(x:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
@@ -26,7 +28,7 @@ const readSnapshot=nextCache(async()=>{
 
 export async function obtenerDashboardGestion(){
  const actor=await actorId();
- return {snapshot:await readSnapshot(),actor};
+ return {snapshot:await readSnapshot(),actor,limits:{dailyFreeAi:DAILY_FREE_LIMIT,freeErrorsPerWeek:FREE_ERRORS_REVIEWS_PER_WEEK}};
 }
 function refresh(){
  updateTag(SNAPSHOT_TAG);
