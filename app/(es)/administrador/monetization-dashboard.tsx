@@ -20,11 +20,10 @@ const money=(n:number|null|undefined)=>n===undefined||n===null?'—':new Intl.Nu
 const pct=(a:number,b:number)=>b>0?(a/b*100).toFixed(1).replace('.',',')+'%':'—';
 const moneyPct=(a:number,b:number)=>b>0?(Math.abs(a-b)*100/b).toFixed(1).replace('.',',')+'%':'—';
 const sign=(a:number,b:number)=>b>0?((a>=b?'↑ ':'↓ ')+moneyPct(a,b)):'—';
-const nzero=(n:number)=>n>0?number(n):'0';
 const detailFor=(d:string)=>new Date(d+'T12:00:00Z').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',timeZone:'UTC'});
 const sliceDate=(d:string,kind:'day'|'week'|'month')=>{
  if(kind==='day')return d;
- if(kind==='month')return d.slice(0,7);
+ if(kind==='month')return d.slice(0,7)+'-01';
  const dt=new Date(d+'T12:00:00Z');dt.setUTCDate(dt.getUTCDate()-((dt.getUTCDay()+6)%7));
  return dt.toISOString().slice(0,10);
 };
@@ -89,7 +88,7 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
   {title:'Conversión Free → Premium',value:conversion,sub:scopedBase?'No comparable con proveedor/estado filtrado':'Premium activo sobre registrados',footer:'Estado Premium actual; no es una cohorte histórica',large:true,priority:true},
   {title:'Suscripciones Premium activas',value:number(activeSub),sub:activeShare==='—'?'Estado actual':activeShare+' de registrados',footer:'Sin accesos manuales de administradores'},
   {title:'Nuevas suscripciones',value:number(fin.new_subs),sub:'Activaciones vigentes iniciadas en el período',footer:'No cuenta suscripciones pendientes'},
-  {title:'Usuarios Free',value:number(fin.free_users),sub:'Sin suscripción Premium ni estado pendiente/cancelado',footer:'Categoría de estado actual'},
+  {title:'Usuarios Free',value:number(fin.free_users),sub:'Sin Premium vigente, incluidos pendientes o cancelados',footer:'Acceso gratuito, no solo ausencia de suscripción'},
   {title:'ARPPU',value:currency==='ARS'?arppu:'—',sub:'Ingresos cobrados / usuarios que pagaron',footer:'Solo pagos confirmados · no MRR'},
   {title:'MRR · mensual recurrente',value:'—',sub:'Sin historial contractual suficiente',footer:'No se estima a partir del precio de lista'},
  ];
