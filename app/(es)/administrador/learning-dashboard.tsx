@@ -8,7 +8,7 @@ import './learning-dashboard.css';
 
 const nav:[string,string][]=[
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],['Adquisición y SEO','adquisicion'],
- ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','biblioteca'],
+ ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
  ['Monetización','referidos'],['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','usuarios'],
 ];
 const number=(v:number|null|undefined)=>v===null||v===undefined?'—':Math.round(v).toLocaleString('es-AR');
