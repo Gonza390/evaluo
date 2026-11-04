@@ -133,7 +133,7 @@ create table if not exists public.free_study_v2_banks (
   user_id uuid not null references auth.users(id) on delete cascade,
   material_id uuid not null references public.student_materials(id) on delete cascade,
   mode text not null check (mode in ('true_false','cases','matching','flashcards')
-    or mode ~ '^topic:[0-9]{1,3}:round:[0-4]
+    or mode ~ '^topic:[0-9]{1,3}:round:[0-4]$'),
   payload jsonb not null check (jsonb_typeof(payload) = 'array'),
   created_at timestamptz not null default now(),
   primary key (user_id, material_id, mode)
@@ -292,139 +292,6 @@ returns trigger language plpgsql security definer set search_path = ''
 as $guard_retry$
 begin
   if not public.is_free_study_v2_rollout_enabled() then return new; end if;
-  perform pg_catalog.pg_advisory_xact_lock(
-    pg_catalog.hashtextextended('free-v2-material:' || new.user_id::text, 0)
-  );
-
-  if not public.free_study_v2_is_premium_account(new.user_id)
-    and not exists (
-      select 1 from public.profiles p
-      where p.id = new.user_id and p.student_material_uploads_unlimited
-    )
-    and (
-      exists (
-        select 1 from public.free_study_v2_upload_claims c
-        where c.user_id = new.user_id and c.first_material_id <> new.id
-      )
-      or exists (
-        select 1 from public.student_materials m
-        where m.user_id = new.user_id and m.id <> new.id
-          and m.processing_status <> 'failed'
-      )
-    )
-  then
-    raise exception 'free_v2_lifetime_upload_limit' using errcode = 'P0001';
-  end if;
-  return new;
-end;
-$guard_retry$;
-revoke all on function public.guard_free_study_v2_failed_material_retry()
-  from public, anon, authenticated;
-drop trigger if exists trg_guard_free_study_v2_failed_retry on public.student_materials;
-create trigger trg_guard_free_study_v2_failed_retry
-before update of processing_status on public.student_materials
-for each row
-when (old.processing_status = 'failed' and new.processing_status <> 'failed')
-execute function public.guard_free_study_v2_failed_material_retry();
-),
-  payload jsonb not null check (jsonb_typeof(payload) = 'array'),
-  created_at timestamptz not null default now(),
-  primary key (user_id, material_id, mode)
-);
-
-alter table public.free_study_v2_banks enable row level security;
-revoke all on public.free_study_v2_banks from public, anon, authenticated;
-grant select, insert on public.free_study_v2_banks to service_role;
-
--- El navegador puede llamar directamente a Supabase con JWT. Por eso la
--- validación de cupos no puede depender sólo de Server Actions / rutas Next.js.
--- Los siguientes triggers se instalan junto con el lanzamiento de Free V2.
--- Ambos flujos legítimos de carga (PDF/DOCX y PDF-first) usan la misma tabla.
-
-create or replace function public.free_study_v2_is_premium_account(p_user_id uuid)
-returns boolean language sql stable security definer set search_path = ''
-as $paid$
-  select exists (
-    select 1
-    from public.user_subscriptions s
-    join public.subscription_plans p on p.id = s.plan_id
-    where s.user_id = p_user_id and p.code = 'premium'
-      and (
-        (pg_catalog.lower(s.status) in ('active','approved','authorized','trialing')
-          and (s.expires_at is null or s.expires_at > pg_catalog.now()))
-        or (pg_catalog.lower(s.status) = 'canceled'
-          and s.expires_at > pg_catalog.now())
-      )
-  );
-$paid$;
-revoke all on function public.free_study_v2_is_premium_account(uuid)
-  from public, anon, authenticated;
-grant execute on function public.free_study_v2_is_premium_account(uuid)
-  to service_role;
-
--- Transacción serializada por estudiante: dos solicitudes simultáneas no
--- pueden gastar el mismo cupo de un material o evadir los 3 diarios Premium.
-create or replace function public.guard_free_study_v2_material_insert()
-returns trigger language plpgsql security definer set search_path = ''
-as $guard_insert$
-declare
-  v_unlimited boolean;
-  v_daily integer;
-begin
-  perform pg_catalog.pg_advisory_xact_lock(
-    pg_catalog.hashtextextended('free-v2-material:' || new.user_id::text, 0)
-  );
-
-  select coalesce(p.student_material_uploads_unlimited, false)
-    into v_unlimited
-  from public.profiles p where p.id = new.user_id;
-
-  if coalesce(v_unlimited,false) then return new; end if;
-
-  if exists (
-    select 1 from public.student_materials m
-    where m.user_id = new.user_id
-      and m.processing_status in ('uploaded','processing')
-  ) then
-    raise exception 'free_v2_upload_already_processing' using errcode = 'P0001';
-  end if;
-
-  if public.free_study_v2_is_premium_account(new.user_id) then
-    select count(*)::integer into v_daily
-    from public.student_materials m
-    where m.user_id = new.user_id
-      and m.created_at >= (pg_catalog.date_trunc('day', pg_catalog.now() at time zone 'UTC') at time zone 'UTC');
-    if v_daily >= 3 then
-      raise exception 'premium_daily_upload_limit' using errcode = 'P0001';
-    end if;
-  elsif exists (
-    select 1 from public.free_study_v2_upload_claims c where c.user_id = new.user_id
-  ) or exists (
-    select 1 from public.student_materials m
-    where m.user_id = new.user_id and m.processing_status <> 'failed'
-  ) then
-    raise exception 'free_v2_lifetime_upload_limit' using errcode = 'P0001';
-  end if;
-
-  -- Un cliente autenticado no debe poder falsificar created_at para evadir
-  -- el conteo Premium del día UTC.
-  new.created_at := pg_catalog.now();
-  return new;
-end;
-$guard_insert$;
-revoke all on function public.guard_free_study_v2_material_insert()
-  from public, anon, authenticated;
-drop trigger if exists trg_guard_free_study_v2_material_insert on public.student_materials;
-create trigger trg_guard_free_study_v2_material_insert
-before insert on public.student_materials for each row
-execute function public.guard_free_study_v2_material_insert();
-
--- Reintentar el mismo primer archivo fallido está permitido, pero convertir
--- otro registro fallido en listo no puede regalar un segundo archivo Free.
-create or replace function public.guard_free_study_v2_failed_material_retry()
-returns trigger language plpgsql security definer set search_path = ''
-as $guard_retry$
-begin
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended('free-v2-material:' || new.user_id::text, 0)
   );
