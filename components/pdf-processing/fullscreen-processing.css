@@ -10,7 +10,8 @@
 }
 
 /* Keep the heading and its example together throughout a scene change. */
-[data-processing-scene-motion] {
+[data-processing-scene-motion],
+[data-processing-final-motion] {
   opacity: 1;
   transform: translate3d(0, 0, 0);
   animation: pdf-processing-arrive 270ms var(--pdf-processing-ease) both;
@@ -72,6 +73,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-processing-scene-motion],
+  [data-processing-final-motion],
   [data-processing-scene-motion][data-phase='exit'] {
     animation: none !important;
     transition: none !important;
