@@ -117,7 +117,7 @@ export async function POST(request:NextRequest) {
     if (error) return fail('No pudimos verificar tu cupo de planes. Intentá nuevamente.',503);
     if (data !== true) return fail('Ya utilizaste tu plan de estudio gratuito. Podés continuar con Premium.',403);
   } else {
-    const {error}=await supabase.from('student_personal_study_plans' as never).upsert({
+    const {error}=await createAdminClient().from('student_personal_study_plans' as never).upsert({
       user_id:user.id,exam_date:examDate,daily_minutes:minutes,material_ids:materialIds,
       preferences,schedule,updated_at:new Date().toISOString()
     } as never,{onConflict:'user_id'});
