@@ -42,6 +42,7 @@ assert.match(screen, /Preparar mi plan de estudios/);
 assert.match(screen, /\/dashboard\/plan-de-estudio\/preparar\?material=/,
   'Plan action must open the wizard, not the plan landing.');
 assert.match(planPage, /initialMaterialId=/);
+assert.match(planPage, /initialExamDate=/, 'The exam date given at upload must follow into plan setup.');
 assert.match(plan, /initialMaterialId && materials\.some/,
   'Plan wizard must preselect the processed material.');
 assert.match(materials, /dashboard\/procesando\/\$\{material\.id\}/,
