@@ -66,39 +66,52 @@ function SceneOrganize() {
   </div>;
 }
 function SceneUnderstand() {
-  return <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
-    <section className="min-w-0 flex-[1.6] rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 sm:p-7">
+  return <div className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
+    <section aria-label="Ejemplo de resumen de un tema" className="flex min-w-0 flex-[1.6] flex-col gap-4 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-6 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:px-8 sm:py-7">
       <div className="flex flex-wrap items-center justify-between gap-3"><Label>TEMA 2 · RESUMEN</Label><ExampleTag/></div>
-      <h2 className="mt-5 text-[22px] font-bold tracking-[-.02em] text-[#0f1623] sm:text-[25px]">Elasticidad precio de la demanda</h2>
-      <p className="mt-4 text-[15px] leading-7 text-[#344054]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <strong>elástica</strong>, una pequeña suba de precio reduce mucho las ventas.</p>
-      <div className="mt-5 rounded-2xl border-l-4 border-[#0b63e5] bg-[#f7faff] p-4 text-[15px] leading-6 text-[#344054]">En cambio, si es <strong>inelástica</strong>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</div>
-      <div className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[14px] font-semibold text-white" aria-label="Ejemplo de botón, no disponible durante el procesamiento">Practicar este tema <ArrowRight size={16}/></div>
-    </section>
-    <section className="flex min-w-0 flex-1 flex-col gap-4 rounded-[28px] border border-[#e8ecf2] bg-white p-5 sm:p-6">
-      <Label>TU PDF, SIEMPRE A MANO</Label>
-      <div className="flex min-h-[225px] flex-1 flex-col gap-2 rounded-2xl border border-[#dbe6f8] bg-[#f7faff] p-5">
-        <div className="h-3 w-2/3 rounded bg-[#c9d1e0]"/>{[90,95,70,88,65,93,78].map((w,i)=><div key={i} className={`h-2 rounded ${i===3||i===4?'bg-[#ffe28a]':'bg-[#dce3ed]'}`} style={{width:`${w}%`}}/>)}
+      <h2 className="text-[23px] font-bold leading-[1.2] tracking-[-.02em] text-[#0f1623] sm:text-[28px]">Elasticidad precio de la demanda</h2>
+      <p className="text-[15px] leading-[1.65] text-[#344054] sm:text-[16px]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">elástica</span>, una pequeña suba de precio reduce mucho las ventas.</p>
+      <p className="text-[15px] leading-[1.65] text-[#344054] sm:text-[16px]">En cambio, si es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">inelástica</span>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</p>
+      <div className="mt-0.5 flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-[13px] font-semibold text-[#4b5565]">Conceptos clave</span>
+        {['Elasticidad','Demanda inelástica','Bien sustituto'].map(item=><span key={item} className="rounded-full bg-[#eaf0fb] px-3 py-1.5 text-[13px] font-semibold text-[#084bb0]">{item}</span>)}
       </div>
-      <p className="text-[13px] leading-5 text-[#667085]">Estudiá el resumen sin perder de vista tus apuntes.</p>
+      <div className="mt-2"><div className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de botón, no disponible durante el procesamiento"><BookOpen size={18}/> Practicar este tema</div></div>
+    </section>
+    <section aria-label="Fragmento de tu material original" className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:p-6 lg:max-w-[360px]">
+      <Label>EN TU MATERIAL</Label>
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-8 w-[26px] shrink-0 items-center justify-center rounded-md bg-[#d92d3a] text-[9px] font-bold text-white">PDF</span>
+        <div className="min-w-0"><p className="truncate text-[14px] font-semibold">Apuntes_Unidad_3.pdf</p><p className="text-[13px] text-[#667085]">Página 14</p></div>
+      </div>
+      <div className="flex flex-1 flex-col gap-2.5 rounded-2xl border border-[#dbe6f8] bg-[#f7faff] px-4 py-5">
+        {[90,82,94,88,64,86].map((width,index)=><div key={index} className={`h-2 rounded ${index===2||index===3?'bg-[#ffe28a]':'bg-[#e1e6ef]'}`} style={{width:`${width}%`}} />)}
+      </div>
+      <p className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#0b63e5]">Ver en el documento <ArrowRight size={16}/></p>
     </section>
   </div>;
 }
 function SceneMemorize() {
-  return <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
-    <section className="flex min-w-0 flex-[1.2] flex-col items-center justify-center rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white p-5 text-center sm:p-8">
-      <div className="mb-5 flex w-full items-center justify-between"><Label>PREGUNTA</Label><ExampleTag/></div>
-      <div className="flex min-h-[235px] w-full max-w-[460px] flex-col items-center justify-center gap-5 rounded-[24px] border border-[#dbe6f8] bg-white px-6 py-9 shadow-[0_12px_34px_rgba(47,75,255,.07)]">
-        <Layers3 className="size-7 text-[#0b63e5]"/>
-        <p className="text-[20px] font-bold leading-7 text-[#0f1623] sm:text-[24px]">¿Qué mide la elasticidad precio de la demanda?</p>
+  return <div className="mx-auto flex w-full max-w-[1040px] flex-col items-start justify-center gap-7 lg:flex-row">
+    <section aria-label="Ejemplo de flashcard" className="min-w-0 flex-[1.5] pb-6 lg:max-w-[600px]">
+      <div className="flex min-h-[300px] flex-col justify-between gap-6 rounded-[32px] border border-[#cfdcf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-7 shadow-[0_14px_0_-6px_#dbe6f8,0_26px_0_-12px_#eaf0fb,0_18px_40px_rgba(20,60,140,0.08)] sm:min-h-[330px] sm:px-8 sm:py-8">
+        <div className="flex items-center justify-between gap-3"><Label>PREGUNTA</Label><ExampleTag/></div>
+        <p className="text-[24px] font-bold leading-[1.25] tracking-[-.025em] sm:text-[30px]">¿Qué mide la elasticidad precio de la demanda?</p>
+        <div className="flex flex-wrap items-center gap-3.5">
+          <div className="inline-flex min-h-[52px] items-center gap-2.5 rounded-full bg-[#0b63e5] px-7 text-[16px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta</div>
+          <span className="text-[14px] text-[#4b5565]">Pensala antes de darla vuelta.</span>
+        </div>
       </div>
-      <div className="mt-5 inline-flex min-h-[50px] items-center gap-2 rounded-full bg-[#0b63e5] px-7 text-[14px] font-semibold text-white" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta <ArrowRight size={16}/></div>
     </section>
-    <section className="min-w-0 flex-1 space-y-5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 sm:p-7">
-      <Label>GLOSARIO</Label>
-      {[['Elasticidad','Sensibilidad de la cantidad demandada ante un cambio en el precio.'],['Demanda inelástica','Los compradores casi no ajustan su consumo cuando el precio cambia.'],['Bien sustituto','Producto que puede reemplazar a otro cuando este se encarece.']].map(([term,definition],i)=><div className="border-b border-[#e8ecf2] pb-4 last:border-0" key={term}>
-        <span className="text-[12px] font-semibold text-[#0b63e5]">0{i+1}</span>
-        <h3 className="mt-1 text-[16px] font-bold text-[#0f1623]">{term}</h3>
-        <p className="mt-1.5 text-[14px] leading-6 text-[#667085]">{definition}</p>
+    <section aria-label="Ejemplo de glosario" className="flex min-w-0 flex-1 flex-col rounded-[28px] border border-[#e8ecf2] bg-white px-5 pb-2 pt-6 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:px-[26px] lg:max-w-[400px]">
+      <div className="pb-3.5"><Label>GLOSARIO</Label></div>
+      {[
+        ['Elasticidad','Sensibilidad de la cantidad demandada ante un cambio en el precio.'],
+        ['Demanda inelástica','Los compradores casi no ajustan su consumo cuando el precio cambia.'],
+        ['Bien sustituto','Producto que puede reemplazar a otro cuando este se encarece.']
+      ].map(([term,definition])=><div className="flex flex-col gap-1 border-t border-[#e8ecf2] py-4" key={term}>
+        <h3 className="text-[16px] font-bold text-[#0f1623]">{term}</h3>
+        <p className="text-[14px] leading-[1.5] text-[#4b5565]">{definition}</p>
       </div>)}
     </section>
   </div>;
