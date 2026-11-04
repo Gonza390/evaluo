@@ -16,6 +16,7 @@ import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isQaAccount } from '@/lib/qa-account';
 import { hasPremiumAccess } from '@/lib/premium';
+import { isFreeStudyV2Active, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { getMateriaRoute } from '@/lib/routes';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import { recoverStaleStudentMaterialJobs } from '@/lib/student-material-jobs';
@@ -306,6 +307,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     }
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
+    const freeStudyV2 = isFreeStudyV2Active() && isOwner && !isPremium;
     const hasFullAcademicContext = Boolean(
       academicProfile.universidadId && academicProfile.carreraId && material.materia_id
     );
@@ -427,6 +429,13 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       summary: studySummary,
       glossary: topicGlossary,
     });
+    // En Free V2 no se envían razonamientos bloqueados al componente del navegador.
+    // Las explicaciones de errores se consultan y descuentan en el backend.
+    const clientPedagogicalArtifacts = freeStudyV2 ? {
+      ...pedagogicalArtifacts,
+      flashcards: pedagogicalArtifacts.flashcards.slice(0, FREE_STUDY_V2.flashcards),
+      questions: pedagogicalArtifacts.questions.map(question => ({...question, explanation:''})),
+    } : pedagogicalArtifacts;
     const otherPdfOptions: Array<{ id: string; title: string }> = [];
     if (isOwner && user) {
       const { data: ownPdfs } = await supabase
@@ -537,6 +546,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           canRegenerate={canRegenerate}
           fileName={material.file_name}
           isPremium={isPremium}
+          freeStudyV2={freeStudyV2}
           materialId={material.id}
           materiaId={material.materia_id ?? undefined}
           isOwner={isOwner}
@@ -551,7 +561,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           visibility={visibility}
           studyGlossary={topicGlossary}
           studySummary={studySummary}
-          pedagogicalArtifacts={pedagogicalArtifacts}
+          pedagogicalArtifacts={clientPedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1' && !shouldShowFirstPdfGuide}
           initialPracticeSectionIndex={
             isOwner && query.tab === 'ejercicios' &&
