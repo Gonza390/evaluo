@@ -29,6 +29,8 @@ import { obtenerDashboardPlanesEstudio } from './study-plans-dashboard-actions';
 import { StudyPlansDashboard } from './study-plans-dashboard';
 import { obtenerDashboardGestion } from './gestion-dashboard-actions';
 import { GestionDashboard } from './gestion-dashboard';
+import { obtenerDashboardSistemaIA } from './system-ai-dashboard-actions';
+import { SystemAiDashboard } from './system-ai-dashboard';
 import {
   AICostPanel,
   IAPanel,
@@ -45,6 +47,7 @@ type PanelKey =
   | 'usuarios'
   | 'mails'
   | 'ia'
+  | 'ia-herramientas'
   | 'gestion';
 
 const PANELS: Array<{ key: PanelKey; label: string }> = [
@@ -156,6 +159,7 @@ export default async function AdministradorPage({
     commTemplate?: string;
     commStatus?: string;
     commCampaign?: string;
+    systemPeriod?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -175,7 +179,8 @@ export default async function AdministradorPage({
   const needsPlanes = activePanel === 'planes';
   const needsUsers = activePanel === 'usuarios';
   const needsMails = activePanel === 'mails';
-  const needsIA = activePanel === 'ia';
+  const needsIA = activePanel === 'ia-herramientas';
+  const needsSystem = activePanel === 'ia';
   const needsGestion = activePanel === 'gestion';
 
   const [
@@ -189,6 +194,7 @@ export default async function AdministradorPage({
     usersResult,
     mailResult,
     gestionResult,
+    systemResult,
     iaPromptResult,
     iaRankingResult,
     iaFeedbackStatsResult,
@@ -211,6 +217,7 @@ export default async function AdministradorPage({
     }) : Promise.resolve(null),
     needsMails ? obtenerDashboardComunicaciones(params) : Promise.resolve(null),
     needsGestion ? obtenerDashboardGestion() : Promise.resolve(null),
+    needsSystem ? obtenerDashboardSistemaIA(params) : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -269,6 +276,10 @@ export default async function AdministradorPage({
       ? <CommunicationsDashboard snapshot={mailResult.snapshot} filters={mailResult.filters}
           today={mailResult.today} earliest={mailResult.earliest} />
       : <ErrorPanel message="No pudimos cargar Comunicaciones." />;
+  } else if (activePanel === 'ia') {
+    panelContent = systemResult
+      ? <SystemAiDashboard data={systemResult.snapshot} days={systemResult.days} />
+      : <ErrorPanel message="No pudimos cargar Sistema e IA." />;
   } else if (
     iaPromptResult?.success &&
     iaRankingResult?.success &&
@@ -339,6 +350,9 @@ export default async function AdministradorPage({
   if (needsGestion && gestionResult) {
     return <GestionDashboard snapshot={gestionResult.snapshot} actor={gestionResult.actor}
       limits={gestionResult.limits} />;
+  }
+  if (needsSystem && systemResult) {
+    return <SystemAiDashboard data={systemResult.snapshot} days={systemResult.days} />;
   }
   if (needsMails && mailResult) {
     return <CommunicationsDashboard snapshot={mailResult.snapshot} filters={mailResult.filters}
