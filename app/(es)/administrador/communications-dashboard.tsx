@@ -11,7 +11,7 @@ const nav:[string,string][]=[
  ['Adquisición y SEO','adquisicion'],['Activación y recorrido','producto'],
  ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
  ['Monetización','monetizacion'],['Comunicaciones','mails'],
- ['Sistema e IA','ia'],['Gestión','usuarios'],
+ ['Sistema e IA','ia'],['Gestión','gestion'],
 ];
 const templates:[string,string][]=[
  ['exam_7','Recordatorio · 7 días'],['exam_3','Recordatorio · 3 días'],
