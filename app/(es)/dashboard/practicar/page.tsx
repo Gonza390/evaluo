@@ -10,7 +10,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function PracticeHomePage() {
+export default async function PracticeHomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ materialId?: string }>;
+}) {
+  const requestedMaterialId = (await searchParams)?.materialId;
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard/practicar');
@@ -44,7 +49,10 @@ export default async function PracticeHomePage() {
     historyLoadError = true;
   }
 
-  return <PracticeModePicker materials={materials} initialMaterialId={lastOpenedMaterialId}
+  const initialMaterialId = requestedMaterialId && materials.some(material => material.id === requestedMaterialId)
+    ? requestedMaterialId : lastOpenedMaterialId;
+
+  return <PracticeModePicker materials={materials} initialMaterialId={initialMaterialId}
     history={history} historyLoadError={historyLoadError}
     advancedPracticeEnabled={process.env.PRACTICE_BANK_ENABLED === '1'} />;
 }
