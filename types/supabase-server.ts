@@ -32,6 +32,10 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_system_ai_dashboard_v1:{
+    Args:{p_days?:number};
+    Returns:import('@/app/(es)/administrador/system-ai-dashboard-types').SystemAiSnapshot;
+  };
   admin_management_snapshot_v1:{
     Args:Record<PropertyKey,never>;
     Returns:import('@/app/(es)/administrador/gestion-dashboard-types').GestionSnapshot;
