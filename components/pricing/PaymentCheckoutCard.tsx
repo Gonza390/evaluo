@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { premiumPurchaseDisplayState } from '@/lib/payments/status';
 import {
   ArrowRight,
   Check,
@@ -109,7 +110,7 @@ export function PaymentCheckoutCard({
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [offer, setOffer] = useState<PremiumOffer | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<
-    'loading' | 'active' | 'attention' | 'inactive'
+    'loading' | 'active' | 'attention' | 'inactive' | 'unavailable'
   >('loading');
 
   useEffect(() => {
@@ -118,17 +119,15 @@ export function PaymentCheckoutCard({
     void fetch('/api/payments/status', { cache: 'no-store' })
       .then(async (response) => {
         if (response.status === 401) return 'inactive';
-        if (!response.ok) return 'inactive';
-        const payload = (await response.json()) as { status?: string };
-        if (['active', 'approved', 'authorized'].includes(payload.status ?? '')) return 'active';
-        if (['past_due', 'paused'].includes(payload.status ?? '')) return 'attention';
-        return 'inactive';
+        if (!response.ok) return 'unavailable';
+        const payload = (await response.json()) as { plan?: string; status?: string };
+        return premiumPurchaseDisplayState(payload);
       })
       .then((status) => {
         if (!cancelled) setSubscriptionStatus(status);
       })
       .catch(() => {
-        if (!cancelled) setSubscriptionStatus('inactive');
+        if (!cancelled) setSubscriptionStatus('unavailable');
       });
 
     void fetch('/api/payments/offer', { cache: 'no-store' })
@@ -403,6 +402,7 @@ export function PaymentCheckoutCard({
               loading ||
               subscriptionStatus === 'loading' ||
               !offer ||
+              subscriptionStatus === 'unavailable' ||
               semesterSoldOut
             }
           >
@@ -413,7 +413,9 @@ export function PaymentCheckoutCard({
               ? 'Abriendo Mercado Pago…'
               : subscriptionStatus === 'loading' || !offer
                 ? 'Verificando tu plan…'
-                : semesterSoldOut
+                : subscriptionStatus === 'unavailable'
+                  ? 'No pudimos verificar tu plan'
+                  : semesterSoldOut
                   ? 'Cupos agotados'
                   : isSemester
                     ? 'Elegir 6 meses'
