@@ -1,5 +1,9 @@
 [
   {
+    "file": "tests/premium-conversion-flow.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/premium-study-v2-contract.smoke.ts",
     "alias": true
   },
