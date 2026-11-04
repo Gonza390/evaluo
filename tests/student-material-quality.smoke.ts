@@ -1864,7 +1864,7 @@ assert.ok(
 );
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  15,
+  16,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
