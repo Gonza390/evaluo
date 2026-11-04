@@ -6,6 +6,7 @@ import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
+import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
@@ -152,7 +153,10 @@ async function getStudentMaterialUploadQuotaForUser(
     };
   }
 
-  const used = countedMaterials.length;
+  const historicalIds = await historicalFreeStudyMaterialIds(userId);
+  const used = isFreeStudyV2Active()
+    ? new Set([...countedMaterials.map(material => material.id), ...historicalIds]).size
+    : countedMaterials.length;
   const freeLimit = isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT;
   const remaining = Math.max(0, freeLimit - used);
   let nextAvailableAt: string | null = null;
