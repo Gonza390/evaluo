@@ -1,0 +1,95 @@
+'use server';
+
+import {unstable_cache as nextCache,updateTag,revalidatePath} from 'next/cache';
+import {getAdminAccessContext} from '@/lib/access-control';
+import {createAdminClient} from '@/lib/supabase-admin';
+import {
+  aprobarSolicitudUniversidadAdministrador,
+  rechazarSolicitudUniversidadAdministrador,
+  aprobarEntidadAcademicaPendienteAdministrador,
+  rechazarEntidadAcademicaPendienteAdministrador,
+} from './solicitudes/actions';
+import type {GestionSnapshot} from './gestion-dashboard-types';
+
+const SNAPSHOT_TAG='admin-gestion-snapshot-v1';
+const validId=(x:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
+async function actorId(){
+ const access=await getAdminAccessContext();
+ if(!access.ok)throw new Error('Se requiere acceso administrativo.');
+ return access.user.id;
+}
+const readSnapshot=nextCache(async()=>{
+ const {data,error}=await createAdminClient().rpc('admin_management_snapshot_v1',{});
+ if(error||!data)throw error??new Error('Gestión no disponible');
+ return data as GestionSnapshot;
+},[SNAPSHOT_TAG],{revalidate:300,tags:[SNAPSHOT_TAG]});
+
+export async function obtenerDashboardGestion(){
+ const actor=await actorId();
+ return {snapshot:await readSnapshot(),actor};
+}
+function refresh(){
+ updateTag(SNAPSHOT_TAG);
+ revalidatePath('/administrador');
+ revalidatePath('/administrador/solicitudes');
+ revalidatePath('/administrador/feedback');
+}
+
+export async function gestionActualizarFeedback(input:{
+ source:'product'|'simulator'|'material';id:string;
+ expected:'open'|'in_progress';next:'in_progress'|'resolved';
+}):Promise<{success:boolean;message:string}>{
+ try{
+  const actor=await actorId();
+  if(!validId(input.id)||!['product','simulator','material'].includes(input.source)||
+   !((input.expected==='open'&&input.next==='in_progress')||
+     (input.expected==='in_progress'&&input.next==='resolved')))
+   return {success:false,message:'Transición de feedback inválida.'};
+  const {error}=await createAdminClient().rpc('admin_management_update_feedback_v1',{
+   p_actor:actor,p_source:input.source,p_feedback_id:input.id,p_expected:input.expected,p_next:input.next,
+  });
+  if(error)throw new Error(error.message);
+  refresh();
+  return {success:true,message:'Estado actualizado y registrado en la auditoría.'};
+ }catch(e){
+  return {success:false,message:e instanceof Error?e.message:'No pudimos actualizar el feedback.'};
+ }
+}
+
+export async function gestionResolverCatalogo(input:{
+ id:string;kind:'university'|'career'|'subject';decision:'approve'|'reject';
+}):Promise<{success:boolean;message:string}>{
+ try{
+  const actor=await actorId();
+  if(!validId(input.id)||!['university','career','subject'].includes(input.kind)||
+     !['approve','reject'].includes(input.decision))
+   return {success:false,message:'Solicitud inválida.'};
+  const data=new FormData();
+  if(input.kind==='university'){
+   data.set('requestId',input.id);
+   if(input.decision==='approve')await aprobarSolicitudUniversidadAdministrador(data);
+   else await rechazarSolicitudUniversidadAdministrador(data);
+  }else{
+   data.set('kind',input.kind);
+   data.set('id',input.id);
+   if(input.decision==='approve')await aprobarEntidadAcademicaPendienteAdministrador(data);
+   else await rechazarEntidadAcademicaPendienteAdministrador(data);
+  }
+  const {error:auditError}=await createAdminClient().from('admin_management_audit').insert({
+   actor_id:actor,action:input.decision==='approve'?'catalog_approved':'catalog_rejected',
+   object_type:input.kind,object_id:input.id,
+   before_state:{status:'pending'},
+   after_state:{status:input.kind==='university'?(input.decision==='approve'?'added':'rejected'):
+      (input.decision==='approve'?'approved':'rejected')},
+   result:'success',
+  } as never);
+  refresh();
+  if(auditError){
+   return {success:true,message:'Solicitud procesada, pero no se pudo registrar en la auditoría. Revisá el historial antes de continuar.'};
+  }
+  return {success:true,message:input.decision==='approve'?
+   'Solicitud aprobada y cambio registrado.':'Solicitud rechazada y cambio registrado.'};
+ }catch(e){
+  return {success:false,message:e instanceof Error?e.message:'No pudimos resolver la solicitud.'};
+ }
+}
