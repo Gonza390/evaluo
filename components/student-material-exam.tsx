@@ -73,6 +73,7 @@ type StudentMaterialExamProps = {
   sections?: StudySummarySection[];
   glossary?: StudyGlossaryItem[];
   topicSectionIndex?: number;
+  freeStudyV2?: boolean;
   simulation?: {
     context: TopicPracticeContext;
     onAnswer: (question: StudyQuestion, wasCorrect: boolean) => void;
@@ -98,6 +99,7 @@ export function StudentMaterialExam({
   glossary = [],
   simulation,
   topicSectionIndex,
+  freeStudyV2 = false,
 }: StudentMaterialExamProps) {
   const router = useRouter();
   const [tomorrowStatus, setTomorrowStatus] = useState<'idle' | 'saving' | 'error'>('idle');
@@ -178,6 +180,8 @@ export function StudentMaterialExam({
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [freeClaimPending, setFreeClaimPending] = useState(false);
+  const [freeQuotaMessage, setFreeQuotaMessage] = useState('');
   const [openAssessments, setOpenAssessments] = useState<Record<string, OpenAssessment>>({});
   const [finished, setFinished] = useState(false);
   const finalResultRef = useRef<HTMLDivElement | null>(null);
@@ -1819,20 +1823,45 @@ export function StudentMaterialExam({
           ) : null}
         </article>
         <div data-pdf-question-actions className={pdfStudyQuestionActionsClassName}>
+          {freeQuotaMessage && <p role="status" className="text-xs text-amber-700">{freeQuotaMessage}</p>}
           {!isRevealed ? (
             <Button
               type="button"
-              disabled={current.type === 'multiple_choice' && !selectedAnswer}
+              disabled={freeClaimPending || (current.type === 'multiple_choice' && !selectedAnswer)}
               onClick={() => {
-                setRevealed((items) => ({ ...items, [current.id]: true }));
-                if (current.type === 'multiple_choice' && !isCorrect && window.matchMedia('(max-width: 767px)').matches) {
-                  requestAnimationFrame(() => {
-                    correctionRef.current?.scrollIntoView({
-                      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-                      block: 'nearest',
+                void (async () => {
+                  if (freeStudyV2 && current.type === 'multiple_choice') {
+                    setFreeClaimPending(true);
+                    setFreeQuotaMessage('');
+                    try {
+                      const response = await fetch('/api/free-study-v2/claim', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ materialId, kind: 'multiple_choice', itemKey: current.id }),
+                      });
+                      const reply: unknown = await response.json();
+                      if (!response.ok || !reply || typeof reply !== 'object' ||
+                          !('allowed' in reply) || reply.allowed !== true) {
+                        setFreeQuotaMessage(response.status === 503
+                          ? 'No pudimos comprobar tu cupo. Reintentá.'
+                          : 'Ya resolviste tus 12 preguntas gratuitas. Podés repetir las anteriores.');
+                        return;
+                      }
+                    } catch {
+                      setFreeQuotaMessage('No pudimos comprobar tu cupo. Reintentá.');
+                      return;
+                    } finally { setFreeClaimPending(false); }
+                  }
+                  setRevealed(items => ({ ...items, [current.id]: true }));
+                  if (current.type === 'multiple_choice' && !isCorrect &&
+                      window.matchMedia('(max-width: 767px)').matches) {
+                    requestAnimationFrame(() => {
+                      correctionRef.current?.scrollIntoView({
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                        block: 'nearest',
+                      });
                     });
-                  });
-                }
+                  }
+                })();
               }}
               className="h-11 rounded-lg px-5"
             >
