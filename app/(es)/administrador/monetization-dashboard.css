@@ -36,3 +36,16 @@
  .mo-filter-second,.mo-custom{grid-column:1}
  .mo-tile-row .mo-tile{padding-left:20px;padding-right:20px}
 }
+
+
+/* Value scale from original financial artboard. */
+.mo-large-row .mo-tile:nth-child(1)>strong{font-size:clamp(38px,4.17vw,60px);line-height:.9;color:var(--accent)}
+.mo-large-row .mo-tile:nth-child(2)>strong,
+.mo-large-row .mo-tile:nth-child(3)>strong{font-size:clamp(42px,5.84vw,84px);line-height:.9}
+.mo-small-row .mo-tile>strong{font-size:clamp(36px,4.45vw,64px);line-height:.9}
+.mo-small-row .mo-tile:nth-child(3)>strong{font-size:clamp(30px,3.05vw,44px);line-height:1}
+.mo-chart-summary strong{font-size:40px;line-height:.95}
+.mo-small-tiles .mo-tile>strong{font-size:56px;line-height:.9}
+.mo-problem-rate>strong{font-size:84px;line-height:.9}
+.mo-mini>strong{font-size:44px;line-height:.9}
+@media(min-width:1024px){.mo-dashboard{min-height:4100px}}
