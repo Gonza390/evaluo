@@ -26,6 +26,56 @@
       "maxGzipKb": 340
     },
     {
+      "label": "/administrador/resumen",
+      "appPath": "(es)/administrador/resumen/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/usuarios",
+      "appPath": "(es)/administrador/usuarios/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/adquisicion",
+      "appPath": "(es)/administrador/adquisicion/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/producto",
+      "appPath": "(es)/administrador/producto/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/biblioteca",
+      "appPath": "(es)/administrador/biblioteca/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/planes",
+      "appPath": "(es)/administrador/planes/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/monetizacion",
+      "appPath": "(es)/administrador/monetizacion/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/mails",
+      "appPath": "(es)/administrador/mails/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/ia",
+      "appPath": "(es)/administrador/ia/page",
+      "maxGzipKb": 340
+    },
+    {
+      "label": "/administrador/gestion",
+      "appPath": "(es)/administrador/gestion/page",
+      "maxGzipKb": 340
+    },
+    {
       "label": "/simulador",
       "appPath": "(es)/simulador/page",
       "maxGzipKb": 335

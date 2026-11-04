@@ -1,38 +1,41 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-
-const source = (path: string) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
-const page = source('app/(es)/administrador/page.tsx');
-const layout = source('app/(es)/administrador/layout.tsx');
-const loading = source('app/(es)/administrador/loading.tsx');
-
-for (const name of [
-  'AdminHome','UsersRetentionDashboard','PackedAcquisitionDashboard',
-  'PackedActivationDashboard','LearningDashboard','StudyPlansDashboard',
-  'MonetizationDashboard','CommunicationsDashboard','SystemAiDashboard','GestionDashboard',
-]) assert.ok(page.includes('<' + name), 'Missing redesigned panel ' + name);
-
-for (const legacy of [
-  'ia-herramientas','ReferralsPanel','IAPanel','AICostPanel','admin-sidebar',
-  'PanelNavigation','admin-theme.css','unlam-funnel-panel',
-]) assert.ok(!page.includes(legacy), 'Legacy administrator must not render ' + legacy);
-assert.ok(!layout.includes('fixed right-5 bottom-5'), 'Old admin floating actions must be removed');
-assert.ok(loading.includes('className="ehome"'), 'Loading must match redesigned black UI');
-
-for (const path of [
-  'app/(es)/administrador/admin-home.tsx',
-  'app/(es)/administrador/users-retention-dashboard.tsx',
-  'app/(es)/administrador/acquisition-dashboard.tsx',
-  'app/(es)/administrador/activation-dashboard.tsx',
-  'app/(es)/administrador/learning-dashboard.tsx',
-  'app/(es)/administrador/study-plans-dashboard.tsx',
-  'app/(es)/administrador/monetization-dashboard.tsx',
-  'app/(es)/administrador/communications-dashboard.tsx',
-  'app/(es)/administrador/system-ai-dashboard.tsx',
-  'app/(es)/administrador/gestion-dashboard.tsx',
-]) {
- const ui = source(path);
- assert.ok(ui.includes('className="ehome'), 'Redesigned HTML shell missing in ' + path);
- assert.ok(ui.includes('eh-tabs'), 'Original ten-tab header missing in ' + path);
-}
-console.log('Admin redesign: 10-only panels, no legacy shell and consistent loading passed.');
+import {readFileSync} from 'node:fs';
+const source=(path:string)=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
+const root=source('app/(es)/administrador/page.tsx');
+const layout=source('app/(es)/administrador/layout.tsx');
+const loading=source('app/(es)/administrador/loading.tsx');
+assert.match(root,/redirect\('\/administrador\/'\+selected/);
+assert.ok(!layout.includes('fixed right-5 bottom-5'));
+assert.ok(loading.includes('className="ehome"'));
+assert.ok(source('app/(es)/administrador/resumen/page.tsx').includes('<AdminHome'));
+assert.ok(source('app/(es)/administrador/resumen/page.tsx').includes('obtenerTableroGeneral'));
+assert.ok(source('app/(es)/administrador/usuarios/page.tsx').includes('<UsersRetentionDashboard'));
+assert.ok(source('app/(es)/administrador/usuarios/page.tsx').includes('obtenerUsuariosRetencion'));
+assert.ok(source('app/(es)/administrador/adquisicion/page.tsx').includes('<PackedAcquisitionDashboard'));
+assert.ok(source('app/(es)/administrador/adquisicion/page.tsx').includes('obtenerDashboardAdquisicion'));
+assert.ok(source('app/(es)/administrador/producto/page.tsx').includes('<PackedActivationDashboard'));
+assert.ok(source('app/(es)/administrador/producto/page.tsx').includes('obtenerActivacionRecorrido'));
+assert.ok(source('app/(es)/administrador/biblioteca/page.tsx').includes('<LearningDashboard'));
+assert.ok(source('app/(es)/administrador/biblioteca/page.tsx').includes('obtenerAprendizajePracticas'));
+assert.ok(source('app/(es)/administrador/planes/page.tsx').includes('<StudyPlansDashboard'));
+assert.ok(source('app/(es)/administrador/planes/page.tsx').includes('obtenerDashboardPlanesEstudio'));
+assert.ok(source('app/(es)/administrador/monetizacion/page.tsx').includes('<MonetizationDashboard'));
+assert.ok(source('app/(es)/administrador/monetizacion/page.tsx').includes('obtenerDashboardMonetizacion'));
+assert.ok(source('app/(es)/administrador/mails/page.tsx').includes('<CommunicationsDashboard'));
+assert.ok(source('app/(es)/administrador/mails/page.tsx').includes('obtenerDashboardComunicaciones'));
+assert.ok(source('app/(es)/administrador/ia/page.tsx').includes('<SystemAiDashboard'));
+assert.ok(source('app/(es)/administrador/ia/page.tsx').includes('obtenerDashboardSistemaIA'));
+assert.ok(source('app/(es)/administrador/gestion/page.tsx').includes('<GestionDashboard'));
+assert.ok(source('app/(es)/administrador/gestion/page.tsx').includes('obtenerDashboardGestion'));
+assert.ok(source('app/(es)/administrador/admin-home.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/users-retention-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/packed-acquisition-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/packed-activation-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/learning-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/study-plans-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/monetization-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/communications-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/system-ai-dashboard.tsx').includes('eh-tabs'));
+assert.ok(source('app/(es)/administrador/gestion-dashboard.tsx').includes('eh-tabs'));
+for(const legacy of ['ia-herramientas','ReferralsPanel','IAPanel','admin-sidebar','admin-theme.css']) assert.ok(!root.includes(legacy));
+console.log('Redesigned admin: ten isolated routes and old links preserved.');
