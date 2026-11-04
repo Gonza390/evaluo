@@ -32,7 +32,12 @@ async function firstFreeItems<T>(args: {
       userId: args.userId,
       materialId: args.materialId,
       kind: args.kind,
-      itemKey: args.materialId + ':' + args.keyPrefix + ':' + index,
+      itemKey: args.materialId + ':' + (
+        args.kind === 'flashcard' ? 'flashcard:' + index
+        : args.kind === 'multiple_choice' || args.kind === 'case'
+          ? String((item as { id?: string }).id ?? args.keyPrefix + ':' + index)
+          : args.keyPrefix + ':' + index
+      ),
       premium: false,
     });
     if (claim.allowed) selected.push(item);
@@ -109,7 +114,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
   if (freeV2 && mode === 'unir') {
     const matching = await claimFreeStudyUnlock({
       userId:user.id,materialId:material.id,kind:'matching_round',
-      itemKey:material.id + ':matching',premium:false,
+      itemKey:material.id + ':matching:first',premium:false,
     });
     if (!matching.allowed) {
       return <main className="mx-auto max-w-xl p-6">
@@ -122,7 +127,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
   if (freeV2 && mode === 'simulacro') {
     const simulator = await claimFreeStudyUnlock({
       userId:user.id,materialId:material.id,kind:'simulator',
-      itemKey:material.id + ':simulator',premium:false,
+      itemKey:material.id + ':simulator:first',premium:false,
     });
     if (!simulator.allowed) {
       return <main className="mx-auto max-w-xl p-6">
@@ -161,5 +166,5 @@ export default async function PracticeModePage({ params, searchParams }: { param
       .map(item => ({ term: item.term, definition: item.definition,
         chapterTitle: item.chapterTitle ?? null, englishTerm: item.englishTerm ?? null }))}
     questions={freeV2 && mode !== 'simulacro'
-      ? freeQuestions : savedBank?.questions.length ? savedBank.questions : sourceQuestions} />;
+      ? (mode === 'mixto' ? freeQuestions : []) : savedBank?.questions.length ? savedBank.questions : sourceQuestions} />;
 }
