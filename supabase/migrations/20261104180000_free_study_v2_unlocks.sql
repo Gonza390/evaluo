@@ -86,3 +86,19 @@ revoke all on function public.claim_free_study_v2_unlock(uuid,uuid,text,text)
   from public, anon, authenticated;
 grant execute on function public.claim_free_study_v2_unlock(uuid,uuid,text,text)
   to service_role;
+
+
+-- Cache de muestras verificadas: repetir no vuelve a gastar IA ni desbloquea
+-- una nueva tanda por actualizar o cambiar el parámetro "round".
+create table if not exists public.free_study_v2_banks (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  material_id uuid not null references public.student_materials(id) on delete cascade,
+  mode text not null check (mode in ('true_false','cases','matching','flashcards')),
+  payload jsonb not null check (jsonb_typeof(payload) = 'array'),
+  created_at timestamptz not null default now(),
+  primary key (user_id, material_id, mode)
+);
+
+alter table public.free_study_v2_banks enable row level security;
+revoke all on public.free_study_v2_banks from public, anon, authenticated;
+grant select, insert on public.free_study_v2_banks to service_role;
