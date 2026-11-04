@@ -47,8 +47,6 @@ const fmtDate=(s:string|null)=>s?new Intl.DateTimeFormat('es-AR',{
 const dateOnly=(s:string)=>new Intl.DateTimeFormat('es-AR',{
   day:'2-digit',month:'short',year:'numeric',timeZone:'UTC',
 }).format(new Date(s+'T12:00:00Z'));
-const delta=(now:number,previous:number)=>previous>0?(now>=previous?'↑ ':'↓ ')+
-  (Math.abs(now-previous)/previous*100).toFixed(1).replace('.',',')+'% vs. período anterior':'Sin base de comparación';
 const percentWidth=(a:number,b:number)=>b>0?Math.max(0,Math.min(100,a*100/b)):0;
 function Section({n,title,note,important=false}:{n:string;title:string;note:string;important?:boolean}){
  return <div className="cm-sec-head"><span className="cm-index">{n}</span><h2>{title}</h2>
@@ -140,7 +138,6 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
   {label:'Actividad académica posterior',value:impact.studied_mails,sub:'No prueba que el correo causó el estudio'},
  ];
  const maxStep=Math.max(m.sent,1);
- const totalTypeSent=Math.max(1,...snapshot.templates.map(x=>x.eligible));
  const impactTypeRows=[...snapshot.templates].sort((a,b)=>b.studied_mails-a.studied_mails)
   .filter(x=>x.sent>0).map(x=>(
    <div className="cm-impact-type" key={x.template}>
