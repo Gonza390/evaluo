@@ -19,12 +19,12 @@ const methods = [
 const week = ['L','M','X','J','V','S','D'];
 const pad = (n:number) => String(n).padStart(2,'0');
 const localDate = (date:Date) => `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
-export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId }: { materials:Material[]; mode?: 'setup' | 'view'; initialMaterialId?: string }) {
+export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, initialExamDate }: { materials:Material[]; mode?: 'setup' | 'view'; initialMaterialId?: string; initialExamDate?: string }) {
   const router = useRouter();
   const today = useMemo(()=>new Date(),[]);
   const [step,setStep] = useState(0);
   const [month,setMonth] = useState(new Date(today.getFullYear(),today.getMonth(),1));
-  const [exam,setExam] = useState('');
+  const [exam,setExam] = useState(initialExamDate ?? '');
   const [selected,setSelected] = useState<string[]>(() => initialMaterialId && materials.some(m => m.id === initialMaterialId) ? [initialMaterialId] : []);
   const [minutes,setMinutes] = useState<number|null>(null);
   const [preferences,setPreferences] = useState<string[]>(['entender','practicar']);
