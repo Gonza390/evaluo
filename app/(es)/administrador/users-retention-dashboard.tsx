@@ -12,7 +12,7 @@ const stamp = (v:string|null|undefined) => v ? new Date(v).toLocaleDateString('e
 const nav = [
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],['Adquisición y SEO','adquisicion'],
  ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],
- ['Planes de estudio','biblioteca'],['Monetización','referidos'],['Comunicaciones','mails'],
+ ['Planes de estudio','planes'],['Monetización','referidos'],['Comunicaciones','mails'],
  ['Sistema e IA','ia'],['Gestión','usuarios'],
 ] as const;
 type Props = {
