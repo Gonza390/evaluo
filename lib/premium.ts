@@ -6,15 +6,19 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
   if (!userId) return false;
   const admin = createAdminClient();
 
-  const [{ data: plans }, { data: subs }] = await Promise.all([
+  const [{ data: plans, error: plansError }, { data: subs, error: subsError }] = await Promise.all([
     admin.from('subscription_plans').select('id, code'),
     admin
       .from('user_subscriptions')
       .select('plan_id, status, started_at, expires_at')
       .eq('user_id', userId)
       .order('started_at', { ascending: false })
-      .limit(5),
+      .limit(100),
   ]);
+
+  // Un fallo de Supabase nunca debe degradar silenciosamente a un usuario pago
+  // ni consumir sus cupos Free. La solicitud debe reintentarse sin mutar cuotas.
+  if (plansError || subsError) throw new Error('premium_access_unavailable');
 
   const premiumPlanIds = new Set(
     ((plans ?? []) as Array<{ id: string; code: string }>)
