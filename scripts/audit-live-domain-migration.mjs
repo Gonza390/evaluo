@@ -7,8 +7,9 @@ const NEW = 'https://evaluoapp.com';
 const OLD = ['https://' + 'evaluo.com.ar', 'https://' + 'www.evaluo.com.ar'];
 const REGION_PATHS = ['/estudiar-pdf-con-ia', '/es/estudiar-pdf-con-ia',
   '/es-mx/estudiar-pdf-con-ia', '/es-co/estudiar-pdf-con-ia', '/es-es/estudiar-pdf-con-ia'];
-const LANDINGS = [...REGION_PATHS, '/es/guias', '/es/paises',
-  '/es/guias/como-estudiar-anatomia', '/es/paises/mexico-guia-exani-ii-pdf',
+const RETIRED_COUNTRY_ROUTES = ['/es/paises', '/es/paises/mexico-guia-exani-ii-pdf'];
+const LANDINGS = [...REGION_PATHS, '/es/guias',
+  '/es/guias/como-estudiar-anatomia',
   '/pregunteros', '/landings/parciales', '/ia-para-estudiantes',
   '/funciones/resumir-pdf-con-ia', '/funciones/crear-mapa-mental-desde-pdf',
   '/funciones/crear-flashcards-desde-pdf',
@@ -115,7 +116,7 @@ try {
   check('sitemap uses absolute main-domain URLs', sitemapUrls.length > 0 &&
     sitemapUrls.every((url) => url.startsWith(NEW + '/')));
   check('sitemap contains academic URLs', sitemapUrls.some((url) => url.startsWith(NEW + '/explorar/materia/')));
-  check('sitemap contains international guides', sitemapUrls.some((url) => url.startsWith(NEW + '/es/paises/')));
+  check('sitemap excludes retired country pages', !sitemapUrls.some((url) => url === NEW + '/es/paises' || url.startsWith(NEW + '/es/paises/')));
   console.log('SITEMAP_CAREER_IDS ' + JSON.stringify(sitemapUrls.filter((url) => url.startsWith(NEW + '/estudiar/')).map((url) => url.split('--').at(-1))));
   for (const path of LANDINGS) {
     check('sitemap includes ' + path, sitemap.includes('<loc>' + NEW + path + '</loc>'));
@@ -154,6 +155,19 @@ for (const path of LANDINGS) {
     check('landing request ' + path, false, String(error));
   }
 }
+// Retired country pages intentionally return 410; they must not be advertised
+// as indexable pages or treated as a failing marketing landing.
+for (const path of RETIRED_COUNTRY_ROUTES) {
+  try {
+    const r = await request(NEW + path);
+    check('retired route HTTP 410 ' + path, r.status === 410, 'HTTP ' + r.status);
+    check('retired route absent from sitemap ' + path,
+      !sitemapUrls.includes(NEW + path));
+  } catch (error) {
+    check('retired route request ' + path, false, String(error));
+  }
+}
+
 // Sample only sitemap-advertised academic URLs. We never assert that a university
 // or career without study content must stay empty forever; the sitemap must agree
 // with the actual canonical and robots directives on the selected live pages.
