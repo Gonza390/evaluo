@@ -10,7 +10,7 @@ assert.match(page,/auth\.getUser\(\)/,'Premium dashboard must require student au
 assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the current study activity should stay safe.');
 assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
 assert.match(screen,/max-w-\[680px\]/,'Central premium page should fit Evaluo desktop dimensions.');
-assert.match(screen,/sm:grid-cols-3/,'Benefits must become stacked cards on mobile.');
+assert.match(screen,/min-\[850px\]:grid-cols-3/,'Benefits should remain stacked until there is room inside the app sidebar.');
 assert.match(screen,/overflow-x-auto/,'Comparison remains accessible if browser font settings increase cell widths.');
 assert.match(screen,/w-full min-w-0 table-fixed/,'Premium comparison should fit mobile widths instead of requiring a 480px table.');
 assert.match(screen,/lg:text-\[40px\]/,'Original desktop headline should be 40px.');
