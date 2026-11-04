@@ -3,6 +3,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
 import { isFreeStudyV2Active } from '@/lib/free-study-v2';
+import { premiumUpgradeForLimit } from '@/lib/premium-flow';
 import { completeStudySchedule, estimateTopicSessionMinutes, savePlanPracticeRecommendations, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
 import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
@@ -115,7 +116,10 @@ export async function POST(request:NextRequest) {
       p_schedule: schedule,
     } as never);
     if (error) return fail('No pudimos verificar tu cupo de planes. Intentá nuevamente.',503);
-    if (data !== true) return fail('Ya utilizaste tu plan de estudio gratuito. Podés continuar con Premium.',403);
+    if (data !== true) return NextResponse.json({
+      error:'Ya utilizaste tu plan de estudio gratuito. Podés continuar con Premium.',
+      upgrade:premiumUpgradeForLimit('study_plan'),
+    },{status:403});
   } else {
     const {error}=await createAdminClient().from('student_personal_study_plans' as never).upsert({
       user_id:user.id,exam_date:examDate,daily_minutes:minutes,material_ids:materialIds,
