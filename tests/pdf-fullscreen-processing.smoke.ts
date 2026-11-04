@@ -11,6 +11,7 @@ const planPage = read('app/(es)/dashboard/plan-de-estudio/preparar/page.tsx');
 const plan = read('components/dashboard/study-plan-setup.tsx');
 const materials = read('components/dashboard/student-materials-workspace.tsx');
 const motion = read('components/pdf-processing/fullscreen-processing.css');
+const shell = read('components/ClientLayoutClient.tsx');
 
 assert.match(upload, /router\.push\(`\/dashboard\/procesando\/\$\{result\.materialId\}`\)/,
   'The upload must open the full-page experience, not a blocking processing modal.');
@@ -31,8 +32,26 @@ assert.match(proxy, /if \(isProtectedRoute && !user\)/,
 
 assert.match(localDemo, /<FullscreenProcessing initialState=\{demoMaterial\} preview/,
   'Demo must reuse the production UI without creating a real PDF.');
-assert.match(screen, /data-pdf-preview-only/,
-  'Development-only scene selector must be visible for all five screens.');
+assert.doesNotMatch(screen, /data-pdf-preview-only/,
+  'The local demo must match the original full-screen designs without manual controls.');
+assert.match(screen, /setPreviewScene\(current=>Math\.min\(4,current\+1\)\)/,
+  'All five local demo screens must advance automatically.');
+assert.match(screen, /\[18,41,68,92,100\]\[previewScene\]/,
+  'Local demo uses the reference HTML stages, not an invented progress scale.');
+assert.match(shell, /isPdfProcessingRoute \? \(/,
+  'The processing route must use a separate fullscreen shell.');
+assert.match(shell, /data-processing-standalone-shell/,
+  'Do not render the normal app topbar, sidebar, footer or mobile navigation.');
+assert.match(screen, /h-dvh min-h-0 .*overflow-hidden/,
+  'The processing experience must fill precisely one viewport.');
+assert.match(screen, /<ProcessingFit sceneKey=/,
+  'Scenes are fitted to the available screen without scrolling or clipping.');
+assert.match(screen, /ResizeObserver\(fit\)/,
+  'Viewport and visual scene size changes must recalculate fit.');
+assert.match(motion, /data-processing-standalone-shell.*dashboard-responsive/s,
+  'The dashboard wrapper must not introduce its own scroll.');
+assert.match(screen, /evi-procesamiento-listo\.svg/,
+  'The final illustration must be the artwork from the supplied HTML.');
 assert.match(screen, /if\(preview\|\|ready\|\|failed\)return/,
   'Preview must skip live processing polling and timing.');
 assert.match(screen, /if\(preview\|\|initialState\.status!=='uploaded'\)return/,
@@ -48,10 +67,10 @@ assert.match(screen, /data-processing-layout="organize"/);
 assert.match(screen, /data-processing-layout="understand"/);
 assert.match(screen, /data-processing-layout="memorize"/);
 assert.match(screen, /data-processing-layout="practice"/);
-assert.match(motion, /@container processing-scene \(max-width: 879px\)/,
-  'Columns must respond to available app width, not browser width.');
+assert.match(motion, /@container processing-scene \(max-width: 719px\)/,
+  'The supplied two-column layout must be retained when enough space is available.');
 assert.match(motion, /prefers-reduced-motion: reduce/, 'Reduced-motion preference must disable transitions.');
-assert.match(motion, /data-processing-scene-stage/, 'Stable scene area reduces page jumps.');
+assert.match(motion, /data-processing-scene-stage/, 'The complete scene is measured as one visual unit.');
 
 for (const heading of [
   'Estamos organizando tu material',
@@ -73,7 +92,8 @@ assert.match(screen, /Math\.min\(96,Math\.max\(0,state\.progress\)\)/,
 assert.match(screen, /state\.status==='ready'/);
 assert.match(screen, /fetchStudentMaterialProcessingState\(materialId\)/);
 assert.match(screen, /processStudentMaterialAction\(materialId\)/);
-assert.match(screen, /Volver a Mi espacio/);
+assert.doesNotMatch(screen, /!ready&&!failed\?<Link href="\/dashboard"/,
+  'No unrelated navigation should appear during PDF processing.');
 assert.match(screen, /Reintentar/);
 assert.match(screen, /Empezar a estudiar/);
 assert.match(screen, /Preparar mi plan de estudios/);
