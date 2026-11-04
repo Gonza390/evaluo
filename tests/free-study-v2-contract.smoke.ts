@@ -64,4 +64,13 @@ assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts
 const planSql=read('supabase/migrations/20261104183000_free_study_v2_plan_claim.sql');
 assert.match(planSql,/revoke insert, update, delete on public\.student_personal_study_plans/);
 assert.match(read('app/api/study-plans/route.ts'),/createAdminClient\(\)\.from\('student_personal_study_plans'/);
+
+// Todo banco generado o cacheado debe aplicar cupos por cuenta.
+for (const path of ['app/api/practice/true-false/route.ts', 'app/api/practice/cases/route.ts']) {
+  const route=read(path);
+  assert.match(route,/claimVerifiedFreeStudySample/);
+}
+assert.match(helper,/export async function claimVerifiedFreeStudySample/);
+const modes=read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
+assert.match(modes,/if \(mode === 'flashcards'\) \{/);
 console.log('Free v2 quotas, database protections and unrestricted corrections smoke passed.');
