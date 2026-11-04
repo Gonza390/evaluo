@@ -1243,3 +1243,36 @@ assertIncludesAll('components/marketing/study-blog-view.tsx', [
   "STUDY_BLOG_WORKSHOPS_ES[article.key]",
   "STUDY_BLOG_WORKSHOPS_EN[article.key]",
 ]);
+
+
+// 2026-11-04 acquisition SEO audit: keep discoverability and relevant internal paths.
+for (const route of [
+  'app/(es)/ia-para-estudiantes/page.tsx',
+  'app/(es)/estudiar-pdf-con-ia/page.tsx',
+  'app/(es)/funciones/resumir-pdf-con-ia/page.tsx',
+  'app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx',
+]) {
+  assertIncludesAll(route, [
+    'canonical: toAbsoluteUrl(path)',
+    'robots: { index: true, follow: true }',
+  ]);
+}
+for (const slug of [
+  '/ia-para-estudiantes',
+  '/estudiar-pdf-con-ia',
+  '/funciones/resumir-pdf-con-ia',
+  '/funciones/crear-mapa-mental-desde-pdf',
+]) {
+  assert.ok(source('app/sitemap.ts').includes('${baseUrl}' + slug),
+    'Core acquisition route absent from sitemap: ' + slug);
+  assert.ok(source('scripts/audit-live-domain-migration.mjs').includes("'" + slug + "'"),
+    'Live canonical audit must check: ' + slug);
+}
+assertIncludesAll('app/(es)/pregunteros/page.tsx', [
+  'href="/funciones/practicar-por-tema"',
+  'href="/estudiar-pdf-con-ia?source=pregunteros-siglo21"',
+]);
+assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
+  'href="/funciones/resumir-pdf-con-ia"',
+  'const PDF_HREF',
+]);
