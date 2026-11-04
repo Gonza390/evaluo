@@ -18,9 +18,9 @@ import { ReferralsPanel } from './referrals-panel';
 import { obtenerDashboardMonetizacion } from './monetization-dashboard-actions';
 import { MonetizationDashboard } from './monetization-dashboard';
 import { obtenerDashboardAdquisicion } from './acquisition-dashboard-actions';
-import { AcquisitionDashboard } from './acquisition-dashboard';
+import { PackedAcquisitionDashboard } from './packed-acquisition-dashboard';
 import { obtenerActivacionRecorrido } from './activation-dashboard-actions';
-import { ActivationDashboard } from './activation-dashboard';
+import { PackedActivationDashboard } from './packed-activation-dashboard';
 import { obtenerDashboardComunicaciones } from './communications-dashboard-actions';
 import { CommunicationsDashboard } from './communications-dashboard';
 import { obtenerAprendizajePracticas } from './learning-dashboard-actions';
@@ -232,11 +232,11 @@ export default async function AdministradorPage({
 
   if (activePanel === 'producto') {
     panelContent = productResult
-      ? <ActivationDashboard data={productResult} />
+      ? <PackedActivationDashboard data={productResult} />
       : <ErrorPanel message="No pudimos cargar Activación y recorrido." />;
   } else if (activePanel === 'adquisicion') {
     panelContent = acquisitionResult
-      ? <AcquisitionDashboard data={acquisitionResult} />
+      ? <PackedAcquisitionDashboard data={acquisitionResult} />
       : <ErrorPanel message="No pudimos cargar Adquisición y SEO." />;
   } else if (activePanel === 'monetizacion') {
     panelContent = monetizationResult
@@ -331,10 +331,10 @@ export default async function AdministradorPage({
     return <AdminHome data={overviewResult.snapshot} minDay={overviewResult.minDay} />;
   }
   if (needsProduct && productResult) {
-    return <ActivationDashboard data={productResult} />;
+    return <PackedActivationDashboard data={productResult} />;
   }
   if (needsAcquisition && acquisitionResult) {
-    return <AcquisitionDashboard data={acquisitionResult} />;
+    return <PackedAcquisitionDashboard data={acquisitionResult} />;
   }
   if (needsBiblioteca && academicUsageResult) {
     return <LearningDashboard data={academicUsageResult.data} filters={academicUsageResult.filters}
