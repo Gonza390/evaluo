@@ -50,7 +50,7 @@ for (const client of [pdfFirst, quickPdf]) {
   assert.match(client, /window\.setInterval/);
   assert.doesNotMatch(client, /const state = await getStudentMaterialProcessingStateAction\(/);
 }
-assert.match(pdfFirst, /processStudentMaterialAction\(result\.materialId\)\.catch/);
+assert.match(pdfFirst, /router\.push\(`\/dashboard\/procesando\/\$\{result\.materialId\}`\)/);
 assert.match(quickPdf, /processStudentMaterialAction\(result\.materialId\)\.catch/);
 
 for (const client of [pdfFirst, quickPdf]) {
