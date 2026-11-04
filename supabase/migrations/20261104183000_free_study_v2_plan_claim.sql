@@ -61,3 +61,11 @@ revoke all on function public.save_free_study_v2_plan(uuid,date,integer,uuid[],t
  from public, anon, authenticated;
 grant execute on function public.save_free_study_v2_plan(uuid,date,integer,uuid[],text[],jsonb)
  to service_role;
+
+-- Los permisos RLS de la tabla permitían llamar a Supabase directamente
+-- para borrar el plan y volver a insertarlo. Sólo la ruta autenticada del
+-- backend y la RPC transaccional pueden crear/editar planes tras Free V2.
+revoke insert, update, delete on public.student_personal_study_plans
+  from public, anon, authenticated;
+grant select, insert, update, delete on public.student_personal_study_plans
+  to service_role;
