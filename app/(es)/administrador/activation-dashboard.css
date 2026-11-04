@@ -17,3 +17,8 @@
 .av-table{overflow-x:auto;padding:0 28px 24px;scrollbar-color:#444 #111}.av-table-row{display:grid;align-items:center;gap:16px;padding:13px 0;border-top:1px solid #1F1F23;font-size:13.5px;min-width:700px}.av-table-row.av-table-head{border-top:0;padding:0 0 10px;font:11.5px 'JetBrains Mono',monospace;letter-spacing:.05em;text-transform:uppercase;color:#8B8B93}.av-table-row.leaks{grid-template-columns:2.4fr 1fr 1fr 2fr}.av-table-row.segments{grid-template-columns:2.6fr 1fr 1fr 1fr 1fr 1fr}.av-table-row>div{min-width:0}.av-descr{display:flex;flex-direction:column;gap:3px}.av-descr strong{font-weight:500}.av-descr small{font:11.5px 'JetBrains Mono',monospace;color:#8B8B93}.av-withbar{display:flex;align-items:center;gap:12px}.av-withbar>.av-track{flex:1 1 auto;height:6px}.av-withbar>.av-mono{width:52px;text-align:right;flex:0 0 auto}
 .av-page a:focus-visible,.av-page button:focus-visible,.av-page select:focus-visible,.av-page input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:800px){.av-intro{padding:32px 20px 24px}.av-intro h1{font-size:48px}.av-filters{padding:0 20px 24px}.av-board{margin:0 20px 28px}.av-sh,.av-cell,.av-callout{padding-left:20px;padding-right:20px}.av-step-group,.av-steps{padding-left:20px;padding-right:20px}.av-table{padding-left:20px;padding-right:20px}.av-step-label{flex:1 1 220px}.av-step>.av-mono{flex:0 0 60px}}
+
+
+/* Exact summary .cell sizing in Activación y recorrido HTML. */
+.av-cell{min-height:0;justify-content:initial}
+.av-small{min-height:0}
