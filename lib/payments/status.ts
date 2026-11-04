@@ -53,6 +53,9 @@ export function premiumPaymentResultState(data: {
   if (data.plan === 'premium') return 'approved';
   const attempt = (data.checkoutStatus ?? '').toLowerCase();
   if (['failed', 'expired', 'rejected'].includes(attempt)) return 'failed';
+  // Una suscripción anterior puede estar cancelada/vencida mientras una NUEVA
+  // compra sigue pendiente. El intento vigente prevalece sobre ese histórico.
+  if (['created', 'pending', 'approved'].includes(attempt)) return 'processing';
   const status = (data.status ?? '').toLowerCase();
   if (['past_due', 'paused'].includes(status)) return 'attention';
   if (['failed', 'rejected', 'cancelled', 'canceled', 'expired', 'refunded', 'charged_back'].includes(status))
