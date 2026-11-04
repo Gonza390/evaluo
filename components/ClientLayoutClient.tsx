@@ -316,7 +316,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const shell = (
     <div
       data-private-compact={isCompactAppRoute ? 'true' : undefined}
-      className={`bg-background flex flex-col ${
+      className={`${isAdministradorRoute ? 'bg-black' : 'bg-background'} flex flex-col ${
         isMaterialStudyRoute ? 'h-dvh min-h-0 overflow-hidden' : isDesktopStudyPlanRoute ? 'min-h-screen xl:h-dvh xl:min-h-0 xl:overflow-hidden' : isDesktopPracticeHomeRoute ? 'min-h-screen lg:h-dvh lg:min-h-0 lg:overflow-hidden' : 'min-h-screen'
       } ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:h-dvh has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:overflow-hidden' : ''
       }`}
@@ -596,8 +596,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
         >
           <main
             className={`w-full min-w-0 flex-1 ${
-              isSimuladorRoute
-                ? 'bg-white p-0'
+              isAdministradorRoute
+                ? 'bg-black p-0'
+                : isSimuladorRoute
+                  ? 'bg-white p-0'
                 : isLegalRoute
                   ? 'bg-background p-0'
                   : isMaterialStudyRoute
