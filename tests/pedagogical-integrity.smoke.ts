@@ -432,7 +432,7 @@ assert.ok(
 );
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
-assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 6/);
+assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 7/);
 const cachedQualitySource = readFileSync('lib/data/student-material-pedagogical-cache.ts', 'utf8');
 assert.match(cachedQualitySource, /semantic_reaudit_pending/);
 assert.match(cachedQualitySource, /requiresSemanticReaudit/);
