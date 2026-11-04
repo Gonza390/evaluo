@@ -24,7 +24,7 @@ const nav: Array<[string,string]> = [
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],['Adquisición y SEO','adquisicion'],
  ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],
  ['Planes de estudio','planes'],['Monetización','monetizacion'],
- ['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','usuarios'],
+ ['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','gestion'],
 ];
 const num = (v: number) => Math.round(v).toLocaleString('es-AR');
 const ratio = (a: number,b: number) => b > 0 ? (a*100/b).toFixed(1).replace('.',',')+'%' : '—';
