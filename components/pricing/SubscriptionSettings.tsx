@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { notifyPremiumAccessChanged } from '@/lib/premium-access-events';
 import {
   AlertTriangle,
   ArrowRight,
@@ -102,6 +103,7 @@ export function SubscriptionSettings() {
     try {
       const response = await fetch('/api/payments/cancel', { method: 'POST' });
       if (!response.ok) throw new Error('cancel_error');
+      notifyPremiumAccessChanged();
       await loadStatus();
     } catch {
       setError('No pudimos cancelar la suscripción. No se realizó ningún cambio.');
