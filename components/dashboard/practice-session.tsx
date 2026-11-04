@@ -35,8 +35,6 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [trueFalseLoading, setTrueFalseLoading] = useState(false);
   const [trueFalseError, setTrueFalseError] = useState('');
   const [trueFalseDiagnostic, setTrueFalseDiagnostic] = useState('');
-  const [freeExplanationById, setFreeExplanationById] = useState<Record<string,string|null>>({});
-  const requestedFreeExplanations = useRef(new Set<string>());
   const trueFalseBusy = useRef(false);
   const trueFalseAttempts = useRef(0);
   const trueFalsePool = useMemo(() => verifiedTrueFalsePool(generatedTrueFalse), [generatedTrueFalse]);
@@ -136,36 +134,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   };
   const current = tasks[step];
   const checked = reviewed.includes(step);
-  const explanationFor = (question:PracticeQuestion) =>
-    freeV2 ? (freeExplanationById[question.id] ?? '') : groundedPracticeExplanation(question,pairs);
-
-  // A Free V2 se le explica automáticamente el error, hasta 15 veces.
-  // Repetir el mismo ejercicio reutiliza la explicación ya desbloqueada.
-  useEffect(() => {
-    if (!freeV2) return;
-    const toExplain = finished
-      ? tasks.map((task,index)=>({task,index}))
-      : checked && current ? [{task:current,index:step}] : [];
-    for(const {task,index} of toExplain){
-      if(task.type !== 'question' || !responses[index] ||
-         responses[index] === task.question.answer ||
-         requestedFreeExplanations.current.has(task.question.id)) continue;
-      const questionId = task.question.id;
-      requestedFreeExplanations.current.add(questionId);
-      void (async()=>{
-        try {
-          const response = await fetch('/api/free-study-v2/explanation', {
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({materialId,questionId,selectedAnswer:responses[index]}),
-          });
-          const body:unknown = await response.json();
-          const explanation = body && typeof body === 'object' && 'explanation' in body &&
-            typeof body.explanation === 'string' ? body.explanation : null;
-          setFreeExplanationById(old=>({...old,[questionId]:response.ok ? explanation : null}));
-        } catch {setFreeExplanationById(old=>({...old,[questionId]:null}));}
-      })();
-    }
-  },[freeV2,finished,checked,current,step,tasks,responses,materialId]);
+  const explanationFor = (question:PracticeQuestion) => groundedPracticeExplanation(question,pairs);
 
   useEffect(() => {
     if (mode !== 'simulacro' || !ready || finished || !examStarted) return;
