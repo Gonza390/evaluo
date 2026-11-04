@@ -6,6 +6,8 @@ import { isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { claimFreeStudyUnlock, getFreeStudyBank } from '@/lib/free-study-v2-server';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import type { PracticeQuestion } from '@/lib/student-materials/practice-modes';
+import { buildSourceBackedCases } from '@/lib/student-materials/practice-modes';
+import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 
 const noCache = { 'Cache-Control': 'private, no-store' };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -49,6 +51,15 @@ export async function POST(request: Request) {
         question=stored?.find(item=>item.id===questionId);
         if(question)break;
       }
+    }
+    if(!question){
+      // Los casos ya verificados al procesar el PDF no necesitan una generación
+      // adicional; también pueden explicar sus errores sin gastar más IA.
+      const {data:model,error:modelError}=await admin.from('student_materials')
+        .select('pedagogical_model').eq('id',materialId).eq('user_id',user.id).maybeSingle();
+      if(modelError)throw modelError;
+      const sourceCases=buildSourceBackedCases((model?.pedagogical_model??null) as CanonicalPedagogicalModel|null);
+      question=sourceCases.find(item=>item.id===questionId);
     }
     if(!question||!question.explanation?.trim()||!Array.isArray(question.options)||
        !question.options.some(answer=>norm(answer)===norm(selectedAnswer))||
