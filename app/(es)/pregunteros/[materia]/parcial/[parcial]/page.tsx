@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { TrackedLink } from '@/components/marketing/tracked-link';
 import { notFound, redirect } from 'next/navigation';
 import { BookOpen, ListChecks, Target } from 'lucide-react';
 import { PregunteroPersonasJuridicasExperiment } from '@/components/marketing/preguntero-personas-juridicas-experiment';
@@ -284,6 +285,27 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
                 Volvé al preguntero completo, revisá resúmenes o entrá a la materia para seguir
                 estudiando.
               </p>
+              <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+                <p className="text-sm font-semibold text-slate-950">
+                  ¿Tenés apuntes de {data.materiaNombre} que querés practicar?
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  El preguntero sirve para repasar preguntas disponibles. Con tu propio PDF podés estudiar temas que no aparezcan acá y comprobar lo que entendiste antes del examen.
+                </p>
+                <TrackedLink
+                  href="/estudiar-pdf-con-ia?source=preguntero-parcial"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'preguntero_parcial_continue_studying',
+                    cta_name: 'estudiar_pdf_propio',
+                    source: 'preguntero-parcial',
+                    destination: '/estudiar-pdf-con-ia',
+                  }}
+                  className="mt-3 inline-flex min-h-11 items-center text-sm font-bold text-blue-700 underline underline-offset-4 hover:text-blue-900"
+                >
+                  Practicar con mi propio PDF
+                </TrackedLink>
+              </div>
               <div className="mt-5 flex flex-col gap-3">
                 <Link
                   href={pregunteroHref}
