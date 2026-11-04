@@ -101,7 +101,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
     explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
     chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? undefined,
   }));
-  const freeQuestions = freeV2 && mode !== 'simulacro'
+  const freeQuestions = freeV2 && mode === 'mixto'
     ? await firstFreeItems({
       userId:user.id, materialId:material.id, kind:'multiple_choice',
       items:sourceQuestions, limit:FREE_STUDY_V2.multipleChoice, keyPrefix:'question',
@@ -154,7 +154,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
   }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
     freeV2={freeV2}
-    materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={savedBank?.cases.length ? savedBank.cases : cases}
+    materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={freeV2 ? cases : savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={true}
     isWord={material.file_name.toLowerCase().endsWith('.docx')}
     glossary={(freeV2 ? glossary.slice(0, FREE_STUDY_V2.matchingPairs) : glossary)
