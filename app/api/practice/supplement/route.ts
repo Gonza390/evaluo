@@ -3,6 +3,9 @@ import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
+import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
+import { hasPremiumAccess } from '@/lib/premium';
+import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
 import { normalizedAnswer, selectPracticePairs, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 import { sourceVerifiedPairs } from '@/lib/student-materials/practice-source-pairs';
@@ -50,6 +53,15 @@ export async function POST(request: Request) {
     .eq('id', body.materialId).eq('user_id', user.id).maybeSingle();
   if (!material || material.processing_status !== 'ready')
     return NextResponse.json({ error: 'material_not_found' }, { status: 404 });
+  const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
+  const freeMode = body.mode === 'unir' ? 'matching' as const : 'flashcards' as const;
+  if (freeV2) {
+    if (body.mode !== 'unir' && body.mode !== 'flashcards')
+      return NextResponse.json({error:'free_study_mode_unavailable'},{status:403});
+    const cached = await getFreeStudyBank<PracticePair>({userId:user.id,materialId:material.id,mode:freeMode});
+    if (cached) return NextResponse.json({pairs:cached,source:'free_sample_cached'},
+      {headers:{'Cache-Control':'private, no-store'}});
+  }
 
   const admin = createAdminClient();
   const { data: chunks, error } = await admin.from('student_material_chunks')
@@ -82,8 +94,11 @@ export async function POST(request: Request) {
   }
   const local = selectPracticePairs(fromModel, 18);
   const minimumPairs = body.mode === 'mixto' ? 2 : 6;
-  if (local.length >= minimumPairs) return NextResponse.json({ pairs: local, source: 'canonical' },
-    { headers: { 'Cache-Control': 'private, no-store' } });
+  if (local.length >= minimumPairs) {
+    const pairs = freeV2 ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:freeMode,
+      items:local.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)}) : local;
+    return NextResponse.json({pairs,source:'canonical'}, {headers:{'Cache-Control':'private, no-store'}});
+  }
 
   // IA runs exclusively after a student clicks a practice mode and only when
   // fewer than six supported concepts are available. Limit to protect shared Free.
@@ -119,9 +134,12 @@ export async function POST(request: Request) {
     const raw = parsed && typeof parsed === 'object' && 'terms' in parsed
       ? (parsed as {terms:unknown}).terms : [];
     const verified = sourceVerifiedPairs(raw, fragments, [...excludedTerms,...local.map(p=>p.term)]);
-    return NextResponse.json({
-      pairs:selectPracticePairs([...local,...verified],24), source:'ai_verified',
-    }, {headers:{'Cache-Control':'private, no-store'}});
+    const selected=selectPracticePairs([...local,...verified],24);
+    const pairs=freeV2 && selected.length
+      ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:freeMode,
+          items:selected.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)})
+      : selected;
+    return NextResponse.json({pairs,source:'ai_verified'}, {headers:{'Cache-Control':'private, no-store'}});
   } catch {
     return NextResponse.json({pairs:local,source:'canonical_only'},
       {headers:{'Cache-Control':'private, no-store'}});
