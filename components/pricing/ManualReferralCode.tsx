@@ -112,13 +112,13 @@ export function ManualReferralCode({
 
   if (compact) {
     return (
-      <div className="w-full border-t border-slate-200 pt-3 text-left">
+      <div className={hideHeading ? "w-full text-left" : "w-full border-t border-slate-200 pt-3 text-left"}>
         {!hideHeading ? <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
           <Tag className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
           ¿Tenés un código de descuento?
         </div> : null}
 
-        <div className="mt-2 flex gap-2">
+        <div className={hideHeading ? "flex gap-2" : "mt-2 flex gap-2"}>
           <Input
             value={code}
             onChange={(event) => {
@@ -132,7 +132,7 @@ export function ManualReferralCode({
                 void applyCode();
               }
             }}
-            placeholder="Ej. MARCA20"
+            placeholder={hideHeading ? "Código" : "Ej. MARCA20"}
             autoComplete="off"
             spellCheck={false}
             className="h-10 min-w-0 rounded-xl bg-white text-xs font-medium uppercase tracking-wide sm:text-sm"
