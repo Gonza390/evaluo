@@ -19,7 +19,7 @@ assert.match(workspace, /first_pdf_guide_started/);
 assert.match(workspace, /first_pdf_guide_step_viewed/);
 assert.match(workspace, /first_pdf_guide_post_action/);
 assert.match(workspace, /getGuideMetadata\(\)/);
-assert.match(adminActions, /admin_activation_cohort_v1/);
+assert.match(adminActions, /admin_activation_cohort_packed_v1/);
 assert.doesNotMatch(adminPanel, /Datos de ejemplo/);
 assert.match(adminPanel, /Onboarding/);
 assert.match(adminPanel, /Primera experiencia de estudio/);
