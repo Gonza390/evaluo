@@ -3,6 +3,10 @@ import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
+import { appliesFreeStudyV2 } from '@/lib/free-study-v2';
+import { hasPremiumAccess } from '@/lib/premium';
+import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
+import type { StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { isPracticeUuid } from '@/lib/student-materials/practice-request-validation';
 import {
   independentlyVerifiedTopicQuestions, selectTopicSourceFragments,
@@ -65,6 +69,16 @@ async function generateTopicExercises(request:Request){
     .eq('user_id',user.id).maybeSingle();
   if(!material||material.processing_status!=='ready')
     return NextResponse.json({error:'material_not_found'},{status:404,headers:noCache});
+  // Free: una pregunta generada y verificada debe permanecer estable para
+  // poder validarla al responder. Reintentos/actualizaciones no crean otra muestra.
+  const freeV2=appliesFreeStudyV2(await hasPremiumAccess(user.id));
+  const bankMode=`topic:${Number(topicIndex)}:round:${round}` as const;
+  if(freeV2){
+    const cached=await getFreeStudyBank<StudyQuestion>({
+      userId:user.id,materialId:material.id,mode:bankMode,
+    });
+    if(cached) return NextResponse.json({questions:cached,source:'verified_topic_cached'},{headers:noCache});
+  }
   const admin=createAdminClient();
   const [{data:summary,error:summaryError},{data:chunks,error:chunksError}]=await Promise.all([
     admin.from('student_material_summaries')
@@ -157,7 +171,11 @@ async function generateTopicExercises(request:Request){
       materialId:material.id,topicIndex,round,
       generated:candidates.length,verified:questions.length,
     });
-    return NextResponse.json({questions,source:'independently_verified'},
+    const stable=freeV2 && questions.length
+      ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,
+          mode:bankMode,items:questions})
+      : questions;
+    return NextResponse.json({questions:stable,source:'independently_verified'},
       {headers:noCache});
   }catch(error){
     console.error('[practice.topic] generation failed',error instanceof Error?error.name:'unknown');
