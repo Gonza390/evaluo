@@ -2398,6 +2398,7 @@ export function MaterialStudyWorkspace({
                 sections={studySummary.sections}
                 glossary={studyGlossary}
                 materialId={materialId}
+                materialTitle={title}
                 onComplete={() => { if (!demo && practiceSectionIndex !== undefined) markActivity(materialId, practiceSectionIndex, 'questions'); else if (practiceSectionIndex === undefined) requestExamDatePrompt(); }}
               />
             )) : null}
