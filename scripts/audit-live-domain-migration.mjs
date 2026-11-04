@@ -9,8 +9,9 @@ const REGION_PATHS = ['/estudiar-pdf-con-ia', '/es/estudiar-pdf-con-ia',
   '/es-mx/estudiar-pdf-con-ia', '/es-co/estudiar-pdf-con-ia', '/es-es/estudiar-pdf-con-ia'];
 const LANDINGS = [...REGION_PATHS, '/es/guias', '/es/paises',
   '/es/guias/como-estudiar-anatomia', '/es/paises/mexico-guia-exani-ii-pdf',
-  '/pregunteros', '/landings/parciales',
-  '/funciones/resumir-pdf-con-ia', '/funciones/crear-flashcards-desde-pdf',
+  '/pregunteros', '/landings/parciales', '/ia-para-estudiantes',
+  '/funciones/resumir-pdf-con-ia', '/funciones/crear-mapa-mental-desde-pdf',
+  '/funciones/crear-flashcards-desde-pdf',
   '/uba-xxi/parciales', '/convertir-pdf-en-preguntas'];
 const HREFLANG = {
   'es-AR': '/estudiar-pdf-con-ia',
