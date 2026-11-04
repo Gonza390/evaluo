@@ -1459,6 +1459,76 @@ function buildCanonicalFormulaQuestions(
     .filter((question): question is StudyQuestion => Boolean(question));
 }
 
+/** Contrast related concepts already documented together, without asking AI to
+ * invent clinical facts or unsupported distinctions. Open responses are not
+ * counted toward the minimum of six auto-correctable questions per chapter. */
+function buildCanonicalSourceContrasts(
+  model: CanonicalPedagogicalModel,
+  chunks: PedagogicalChunk[],
+  sections: StudySummarySection[],
+  limit = 5
+): StudyQuestion[] {
+  const output: StudyQuestion[] = [];
+  const concepts = model.concepts.filter(concept =>
+    cleanLine(concept.term).length >= 4 && cleanLine(concept.detail).length >= 32
+  ).slice(0, 100);
+  const usedConcepts = new Set<string>();
+  for (let i = 0; i < concepts.length && output.length < limit; i++) {
+    const left = concepts[i]!;
+    if (usedConcepts.has(normalizeForDedupe(left.term))) continue;
+    for (let j = i+1; j < concepts.length && output.length < limit; j++) {
+      const right = concepts[j]!;
+      if (usedConcepts.has(normalizeForDedupe(right.term))) continue;
+      const leftTerms=significantTerms(left.term);
+      const rightTerms=significantTerms(right.term);
+      const related=leftTerms.some(term=>rightTerms.includes(term)) ||
+        model.confusions.some(confusion=>{
+          const text=normalizeForDedupe(confusion);
+          return text.includes(normalizeForDedupe(left.term)) &&
+            text.includes(normalizeForDedupe(right.term));
+        });
+      if (!related) continue;
+      const sharedPages=(left.pageReferences??[]).filter(page=>
+        right.pageReferences?.includes(page));
+      const evidenceChunks=chunks.filter(chunk=>
+        sharedPages.includes(chunk.pageStart??-1));
+      const text=normalizeForDedupe(evidenceChunks.map(chunk=>chunk.text).join(' '));
+      if (!sharedPages.length ||
+          !text.includes(normalizeForDedupe(left.term)) ||
+          !text.includes(normalizeForDedupe(right.term))) continue;
+      const sectionsWithBoth=sections.filter(section=>{
+        const body=normalizeForDedupe(section.body);
+        return body.includes(normalizeForDedupe(left.term)) &&
+          body.includes(normalizeForDedupe(right.term));
+      });
+      if (sectionsWithBoth.length!==1) continue;
+      const pair={left:left.term,right:right.term};
+      const answer=buildExpectedComparisonAnswer(model,pair);
+      if (!answer) continue;
+      const source=evidenceChunks.find(chunk=>
+        normalizeForDedupe(chunk.text).includes(normalizeForDedupe(left.term)))!;
+      output.push({
+        id:`model-source-contrast-${i}-${j}`,type:'open',
+        level:'comprender',kind:'relationship',
+        topic:`${left.term} ↔ ${right.term}`,
+        chapterTitle:sectionsWithBoth[0]!.title,
+        prompt:`Compará “${left.term}” y “${right.term}”. Explicá una diferencia y cómo reconocerla en una situación de estudio.`,
+        options:[],answer,
+        explanation:'La comparación debe distinguir ambos conceptos a partir de los criterios documentados, no solo mencionarlos.',
+        reference:{
+          pageStart:source.pageStart,pageEnd:source.pageEnd,
+          sectionTitle:sectionsWithBoth[0]!.title,
+          excerpt:truncateAtWord(source.text,250),
+        },
+      });
+      usedConcepts.add(normalizeForDedupe(left.term));
+      usedConcepts.add(normalizeForDedupe(right.term));
+      break;
+    }
+  }
+  return output;
+}
+
 function buildCanonicalComparisonQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[],
@@ -1914,6 +1984,7 @@ export function buildPedagogicalArtifacts(input: {
         ...buildCanonicalFormulaQuestions(model, chunks, 5 * categoryFactor),
         ...buildVerifiedMathPractice(model, chunks),
         ...buildCanonicalComparisonQuestions(model, chunks, 4 * categoryFactor),
+        ...buildCanonicalSourceContrasts(model, chunks, input.summary.sections),
         ...buildCanonicalConfusionQuestions(model, chunks, 3 * categoryFactor),
       ]
     : [];
