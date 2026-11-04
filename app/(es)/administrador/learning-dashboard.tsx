@@ -155,11 +155,11 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
     <option value="">Todas</option>{data.options.careers.map(x=><option value={x.value} key={x.value}>{x.label}</option>)}</select></label>
    <label className="lp-filter"><span className="lp-kicker">Materia</span><select name="academicSubject" defaultValue={filters.subject??''}>
     <option value="">Todas</option>{data.options.subjects.map(x=><option value={x.value} key={x.value}>{x.label}</option>)}</select></label>
-   <label className="lp-filter"><span className="lp-kicker">Modalidad · solo tabla</span><select value={selectedMode} onChange={e=>setSelectedMode(e.target.value)}>
+   <label className="lp-filter"><span className="lp-kicker">Modalidad de práctica</span><select value={selectedMode} onChange={e=>setSelectedMode(e.target.value)}>
     <option value="all">Todas</option>{data.tools.map(t=><option key={t.name} value={t.name}>{t.name}</option>)}</select></label>
    <label className="lp-filter"><span className="lp-kicker">Plan actual</span><select name="academicPlan" defaultValue={filters.plan}>
     <option value="all">Free y Premium</option><option value="free">Free</option><option value="premium">Premium</option></select></label>
-   <span className="lp-tag">Datos reales · Supabase</span>
+   <span className="lp-tag">Muestra mínima: 30 estudiantes</span><span className="lp-tag">Datos reales · Supabase</span>
    {selectedPeriod==='custom'&&<div className="lp-custom">
     <label>Desde <input required name="academicFrom" type="date" min={earliest} max={today} value={customFrom} onChange={e=>setCustomFrom(e.target.value)}/></label>
     <label>Hasta <input required name="academicTo" type="date" min={earliest} max={today} value={customTo} onChange={e=>setCustomTo(e.target.value)}/></label>
