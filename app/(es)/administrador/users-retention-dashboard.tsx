@@ -13,7 +13,7 @@ const nav = [
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],['Adquisición y SEO','adquisicion'],
  ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],
  ['Planes de estudio','planes'],['Monetización','monetizacion'],['Comunicaciones','mails'],
- ['Sistema e IA','ia'],['Gestión','usuarios'],
+ ['Sistema e IA','ia'],['Gestión','gestion'],
 ] as const;
 type Props = {
  stats:UsersRetentionSnapshot;segments:UsersSegment[];list:UserListResult;detail:UserDetail|null;
