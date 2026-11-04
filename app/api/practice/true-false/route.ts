@@ -7,7 +7,7 @@ import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, claimVerifiedFreeStudySample } from '@/lib/free-study-v2-server';
 import {
   applyIndependentTrueFalseReview, selectTrueFalseFragments, verifyGeneratedTrueFalse, type TrueFalseFragment,
 } from '@/lib/student-materials/practice-true-false';
@@ -80,7 +80,11 @@ async function handleVerifiedTrueFalse(request: Request) {
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   if (freeV2) {
     const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:'true_false' });
-    if (saved) return NextResponse.json({ questions:saved,source:'free_sample_cached' },{headers:{'Cache-Control':'private, no-store'}});
+    if (saved) {
+      const allowed = await claimVerifiedFreeStudySample({ userId:user.id, materialId:material.id, kind:'true_false', items:saved });
+      return NextResponse.json({questions:allowed,source:'free_sample_cached'},
+        {headers:{'Cache-Control':'private, no-store'}});
+    }
   }
 
   // This endpoint is reached only after an explicit Practicar > Opciones
@@ -209,7 +213,10 @@ async function handleVerifiedTrueFalse(request: Request) {
       ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:'true_false' as const,
           items:questions.slice(0,FREE_STUDY_V2.trueFalse)})
       : questions;
-    return NextResponse.json({questions:bounded,source:'independently_verified_against_document'},
+    const accessible = freeV2
+      ? await claimVerifiedFreeStudySample({userId:user.id,materialId:material.id,kind:'true_false',items:bounded})
+      : bounded;
+    return NextResponse.json({questions:accessible,source:'independently_verified_against_document'},
       {headers:{'Cache-Control':'private, no-store'}});
   } catch (error) {
     console.error('[practice.true-false] Gemini generation or review failed',
