@@ -8,6 +8,7 @@ const screen = read('components/pdf-processing/fullscreen-processing.tsx');
 const planPage = read('app/(es)/dashboard/plan-de-estudio/preparar/page.tsx');
 const plan = read('components/dashboard/study-plan-setup.tsx');
 const materials = read('components/dashboard/student-materials-workspace.tsx');
+const motion = read('components/pdf-processing/fullscreen-processing.css');
 
 assert.match(upload, /router\.push\(`\/dashboard\/procesando\/\$\{result\.materialId\}`\)/,
   'The upload must open the full-page experience, not a blocking processing modal.');
@@ -15,6 +16,17 @@ assert.match(route, /getStudentMaterialProcessingStateAction\(id\)/,
   'The processing screen must restore the real material status securely.');
 assert.match(route, /auth\.getUser\(\)/);
 assert.match(screen, /const SCENE_MS = 6500/);
+assert.match(screen, /data-processing-scene-motion/, 'Heading and example must transition together.');
+assert.match(screen, /data-phase=\{sceneExiting/, 'Outgoing scene must fade before replacement.');
+assert.match(screen, /data-processing-layout="organize"/);
+assert.match(screen, /data-processing-layout="understand"/);
+assert.match(screen, /data-processing-layout="memorize"/);
+assert.match(screen, /data-processing-layout="practice"/);
+assert.match(motion, /@container processing-scene \(max-width: 879px\)/,
+  'Columns must respond to available app width, not browser width.');
+assert.match(motion, /prefers-reduced-motion: reduce/, 'Reduced-motion preference must disable transitions.');
+assert.match(motion, /data-processing-scene-stage/, 'Stable scene area reduces page jumps.');
+
 for (const heading of [
   'Estamos organizando tu material',
   'Primero, entendé lo importante',
