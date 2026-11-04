@@ -107,8 +107,10 @@ export function SystemAiDashboard({data,days}:Props){
   ]},
  ];
  const performance=data.performance.map(r=>({
-  ...r,p95:r.ord===2?formatTime(js.p95_seconds):'—',
-  hasP95:r.ord===2&&js.p95_seconds!==null,
+  ...r,
+  p95:r.lcp_samples>=20&&r.lcp_p95_ms!==null
+    ?nf(r.lcp_p95_ms)+' ms':'—',
+  hasP95:r.lcp_samples>=20&&r.lcp_p95_ms!==null,
   errors:r.ord===2?ms.failed:r.errors,
  }));
  return <main className="ehome si-page">
@@ -256,7 +258,7 @@ export function SystemAiDashboard({data,days}:Props){
        <span>P95</span><span>Consultas</span><span>Errores</span><span>Vs. anterior</span></div>
      {performance.map(p=><div className="si-row si-g4" key={p.ord}>
       <span className="si-mono si-muted">{p.ord.toString().padStart(2,'0')}</span>
-      <Name title={p.name} note={p.hasP95?'P95 parcial de trabajos':'P95 por pantalla no medido'}/>
+      <Name title={p.name} note={p.hasP95? 'P95 de LCP de carga inicial · '+nf(p.lcp_samples)+' muestras' : 'LCP muestreado: '+nf(p.lcp_samples)+' de 20 muestras mínimas'}/>
       <span className="si-muted">{p.note}</span>
       <span className="si-right si-mono">{p.p95}</span><span className="si-right si-mono si-muted">—</span>
       <span className="si-right si-mono">{nf(p.errors)}</span><span className="si-right si-mono si-muted">—</span>
