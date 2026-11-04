@@ -14,6 +14,8 @@ type PricingPlanSelectorProps = {
   premiumFeatures: string[];
   source: string;
   materiaId?: string;
+  parcial?: number;
+  returnTo?: string;
 };
 
 export function PricingPlanSelector({
@@ -21,6 +23,8 @@ export function PricingPlanSelector({
   premiumFeatures,
   source,
   materiaId,
+  parcial,
+  returnTo,
 }: PricingPlanSelectorProps) {
   // Las tres alternativas están visibles. El único selector pendiente es para
   // validar a qué modalidad Premium corresponde un código de referido.
@@ -74,6 +78,8 @@ export function PricingPlanSelector({
             features={premiumFeatures}
             source={source}
             materiaId={materiaId}
+            parcial={parcial}
+            returnTo={returnTo}
             offerCode="monthly"
             featured
           />
