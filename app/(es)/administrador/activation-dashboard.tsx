@@ -12,7 +12,7 @@ const nav:[string,string][]=[
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],
  ['Adquisición y SEO','adquisicion'],['Activación y recorrido','producto'],
  ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
- ['Monetización','monetizacion'],['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','usuarios']];
+ ['Monetización','monetizacion'],['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','gestion']];
 const sources:[string,string][]=[['all','Todas'],['google','Google'],['social','Instagram y TikTok'],['whatsapp','WhatsApp'],['facebook','Facebook'],['unknown','Directo / sin atribución'],['other','Otros'],['reddit','Reddit'],['ai_referral','Referidos IA']];
 const fmt=(n:number)=>Math.round(n).toLocaleString('es-AR');
 const pct=(a:number,b:number)=>b>0?(100*a/b).toFixed(1).replace('.',',')+'%':'—';
