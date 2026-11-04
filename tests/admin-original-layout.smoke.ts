@@ -38,7 +38,7 @@ for(const signature of ['#C8FF3A','Bricolage Grotesque','Inter Tight','JetBrains
    foreground. Tailwind's global base sets a dark foreground on headings and
    slate on paragraphs, so without this scoped reset the artboards are illegible.
    The low-specificity :where rule must leave explicit per-panel colors intact. */
-assert.match(css,/\.ehome\s+:where\(h1,h2,h3,h4,h5,h6,p\)\s*\{\s*color:\s*inherit\s*\}/);
+assert.match(css,/:where\(\.ehome\)\s+:where\(h1,h2,h3,h4,h5,h6,p\)\s*\{\s*color:\s*inherit\s*\}/);
 assert.match(css,/\.ehome\{[^}]*color:#FAFAFA/);
 for(const file of [
  'activation-dashboard.css','acquisition-dashboard.css','learning-dashboard.css',
