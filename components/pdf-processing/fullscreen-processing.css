@@ -1,19 +1,36 @@
-/* Scoped to the full-screen PDF preparation flow. Never affects the dashboard. */
+/* Full-screen PDF processing from the five HTML designs: never show the
+ * dashboard chrome or let an individual scene create document scrolling.
+ */
+[data-processing-standalone-shell],
+[data-processing-standalone-shell] > .dashboard-responsive {
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
 [data-pdf-processing-screen] {
   --pdf-processing-ease: cubic-bezier(.22, 1, .36, 1);
   overflow-wrap: break-word;
 }
 
+[data-processing-content] { min-height: 0; }
+[data-processing-fit-viewport] {
+  min-height: 0;
+  overflow: hidden;
+  contain: layout;
+}
+[data-processing-fit-content] { min-width: 0; }
 [data-processing-scene-stage] {
   container: processing-scene / inline-size;
+  min-height: 0;
   min-width: 0;
 }
 
-/* Keep the heading and its example together throughout a scene change. */
+/* Heading + example transition as a single scene, with no layout jumps. */
 [data-processing-scene-motion],
 [data-processing-final-motion] {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
   animation: pdf-processing-arrive 270ms var(--pdf-processing-ease) both;
 }
 
@@ -29,48 +46,61 @@
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
-/* The available area is smaller than the viewport when the Evaluo sidebar is visible.
-   Switch to columns based on this component's actual width, not the viewport. */
-@container processing-scene (max-width: 879px) {
+/* This is the full-width scene, with no sidebar. Keep the supplied two-column
+   composition when the usable width permits it. */
+@container processing-scene (max-width: 719px) {
   [data-processing-layout] {
     flex-direction: column;
     align-items: stretch;
   }
-
   [data-processing-layout='organize'] [data-processing-arrow] {
     margin-inline: 0;
   }
-
-  [data-processing-layout='memorize'] > section {
-    width: 100%;
-    max-width: none;
-  }
-
+  [data-processing-layout='memorize'] > section,
   [data-processing-layout='practice'] > section,
   [data-processing-layout='understand'] > section {
     width: 100%;
     max-width: none;
   }
 }
-
-@container processing-scene (min-width: 880px) {
-  [data-processing-layout] { flex-direction: row; }
-}
-
-/* Reserve a stable visual stage on desktop, so the footer and header do not jump
-   when content heights differ. On mobile, scrolling is preferable to clipping. */
-@media (min-width: 1024px) {
-  [data-processing-scene-stage] {
-    min-height: min(680px, calc(100svh - 235px));
+@container processing-scene (min-width: 720px) {
+  [data-processing-layout] {
+    flex-direction: row;
   }
 }
 
+/* Short phones preserve every HTML example but use compact spacing first,
+   before the fitting logic scales a scene down as a last resort. */
 @media (max-width: 639px) {
-  [data-pdf-processing-screen] [data-processing-scene-motion] { gap: 22px; }
+  [data-pdf-processing-screen] [data-processing-scene-motion] { gap: 15px; }
+  [data-pdf-processing-screen] [data-processing-scene-stage] { gap: 15px; }
+  [data-pdf-processing-screen] [data-processing-scene-motion] h1 { font-size: 25px; line-height: 1.16; }
   [data-pdf-processing-screen] [data-processing-scene-content] { min-width: 0; }
-  [data-pdf-processing-screen] [data-processing-layout] { gap: 16px; }
+  [data-pdf-processing-screen] [data-processing-layout] { gap: 12px; }
+  [data-pdf-processing-screen] [data-processing-layout] section { padding: 14px; border-radius: 20px; }
+  [data-pdf-processing-screen] [data-processing-layout='organize'] section [aria-hidden='true'] {
+    min-height: 155px;
+    padding: 14px;
+    gap: 6px;
+  }
+  [data-pdf-processing-screen] [data-processing-layout='memorize'] > section {
+    padding-bottom: 6px;
+  }
+  [data-pdf-processing-screen] [data-processing-layout='memorize'] > section > div {
+    min-height: 225px;
+    padding: 17px;
+    gap: 15px;
+  }
+  [data-pdf-processing-screen] [data-processing-layout='memorize'] > section > div > p {
+    font-size: 23px;
+  }
+  [data-pdf-processing-screen] footer { gap: 8px; }
 }
-
+@media (max-height: 690px) {
+  [data-pdf-processing-screen] header { padding-top: 9px; padding-bottom: 9px; }
+  [data-pdf-processing-screen] footer { padding-top: 8px; padding-bottom: 8px; }
+  [data-pdf-processing-screen] [data-processing-content] { padding-top: 6px; padding-bottom: 6px; }
+}
 @media (prefers-reduced-motion: reduce) {
   [data-processing-scene-motion],
   [data-processing-final-motion],
