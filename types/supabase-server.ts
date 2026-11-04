@@ -32,6 +32,14 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_acquisition_dashboard_packed_v1:{
+    Args:Record<PropertyKey,never>;
+    Returns:import('@/app/(es)/administrador/packed-dashboard-transport').PackedDashboardSnapshot;
+  };
+  admin_activation_cohort_packed_v1:{
+    Args:Record<PropertyKey,never>;
+    Returns:import('@/app/(es)/administrador/packed-dashboard-transport').PackedDashboardSnapshot;
+  };
   admin_system_ai_dashboard_v1:{
     Args:{p_days?:number};
     Returns:import('@/app/(es)/administrador/system-ai-dashboard-types').SystemAiSnapshot;
