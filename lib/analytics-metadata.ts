@@ -6,6 +6,9 @@ type JsonRecord = Record<string, Json | undefined>;
 const FIRST_PDF_DEMO_KEYS = ['demo_run_id', 'demo_version', 'environment'];
 
 const ATTRIBUTION_KEYS = new Set([
+  // Persist normalized acquisition channels across signup, upload and study events.
+  'source',
+  'latest_source',
   'utm_source',
   'utm_medium',
   'utm_campaign',
