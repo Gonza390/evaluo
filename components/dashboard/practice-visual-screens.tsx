@@ -87,7 +87,7 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
   </div>
  </main>;
 }
-export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,onSelect,onNext,onPrevious,onSkip,onGenerate,generating}:{materialTitle:string;question:CaseQuestion;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void;onGenerate:()=>void;generating:boolean}){
+export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,onSelect,onNext,onPrevious,onSkip}:{materialTitle:string;question:CaseQuestion;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void}){
  const explanationRef = React.useRef<HTMLDivElement>(null);
  const previousChecked = React.useRef(checked);
  React.useEffect(() => {
