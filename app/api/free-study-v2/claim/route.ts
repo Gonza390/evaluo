@@ -3,6 +3,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
 import { isFreeStudyV2Active } from '@/lib/free-study-v2';
+import { premiumUpgradeForLimit, type PremiumGateReason } from '@/lib/premium-flow';
 import { claimFreeStudyUnlock, getFreeStudyBank, type FreeStudyUnlockKind } from '@/lib/free-study-v2-server';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 
@@ -102,9 +103,16 @@ export async function POST(request: Request) {
       // reuse the first material's grant without consuming an account quota.
       userId:user.id, materialId, kind:type, itemKey:materialId+':'+itemKey, premium,
     });
+    const reasons: Record<FreeStudyUnlockKind, PremiumGateReason> = {
+      multiple_choice:'multiple_choice', true_false:'true_false',
+      matching_round:'matching_round', case:'case', flashcard:'flashcard', simulator:'simulator',
+    };
+    const upgrade = result.allowed ? undefined
+      : premiumUpgradeForLimit(reasons[type], {materialId});
     return NextResponse.json({
       allowed:result.allowed, used:result.used, limit:result.limit,
       alreadyUnlocked:result.alreadyUnlocked,
+      ...(upgrade ? {upgrade} : {}),
     }, { headers:noStore });
   } catch {
     return fail('free_study_quota_unavailable', 503);
