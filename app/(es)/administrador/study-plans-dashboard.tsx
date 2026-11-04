@@ -10,7 +10,7 @@ const tabs:[string,string][]=[
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],
  ['Adquisición y SEO','adquisicion'],['Activación y recorrido','producto'],
  ['Aprendizaje y prácticas','biblioteca'],['Planes de estudio','planes'],
- ['Monetización','referidos'],['Comunicaciones','mails'],['Sistema e IA','ia'],
+ ['Monetización','monetizacion'],['Comunicaciones','mails'],['Sistema e IA','ia'],
  ['Gestión','usuarios'],
 ];
 const num=(n:number|null|undefined)=>n===null||n===undefined?'—':Math.round(n).toLocaleString('es-AR');
