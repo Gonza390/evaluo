@@ -10,7 +10,7 @@ import type {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 6;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 7;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
