@@ -32,6 +32,14 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_management_snapshot_v1:{
+    Args:Record<PropertyKey,never>;
+    Returns:import('@/app/(es)/administrador/gestion-dashboard-types').GestionSnapshot;
+  };
+  admin_management_update_feedback_v1:{
+    Args:{p_actor:string;p_source:string;p_feedback_id:string;p_expected:string;p_next:string};
+    Returns:{status:string};
+  };
   admin_communications_dashboard_v1: {
     Args: {p_days?:number;p_from?:string|null;p_to?:string|null;p_type?:string;p_template?:string;p_status?:string;p_campaign?:string};
     Returns: import('@/app/(es)/administrador/communications-dashboard-types').CommunicationsSnapshot;
