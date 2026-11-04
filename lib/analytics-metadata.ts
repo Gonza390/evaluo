@@ -63,6 +63,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   pdf_lifecycle_email_landing_viewed: ['material_id', 'campaign_key', 'content'],
   session_ping: ['engagement_ms', 'engagement_version', 'attribution', 'anonymous_id', 'page_type'],
   client_error: ['message', 'source', 'line', 'attribution', 'anonymous_id', 'page_type'],
+  // Solo métricas numéricas: rutas normalizadas, sin identificación ni contenido del estudiante.
+  product_web_vital: ['metric', 'value_ms', 'sample_rate', 'measurement_version'],
   // Datos técnicos de diseño; no enviar texto visible ni contenido del PDF.
   ui_horizontal_overflow_detected: [
     'anonymous_id', 'page_type', 'viewport_width', 'scroll_width',
