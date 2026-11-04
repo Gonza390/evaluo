@@ -558,7 +558,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
-    onGenerate={freeV2 ? undefined : () => { void generateNewCases(); }} generating={generating} /></div>;
+    /></div>;
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
