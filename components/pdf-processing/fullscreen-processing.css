@@ -1,0 +1,84 @@
+/* Scoped to the full-screen PDF preparation flow. Never affects the dashboard. */
+[data-pdf-processing-screen] {
+  --pdf-processing-ease: cubic-bezier(.22, 1, .36, 1);
+  overflow-wrap: break-word;
+}
+
+[data-processing-scene-stage] {
+  container: processing-scene / inline-size;
+  min-width: 0;
+}
+
+/* Keep the heading and its example together throughout a scene change. */
+[data-processing-scene-motion] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  animation: pdf-processing-arrive 270ms var(--pdf-processing-ease) both;
+}
+
+[data-processing-scene-motion][data-phase='exit'] {
+  animation: none;
+  opacity: 0;
+  transform: translate3d(0, 5px, 0);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+@keyframes pdf-processing-arrive {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* The available area is smaller than the viewport when the Evaluo sidebar is visible.
+   Switch to columns based on this component's actual width, not the viewport. */
+@container processing-scene (max-width: 879px) {
+  [data-processing-layout] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  [data-processing-layout='organize'] [data-processing-arrow] {
+    margin-inline: 0;
+  }
+
+  [data-processing-layout='memorize'] > section {
+    width: 100%;
+    max-width: none;
+  }
+
+  [data-processing-layout='practice'] > section,
+  [data-processing-layout='understand'] > section {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@container processing-scene (min-width: 880px) {
+  [data-processing-layout] { flex-direction: row; }
+}
+
+/* Reserve a stable visual stage on desktop, so the footer and header do not jump
+   when content heights differ. On mobile, scrolling is preferable to clipping. */
+@media (min-width: 1024px) {
+  [data-processing-scene-stage] {
+    min-height: min(680px, calc(100svh - 235px));
+  }
+}
+
+@media (max-width: 639px) {
+  [data-pdf-processing-screen] [data-processing-scene-motion] { gap: 22px; }
+  [data-pdf-processing-screen] [data-processing-scene-content] { min-width: 0; }
+  [data-pdf-processing-screen] [data-processing-layout] { gap: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-processing-scene-motion],
+  [data-processing-scene-motion][data-phase='exit'] {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [data-pdf-processing-screen] [role='progressbar'] > div {
+    transition: none !important;
+  }
+}
