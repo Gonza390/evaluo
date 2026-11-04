@@ -27,6 +27,8 @@ import { obtenerAprendizajePracticas } from './learning-dashboard-actions';
 import { LearningDashboard } from './learning-dashboard';
 import { obtenerDashboardPlanesEstudio } from './study-plans-dashboard-actions';
 import { StudyPlansDashboard } from './study-plans-dashboard';
+import { obtenerDashboardGestion } from './gestion-dashboard-actions';
+import { GestionDashboard } from './gestion-dashboard';
 import {
   AICostPanel,
   IAPanel,
@@ -42,7 +44,8 @@ type PanelKey =
   | 'planes'
   | 'usuarios'
   | 'mails'
-  | 'ia';
+  | 'ia'
+  | 'gestion';
 
 const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'resumen', label: 'Resumen general' },
@@ -55,6 +58,7 @@ const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'usuarios', label: 'Usuarios' },
   { key: 'mails', label: 'Comunicaciones' },
   { key: 'ia', label: 'IA' },
+  { key: 'gestion', label: 'Gestión' },
 ];
 
 const PERIOD_OPTIONS = [
@@ -172,6 +176,7 @@ export default async function AdministradorPage({
   const needsUsers = activePanel === 'usuarios';
   const needsMails = activePanel === 'mails';
   const needsIA = activePanel === 'ia';
+  const needsGestion = activePanel === 'gestion';
 
   const [
     overviewResult,
@@ -183,6 +188,7 @@ export default async function AdministradorPage({
     plansResult,
     usersResult,
     mailResult,
+    gestionResult,
     iaPromptResult,
     iaRankingResult,
     iaFeedbackStatsResult,
@@ -204,6 +210,7 @@ export default async function AdministradorPage({
       university:params.usersUniversity ?? 'all', selectedUserId:params.userId ?? null,
     }) : Promise.resolve(null),
     needsMails ? obtenerDashboardComunicaciones(params) : Promise.resolve(null),
+    needsGestion ? obtenerDashboardGestion() : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -228,6 +235,11 @@ export default async function AdministradorPage({
           filters={monetizationResult.filters} today={monetizationResult.today}
           earliest={monetizationResult.earliest} />
       : <ErrorPanel message="No pudimos cargar Monetización." />;
+  } else if (activePanel === 'gestion') {
+    panelContent = gestionResult
+      ? <GestionDashboard snapshot={gestionResult.snapshot} actor={gestionResult.actor}
+          limits={gestionResult.limits} />
+      : <ErrorPanel message="No pudimos cargar Gestión." />;
   } else if (activePanel === 'referidos') {
     panelContent =
       referralResult?.success && referralResult.data ? (
@@ -323,6 +335,10 @@ export default async function AdministradorPage({
   if (needsPlanes && plansResult) {
     return <StudyPlansDashboard snapshot={plansResult.snapshot} filters={plansResult.filters}
       today={plansResult.today} earliest={plansResult.earliest} />;
+  }
+  if (needsGestion && gestionResult) {
+    return <GestionDashboard snapshot={gestionResult.snapshot} actor={gestionResult.actor}
+      limits={gestionResult.limits} />;
   }
   if (needsMails && mailResult) {
     return <CommunicationsDashboard snapshot={mailResult.snapshot} filters={mailResult.filters}
