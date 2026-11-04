@@ -29,8 +29,8 @@ export default async function PrepareStudyPlanPage({ searchParams }: { searchPar
     ? await supabase.from('student_materials').select('exam_date').eq('id', selectedId).eq('user_id', user.id).maybeSingle()
     : { data: null };
   // exam_date exists in remote Supabase but local generated DB types lag the schema.
-  const examDate = (selectedMaterial as { exam_date?: string | null } | null)?.exam_date;
-  const futureExamDate = typeof examDate === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(examDate) &&
+  const examDate = (selectedMaterial as unknown as { exam_date?: string | null } | null)?.exam_date;
+  const futureExamDate = typeof examDate === 'string' && /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(examDate) &&
     examDate >= new Date().toISOString().slice(0,10) ? examDate : undefined;
   return <StudyPlanSetup materials={materials} initialMaterialId={selectedId} initialExamDate={futureExamDate}/>;
 }
