@@ -64,6 +64,7 @@ type StudentMaterialExamProps = {
   entryId?: string | null;
   artifacts: PedagogicalArtifacts;
   materialId: string;
+  materialTitle?: string;
   freeStudyV2?: boolean;
   onComplete?: () => void;
   /** Entrega el resultado de la tanda al contenedor para reutilizar la vista de Progreso. */
@@ -87,6 +88,7 @@ type OpenAssessment = 'got_it' | 'review';
 export function StudentMaterialExam({
   artifacts,
   materialId,
+  materialTitle,
   freeStudyV2 = false,
   entrySource = 'direct_tab',
   entryId = null,
@@ -539,7 +541,7 @@ export function StudentMaterialExam({
       : '/materiales/' + materialId + '?tab=ejercicios';
     return <FreePracticeLimitScreen
       kind="multiple_choice"
-      materialTitle="Tu material"
+      materialTitle={materialTitle}
       topicLabel={topicTitle}
       premiumHref={premiumUpgradeForLimit('multiple_choice', {
         materialId, returnTo:practicePath,
