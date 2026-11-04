@@ -4,7 +4,9 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 
-import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, listFreeStudyUnlockedKeys } from '@/lib/free-study-v2-server';
+import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
+import { hasPremiumAccess } from '@/lib/premium';
 import type { StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { isPracticeUuid } from '@/lib/student-materials/practice-request-validation';
 import {
@@ -77,6 +79,19 @@ async function generateTopicExercises(request:Request){
     userId:user.id,materialId:material.id,mode:bankMode,
   });
   if(cached) return NextResponse.json({questions:cached,source:'verified_topic_cached'},{headers:noCache});
+  // No more generation charges for a Free account after all 12
+  // individual multiple-choice grants have been consumed. Paid accounts
+  // never participate in this Free quota.
+  const premium=await hasPremiumAccess(user.id);
+  if(appliesFreeStudyV2(premium)) {
+    const unlocked=await listFreeStudyUnlockedKeys({
+      userId:user.id,kind:'multiple_choice',premium:false,
+    });
+    if(unlocked && unlocked.size>=FREE_STUDY_V2.multipleChoice) {
+      return NextResponse.json({error:'free_quota_exhausted'},
+        {status:403,headers:noCache});
+    }
+  }
   const admin=createAdminClient();
   const [{data:summary,error:summaryError},{data:chunks,error:chunksError}]=await Promise.all([
     admin.from('student_material_summaries')
