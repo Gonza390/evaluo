@@ -59,6 +59,27 @@ export async function POST(request: Request) {
         valid = Array.isArray(artifacts?.questions) &&
           artifacts.questions.some(q => q.id === itemKey && q.type === 'multiple_choice' &&
             q.options?.length >= 2 && q.options.includes(q.answer));
+        if (!valid) {
+          // Preguntas nuevas: la ruta de generación guarda solo ejercicios
+          // con dos validaciones independientes y evidencia del documento.
+          // No confiar nunca en la pregunta/clave enviada por el navegador.
+          const { data: banks, error: bankError } = await admin
+            .from('free_study_v2_banks' as never)
+            .select('payload')
+            .eq('user_id', user.id).eq('material_id', materialId)
+            .like('mode','topic:%').limit(500);
+          if (bankError) throw bankError;
+          valid = (banks ?? []).some(entry => {
+            const payload = (entry as {payload?: unknown}).payload;
+            return Array.isArray(payload) && payload.some((raw: unknown) => {
+              if (!raw || typeof raw !== 'object') return false;
+              const q = raw as {id?:unknown;type?:unknown;answer?:unknown;options?:unknown};
+              return q.id === itemKey && q.type === 'multiple_choice' &&
+                typeof q.answer === 'string' && Array.isArray(q.options) &&
+                q.options.length >= 2 && q.options.includes(q.answer);
+            });
+          });
+        }
       } else {
         const index = /^flashcard:(\d+)$/.exec(itemKey);
         const i = index ? Number(index[1]) : -1;
