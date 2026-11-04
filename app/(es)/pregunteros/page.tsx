@@ -190,6 +190,9 @@ export default async function PregunteroHubPage() {
                     <Link href="/funciones/simulacro-examen-con-ia" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
                       Simulacro de examen desde tu PDF
                     </Link>
+                    <Link href="/funciones/practicar-por-tema" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
+                      Practicar cada tema de mis apuntes
+                    </Link>
                   </div>
                 </div>
               </div>
