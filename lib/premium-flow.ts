@@ -84,3 +84,8 @@ export function premiumUpgradeForLimit(
   const source = 'free_v2_' + reason + '_limit';
   return { reason, source, returnTo, href: premiumPricingHref({source, materiaId:materialId, returnTo}) };
 }
+
+/** Error distinguible de red/validación: sólo una cuota Free real habilita upgrade. */
+export class FreeStudyV2UploadLimitError extends Error {
+  readonly code = 'free_v2_material_limit';
+}
