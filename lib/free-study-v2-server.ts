@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 
 export type FreeStudyUnlockKind =
   | 'multiple_choice' | 'true_false' | 'matching_round' | 'case'
-  | 'flashcard' | 'simulator';
+  | 'flashcard' | 'simulator' | 'error_explanation';
 
 export const FREE_STUDY_KIND_LIMIT: Record<FreeStudyUnlockKind, number> = {
   multiple_choice: FREE_STUDY_V2.multipleChoice,
@@ -15,6 +15,7 @@ export const FREE_STUDY_KIND_LIMIT: Record<FreeStudyUnlockKind, number> = {
   case: FREE_STUDY_V2.cases,
   flashcard: FREE_STUDY_V2.flashcards,
   simulator: FREE_STUDY_V2.simulatorSessions,
+  error_explanation: FREE_STUDY_V2.incorrectAnswerExplanations,
 };
 
 export type FreeStudyUnlockResult = {
