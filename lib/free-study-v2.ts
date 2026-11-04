@@ -1,6 +1,7 @@
 /**
  * Contrato comercial del nuevo Free. Sólo se activa tras desplegar a producción.
  * Ningún preview de master ni entorno local aplica cupos v2.
+ * Requiere el rollout explícito (migración aplicada) para evitar fallos parciales.
  */
 export const FREE_STUDY_V2 = Object.freeze({
   materialsLifetime: 1,
@@ -19,7 +20,7 @@ export const FREE_STUDY_V2 = Object.freeze({
 
 /** Exige un despliegue real de producción, no NODE_ENV=production (también en previews). */
 export function isFreeStudyV2Active() {
-  return process.env.VERCEL_ENV === 'production';
+  return process.env.VERCEL_ENV === 'production' && process.env.FREE_STUDY_V2_ENABLED === '1';
 }
 
 export function appliesFreeStudyV2(isPremium: boolean) {
