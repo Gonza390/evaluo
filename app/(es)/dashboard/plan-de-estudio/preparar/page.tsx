@@ -24,5 +24,12 @@ export default async function PrepareStudyPlanPage({ searchParams }: { searchPar
     return {id:material.id,title:material.title,topicCount:topics.length,topics};
   }));
   const materialId = (await searchParams)?.material;
-  return <StudyPlanSetup materials={materials} initialMaterialId={materials.some(m => m.id === materialId) ? materialId : undefined}/>;
+  const selectedId = materials.some(m => m.id === materialId) ? materialId : undefined;
+  const { data: selectedMaterial } = selectedId
+    ? await supabase.from('student_materials').select('exam_date').eq('id', selectedId).eq('user_id', user.id).maybeSingle()
+    : { data: null };
+  const examDate = selectedMaterial?.exam_date;
+  const futureExamDate = typeof examDate === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(examDate) &&
+    examDate >= new Date().toISOString().slice(0,10) ? examDate : undefined;
+  return <StudyPlanSetup materials={materials} initialMaterialId={selectedId} initialExamDate={futureExamDate}/>;
 }
