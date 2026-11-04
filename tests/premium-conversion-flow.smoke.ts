@@ -51,6 +51,8 @@ assert.equal(premiumPurchaseDisplayState({plan:'free',status:'active'}),'inactiv
 assert.equal(premiumPurchaseDisplayState({plan:'free',status:'past_due'}),'attention');
 assert.equal(premiumPaymentResultState({plan:'premium',status:'canceled',checkoutStatus:'approved'}),'approved');
 assert.equal(premiumPaymentResultState({plan:'free',status:'active',checkoutStatus:'pending'}),'processing');
+assert.equal(premiumPaymentResultState({plan:'free',status:'canceled',checkoutStatus:'pending'}),'processing');
+assert.equal(premiumPaymentResultState({plan:'free',status:'expired',checkoutStatus:'approved'}),'processing');
 assert.equal(premiumPaymentResultState({plan:'free',status:'active',checkoutStatus:'failed'}),'failed');
 assert.equal(premiumPaymentResultState({plan:'free',status:'past_due'}),'attention');
 
