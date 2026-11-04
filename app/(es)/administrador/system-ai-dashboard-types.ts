@@ -11,6 +11,6 @@ export type SystemAiSnapshot={
  ai_functions:Array<{name:string;requests:number;tokens:number;prompt_tokens:number;completion_tokens:number}>;
  daily:Array<{d:string;requests:number;tokens:number}>;
  incidents:Array<{area:string;title:string;first_seen:string;last_seen:string;occurrences:number;state:string;severity:string}>;
- performance:Array<{ord:number;name:string;note:string;errors:number}>;
+ performance:Array<{ord:number;name:string;note:string;errors:number;lcp_samples:number;ttfb_samples:number;lcp_p95_ms:number|null;ttfb_p95_ms:number|null}>;
  infra:{database_bytes:number;storage:{objects:number;bytes:number}};
 };
