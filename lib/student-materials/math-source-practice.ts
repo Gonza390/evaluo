@@ -29,8 +29,15 @@ export function buildVerifiedMathPractice(
       excerpt: source.text.trim().slice(0, 220),
     };
   };
-  const numericOptions = (correct: number) =>
-    [correct, correct + 2, correct - 3, correct + 5].map(String);
+  const numericOptions = (correct: number, round: number) => {
+    const distractors = [correct + 2, correct - 3, correct + 5].map(String);
+    const index = round % 4;
+    return [
+      ...distractors.slice(0, index),
+      String(correct),
+      ...distractors.slice(index),
+    ];
+  };
   const determinant = model.formulas.find(formula =>
     /determinante/i.test(formula.expression + ' ' + formula.description) &&
     /(?:2x2|2\s*[×x]\s*2|ad\s*[-−]\s*bc)/i.test(formula.expression + ' ' + formula.description)
@@ -49,7 +56,7 @@ export function buildVerifiedMathPractice(
           id: `worked-det-${index}`, type: 'multiple_choice',
           level: 'aplicar', kind: 'formula', topic: 'Determinante de una matriz 2×2',
           prompt: `Calculá el determinante de la matriz A = [[${a}, ${b}], [${c}, ${d}]]. ¿Cuál es el resultado?`,
-          options: numericOptions(correct), answer: String(correct),
+          options: numericOptions(correct, index), answer: String(correct),
           explanation: `En una matriz 2×2 se usa ad − bc. Por eso, det(A) = (${a} × ${d}) − (${b} × ${c}) = ${correct}.`,
           reference,
         });
@@ -77,7 +84,7 @@ export function buildVerifiedMathPractice(
           id:`worked-product-${index}`,type:'multiple_choice',level:'aplicar',
           kind:'formula',topic:'Multiplicación de matrices 2×2',
           prompt:`Multiplicá A = [[${a[0]}, ${a[1]}], [${a[2]}, ${a[3]}]] por B = [[${b[0]}, ${b[1]}], [${b[2]}, ${b[3]}]]. ¿Cuánto vale la entrada C${row+1}${col+1} de C = AB?`,
-          options:numericOptions(correct),answer:String(correct),
+          options:numericOptions(correct,index+1),answer:String(correct),
           explanation:`La entrada C${row+1}${col+1} es el producto de la fila ${row+1} de A por la columna ${col+1} de B: ${a[i]} × ${b[j]} + ${a[i+1]} × ${b[j+2]} = ${first} + ${second} = ${correct}.`,
           reference,
         });
