@@ -32,6 +32,10 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_communications_dashboard_v1: {
+    Args: {p_days?:number;p_from?:string|null;p_to?:string|null;p_type?:string;p_template?:string;p_status?:string;p_campaign?:string};
+    Returns: import('@/app/(es)/administrador/communications-dashboard-types').CommunicationsSnapshot;
+  };
   admin_monetization_dashboard_v1: {
     Args: {
       p_days?: number; p_from?: string | null; p_to?: string | null;
