@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, Check, CheckCircle2, FileText, Layers3, Lightbulb, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, CheckCircle2, Lightbulb, Loader2, RotateCcw } from 'lucide-react';
 import type { StudentMaterialProcessingState } from '@/app/dashboard/materiales/actions';
 import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
@@ -66,7 +66,7 @@ function SceneOrganize() {
     <ExampleDocument/><div data-processing-arrow aria-hidden="true" className="flex items-center justify-center text-[#0b63e5] lg:-mx-1"><ArrowRight className="size-6 rotate-90 lg:rotate-0"/></div><TopicsExample/>
   </div>;
 }
-function SceneUnderstand() {
+function SceneUnderstand({fileName}: {fileName:string}) {
   return <div data-processing-layout="understand" className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
     <section aria-label="Ejemplo de resumen de un tema" className="flex min-w-0 flex-[1.6] flex-col gap-4 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-6 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:px-8 sm:py-7">
       <div className="flex flex-wrap items-center justify-between gap-3"><Label>TEMA 2 · RESUMEN</Label><ExampleTag/></div>
@@ -83,7 +83,7 @@ function SceneUnderstand() {
       <Label>EN TU MATERIAL</Label>
       <div className="flex items-center gap-2.5">
         <span className="flex h-8 w-[26px] shrink-0 items-center justify-center rounded-md bg-[#d92d3a] text-[9px] font-bold text-white">PDF</span>
-        <div className="min-w-0"><p className="truncate text-[14px] font-semibold">Apuntes_Unidad_3.pdf</p><p className="text-[13px] text-[#667085]">Página 14</p></div>
+        <div className="min-w-0"><p className="truncate text-[14px] font-semibold">{fileName}</p><p className="text-[13px] text-[#667085]">Página 14</p></div>
       </div>
       <div className="flex flex-1 flex-col gap-2.5 rounded-2xl border border-[#dbe6f8] bg-[#f7faff] px-4 py-5">
         {[90,82,94,88,64,86].map((width,index)=><div key={index} className={`h-2 rounded ${index===2||index===3?'bg-[#ffe28a]':'bg-[#e1e6ef]'}`} style={{width:`${width}%`}} />)}
@@ -145,9 +145,38 @@ function ScenePractice() {
   </div>;
 }
 
-function ProcessingScene({ scene }: {scene:number}) {
-  const parts=[<SceneOrganize key="organize"/>,<SceneUnderstand key="understand"/>,<SceneMemorize key="memorize"/>,<ScenePractice key="practice"/>];
+function ProcessingScene({ scene, fileName }: {scene:number; fileName:string}) {
+  const parts=[<SceneOrganize key="organize"/>,<SceneUnderstand key="understand" fileName={fileName}/>,<SceneMemorize key="memorize"/>,<ScenePractice key="practice"/>];
   return <div className="w-full" data-pdf-processing-scene-content>{parts[scene] ?? parts[3]}</div>;
+}
+
+/** Keep every complete illustration visible within one viewport, including small screens. */
+function ProcessingFit({children,sceneKey}:{children:React.ReactNode;sceneKey:number|string}) {
+  const viewportRef=useRef<HTMLDivElement>(null);
+  const contentRef=useRef<HTMLDivElement>(null);
+  const [scale,setScale]=useState(1);
+  useLayoutEffect(()=>{
+    const viewport=viewportRef.current,content=contentRef.current;
+    if(!viewport||!content)return;
+    const fit=()=>{
+      const vh=viewport.clientHeight,vw=viewport.clientWidth;
+      const h=content.scrollHeight,w=content.scrollWidth;
+      if(!vh||!vw||!h||!w)return;
+      const next=Math.max(0.1,Math.min(1,(vh-6)/h,(vw-6)/w));
+      setScale(current=>Math.abs(current-next)>0.005?next:current);
+    };
+    const observer=new ResizeObserver(fit);
+    observer.observe(viewport);
+    observer.observe(content);
+    fit();
+    return ()=>observer.disconnect();
+  },[sceneKey]);
+  return <div data-processing-fit-viewport ref={viewportRef} className="relative min-h-0 w-full flex-1 overflow-hidden">
+    <div data-processing-fit-content ref={contentRef} className="absolute left-1/2 top-1/2 w-full max-w-[1040px]"
+      style={{transform:`translate(-50%, -50%) scale(${scale})`,transformOrigin:'center center'}}>
+      {children}
+    </div>
+  </div>;
 }
 
 export function FullscreenProcessing({ initialState, preview = false }: {initialState: StudentMaterialProcessingState; preview?: boolean}) {
@@ -164,8 +193,13 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   const materialId=initialState.materialId;
   const ready=preview ? previewScene===4 : state.status==='ready';
   const failed=!preview && state.status==='failed';
-  const progress=preview ? [12,38,64,90,100][previewScene] : ready?100:Math.min(96,Math.max(0,state.progress));
+  const progress=preview ? [18,41,68,92,100][previewScene] : ready?100:Math.min(96,Math.max(0,state.progress));
   const scene=preview ? Math.min(3,previewScene) : Math.min(3,Math.floor(elapsed/SCENE_MS));
+  useEffect(()=>{
+    if(!preview||previewScene>=4)return;
+    const timer=window.setTimeout(()=>setPreviewScene(current=>Math.min(4,current+1)),SCENE_MS);
+    return ()=>window.clearTimeout(timer);
+  },[preview,previewScene]);
   useEffect(()=>{
     if(ready||failed)return;
     if(scene===visibleScene)return;
@@ -217,30 +251,31 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
     finally{setRetrying(false)}
   },[materialId,retrying,preview]);
   const readHref=`${getStudentMaterialRoute(materialId)}?inicio=1${state.isFirstReadyMaterial?'&recorrido=1':'&tab=resumen'}`;
-  return <main data-pdf-processing-screen className="flex min-h-[calc(100svh-52px)] w-full min-w-0 flex-col overflow-x-clip bg-white font-sans text-[#0f1623]">
-    {preview ? <nav aria-label="Pantallas de demostración" data-pdf-preview-only className="flex flex-wrap items-center gap-2 border-b border-[#dbe6f8] bg-[#f7faff] px-4 py-3 sm:px-6 lg:px-9">
-      <span className="mr-2 text-[12px] font-semibold text-[#42506A]">Vista local · Sin procesar PDF</span>
-      {[...STEPS,'Material listo'].map((name,index)=><button key={name} type="button" onClick={()=>setPreviewScene(index)} aria-pressed={previewScene===index} className={`min-h-9 rounded-full border px-3 text-[12px] font-semibold transition-colors ${previewScene===index?'border-[#2563EB] bg-[#2563EB] text-white':'border-[#dbe6f8] bg-white text-[#42506A] hover:border-[#2563EB]'}`}>{index+1}. {name}</button>)}
-    </nav> : null}
-    <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-[#e8ecf2] px-4 py-4 sm:px-6 lg:px-9">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eef4ff] text-[#0b63e5]"><FileText size={20}/></span>
-        <div className="min-w-0"><p className="text-[12px] font-semibold text-[#667085]">Preparación de material</p><p className="max-w-[240px] truncate text-[14px] font-semibold sm:max-w-[360px]">{state.fileName}</p></div>
+  return <main data-pdf-processing-screen className="flex h-dvh min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white font-sans text-[#0f1623]">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-8 gap-y-2 border-b border-[#e8ecf2] px-4 py-3 sm:px-8 sm:py-4 lg:px-10">
+      <div className="flex shrink-0 items-center gap-2.5" aria-label="Evaluo">
+        <Image src="/evaluo-logo-icono.svg" width={28} height={28} alt="" className="size-7 object-contain"/>
+        <span className="text-[18px] font-bold tracking-[-.01em]">Evaluo</span>
       </div>
-      <div className="flex min-w-0 w-full items-center gap-3 sm:w-[280px]">
+      {!ready?<div className="flex min-w-0 flex-1 items-center justify-start gap-3 sm:justify-center">
+        <span className="flex h-9 w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#d92d3a] text-[10px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
+        <span className="max-w-[160px] truncate text-[13px] font-semibold sm:max-w-[280px] sm:text-[15px]">{state.fileName}</span>
+      </div>:null}
+      <div className="flex min-w-[145px] flex-[0_1_340px] items-center gap-3 sm:gap-3.5">
         <div role="progressbar" aria-label={state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-2 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
           <div className={`h-full rounded-full transition-[width] duration-500 ${ready?'bg-[#067647]':'bg-[#0b63e5]'}`} style={{width:`${progress}%`}}/>
         </div>
         <span className={`min-w-12 text-right text-[14px] font-bold tabular-nums ${ready?'text-[#067647]':''}`}>{progress} %</span>
       </div>
     </header>
-    <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-7 px-4 py-7 sm:gap-8 sm:px-6 lg:px-9" data-processing-content>
+    <div data-processing-content className="flex min-h-0 min-w-0 flex-1 flex-col px-3 py-3 sm:px-6 sm:py-5 lg:px-10">
+      <ProcessingFit sceneKey={ready?'ready':failed?'failed':visibleScene}>
       {failed? <section data-processing-final-motion role="alert" className="mx-auto w-full max-w-[650px] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-7 text-center">
         <h1 className="text-[25px] font-bold">No pudimos procesar tu material</h1>
         <p className="text-[14px] text-[#4b5565]">{state.error||state.message}</p>
         <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-6 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> Reintentar</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-6 text-sm font-semibold">Volver a Mi espacio</Link></div>
       </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[880px] flex-col items-center rounded-[32px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-8 text-center sm:px-10 sm:py-11">
-        <Image src="/evi-bienvenida.svg" alt="" width={128} height={128} className="h-24 w-24 object-contain sm:h-32 sm:w-32"/>
+        <Image src="/evi-procesamiento-listo.svg" alt="" width={140} height={140} className="mx-auto h-28 w-28 object-contain sm:h-[140px] sm:w-[140px]"/>
         <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#abefc6] bg-[#ecfdf3] px-4 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> Procesamiento completo</span>
         <h1 className="mt-4 text-[27px] font-bold leading-tight tracking-[-.03em] sm:text-[40px]">Tu material está listo para estudiar</h1>
         <p className="mt-3 max-w-[520px] text-[15px] leading-6 text-[#4b5565] sm:text-[17px]">Ya podés comenzar por el primer tema y avanzar a tu ritmo.</p>
@@ -258,24 +293,25 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
           <h1 className="text-[26px] font-bold leading-tight tracking-[-.03em] sm:text-[32px] lg:text-[38px]">{titles[visibleScene]}</h1>
           <p className="mx-auto max-w-[560px] text-[14px] leading-6 text-[#4b5565] sm:text-[17px]">{descriptions[visibleScene]}</p>
         </div>
-        <ProcessingScene scene={visibleScene}/>
+        <ProcessingScene scene={visibleScene} fileName={state.fileName}/>
         </div>
         <span className="sr-only" role="status">{connectionIssues?'Seguimos preparando tu material. Estamos restableciendo la conexión.':state.message}</span>
       </div>}
+      </ProcessingFit>
     </div>
-    <footer className="flex min-w-0 flex-col items-start justify-between gap-3 border-t border-[#e8ecf2] px-4 py-4 sm:px-6 xl:flex-row xl:items-center lg:px-9">
+    <footer className="flex min-w-0 shrink-0 flex-col items-start justify-between gap-2 border-t border-[#e8ecf2] px-4 py-3 sm:px-8 sm:py-4 lg:flex-row lg:items-center lg:px-10">
       <ol className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3" aria-label="Recorrido de estudio">
         {STEPS.map((step,index)=><li key={step} className="flex items-center gap-2">
           {index>0?<span aria-hidden="true" className="mr-1 h-0.5 w-3 bg-[#e8ecf2] sm:w-6"/>:null}
-          <span className={`flex size-3 items-center justify-center rounded-full ${ready?'bg-[#067647]':index===visibleScene?'bg-[#0b63e5] ring-4 ring-[#dbe6f8]':index<visibleScene?'bg-[#0b63e5]':'bg-[#d0d5dd]'}`}>{ready||index<scene?<Check className="size-2.5 text-white"/>:null}</span>
+          <span className={`flex size-3 items-center justify-center rounded-full ${ready?'bg-[#067647]':index===visibleScene?'bg-[#0b63e5] ring-4 ring-[#dbe6f8]':index<visibleScene?'bg-[#0b63e5]':'bg-[#d0d5dd]'}`}>{ready||index<visibleScene?<Check className="size-2.5 text-white"/>:null}</span>
           <span className={`text-[12px] sm:text-[13px] ${!ready&&index===visibleScene?'font-semibold text-[#0f1623]':'text-[#667085]'}`}>{step}</span>
         </li>)}
       </ol>
       <div className="flex min-w-0 items-start gap-3 text-[12px] leading-5 text-[#4b5565] sm:text-[13px]">
         {!ready&&!failed?<Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-[#0b63e5]"/>:<CheckCircle2 size={16} className="text-[#067647]"/>}
-        <span>{failed?'Podés reintentar sin volver a subir el archivo.':ready?'Todo preparado. Podés empezar cuando quieras.':connectionIssues?'Seguimos procesando. Restableciendo la conexión…':visibleScene===0?'Leyendo tu documento y detectando los temas principales…':visibleScene===1?'Organizando la guía de estudio…':visibleScene===2?'Preparando recursos para repasar…':'Revisando y guardando todo tu material…'}</span>
+        <span>{failed?'Podés reintentar sin volver a subir el archivo.':ready?'Todo preparado. Podés empezar cuando quieras.':connectionIssues?'Seguimos procesando. Restableciendo la conexión…':visibleScene===0?'Leyendo tu documento y detectando los temas principales…':visibleScene===1?'Armando resúmenes claros para cada tema…':visibleScene===2?'Preparando tarjetas y glosario para que repases…':'Revisando y guardando todo tu material…'}</span>
       </div>
-      {!ready&&!failed?<Link href="/dashboard" className="text-[12px] font-semibold text-[#0b63e5] hover:underline">Volver a Mi espacio</Link>:null}
+
     </footer>
   </main>;
 }
