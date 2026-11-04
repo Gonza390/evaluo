@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     .select('id, status, offer_code, amount_ars, created_at, updated_at')
     .eq('user_id', user.id);
 
-  const [{ data }, { data: latestCheckoutAttempt }] = await Promise.all([
+  const [{ data, error: subscriptionsError }, { data: latestCheckoutAttempt, error: checkoutError }] = await Promise.all([
     paymentsDb
       .from('user_subscriptions')
       .select(
@@ -30,11 +30,20 @@ export async function GET(request: Request) {
       )
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(100),
     attemptId
       ? checkoutAttemptQuery.eq('id', attemptId).maybeSingle()
       : checkoutAttemptQuery.order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
+
+  if (subscriptionsError || checkoutError) {
+    return NextResponse.json({error:'subscription_status_unavailable'}, {status:503,
+      headers:{'Cache-Control':'private, no-store'}});
+  }
+  if (attemptId && !latestCheckoutAttempt) {
+    return NextResponse.json({error:'checkout_attempt_not_found'}, {status:404,
+      headers:{'Cache-Control':'private, no-store'}});
+  }
 
   const subscriptions = (data ?? []) as unknown as Array<{
     id: string;
@@ -68,7 +77,7 @@ export async function GET(request: Request) {
       ? 'fixed_term'
       : null;
 
-  const { data: transaction } = premium
+  const { data: transaction, error: transactionError } = premium
     ? await paymentsDb
         .from('payment_transactions')
         .select('status, amount_ars, currency, paid_at, created_at')
@@ -76,7 +85,10 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-    : { data: null };
+    : { data: null, error: null };
+
+  if (transactionError) return NextResponse.json({error:'payment_status_unavailable'}, {status:503,
+    headers:{'Cache-Control':'private, no-store'}});
 
   return NextResponse.json({
     plan: premiumIsActive ? 'premium' : 'free',
