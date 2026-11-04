@@ -67,4 +67,17 @@ assert.match(ui,/for\(let round=0;round<2/,
 assert.doesNotMatch(readFileSync(new URL('../lib/student-materials/processing-service.ts',import.meta.url),'utf8'),
   /\/api\/practice\/topic-supplement/,
   'Procesar un PDF no debe iniciar generación adicional de práctica.');
+const answerRecorder=readFileSync(new URL('../lib/actions/study-errors.ts',import.meta.url),'utf8');
+assert.match(answerRecorder,/like\('mode', 'topic:%'\)/,
+  'Los resultados de IA deben validarse contra bancos guardados por el servidor.');
+assert.match(answerRecorder,/resolveMaterialAnswer\(input, \{/,
+  'La comprobación del resultado debe usar el contenido canónico del suplemento.');
+assert.match(route,/if\(cached\) return NextResponse\.json/,
+  'Los intentos posteriores deben reutilizar el banco verificado sin otra llamada IA.');
+assert.match(route,/if\(appliesFreeStudyV2\(premium\)\)/,
+  'La limitación de cupo debe aplicarse a Free, nunca a Premium.');
+assert.match(route,/unlocked\.size>=FREE_STUDY_V2\.multipleChoice/,
+  'No generar preguntas que el usuario Free ya no puede utilizar.');
+assert.match(route,/const stable=questions\.length/,
+  'Los suplementos de Premium también deben persistirse para validar respuestas.');
 console.log('Topic practice AI: source validation, DOCX, independent QA, privacy and on-demand flow OK.');
