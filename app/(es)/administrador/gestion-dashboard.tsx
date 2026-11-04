@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
-import {useMemo,useState} from 'react';
+import {useState} from 'react';
 import {gestionActualizarFeedback,gestionResolverCatalogo} from './gestion-dashboard-actions';
 import type {GestionSnapshot} from './gestion-dashboard-types';
 import './admin-home.css';
@@ -35,7 +35,6 @@ const date=(v:string|null)=>v?new Intl.DateTimeFormat('es-AR',{
   timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',
   year:'numeric',hour:'2-digit',minute:'2-digit'
 }).format(new Date(v)):'—';
-const safeString=(v:unknown)=>typeof v==='string'?v:String(v??'—');
 function Title({n,title,note,priority}:{n:string;title:string;note:string;priority?:string}){
  return <div className="gm-sh"><span className="gm-idx">{n}</span><h2>{title}</h2>
  {priority&&<span className="gm-pri">{priority}</span>}<p>{note}</p></div>;
@@ -120,7 +119,6 @@ export function GestionDashboard({snapshot,actor,limits}:{
    setNotice({ok:false,text:e instanceof Error?e.message:'No pudimos guardar el cambio.'});
   }finally{setBusy(false)}
  }
- const requestsSorted=useMemo(()=>[...snapshot.requests], [snapshot.requests]);
  return <main className="ehome gm-page">
   <header className="eh-header"><div className="eh-top"><span className="eh-logo">evaluo<span>.</span></span>
    <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link>
@@ -216,7 +214,7 @@ export function GestionDashboard({snapshot,actor,limits}:{
       <span className={'gm-mono '+(f.status==='in_progress'?'gm-green':f.status==='resolved'?'gm-muted':'')}>{statusLabels[f.status]??f.status}</span>
       <div>{canFeedback&&f.status!=='resolved'?<button disabled={busy} type="button" className="gm-bt"
        onClick={()=>{setNotice(null);setConfirm({section:'fb',source:f.source,id:f.id,name:f.description,
-        expected:f.status,next:f.status==='open'?'in_progress':'resolved'});}}>
+        expected:f.status==='open'?'open':'in_progress',next:f.status==='open'?'in_progress':'resolved'});}}>
         {f.status==='open'?'Pasar a seguimiento':'Marcar resuelto'}</button>:<span className="gm-mono gm-muted">—</span>}</div>
      </div>)}
      {!snapshot.feedback.length&&<p className="gm-empty">No hay feedback pendiente de revisión.</p>}
