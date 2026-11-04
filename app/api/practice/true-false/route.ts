@@ -1,9 +1,13 @@
+import type { PracticeQuestion } from '@/lib/student-materials/practice-modes';
 import { NextResponse } from 'next/server';
 import { isPracticeUuid } from '@/lib/student-materials/practice-request-validation';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
+import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
+import { hasPremiumAccess } from '@/lib/premium';
+import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
 import {
   applyIndependentTrueFalseReview, selectTrueFalseFragments, verifyGeneratedTrueFalse, type TrueFalseFragment,
 } from '@/lib/student-materials/practice-true-false';
@@ -73,6 +77,11 @@ async function handleVerifiedTrueFalse(request: Request) {
     .select('id,processing_status').eq('id',input.materialId).eq('user_id',user.id).maybeSingle();
   if (!material||material.processing_status!=='ready')
     return NextResponse.json({error:'material_not_found'},{status:404});
+  const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
+  if (freeV2) {
+    const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:'true_false' });
+    if (saved) return NextResponse.json({ questions:saved,source:'free_sample_cached' },{headers:{'Cache-Control':'private, no-store'}});
+  }
 
   // This endpoint is reached only after an explicit Practicar > Opciones
   // action, never from the initial PDF/DOCX processing pipeline.
@@ -196,7 +205,11 @@ async function handleVerifiedTrueFalse(request: Request) {
       round,fragments:fragments.length,candidates:candidates.length,
       verified:questions.length,
     });
-    return NextResponse.json({questions,source:'independently_verified_against_document'},
+    const bounded = freeV2
+      ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:'true_false' as const,
+          items:questions.slice(0,FREE_STUDY_V2.trueFalse)})
+      : questions;
+    return NextResponse.json({questions:bounded,source:'independently_verified_against_document'},
       {headers:{'Cache-Control':'private, no-store'}});
   } catch (error) {
     console.error('[practice.true-false] Gemini generation or review failed',
