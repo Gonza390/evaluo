@@ -22,6 +22,7 @@ type AppliedReferral = {
 type ManualReferralCodeProps = {
   offerCode: ReferralOfferCode;
   variant?: 'default' | 'compact';
+  hideHeading?: boolean;
 };
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -49,6 +50,7 @@ function referralError(error: string | undefined, offerCode: ReferralOfferCode) 
 export function ManualReferralCode({
   offerCode,
   variant = 'default',
+  hideHeading = false,
 }: ManualReferralCodeProps) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -111,10 +113,10 @@ export function ManualReferralCode({
   if (compact) {
     return (
       <div className="w-full border-t border-slate-200 pt-3 text-left">
-        <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
+        {!hideHeading ? <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
           <Tag className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
           ¿Tenés un código de descuento?
-        </div>
+        </div> : null}
 
         <div className="mt-2 flex gap-2">
           <Input
