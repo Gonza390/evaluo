@@ -10,7 +10,9 @@ import { PracticeFlashcardSession } from '@/components/dashboard/practice-flashc
 import { buildSourceBackedCases } from '@/lib/student-materials/practice-modes';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { claimFreeStudyUnlock, type FreeStudyUnlockKind } from '@/lib/free-study-v2-server';
+import { claimFreeStudyUnlock, listFreeStudyUnlockedKeys, type FreeStudyUnlockKind } from '@/lib/free-study-v2-server';
+import { premiumUpgradeForLimit, safePremiumReturnTo } from '@/lib/premium-flow';
+import { FreePracticeLimitScreen, type FreePracticeLimitKind } from '@/components/dashboard/free-practice-limit-screen';
 
 import {
   PRACTICE_BANK_VERSION, safePracticeBank, sourceFingerprint,
@@ -45,9 +47,9 @@ async function firstFreeItems<T>(args: {
   return selected;
 }
 
-export default async function PracticeModePage({ params, searchParams }: { params: Promise<{ id: string; mode: string }>; searchParams: Promise<{ repaso?: string; planTopic?: string }> }) {
+export default async function PracticeModePage({ params, searchParams }: { params: Promise<{ id: string; mode: string }>; searchParams: Promise<{ repaso?: string; planTopic?: string; returnTo?: string }> }) {
   const { id, mode } = await params;
-  const { repaso, planTopic } = await searchParams;
+  const { repaso, planTopic, returnTo } = await searchParams;
   const planTopicIndex = planTopic !== undefined && /^\\d{1,3}$/.test(planTopic) ? Number(planTopic) : undefined;
   const reviewLength = repaso === 'rapido' ? 'rapido' : 'completo';
   const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards'];
@@ -69,6 +71,26 @@ export default async function PracticeModePage({ params, searchParams }: { param
     return <main className="mx-auto max-w-3xl p-6"><p>El material todavía se está preparando.</p><Link className="text-blue-600 underline" href="/dashboard/practicar">Volver a Practicar</Link></main>;
   }
   const glossary = tagGlossaryChapters(studyGlossary, studySummary.sections);
+  const requestedBack = safePremiumReturnTo(returnTo);
+  // Do not send a student back to the blocked exercise or an external origin.
+  const backHref = requestedBack && !requestedBack.startsWith('/dashboard/premium') &&
+    !requestedBack.startsWith('/dashboard/practicar/' + id + '/')
+    ? requestedBack
+    : planTopicIndex !== undefined
+      ? '/materiales/' + id + '?tab=resumen&studyTopic=' + planTopicIndex
+      : '/dashboard/practicar?materialId=' + id;
+  const backLabel = backHref.startsWith('/dashboard/plan-de-estudio')
+    ? 'Volver al plan'
+    : backHref.startsWith('/materiales/') ? 'Volver al tema'
+    : backHref.startsWith('/dashboard') && !backHref.startsWith('/dashboard/practicar')
+      ? 'Volver a Mi espacio' : 'Volver a Practicar';
+  const topicLabel = planTopicIndex !== undefined
+    ? studySummary.sections[planTopicIndex]?.title : undefined;
+  const exhausted = (kind: FreePracticeLimitKind) =>
+    <FreePracticeLimitScreen kind={kind} materialTitle={material.title}
+      topicLabel={topicLabel} backHref={backHref} backLabel={backLabel}
+      premiumHref={premiumUpgradeForLimit(kind, {materialId:material.id, returnTo:backHref}).href}/>;
+
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   if (freeV2 && (mode === 'completar' || mode === 'mixto')) {
     return <main className="mx-auto max-w-xl p-6">
@@ -89,6 +111,8 @@ export default async function PracticeModePage({ params, searchParams }: { param
         items: artifacts.flashcards, limit: FREE_STUDY_V2.flashcards, keyPrefix: 'flashcard',
       })
       : artifacts.flashcards;
+    if (freeV2 && artifacts.flashcards.length > 0 && freeFlashcards.length === 0)
+      return exhausted('flashcard');
     return <PracticeFlashcardSession
       materialId={material.id} cards={freeFlashcards} reviewLength={reviewLength}
       freeV2={freeV2} planTopicIndex={planTopicIndex} />;
@@ -103,6 +127,19 @@ export default async function PracticeModePage({ params, searchParams }: { param
       userId:user.id, materialId:material.id, kind:'case',
       items:sourceCases, limit:FREE_STUDY_V2.cases, keyPrefix:'case',
     }) : sourceCases;
+  if (freeV2 && mode === 'casos' && sourceCases.length > 0 && cases.length === 0)
+    return exhausted('case');
+
+  // A fully consumed Free account may still repeat cards previously unlocked
+  // for THIS material; do not show the upgrade screen in that case.
+  if (freeV2 && mode === 'opciones') {
+    const keys = await listFreeStudyUnlockedKeys({
+      userId:user.id,kind:'true_false',premium:false,
+    });
+    if (keys && keys.size >= FREE_STUDY_V2.trueFalse &&
+        !Array.from(keys).some(key => key.startsWith(material.id + ':')))
+      return exhausted('true_false');
+  }
   const sourceQuestions = artifacts.questions.filter(q =>
     q.type === 'multiple_choice' && q.options.length >= 2
   ).map(q => ({
@@ -121,11 +158,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
       itemKey:material.id + ':matching:first',premium:false,
     });
     if (!matching.allowed) {
-      return <main className="mx-auto max-w-xl p-6">
-        <h1 className="text-xl font-semibold">Completaste la ronda gratuita de unir conceptos</h1>
-        <p className="mt-2 text-sm text-slate-600">Ya completaste tu ronda gratuita. Podés volver a repasar los conceptos guardados.</p>
-        <Link href="/dashboard/practicar" className="mt-4 inline-block text-blue-600 underline">Volver a Practicar</Link>
-      </main>;
+      return exhausted('matching_round');
     }
   }
   if (freeV2 && mode === 'simulacro') {
@@ -134,10 +167,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
       itemKey:material.id + ':simulator:first',premium:false,
     });
     if (!simulator.allowed) {
-      return <main className="mx-auto max-w-xl p-6">
-        <h1 className="text-xl font-semibold">Ya utilizaste tu simulacro gratuito</h1>
-        <Link href="/dashboard/practicar" className="mt-4 inline-block text-blue-600 underline">Volver a Practicar</Link>
-      </main>;
+      return exhausted('simulator');
     }
   }
   // A missing bank table during rollout is safe: keep the original source-backed practice.
