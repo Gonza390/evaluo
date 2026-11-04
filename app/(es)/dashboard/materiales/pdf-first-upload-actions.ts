@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
+import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
@@ -113,7 +114,7 @@ async function assertStudentMaterialQuota(userId: string) {
         .from('student_materials')
         .select('id, created_at, processing_status')
         .eq('user_id', userId)
-        .gte('created_at', intervalStart.toISOString()),
+        .gte('created_at', isFreeStudyV2Active() ? '1970-01-01T00:00:00Z' : intervalStart.toISOString()),
       admin
         .from('student_materials')
         .select('id', { count: 'exact', head: true })
@@ -142,9 +143,11 @@ async function assertStudentMaterialQuota(userId: string) {
     const used = (materialsResult.data ?? []).filter(
       (material) => material.processing_status !== 'failed'
     ).length;
-    if (used >= FREE_MATERIAL_UPLOAD_LIMIT) {
+    if (used >= (isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT)) {
       throw new Error(
-        'Ya usaste tus 2 PDFs gratuitos. Tu cupo se renueva cada 15 días o podés continuar con Premium.'
+        isFreeStudyV2Active()
+          ? 'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.'
+          : 'Ya usaste tus 2 PDFs gratuitos. Tu cupo se renueva cada 15 días o podés continuar con Premium.'
       );
     }
   }
