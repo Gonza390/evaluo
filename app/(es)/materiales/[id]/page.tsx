@@ -546,6 +546,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           canRegenerate={canRegenerate}
           fileName={material.file_name}
           isPremium={isPremium}
+          freeStudyV2={freeStudyV2}
           materialId={material.id}
           materiaId={material.materia_id ?? undefined}
           isOwner={isOwner}
