@@ -77,7 +77,9 @@ export async function POST(request: Request) {
     if (!valid) return fail('item_not_in_verified_bank', 403);
 
     const result = await claimFreeStudyUnlock({
-      userId:user.id, materialId, kind:type, itemKey, premium,
+      // Namespace by material: otherwise flashcard:0 on another PDF would
+      // reuse the first material's grant without consuming an account quota.
+      userId:user.id, materialId, kind:type, itemKey:materialId+':'+itemKey, premium,
     });
     return NextResponse.json({
       allowed:result.allowed, used:result.used, limit:result.limit,
