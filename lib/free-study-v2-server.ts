@@ -148,6 +148,38 @@ export async function claimVerifiedFreeStudySample<T extends { id: string }>(inp
   return result;
 }
 
+/**
+ * Source-verified conceptual pairs returned by /api/practice/supplement.
+ * The first cached bank is stable, and each new flashcard consumes one of
+ * the same account-wide 25 grants. Matching always uses the single round.
+ */
+export async function claimFreeStudyPairSample<T extends { term: string; definition: string }>(input: {
+  userId: string; materialId: string; mode: 'matching' | 'flashcards'; items: T[];
+}): Promise<T[]> {
+  const maximum = input.mode === 'matching' ? FREE_STUDY_V2.matchingPairs : FREE_STUDY_V2.flashcards;
+  const sample = input.items.slice(0, maximum).filter(pair =>
+    typeof pair.term === 'string' && pair.term.trim() &&
+    typeof pair.definition === 'string' && pair.definition.trim());
+  if (input.mode === 'matching') {
+    if (sample.length < FREE_STUDY_V2.matchingPairs) return [];
+    const unlock = await claimFreeStudyUnlock({
+      userId:input.userId, materialId:input.materialId,
+      kind:'matching_round', itemKey:input.materialId + ':matching:first', premium:false,
+    });
+    return unlock.allowed ? sample : [];
+  }
+  const accessible: T[] = [];
+  for (const [index, pair] of sample.entries()) {
+    const unlock = await claimFreeStudyUnlock({
+      userId:input.userId, materialId:input.materialId,
+      kind:'flashcard', itemKey:input.materialId + ':supplement-flashcard:' + index,
+      premium:false,
+    });
+    if (unlock.allowed) accessible.push(pair);
+  }
+  return accessible;
+}
+
 /** La primera carga lista sigue consumida aunque se elimine su material. */
 export async function hasFreeStudyV2UploadClaim(userId: string): Promise<boolean> {
   if (!isFreeStudyV2Active()) return false;
