@@ -45,3 +45,13 @@
  }
  .cm-section>.cm-table-scroll{padding-left:20px;padding-right:20px}
 }
+
+
+/* Typography scale and spacing from original Comunicaciones artboard. */
+.cm-tile>strong{font-size:clamp(38px,4.45vw,64px);line-height:.9;letter-spacing:-.05em}
+.cm-flow-stats strong{font-size:32px;line-height:.95}
+.cm-rem-card>strong{font-size:44px;line-height:.95}
+.cm-error-feature>strong{font-size:84px;line-height:.9}
+.cm-impact-main strong{font-size:96px;line-height:.9;letter-spacing:-.05em;color:var(--accent)}
+.cm-impact-side>div:nth-child(1) strong{font-size:64px;line-height:.9}
+.cm-impact-side>div:nth-child(2) strong{font-size:44px;line-height:1}
