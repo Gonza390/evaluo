@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
+import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
@@ -129,7 +130,7 @@ async function getStudentMaterialUploadQuotaForUser(
       .from('student_materials')
       .select('id, created_at, processing_status')
       .eq('user_id', userId)
-      .gte('created_at', intervalStart.toISOString())
+      .gte('created_at', isFreeStudyV2Active() ? '1970-01-01T00:00:00Z' : intervalStart.toISOString())
       .order('created_at', { ascending: true }),
     hasPremiumAccess(userId),
     hasUnlimitedStudentMaterialUploads(userId),
@@ -152,10 +153,11 @@ async function getStudentMaterialUploadQuotaForUser(
   }
 
   const used = countedMaterials.length;
-  const remaining = Math.max(0, FREE_MATERIAL_UPLOAD_LIMIT - used);
+  const freeLimit = isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT;
+  const remaining = Math.max(0, freeLimit - used);
   let nextAvailableAt: string | null = null;
 
-  if (remaining === 0 && countedMaterials.length > 0) {
+  if (!isFreeStudyV2Active() && remaining === 0 && countedMaterials.length > 0) {
     const blockingIndex = Math.max(0, countedMaterials.length - FREE_MATERIAL_UPLOAD_LIMIT);
     const blockingMaterial = countedMaterials[blockingIndex];
     const createdAt = new Date(blockingMaterial.created_at);
@@ -168,7 +170,7 @@ async function getStudentMaterialUploadQuotaForUser(
 
   return {
     isPremium: false,
-    limit: FREE_MATERIAL_UPLOAD_LIMIT,
+    limit: freeLimit,
     used,
     remaining,
     nextAvailableAt,
@@ -223,7 +225,9 @@ async function assertStudentMaterialQuota(userId: string) {
     }
   } else if (!hasUnlimitedUploads && (quota.remaining ?? 0) <= 0) {
     throw new Error(
-      'Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.'
+      isFreeStudyV2Active()
+        ? 'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.'
+        : 'Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.'
     );
   }
 
