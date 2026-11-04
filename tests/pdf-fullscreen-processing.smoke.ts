@@ -6,6 +6,7 @@ const upload = read('components/dashboard/pdf-first-upload-shell.tsx');
 const route = read('app/(es)/dashboard/procesando/[id]/page.tsx');
 const screen = read('components/pdf-processing/fullscreen-processing.tsx');
 const localDemo = read('app/(es)/dashboard/procesando/demo/page.tsx');
+const proxy = read('proxy.ts');
 const planPage = read('app/(es)/dashboard/plan-de-estudio/preparar/page.tsx');
 const plan = read('components/dashboard/study-plan-setup.tsx');
 const materials = read('components/dashboard/student-materials-workspace.tsx');
@@ -19,6 +20,15 @@ assert.match(route, /auth\.getUser\(\)/);
 assert.match(screen, /const SCENE_MS = 6500/);
 assert.match(localDemo, /process\.env\.NODE_ENV !== 'development'/,
   'Local demo route must be inaccessible in deployed environments.');
+assert.match(proxy, /process\.env\.NODE_ENV === 'development'/,
+  'Unauthenticated demo bypass must only exist in local development.');
+assert.match(proxy, /pathname === '\/dashboard\/procesando\/demo'/,
+  'The exception must match only the exact demo path.');
+assert.match(proxy, /pathname\.startsWith\('\/dashboard'\)/,
+  'Regular dashboard routes must stay protected.');
+assert.match(proxy, /if \(isProtectedRoute && !user\)/,
+  'Unauthenticated real processing routes must still redirect to login.');
+
 assert.match(localDemo, /<FullscreenProcessing initialState=\{demoMaterial\} preview/,
   'Demo must reuse the production UI without creating a real PDF.');
 assert.match(screen, /data-pdf-preview-only/,
