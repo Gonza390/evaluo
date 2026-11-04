@@ -950,8 +950,10 @@ assertIncludesAll('app/sitemap.ts', [
   'carrera.materiasCount === 0',
   'carrera.questionMateriasCount > 0',
 ]);
+// Simulator metadata uses only the bounded, cached public catalog RPC.
+// The raw bank must remain inaccessible to anonymous requests.
 assertIncludesAll('app/(es)/simulador-parcial/[carrera]/page.tsx', [
-  "from('preguntas_banco_public')",
+  "rpc('get_public_preguntero_catalog')",
   'robots: { index: hasPublicPractice, follow: true }',
 ]);
 
