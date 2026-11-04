@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { safePremiumReturnTo, premiumPricingHref } from '@/lib/premium-flow';
+import { premiumPaymentResultState } from '@/lib/payments/status';
+import { notifyPremiumAccessChanged } from '@/lib/premium-access-events';
 import {
   AlertTriangle,
   ArrowRight,
@@ -45,10 +48,6 @@ type PaymentDetails = {
 
 type PaymentResultState = 'processing' | 'approved' | 'failed' | 'attention';
 
-const ACTIVE_STATUSES = new Set(['active', 'approved', 'authorized', 'trialing']);
-const ATTENTION_STATUSES = new Set(['past_due', 'paused']);
-const FAILED_STATUSES = new Set(['failed', 'rejected', 'cancelled', 'canceled', 'expired']);
-const FAILED_CHECKOUT_STATUSES = new Set(['failed', 'expired']);
 
 const INITIAL_DETAILS: PaymentDetails = {
   plan: 'free',
@@ -74,8 +73,7 @@ function formatDate(value: string | null) {
 }
 
 function safeReturnTo(value: string | undefined) {
-  const candidate = String(value ?? '').slice(0, 600);
-  return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : undefined;
+  return safePremiumReturnTo(value);
 }
 
 function contextualPremiumRoute(
@@ -95,7 +93,7 @@ function contextualPremiumRoute(
   if (source === 'simulator_explanations') return `/premium/explicaciones${suffix}`;
   if (source === 'errores_review') return `/premium/errores${suffix}`;
   if (source === 'premium_simulator') return `/premium/simulador${suffix}`;
-  return '/pricing#elegir-plan';
+  return premiumPricingHref({source, materiaId, parcial, returnTo});
 }
 
 function successContext(source: string, returnTo: string | undefined) {
@@ -133,18 +131,21 @@ function successContext(source: string, returnTo: string | undefined) {
       href: destination ?? '/simulador',
     };
   }
+  // Incluso una compra desde la página de precios debe recuperar el origen
+  // exacto, no enviar al estudiante al dashboard genérico.
+  if (destination) {
+    return {
+      title: 'Evaluo Premium está activo.',
+      description: 'Podés continuar estudiando desde donde lo dejaste.',
+      cta: 'Continuar estudiando',
+      href: destination,
+    };
+  }
   return null;
 }
 
 function resolvePaymentResultState(details: PaymentDetails): PaymentResultState {
-  const status = details.status.toLowerCase();
-  const checkoutStatus = details.checkoutStatus?.toLowerCase() ?? '';
-
-  if (details.plan === 'premium' || ACTIVE_STATUSES.has(status)) return 'approved';
-  if (ATTENTION_STATUSES.has(status)) return 'attention';
-  if (FAILED_STATUSES.has(status) || FAILED_CHECKOUT_STATUSES.has(checkoutStatus)) return 'failed';
-
-  return 'processing';
+  return premiumPaymentResultState(details);
 }
 
 export function PaymentResult({
@@ -187,6 +188,10 @@ export function PaymentResult({
       };
       setDetails(nextDetails);
       return nextDetails;
+    } catch {
+      // Sin una respuesta confirmada no podemos anunciar Premium ni marcar
+      // una compra como rechazada; el usuario conserva la opción de reintentar.
+      return null;
     } finally {
       setChecking(false);
     }
@@ -200,9 +205,9 @@ export function PaymentResult({
     const check = async () => {
       attempts += 1;
       const nextDetails = await checkPaymentStatus();
-      if (cancelled || !nextDetails) return;
+      if (cancelled) return;
 
-      if (resolvePaymentResultState(nextDetails) === 'processing' && attempts < 10) {
+      if ((!nextDetails || resolvePaymentResultState(nextDetails) === 'processing') && attempts < 10) {
         timeoutId = window.setTimeout(check, 2500);
       }
     };
@@ -216,6 +221,13 @@ export function PaymentResult({
   }, [checkPaymentStatus]);
 
   const resultState = resolvePaymentResultState(details);
+  const entitlementNotified = useRef(false);
+  useEffect(() => {
+    if (resultState === 'approved' && !entitlementNotified.current) {
+      entitlementNotified.current = true;
+      notifyPremiumAccessChanged();
+    }
+  }, [resultState]);
 
   useEffect(() => {
     if (resultState === 'processing') return;
