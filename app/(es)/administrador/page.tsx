@@ -21,12 +21,12 @@ import { obtenerDashboardAdquisicion } from './acquisition-dashboard-actions';
 import { AcquisitionDashboard } from './acquisition-dashboard';
 import { obtenerActivacionRecorrido } from './activation-dashboard-actions';
 import { ActivationDashboard } from './activation-dashboard';
-import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
+import { obtenerDashboardComunicaciones } from './communications-dashboard-actions';
+import { CommunicationsDashboard } from './communications-dashboard';
 import { obtenerAprendizajePracticas } from './learning-dashboard-actions';
 import { LearningDashboard } from './learning-dashboard';
 import { obtenerDashboardPlanesEstudio } from './study-plans-dashboard-actions';
 import { StudyPlansDashboard } from './study-plans-dashboard';
-import { MailPanel } from './mail-panel';
 import {
   AICostPanel,
   IAPanel,
@@ -53,7 +53,7 @@ const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'biblioteca', label: 'Uso académico' },
   { key: 'planes', label: 'Planes de estudio' },
   { key: 'usuarios', label: 'Usuarios' },
-  { key: 'mails', label: 'Mails' },
+  { key: 'mails', label: 'Comunicaciones' },
   { key: 'ia', label: 'IA' },
 ];
 
@@ -145,6 +145,13 @@ export default async function AdministradorPage({
     moneyCountry?: string;
     moneyProvider?: string;
     moneyState?: string;
+    commPeriod?: string;
+    commFrom?: string;
+    commTo?: string;
+    commType?: string;
+    commTemplate?: string;
+    commStatus?: string;
+    commCampaign?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -154,12 +161,6 @@ export default async function AdministradorPage({
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
   const requestedProductDate = String(params.productDate ?? '').trim();
-  const requestedMailType = String(params.mailType ?? 'all').trim().toLowerCase();
-  const activeMailType: MailFilterType =
-    requestedMailType === 'exam' || requestedMailType === 'ready' || requestedMailType === 'campaign'
-      ? requestedMailType
-      : 'all';
-  const activeMailPeriod: 7 | 30 = Number(params.mailPeriod ?? 7) === 30 ? 30 : 7;
 
   const needsOverview = activePanel === 'resumen';
   const needsProduct = activePanel === 'producto';
@@ -202,9 +203,7 @@ export default async function AdministradorPage({
       materials:params.usersMaterials ?? 'all', country:params.usersCountry ?? 'all',
       university:params.usersUniversity ?? 'all', selectedUserId:params.userId ?? null,
     }) : Promise.resolve(null),
-    needsMails
-      ? obtenerMailsAdministrador({ type: activeMailType, days: activeMailPeriod })
-      : Promise.resolve(null),
+    needsMails ? obtenerDashboardComunicaciones(params) : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -254,23 +253,10 @@ export default async function AdministradorPage({
         />
       : <ErrorPanel message="No se pudieron cargar los usuarios." />;
   } else if (activePanel === 'mails') {
-    if (mailResult?.success) {
-      panelContent = (
-        <MailPanel
-          data={mailResult.data}
-          activeType={activeMailType}
-          activePeriod={activeMailPeriod}
-        />
-      );
-    } else {
-      panelContent = (
-        <ErrorPanel
-          message={
-            mailResult && !mailResult.success ? mailResult.message : 'No pudimos cargar Mails.'
-          }
-        />
-      );
-    }
+    panelContent = mailResult
+      ? <CommunicationsDashboard snapshot={mailResult.snapshot} filters={mailResult.filters}
+          today={mailResult.today} earliest={mailResult.earliest} />
+      : <ErrorPanel message="No pudimos cargar Comunicaciones." />;
   } else if (
     iaPromptResult?.success &&
     iaRankingResult?.success &&
@@ -337,6 +323,10 @@ export default async function AdministradorPage({
   if (needsPlanes && plansResult) {
     return <StudyPlansDashboard snapshot={plansResult.snapshot} filters={plansResult.filters}
       today={plansResult.today} earliest={plansResult.earliest} />;
+  }
+  if (needsMails && mailResult) {
+    return <CommunicationsDashboard snapshot={mailResult.snapshot} filters={mailResult.filters}
+      today={mailResult.today} earliest={mailResult.earliest} />;
   }
   if (needsUsers && usersResult) {
     return <UsersRetentionDashboard
