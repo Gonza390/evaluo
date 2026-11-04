@@ -614,11 +614,11 @@ export function PdfFirstUploadShell({
       autoRetryingMaterialRef.current = null;
       setProcessing(initialState);
       setDisplayProgress(10);
-      void processStudentMaterialAction(result.materialId).catch(() => {
-        // El trabajador puede seguir activo aunque se corte la respuesta HTTP.
-        // El polling recupera el estado persistido sin volver a subir el PDF.
-      });
+      // El procesamiento se inicia y se observa desde la pantalla completa.
+      // El job ya está persistido; no depende de mantener abierto este diálogo.
       preparedPath = null;
+      setOpen(false);
+      router.push(`/dashboard/procesando/${result.materialId}`);
     } catch (error) {
       if (preparedPath) {
         await cancelPdfFirstUploadAction(preparedPath).catch(() => undefined);
