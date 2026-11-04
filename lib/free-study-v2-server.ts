@@ -121,3 +121,15 @@ export async function saveFirstFreeStudyBank<T>(input: {
   if (!stored) throw new Error('free_study_bank_unavailable');
   return stored;
 }
+
+/** La primera carga lista sigue consumida aunque se elimine su material. */
+export async function hasFreeStudyV2UploadClaim(userId: string): Promise<boolean> {
+  if (!isFreeStudyV2Active()) return false;
+  const { data, error } = await createAdminClient()
+    .from('free_study_v2_upload_claims' as never)
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
