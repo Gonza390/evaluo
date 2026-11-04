@@ -14,18 +14,26 @@ assert.equal(FREE_STUDY_V2.simulatorSessions,1);
 assert.equal(FREE_STUDY_V2.simulatorQuestions,20);
 assert.equal(FREE_STUDY_V2.studyPlans,1);
 
-// Se descartó la pantalla de promoción, NO las 15 explicaciones de errores.
-assert.equal(FREE_STUDY_V2.incorrectAnswerExplanations,15);
+// Punto 4 rechazado: no limitar las explicaciones cuando el estudiante se equivoca.
+assert.ok(!('incorrectAnswerExplanations' in FREE_STUDY_V2));
 const helper=read('lib/free-study-v2-server.ts');
 const schema=read('supabase/migrations/20261104180000_free_study_v2_unlocks.sql');
-assert.match(helper,/error_explanation/);
-assert.match(schema,/error_explanation/);
-assert.match(schema,/when 'error_explanation' then 15/);
+assert.doesNotMatch(helper,/error_explanation|incorrectAnswerExplanations/);
+assert.doesNotMatch(schema,/error_explanation/);
 assert.match(schema,/remember_free_study_v2_upload\(\)[\s\S]*?as \$\$[\s\S]*?end;\s*\$\$/);
+assert.ok(!existsSync(new URL('../app/api/free-study-v2/explanation/route.ts',import.meta.url)));
+const pdfExam=read('components/student-material-exam.tsx');
+assert.doesNotMatch(pdfExam,/\/api\/free-study-v2\/explanation/);
+assert.match(pdfExam,/\{current\.explanation\}/);
+assert.match(pdfExam,/itemKey: current\.id/);
+assert.doesNotMatch(pdfExam,/const grants:StudyQuestion\[\] = \[\]/);
+assert.match(schema,/guard_free_study_v2_material_insert/);
+assert.match(schema,/guard_free_study_v2_failed_material_retry/);
+assert.match(schema,/pg_catalog\.pg_advisory_xact_lock/);
+assert.match(schema,/free_study_v2_is_premium_account/);
+assert.match(schema,/created_at := pg_catalog\.now\(\)/);
 assert.match(read('app/(es)/materiales/[id]/page.tsx'),/clientPedagogicalArtifacts/);
-assert.ok(existsSync(new URL('../app/api/free-study-v2/explanation/route.ts',import.meta.url)));
-assert.match(read('components/student-material-exam.tsx'),/\/api\/free-study-v2\/explanation/);
-// El Free nuevo no agrega pantallas de venta o enlaces de pago al agotar cupos.
+// No introducir diseños/upsells mientras el usuario diseña esas pantallas.
 assert.doesNotMatch(read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx'),/href="\/pricing"/);
 
 // Los previews de master nunca pueden cobrar cupos v2 por error.
@@ -52,4 +60,8 @@ assert.match(schema,/claim_free_study_v2_unlock/);
 assert.match(read('app/api/study-plans/route.ts'),/save_free_study_v2_plan/);
 assert.match(read('app\/(es)\/dashboard\/materiales\/upload-actions.ts'),/historicalFreeStudyMaterialIds/);
 assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts'),/historicalFreeStudyMaterialIds/);
-console.log('Free v2 contract, explanation cap and no-upsell smoke tests passed.');
+
+const planSql=read('supabase/migrations/20261104183000_free_study_v2_plan_claim.sql');
+assert.match(planSql,/revoke insert, update, delete on public\.student_personal_study_plans/);
+assert.match(read('app/api/study-plans/route.ts'),/createAdminClient\(\)\.from\('student_personal_study_plans'/);
+console.log('Free v2 quotas, database protections and unrestricted corrections smoke passed.');
