@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { safePremiumReturnTo } from '@/lib/premium-flow';
 import { ShieldCheck, Sparkles } from 'lucide-react';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
@@ -69,12 +70,16 @@ const comparison = [
 export default async function PricingPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ source?: string; materia?: string; recovery?: string }>;
+  searchParams?: Promise<{ source?: string; materia?: string; parcial?: string; returnTo?: string; recovery?: string }>;
 }) {
   const params = (await searchParams) ?? {};
   const source = String(params.source ?? 'pricing_direct').slice(0, 80);
   const materiaId = String(params.materia ?? '').slice(0, 80) || undefined;
   const showRecovery = params.recovery === '1';
+  const returnTo = safePremiumReturnTo(params.returnTo);
+  const parsedParcial = Number(params.parcial);
+  const parcial = Number.isInteger(parsedParcial) && parsedParcial > 0 && parsedParcial <= 99
+    ? parsedParcial : undefined;
 
   return (
     <>
@@ -138,6 +143,8 @@ export default async function PricingPage({
               premiumFeatures={premiumFeatures}
               source={source}
               materiaId={materiaId}
+              parcial={parcial}
+              returnTo={returnTo}
             />
 
             <div className="mx-auto mt-16 max-w-3xl text-center">
