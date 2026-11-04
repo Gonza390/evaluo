@@ -11,6 +11,11 @@ const ImmediateAcquisitionTracker = dynamic(
   { ssr: false }
 );
 
+const ProductWebVitalsTracker = dynamic(
+  () => import('@/components/ProductWebVitalsTracker').then(m => m.ProductWebVitalsTracker),
+  { ssr: false }
+);
+
 const SessionIdleGuard = dynamic(() => import('@/components/SessionIdleGuard'), {
   ssr: false,
 });
@@ -67,6 +72,7 @@ export function GlobalClientRuntime() {
   return (
     <>
       <ImmediateAcquisitionTracker />
+      {(pathname.startsWith('/dashboard') || pathname.startsWith('/materiales/')) ? <ProductWebVitalsTracker /> : null}
       {shouldRunSessionGuard ? <SessionIdleGuard /> : null}
       {shouldShowPdfNudge ? <ContextualPdfNudge /> : null}
     </>
