@@ -31,6 +31,8 @@ type PaymentCheckoutCardProps = {
   features: string[];
   source?: string;
   materiaId?: string;
+  parcial?: number;
+  returnTo?: string;
   offerCode?: Extract<PremiumOfferCode, 'monthly' | 'semester' | 'recovery'>;
   featured?: boolean;
 };
@@ -97,6 +99,8 @@ export function PaymentCheckoutCard({
   features,
   source = 'pricing_direct',
   materiaId,
+  parcial,
+  returnTo,
   offerCode = 'monthly',
   featured = false,
 }: PaymentCheckoutCardProps) {
@@ -186,6 +190,8 @@ export function PaymentCheckoutCard({
         body: JSON.stringify({
           source,
           materiaId,
+          parcial,
+          returnTo,
           planContext: 'premium',
           offerCode,
           expectedBaseAmountArs: displayedPrice,
