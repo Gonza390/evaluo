@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const read=(path:string)=>readFileSync(path,'utf8');
+const page=read('app/(es)/dashboard/premium/page.tsx');
+const screen=read('components/pricing/PremiumDashboardScreen.tsx');
+const nav=read('components/navbar.tsx');
+
+assert.match(page,/auth\.getUser\(\)/,'Premium dashboard must require student authentication.');
+assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the current study activity should stay safe.');
+assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
+assert.match(screen,/max-w-\[680px\]/,'Central premium page should fit Evaluo desktop dimensions.');
+assert.match(screen,/sm:grid-cols-3/,'Benefits must become stacked cards on mobile.');
+assert.match(screen,/overflow-x-auto/,'Free vs Premium comparison must scroll on narrow screens.');
+assert.doesNotMatch(screen,/min-h-\[2300px\]/,'Do not reproduce the HTML mockup fixed height.');
+for(const text of [
+  'Estudiá más. Practicá mejor.',
+  'Llegá preparado a tu examen.',
+  'Premium mensual',
+  '¿Preferís pagar una sola vez?',
+  '¿Tenés un código de descuento?',
+  'Tres razones para pasarte a Premium',
+  'Free vs. Premium',
+  'Preguntas frecuentes',
+  'Volver al estudio sin comprar',
+  'Pago seguro con Mercado Pago',
+])assert.ok(screen.includes(text),'Original Premium screen copy changed: '+text);
+assert.match(screen,/ManualReferralCode offerCode=\{referralPlan\}/,
+  'Coupon flow must reuse the real referral validator.');
+assert.match(screen,/fetch\('\/api\/payments\/offer'/,
+  'Never invent live offer amounts.');
+assert.match(screen,/fetch\('\/api\/payments\/status'/,
+  'Active and already-paid accounts must be handled safely.');
+assert.match(screen,/fetch\('\/api\/payments\/checkout'/,
+  'Premium CTA must use the existing protected checkout endpoint.');
+assert.match(screen,/expectedBaseAmountArs:amount/,
+  'Client must send the displayed base amount to price validation.');
+assert.match(screen,/providerUrl|mercadopago\.com/,
+  'Checkout URL must be verified before navigating.');
+console.log('Premium dashboard layout and payment handoff checks passed.');
