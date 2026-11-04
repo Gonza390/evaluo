@@ -2035,6 +2035,16 @@ assert.ok(
 );
 
 // P0: registrar extracción, aceptación y profundidad por separado.
+if (canonicalQuality.practiceCoverage?.chaptersBelowMinimum.length) {
+  assert.equal(canonicalQuality.practiceCoverage.status,'limited',
+    'Si un tema no llega a seis ejercicios válidos, la cobertura no debe figurar como distribuida.');
+  assert.ok(canonicalQuality.score <= 79,
+    'El score de calidad no puede ser perfecto cuando faltan prácticas por tema.');
+}
+if (canonicalQuality.pedagogicalDepthScore < 55) {
+  assert.ok(canonicalQuality.score <= 79,
+    'El score no puede mostrar 100/100 cuando la profundidad pedagógica es insuficiente.');
+}
 assert.equal(typeof canonicalQuality.extractionScore, 'number');
 assert.equal(typeof canonicalQuality.bankQualityScore, 'number');
 assert.equal(typeof canonicalQuality.bankAcceptanceRatio, 'number');
