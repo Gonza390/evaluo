@@ -22,6 +22,8 @@ import { ActivationDashboard } from './activation-dashboard';
 import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
 import { obtenerAprendizajePracticas } from './learning-dashboard-actions';
 import { LearningDashboard } from './learning-dashboard';
+import { obtenerDashboardPlanesEstudio } from './study-plans-dashboard-actions';
+import { StudyPlansDashboard } from './study-plans-dashboard';
 import { MailPanel } from './mail-panel';
 import {
   AICostPanel,
@@ -34,6 +36,7 @@ type PanelKey =
   | 'adquisicion'
   | 'referidos'
   | 'biblioteca'
+  | 'planes'
   | 'usuarios'
   | 'mails'
   | 'ia';
@@ -44,6 +47,7 @@ const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'adquisicion', label: 'Adquisición' },
   { key: 'referidos', label: 'Referidos' },
   { key: 'biblioteca', label: 'Uso académico' },
+  { key: 'planes', label: 'Planes de estudio' },
   { key: 'usuarios', label: 'Usuarios' },
   { key: 'mails', label: 'Mails' },
   { key: 'ia', label: 'IA' },
@@ -121,6 +125,14 @@ export default async function AdministradorPage({
     academicCareer?: string;
     academicSubject?: string;
     academicPlan?: string;
+    planPeriod?: string;
+    planFrom?: string;
+    planTo?: string;
+    planUniversity?: string;
+    planCareer?: string;
+    planSubject?: string;
+    planDuration?: string;
+    planState?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -142,6 +154,7 @@ export default async function AdministradorPage({
   const needsAcquisition = activePanel === 'adquisicion';
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
+  const needsPlanes = activePanel === 'planes';
   const needsUsers = activePanel === 'usuarios';
   const needsMails = activePanel === 'mails';
   const needsIA = activePanel === 'ia';
@@ -152,6 +165,7 @@ export default async function AdministradorPage({
     acquisitionResult,
     referralResult,
     academicUsageResult,
+    plansResult,
     usersResult,
     mailResult,
     iaPromptResult,
@@ -166,6 +180,7 @@ export default async function AdministradorPage({
     needsAcquisition ? obtenerDashboardAdquisicion() : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerAprendizajePracticas(params) : Promise.resolve(null),
+    needsPlanes ? obtenerDashboardPlanesEstudio(params) : Promise.resolve(null),
     needsUsers ? obtenerUsuariosRetencion({
       period: activePeriod, from:params.from ?? null, to:params.to ?? null, page:usersPage,
       search:params.usersSearch ?? '', plan:params.usersPlan ?? 'all',
@@ -205,6 +220,11 @@ export default async function AdministradorPage({
       ? <LearningDashboard data={academicUsageResult.data} filters={academicUsageResult.filters}
           earliest={academicUsageResult.earliest} today={academicUsageResult.today} />
       : <ErrorPanel message="No pudimos cargar Aprendizaje y prácticas." />;
+  } else if (activePanel === 'planes') {
+    panelContent = plansResult
+      ? <StudyPlansDashboard snapshot={plansResult.snapshot} filters={plansResult.filters}
+          today={plansResult.today} earliest={plansResult.earliest} />
+      : <ErrorPanel message="No pudimos cargar Planes de estudio." />;
   } else if (activePanel === 'usuarios') {
     panelContent = usersResult
       ? <UsersRetentionDashboard
@@ -287,6 +307,10 @@ export default async function AdministradorPage({
   if (needsBiblioteca && academicUsageResult) {
     return <LearningDashboard data={academicUsageResult.data} filters={academicUsageResult.filters}
       earliest={academicUsageResult.earliest} today={academicUsageResult.today} />;
+  }
+  if (needsPlanes && plansResult) {
+    return <StudyPlansDashboard snapshot={plansResult.snapshot} filters={plansResult.filters}
+      today={plansResult.today} earliest={plansResult.earliest} />;
   }
   if (needsUsers && usersResult) {
     return <UsersRetentionDashboard
