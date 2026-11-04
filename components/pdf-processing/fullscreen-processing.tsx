@@ -167,7 +167,7 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   const progress=preview ? [12,38,64,90,100][previewScene] : ready?100:Math.min(96,Math.max(0,state.progress));
   const scene=preview ? Math.min(3,previewScene) : Math.min(3,Math.floor(elapsed/SCENE_MS));
   useEffect(()=>{
-    if(preview||ready||failed)return;
+    if(ready||failed)return;
     if(scene===visibleScene)return;
     setSceneExiting(true);
     sceneTransitionRef.current=window.setTimeout(()=>{
