@@ -255,6 +255,16 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   score += glossaryCleanRatio * 10;
   score += input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5;
   score = Math.round(clamp(score, 0, 100));
+  // The public-facing pedagogical score must not certify a perfect result
+  // while some chapters have fewer than six valid exercises. Extraction stays
+  // reported separately and is not penalized for unrelated teaching depth.
+  if (practiceCoverage.status === 'limited') {
+    const coveredRatio = practiceCoverage.summaryChapterCount > 0
+      ? practiceCoverage.chaptersMeetingMinimum / practiceCoverage.summaryChapterCount
+      : 0;
+    score = Math.min(score, Math.round(55 + coveredRatio * 24));
+  }
+  if (pedagogicalDepthScore < 55) score = Math.min(score, 79);
 
   // Rechazos y profundidad se reflejan en sus indicadores específicos y
   // siguen degradando el status de calidad, no la nota de extracción.
