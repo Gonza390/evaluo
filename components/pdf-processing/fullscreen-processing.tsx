@@ -150,10 +150,11 @@ function ProcessingScene({ scene }: {scene:number}) {
   return <div className="w-full" data-pdf-processing-scene-content>{parts[scene] ?? parts[3]}</div>;
 }
 
-export function FullscreenProcessing({ initialState }: {initialState: StudentMaterialProcessingState}) {
+export function FullscreenProcessing({ initialState, preview = false }: {initialState: StudentMaterialProcessingState; preview?: boolean}) {
   const router=useRouter();
   const [state,setState]=useState(initialState);
   const [elapsed,setElapsed]=useState(0);
+  const [previewScene,setPreviewScene]=useState(0);
   const [visibleScene,setVisibleScene]=useState(0);
   const [sceneExiting,setSceneExiting]=useState(false);
   const sceneTransitionRef=useRef<number|null>(null);
@@ -161,11 +162,12 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
   const [connectionIssues,setConnectionIssues]=useState(false);
   const [poller]=useState(()=>createSingleFlightPolling<StudentMaterialProcessingState|null>());
   const materialId=initialState.materialId;
-  const ready=state.status==='ready',failed=state.status==='failed';
-  const progress=ready?100:Math.min(96,Math.max(0,state.progress));
-  const scene=Math.min(3,Math.floor(elapsed/SCENE_MS));
+  const ready=preview ? previewScene===4 : state.status==='ready';
+  const failed=!preview && state.status==='failed';
+  const progress=preview ? [12,38,64,90,100][previewScene] : ready?100:Math.min(96,Math.max(0,state.progress));
+  const scene=preview ? Math.min(3,previewScene) : Math.min(3,Math.floor(elapsed/SCENE_MS));
   useEffect(()=>{
-    if(ready||failed)return;
+    if(preview||ready||failed)return;
     if(scene===visibleScene)return;
     setSceneExiting(true);
     sceneTransitionRef.current=window.setTimeout(()=>{
@@ -176,15 +178,15 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
     return ()=>{
       if(sceneTransitionRef.current!==null){window.clearTimeout(sceneTransitionRef.current);sceneTransitionRef.current=null;}
     };
-  },[scene,visibleScene,ready,failed]);
+  },[scene,visibleScene,ready,failed,preview]);
   useEffect(()=>{
-    if(ready||failed)return;
+    if(preview||ready||failed)return;
     const started=Date.now();
     const timer=window.setInterval(()=>setElapsed(Date.now()-started),250);
     return ()=>window.clearInterval(timer);
-  },[ready,failed]);
+  },[ready,failed,preview]);
   useEffect(()=>{
-    if(ready||failed)return;
+    if(preview||ready||failed)return;
     let active=true;
     const check=async()=>{
       if(document.visibilityState==='hidden')return;
@@ -202,20 +204,24 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
     const visibility=()=>{if(document.visibilityState==='visible')void check()};
     document.addEventListener('visibilitychange',visibility);
     return ()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',visibility)};
-  },[ready,failed,materialId,poller,router]);
+  },[ready,failed,materialId,poller,router,preview]);
   useEffect(()=>{
-    if(initialState.status!=='uploaded')return;
+    if(preview||initialState.status!=='uploaded')return;
     void processStudentMaterialAction(materialId).catch(()=>undefined);
-  },[materialId,initialState.status]);
+  },[materialId,initialState.status,preview]);
   const retry=useCallback(async()=>{
-    if(retrying)return;
+    if(preview||retrying)return;
     setRetrying(true);
     setState(current=>({...current,status:'processing',stage:'extracting',error:null,message:'Reintentando procesamiento…'}));
     try{await processStudentMaterialAction(materialId)}catch{setConnectionIssues(true)}
     finally{setRetrying(false)}
-  },[materialId,retrying]);
+  },[materialId,retrying,preview]);
   const readHref=`${getStudentMaterialRoute(materialId)}?inicio=1${state.isFirstReadyMaterial?'&recorrido=1':'&tab=resumen'}`;
   return <main data-pdf-processing-screen className="flex min-h-[calc(100svh-52px)] w-full min-w-0 flex-col overflow-x-clip bg-white font-sans text-[#0f1623]">
+    {preview ? <nav aria-label="Pantallas de demostración" data-pdf-preview-only className="flex flex-wrap items-center gap-2 border-b border-[#dbe6f8] bg-[#f7faff] px-4 py-3 sm:px-6 lg:px-9">
+      <span className="mr-2 text-[12px] font-semibold text-[#42506A]">Vista local · Sin procesar PDF</span>
+      {[...STEPS,'Material listo'].map((name,index)=><button key={name} type="button" onClick={()=>setPreviewScene(index)} aria-pressed={previewScene===index} className={`min-h-9 rounded-full border px-3 text-[12px] font-semibold transition-colors ${previewScene===index?'border-[#2563EB] bg-[#2563EB] text-white':'border-[#dbe6f8] bg-white text-[#42506A] hover:border-[#2563EB]'}`}>{index+1}. {name}</button>)}
+    </nav> : null}
     <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-[#e8ecf2] px-4 py-4 sm:px-6 lg:px-9">
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eef4ff] text-[#0b63e5]"><FileText size={20}/></span>
@@ -243,8 +249,8 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
           <div className="min-w-0 flex-1"><p className="truncate text-[16px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">Resúmenes por tema · Tarjetas y glosario · Práctica</p></div>
         </div>
         <div className="mt-7 flex w-full max-w-[340px] flex-col gap-3">
-          <Link href={readHref} className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
-          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-5 text-[14px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
+          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
+          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-5 text-[14px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
         </div>
       </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col items-center justify-center gap-7 sm:gap-8">
         <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-7 sm:gap-8">
