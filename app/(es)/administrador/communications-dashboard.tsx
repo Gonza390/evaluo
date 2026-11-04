@@ -250,7 +250,7 @@ export function CommunicationsDashboard({snapshot,filters,today,earliest}:Props)
        <div><span>Pendientes</span><strong>{number(x?.pending??0)}</strong></div>
        <div><span>Fallidos</span><strong>{number(x?.failed??0)}</strong></div></div>
      </div>})}</div>
-    <div className="cm-upcoming"><div className="cm-upcoming-head"><h3>Próximos envíos posibles</h3>
+    <div className="cm-upcoming"><div className="cm-upcoming-head"><h3>Próximos envíos programados</h3>
       <span className="cm-kicker">{number(snapshot.upcoming_total)} candidatos · según exámenes registrados, fuera del período seleccionado</span></div>
      <ReportTable layout="upcoming" head={['Estudiante','Materia o examen','Recordatorio','Fecha prevista']}
       rows={upcomingRows} empty="No hay candidatos pendientes identificados para exámenes dentro de 1, 3 o 7 días."/>
