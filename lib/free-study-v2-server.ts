@@ -87,7 +87,7 @@ export async function listFreeStudyUnlockedKeys(input: {
   return new Set((data ?? []).map((entry) => (entry as {item_key: string}).item_key));
 }
 
-export type FreeStudyBankMode = 'true_false' | 'cases' | 'matching' | 'flashcards';
+export type FreeStudyBankMode = 'true_false' | 'cases' | 'matching' | 'flashcards' | `topic:${number}:round:${number}`;
 
 /** First validated bank wins, even when concurrent requests finish in a different order. */
 export async function getFreeStudyBank<T>(input: {
