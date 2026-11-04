@@ -1,6 +1,7 @@
 'use server';
 
 import {unstable_cache as nextCache,updateTag,revalidatePath} from 'next/cache';
+import type {SupabaseClient} from '@supabase/supabase-js';
 import {getAdminAccessContext} from '@/lib/access-control';
 import {createAdminClient} from '@/lib/supabase-admin';
 import {
@@ -77,14 +78,15 @@ export async function gestionResolverCatalogo(input:{
    if(input.decision==='approve')await aprobarEntidadAcademicaPendienteAdministrador(data);
    else await rechazarEntidadAcademicaPendienteAdministrador(data);
   }
-  const {error:auditError}=await createAdminClient().from('admin_management_audit').insert({
+  const database=createAdminClient() as unknown as SupabaseClient;
+  const {error:auditError}=await database.from('admin_management_audit').insert({
    actor_id:actor,action:input.decision==='approve'?'catalog_approved':'catalog_rejected',
    object_type:input.kind,object_id:input.id,
    before_state:{status:'pending'},
    after_state:{status:input.kind==='university'?(input.decision==='approve'?'added':'rejected'):
       (input.decision==='approve'?'approved':'rejected')},
    result:'success',
-  } as never);
+  });
   refresh();
   if(auditError){
    return {success:true,message:'Solicitud procesada, pero no se pudo registrar en la auditoría. Revisá el historial antes de continuar.'};
