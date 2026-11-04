@@ -182,6 +182,8 @@ export function StudentMaterialExam({
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [freeClaimPending, setFreeClaimPending] = useState(false);
   const [freeQuotaMessage, setFreeQuotaMessage] = useState('');
+  const [freeExplanationById, setFreeExplanationById] = useState<Record<string, string | null>>({});
+  const freeExplanationRequested = useRef(new Set<string>());
   const [openAssessments, setOpenAssessments] = useState<Record<string, OpenAssessment>>({});
   const [finished, setFinished] = useState(false);
   const finalResultRef = useRef<HTMLDivElement | null>(null);
@@ -348,6 +350,31 @@ export function StudentMaterialExam({
   };
 
   const current = questions[currentIndex];
+
+  // La corrección siempre está disponible; el razonamiento se obtiene cuando
+  // la respuesta es errónea, una sola vez por pregunta y hasta 15 veces.
+  useEffect(() => {
+    if (!freeStudyV2 || !current || current.type !== 'multiple_choice' ||
+        !revealed[current.id] || !selectedAnswers[current.id] ||
+        normalizeAnswer(selectedAnswers[current.id]!) === normalizeAnswer(current.answer) ||
+        freeExplanationRequested.current.has(current.id)) return;
+    freeExplanationRequested.current.add(current.id);
+    const id = current.id;
+    void (async () => {
+      try {
+        const response = await fetch('/api/free-study-v2/explanation', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({materialId,questionId:id,selectedAnswer:selectedAnswers[id]}),
+        });
+        const body:unknown = await response.json();
+        const explanation = body && typeof body === 'object' && 'explanation' in body &&
+          typeof body.explanation === 'string' ? body.explanation : null;
+        setFreeExplanationById(old => ({...old,[id]:response.ok ? explanation : null}));
+      } catch {
+        setFreeExplanationById(old => ({...old,[id]:null}));
+      }
+    })();
+  }, [freeStudyV2,current,materialId,revealed,selectedAnswers]);
 
   const result = useMemo(() => {
     let correct = 0;
@@ -1233,8 +1260,8 @@ export function StudentMaterialExam({
                             </span>
                             {question.answer}
                           </p>
-                          {question.explanation && (
-                            <p><span className="text-foreground font-semibold">¿Por qué? </span>{question.explanation}</p>
+                          {(freeStudyV2 ? freeExplanationById[question.id] : question.explanation) && (
+                            <p><span className="text-foreground font-semibold">¿Por qué? </span>{freeStudyV2 ? freeExplanationById[question.id] : question.explanation}</p>
                           )}
                           <p className="text-xs">Fuente: {sourceLabel(question)}</p>
                           {question.type === 'open' && (
@@ -1273,7 +1300,7 @@ export function StudentMaterialExam({
                         <p><span className="text-foreground font-semibold">Respuesta esperada: </span>
                           {question.answer}
                         </p>
-                        {question.explanation && <p>{question.explanation}</p>}
+                        {(freeStudyV2 ? freeExplanationById[question.id] : question.explanation) && <p>{freeStudyV2 ? freeExplanationById[question.id] : question.explanation}</p>}
                         <p className="text-xs">Fuente: {sourceLabel(question)}</p>
                         {question.type === 'open' && <p className="text-xs">Pregunta autoevaluada.</p>}
                       </div>
@@ -1469,7 +1496,8 @@ export function StudentMaterialExam({
   const isCorrect =
     current.type === 'multiple_choice' &&
     normalizeAnswer(selectedAnswer) === normalizeAnswer(current.answer);
-  const groundedMistakeContrast = current.type === 'multiple_choice' && !isCorrect && isRevealed
+  const groundedMistakeContrast = current.type === 'multiple_choice' && !isCorrect && isRevealed &&
+    (!freeStudyV2 || Boolean(freeExplanationById[current.id]))
     ? buildGroundedErrorContrast(selectedAnswer, current.answer, glossary)
     : null;
   const openAssessment = openAssessments[current.id];
@@ -1751,7 +1779,12 @@ export function StudentMaterialExam({
                   </div>
                 ) : null}
                 <p className="text-muted-foreground mt-2 text-[13px] leading-5">
-                  {current.explanation}
+                  {freeStudyV2
+                    ? (freeExplanationById[current.id] === undefined
+                      ? (current.type === 'multiple_choice' && !isCorrect ? 'Preparando explicación del error…' : '')
+                      : (freeExplanationById[current.id] ?? (current.type === 'multiple_choice' && !isCorrect
+                        ? 'Ya usaste tus explicaciones gratuitas o no pudimos obtener esta explicación.' : '')))
+                    : current.explanation}
                 </p>
                 <p className="text-muted-foreground mt-3 text-[11.5px] font-medium">
                   Fuente: {sourceLabel(current)}
