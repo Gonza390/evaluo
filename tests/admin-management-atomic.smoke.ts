@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const source=(p:string)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const action=source('app/(es)/administrador/gestion-dashboard-actions.ts');
-const sql=source('supabase/migrations/20261104124000_admin_management_catalog_atomic_v1.sql');
+const sql=source('supabase/migrations/20261104123703_admin_management_catalog_atomic_v1.sql');
 
 assert.ok(action.includes("rpc('admin_management_resolve_catalog_v1'"));
 assert.ok(action.includes('if(!data?.audited)'));
