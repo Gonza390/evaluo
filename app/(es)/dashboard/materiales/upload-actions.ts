@@ -6,6 +6,7 @@ import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { PREMIUM_STUDY_LIMITS } from '@/lib/study-commercial-entitlements';
+import { premiumUpgradeForLimit, type PremiumUpgrade } from '@/lib/premium-flow';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -46,6 +47,7 @@ export type StudentMaterialUploadQuota = {
   used: number;
   remaining: number | null;
   nextAvailableAt: string | null;
+  upgrade?: PremiumUpgrade;
 };
 
 export type StudentMaterialUploadQuotaResult = ActionResult & {
@@ -179,6 +181,8 @@ async function getStudentMaterialUploadQuotaForUser(
     used,
     remaining,
     nextAvailableAt,
+    ...(isFreeStudyV2Active() && remaining === 0
+      ? {upgrade:premiumUpgradeForLimit('material_upload')} : {}),
   };
 }
 
