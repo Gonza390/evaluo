@@ -177,6 +177,7 @@ export function StudyPlansDashboard({snapshot,filters,today,earliest}:{
     <option value="all">Todos</option><option value="active">Activo</option>
     <option disabled value="completed">Completado · sin dato</option><option value="not_started">Sin comenzar</option>
     <option value="interrupted">Interrumpido</option></select></label>
+   <span className="sp-tag">Muestra mínima: 30 estudiantes</span>
    <span className="sp-tag">Datos reales · Supabase</span>
    {period==='custom'&&<div className="sp-custom"><label>Desde<input required name="planFrom" type="date" value={from} min={earliest} max={today} onChange={e=>setFrom(e.target.value)}/></label>
      <label>Hasta<input required name="planTo" type="date" value={to} min={earliest} max={today} onChange={e=>setTo(e.target.value)}/></label>
