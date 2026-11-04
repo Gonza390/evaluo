@@ -1,0 +1,1 @@
+-- Reconciles migration history. The validated admin_monetization_active_subscription_priority migration contains the corrected SQL without the unused aggregate CTE.
