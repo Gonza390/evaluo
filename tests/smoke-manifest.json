@@ -1,5 +1,9 @@
 [
   {
+    "file": "tests/free-study-v2-contract.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/admin-redesign.smoke.ts",
     "alias": true
   },
