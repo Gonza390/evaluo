@@ -6,7 +6,7 @@ import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { getFreeStudyBank, saveFirstFreeStudyBank } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, claimVerifiedFreeStudySample } from '@/lib/free-study-v2-server';
 import { applyIndependentCaseReview, verifyGeneratedPracticeCases, type SourceFragment } from '@/lib/student-materials/practice-ai-cases';
 import { sourceBackedPracticeTerms } from '@/lib/student-materials/practice-classification-terms';
 import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
@@ -76,8 +76,11 @@ export async function POST(request: Request) {
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   if (freeV2) {
     const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:'cases' });
-    if (saved) return NextResponse.json({cases:saved,source:'free_sample_cached'},
-      {headers:{'Cache-Control':'private, no-store'}});
+    if (saved) {
+      const allowed = await claimVerifiedFreeStudySample({ userId:user.id, materialId:material.id, kind:'case', items:saved });
+      return NextResponse.json({cases:allowed,source:'free_sample_cached'},
+        {headers:{'Cache-Control':'private, no-store'}});
+    }
   }
 
   // This route is explicitly invoked by a student choosing Casos. It does
@@ -213,7 +216,10 @@ export async function POST(request: Request) {
       ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:'cases' as const,
           items:cases.slice(0,FREE_STUDY_V2.cases)})
       : cases;
-    return NextResponse.json({ cases:bounded, source: 'independently_verified_against_document' },
+    const accessible = freeV2
+      ? await claimVerifiedFreeStudySample({userId:user.id,materialId:material.id,kind:'case',items:bounded})
+      : bounded;
+    return NextResponse.json({ cases:accessible, source: 'independently_verified_against_document' },
       { headers: { 'Cache-Control': 'private, no-store' } });
   } catch {
     return NextResponse.json({ error: 'provider_unavailable' }, { status: 503 });
