@@ -63,7 +63,6 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const [loading,setLoading] = useState<Plan|null>(null);
   const [error,setError] = useState<string|null>(null);
   const [checkoutUrl,setCheckoutUrl] = useState<string|null>(null);
-  const [referralPlan,setReferralPlan] = useState<Plan>('monthly');
 
   useEffect(()=>{
     let active=true;
@@ -199,11 +198,7 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
       <details className="mt-2 text-center" data-premium-referral>
         <summary className="cursor-pointer py-1.5 text-[12px] text-[#5b6475] marker:hidden [&::-webkit-details-marker]:hidden">¿Tenés un código de descuento?</summary>
         <div className="mx-auto mt-2 max-w-[520px] rounded-[16px] border border-[#e6eaf2] bg-white p-4 text-left">
-          <div className="mb-3 flex items-center justify-center gap-2 text-[12px]">
-            <button type="button" onClick={()=>setReferralPlan('monthly')} aria-pressed={referralPlan==='monthly'} className={'rounded-full px-3 py-1.5 font-semibold '+(referralPlan==='monthly'?'bg-[#eef3ff] text-[#2a49c9]':'text-[#5b6475]')}>Mensual</button>
-            <button type="button" onClick={()=>setReferralPlan('semester')} aria-pressed={referralPlan==='semester'} className={'rounded-full px-3 py-1.5 font-semibold '+(referralPlan==='semester'?'bg-[#eef3ff] text-[#2a49c9]':'text-[#5b6475]')}>Semestral</button>
-          </div>
-          <ManualReferralCode offerCode={referralPlan} variant="compact"/>
+          <ManualReferralCode offerCode="monthly" variant="compact" hideHeading/>
         </div>
       </details>
       <Link href={backHref} className="mx-auto mt-2 flex min-h-[42px] w-fit items-center justify-center px-3 text-center text-[13px] font-semibold text-[#475569] hover:text-[#2a49c9]">Volver al estudio sin comprar</Link>
