@@ -38,6 +38,7 @@ import { getStudentMaterialPracticeContextAction } from '@/lib/actions/student-m
 import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-materials/types';
 import { buildGroundedErrorContrast } from '@/lib/student-materials/error-contrast';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
+import { isReliableTopicQuestion, MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS } from '@/lib/student-materials/question-bank';
 import {
   buildPracticeTopicResults,
   visiblePracticeTopicResults,
@@ -136,6 +137,11 @@ export function StudentMaterialExam({
     0;
   const [selectedSize, setSelectedSize] = useState(defaultSize);
   const topicPracticeCount = topicPracticeQuestionCount(eligibleQuestions.length);
+  const verifiedTopicCount = useMemo(() =>
+    topicSectionIndex === undefined ? 0 :
+      getDistinctEligibleExamQuestions(eligibleQuestions.filter(isReliableTopicQuestion)).length,
+    [eligibleQuestions,topicSectionIndex]
+  );
   const topicAutoStartRequested = useRef(false);
   const [started, setStarted] = useState(false);
   // Congelar la tanda: los nuevos resultados no deben cambiar preguntas en pleno intento.
@@ -455,6 +461,12 @@ export function StudentMaterialExam({
             {topicTitle}
           </h2>
         </div>
+        {verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
+          <p role="status" className="text-muted-foreground text-xs leading-5">
+            Este tema tiene {verifiedTopicCount} de {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} preguntas verificadas.
+            Podés practicar con las disponibles; no agregamos respuestas sin respaldo.
+          </p>
+        )}
         {savedDraft && !isSimulation ? (
           <div className="border-primary/30 bg-primary/5 rounded-xl border p-4">
             <p className="text-sm font-medium">Tenés una práctica sin terminar</p>
@@ -1445,6 +1457,13 @@ export function StudentMaterialExam({
             <p className="text-muted-foreground text-[13px] font-medium">{topicTitle}</p>
           </div>
         )}
+        {topicSectionIndex !== undefined &&
+          verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
+            <p role="status" className="text-muted-foreground text-xs leading-5">
+              Cobertura de este tema: {verifiedTopicCount} de {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} preguntas verificadas.
+              Esta tanda utiliza las disponibles.
+            </p>
+          )}
         {contextUnavailable && (
           <p role="status" className="text-muted-foreground text-xs!">
             {topicSectionIndex === undefined
