@@ -71,6 +71,11 @@ for (const path of ['app/api/practice/true-false/route.ts', 'app/api/practice/ca
   assert.match(route,/claimVerifiedFreeStudySample/);
 }
 assert.match(helper,/export async function claimVerifiedFreeStudySample/);
+assert.match(helper,/export async function claimFreeStudyPairSample/);
+const supplement=read('app/api/practice/supplement/route.ts');
+assert.match(supplement,/claimFreeStudyPairSample/);
+assert.match(supplement,/free_study_sample_unavailable/);
+
 const modes=read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
 assert.match(modes,/if \(mode === 'flashcards'\) \{/);
 console.log('Free v2 quotas, database protections and unrestricted corrections smoke passed.');
