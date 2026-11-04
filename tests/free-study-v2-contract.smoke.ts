@@ -62,7 +62,12 @@ assert.match(read('app\/(es)\/dashboard\/materiales\/upload-actions.ts'),/histor
 assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts'),/historicalFreeStudyMaterialIds/);
 
 const planSql=read('supabase/migrations/20261104183000_free_study_v2_plan_claim.sql');
-assert.match(planSql,/revoke insert, update, delete on public\.student_personal_study_plans/);
+assert.match(schema,/create table if not exists public\.free_study_v2_rollout/);
+assert.match(schema,/is_free_study_v2_rollout_enabled/);
+assert.match(planSql,/as restrictive for insert to authenticated/);
+assert.match(planSql,/as restrictive for update to authenticated/);
+assert.match(planSql,/as restrictive for delete to authenticated/);
+assert.doesNotMatch(planSql,/revoke insert, update, delete on public\.student_personal_study_plans/);
 assert.match(read('app/api/study-plans/route.ts'),/createAdminClient\(\)\.from\('student_personal_study_plans'/);
 
 // Todo banco generado o cacheado debe aplicar cupos por cuenta.
