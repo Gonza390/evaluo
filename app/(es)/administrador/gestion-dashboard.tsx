@@ -136,7 +136,7 @@ export function GestionDashboard({snapshot,actor,limits}:{
        {previews.map(([k,label])=><button key={k} type="button" aria-pressed={preview===k}
         onClick={()=>{setPreview(k);setConfirm(null);}} className={preview===k?'gm-active':''}>{label}</button>)}
       </div></div>
-    <span className="gm-flex"/><span className="gm-tag">Simulación de permisos · solo visual</span>
+    <span className="gm-flex"/><span className="gm-tag">Simulación de permisos</span>
     <span className="gm-tag">Datos reales · Supabase</span>
   </section>
   {notice&&<div className={'gm-notice '+(notice.ok?'gm-success':'gm-error')} role="status">
