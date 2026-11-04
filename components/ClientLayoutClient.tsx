@@ -251,6 +251,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
   const isMaterialStudyRoute = pathname.startsWith('/materiales/');
+  const isPdfProcessingRoute = pathname === '/dashboard/procesando' || pathname.startsWith('/dashboard/procesando/');
   const isDesktopStudyPlanRoute = pathname === '/dashboard/plan-de-estudio';
   const isDesktopPracticeHomeRoute = pathname === '/dashboard/practicar';
   // A single compact mobile header for all authenticated screens.
@@ -314,7 +315,13 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const shell = (
+  // The PDF processing flow is its own supplied full-viewport design.
+  // Do not render the app's header, sidebar, bottom navigation or footer here.
+  const shell = isPdfProcessingRoute ? (
+    <div data-processing-standalone-shell className="h-dvh min-h-0 w-full overflow-hidden bg-white">
+      {children}
+    </div>
+  ) : (
     <div
       data-private-compact={isCompactAppRoute ? 'true' : undefined}
       className={`${isAdministradorRoute ? 'bg-black' : 'bg-background'} flex flex-col ${
