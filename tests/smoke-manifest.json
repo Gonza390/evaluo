@@ -116,6 +116,10 @@
     "alias": true
   },
   {
+    "file": "tests/math-source-practice.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/practice-result-topics.smoke.ts",
     "alias": false
   },
