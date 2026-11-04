@@ -214,7 +214,7 @@ export function FullscreenProcessing({ initialState }: {initialState: StudentMat
         </div>
         <div className="mt-7 flex w-full max-w-[340px] flex-col gap-3">
           <Link href={readHref} className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
-          <Link href={`/dashboard/plan-de-estudio?material=${encodeURIComponent(materialId)}`} className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-5 text-[14px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
+          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-5 text-[14px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
         </div>
       </section> : <>
         <div key={scene} className="space-y-3 text-center" data-evaluo-route-enter>
