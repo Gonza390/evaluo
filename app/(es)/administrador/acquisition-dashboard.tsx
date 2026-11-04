@@ -23,7 +23,7 @@ const pageTypes: Array<[PageType,string]> = [
 const nav: Array<[string,string]> = [
  ['Tablero general','resumen'],['Usuarios y retención','usuarios'],['Adquisición y SEO','adquisicion'],
  ['Activación y recorrido','producto'],['Aprendizaje y prácticas','biblioteca'],
- ['Planes de estudio','planes'],['Monetización','referidos'],
+ ['Planes de estudio','planes'],['Monetización','monetizacion'],
  ['Comunicaciones','mails'],['Sistema e IA','ia'],['Gestión','usuarios'],
 ];
 const num = (v: number) => Math.round(v).toLocaleString('es-AR');
