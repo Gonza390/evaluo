@@ -314,5 +314,9 @@
   {
     "file": "tests/pdf-fullscreen-processing.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/dashboard-premium-responsive.smoke.ts",
+    "alias": false
   }
 ]
