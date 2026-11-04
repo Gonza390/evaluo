@@ -32,6 +32,12 @@ type AdminRetentionFunctions = {
 };
 
 type AdminPerformanceFunctions = {
+  admin_study_plans_dashboard_v1: {
+    Args: { p_days?: number; p_from?: string|null; p_to?: string|null;
+      p_university?:string|null; p_career?:string|null; p_subject?:string|null;
+      p_duration?:string; p_state?:string };
+    Returns: import('@/app/(es)/administrador/study-plans-dashboard-types').StudyPlanAdminSnapshot;
+  };
   admin_learning_dashboard_v2: {
     Args: { p_days?:number; p_from?:string|null; p_to?:string|null;
       p_university?:string|null; p_career?:string|null;
