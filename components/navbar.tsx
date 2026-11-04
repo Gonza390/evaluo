@@ -250,7 +250,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
             {user ? (
               <div className="space-y-1">
                 <Link
-                  href="/pricing"
+                  href="/dashboard/premium"
                   title={collapsed ? 'Planes' : undefined}
                   className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
                     collapsed
