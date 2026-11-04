@@ -15,6 +15,8 @@ import { obtenerUsuariosRetencion } from './users-retention-actions';
 import { UsersRetentionDashboard } from './users-retention-dashboard';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
+import { obtenerDashboardMonetizacion } from './monetization-dashboard-actions';
+import { MonetizationDashboard } from './monetization-dashboard';
 import { obtenerDashboardAdquisicion } from './acquisition-dashboard-actions';
 import { AcquisitionDashboard } from './acquisition-dashboard';
 import { obtenerActivacionRecorrido } from './activation-dashboard-actions';
@@ -35,6 +37,7 @@ type PanelKey =
   | 'producto'
   | 'adquisicion'
   | 'referidos'
+  | 'monetizacion'
   | 'biblioteca'
   | 'planes'
   | 'usuarios'
@@ -46,6 +49,7 @@ const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'producto', label: 'Producto' },
   { key: 'adquisicion', label: 'Adquisición' },
   { key: 'referidos', label: 'Referidos' },
+  { key: 'monetizacion', label: 'Monetización' },
   { key: 'biblioteca', label: 'Uso académico' },
   { key: 'planes', label: 'Planes de estudio' },
   { key: 'usuarios', label: 'Usuarios' },
@@ -133,6 +137,14 @@ export default async function AdministradorPage({
     planSubject?: string;
     planDuration?: string;
     planState?: string;
+    moneyPeriod?: string;
+    moneyFrom?: string;
+    moneyTo?: string;
+    moneyUniversity?: string;
+    moneyCareer?: string;
+    moneyCountry?: string;
+    moneyProvider?: string;
+    moneyState?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -153,6 +165,7 @@ export default async function AdministradorPage({
   const needsProduct = activePanel === 'producto';
   const needsAcquisition = activePanel === 'adquisicion';
   const needsReferrals = activePanel === 'referidos';
+  const needsMonetizacion = activePanel === 'monetizacion';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsPlanes = activePanel === 'planes';
   const needsUsers = activePanel === 'usuarios';
@@ -164,6 +177,7 @@ export default async function AdministradorPage({
     productResult,
     acquisitionResult,
     referralResult,
+    monetizationResult,
     academicUsageResult,
     plansResult,
     usersResult,
@@ -179,6 +193,7 @@ export default async function AdministradorPage({
     needsProduct ? obtenerActivacionRecorrido() : Promise.resolve(null),
     needsAcquisition ? obtenerDashboardAdquisicion() : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
+    needsMonetizacion ? obtenerDashboardMonetizacion(params) : Promise.resolve(null),
     needsBiblioteca ? obtenerAprendizajePracticas(params) : Promise.resolve(null),
     needsPlanes ? obtenerDashboardPlanesEstudio(params) : Promise.resolve(null),
     needsUsers ? obtenerUsuariosRetencion({
@@ -208,6 +223,12 @@ export default async function AdministradorPage({
     panelContent = acquisitionResult
       ? <AcquisitionDashboard data={acquisitionResult} />
       : <ErrorPanel message="No pudimos cargar Adquisición y SEO." />;
+  } else if (activePanel === 'monetizacion') {
+    panelContent = monetizationResult
+      ? <MonetizationDashboard snapshot={monetizationResult.snapshot}
+          filters={monetizationResult.filters} today={monetizationResult.today}
+          earliest={monetizationResult.earliest} />
+      : <ErrorPanel message="No pudimos cargar Monetización." />;
   } else if (activePanel === 'referidos') {
     panelContent =
       referralResult?.success && referralResult.data ? (
@@ -307,6 +328,11 @@ export default async function AdministradorPage({
   if (needsBiblioteca && academicUsageResult) {
     return <LearningDashboard data={academicUsageResult.data} filters={academicUsageResult.filters}
       earliest={academicUsageResult.earliest} today={academicUsageResult.today} />;
+  }
+  if (needsMonetizacion && monetizationResult) {
+    return <MonetizationDashboard snapshot={monetizationResult.snapshot}
+      filters={monetizationResult.filters} today={monetizationResult.today}
+      earliest={monetizationResult.earliest} />;
   }
   if (needsPlanes && plansResult) {
     return <StudyPlansDashboard snapshot={plansResult.snapshot} filters={plansResult.filters}
