@@ -1,0 +1,1 @@
+-- Reconciles migration history. The complete validated service-role-only finance dashboard is defined in the subsequent admin_monetization_active_subscription_priority migration.
