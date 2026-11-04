@@ -1,4 +1,5 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
+import { buildVerifiedMathPractice } from '@/lib/student-materials/math-source-practice';
 import { isAdministrativeConcept, isAdministrativeStudyDescription } from '@/lib/student-materials/nonacademic-metadata';
 import { isNonSequentialProcess, practiceQuestionQualityIssue } from '@/lib/student-materials/practice-question-quality';
 import { chooseDocumentedDistractors, explainDocumentedOptions, type DocumentedOption } from '@/lib/student-materials/practice-option-evidence';
@@ -1911,6 +1912,7 @@ export function buildPedagogicalArtifacts(input: {
         ...buildCanonicalClassificationQuestions(model, chunks, 10 * categoryFactor),
         ...buildCanonicalProcessQuestions(model, chunks, 8 * categoryFactor),
         ...buildCanonicalFormulaQuestions(model, chunks, 5 * categoryFactor),
+        ...buildVerifiedMathPractice(model, chunks),
         ...buildCanonicalComparisonQuestions(model, chunks, 4 * categoryFactor),
         ...buildCanonicalConfusionQuestions(model, chunks, 3 * categoryFactor),
       ]
