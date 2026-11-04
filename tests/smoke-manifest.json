@@ -318,5 +318,9 @@
   {
     "file": "tests/dashboard-premium-responsive.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/pomodoro-timer.smoke.ts",
+    "alias": false
   }
 ]
