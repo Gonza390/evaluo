@@ -9,7 +9,9 @@ export async function getPremiumStatus(): Promise<{ isPremium: boolean; unavaila
     const supabase = await createClientServer();
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
+    if (authError) throw authError;
     if (!user) return { isPremium: false };
     return { isPremium: await hasPremiumAccess(user.id) };
   } catch (error) {
