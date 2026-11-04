@@ -321,7 +321,6 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
     </section>
   </div>
   <footer className="eh-footer">Fuente: Supabase · solo administradores · sin ingresos ficticios, importes USD estimados ni accesos Premium manuales del equipo · caché de 60 minutos · filtros aplicados al enviar el formulario. Las renovaciones, reembolsos, MRR y churn requieren un historial de facturación más completo.
-   <span className="mo-footer-link"> <Link href="/administrador?panel=referidos" prefetch={false}>Abrir gestión de códigos de Referidos</Link></span>
   </footer>
  </main>;
 }
