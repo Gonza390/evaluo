@@ -28,6 +28,7 @@ import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
+import { PomodoroHeader } from '@/components/dashboard/pomodoro-header';
 
 const Navbar = dynamic(() => import('./navbar').then((module) => module.Navbar));
 const EstimatedStudyActivity = dynamic(() =>
@@ -373,6 +374,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
+                  <PomodoroHeader key={user.id} userId={user.id} />
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
                     href="/calendario"
