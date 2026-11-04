@@ -147,6 +147,7 @@ export function MonetizationDashboard({snapshot,filters,today,earliest}:Props){
   {title:'Checkouts rechazados / fallidos',value:number(co.failed),note:'Estado de intentos de checkout'},
   {title:'Checkouts aprobados',value:number(co.approved),note:'Aprobación de checkout no es ingreso'},
   {title:'Pagos efectivamente aprobados',value:number(fin.approved_payments),note:'Transacciones contables con paid_at'},
+  {title:'Checkout aprobado sin cobro registrado',value:number(snapshot.mismatches.approved_checkout_without_paid),note:'Estado aprobado del checkout, sin transacción cobrada vinculada'},
   {title:'Cobros sin Premium activo',value:number(snapshot.mismatches.paid_without_active),note:'Requieren revisión de activación'},
   {title:'Reembolsos',value:'—',note:'No existe un libro separado de devoluciones'},
  ];
