@@ -59,7 +59,7 @@ assert.match(ui,/fetch\('\/api\/practice\/topic-supplement'/);
 assert.match(ui,/verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS/);
 assert.match(ui,/window\.sessionStorage\.setItem\(supplementalCacheKey/,
   'Las preguntas complementarias deben sobrevivir a una recarga de la pestaña.');
-assert.match(ui,/if \(!supplementalBankLoaded\) return;/,
+assert.match(ui,/if \(supplementalBankLoadedFor !== supplementalCacheKey\) return;/,
   'Restaurar primero el banco generado antes de recuperar respuestas guardadas.');
 assert.match(ui,/for\(let round=0;round<2/,
   'El frontend debe limitar los reintentos automáticos de Gemini.');
