@@ -5,6 +5,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const upload = read('components/dashboard/pdf-first-upload-shell.tsx');
 const route = read('app/(es)/dashboard/procesando/[id]/page.tsx');
 const screen = read('components/pdf-processing/fullscreen-processing.tsx');
+const localDemo = read('app/(es)/dashboard/procesando/demo/page.tsx');
 const planPage = read('app/(es)/dashboard/plan-de-estudio/preparar/page.tsx');
 const plan = read('components/dashboard/study-plan-setup.tsx');
 const materials = read('components/dashboard/student-materials-workspace.tsx');
@@ -16,6 +17,21 @@ assert.match(route, /getStudentMaterialProcessingStateAction\(id\)/,
   'The processing screen must restore the real material status securely.');
 assert.match(route, /auth\.getUser\(\)/);
 assert.match(screen, /const SCENE_MS = 6500/);
+assert.match(localDemo, /process\.env\.NODE_ENV !== 'development'/,
+  'Local demo route must be inaccessible in deployed environments.');
+assert.match(localDemo, /<FullscreenProcessing initialState=\{demoMaterial\} preview/,
+  'Demo must reuse the production UI without creating a real PDF.');
+assert.match(screen, /data-pdf-preview-only/,
+  'Development-only scene selector must be visible for all five screens.');
+assert.match(screen, /if\(preview\|\|ready\|\|failed\)return/,
+  'Preview must skip live processing polling and timing.');
+assert.match(screen, /if\(preview\|\|initialState\.status!=='uploaded'\)return/,
+  'Preview must never launch a server-side PDF processing job.');
+assert.match(screen, /if\(preview\|\|retrying\)return/,
+  'Preview must never retry a backend processing job.');
+assert.match(screen, /onClick=\{preview\?\(event\)=>event\.preventDefault\(\):undefined\}/,
+  'Preview final buttons must not navigate using a fake material ID.');
+
 assert.match(screen, /data-processing-scene-motion/, 'Heading and example must transition together.');
 assert.match(screen, /data-phase=\{sceneExiting/, 'Outgoing scene must fade before replacement.');
 assert.match(screen, /data-processing-layout="organize"/);
