@@ -12,3 +12,27 @@
 .mo-problem-head{display:flex;flex-wrap:wrap;gap:1px;background:var(--mo-border);border-top:1px solid var(--mo-border)}.mo-problem-rate{flex:1.2 1 380px;min-width:0;background:#000;padding:23px 28px 26px}.mo-problem-rate>strong{font:700 72px/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.04em;display:block;margin:25px 0}.mo-problem-rate>p{color:var(--mo-muted);line-height:1.5;font-size:13px}.mo-problem-cards{flex:2 1 620px;display:flex;flex-wrap:wrap;gap:1px;background:var(--mo-border)}.mo-mini{flex:1 1 190px;min-width:0;min-height:135px;padding:17px 21px;background:#000;display:flex;flex-direction:column;gap:7px}.mo-mini>strong{font:700 32px/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.03em}.mo-mini>small{font:11px/1.45 'JetBrains Mono',monospace;color:var(--mo-muted)}.mo-provider-errors{padding:22px 28px 24px;border-top:1px solid var(--mo-border)}
 .mo-dimensions{padding:20px 28px;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;border-top:1px solid var(--mo-border)}.mo-scroll{padding:0 28px 24px;overflow-x:auto;scrollbar-color:#45454D #121215}.mo-row{min-width:800px;display:grid;gap:16px;align-items:center;border-top:1px solid var(--mo-border);padding:13px 0;font-size:13.5px}.mo-row-head{padding:0 0 10px;border-top:0;color:var(--mo-muted);font:11.5px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.045em}.mo-row.mo-providers{grid-template-columns:2.2fr 1fr 1fr 1fr 1fr 1.15fr}.mo-row.mo-segments{grid-template-columns:2.2fr 1fr 1fr 2fr 1.35fr}.mo-row>div{min-width:0}.mo-name{display:flex;flex-direction:column;gap:4px;min-width:0}.mo-name strong{font-weight:500;overflow-wrap:anywhere}.mo-name small{font:11.5px/1.45 'JetBrains Mono',monospace;color:var(--mo-muted)}.mo-conversion{display:flex;align-items:center;gap:12px}.mo-conversion>.mo-bar{flex:1 1 auto;height:6px}.mo-conversion .mo-mono{flex:0 0 54px;text-align:right}.mo-empty{padding:16px 0;margin:0;font-size:13px;line-height:1.5;color:var(--mo-muted)}.mo-footer-link{margin-left:12px}.mo-footer-link a{color:var(--accent)!important;text-decoration:underline!important}
 @media(max-width:850px){.mo-intro{padding:32px 20px 24px}.mo-intro h1{font-size:48px}.mo-filters{padding:0 20px 24px}.mo-info{margin:0 20px 20px}.mo-board{margin:0 20px 28px}.mo-head,.mo-chart-grid,.mo-status-layout,.mo-split-cell,.mo-provider-revenue,.mo-problem-rate,.mo-provider-errors,.mo-dimensions,.mo-footnote{padding-left:20px;padding-right:20px}.mo-tile,.mo-mini{padding-left:20px;padding-right:20px}.mo-scroll,.mo-funnel{padding-left:20px;padding-right:20px}.mo-funnel-row{min-width:760px}.mo-funnel-name{flex-basis:310px}}
+
+
+/* Exact structural proportions from Monetización-html.zip:
+   one horizontal period/currency row, five filters, 3 + 4 finance cards. */
+.mo-filters{display:grid;grid-template-columns:max-content max-content minmax(0,1fr);gap:16px 20px;align-items:center}
+.mo-filter-period{flex-direction:row;align-items:center;gap:12px}
+.mo-filters>.mo-tag{justify-self:end}
+.mo-filter-second{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:14px;align-items:end}
+.mo-filter-second .mo-select{flex:1 1 160px;min-width:150px;gap:8px}
+.mo-filter-second .mo-select select{width:100%;max-width:none}
+.mo-custom{grid-column:1/-1}
+.mo-tiles{display:flex;flex-direction:column;gap:1px}
+.mo-tile-row{display:flex;flex-wrap:wrap;gap:1px;background:var(--mo-border)}
+.mo-tile-row .mo-tile{padding:22px 28px;justify-content:space-between}
+.mo-large-row .mo-tile{flex:1 1 300px;min-height:220px;gap:14px}
+.mo-large-row .mo-tile:first-child{flex:1.3 1 360px}
+.mo-small-row .mo-tile{flex:1 1 240px;min-height:176px;gap:12px}
+@media(max-width:850px){
+ .mo-filters{grid-template-columns:minmax(0,1fr);align-items:start}
+ .mo-filter-period{flex-wrap:wrap}
+ .mo-filters>.mo-tag{justify-self:start}
+ .mo-filter-second,.mo-custom{grid-column:1}
+ .mo-tile-row .mo-tile{padding-left:20px;padding-right:20px}
+}
