@@ -304,12 +304,18 @@ export function analyzeQuestionBankCoverage(
   const quarters = validPageCount
     ? new Set(distinctPages.map((page) => Math.min(4, Math.ceil(page * 4 / pageCount)))).size
     : 0;
-  const evaluatedChapters = byChapter.filter((item) => item.auto > 0).length;
+  // Only reliable, unique, source-backed, auto-correctable questions count
+  // toward a topic's readiness. A scattered bank is not six per topic.
+  const evaluatedChapters = chapterAssessments.filter((chapter) =>
+    chapter.validAutoCorrectable > 0
+  ).length;
   const ratio = validPageCount ? distinctPages.length / pageCount : null;
   const status =
     sections.length === 0 || !validPageCount
       ? 'unknown'
-      : evaluatedChapters / sections.length < 0.75 ||
+      : chaptersBelowMinimum.length > 0 ||
+          chaptersWithLowDiversity.length > 0 ||
+          evaluatedChapters / sections.length < 0.75 ||
           (pageCount >= 25 && quarters < 4)
         ? 'limited'
         : 'distributed';
@@ -321,7 +327,7 @@ export function analyzeQuestionBankCoverage(
     chaptersWithQuestions: byChapter.filter((item) => item.all > 0).length,
     chaptersWithAutoCorrectableQuestions: evaluatedChapters,
     chaptersWithoutAutoCorrectableQuestions: sections
-      .filter((_, index) => byChapter[index]!.auto === 0)
+      .filter((_, index) => chapterAssessments[index]!.validAutoCorrectable === 0)
       .map((section) => section.title),
     questionsWithoutReliableChapter: unassigned,
     distinctReferencedPages: pageNumbers.size,
