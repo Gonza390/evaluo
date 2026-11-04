@@ -80,15 +80,19 @@ export default async function PracticeModePage({ params, searchParams }: { param
   const artifacts = await loadOrBuildPedagogicalArtifacts({
     admin, materialId: material.id, summary: studySummary, glossary,
   });
-  const freeFlashcards = freeV2
-    ? await firstFreeItems({
-      userId: user.id, materialId: material.id, kind: 'flashcard',
-      items: artifacts.flashcards, limit: FREE_STUDY_V2.flashcards, keyPrefix: 'flashcard',
-    })
-    : artifacts.flashcards;
-  if (mode === 'flashcards') return <PracticeFlashcardSession
-    materialId={material.id} cards={freeFlashcards} reviewLength={reviewLength}
-    freeV2={freeV2} planTopicIndex={planTopicIndex} />;
+  // No consumir flashcards al abrir Casos, Simulacro, Opciones o Unir.
+  // El estudiante gasta el cupo sólo si entra efectivamente a Flashcards.
+  if (mode === 'flashcards') {
+    const freeFlashcards = freeV2
+      ? await firstFreeItems({
+        userId: user.id, materialId: material.id, kind: 'flashcard',
+        items: artifacts.flashcards, limit: FREE_STUDY_V2.flashcards, keyPrefix: 'flashcard',
+      })
+      : artifacts.flashcards;
+    return <PracticeFlashcardSession
+      materialId={material.id} cards={freeFlashcards} reviewLength={reviewLength}
+      freeV2={freeV2} planTopicIndex={planTopicIndex} />;
+  }
 
   const { data: modelRow } = mode === 'casos' || mode === 'mixto'
     ? await admin.from('student_materials').select('pedagogical_model').eq('id', material.id).maybeSingle()
