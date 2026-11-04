@@ -122,7 +122,7 @@ export function AcquisitionDashboard({data}:{data:AcquisitionSnapshot}){
    <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link>
    <Link href="/administrador/solicitudes" className="eh-primary-link">Solicitudes universidades <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></Link></div></div>
    <nav className="eh-tabs" aria-label="Paneles">{nav.map(([name,panel],i)=>
-   <Link key={name} className={'eh-tab'+(i===2?' eh-active':'')} href={'/administrador?panel='+panel}
+   <Link key={name} className={'eh-tab'+(i===2?' eh-active':'')} href={'/administrador/'+panel}
    aria-current={i===2?'page':undefined} prefetch={false}>{name}</Link>)}</nav></header>
  <section className="aq-intro"><div className="aq-lab">Evaluo / Adquisición y SEO</div><h1>Adquisición y SEO</h1>
  <p>De dónde llegan los estudiantes, qué páginas generan tráfico y qué canales consiguen usuarios que realmente estudian.</p></section>

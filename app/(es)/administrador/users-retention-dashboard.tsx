@@ -75,12 +75,12 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
  const [dimension,setDimension]=useState<'university'|'country'|'plan'|'materials'>('university');
  const [showCustom,setShowCustom]=useState(Boolean(filters.from&&filters.to));
  const q=(values:Record<string,string|number|null|undefined>={})=>{
-  const params=new URLSearchParams({panel:'usuarios',period:String(filters.period),usersPage:String(filters.page),
+  const params=new URLSearchParams({period:String(filters.period),usersPage:String(filters.page),
    usersSearch:filters.search,usersPlan:filters.plan,usersMaterials:filters.materials,
    usersCountry:filters.country,usersUniversity:filters.university});
   if(filters.from&&filters.to){params.set('from',filters.from);params.set('to',filters.to)}
   for(const [k,v] of Object.entries(values)){if(v===null||v===undefined||v===''){params.delete(k)}else params.set(k,String(v))}
-  return '/administrador?'+params.toString();
+  return '/administrador/usuarios?'+params.toString();
  };
  const comparison=stats.previous.prev_new ? (stats.totals.new_users-stats.previous.prev_new)/stats.previous.prev_new*100 : null;
  const freq=stats.frequency;
@@ -101,7 +101,7 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
     <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link>
       <Link href="/administrador/solicitudes" className="eh-primary-link">Solicitudes universidades <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></Link></div></div>
     <nav className="eh-tabs" aria-label="Paneles">{nav.map(([label,panel],i)=>
-      <Link href={'/administrador?panel='+panel} key={label} prefetch={false} className={'eh-tab'+(i===1?' eh-active':'')} aria-current={i===1?'page':undefined}>{label}</Link>)}</nav></header>
+      <Link href={'/administrador/'+panel} key={label} prefetch={false} className={'eh-tab'+(i===1?' eh-active':'')} aria-current={i===1?'page':undefined}>{label}</Link>)}</nav></header>
   <section className="eh-heading"><div><div className="eh-eyebrow">Evaluo / Usuarios y retención</div>
     <h1>Usuarios y retención</h1><p>Quiénes usan Evaluo, con qué frecuencia estudian, cuántos regresan y dónde estamos perdiendo estudiantes.</p></div></section>
   <section className="ur-filter-strip" aria-label="Filtros generales"><span className="eh-kicker">Período</span>

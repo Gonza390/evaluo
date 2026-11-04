@@ -143,7 +143,7 @@ export function ActivationDashboard({data}:{data:ActivationCohortSnapshot}){
  return <main className="ehome av-page">
   <header className="eh-header"><div className="eh-top"><span className="eh-logo">evaluo<span>.</span></span>
   <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link><Link className="eh-primary-link" href="/administrador/solicitudes">Solicitudes universidades <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></Link></div></div>
-  <nav className="eh-tabs" aria-label="Paneles">{nav.map(([name,id],i)=><Link key={name} href={'/administrador?panel='+id} prefetch={false}
+  <nav className="eh-tabs" aria-label="Paneles">{nav.map(([name,id],i)=><Link key={name} href={'/administrador/'+id} prefetch={false}
   aria-current={i===3?'page':undefined} className={'eh-tab'+(i===3?' eh-active':'')}>{name}</Link>)}</nav></header>
   <section className="av-intro"><div className="av-lab">Evaluo / Activación y recorrido</div><h1>Activación y recorrido</h1>
    <p>Qué hace un estudiante desde que se registra hasta que empieza a estudiar, y dónde abandona. Si vuelve después, eso se mide en Usuarios y retención.</p></section>

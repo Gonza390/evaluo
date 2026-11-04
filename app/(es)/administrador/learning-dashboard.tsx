@@ -128,7 +128,7 @@ export function LearningDashboard({data,filters,earliest,today}:Props){
   <header className="eh-header"><div className="eh-top"><span className="eh-logo">evaluo<span>.</span></span>
    <div className="eh-top-actions"><Link href="/administrador/feedback">Feedback</Link><Link href="/administrador/solicitudes" className="eh-primary-link">Solicitudes universidades <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></Link></div></div>
    <nav className="eh-tabs" aria-label="Paneles">{nav.map(([name,id],i)=>
-    <Link key={name} href={'/administrador?panel='+id} prefetch={false} aria-current={i===4?'page':undefined}
+    <Link key={name} href={'/administrador/'+id} prefetch={false} aria-current={i===4?'page':undefined}
       className={'eh-tab'+(i===4?' eh-active':'')}>{name}</Link>)}</nav></header>
   <section className="lp-intro"><div className="lp-kicker">Evaluo / Aprendizaje y prácticas</div>
    <h1>Aprendizaje y prácticas</h1><p>Cómo estudian realmente los usuarios, qué herramientas usan, qué les cuesta y si mejoran después de practicar. Medimos aprendizaje, no solo uso.</p>
