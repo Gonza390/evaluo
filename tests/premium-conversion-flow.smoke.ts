@@ -39,6 +39,8 @@ const cases:Record<PremiumGateReason,string>={
   case:'/dashboard/practicar/'+materialId+'/casos',
   flashcard:'/dashboard/practicar/'+materialId+'/flashcards',
   simulator:'/dashboard/practicar/'+materialId+'/simulacro',
+  complete:'/dashboard/practicar/'+materialId+'/completar',
+  mixed:'/dashboard/practicar/'+materialId+'/mixto',
   study_plan:'/dashboard/plan-de-estudio',
   mind_map:'/materiales/'+materialId+'?tab=mapa',
 };
