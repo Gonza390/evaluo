@@ -27,12 +27,12 @@ export const HOME_REDESIGN_FAQS = [
   {
     question: '¿Qué puedo probar gratis?',
     answer:
-      'Podés empezar sin tarjeta, con hasta 2 PDFs cada 15 días y un máximo de 100 páginas y 20 MB por archivo. Cada carga deja de contar para el cupo al cumplir 15 días. También podés probar la demo de esta página sin crear una cuenta.',
+      'Podés empezar sin tarjeta con 1 archivo PDF o Word gratis de por vida. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo no se renueva. Si ya tenías archivos en Evaluo, se conservan y recibís un nuevo cupo con este lanzamiento. También podés probar la demo sin crear una cuenta.',
   },
   {
     question: '¿Qué cambia con Premium?',
     answer:
-      'Podés subir hasta 3 PDFs por día, sin límite de páginas y con un máximo de 20 MB por archivo. Además, tenés simuladores completos, más explicaciones y práctica personalizada a partir de tus errores para seguir trabajando lo que más te cuesta.',
+      'Podés subir hasta 3 materiales PDF o Word por día, con un máximo de 20 MB por archivo. Además, tenés simuladores completos, más explicaciones y práctica personalizada a partir de tus errores para seguir trabajando lo que más te cuesta.',
   },
   {
     question: '¿Cómo se paga Premium? ¿Puedo cancelar?',
