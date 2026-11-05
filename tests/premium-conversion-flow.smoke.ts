@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  safePremiumReturnTo, premiumPricingHref, premiumDashboardHref, premiumUpgradeForLimit,
+  safePremiumReturnTo, premiumPricingHref, premiumDashboardHref, legacyPremiumFunnelHref, premiumUpgradeForLimit,
   FreeStudyV2UploadLimitError, type PremiumGateReason,
 } from '../lib/premium-flow.ts';
 import {
@@ -52,6 +52,65 @@ for(const [reason,returnTo] of Object.entries(cases)){
   assert.equal(new URL(upgrade.href,'https://evaluoapp.com').searchParams.get('returnTo'),returnTo);
 }
 assert.equal(premiumUpgradeForLimit('case',{materialId,returnTo:original}).returnTo,original);
+
+const oldFunnelSources = {
+  'mapa-mental':'material_mapa_mental',
+  errores:'errores_review',
+  simulador:'premium_simulator',
+  explicaciones:'simulator_explanations',
+} as const;
+for (const [funnel,source] of Object.entries(oldFunnelSources)) {
+  const url = new URL(legacyPremiumFunnelHref(
+    funnel as keyof typeof oldFunnelSources,
+    {materiaId:materialId,parcial:'2',returnTo:original},
+  ), 'https://evaluoapp.com');
+  assert.equal(url.pathname,'/dashboard/premium',funnel);
+  assert.equal(url.searchParams.get('source'),source,funnel);
+  assert.equal(url.searchParams.get('materia'),materialId,funnel);
+  assert.equal(url.searchParams.get('parcial'),'2',funnel);
+  assert.equal(url.searchParams.get('returnTo'),original,funnel);
+  const unsafe = new URL(legacyPremiumFunnelHref(
+    funnel as keyof typeof oldFunnelSources,
+    {materiaId:materialId,returnTo:'https://evil.example/redirect'},
+  ), 'https://evaluoapp.com');
+  assert.equal(unsafe.pathname,'/dashboard/premium');
+  assert.notEqual(unsafe.searchParams.get('returnTo'),'https://evil.example/redirect');
+}
+for(const [funnel,route] of [
+  ['mapa-mental','/materiales/'+materialId+'?tab=mapa'],
+  ['errores','/simulador/errores/'+materialId+'?parcial=2'],
+  ['simulador','/simulador/premium/'+materialId+'/2'],
+  ['explicaciones','/dashboard/explicaciones'],
+] as const) {
+  const path=legacyPremiumFunnelHref(funnel,{materiaId:materialId,parcial:'2'});
+  assert.equal(new URL(path,'https://evaluoapp.com').searchParams.get('returnTo'),route);
+}
+for (const name of ['mapa-mental','errores','simulador','explicaciones']) {
+  const legacy=read('app/(es)/premium/'+name+'/page.tsx');
+  assert.match(legacy,/redirect\(legacyPremiumFunnelHref\(/,
+    'Historic '+name+' links must reach the single commerce screen');
+  assert.doesNotMatch(legacy,/<(?:MapaMental|Errores|Simulador|Explicaciones)PremiumFunnel/,
+    'Do not render a second payment flow');
+}
+const upsell=read('components/premium/premium-upsell.tsx');
+assert.match(upsell,/premiumDashboardHref\(/);
+assert.doesNotMatch(upsell,/openContextualFlow|PREMIUM_FLOWS|premiumPricingHref/,
+  'Map and error upsells must not auto-open a legacy funnel or public pricing');
+const simulatorLegacy=read('components/simulador/SimuladorExamenLegacy.tsx');
+assert.match(simulatorLegacy,/premiumDashboardHref\(\{/);
+assert.doesNotMatch(simulatorLegacy,/\/premium\/explicaciones\?/);
+for(const name of ['premium','ultimo-intento']) {
+  const route=read('app/(es)/simulador/'+name+'/[materia_id]/[parcial]/page.tsx');
+  assert.match(route,/redirect\(premiumDashboardHref\(/);
+  assert.doesNotMatch(route,/redirect\(`\/premium\/simulador/);
+}
+const dashboardPremium=read('app/(es)/dashboard/premium/page.tsx');
+assert.match(dashboardPremium,/nextPath = premiumDashboardHref\(\{source, materiaId, parcial, returnTo\}\)/,
+  'After logging in, keep the original study action in the checkout context');
+assert.match(read('components/pricing/PremiumDashboardScreen.tsx'),
+  /status==='active'\?\(returnTo\?\?'\/dashboard'\)/,
+  'Existing subscribers must resume their requested action instead of landing on the dashboard');
+
 assert.equal(new FreeStudyV2UploadLimitError('used').code,'free_v2_material_limit');
 
 // Plan y derecho efectivo tienen prioridad sobre strings del proveedor.
