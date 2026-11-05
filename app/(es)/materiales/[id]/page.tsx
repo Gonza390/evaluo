@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowRight, FileText, UploadCloud } from 'lucide-react';
 import { LazyMaterialStudyWorkspace } from '@/components/lazy-material-study-workspace';
+import { StudentMaterialShareControl } from '@/components/student-material-share-control';
 import { MaterialStudyStatusWorkspace } from '@/components/material-study-status-workspace';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
@@ -503,6 +504,10 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     // Students can voluntarily re-open it from the PDF header at any time.
     const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
 
+    const shareAvailable = isOwner && Boolean(
+      academicProfile.universidadId && academicProfile.carreraId && material.materia_id
+    );
+    const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
     if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
     if (material.carrera_id) uploadParams.set('carreraId', material.carrera_id);
@@ -514,6 +519,14 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
 
     return (
       <>
+        {shareAvailable ? (
+          <StudentMaterialShareControl
+            materialId={material.id}
+            title={material.title}
+            sharePath={sharePath}
+            initialVisibility={visibility}
+          />
+        ) : null}
         <LazyMaterialStudyWorkspace
           key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
           initialProgressOpen={isOwner && query.tab === 'progreso' && !shouldShowFirstPdfGuide}
@@ -541,6 +554,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           pageCount={material.page_count}
           title={material.title}
           otherPdfOptions={otherPdfOptions}
+          shareAvailable={shareAvailable}
           viewerUrl={viewerUrl}
           docxSourceText={docxSourceText}
           docxHasImages={docxHasImages}
