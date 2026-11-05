@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { StudyBlogWorkshopView } from '@/components/marketing/study-blog-workshop';
+import { ExamStudyTimeEstimator } from '@/components/marketing/exam-study-time-estimator';
 import { STUDY_BLOG_WORKSHOPS_ES } from '@/lib/study-blog-workshops-es';
 import { STUDY_BLOG_WORKSHOPS_EN } from '@/lib/study-blog-workshops-en';
 import { PublicBrandLink, PublicSiteHeader } from '@/components/marketing/public-site-header';
@@ -84,7 +85,8 @@ const CONTEXTUAL_LINKS: Partial<Record<StudyBlogLocale, Record<string, {href:str
   engineering:[{href:'/en/blog/how-to-study-statistics',label:'Study statistics',description:'Interpret numerical results and assumptions.'},{href:'/en/pdf-to-quiz',label:'Quiz from your notes',description:'Explore retrieval practice with course material.'}],
   statistics:[{href:'/en/blog/how-to-study-engineering',label:'Study engineering',description:'Work through models and unit checks.'},{href:'/en/match-concepts-with-ai',label:'Match concepts',description:'Practice distinguishing closely related definitions.'}],
   'exam-planning':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Organize cumulative revision across multiple topics.'},{href:'/en/pdf-to-quiz',label:'Quiz-based practice',description:'Use questions to assess understanding.'}],
-  'active-recall':[{href:'/en/blog/spaced-repetition-for-studying',label:'Spaced repetition',description:'Review older material across study sessions.'},{href:'/en/pdf-to-flashcards',label:'Flashcards',description:'Practice retrieving concepts from your notes.'}]
+  'active-recall':[{href:'/en/blog/spaced-repetition-for-studying',label:'Spaced repetition',description:'Review older material across study sessions.'},{href:'/en/pdf-to-flashcards',label:'Flashcards',description:'Practice retrieving concepts from your notes.'}],
+  'exam-study-time-nov2026':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Learn to organize a cumulative assessment across topics.'},{href:'/en/pdf-to-quiz',label:'Practice questions from notes',description:'Test recall and identify which topics need more work.'}]
  }
 };
 
@@ -173,7 +175,8 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
     nursing: ['medicine','biology','active-recall'],
     engineering: ['statistics','exam-planning','active-recall'],
     statistics: ['engineering','exam-planning','active-recall'],
-    'exam-planning': ['active-recall','medicine','engineering'],
+    'exam-planning': ['exam-study-time-nov2026','active-recall','medicine','engineering'],
+    'exam-study-time-nov2026': ['exam-planning','active-recall'],
     'active-recall': ['exam-planning','statistics','nursing'],
   };
   const available = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key);
@@ -242,6 +245,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
               <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-blue-700">{copy.takeaway}</h2>
               <p className="mt-2 text-base font-medium leading-8 text-[#0F1B3D]">{article.takeaway}</p>
             </section>
+            {article.key === 'exam-study-time-nov2026' && <ExamStudyTimeEstimator />}
             {workshop && <StudyBlogWorkshopView locale={locale} workshop={workshop} />}
             {article.sections.map((section, index) => (
               <section className="mt-12 scroll-mt-24" id={'seccion-' + (index + 1)} key={section.heading}>
