@@ -537,7 +537,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         : undefined}
       note={historySaveFailed && !previewResult
         ? 'No pudimos guardar esta práctica en el historial.'
-        : 'Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.'}
+        : undefined}
     />
   ) : null;
 
