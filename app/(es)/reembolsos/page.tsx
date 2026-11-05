@@ -21,6 +21,12 @@ const sections = [
     'Evaluo está preparando Paddle para ventas fuera de Argentina. Esta modalidad estará disponible únicamente cuando Paddle apruebe la cuenta y el checkout internacional esté habilitado con sus precios públicos.',
     'Cuando Paddle figure en el comprobante como vendedor registrado (Merchant of Record), se aplicarán también sus condiciones y política de devoluciones. El soporte de Evaluo puede orientarte hacia los canales correspondientes.',
   ] },
+  { title: 'Cómo solicitar una devolución con Paddle', paragraphs: [
+    'Cuando el comprobante de la compra indique que Paddle es el vendedor registrado (Merchant of Record), podés solicitar atención por la compra, gestionar la suscripción y pedir una devolución directamente en https://paddle.net. Para problemas con el funcionamiento de Evaluo, escribí a facturacion@evaluo.com.ar.',
+    'Las compras hechas con Paddle están sujetas a su política de reembolsos y a los derechos irrenunciables del consumidor. La política puede consultarse en https://www.paddle.com/legal/refund-policy y las condiciones para compradores en https://www.paddle.com/legal/buyer-terms.',
+    'En la Unión Europea, el Espacio Económico Europeo y el Reino Unido pueden corresponder derechos de desistimiento, generalmente durante los primeros 14 días, con excepciones aplicables a productos y servicios digitales cuando el usuario haya consentido su uso inmediato. El alcance concreto se determina por las condiciones informadas al comprar y la legislación aplicable.',
+    'Cancelar una renovación no genera automáticamente un reembolso del período pagado; la solicitud de devolución se tramita por el canal del vendedor indicado en el comprobante.',
+  ] },
   { title: 'Cancelación y plazos', paragraphs: [
     'Cancelar una suscripción evita futuras renovaciones según las condiciones mostradas al contratar, pero no implica automáticamente un reembolso del período ya cobrado. Los planes de duración fija finalizan en la fecha indicada.',
     'Una devolución aprobada se procesa a través del proveedor de pago y puede demorar según el medio utilizado. Nada de esta política limita derechos irrenunciables del consumidor, incluidos derechos de desistimiento cuando correspondan.',
@@ -34,7 +40,7 @@ export default function RefundsPage() {
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Volver</Link>
         <p className="mt-8 text-xs font-bold uppercase tracking-[0.26em] text-brand">Legal</p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">Política de reembolsos</h1>
-        <p className="mt-4 text-sm leading-7 text-muted-foreground">Última actualización: octubre de 2026. Complementa los <Link href="/facturacion" className="font-semibold text-blue-700 underline">términos de facturación</Link>.</p>
+        <p className="mt-4 text-sm leading-7 text-muted-foreground">Última actualización: noviembre de 2026. Complementa los <Link href="/facturacion" className="font-semibold text-blue-700 underline">términos de facturación</Link>.</p>
         <div className="mt-10 space-y-10">
           {sections.map(section => <section key={section.title} className="border-b border-border pb-8">
             <h2 className="text-xl font-bold">{section.title}</h2>
