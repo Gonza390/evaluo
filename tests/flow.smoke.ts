@@ -738,7 +738,7 @@ const topicCheckView = readFileSync('components/study/summary-topic-check-popup.
 const summaryCompletionView = readFileSync('components/study/summary-completion-popup.tsx', 'utf8');
 const topicSupportView = readFileSync('components/study/topic-study-support.tsx', 'utf8');
 assert.ok(flashcardView.includes('data-topic-flashcards-result'));
-assert.ok(practiceResultView.includes('max-w-[860px] px-4 pb-10 pt-6'), 'La galería de resultados usa la escala compacta.');
+assert.ok(practiceResultView.includes('max-w-[860px] px-3 pb-8 pt-4'), 'La galería de resultados usa el padding compacto de Evaluo.');
 assert.ok(flashcardView.includes('<PracticeResultsScreen'), 'Flashcards reutiliza los resultados compartidos.');
 assert.ok(flashcardView.includes('data-flashcard-card'));
 assert.ok(flashcardView.includes('onClick={flipCard}'), 'La tarjeta debe usar el manejador animado actual.');
