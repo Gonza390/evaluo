@@ -26,6 +26,19 @@ assert.match(mobileMenu,/data-\[highlighted\]:text-\[#0F1B3D\]/,
   'Radix highlighted state must never use the white accent foreground on the light Premium card.');
 assert.match(mobileMenu,/focus:bg-\[#EEF2FF\]/,
   'The Premium menu focus background must have sufficient contrast with the label.');
+const highlight = mobileMenu.match(/const mobileMenuItemHighlight =\s*'([^']+)'/)?.[1];
+assert.ok(highlight, 'The profile menu must have one shared highlight style.');
+for (const state of [
+  'hover:bg-[#EEF2FF]', 'focus:bg-[#EEF2FF]', 'data-[highlighted]:bg-[#EEF2FF]',
+  'hover:text-[#0F1B3D]', 'focus:text-[#0F1B3D]', 'data-[highlighted]:text-[#0F1B3D]',
+]) assert.ok(highlight.includes(state), 'The shared mobile menu highlight lacks ' + state);
+assert.match(mobileMenu,/DropdownMenuItem asChild className=\{mobileMenuItemHighlight\}>\s*<Link href="\/configuracion"/,
+  'Settings must use the shared Premium highlight.');
+assert.match(mobileMenu,/text-\[13px\] ' \+ mobileMenuItemHighlight\}\s*onSelect=\{\(\) => setFeedbackOpen\(true\)\}/,
+  'Suggestions must use the shared Premium highlight.');
+assert.match(mobileMenu,/!isPremium \? \(\s*<DropdownMenuItem asChild className=\{mobileMenuItemHighlight\}>/,
+  'Premium must use the same profile menu highlight.');
+
 
 assert.match(screen,/max-w-\[680px\]/,'Central premium page should fit Evaluo desktop dimensions.');
 assert.match(screen,/min-\[850px\]:grid-cols-3/,'Benefits should remain stacked until there is room inside the app sidebar.');
