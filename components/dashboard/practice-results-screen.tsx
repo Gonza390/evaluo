@@ -21,6 +21,7 @@ type ResultAction = {
   onClick?: () => void;
   href?: string;
   disabled?: boolean;
+  qaId?: 'topic-primary' | 'topic-review';
 };
 
 type PracticeResultsScreenProps = {
@@ -45,10 +46,14 @@ function ResultButton({ action, primary = false }: { action?: ResultAction; prim
     (primary ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] ' : 'border border-[#E7EBF4] bg-white text-[#42506A] hover:bg-[#F5F7FB] ') +
     (action.disabled ? 'cursor-not-allowed opacity-50' : '');
   if (action.href && !action.disabled) return (
-    <Link href={action.href} className={className}>{action.label}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}</Link>
+    <Link href={action.href} className={className}
+      data-topic-flashcards-primary={action.qaId === 'topic-primary' ? '' : undefined}
+      data-topic-flashcards-review={action.qaId === 'topic-review' ? '' : undefined}>{action.label}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}</Link>
   );
   return (
-    <button type="button" onClick={action.onClick} disabled={action.disabled || !action.onClick} className={className}>
+    <button type="button" onClick={action.onClick} disabled={action.disabled || !action.onClick} className={className}
+      data-topic-flashcards-primary={action.qaId === 'topic-primary' ? '' : undefined}
+      data-topic-flashcards-review={action.qaId === 'topic-review' ? '' : undefined}>
       {action.label}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
     </button>
   );
