@@ -1,5 +1,6 @@
 import { MASTER_ES_BLOG, MASTER_EN_BLOG } from './study-blog-master-expansion';
 import { EXPANDED_ES_BLOG, EXPANDED_EN_BLOG } from './study-blog-expansion';
+import { NOV5_ES_BLOG, NOV5_EN_BLOG } from './study-blog-2026-11-05';
 export type StudyBlogLocale = 'es' | 'en';
 export type StudyBlogArticle = {
   key: string;
@@ -25,6 +26,7 @@ export const STUDY_BLOG_ARTICLES: Record<StudyBlogLocale, StudyBlogArticle[]> = 
   es: [
     ...MASTER_ES_BLOG,
     ...EXPANDED_ES_BLOG,
+    ...NOV5_ES_BLOG,
     {
       key: 'accounting',
       slug: 'como-estudiar-contabilidad',
@@ -249,6 +251,7 @@ export const STUDY_BLOG_ARTICLES: Record<StudyBlogLocale, StudyBlogArticle[]> = 
   en: [
     ...MASTER_EN_BLOG,
     ...EXPANDED_EN_BLOG,
+    ...NOV5_EN_BLOG,
     {
       key: 'accounting',
       slug: 'how-to-study-accounting',
