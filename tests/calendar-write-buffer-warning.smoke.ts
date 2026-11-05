@@ -61,13 +61,13 @@ for (const [year, month] of [[2026, 10], [2027, 1], [2027, 2]]) {
 }
 
 const page = readFileSync('app/(es)/calendario/page.tsx', 'utf8');
-assert.match(page, /h-\\[48px\\][^\\n]*sm:h-\\[56px\\]/,
+assert.match(page, /h-\[48px\][^\n]*sm:h-\[56px\]/,
   'Las fechas son compactas en móvil y escritorio, conservando un área táctil mínima.');
-assert.doesNotMatch(page, /min-h-\\[64px\\]/,
+assert.doesNotMatch(page, /min-h-\[64px\]/,
   'Las casillas no deben expandirse a la altura antigua.');
-assert.match(page, /cellEvents\\.length > 1 \\? \\([\\s\\S]*?absolute right-1 top-1/,
+assert.match(page, /cellEvents\.length > 1 \? \([\s\S]*?absolute right-1 top-1/,
   'La cantidad adicional de eventos no debe crear una tercera línea dentro de la fecha.');
-assert.match(page, /min-\\[480px\\]:hidden/,
+assert.match(page, /min-\[480px\]:hidden/,
   'En pantallas pequeñas los eventos se distinguen mediante un indicador compacto.');
 const instrumentation = readFileSync('instrumentation.ts', 'utf8');
 const runtimeTracer = readFileSync('lib/server-runtime-warnings.ts', 'utf8');
