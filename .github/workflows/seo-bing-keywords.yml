@@ -14,6 +14,10 @@ on:
       - 'scripts/seo/editorial-quality-gate.mjs'
       - 'tests/seo-editorial-quality-gate.smoke.mjs'
       - 'seo/keyword-data/EDITORIAL_POLICY.md'
+      - 'lib/study-blog-2026-11-05.ts'
+      - 'lib/study-blog-articles.ts'
+      - 'app/sitemap.ts'
+      - 'tests/seo-nov5-study-blog.smoke.mjs'
 
 permissions:
   contents: write
@@ -43,6 +47,7 @@ jobs:
           node tests/seo-bing-keyword.smoke.mjs
           node tests/seo-bing-batch.smoke.mjs
           node tests/seo-editorial-quality-gate.smoke.mjs
+          node tests/seo-nov5-study-blog.smoke.mjs
 
       - name: Verify secret is configured
         env:
