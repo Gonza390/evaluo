@@ -1,0 +1,50 @@
+name: Free V2 isolated migration QA
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'supabase/migrations/20261104180000_free_study_v2_unlocks.sql'
+      - 'supabase/migrations/20261104183000_free_study_v2_plan_claim.sql'
+      - 'tests/db/free-study-v2-*.sql'
+      - '.github/workflows/free-study-v2-db-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  migration-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: evaluo_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d evaluo_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Apply schema fixture and Free V2 migrations
+        env:
+          PGPASSWORD: postgres
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGDATABASE: evaluo_qa
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-schema-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104180000_free_study_v2_unlocks.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104183000_free_study_v2_plan_claim.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-migration-regression.sql
