@@ -13,6 +13,7 @@ import { buildCollectionPageJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { toAbsoluteUrl } from '@/lib/site';
 import { createPublicClient } from '@/lib/supabase-public';
+import { createAdminClient } from '@/lib/supabase-admin';
 
 type SummaryCatalogItem = {
   materiaId: string;
@@ -64,15 +65,17 @@ const loadSummaryCatalog = nextCache(
       const rows: Array<{ materia_id: string | null; parcial: number | null }> = [];
 
       for (let from = 0; ; from += pageSize) {
-        const { data, error: questionsError } = await client
-          .from('preguntas_banco_public')
+        // Aggregated counters only. The public question-bank view is restricted.
+        // This server-only query never returns questions or answer keys to the page.
+        const { data, error: questionsError } = await createAdminClient()
+          .from('preguntas_banco')
           .select('materia_id, parcial')
+          .eq('es_demo', false)
           .in('materia_id', materiaIds)
           .range(from, from + pageSize - 1);
 
-        // El catálogo de resúmenes es público, pero el banco de preguntas puede
-        // no tener permisos de lectura anónima. Nunca romper la landing por un
-        // contador opcional; en ese caso ocultamos las métricas de preguntas.
+        // Si falla la consulta privada opcional, las métricas se omiten
+        // sin bloquear el catálogo público de resúmenes.
         if (questionsError) return [];
         rows.push(...((data ?? []) as Array<{ materia_id: string | null; parcial: number | null }>));
         if (!data || data.length < pageSize) break;
