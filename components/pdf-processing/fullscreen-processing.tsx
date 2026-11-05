@@ -36,50 +36,50 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 function ExampleDocument() {
   const lines = [56,94,88,92,60,42,90,96,70,48,93,86,52];
-  return <section className="flex min-w-0 flex-1 flex-col gap-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-5 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:p-[22px]">
+  return <section className="flex min-w-0 flex-1 flex-col gap-4 rounded-[24px] border border-[#e3eaf5] bg-[#f7faff] p-4 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:p-5">
     <Label>TU DOCUMENTO</Label>
-    <div aria-hidden="true" className="relative flex min-h-[225px] flex-1 flex-col gap-2 overflow-hidden rounded-2xl border border-[#dbe6f8] bg-white p-6 sm:min-h-[300px]">
-      {lines.map((width, index) => <div key={index} className={`shrink-0 rounded-[5px] ${index === 0 || index === 5 || index === 9 ? 'h-3 bg-[#c9d1e0]' : index===6||index===7 ? 'h-2 bg-[#ffe28a]' : 'h-2 bg-[#e8ecf2]'}`} style={{ width: `${width}%` }} />)}
-      <div className="pointer-events-none absolute inset-x-0 top-[48%] h-16 border-y-2 border-[#0b63e5] bg-[#0b63e5]/[.08]" />
+    <div aria-hidden="true" className="relative flex min-h-[200px] flex-1 flex-col gap-1.5 overflow-hidden rounded-2xl border border-[#dbe6f8] bg-white p-5 sm:min-h-[245px]">
+      {lines.map((width, index) => <div key={index} className={`shrink-0 rounded-[5px] ${index === 0 || index === 5 || index === 9 ? 'h-2.5 bg-[#c9d1e0]' : index===6||index===7 ? 'h-1.5 bg-[#ffe28a]' : 'h-1.5 bg-[#e8ecf2]'}`} style={{ width: `${width}%` }} />)}
+      <div className="pointer-events-none absolute inset-x-0 top-[48%] h-14 border-y border-[#0b63e5] bg-[#0b63e5]/[.08]" />
     </div>
   </section>;
 }
 function TopicsExample() {
-  return <section className="flex min-w-0 flex-[1.1] flex-col gap-5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 sm:p-[26px]">
+  return <section className="flex min-w-0 flex-[1.1] flex-col gap-4 rounded-[24px] border border-[#e8ecf2] bg-white p-4 sm:p-[22px]">
     <Label>TEMAS DETECTADOS</Label>
     {[
       ['Oferta y demanda', 'Ley de la demanda · Curva de oferta · Equilibrio'],
       ['Elasticidad', 'Elasticidad precio · Demanda inelástica'],
       ['Costos de producción', ''],
-    ].map(([name, detail], index) => <div className="flex gap-3.5" key={name}>
-      <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fb] text-[13px] font-bold text-[#084bb0]">{index+1}</span>
+    ].map(([name, detail], index) => <div className="flex gap-3" key={name}>
+      <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fb] text-[12px] font-bold text-[#084bb0]">{index+1}</span>
       <div className="min-w-0">
-        <p className="text-[16px] font-semibold text-[#0f1623]">{name}</p>
+        <p className="text-[15px] font-semibold text-[#0f1623]">{name}</p>
         {detail ? <p className="mt-1 text-[13px] leading-5 text-[#667085]">{detail}</p> : null}
       </div>
     </div>)}
-    {[1,2].map(i=><div key={i} className="flex items-center gap-3.5 opacity-50"><span className="size-[30px] rounded-full bg-[#f2f4f7]"/><div className="h-2.5 w-2/3 rounded-full bg-[#e8ecf2]"/></div>)}
+    {[1,2].map(i=><div key={i} className="flex items-center gap-3 opacity-50"><span className="size-[26px] rounded-full bg-[#f2f4f7]"/><div className="h-2 w-2/3 rounded-full bg-[#e8ecf2]"/></div>)}
   </section>;
 }
 function SceneOrganize() {
-  return <div data-processing-layout="organize" className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
-    <ExampleDocument/><div data-processing-arrow aria-hidden="true" className="flex items-center justify-center text-[#0b63e5] lg:-mx-1"><ArrowRight className="size-6 rotate-90 lg:rotate-0"/></div><TopicsExample/>
+  return <div data-processing-layout="organize" className="mx-auto flex w-full max-w-[920px] flex-col items-stretch justify-center gap-5 lg:flex-row">
+    <ExampleDocument/><div data-processing-arrow aria-hidden="true" className="flex items-center justify-center text-[#0b63e5] lg:-mx-1"><ArrowRight className="size-5 rotate-90 lg:rotate-0"/></div><TopicsExample/>
   </div>;
 }
 function SceneUnderstand({fileName}: {fileName:string}) {
-  return <div data-processing-layout="understand" className="mx-auto flex w-full max-w-[1040px] flex-col items-stretch justify-center gap-5 lg:flex-row">
-    <section aria-label="Ejemplo de resumen de un tema" className="flex min-w-0 flex-[1.6] flex-col gap-4 rounded-[28px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-6 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:px-8 sm:py-7">
+  return <div data-processing-layout="understand" className="mx-auto flex w-full max-w-[920px] flex-col items-stretch justify-center gap-5 lg:flex-row">
+    <section aria-label="Ejemplo de resumen de un tema" className="flex min-w-0 flex-[1.6] flex-col gap-3.5 rounded-[24px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-5 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:px-6 sm:py-6">
       <div className="flex flex-wrap items-center justify-between gap-3"><Label>TEMA 2 · RESUMEN</Label><ExampleTag/></div>
-      <h2 className="text-[23px] font-bold leading-[1.2] tracking-[-.02em] text-[#0f1623] sm:text-[28px]">Elasticidad precio de la demanda</h2>
-      <p className="text-[15px] leading-[1.65] text-[#344054] sm:text-[16px]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">elástica</span>, una pequeña suba de precio reduce mucho las ventas.</p>
-      <p className="text-[15px] leading-[1.65] text-[#344054] sm:text-[16px]">En cambio, si es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">inelástica</span>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</p>
+      <h2 className="text-[21px] font-bold leading-[1.2] tracking-[-.02em] text-[#0f1623] sm:text-[24px]">Elasticidad precio de la demanda</h2>
+      <p className="text-[14px] leading-[1.55] text-[#344054] sm:text-[15px]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">elástica</span>, una pequeña suba de precio reduce mucho las ventas.</p>
+      <p className="text-[14px] leading-[1.55] text-[#344054] sm:text-[15px]">En cambio, si es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">inelástica</span>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</p>
       <div className="mt-0.5 flex flex-wrap items-center gap-2">
         <span className="mr-1 text-[13px] font-semibold text-[#4b5565]">Conceptos clave</span>
         {['Elasticidad','Demanda inelástica','Bien sustituto'].map(item=><span key={item} className="rounded-full bg-[#eaf0fb] px-3 py-1.5 text-[13px] font-semibold text-[#084bb0]">{item}</span>)}
       </div>
-      <div className="mt-2"><div className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de botón, no disponible durante el procesamiento"><BookOpen size={18}/> Practicar este tema</div></div>
+      <div className="mt-2"><div className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de botón, no disponible durante el procesamiento"><BookOpen size={18}/> Practicar este tema</div></div>
     </section>
-    <section aria-label="Fragmento de tu material original" className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:p-6 lg:max-w-[360px]">
+    <section aria-label="Fragmento de tu material original" className="flex min-w-0 flex-1 flex-col gap-3 rounded-[24px] border border-[#e8ecf2] bg-white p-4 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:p-5 lg:max-w-[320px]">
       <Label>EN TU MATERIAL</Label>
       <div className="flex items-center gap-2.5">
         <span className="flex h-8 w-[26px] shrink-0 items-center justify-center rounded-md bg-[#d92d3a] text-[9px] font-bold text-white">PDF</span>
@@ -93,24 +93,24 @@ function SceneUnderstand({fileName}: {fileName:string}) {
   </div>;
 }
 function SceneMemorize() {
-  return <div data-processing-layout="memorize" className="mx-auto flex w-full max-w-[1040px] flex-col items-start justify-center gap-7 lg:flex-row">
+  return <div data-processing-layout="memorize" className="mx-auto flex w-full max-w-[920px] flex-col items-start justify-center gap-5 lg:flex-row">
     <section aria-label="Ejemplo de flashcard" className="w-full min-w-0 flex-[1.5] pb-6 lg:max-w-[600px]">
-      <div className="flex min-h-[300px] flex-col justify-between gap-6 rounded-[32px] border border-[#cfdcf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-7 shadow-[0_14px_0_-6px_#dbe6f8,0_26px_0_-12px_#eaf0fb,0_18px_40px_rgba(20,60,140,0.08)] sm:min-h-[330px] sm:px-8 sm:py-8">
+      <div className="flex min-h-[255px] flex-col justify-between gap-5 rounded-[24px] border border-[#cfdcf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-6 shadow-[0_14px_0_-6px_#dbe6f8,0_26px_0_-12px_#eaf0fb,0_18px_40px_rgba(20,60,140,0.08)] sm:min-h-[280px] sm:px-6 sm:py-6">
         <div className="flex items-center justify-between gap-3"><Label>PREGUNTA</Label><ExampleTag/></div>
-        <p className="text-[24px] font-bold leading-[1.25] tracking-[-.025em] sm:text-[30px]">¿Qué mide la elasticidad precio de la demanda?</p>
+        <p className="text-[22px] font-bold leading-[1.25] tracking-[-.025em] sm:text-[26px]">¿Qué mide la elasticidad precio de la demanda?</p>
         <div className="flex flex-wrap items-center gap-3.5">
-          <div className="inline-flex min-h-[52px] items-center gap-2.5 rounded-full bg-[#0b63e5] px-7 text-[16px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta</div>
+          <div className="inline-flex min-h-[44px] items-center gap-2.5 rounded-full bg-[#0b63e5] px-6 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta</div>
           <span className="text-[14px] text-[#4b5565]">Pensala antes de darla vuelta.</span>
         </div>
       </div>
     </section>
-    <section aria-label="Ejemplo de glosario" className="flex w-full min-w-0 flex-1 flex-col rounded-[28px] border border-[#e8ecf2] bg-white px-5 pb-2 pt-6 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:px-[26px] lg:max-w-[400px]">
+    <section aria-label="Ejemplo de glosario" className="flex w-full min-w-0 flex-1 flex-col rounded-[24px] border border-[#e8ecf2] bg-white px-5 pb-2 pt-5 shadow-[0_6px_24px_rgba(20,40,80,0.04)] sm:px-[22px] lg:max-w-[370px]">
       <div className="pb-3.5"><Label>GLOSARIO</Label></div>
       {[
         ['Elasticidad','Sensibilidad de la cantidad demandada ante un cambio en el precio.'],
         ['Demanda inelástica','Los compradores casi no ajustan su consumo cuando el precio cambia.'],
         ['Bien sustituto','Producto que puede reemplazar a otro cuando este se encarece.']
-      ].map(([term,definition])=><div className="flex flex-col gap-1 border-t border-[#e8ecf2] py-4" key={term}>
+      ].map(([term,definition])=><div className="flex flex-col gap-1 border-t border-[#e8ecf2] py-3" key={term}>
         <h3 className="text-[16px] font-bold text-[#0f1623]">{term}</h3>
         <p className="text-[14px] leading-[1.5] text-[#4b5565]">{definition}</p>
       </div>)}
@@ -118,10 +118,10 @@ function SceneMemorize() {
   </div>;
 }
 function ScenePractice() {
-  return <div data-processing-layout="practice" className="mx-auto flex w-full max-w-[1040px] flex-col gap-5 lg:flex-row">
-    <section className="min-w-0 flex-[1.6] space-y-5 rounded-[28px] border border-[#e8ecf2] bg-white p-5 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:p-7">
+  return <div data-processing-layout="practice" className="mx-auto flex w-full max-w-[920px] flex-col gap-5 lg:flex-row">
+    <section className="min-w-0 flex-[1.6] space-y-4 rounded-[24px] border border-[#e8ecf2] bg-white p-4 shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2"><Label>PRÁCTICA · PREGUNTA 3</Label><ExampleTag/></div>
-      <h2 className="text-[19px] font-bold leading-7 tracking-[-.02em] text-[#0f1623] sm:text-[22px]">Si la demanda de un bien es elástica y su precio sube, ¿qué pasa con la cantidad demandada?</h2>
+      <h2 className="text-[18px] font-bold leading-6 tracking-[-.02em] text-[#0f1623] sm:text-[20px]">Si la demanda de un bien es elástica y su precio sube, ¿qué pasa con la cantidad demandada?</h2>
       <div className="space-y-2.5">
         {['Aumenta','Se mantiene igual','Disminuye bastante'].map((answer,index)=><div key={answer} className={`flex items-center gap-3.5 rounded-2xl border-[1.5px] p-3 text-left text-[14px] font-medium ${index===1?'border-[#fda29b] bg-[#fff1f0] text-[#b42318]':'border-[#d0d5dd] bg-white text-[#344054]'}`}>
           <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-current/20">{String.fromCharCode(65+index)}</span>
@@ -134,7 +134,7 @@ function ScenePractice() {
         <p className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#0b63e5]">Repasar en el resumen del tema <ArrowRight size={15}/></p>
       </div>
     </section>
-    <section className="min-w-0 flex-1 space-y-6 rounded-[28px] border border-[#e8ecf2] bg-white p-5 sm:p-6 lg:max-w-[300px]">
+    <section className="min-w-0 flex-1 space-y-4 rounded-[24px] border border-[#e8ecf2] bg-white p-4 sm:p-5 lg:max-w-[270px]">
       <Label>TU AVANCE</Label>
       <div className="flex flex-wrap gap-2">{[1,2,3,4,5].map(i=><span key={i} className={`flex size-8 items-center justify-center rounded-full text-[13px] font-semibold ${i<3?'bg-[#067647] text-white':i===3?'bg-[#d92d20] text-white':'border-2 border-[#d0d5dd] text-[#667085]'}`}>{i<3?<Check size={16}/>:i===3?'×':i}</span>)}</div>
       <div className="space-y-2 border-t border-[#e8ecf2] pt-5">
@@ -172,7 +172,7 @@ function ProcessingFit({children,sceneKey}:{children:React.ReactNode;sceneKey:nu
     return ()=>observer.disconnect();
   },[sceneKey]);
   return <div data-processing-fit-viewport ref={viewportRef} className="relative min-h-0 w-full flex-1 overflow-hidden">
-    <div data-processing-fit-content ref={contentRef} className="absolute left-1/2 top-1/2 w-full max-w-[1040px]"
+    <div data-processing-fit-content ref={contentRef} className="absolute left-1/2 top-1/2 w-full max-w-[920px]"
       style={{transform:`translate(-50%, -50%) scale(${scale})`,transformOrigin:'center center'}}>
       {children}
     </div>
@@ -252,46 +252,46 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   },[materialId,retrying,preview]);
   const readHref=`${getStudentMaterialRoute(materialId)}?inicio=1${state.isFirstReadyMaterial?'&recorrido=1':'&tab=resumen'}`;
   return <main data-pdf-processing-screen className="flex h-dvh min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white font-sans text-[#0f1623]">
-    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-8 gap-y-2 border-b border-[#e8ecf2] px-4 py-3 sm:px-8 sm:py-4 lg:px-10">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-7 gap-y-2 border-b border-[#e8ecf2] px-4 py-2.5 sm:px-7 sm:py-3 lg:px-9">
       <div className="flex shrink-0 items-center gap-2.5" aria-label="Evaluo">
-        <Image src="/evaluo-logo-icono.svg" width={28} height={28} alt="" className="size-7 object-contain"/>
-        <span className="text-[18px] font-bold tracking-[-.01em]">Evaluo</span>
+        <Image src="/evaluo-logo-icono.svg" width={26} height={26} alt="" className="size-[26px] object-contain"/>
+        <span className="text-[16px] font-bold tracking-[-.01em]">Evaluo</span>
       </div>
       {!ready?<div className="flex min-w-0 flex-1 items-center justify-start gap-3 sm:justify-center">
-        <span className="flex h-9 w-[30px] shrink-0 items-center justify-center rounded-[7px] bg-[#d92d3a] text-[10px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
-        <span className="max-w-[160px] truncate text-[13px] font-semibold sm:max-w-[280px] sm:text-[15px]">{state.fileName}</span>
+        <span className="flex h-8 w-[28px] shrink-0 items-center justify-center rounded-[7px] bg-[#d92d3a] text-[10px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
+        <span className="max-w-[160px] truncate text-[13px] font-semibold sm:max-w-[280px] sm:text-[14px]">{state.fileName}</span>
       </div>:null}
       <div className="flex min-w-[145px] flex-[0_1_340px] items-center gap-3 sm:gap-3.5">
-        <div role="progressbar" aria-label={state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-2 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
+        <div role="progressbar" aria-label={state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
           <div className={`h-full rounded-full transition-[width] duration-500 ${ready?'bg-[#067647]':'bg-[#0b63e5]'}`} style={{width:`${progress}%`}}/>
         </div>
-        <span className={`min-w-12 text-right text-[14px] font-bold tabular-nums ${ready?'text-[#067647]':''}`}>{progress} %</span>
+        <span className={`min-w-12 text-right text-[13px] font-bold tabular-nums ${ready?'text-[#067647]':''}`}>{progress} %</span>
       </div>
     </header>
-    <div data-processing-content className="flex min-h-0 min-w-0 flex-1 flex-col px-3 py-3 sm:px-6 sm:py-5 lg:px-10">
+    <div data-processing-content className="flex min-h-0 min-w-0 flex-1 flex-col px-3 py-2 sm:px-6 sm:py-3 lg:px-9">
       <ProcessingFit sceneKey={ready?'ready':failed?'failed':visibleScene}>
       {failed? <section data-processing-final-motion role="alert" className="mx-auto w-full max-w-[650px] space-y-5 rounded-[28px] border border-[#e3eaf5] bg-[#f7faff] p-7 text-center">
         <h1 className="text-[25px] font-bold">No pudimos procesar tu material</h1>
         <p className="text-[14px] text-[#4b5565]">{state.error||state.message}</p>
         <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-6 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> Reintentar</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-6 text-sm font-semibold">Volver a Mi espacio</Link></div>
-      </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[880px] flex-col items-center rounded-[32px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-8 text-center sm:px-10 sm:py-11">
-        <Image src="/evi-procesamiento-listo.svg" alt="" width={140} height={140} className="mx-auto h-28 w-28 object-contain sm:h-[140px] sm:w-[140px]"/>
+      </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[780px] flex-col items-center rounded-[24px] border border-[#e3eaf5] bg-gradient-to-b from-[#eef4ff] to-white px-5 py-6 text-center sm:px-8 sm:py-8">
+        <Image src="/evi-procesamiento-listo.svg" alt="" width={120} height={120} className="mx-auto h-24 w-24 object-contain sm:h-[120px] sm:w-[120px]"/>
         <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#abefc6] bg-[#ecfdf3] px-4 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> Procesamiento completo</span>
-        <h1 className="mt-4 text-[27px] font-bold leading-tight tracking-[-.03em] sm:text-[40px]">Tu material está listo para estudiar</h1>
-        <p className="mt-3 max-w-[520px] text-[15px] leading-6 text-[#4b5565] sm:text-[17px]">Ya podés comenzar por el primer tema y avanzar a tu ritmo.</p>
-        <div className="mt-7 flex w-full max-w-[600px] flex-wrap items-center gap-4 rounded-[24px] border border-[#dbe6f8] bg-white p-4 text-left sm:p-5">
+        <h1 className="mt-4 text-[24px] font-bold leading-tight tracking-[-.03em] sm:text-[32px]">Tu material está listo para estudiar</h1>
+        <p className="mt-3 max-w-[520px] text-[14px] leading-6 text-[#4b5565] sm:text-[15px]">Ya podés comenzar por el primer tema y avanzar a tu ritmo.</p>
+        <div className="mt-5 flex w-full max-w-[560px] flex-wrap items-center gap-3 rounded-[20px] border border-[#dbe6f8] bg-white p-4 text-left">
           <span className="flex h-[54px] w-11 shrink-0 items-center justify-center rounded-lg bg-[#d92d3a] text-[12px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
           <div className="min-w-0 flex-1"><p className="truncate text-[16px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">Resúmenes por tema · Tarjetas y glosario · Práctica</p></div>
         </div>
-        <div className="mt-7 flex w-full max-w-[340px] flex-col gap-3">
-          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-14 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
+        <div className="mt-5 flex w-full max-w-[320px] flex-col gap-3">
+          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0b63e5]" px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
           <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-5 text-[14px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
         </div>
-      </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col items-center justify-center gap-7 sm:gap-8">
-        <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-7 sm:gap-8">
+      </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[980px] flex-1 flex-col items-center justify-center gap-5 sm:gap-6">
+        <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-5 sm:gap-6">
         <div className="w-full space-y-3 text-center">
-          <h1 className="text-[26px] font-bold leading-tight tracking-[-.03em] sm:text-[32px] lg:text-[38px]">{titles[visibleScene]}</h1>
-          <p className="mx-auto max-w-[560px] text-[14px] leading-6 text-[#4b5565] sm:text-[17px]">{descriptions[visibleScene]}</p>
+          <h1 className="text-[24px] font-bold leading-tight tracking-[-.03em] sm:text-[29px] lg:text-[32px]">{titles[visibleScene]}</h1>
+          <p className="mx-auto max-w-[520px] text-[14px] leading-6 text-[#4b5565] sm:text-[15px]">{descriptions[visibleScene]}</p>
         </div>
         <ProcessingScene scene={visibleScene} fileName={state.fileName}/>
         </div>
@@ -299,7 +299,7 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
       </div>}
       </ProcessingFit>
     </div>
-    <footer className="flex min-w-0 shrink-0 flex-col items-start justify-between gap-2 border-t border-[#e8ecf2] px-4 py-3 sm:px-8 sm:py-4 lg:flex-row lg:items-center lg:px-10">
+    <footer className="flex min-w-0 shrink-0 flex-col items-start justify-between gap-2 border-t border-[#e8ecf2] px-4 py-2.5 sm:px-7 sm:py-3 lg:flex-row lg:items-center lg:px-9">
       <ol className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3" aria-label="Recorrido de estudio">
         {STEPS.map((step,index)=><li key={step} className="flex items-center gap-2">
           {index>0?<span aria-hidden="true" className="mr-1 h-0.5 w-3 bg-[#e8ecf2] sm:w-6"/>:null}
