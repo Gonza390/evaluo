@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PracticeResultsScreen, type PracticeResultEntry } from '@/components/dashboard/practice-results-screen';
 import advanceStyles from './student-material-flashcards.module.css';
 import { cn } from '@/lib/utils';
 import { pdfStudyControlsClassName } from '@/components/study/pdf-study-styles';
@@ -134,7 +135,6 @@ export function StudentMaterialFlashcards({
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
   const [progressSyncError, setProgressSyncError] = useState(false);
-  const [showAllReviewTopics, setShowAllReviewTopics] = useState(false);
   const [isSchedulingReminder, setIsSchedulingReminder] = useState(false);
   const [reminderScheduled, setReminderScheduled] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
@@ -198,8 +198,6 @@ export function StudentMaterialFlashcards({
     ).slice(0, 12);
   }, [cards, sessionRecall]);
 
-  const visibleReviewTopics = showAllReviewTopics ? reviewTopics : reviewTopics.slice(0, 3);
-  const hiddenReviewTopicsCount = Math.max(0, reviewTopics.length - 3);
 
   const beginSession = useCallback((nextOrder: number[]) => {
     advanceTimersRef.current.forEach((timer) => window.clearTimeout(timer));
@@ -212,7 +210,6 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
-    setShowAllReviewTopics(false);
     setReminderScheduled(false);
     setReminderError(null);
     setStarted(true);
@@ -243,7 +240,6 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
-    setShowAllReviewTopics(false);
     setReminderScheduled(false);
     setReminderError(null);
     completionHandledRef.current = false;
@@ -520,145 +516,62 @@ export function StudentMaterialFlashcards({
     );
   }
 
-  if (allReviewed && allowedCardIndices !== undefined) {
-    return (
-      <div data-topic-flashcards-result className="border-border bg-card mx-auto w-full max-w-[640px] rounded-xl border px-4 py-4 text-center sm:px-6 sm:py-5">
-        <div className="bg-emerald-50 mx-auto flex size-11 items-center justify-center rounded-xl text-emerald-600"><Check className="size-5" /></div>
-        {topicTitle ? <p className="text-muted-foreground mt-3 text-xs font-medium">{topicTitle}</p> : null}
-        <h3 className="text-foreground mt-2 text-[20px] leading-[1.3] font-semibold">¡Terminaste de repasar este tema!</h3>
-        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">Ahora comprobá cuánto aprendiste con las preguntas del tema.</p>
-        <p className="text-muted-foreground mt-2 text-xs">Estos resultados reflejan lo que marcaste al estudiar las tarjetas, no una calificación de examen.</p>
-        <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Resultado del repaso">
-          <div className="rounded-xl border border-red-100 bg-red-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-red-600">{unknownCount}</p><p className="text-xs text-red-700">Para repasar</p>
-          </div>
-          <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-amber-600">{learningCount}</p><p className="text-xs text-amber-700">Aprendiendo</p>
-          </div>
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-2 py-3">
-            <p className="text-[20px] font-medium text-emerald-600">{knownCount}</p><p className="text-xs text-emerald-700">Recordadas</p>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
-          <Button data-topic-flashcards-primary type="button" onClick={onPracticeTopic ?? onReturnToTopic} disabled={!onPracticeTopic && !onReturnToTopic} className="min-h-11 w-full rounded-lg text-[13px]">
-            {onPracticeTopic ? 'Practicar este tema' : 'Volver al tema'} <ArrowRight aria-hidden="true" className="ml-2 size-4" />
-          </Button>
-          {needsReviewCount > 0 ? (
-            <Button data-topic-flashcards-review type="button" variant="outline" onClick={reviewDifficult} className="min-h-11 w-full rounded-lg text-[13px]">
-              <RotateCcw aria-hidden="true" className="mr-2 size-4" /> Repasar tarjetas ({needsReviewCount})
-            </Button>
-          ) : null}
-        </div>
-        {!onPracticeTopic ? <p className="text-muted-foreground mt-3 text-xs" role="status">Este tema todavía no tiene preguntas disponibles para practicar.</p> : null}
-        {!demoMode && progressSyncError ? <p className="mt-3 text-xs text-amber-700" role="status">El progreso sigue guardado en este navegador, pero aún no pudimos sincronizarlo.</p> : null}
-      </div>
-    );
-  }
-
   if (allReviewed) {
+    const topicSession = allowedCardIndices !== undefined;
+    const resultEntries: PracticeResultEntry[] = order.map((cardIndex, index) => {
+      const card = cards[cardIndex];
+      return {
+        index,
+        prompt: card?.front ?? 'Tarjeta de estudio',
+        selectedAnswer: sessionRecall[cardIndex] === 'known' ? 'Lo sabía' : 'No lo sabía',
+        correctAnswer: card?.back ?? '',
+        explanation: 'Repasá el concepto y tratá de recordarlo antes de dar vuelta la tarjeta.',
+        correct: sessionRecall[cardIndex] === 'known',
+        chapterTitle: card?.reference.sectionTitle,
+        modeLabel: 'Flashcards',
+        pageStart: card?.reference.pageStart,
+      };
+    });
+    const note = [
+      'Estos resultados reflejan lo que marcaste al estudiar las tarjetas, no una calificación de examen.',
+      !demoMode && progressSyncError ? 'El progreso quedó guardado en este navegador, pero todavía no pudimos sincronizarlo.' : '',
+      reminderError ?? '',
+      reminderScheduled ? 'Listo. Mañana te enviamos un recordatorio para retomar estos temas.' : '',
+      topicSession && !onPracticeTopic ? 'Este tema todavía no tiene preguntas disponibles para practicar.' : '',
+    ].filter(Boolean).join(' ');
+
     return (
-      <>
-        <div className="bg-card rounded-xl border border-emerald-200 px-4 py-4 text-center sm:px-5">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-none">
-            <Check className="h-5 w-5" />
-          </div>
-          <h3 className="text-foreground mt-2 text-[18px] font-medium tracking-[-0.04em]">
-            ¡Terminaste esta sesión!
-          </h3>
-          <p className="text-foreground mt-2 text-sm font-medium">
-            {knownCount} lo sabías · {unknownCount} no lo sabías
-          </p>
-          {unknownCount > 0 ? (
-            <p className="text-muted-foreground mx-auto mt-1 max-w-md text-xs leading-5">
-              Podés cerrar la sesión o volver a practicar únicamente las {unknownCount} que no
-              sabías.
-            </p>
-          ) : (
-            <p className="text-muted-foreground mx-auto mt-1 max-w-md text-xs leading-5">
-              Completaste todas las tarjetas sin pendientes para repasar.
-            </p>
-          )}
-          {unknownCount > 0 && reviewTopics.length > 0 ? (
-            <div className="mx-auto mt-5 w-full max-w-xl border-t border-emerald-100 pt-5 text-left">
-              <h4 className="text-foreground text-sm font-medium">Temas para repasar</h4>
-              <p className="text-muted-foreground mt-1 text-xs leading-5">
-                Estos son los temas que te costaron en esta sesión.
-              </p>
-              <ul className="border-border mt-3 divide-y divide-slate-200 border-y">
-                {visibleReviewTopics.map((topic) => (
-                  <li key={topic} className="text-foreground py-2.5 text-sm font-medium">
-                    {topic}
-                  </li>
-                ))}
-              </ul>
-              {hiddenReviewTopicsCount > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setShowAllReviewTopics((current) => !current)}
-                  className="text-primary hover:text-primary mt-2 text-xs font-medium"
-                >
-                  {showAllReviewTopics
-                    ? 'Ver menos'
-                    : `Ver ${hiddenReviewTopicsCount} tema${hiddenReviewTopicsCount === 1 ? '' : 's'} más`}
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            {unknownCount > 0 ? (
-              <>
-                {!demoMode && (
-                  <Button
-                    type="button"
-                    onClick={scheduleTomorrowReminder}
-                    disabled={isSchedulingReminder || reminderScheduled}
-                    className="rounded-lg px-4 text-[13px]"
-                  >
-                    <Bell className="h-4 w-4" />
-                    {isSchedulingReminder
-                      ? 'Guardando...'
-                      : reminderScheduled
-                        ? 'Te recordamos mañana'
-                        : 'Recordarme mañana'}
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={reviewDifficult}
-                  className="rounded-lg px-4 text-[13px]"
-                >
-                  <RotateCcw className="h-4 w-4" /> Repasar ahora
-                </Button>
-              </>
-            ) : null}
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={finishSession}
-              className="rounded-lg px-4 text-[13px]"
-            >
-              <Check className="h-4 w-4" /> Finalizar sesión
-            </Button>
-          </div>
-          {!demoMode && progressSyncError ? (
-            <p role="status" className="text-amber-700 mx-auto mt-3 max-w-md text-xs leading-5">
-              Guardamos tus tarjetas en este navegador, pero todavía no pudimos sincronizarlas.
-              Volveremos a intentarlo.
-            </p>
-          ) : null}
-          {reminderError ? (
-            <p className="text-destructive mx-auto mt-3 max-w-md text-xs leading-5">
-              {reminderError}
-            </p>
-          ) : null}
-          {reminderScheduled ? (
-            <p className="mx-auto mt-3 max-w-md text-xs leading-5 text-emerald-700">
-              Listo. Mañana te enviamos un recordatorio para retomar estos temas.
-            </p>
-          ) : null}
-        </div>
-      </>
+      <div data-topic-flashcards-result={topicSession || undefined}>
+        <PracticeResultsScreen
+          materialTitle={topicTitle ?? 'Flashcards del material'}
+          modeLabel={topicSession ? 'Flashcards por tema' : 'Flashcards'}
+          entries={resultEntries}
+          kind="flashcards"
+          materialId={materialId}
+          preview={demoMode}
+          onClose={topicSession ? onReturnToTopic ?? finishSession : finishSession}
+          primaryAction={topicSession
+            ? {
+                label: onPracticeTopic ? 'Practicar este tema' : 'Volver al tema',
+                onClick: onPracticeTopic ?? onReturnToTopic,
+                disabled: !onPracticeTopic && !onReturnToTopic,
+              }
+            : unknownCount > 0
+              ? { label: 'Repasar ahora', onClick: reviewDifficult }
+              : { label: 'Finalizar sesión', onClick: finishSession }}
+          secondaryAction={topicSession
+            ? unknownCount > 0 ? { label: 'Repasar tarjetas (' + unknownCount + ')', onClick: reviewDifficult } : undefined
+            : unknownCount > 0 ? { label: 'Finalizar sesión', onClick: finishSession } : undefined}
+          extraAction={!topicSession && !demoMode && unknownCount > 0
+            ? {
+                label: isSchedulingReminder ? 'Guardando...' : reminderScheduled ? 'Te recordamos mañana' : 'Recordarme mañana',
+                onClick: scheduleTomorrowReminder,
+                disabled: isSchedulingReminder || reminderScheduled,
+              }
+            : undefined}
+          note={note}
+        />
+      </div>
     );
   }
 
