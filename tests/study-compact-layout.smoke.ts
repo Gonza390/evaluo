@@ -34,10 +34,19 @@ assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original/,
 const globalStyles = readFileSync('app/globals.css', 'utf8');
 assert.doesNotMatch(globalStyles, /data-student-material-share-control/,
   'The retired share action must not rely on CSS visibility overrides.');
-assert.doesNotMatch(materialPage, /StudentMaterialShareControl|shareAvailable=\{/,
-  'The PDF reader must not mount the floating share control in any tab.');
-assert.doesNotMatch(workspace, /Share2|shareAvailable|evaluo:share-material/,
-  'The mobile PDF menu must not expose sharing after the action was removed.');
+const shareControl = readFileSync('components/student-material-share-control.tsx', 'utf8');
+assert.match(materialPage, /<StudentMaterialShareControl[\s\S]*?mobileMenuOnly[\s\S]*?\/>/,
+  'The PDF keeps its share handler mounted for mobile only.');
+assert.match(materialPage, /shareAvailable=\{shareAvailable\}/,
+  'The mobile reader gets the same sharing eligibility as the share handler.');
+assert.match(mobileOverflow, /shareAvailable && isOwner && !demo[\s\S]*?evaluo:share-material[\s\S]*?Compartir/,
+  'The three-dot menu preserves the Share action for the material owner.');
+assert.match(shareControl, /window\.addEventListener\('evaluo:share-material'/,
+  'The mobile menu still has a real sharing event handler.');
+assert.match(shareControl, /mobileMenuOnly \? 'md:hidden'/,
+  'The share handler is not visible on desktop.');
+assert.match(shareControl, /\{!mobileMenuOnly \? \(/,
+  'The floating share button is absent on this reader, including mobile.');
 assert.match(workspace, /DropdownMenuItem asChild/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
