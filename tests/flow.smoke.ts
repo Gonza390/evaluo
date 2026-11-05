@@ -729,6 +729,7 @@ assert.equal(privacyControls.includes('Zona sensible'), false);
 
 // La escala compacta se aplica a las pantallas de estudio, no sólo al menú.
 const flashcardView = readFileSync('components/student-material-flashcards.tsx', 'utf8');
+const practiceResultView = readFileSync('components/dashboard/practice-results-screen.tsx', 'utf8');
 const practiceView = readFileSync('components/student-material-exam.tsx', 'utf8');
 const diagnosticView = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
 const errorReviewView = readFileSync('components/dashboard/study-error-detail.tsx', 'utf8');
@@ -737,7 +738,8 @@ const topicCheckView = readFileSync('components/study/summary-topic-check-popup.
 const summaryCompletionView = readFileSync('components/study/summary-completion-popup.tsx', 'utf8');
 const topicSupportView = readFileSync('components/study/topic-study-support.tsx', 'utf8');
 assert.ok(flashcardView.includes('data-topic-flashcards-result'));
-assert.ok(flashcardView.includes('max-w-[640px] rounded-xl border px-4 py-4'));
+assert.ok(practiceResultView.includes('max-w-[860px] px-4 pb-10 pt-6'), 'La galería de resultados usa la escala compacta.');
+assert.ok(flashcardView.includes('<PracticeResultsScreen'), 'Flashcards reutiliza los resultados compartidos.');
 assert.ok(flashcardView.includes('data-flashcard-card'));
 assert.ok(flashcardView.includes('onClick={flipCard}'), 'La tarjeta debe usar el manejador animado actual.');
 assert.ok(flashcardView.includes('data-flashcard-flipping={isFlipping}'));
