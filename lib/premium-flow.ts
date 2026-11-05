@@ -62,6 +62,41 @@ export function premiumDashboardHref(context: Parameters<typeof premiumPricingHr
   return '/dashboard/premium' + pricingHref.slice('/pricing'.length).replace(/#elegir-plan$/, '');
 }
 
+/** Compatibilidad con enlaces antiguos: todos los embudos internos usan una
+ * sola pantalla de compra, sin perder su origen ni reabrir otra venta.
+ * /pricing sigue siendo independiente y público.
+ */
+export type LegacyPremiumFunnel = 'mapa-mental' | 'errores' | 'simulador' | 'explicaciones';
+
+const LEGACY_SOURCES: Record<LegacyPremiumFunnel, string> = {
+  'mapa-mental': 'material_mapa_mental',
+  errores: 'errores_review',
+  simulador: 'premium_simulator',
+  explicaciones: 'simulator_explanations',
+};
+
+export function legacyPremiumFunnelHref(
+  kind: LegacyPremiumFunnel,
+  context: { materiaId?: string; parcial?: string | number; returnTo?: string } = {},
+): string {
+  const materiaId = typeof context.materiaId === 'string' &&
+    /^[0-9a-f-]{36}$/i.test(context.materiaId) ? context.materiaId : undefined;
+  const parsedParcial = Number(context.parcial);
+  const parcial = Number.isInteger(parsedParcial) && parsedParcial >= 1 && parsedParcial <= 99
+    ? parsedParcial : undefined;
+  const fallback = kind === 'mapa-mental' && materiaId
+    ? '/materiales/' + materiaId + '?tab=mapa'
+    : kind === 'errores' && materiaId
+      ? '/simulador/errores/' + materiaId + (parcial ? '?parcial=' + parcial : '')
+      : kind === 'simulador' && materiaId
+        ? '/simulador/premium/' + materiaId + '/' + (parcial ?? 1)
+        : kind === 'explicaciones' ? '/dashboard/explicaciones' : '/dashboard';
+  const requestedReturn = safePremiumReturnTo(context.returnTo);
+  const returnTo = requestedReturn && !requestedReturn.startsWith('/dashboard/premium')
+    ? requestedReturn : fallback;
+  return premiumDashboardHref({source:LEGACY_SOURCES[kind], materiaId, parcial, returnTo});
+}
+
 const GATE_MODES: Record<PremiumGateReason, string | null> = {
   material_upload: null,
   multiple_choice: null,
