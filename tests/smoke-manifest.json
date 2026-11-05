@@ -320,6 +320,10 @@
     "alias": true
   },
   {
+    "file": "tests/pdf-progress-redesign.smoke.ts",
+    "alias": false
+  },
+  {
     "file": "tests/pdf-fullscreen-processing.smoke.ts",
     "alias": false
   },
