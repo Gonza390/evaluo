@@ -6,7 +6,8 @@ import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { getFreeStudyBank, saveFirstFreeStudyBank, claimVerifiedFreeStudySample } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, claimVerifiedFreeStudySample, listFreeStudyUnlockedKeys } from '@/lib/free-study-v2-server';
+import { premiumUpgradeForLimit } from '@/lib/premium-flow';
 import { applyIndependentCaseReview, verifyGeneratedPracticeCases, type SourceFragment } from '@/lib/student-materials/practice-ai-cases';
 import { sourceBackedPracticeTerms } from '@/lib/student-materials/practice-classification-terms';
 import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
@@ -78,9 +79,24 @@ export async function POST(request: Request) {
     const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:'cases' });
     if (saved) {
       const allowed = await claimVerifiedFreeStudySample({ userId:user.id, materialId:material.id, kind:'case', items:saved });
+      if (!allowed.length) {
+        const unlocked = await listFreeStudyUnlockedKeys({userId:user.id,kind:'case',premium:false});
+        if (unlocked && unlocked.size >= FREE_STUDY_V2.cases)
+          return NextResponse.json({error:'free_quota_exhausted',
+            upgrade:premiumUpgradeForLimit('case',{materialId:material.id})},
+            {status:403,headers:{'Cache-Control':'private, no-store'}});
+      }
       return NextResponse.json({cases:allowed,source:'free_sample_cached'},
         {headers:{'Cache-Control':'private, no-store'}});
     }
+  }
+
+  if (freeV2) {
+    const unlocked = await listFreeStudyUnlockedKeys({userId:user.id,kind:'case',premium:false});
+    if (unlocked && unlocked.size >= FREE_STUDY_V2.cases)
+      return NextResponse.json({error:'free_quota_exhausted',
+        upgrade:premiumUpgradeForLimit('case',{materialId:material.id})},
+        {status:403,headers:{'Cache-Control':'private, no-store'}});
   }
 
   // This route is explicitly invoked by a student choosing Casos. It does
