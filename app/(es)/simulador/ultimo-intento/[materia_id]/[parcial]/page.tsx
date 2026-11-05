@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { requirePremiumUser } from '@/lib/premium';
+import { premiumDashboardHref } from '@/lib/premium-flow';
 import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
 
 type Params = Promise<{ materia_id: string; parcial: string }>;
@@ -10,12 +11,12 @@ async function UltimoIntentoSimuladorContent({ params }: { params: Params }) {
   const premium = await requirePremiumUser();
   if (!premium.ok) {
     const returnTo = `/simulador/ultimo-intento/${materia_id}/${Number(parcial) || 1}`;
-    const query = new URLSearchParams({
-      materia: materia_id,
-      parcial: String(Number(parcial) || 1),
+    redirect(premiumDashboardHref({
+      source:'premium_simulator',
+      materiaId:materia_id,
+      parcial:Number(parcial) || 1,
       returnTo,
-    });
-    redirect(`/premium/simulador?${query.toString()}`);
+    }));
   }
 
   return (
