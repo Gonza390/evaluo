@@ -11,21 +11,25 @@ alter table public.free_study_v2_upload_claims enable row level security;
 revoke all on public.free_study_v2_upload_claims from public, anon, authenticated;
 grant select, insert on public.free_study_v2_upload_claims to service_role;
 
--- Conservar usos históricos para no regalar cupos tras una eliminación.
-insert into public.free_study_v2_upload_claims(user_id, first_material_id, claimed_at)
-select distinct on (m.user_id) m.user_id, m.id, m.created_at
-from public.student_materials m
-join auth.users u on u.id = m.user_id
-where m.processing_status = 'ready'
-order by m.user_id, m.created_at
-on conflict (user_id) do nothing;
+-- Lanzamiento desde cero: NO importar materiales procesados antes de Free V2.
+-- Los documentos históricos permanecen accesibles, pero sus propietarios
+-- conservan el cupo para subir un material nuevo luego de la activación.
+-- No registrar consumos durante la instalación con rollout.enabled=false.
 
 -- La carga fallida no consume el único material Free.
 create or replace function public.remember_free_study_v2_upload()
 returns trigger language plpgsql security definer set search_path = ''
 as $$
 begin
-  if new.processing_status = 'ready' then
+  -- Solo contar materiales dados de alta desde el lanzamiento, nunca un
+  -- material histórico que se termine de procesar o vuelva a procesarse.
+  if public.is_free_study_v2_rollout_enabled()
+     and new.processing_status = 'ready'
+     and exists (
+       select 1 from public.study_material_v2_upload_ledger l
+       where l.material_id = new.id and l.user_id = new.user_id
+     )
+     and not public.free_study_v2_is_premium_account(new.user_id) then
     insert into public.free_study_v2_upload_claims(user_id, first_material_id)
     values(new.user_id,new.id)
     on conflict (user_id) do nothing;
@@ -36,7 +40,7 @@ $$;
 revoke all on function public.remember_free_study_v2_upload() from public, anon, authenticated;
 drop trigger if exists trg_free_study_v2_ready_upload on public.student_materials;
 create trigger trg_free_study_v2_ready_upload
-after insert or update of processing_status on public.student_materials
+after update of processing_status on public.student_materials
 for each row execute function public.remember_free_study_v2_upload();
 
 create table if not exists public.free_study_v2_unlocks (
@@ -180,17 +184,26 @@ create index if not exists idx_study_material_v2_upload_daily
 alter table public.study_material_v2_upload_ledger enable row level security;
 revoke all on public.study_material_v2_upload_ledger from public, anon, authenticated;
 grant select, insert on public.study_material_v2_upload_ledger to service_role;
-insert into public.study_material_v2_upload_ledger(material_id,user_id,claimed_at)
-select id,user_id,created_at from public.student_materials
-on conflict (material_id) do nothing;
+-- El contador Premium de 3 archivos/día también comienza desde el lanzamiento.
+-- No cargar aquí materiales anteriores, aunque hayan sido subidos hoy.
 
 create or replace function public.remember_study_material_v2_upload()
 returns trigger language plpgsql security definer set search_path = ''
 as $ledger$
 begin
+  if not public.is_free_study_v2_rollout_enabled() then return new; end if;
   insert into public.study_material_v2_upload_ledger(material_id,user_id,claimed_at)
   values(new.id,new.user_id,new.created_at)
   on conflict (material_id) do nothing;
+
+  -- El flujo PDF-first puede insertar directamente con status='ready'.
+  -- Registrar su primer cupo Free en la misma transacción que el alta.
+  if new.processing_status = 'ready'
+     and not public.free_study_v2_is_premium_account(new.user_id) then
+    insert into public.free_study_v2_upload_claims(user_id, first_material_id)
+    values(new.user_id,new.id)
+    on conflict (user_id) do nothing;
+  end if;
   return new;
 end;
 $ledger$;
@@ -265,9 +278,6 @@ begin
     end if;
   elsif exists (
     select 1 from public.free_study_v2_upload_claims c where c.user_id = new.user_id
-  ) or exists (
-    select 1 from public.student_materials m
-    where m.user_id = new.user_id and m.processing_status <> 'failed'
   ) then
     raise exception 'free_v2_lifetime_upload_limit' using errcode = 'P0001';
   end if;
@@ -301,16 +311,14 @@ begin
       select 1 from public.profiles p
       where p.id = new.user_id and p.student_material_uploads_unlimited
     )
-    and (
-      exists (
-        select 1 from public.free_study_v2_upload_claims c
-        where c.user_id = new.user_id and c.first_material_id <> new.id
-      )
-      or exists (
-        select 1 from public.student_materials m
-        where m.user_id = new.user_id and m.id <> new.id
-          and m.processing_status <> 'failed'
-      )
+    -- No impedir reintentos de archivos históricos: no consumen Free V2.
+    and exists (
+      select 1 from public.study_material_v2_upload_ledger l
+      where l.material_id = new.id and l.user_id = new.user_id
+    )
+    and exists (
+      select 1 from public.free_study_v2_upload_claims c
+      where c.user_id = new.user_id and c.first_material_id <> new.id
     )
   then
     raise exception 'free_v2_lifetime_upload_limit' using errcode = 'P0001';
