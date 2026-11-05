@@ -3,7 +3,7 @@
 -- These grants and auth.uid stub are NEVER part of production migrations.
 create or replace function auth.uid() returns uuid
 language sql stable set search_path = ''
-as $$ select nullif(pg_catalog.current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+as $$ select nullif((pg_catalog.current_setting('request.jwt.claims', true)::jsonb ->> 'sub'), '')::uuid $$;
 grant usage on schema auth to authenticated;
 grant execute on function auth.uid() to authenticated;
 grant usage on schema public to anon, authenticated, service_role;
