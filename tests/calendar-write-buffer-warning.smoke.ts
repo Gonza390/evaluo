@@ -61,6 +61,30 @@ for (const [year, month] of [[2026, 10], [2027, 1], [2027, 2]]) {
 }
 
 const page = readFileSync('app/(es)/calendario/page.tsx', 'utf8');
+const studyPlanApi = readFileSync('app/api/study-plans/route.ts', 'utf8');
+assert.match(studyPlanApi, /request\.nextUrl\.searchParams\.get\('view'\)==='calendar'/,
+  'La API de planes ofrece una consulta liviana para el calendario.');
+assert.match(studyPlanApi, /\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,
+  'El plan del calendario se consulta únicamente para el usuario autenticado.');
+assert.match(page, /fetch\('\/api\/study-plans\?view=calendar'/,
+  'El calendario consulta el plan persistido, no genera actividades ficticias.');
+assert.match(page, /data-calendar-plan-day/,
+  'Los días con temas guardados tienen una marca azul.');
+assert.match(page, /data-calendar-plan-exam/,
+  'La fecha del examen guardada en el plan tiene una marca diferente.');
+assert.match(page, /data-calendar-selected-plan-day/,
+  'El día seleccionado presenta los temas planificados.');
+assert.match(page, /selectedStudyPlanDay\.estimatedMinutes/,
+  'El calendario presenta los minutos guardados en el plan.');
+assert.match(page, /selectedStudyPlanDay\.topics\.slice\(0, 2\)/,
+  'El detalle del día es compacto para evitar scroll innecesario.');
+assert.match(page, /href="\/dashboard\/plan-de-estudio"/,
+  'La sección del plan abre su pantalla de origen.');
+assert.match(page, /cellEvents\.length > 0 \|\| \(!planDay && !isPlanExamDay\)/,
+  'Los eventos del calendario conservan su editor existente.');
+assert.match(page, /new Map<string, PlanDay>\(\)/,
+  'Los indicadores se derivan de los días reales guardados, no duplican eventos.');
+
 assert.match(page, /h-\[48px\][^\n]*sm:h-\[56px\]/,
   'Las fechas son compactas en móvil y escritorio, conservando un área táctil mínima.');
 assert.doesNotMatch(page, /min-h-\[64px\]/,
