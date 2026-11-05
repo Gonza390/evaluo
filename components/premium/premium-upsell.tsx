@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+import { Check, Crown, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import { isPremiumFunnelDismissReturn } from '@/lib/premium-funnel-return';
-import { premiumPricingHref } from '@/lib/premium-flow';
+import { premiumDashboardHref } from '@/lib/premium-flow';
 
 interface PremiumUpsellProps {
   title: string;
@@ -17,17 +16,6 @@ interface PremiumUpsellProps {
   parcial?: number;
 }
 
-const PREMIUM_FLOWS: Record<string, { route: string; dismissKey: string }> = {
-  material_mapa_mental: {
-    route: '/premium/mapa-mental',
-    dismissKey: 'evaluo:mapa-mental-premium-dismissed-once',
-  },
-  errores_review: {
-    route: '/premium/errores',
-    dismissKey: 'evaluo:errores-premium-dismissed-once',
-  },
-};
-
 export function PremiumUpsell({
   title,
   description,
@@ -37,9 +25,6 @@ export function PremiumUpsell({
   materiaId,
   parcial,
 }: PremiumUpsellProps) {
-  const flow = PREMIUM_FLOWS[source] ?? null;
-  const [flowDismissed, setFlowDismissed] = useState(false);
-
   const currentReturnTo = useCallback(() => {
     const url = new URL(window.location.href);
     if (source === 'material_mapa_mental') {
@@ -48,44 +33,14 @@ export function PremiumUpsell({
     return `${url.pathname}${url.search}${url.hash}`;
   }, [source]);
 
-  const openContextualFlow = useCallback(() => {
-    if (!flow) return false;
-    const params = new URLSearchParams();
-    if (materiaId) params.set('materia', materiaId);
-    if (parcial) params.set('parcial', String(parcial));
-    params.set('returnTo', currentReturnTo());
-    window.location.assign(`${flow.route}?${params.toString()}`);
-    return true;
-  }, [currentReturnTo, flow, materiaId, parcial]);
-
   useEffect(() => {
     trackMarketingEvent('premium_gate_viewed', {
       source,
       materia_id: materiaId ?? undefined,
     });
-
-    if (!flow) return;
-
-    // Primary close handshake: the funnel returns with an explicit URL marker,
-    // even when sessionStorage is blocked or browser history is unreliable.
-    if (isPremiumFunnelDismissReturn(window.location.search, source)) {
-      setFlowDismissed(true);
-      return;
-    }
-
-    try {
-      const dismissedOnce = window.sessionStorage.getItem(flow.dismissKey) === '1';
-      if (dismissedOnce) {
-        window.sessionStorage.removeItem(flow.dismissKey);
-        setFlowDismissed(true);
-        return;
-      }
-    } catch {
-      // El flujo puede abrirse aunque sessionStorage no esté disponible.
-    }
-
-    openContextualFlow();
-  }, [flow, materiaId, openContextualFlow, source]);
+    // Nunca redirigir automáticamente a una venta: el alumno decide
+    // si quiere abrir Premium desde la actividad que estaba estudiando.
+  }, [source, materiaId]);
 
   const handleUpgrade = () => {
     trackMarketingEvent('premium_cta_clicked', {
@@ -93,26 +48,10 @@ export function PremiumUpsell({
       materia_id: materiaId ?? undefined,
     });
 
-    if (openContextualFlow()) return;
-
-    window.location.assign(premiumPricingHref({
+    window.location.assign(premiumDashboardHref({
       source, materiaId, parcial, returnTo: currentReturnTo(),
     }));
   };
-
-  if (flow && !flowDismissed) {
-    return (
-      <StudyStatePanel
-        icon={Loader2}
-        iconSpin
-        tone="loading"
-        eyebrow="Evaluo Premium"
-        title="Abriendo Evaluo Premium…"
-        description="Estamos preparando la experiencia Premium para esta función."
-        className="min-h-[440px] w-full sm:min-h-[500px]"
-      />
-    );
-  }
 
   const contextualCopy =
     source === 'material_mapa_mental'
