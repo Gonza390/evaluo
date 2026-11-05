@@ -32,8 +32,12 @@ assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
 assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original/, 
   'Keep the original PDF action in the overflow menu.');
 const globalStyles = readFileSync('app/globals.css', 'utf8');
-assert.match(globalStyles, /@media \(max-width: 767px\)\s*\{\s*body:has\(\[data-mobile-summary-active='true'\]\) \[data-student-material-share-control\]/,
-  'The share FAB must be hidden only in mobile summary mode, not on desktop.');
+assert.doesNotMatch(globalStyles, /data-student-material-share-control/,
+  'The retired share action must not rely on CSS visibility overrides.');
+assert.doesNotMatch(materialPage, /StudentMaterialShareControl|shareAvailable=\{/,
+  'The PDF reader must not mount the floating share control in any tab.');
+assert.doesNotMatch(workspace, /Share2|shareAvailable|evaluo:share-material/,
+  'The mobile PDF menu must not expose sharing after the action was removed.');
 assert.match(workspace, /DropdownMenuItem asChild/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
