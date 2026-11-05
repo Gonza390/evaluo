@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import './practice-motion.css';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
+import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
 import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
@@ -24,10 +25,11 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false, quotaPremiumHref, quotaBackHref, quotaBackLabel }: {
   mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
   aiAvailable?: boolean; isWord?: boolean; planTopicIndex?: number; freeV2?: boolean;
+  quotaPremiumHref?: string; quotaBackHref?: string; quotaBackLabel?: string;
 }) {
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
@@ -69,6 +71,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [leavingActivity, setLeavingActivity] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
   const [examStarted, setExamStarted] = useState(false);
+  const [freeSessionGate, setFreeSessionGate] = useState<'new'|'pending'|'allowed'|'denied'|'error'>(
+    freeV2 && (mode === 'unir' || mode === 'simulacro') ? 'new' : 'allowed'
+  );
+  const freeSessionGateBusy = useRef(false);
   const [deadline, setDeadline] = useState<number | null>(null);
   const posted = useRef('');
   const sessionIdRef = useRef<string | null>(null);
@@ -101,12 +107,47 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
   const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
-    mode === 'casos' ? contexts.length >= (freeV2 ? 2 : MIN_CASES_PER_PRACTICE) :
+    mode === 'casos' ? contexts.length >= (freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
     mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && distinctApplicationCases(contexts).length >= 1 :
     mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
     mode === 'simulacro' && freeV2 ? tasks.length >= 20 :
     tasks.length >= MIN_CASES_PER_PRACTICE;
+  // La ruta puede preparar contenido sin gastar el único uso. La ronda
+  // se reclama al estar verificada y lista; el simulacro al pulsar Comenzar.
+  const claimSessionQuota = useCallback(async (): Promise<boolean> => {
+    if (!freeV2 || (mode !== 'unir' && mode !== 'simulacro')) return true;
+    if (freeSessionGateBusy.current) return false;
+    freeSessionGateBusy.current = true;
+    setFreeSessionGate('pending');
+    try {
+      const response = await fetch('/api/free-study-v2/claim', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          materialId, kind: mode === 'unir' ? 'matching_round' : 'simulator',
+          itemKey: mode === 'unir' ? 'matching:first' : 'simulator:first',
+        }),
+      });
+      const result: unknown = await response.json();
+      if (response.ok && result && typeof result === 'object' && 'allowed' in result) {
+        if (result.allowed === true) { setFreeSessionGate('allowed'); return true; }
+        if (result.allowed === false) { setFreeSessionGate('denied'); return false; }
+      }
+      setFreeSessionGate('error');
+      return false;
+    } catch {
+      // Errores técnicos no son cuota agotada ni justifican un upsell.
+      setFreeSessionGate('error');
+      return false;
+    } finally {
+      freeSessionGateBusy.current = false;
+    }
+  }, [freeV2, mode, materialId]);
+  useEffect(() => {
+    if (freeV2 && mode === 'unir' && ready && freeSessionGate === 'new')
+      void claimSessionQuota();
+  }, [freeV2, mode, ready, freeSessionGate, claimSessionQuota]);
+
   const correctAt = (index: number) => {
     if (mode === 'unir') return matches[index] === index;
     const item = tasks[index];
@@ -242,7 +283,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   // applications exist. Try again with fresh source snippets if QA rejects any.
   useEffect(() => {
     const needsMore = mode === 'casos'
-      ? contexts.length < (freeV2 ? 2 : MIN_CASES_PER_PRACTICE)
+      ? contexts.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)
       : mode === 'mixto' ? options.length < 4 || contexts.length < 1
       : mode === 'simulacro'
         ? options.length < (freeV2 ? 20 : MIN_CASES_PER_PRACTICE) : false;
@@ -481,6 +522,24 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const pendingPreparation=!ready && !generationError && !pairError && !trueFalseError &&
     (generating || pairLoading || trueFalseLoading ||
       (aiAvailable && ['casos','mixto','simulacro','opciones','unir','completar'].includes(mode)));
+  if (freeV2 && freeSessionGate === 'denied' && quotaPremiumHref && quotaBackHref) {
+    return <FreePracticeLimitScreen
+      kind={mode === 'unir' ? 'matching_round' : 'simulator'}
+      premiumHref={quotaPremiumHref} backHref={quotaBackHref}
+      backLabel={quotaBackLabel} materialTitle={materialTitle}/>;
+  }
+  if (freeV2 && freeSessionGate === 'error' && (mode === 'unir' || mode === 'simulacro')) {
+    return <main className="mx-auto max-w-[780px] px-4 py-8">
+      <p role="alert" className="text-sm text-slate-700">No pudimos comprobar tu cupo. No se consumió un nuevo uso desde esta pantalla.</p>
+      <button type="button" className="mt-4 min-h-11 rounded-xl border px-4 text-sm"
+        onClick={() => { setFreeSessionGate('new'); if(mode==='simulacro') void claimSessionQuota(); }}>
+        Reintentar verificación
+      </button>
+      <Link href={quotaBackHref ?? '/dashboard/practicar'} className="ml-4 text-sm text-blue-600 underline">Volver a Practicar</Link>
+    </main>;
+  }
+  if (freeV2 && mode === 'unir' && ready && freeSessionGate !== 'allowed')
+    return <PracticePreparing mode={mode} ready={false}/>;
   if (!finished && (pendingPreparation || (ready && !revealPractice)))
     return <PracticePreparing mode={mode} ready={ready} />;
 
@@ -606,7 +665,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
           </div>
           <div className="mx-auto mt-6 flex max-w-[560px] flex-col gap-2">
-            <button type="button" onClick={() => transitionTo(()=>setExamStarted(true))} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8]">Comenzar simulacro</button>
+            <button type="button" disabled={freeSessionGate === 'pending'} onClick={() => {
+              if (!freeV2 || freeSessionGate === 'allowed') {
+                transitionTo(()=>setExamStarted(true));
+                return;
+              }
+              void claimSessionQuota().then(allowed => { if (allowed) transitionTo(()=>setExamStarted(true)); });
+            }} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
+              {freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro'}
+            </button>
             <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">Ahora no, volver a Practicar</Link>
           </div>
         </div>
