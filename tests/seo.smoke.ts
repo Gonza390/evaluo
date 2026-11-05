@@ -276,8 +276,8 @@ assert.ok(
 
 assertIncludesAll('app/(es)/landings/resumenes/page.tsx', [
   'loadSummaryCatalog',
-  'fetchQuestionRows',
-  '.range(from, from + pageSize - 1)',
+  'getPregunteroMateriaStats',
+  'statsPerMateria',
   'ItemList',
   'Materias con resúmenes disponibles',
 ]);
@@ -1023,7 +1023,7 @@ if (countryHubExists) assertIncludesAll('app/(es)/es/paises/[slug]/page.tsx', [
 // Career landing must never promise a public simulator when no public
 // questions are published for that career.
 assertIncludesAll('app/(es)/estudiar/[universidad]/[carrera]/page.tsx', [
-  "from('preguntas_banco_public')",
+  "get_public_preguntero_catalog",
   'const hasPublicPractice =',
   '{hasPublicPractice ? (',
   'Crear práctica desde mi PDF',

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { isInternalQueueRequestAuthorized } from '../lib/student-materials/job-auth.ts';
 
 const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8')) as {
@@ -85,6 +85,32 @@ if (previousInternalQueueSecret === undefined) delete process.env.INTERNAL_QUEUE
 else process.env.INTERNAL_QUEUE_SECRET = previousInternalQueueSecret;
 if (previousCronSecret === undefined) delete process.env.CRON_SECRET;
 else process.env.CRON_SECRET = previousCronSecret;
+
+// No usar de nuevo la vista privada de preguntas desde la aplicación.
+const unsafeQuestionBankReads: string[] = [];
+const unsafeViewRead = /\.from\s*\(\s*['"\x60]preguntas_banco_public['"\x60]\s*\)|\/rest\/v1\/preguntas_banco_public/g;
+function auditApplicationSource(directory: string) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.name.startsWith('.')) continue;
+    const filePath = join(directory, entry.name);
+    if (entry.isDirectory()) { auditApplicationSource(filePath); continue; }
+    if (!/\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) continue;
+    const contents = readFileSync(filePath, 'utf8');
+    if (unsafeViewRead.test(contents)) unsafeQuestionBankReads.push(filePath);
+    unsafeViewRead.lastIndex = 0;
+  }
+}
+for (const root of ['app', 'components', 'lib', 'services', 'hooks', 'src']) {
+  try { auditApplicationSource(resolve(root)); }
+  catch (error) {
+    if (!(error && typeof error === 'object' && 'code' in error &&
+          error.code === 'ENOENT')) throw error;
+  }
+}
+assert.deepEqual(
+  unsafeQuestionBankReads, [],
+  'No consultar directamente preguntas_banco_public; usar RPC agregadas.'
+);
 
 await import('./proxy-home.smoke.ts');
 

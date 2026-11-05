@@ -130,16 +130,24 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
     carreraNombre: carrera.nombre,
   });
 
-  // Only advertise a public simulator when it has practice questions.
-  // A transient query error must not result in a false "available" claim.
-  const publicPractice = materias.length > 0
-    ? await createPublicClient()
-        .from('preguntas_banco_public')
-        .select('materia_id')
-        .in('materia_id', materias.map((materia) => materia.id))
-        .limit(1)
+  // Solo usar estadísticas agregadas aprobadas. La vista de preguntas no permite
+  // SELECT para los roles públicos y no debemos restaurarle esos permisos.
+  const catalogClient = createPublicClient() as unknown as {
+    rpc: (name: 'get_public_preguntero_catalog') => PromiseLike<{
+      data: Array<{ materia_id: string; question_count: number | string }> | null;
+      error: { message: string } | null;
+    }>;
+  };
+  const publicPractice = materias.length
+    ? await catalogClient.rpc('get_public_preguntero_catalog')
     : null;
-  const hasPublicPractice = Boolean(publicPractice && !publicPractice.error && publicPractice.data?.length);
+  const materiaIds = new Set(materias.map((materia) => materia.id));
+  const hasPublicPractice = Boolean(
+    publicPractice && !publicPractice.error &&
+    publicPractice.data?.some(
+      (row) => materiaIds.has(String(row.materia_id)) && Number(row.question_count) > 0
+    )
+  );
 
   return (
     <main className="min-h-screen bg-white">
