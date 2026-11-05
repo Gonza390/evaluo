@@ -88,6 +88,10 @@ assert.match(page, /selectedStudyPlanDay\.estimatedMinutes/,
   'El calendario presenta los minutos guardados en el plan.');
 assert.match(page, /selectedStudyPlanDay\.topics\.slice\(0, 2\)/,
   'El detalle del día es compacto para evitar scroll innecesario.');
+assert.match(page, /calendar-editor:\$\{topic\.materialId\}:\$\{topic\.topicIndex\}/,
+  'Si coincide con un evento manual, el editor también muestra los temas del plan.');
+assert.match(page, /setSelectedDate\(date\);\s*setVisibleMonth\(getMonthStart\(date\)\);/,
+  'Elegir un día del plan no abre automáticamente el editor de eventos.');
 assert.match(page, /href="\/dashboard\/plan-de-estudio"/,
   'La sección del plan abre su pantalla de origen.');
 assert.match(page, /cellEvents\.length > 0 \|\| \(!planDay && !isPlanExamDay\)/,
