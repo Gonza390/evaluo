@@ -1029,7 +1029,7 @@ export function PdfProgressPanel({
                   </label>
                 )}
               </div>
-              <ul className="divide-border divide-y">
+              <ul className="divide-y divide-[#EEF1F6]">
                 {showOnboardingExample && topics.slice(0, 3).map((topic, index) => {
                   const mastered = index === 0;
                   const needsReview = index === 1;
@@ -1094,7 +1094,7 @@ export function PdfProgressPanel({
                           : 'Todavía sin preguntas corregidas';
                   return (
                     <li key={topic.id} data-progress-topic-row>
-                      <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 border-t border-[#EEF1F6] px-3 py-3 sm:grid-cols-[30px_minmax(0,1fr)_auto_auto] sm:gap-x-3 sm:px-4">
+                      <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 px-3 py-3 sm:grid-cols-[30px_minmax(0,1fr)_auto_auto] sm:gap-x-3 sm:px-4">
                         <span className={'flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold sm:size-[30px] ' +
                           (pendingCount > 0 ? 'bg-[#FEF3F2] text-[#B42318]' :
                             assessedCount > 0 ? 'bg-[#EAF1FF] text-[#1A4FB3]' :
@@ -1138,7 +1138,7 @@ export function PdfProgressPanel({
               {!showOnboardingExample && !visibleTopics.length && (
                 <p className="text-muted-foreground px-6 pb-6 text-sm">
                   {topics.length
-                    ? 'No hay temas en este filtro.'
+                    ? 'No encontramos temas con ese nombre.'
                     : 'Todavía no hay temas disponibles para mostrar.'}
                 </p>
               )}
@@ -1149,16 +1149,18 @@ export function PdfProgressPanel({
               )}
             </section>
             {unmatched.length > 0 && !showOnboardingExample && (
-              <section className="border-border bg-card rounded-3xl border p-6 lg:col-span-2">
-                <h2 className="font-semibold">Otros conceptos con errores</h2>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  {unmatched.length} registros de este PDF no tienen una coincidencia única con los
-                  temas del resumen. No los sumamos al indicador por tema.
-                </p>
+              <section className="flex flex-col items-start gap-3 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[14px] font-semibold text-[#0F1B3D]">Otros conceptos con errores</h2>
+                  <p className="mt-1 text-[12px] leading-[1.6] text-[#42506A]">
+                    {unmatched.length} {unmatched.length === 1 ? 'registro de este PDF no coincide' : 'registros de este PDF no coinciden'} con un tema del resumen.
+                    Por eso no se incluyen en el avance por tema.
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => openTopic('unmatched')}
-                  className={`${actionClass} border-border text-foreground mt-4 border`}
+                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-[#D9E6FF] bg-white px-4 text-[12px] font-semibold text-[#2563EB] hover:bg-[#EEF2FF]"
                 >
                   Ver estos conceptos
                   <ArrowRight size={16} />
