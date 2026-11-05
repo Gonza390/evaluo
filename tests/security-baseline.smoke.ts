@@ -92,7 +92,7 @@ else process.env.CRON_SECRET = previousCronSecret;
 // usar las RPC públicas agregadas o lecturas privadas con autorización.
 // Los SQL de migraciones no son rutas de aplicación y quedan fuera de este control.
 const unsafeQuestionBankReads: string[] = [];
-const unsafeViewRead = /\\.from\\s*\\(\\s*['"`]preguntas_banco_public['"`]\\s*\\)|\\/rest\\/v1\\/preguntas_banco_public/g;
+const unsafeViewRead = /\.from\s*\(\s*['"`]preguntas_banco_public['"`]\s*\)|\/rest\/v1\/preguntas_banco_public/g;
 function auditApplicationSource(directory: string) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     if (entry.name.startsWith('.')) continue;
@@ -101,7 +101,7 @@ function auditApplicationSource(directory: string) {
       auditApplicationSource(path);
       continue;
     }
-    if (!/\\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) continue;
+    if (!/\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) continue;
     const text = readFileSync(path, 'utf8');
     if (unsafeViewRead.test(text)) unsafeQuestionBankReads.push(path);
     unsafeViewRead.lastIndex = 0;
@@ -126,10 +126,10 @@ assert.equal(isTerminalAuthSessionError({ code: 'refresh_token_not_found' }), tr
 assert.equal(isTerminalAuthSessionError({ message: 'Invalid Refresh Token: Refresh Token Not Found' }), true);
 assert.equal(isTerminalAuthSessionError({ message: 'fetch failed' }), false);
 const proxySource = readFileSync(resolve('proxy.ts'), 'utf8');
-assert.match(proxySource, /isTerminalAuthSessionError\\(authError\\)/);
-assert.match(proxySource, /response\\.cookies\\.delete\\(cookie\\.name\\)/);
+assert.match(proxySource, /isTerminalAuthSessionError\(authError\)/);
+assert.match(proxySource, /response\.cookies\.delete\(cookie\.name\)/);
 const idleGuardSource = readFileSync(resolve('components/SessionIdleGuard.tsx'), 'utf8');
-assert.match(idleGuardSource, /supabase\\.auth\\.signOut\\(\\{\\s*scope:\\s*'local'\\s*\\}\\)/);
+assert.match(idleGuardSource, /supabase\.auth\.signOut\(\{\s*scope:\s*'local'\s*\}\)/);
 
 await import('./proxy-home.smoke.ts');
 
