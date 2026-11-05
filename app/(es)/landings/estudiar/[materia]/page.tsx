@@ -167,7 +167,7 @@ const loadStudyLandingData = nextCache(
       resources: resourceMaterials,
     };
   },
-  ['study-landing-data-v2'],
+  ['study-landing-data-v3'],
   { revalidate: 600, tags: ['materia-bootstrap'] }
 );
 
