@@ -939,41 +939,73 @@ export function PdfProgressPanel({
           )}
         </div>
       ) : (
-        <div className="mt-5">
-          <div className={
-              recommendedTopic && !showOnboardingExample
-                ? 'grid gap-5 lg:grid-cols-[minmax(270px,0.75fr)_minmax(0,1.25fr)] lg:items-start'
-                : 'space-y-4'
-            }>
-            {/* En el paso Progreso del recorrido, los estados tienen prioridad visual,
-                especialmente en pantallas móviles; después vuelve la actividad recomendada. */}
-            {recommendedTopic && !showOnboardingExample && (
-              <section
-                className="border-primary/20 bg-primary/5 rounded-xl border p-4 sm:p-4 lg:sticky lg:top-2"
-                aria-label="Actividad recomendada"
-              >
-                <p className="text-primary text-xs font-semibold">
-                  {next
-                    ? 'Para seguir avanzando'
-                    : evaluated === 0
-                      ? 'Empezá por este tema'
-                      : 'Tu próxima actividad'}
-                </p>
-                <h2 className="mt-2 text-[16px] leading-[1.4] font-semibold break-words">{recommendedTopic.title}</h2>
-                <p className="text-muted-foreground mt-2 text-sm!">
-                  {next
-                    ? 'Retomá una dificultad con tu material y comprobá lo aprendido.'
-                    : 'Conocé los conceptos principales y después comprobá cuánto entendiste.'}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => openTopic(recommendedTopic.id)}
-                  className={actionClass + ' bg-primary text-primary-foreground mt-4'}
-                >
-                  {next ? 'Continuar estudiando' : 'Comenzar a estudiar'} <ArrowRight size={16} />
-                </button>
+        <div className="mt-4 space-y-4">
+          {!showOnboardingExample && (
+            <div data-progress-overview className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,300px)]">
+              <section aria-label="Resumen de tu progreso" className="flex min-w-0 flex-col items-start gap-4 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+                <svg className="size-[82px] shrink-0 sm:size-[90px]" viewBox="0 0 100 100" role="img"
+                  aria-label={touchedTopics + ' de ' + topics.length + ' temas con actividad registrada'}>
+                  <circle cx="50" cy="50" r="40" stroke="#E7EBF4" strokeWidth="9" fill="none" />
+                  <circle cx="50" cy="50" r="40" stroke="#2563EB" strokeWidth="9" strokeLinecap="round" fill="none"
+                    strokeDasharray={String(topics.length ? Math.round((touchedTopics / topics.length) * 251.3) : 0) + ' 251.3'}
+                    transform="rotate(-90 50 50)" />
+                  <text x="50" y="56" fontSize="20" fontWeight="700" textAnchor="middle" fill="#0F1B3D">
+                    {touchedTopics}/{topics.length}
+                  </text>
+                </svg>
+                <div className="w-full min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-[#66758D]">Temas con actividad</p>
+                  <p className="mt-1 text-[13px] font-semibold text-[#0F1B3D] sm:text-[14px]">
+                    {assessmentData?.loadError
+                      ? 'Comprobación con preguntas no disponible'
+                      : assessedTopics + ' de ' + topics.length + ' comprobados con preguntas'}
+                  </p>
+                  {topics.length > 0 && (
+                    <div className="mt-3 flex gap-1" role="img" aria-label="Estado de actividad de cada tema">
+                      {topicStates.map((state, index) => (
+                        <span key={topics[index].id} title={topics[index].title}
+                          className={'h-1.5 min-w-0 flex-1 rounded-full ' +
+                            (state === 'review' ? 'bg-[#D92D20]' : state === 'assessed' ? 'bg-[#2563EB]' :
+                              state === 'self' ? 'bg-[#A6C5FA]' : 'bg-[#E7EBF4]')} />
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-medium text-[#66758D] sm:text-[11px]">
+                    {[
+                      { label: 'Con preguntas', color: 'bg-[#2563EB]' },
+                      { label: 'Autoevaluado', color: 'bg-[#A6C5FA]' },
+                      { label: 'Por reforzar', color: 'bg-[#D92D20]' },
+                      { label: 'Sin evaluar', color: 'bg-[#E7EBF4]' },
+                    ].map((item) => (
+                      <span key={item.label} className="inline-flex items-center gap-1.5">
+                        <span className={'size-2 rounded-full ' + item.color} />{item.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </section>
-            )}
+              {recommendedTopic && (
+                <section aria-label="Actividad recomendada" className="rounded-2xl border border-[#D9E6FF] bg-[#F4F8FF] p-4 sm:p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2563EB]">
+                    {next ? 'Para seguir avanzando' : evaluated === 0 ? 'Empezá por este tema' : 'Tu próxima actividad'}
+                  </p>
+                  <h2 className="mt-2 break-words text-[15px] font-semibold leading-[1.4] text-[#0F1B3D] sm:text-[16px]">
+                    {recommendedTopic.title}
+                  </h2>
+                  <p className="mt-2 text-[12px] leading-[1.6] text-[#42506A]">
+                    {next
+                      ? 'Retomá la dificultad que registraste y comprobá lo aprendido.'
+                      : 'Leé el tema y comprobá lo aprendido con una práctica.'}
+                  </p>
+                  <button type="button" onClick={() => openTopic(recommendedTopic.id)}
+                    className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+                    {next ? 'Continuar estudiando' : 'Comenzar a estudiar'} <ArrowRight className="size-4" aria-hidden="true" />
+                  </button>
+                </section>
+              )}
+            </div>
+          )}
+          <div className="space-y-3">
             <section
               data-recommended-topics
               className="border-border bg-card overflow-hidden rounded-xl border"
