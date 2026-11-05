@@ -12,6 +12,7 @@ import {
 } from '@/lib/payments/mercadopago';
 import { PREMIUM_SEMESTER_MONTHS, PREMIUM_SEMESTER_PRICE_ARS } from '@/lib/payments/offers';
 import { subscriptionStatusForPayment } from '@/lib/payments/status';
+import { canceledSubscriptionAccessUntil, preapprovalCheckoutStatus } from '@/lib/payments/subscription-lifecycle';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 
 type WebhookBody = {
@@ -386,7 +387,7 @@ export async function POST(request: Request) {
       const { data: attempt, error: attemptError } = await admin
         .from('payment_checkout_attempts')
         .select(
-          'id, user_id, plan_id, promotion_claim_id, referral_code_id, offer_code, base_amount_ars, discount_amount_ars, amount_ars'
+          'id, user_id, plan_id, promotion_claim_id, referral_code_id, offer_code, base_amount_ars, discount_amount_ars, amount_ars, status'
         )
         .eq('id', attemptId)
         .eq('provider_subscription_id', providerSubscription.id)
@@ -405,6 +406,22 @@ export async function POST(request: Request) {
       const promotionCode = await getPromotionCode(admin, attempt.promotion_claim_id);
       const isActive = ACTIVE_PROVIDER_STATUSES.has(providerSubscription.status.toLowerCase());
       const internalStatus = isActive ? 'active' : providerSubscription.status.toLowerCase();
+      // El proveedor puede quitar la fecha del próximo cobro al cancelar:
+      // conservar hasta el final del período pagado conocido en nuestra base.
+      const { data: existingSubscription, error: existingSubscriptionError } = await admin
+        .from('user_subscriptions')
+        .select('expires_at,current_period_end,next_payment_date')
+        .eq('payment_provider', 'mercadopago')
+        .eq('provider_subscription_id', providerSubscription.id)
+        .maybeSingle();
+      if (existingSubscriptionError) throw existingSubscriptionError;
+      const isCanceled = internalStatus === 'canceled' || internalStatus === 'cancelled';
+      const nextPaymentDate = providerSubscription.next_payment_date ??
+        (isCanceled ? existingSubscription?.next_payment_date ?? null : null);
+      const accessUntil = isCanceled ? canceledSubscriptionAccessUntil(
+        nextPaymentDate,
+        [existingSubscription?.current_period_end, existingSubscription?.expires_at],
+      ) : null;
       const { error: subscriptionError } = await admin.from('user_subscriptions').upsert(
         {
           user_id: attempt.user_id,
@@ -414,12 +431,11 @@ export async function POST(request: Request) {
           payment_reference: providerSubscription.id,
           provider_subscription_id: providerSubscription.id,
           amount_ars: providerAmount,
-          next_payment_date: providerSubscription.next_payment_date ?? null,
-          current_period_end: providerSubscription.next_payment_date ?? null,
+          next_payment_date: nextPaymentDate,
+          current_period_end: isCanceled ? accessUntil : providerSubscription.next_payment_date ?? null,
           promotion_code: promotionCode,
-          canceled_at: internalStatus === 'canceled' ? now : null,
-          expires_at:
-            internalStatus === 'canceled' ? (providerSubscription.next_payment_date ?? now) : null,
+          canceled_at: isCanceled ? now : null,
+          expires_at: accessUntil,
           provider_updated_at: providerSubscription.last_modified ?? now,
           updated_at: now,
         },
@@ -447,7 +463,7 @@ export async function POST(request: Request) {
       await admin
         .from('payment_checkout_attempts')
         .update({
-          status: isActive ? 'approved' : 'pending',
+          status: preapprovalCheckoutStatus(internalStatus, attempt.status),
           updated_at: now,
         })
         .eq('id', attempt.id);

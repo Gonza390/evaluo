@@ -64,3 +64,15 @@ No borrar tablas, claims, planes ni ejercicios ante un rollback; conservar histo
 - `/api/payments/status` devuelve 503 si falla el chequeo de suscripción; un fallo del historial auxiliar de pagos no oculta un Premium legítimo. `hooks/usePremium.tsx` invalida la caché tras pago, cancelación o regreso a la pestaña.
 
 **Pendiente para el lanzamiento:** conectar los estados visuales a estos contratos con los diseños del usuario, verificar sandbox y webhooks reales, probar ambas migraciones en Supabase aislado, y pedir autorización antes de pasar a `main` o activar el nuevo modelo en producción.
+
+
+### Ajustes de cierre de suscripciones (2026-11-05)
+
+- El webhook conserva el fin del período ya pagado cuando Mercado Pago envía una cancelación sin `next_payment_date`.
+- Una suscripción cancelada **antes de aprobarse** deja su checkout en `failed`; la cancelación de una compra previamente aprobada mantiene el intento `approved`.
+- Las pruebas automatizadas cubren estos estados de forma determinista, sin consumir créditos de Mercado Pago ni alterar suscripciones reales.
+- **Resultado del diagnóstico de la base productiva, solo lectura:** catálogo Premium ARS 9.990; 18 checkouts históricos (1 aprobado de agosto, 8 pendientes y 9 fallidos), ninguna transacción `approved` registrada en `payment_transactions`. Los 6 webhooks `failed` se concentran en 2026-08-17; no atribuirlos a la versión actual.
+- Las migraciones Free V2 `20261104180000_free_study_v2_unlocks.sql` y `20261104183000_free_study_v2_plan_claim.sql` aún no constaban instaladas en producción al consultar (no se aplican en esta auditoría).
+- Antes de desplegar: aplicar las migraciones bajo un plan de recuperación y mantener `free_study_v2_rollout.enabled=false` hasta el despliegue coordinado. Luego activar el flag de Vercel y el switch de Supabase en el lanzamiento.
+- El **único ensayo pendiente del proveedor** es confirmar en sandbox, con cuentas y base aisladas: mensual, semestral, pago real de prueba → webhook firmado → acceso Premium → retorno → cancelación/expiración. Un checkout que abre correctamente no demuestra el ciclo completo.
+- No mostrar Premium al cerrar una práctica; el límite comercial se presenta solo cuando se solicita contenido nuevo sin cupos.
