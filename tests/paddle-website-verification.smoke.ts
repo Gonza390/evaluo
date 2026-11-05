@@ -28,6 +28,16 @@ assert.match(billing, /4 bis\. Compras internacionales con Paddle/);
 assert.match(pricing, /US\$ 9,99/);
 assert.match(pricing, /todavía no disponible para comprar/);
 assert.match(pricing, /Renovación automática mensual/);
+assert.doesNotMatch(pricing, /2 PDFs cada 15 días|2 cada 15 días/,
+  'La página pública no puede ofrecer la cuota anterior si Free V2 se lanza.');
+for (const freeEntitlement of [
+  '1 material PDF o Word gratis de por vida',
+  '12 preguntas de opción múltiple y 10 de verdadero/falso',
+  '25 flashcards, 2 casos prácticos y 1 ronda de unir conceptos',
+  '1 simulacro y 1 plan de estudio gratuito',
+]) assert.ok(pricing.includes(freeEntitlement),
+  'La oferta publicada debe coincidir con el backend: ' + freeEntitlement);
+
 assert.match(pricing, /href="\/reembolsos"/);
 assert.doesNotMatch(refunds, /reembolso garantizado durante 30 días/i,
   'Do not invent unsupported refund promises.');
