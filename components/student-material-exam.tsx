@@ -706,13 +706,13 @@ export function StudentMaterialExam({
             Volver al contenido del tema
           </button>
         )}
-        <header className="border-border border-b pb-5">
-          <p className="text-primary text-[11px] font-medium tracking-[0.15em] uppercase">
-            {topicSectionIndex === undefined
-              ? 'Práctica basada en este PDF'
-              : 'Práctica de este tema'}
-          </p>
-          <h2 className="text-foreground mt-2 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]">
+        <header className="border-border border-b pb-4">
+          {topicSectionIndex !== undefined && (
+            <p className="text-primary text-[11px] font-medium tracking-[0.15em] uppercase">
+              Práctica de este tema
+            </p>
+          )}
+          <h2 className={cn('text-foreground text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]', topicSectionIndex !== undefined && 'mt-2')}>
             {topicTitle ?? 'Elegí cuánto querés practicar'}
           </h2>
         </header>
@@ -750,7 +750,7 @@ export function StudentMaterialExam({
           </div>
         )}
 
-        <div data-onboarding-practice-options className="grid w-full max-w-[520px] grid-cols-2 gap-2.5 py-4">
+        <div data-onboarding-practice-options className="grid w-full max-w-[720px] grid-cols-3 gap-2 py-3 sm:gap-3 sm:py-4">
           {sizeOptions.map((option, index) => {
             const selected = selectedSize === option.count;
             const Icon = index === 0 ? Sparkles : index === 1 ? Layers3 : BookOpenCheck;
@@ -766,24 +766,23 @@ export function StudentMaterialExam({
                 aria-pressed={selected}
                 onClick={() => setSelectedSize(option.count)}
                 className={cn(
-                  'group relative flex min-h-[142px] flex-col items-start rounded-[15px] border p-3 text-left transition-[border-color,box-shadow,transform] duration-150 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100',
-                  index === 2 && sizeOptions.length === 3 && 'col-span-2',
+                  'group relative flex min-h-[116px] min-w-0 flex-col items-start rounded-[14px] border p-2.5 text-left transition-[border-color,box-shadow,transform] duration-150 sm:min-h-[138px] sm:p-3 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100',
                   tones[index % tones.length],
                   selected && 'border-blue-500 ring-2 ring-blue-500/65 ring-offset-2'
                 )}
               >
-                <div className="flex w-full items-start justify-between gap-2">
+                <div className="flex w-full items-start justify-between gap-1">
                   <Icon className="size-[17px] shrink-0 opacity-85" aria-hidden="true" />
                   {selected ? <Check className="size-4 shrink-0 text-blue-600" aria-hidden="true" /> : null}
                 </div>
-                <div className="mt-auto pt-4">
-                  <p className="text-[14px] font-medium leading-5">
+                <div className="mt-auto min-w-0 pt-3 sm:pt-4">
+                  <p className="break-words text-[12px] font-semibold leading-[1.4] sm:text-[14px] sm:leading-5">
                     {option.label}
                   </p>
-                  <p className="mt-0.5 text-[12px] font-medium opacity-90">
+                  <p className="mt-1 text-[11px] font-medium opacity-90 sm:text-[12px]">
                     {option.count} {option.count === 1 ? 'pregunta' : 'preguntas'}
                   </p>
-                  <p className="mt-1 text-[11px] leading-[1.4] opacity-80">
+                  <p className="mt-1 hidden text-[11px] leading-[1.4] opacity-80 sm:block">
                     {topicSectionIndex === undefined
                       ? option.description
                       : option.mode === 'complete'
