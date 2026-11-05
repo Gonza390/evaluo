@@ -63,7 +63,47 @@ assert.equal(evaluateTopic(missingSerp,{now}).state,'BLOCKED');
 const noFacts = structuredClone(cornell);
 noFacts.review.pedagogicalValue={pass:true,rationale:'ok'};
 assert.equal(evaluateTopic(noFacts,{now}).state,'BLOCKED');
-console.log('PASS: Tier 1, Tier 2, 16 PASS, fail-closed, country, keyword, freshness, duplicate, Google-range and production protections');
+
+const competitor = make('practica intercalada', 'practica-intercalada');
+delete competitor.signals.bing;
+delete competitor.signals.autocomplete;
+delete competitor.signals.serp;
+competitor.signals.competitors = {
+  source: 'COMPETITOR_EDITORIAL', topicKeyword: competitor.keyword, country: 'ES',
+  observedAt: '2026-11-05',
+  originalAngle: 'Original pedagogical case comparing mixed practice and topic-by-topic exercises, including explanations of misconceptions.',
+  articles: [
+    {url: 'https://competitor-a.example/blog/practice', title: 'Practical guide to mixed exam practice', publishedAt: '2026-10-30', intentMatches: true,
+      identifiedGap: 'Does not provide a topic-by-topic correction plan connected to the student own material.'},
+    {url: 'https://competitor-b.example/resources/testing', title: 'Assessments from your university notes', publishedAt: '2026-07-01', intentMatches: true,
+      identifiedGap: 'Does not show an original worked example comparing why distractor answers are incorrect.'},
+  ],
+};
+assert.equal(evaluateTopic(competitor,{now}).tier,'T3_COMPETITOR_GAP');
+assert.equal(evaluateTopic(competitor,{now}).googleMonthlyVolume,null);
+assert.equal(evaluateTopic(competitor,{now}).demandVerified,false);
+assert.equal(evaluateBatch([competitor,feynman],{now}).state,'LISTO_PARA_DESARROLLO');
+const oneRival = structuredClone(competitor);
+oneRival.signals.competitors.articles.pop();
+assert.equal(evaluateTopic(oneRival,{now}).state,'BLOCKED');
+const oneDomain = structuredClone(competitor);
+oneDomain.signals.competitors.articles[1].url = 'https://competitor-a.example/other';
+assert.equal(evaluateTopic(oneDomain,{now}).state,'BLOCKED');
+const undated = structuredClone(competitor);
+for (const article of undated.signals.competitors.articles) delete article.publishedAt;
+assert.equal(evaluateTopic(undated,{now}).state,'BLOCKED');
+const unoriginal = structuredClone(competitor);
+unoriginal.signals.competitors.originalAngle = 'Same article';
+assert.equal(evaluateTopic(unoriginal,{now}).state,'BLOCKED');
+const wrongTopic = structuredClone(competitor);
+wrongTopic.signals.competitors.topicKeyword = 'flashcards';
+assert.equal(evaluateTopic(wrongTopic,{now}).state,'BLOCKED');
+const competitorNoEditorial = structuredClone(competitor);
+competitorNoEditorial.review.cannibalization.pass = false;
+assert.equal(evaluateTopic(competitorNoEditorial,{now}).state,'BLOCKED');
+console.log('PASS: Tier 3 competitor-led fallback requires distinct sources, freshness, original angle, no cannibalization and NO invented Google volume');
+
+console.log('PASS: Tier 1, Tier 2, Tier 3, 16 PASS, fail-closed, country, keyword, freshness, duplicate, Google-range and production protections');
 
 // CLI round trip: ephemeral, intentionally synthetic evidence. No real keyword is approved here.
 const tmp = mkdtempSync(join(tmpdir(), 'seo-quality-gate-'));
