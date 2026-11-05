@@ -677,9 +677,9 @@ assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', ['index: false', 'f
 
 /* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
 const acquisitionSeoTitles: Array<[string, string]> = [
-  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes: estudiá apuntes y practicá'],
-  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen y práctica por tema'],
-  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: resumen útil para estudiar'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes: resumí PDFs y prepará exámenes'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen, preguntas y práctica'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: ejemplo de resumen y práctica'],
   ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de PDF con IA'],
   ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde PDF con IA'],
   ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de PDF con IA'],
