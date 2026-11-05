@@ -13,8 +13,9 @@ const EXTENSIONS = new Set([
 ]);
 const IGNORED_FOLDERS = new Set(['node_modules', '.next', '.git', '.vercel', 'coverage', '.lighthouseci', 'artifacts']);
 const LEGACY_URL = /https?:\/\/(?:www\.)?evaluo\.com\.ar(?=[\/?#"'\\\s<]|$)/g;
-// Both old hosts must remain here as redirect conditions and are not a migration leak.
-const ALLOWED_FILES = new Set(['vercel.json']);
+// Old hosts are allowed only in deployment redirects and the read-only
+// migration monitor, which must request the old domain to verify HTTP 301/308.
+const ALLOWED_FILES = new Set(['vercel.json', 'scripts/seo/migration-live-check.mjs']);
 const found = [];
 let filesRead = 0;
 
@@ -49,5 +50,5 @@ if (found.length) {
   console.error('Move URL creation to lib/site.ts; preserve old URLs only as domain redirect conditions.');
   process.exitCode = 1;
 } else {
-  console.log(`Domain migration source audit passed (${filesRead} files). Legacy URLs are only permitted in vercel.json redirect rules.`);
+  console.log(`Domain migration source audit passed (${filesRead} files). Legacy URLs are limited to redirects and the read-only migration monitor.`);
 }
