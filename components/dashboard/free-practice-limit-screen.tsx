@@ -126,7 +126,7 @@ export function FreePracticeLimitScreen({
           Práctica · {place}
         </span>
         {backControl(
-          'flex size-11 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]',
+          'flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]',
           <X className="size-[18px] text-[#344054]" aria-hidden="true"/>, 'Cerrar y ' + backLabel.toLowerCase(),
         )}
       </header>
@@ -137,61 +137,61 @@ export function FreePracticeLimitScreen({
             className="absolute left-1/2 top-1/2 flex w-full max-w-[460px] flex-col items-center text-center"
             style={{ transform: `translate(-50%, -50%) scale(${fitScale})`, transformOrigin: 'center center' }}>
         <section className="flex w-full flex-col items-center text-center">
-          <Image src="/evi-practica-limite.svg" width={104} height={104} alt="Evi con un candado" className="size-[104px] shrink-0"/>
-          <h1 id="free-practice-limit-title" className="mt-2 text-[27px] font-bold leading-[1.15] tracking-[-.03em] sm:text-[32px]">
+          <Image src="/evi-practica-limite.svg" width={104} height={104} alt="Evi con un candado" className="size-[72px] shrink-0"/>
+          <h1 id="free-practice-limit-title" className="mt-1.5 text-[23px] font-bold leading-[1.16] tracking-[-.03em] sm:text-[27px]">
             Ya agotaste tu límite gratuito
           </h1>
 
-          <div className="mt-3 flex max-w-full flex-wrap justify-center gap-2">
+          <div className="mt-2.5 flex max-w-full flex-wrap justify-center gap-2">
             {[mode.label, place].map((tag,index) =>
-              <span key={index} className="max-w-[250px] truncate rounded-full border border-[#d0d5dd] bg-white px-3 py-1.5 text-[13px] font-medium text-[#344054]">{tag}</span>
+              <span key={index} className="max-w-[210px] truncate rounded-full border border-[#d0d5dd] bg-white px-3 py-1 text-[11px] font-medium text-[#344054]">{tag}</span>
             )}
           </div>
 
-          <div className="relative mt-5 w-full pb-[18px]" aria-label="Vista previa bloqueada de la práctica">
-            <div aria-hidden="true" className="absolute inset-x-7 bottom-0 top-6 rounded-[20px] border border-[#cfdcf5] bg-[#e3ecfb]"/>
-            <div aria-hidden="true" className="absolute bottom-[9px] left-[14px] right-[14px] top-4 rounded-[20px] border border-[#cfdcf5] bg-[#eef4ff]"/>
-            <div className="relative overflow-hidden rounded-[20px] border border-[#cfdcf5] bg-gradient-to-b from-[#f3f7ff] via-white to-white px-4 pb-[18px] pt-4 text-left shadow-[0_8px_24px_rgba(20,60,140,0.10)] sm:px-5">
+          <div className="relative mt-3.5 w-full pb-[12px]" aria-label="Vista previa bloqueada de la práctica">
+            <div aria-hidden="true" className="absolute inset-x-7 bottom-0 top-5 rounded-[20px] border border-[#cfdcf5] bg-[#e3ecfb]"/>
+            <div aria-hidden="true" className="absolute bottom-[6px] left-[14px] right-[14px] top-3 rounded-[20px] border border-[#cfdcf5] bg-[#eef4ff]"/>
+            <div className="relative overflow-hidden rounded-[20px] border border-[#cfdcf5] bg-gradient-to-b from-[#f3f7ff] via-white to-white px-4 pb-3 pt-3 text-left shadow-[0_8px_24px_rgba(20,60,140,0.10)] sm:px-5">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold tracking-[.18em] text-[#344054]">{mode.preview}</span>
-                <span className="max-w-[140px] truncate rounded-full bg-[#eaf0fb] px-2.5 py-1 text-[12px] font-semibold text-[#084bb0]">
+                <span className="text-[10px] font-bold tracking-[.16em] text-[#344054]">{mode.preview}</span>
+                <span className="max-w-[140px] truncate rounded-full bg-[#eaf0fb] px-2.5 py-1 text-[11px] font-semibold text-[#084bb0]">
                   {topicLabel ?? 'Tu material'}
                 </span>
               </div>
-              <div aria-hidden="true" className="mt-3 flex select-none flex-col gap-2.5 blur-[5px]">
-                <p className="text-[17px] font-bold leading-[1.3] tracking-[-.02em]">¿Qué concepto del material corresponde a este ejercicio?</p>
+              <div aria-hidden="true" className="mt-2.5 flex select-none flex-col gap-2 blur-[5px]">
+                <p className="text-[13px] font-bold leading-[1.3] tracking-[-.02em]">¿Qué concepto del material corresponde a este ejercicio?</p>
                 {['Primera respuesta', 'Segunda respuesta'].map((answer,index) =>
-                  <div key={answer} className="flex items-center gap-3 rounded-xl border-[1.5px] border-[#d0d5dd] bg-white px-3 py-2 text-[14px]">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#f2f4f7] text-[12px] font-bold">{index===0?'A':'B'}</span>
+                  <div key={answer} className="flex items-center gap-2.5 rounded-xl border-[1.5px] border-[#d0d5dd] bg-white px-3 py-1.5 text-[12px]">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#f2f4f7] text-[11px] font-bold">{index===0?'A':'B'}</span>
                     {answer}
                   </div>
                 )}
               </div>
               <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-11 bg-gradient-to-b from-white/15 to-white/70"/>
-              <span className="absolute left-1/2 top-[62%] inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 whitespace-nowrap rounded-full border border-[#cfdcf5] bg-white py-[9px] pl-2.5 pr-[18px] text-[13px] font-semibold shadow-[0_10px_26px_rgba(20,60,140,0.18)] sm:text-[14px]">
-                <span className="flex size-7 items-center justify-center rounded-full bg-[#0b63e5] text-white"><LockKeyhole className="size-[15px]"/></span>
+              <span className="absolute left-1/2 top-[62%] inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#cfdcf5] bg-white py-1.5 pl-2 pr-3.5 text-[12px] font-semibold shadow-[0_10px_26px_rgba(20,60,140,0.18)] sm:text-[14px]">
+                <span className="flex size-6 items-center justify-center rounded-full bg-[#0b63e5] text-white"><LockKeyhole className="size-[15px]"/></span>
                 Se desbloquea con Premium
               </span>
             </div>
           </div>
 
-          <p className="mt-[14px] max-w-[500px] text-[14px] leading-[1.55] text-[#4b5565] sm:text-[15px]">
+          <p className="mt-3 max-w-[440px] text-[12px] leading-[1.5] text-[#4b5565] sm:text-[13px]">
             Ya agotaste tu cupo de {mode.noun} del plan gratis. Podés repetir las actividades que ya desbloqueaste. Con Premium accedés a nuevas prácticas.
           </p>
 
-          <div className="mt-[18px] flex w-full flex-wrap items-center justify-center gap-3">
+          <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-2.5">
             <Link href={premiumHref} onClick={event => onLinkClick(event, premiumHref)} aria-disabled={leaving}
-              className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full bg-[#0b63e5] px-7 text-[16px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
-              Practicar con <span className="rounded-full bg-white px-2.5 py-[3px] text-[12px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
+              className="inline-flex min-h-[44px] items-center justify-center gap-2.5 rounded-full bg-[#0b63e5] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
+              Practicar con <span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
             </Link>
             {backControl(
-              'inline-flex min-h-[52px] items-center justify-center gap-2.5 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-7 text-[15px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5] sm:text-[16px]',
+              'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-[13px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5] sm:text-[14px]',
               <><ArrowLeft className="size-[18px]" aria-hidden="true"/>{backLabel}</>,
             )}
           </div>
         </section>
-        <p className="mt-3 max-w-[520px] text-center text-[13px] leading-5 text-[#667085]">
-          El límite gratuito ya se agotó para esta modalidad. Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.
+        <p className="mt-3 max-w-[440px] text-center text-[11px] leading-[1.45] text-[#667085]">
+          Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.
         </p>
           </div>
         </div>
