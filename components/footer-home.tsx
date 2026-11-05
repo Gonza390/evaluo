@@ -259,6 +259,13 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
                 Política de reembolsos
               </Link>
             </nav>
+            <div className="mt-5 max-w-xs text-center text-xs leading-5 text-white/75 md:text-left">
+              <p className="font-semibold text-white">Soporte de Evaluo</p>
+              <a href="mailto:facturacion@evaluo.com.ar" className="mt-1 inline-block break-all underline underline-offset-2 hover:text-white">
+                facturacion@evaluo.com.ar
+              </a>
+              <p className="mt-1 text-white/60">Consultas sobre el servicio, pagos y suscripciones.</p>
+            </div>
           </div>
         </div>
 
