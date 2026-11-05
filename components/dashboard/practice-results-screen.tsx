@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, ChevronDown, Lightbulb, X } from 'lucide-react';
 
@@ -74,13 +74,8 @@ export function PracticeResultsScreen({
   extraAction,
   note,
 }: PracticeResultsScreenProps) {
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const mistakes = useMemo(() => entries.filter((entry) => !entry.correct), [entries]);
   const correctEntries = useMemo(() => entries.filter((entry) => entry.correct), [entries]);
-  const topics = useMemo(() => Array.from(new Set(
-    mistakes.map((entry) => entry.chapterTitle?.trim()).filter((topic): topic is string => Boolean(topic))
-  )), [mistakes]);
-  const visible = selectedTopic ? mistakes.filter((entry) => entry.chapterTitle === selectedTopic) : mistakes;
   const correctCount = correctEntries.length;
   const flashcards = kind === 'flashcards';
   const summaryHref = materialId && !preview ? '/materiales/' + encodeURIComponent(materialId) + '?tab=resumen' : undefined;
@@ -122,23 +117,6 @@ export function PracticeResultsScreen({
             )}
           </div>
 
-          {topics.length > 1 && (
-            <div className="flex flex-wrap gap-2" aria-label="Filtrar por tema">
-              <button type="button" aria-pressed={selectedTopic === null} onClick={() => setSelectedTopic(null)}
-                className={'min-h-8 rounded-full border px-3 py-1 text-[12px] font-semibold ' +
-                  (selectedTopic === null ? 'border-[#2563EB] bg-[#EEF2FF] text-[#032269]' : 'border-[#E7EBF4] text-[#42506A] hover:bg-[#F5F7FB]')}>
-                Todos ({mistakes.length})
-              </button>
-              {topics.map((topic) => (
-                <button type="button" key={topic} aria-pressed={selectedTopic === topic} onClick={() => setSelectedTopic(topic)}
-                  className={'min-h-8 max-w-full truncate rounded-full border px-3 py-1 text-[12px] font-semibold ' +
-                    (selectedTopic === topic ? 'border-[#2563EB] bg-[#EEF2FF] text-[#032269]' : 'border-[#E7EBF4] text-[#42506A] hover:bg-[#F5F7FB]')}>
-                  {topic}
-                </button>
-              ))}
-            </div>
-          )}
-
           {mistakes.length === 0 ? (
             <div className="flex items-start gap-3 rounded-[20px] border border-[#D1FADF] bg-[#F6FEF9] px-4 py-5 sm:p-6">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#067647] text-white"><Check className="size-5" aria-hidden="true" /></span>
@@ -151,12 +129,12 @@ export function PracticeResultsScreen({
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {visible.map((entry, position) => {
+              {mistakes.map((entry, position) => {
                 const materialHref = summaryHref && entry.pageStart
                   ? summaryHref + '&page=' + encodeURIComponent(String(entry.pageStart))
                   : summaryHref;
                 return (
-                  <details key={String(entry.index) + ':' + (selectedTopic ?? 'todos')} open={position === 0}
+                  <details key={entry.index} open={position === 0}
                     className="group overflow-hidden rounded-2xl border border-[#E7EBF4] bg-white shadow-[0_4px_16px_rgba(15,27,61,0.025)]">
                     <summary className="flex cursor-pointer items-center gap-3 px-4 py-3.5 marker:content-none sm:px-4">
                       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#D92D20] text-white">
