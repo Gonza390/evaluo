@@ -131,7 +131,7 @@ export function UnlamEditorialGuide() {
                 </a>
                 <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-blue-100 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> Guía y práctica interactiva</span>
-                  <span>Revisado el 29 de octubre de 2026</span>
+                  <span>Revisado el 5 de noviembre de 2026</span>
                   <span>Equipo Evaluo</span>
                 </div>
               </div>
@@ -210,7 +210,7 @@ export function UnlamEditorialGuide() {
               Fuentes oficiales del Curso de Ingreso
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
-              Revisado el 29 de octubre de 2026. UNLaM es la autoridad para inscripciones, horarios,
+              Revisado el 5 de noviembre de 2026. UNLaM es la autoridad para inscripciones, horarios,
               evaluación, recuperatorios y cambios en el calendario. Los modelos externos de años
               anteriores se identifican en su sección correspondiente.
             </p>
@@ -243,6 +243,7 @@ export function UnlamEditorialGuide() {
               <Link href="/estudiar-pdf-con-ia" className="underline underline-offset-4">Estudiar un PDF con IA</Link>
               <Link href="/funciones/resumir-pdf-con-ia" className="underline underline-offset-4">Resumir mi PDF</Link>
               <Link href="/funciones/crear-flashcards-desde-pdf" className="underline underline-offset-4">Crear flashcards</Link>
+              <Link href="/blog/metodo-pomodoro-para-estudiar" className="underline underline-offset-4">Organizar sesiones de estudio</Link>
             </nav>
           </div>
         </section>
