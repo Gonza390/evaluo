@@ -48,6 +48,13 @@ assert.match(screen, /<ProcessingFit sceneKey=/,
   'Scenes are fitted to the available screen without scrolling or clipping.');
 assert.match(screen, /ResizeObserver\(fit\)/,
   'Viewport and visual scene size changes must recalculate fit.');
+assert.match(screen, /<header className="grid shrink-0 grid-cols-2.*sm:grid-cols-3/,
+  'Header has balanced columns so the document name is centered independent of logo and progress.');
+assert.match(screen, /data-processing-file-name className="col-span-2 row-start-2.*sm:col-start-2 sm:row-start-1/,
+  'Filename remains centered on desktop and gets a separate centered row on narrow screens.');
+assert.match(screen, /title=\{state\.fileName\}.*text-\[11px\].*sm:text-\[12px\]/,
+  'Compact filename retains the full name in the tooltip when truncated.');
+
 assert.match(motion, /data-processing-standalone-shell.*dashboard-responsive/s,
   'The dashboard wrapper must not introduce its own scroll.');
 assert.match(screen, /evi-procesamiento-listo\.svg/,
