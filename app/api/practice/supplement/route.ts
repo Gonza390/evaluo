@@ -5,7 +5,8 @@ import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { getFreeStudyBank, saveFirstFreeStudyBank, claimFreeStudyPairSample } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, claimFreeStudyPairSample, listFreeStudyUnlockedKeys } from '@/lib/free-study-v2-server';
+import { premiumUpgradeForLimit } from '@/lib/premium-flow';
 import { normalizedAnswer, selectPracticePairs, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 import { sourceVerifiedPairs } from '@/lib/student-materials/practice-source-pairs';
@@ -66,6 +67,17 @@ export async function POST(request: Request) {
       return NextResponse.json({pairs:allowed,source:'free_sample_cached'},
         {headers:{'Cache-Control':'private, no-store'}});
     }
+    const kind = body.mode === 'unir' ? 'matching_round' : 'flashcard';
+    const maxAllowed = body.mode === 'unir' ? FREE_STUDY_V2.matchingRounds : FREE_STUDY_V2.flashcards;
+    const unlocked = await listFreeStudyUnlockedKeys({userId:user.id,kind,premium:false});
+    // Si la única ronda ya fue desbloqueada en este material, puede volver a
+    // prepararse con el mismo origen sin abrir una ronda nueva.
+    const alreadyOwnMatching = body.mode === 'unir' &&
+      unlocked?.has(material.id + ':matching:first') === true;
+    if (unlocked && unlocked.size >= maxAllowed && !alreadyOwnMatching)
+      return NextResponse.json({error:'free_quota_exhausted',
+        upgrade: premiumUpgradeForLimit(body.mode === 'unir' ? 'matching_round' : 'flashcard',
+          {materialId:material.id})}, {status:403,headers:{'Cache-Control':'private, no-store'}});
   }
 
   const admin = createAdminClient();
