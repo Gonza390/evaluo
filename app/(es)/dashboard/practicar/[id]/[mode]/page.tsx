@@ -7,7 +7,8 @@ import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-ped
 import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import { PracticeSession } from '@/components/dashboard/practice-session';
 import { PracticeFlashcardSession } from '@/components/dashboard/practice-flashcard-session';
-import { buildSourceBackedCases } from '@/lib/student-materials/practice-modes';
+import { buildSourceBackedCases, normalizedAnswer } from '@/lib/student-materials/practice-modes';
+import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-quality';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
 import { claimFreeStudyUnlock, listFreeStudyUnlockedKeys, type FreeStudyUnlockKind } from '@/lib/free-study-v2-server';
@@ -26,10 +27,13 @@ import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 async function firstFreeItems<T>(args: {
   userId: string; materialId: string; kind: FreeStudyUnlockKind;
   items: T[]; limit: number; keyPrefix: string;
+  valid?: (item: T, originalIndex: number) => boolean;
 }): Promise<T[]> {
   const selected: T[] = [];
   for (const [index, item] of args.items.entries()) {
     if (selected.length >= args.limit) break;
+    // Rechazar contenido no estudiable antes del claim irreversible.
+    if (args.valid && !args.valid(item, index)) continue;
     const claim = await claimFreeStudyUnlock({
       userId: args.userId,
       materialId: args.materialId,
@@ -119,10 +123,19 @@ export default async function PracticeModePage({ params, searchParams }: { param
           !Array.from(keys).some(key => key.startsWith(material.id + ':')))
         return exhausted('flashcard');
     }
+    const seenPrompts = new Set<string>(), seenAnswers = new Set<string>();
     const freeFlashcards = freeV2
       ? await firstFreeItems({
         userId: user.id, materialId: material.id, kind: 'flashcard',
         items: artifacts.flashcards, limit: FREE_STUDY_V2.flashcards, keyPrefix: 'flashcard',
+        valid: card => {
+          if (!auditPracticeFlashcard(card).approved) return false;
+          const prompt = normalizedAnswer(card.front), answer = normalizedAnswer(card.back);
+          if (seenPrompts.has(prompt) || seenAnswers.has(answer)) return false;
+          seenPrompts.add(prompt);
+          seenAnswers.add(answer);
+          return true;
+        },
       })
       : artifacts.flashcards;
     if (freeV2 && artifacts.flashcards.length > 0 && freeFlashcards.length === 0)
