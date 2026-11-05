@@ -130,16 +130,17 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
     carreraNombre: carrera.nombre,
   });
 
-  // Only advertise a public simulator when it has practice questions.
-  // A transient query error must not result in a false "available" claim.
+  // Only advertise public practice when the explicitly public catalog confirms it.
+  // This RPC has a public contract; the underlying question bank has no anon grants.
   const publicPractice = materias.length > 0
-    ? await createPublicClient()
-        .from('preguntas_banco_public')
-        .select('materia_id')
-        .in('materia_id', materias.map((materia) => materia.id))
-        .limit(1)
+    ? await createPublicClient().rpc('get_public_preguntero_catalog')
     : null;
-  const hasPublicPractice = Boolean(publicPractice && !publicPractice.error && publicPractice.data?.length);
+  const materiaIds = new Set(materias.map((materia) => materia.id));
+  const hasPublicPractice = Boolean(
+    publicPractice && !publicPractice.error && publicPractice.data?.some(
+      (row) => materiaIds.has(String(row.materia_id)) && Number(row.question_count) > 0
+    )
+  );
 
   return (
     <main className="min-h-screen bg-white">
