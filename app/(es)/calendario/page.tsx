@@ -878,6 +878,8 @@ export default function CalendarioPage() {
                 {monthGrid.map((date) => {
                   const dateKey = formatStorageDate(date);
                   const cellEvents = eventsByDate[dateKey] ?? [];
+                  const planDay = studyPlanDaysByDate.get(dateKey);
+                  const isPlanExamDay = activeStudyPlan?.exam_date === dateKey;
                   const isCurrentMonth = date.getMonth() === visibleMonth.getMonth();
                   const isSelected = dateKey === selectedDateKey;
                   const isToday = dateKey === formatStorageDate(new Date());
@@ -886,8 +888,16 @@ export default function CalendarioPage() {
                     <button
                       key={dateKey}
                       type="button"
-                      onClick={() => openComposerForDate(date)}
-                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''}`}
+                      onClick={() => {
+                        // Si ya hay eventos manuales, conservar el acceso al editor habitual.
+                        if (cellEvents.length > 0 || (!planDay && !isPlanExamDay)) {
+                          openComposerForDate(date);
+                        } else {
+                          setSelectedDate(date);
+                          setVisibleMonth(getMonthStart(date));
+                        }
+                      }}
+                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''}${planDay ? `, ${planDay.topics.length} temas del plan` : ''}${isPlanExamDay ? ', examen del plan' : ''}`}
                       className={`group relative flex h-[48px] min-w-0 flex-col gap-0.5 overflow-hidden border-r border-b px-1 py-1 text-left transition last:border-r-0 hover:bg-white min-[380px]:h-[52px] min-[380px]:px-1.5 sm:h-[56px] sm:gap-1 sm:px-2 sm:py-1.5 ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
@@ -907,11 +917,15 @@ export default function CalendarioPage() {
                           style={{
                             backgroundColor: isToday
                               ? 'var(--brand)'
+                              : isPlanExamDay
+                                ? '#FFF2E6'
                               : isSelected
                                 ? 'var(--calendar-selected-bg)'
                                 : 'transparent',
                             color: isToday
                               ? 'var(--primary-foreground)'
+                              : isPlanExamDay
+                                ? '#AD713D'
                               : isSelected
                                 ? 'var(--calendar-selected-text)'
                                 : undefined,
@@ -921,23 +935,33 @@ export default function CalendarioPage() {
                         </span>
                       </div>
 
-                      {/* Mantener la altura de las semanas estable incluso con varios eventos. */}
-                      {cellEvents.length > 0 ? (
-                        <div className="mt-auto min-w-0 overflow-hidden">
-                          <span
-                            aria-hidden="true"
-                            className={`block size-1.5 rounded-full min-[480px]:hidden ${cellEvents[0]?.type === 'exam' ? 'bg-[#AD713D]' : 'bg-[#376CAD]'}`}
-                          />
-                          <div
-                            className="hidden truncate rounded-md border px-1 py-0.5 text-[10px] leading-3 font-medium min-[480px]:block sm:text-[11px]"
-                            style={{
-                              backgroundColor: cellEvents[0]?.type === 'exam' ? '#FFF2E6' : '#E8F2FF',
-                              borderColor: cellEvents[0]?.type === 'exam' ? '#F1DFC8' : '#D5E6FA',
-                              color: cellEvents[0]?.type === 'exam' ? '#AD713D' : '#376CAD',
-                            }}
-                          >
-                            {cellEvents[0]?.title}
-                          </div>
+                      {/* Marcas independientes: no generan eventos ni aumentan la altura de la semana. */}
+                      {(planDay || isPlanExamDay || cellEvents.length > 0) ? (
+                        <div className="mt-auto flex min-w-0 items-center gap-1 overflow-hidden">
+                          {planDay ? (
+                            <span aria-hidden="true" data-calendar-plan-day className="size-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                          ) : null}
+                          {isPlanExamDay ? (
+                            <span aria-hidden="true" data-calendar-plan-exam className="size-1.5 shrink-0 rounded-full bg-[#D97706]" />
+                          ) : null}
+                          {cellEvents.length > 0 ? (
+                            <div className="min-w-0 flex-1 overflow-hidden">
+                              <span
+                                aria-hidden="true"
+                                className={`block size-1.5 rounded-full min-[480px]:hidden ${cellEvents[0]?.type === 'exam' ? 'bg-[#AD713D]' : 'bg-[#376CAD]'}`}
+                              />
+                              <div
+                                className="hidden truncate rounded-md border px-1 py-0.5 text-[10px] leading-3 font-medium min-[480px]:block sm:text-[11px]"
+                                style={{
+                                  backgroundColor: cellEvents[0]?.type === 'exam' ? '#FFF2E6' : '#E8F2FF',
+                                  borderColor: cellEvents[0]?.type === 'exam' ? '#F1DFC8' : '#D5E6FA',
+                                  color: cellEvents[0]?.type === 'exam' ? '#AD713D' : '#376CAD',
+                                }}
+                              >
+                                {cellEvents[0]?.title}
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                       {cellEvents.length > 1 ? (
