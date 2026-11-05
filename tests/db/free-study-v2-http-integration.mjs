@@ -124,12 +124,26 @@ const expire = await request('/user_subscriptions?user_id=eq.' + paid, {
 });
 allowed(expire, 'Expire canceled subscription');
 assert.equal(await premiumStatus(), false, 'Expired premium must not retain entitlement');
+// Los materiales subidos como Premium NO gastan el cupo Free vitalicio.
+const premiumFreeClaims = await request('/free_study_v2_upload_claims?user_id=eq.' + paid, {
+  role: 'service_role',
+});
+allowed(premiumFreeClaims, 'Premium account Free grant status');
+assert.equal(premiumFreeClaims.data.length, 0, 'Past Premium uploads cannot spend the fresh Free grant');
 const expiredPaidUpload = await request('/student_materials', {
   role: 'authenticated', sub: paid, method: 'POST',
   body: { id: paidUpload, user_id: paid, processing_status: 'ready' },
 });
-assert.equal(expiredPaidUpload.status, 400, 'Expired premium must follow Free upload limit');
-assert.equal(expiredPaidUpload.data?.message, 'free_v2_lifetime_upload_limit');
+allowed(expiredPaidUpload, 'First Free file after Premium expiration');
+const secondAfterExpiry = await request('/student_materials', {
+  role: 'authenticated', sub: paid, method: 'POST',
+  body: {
+    id: '70000000-0000-4000-8000-000000000002', user_id: paid,
+    processing_status: 'ready',
+  },
+});
+assert.equal(secondAfterExpiry.status, 400, 'Second Free file after Premium expiration must be denied');
+assert.equal(secondAfterExpiry.data?.message, 'free_v2_lifetime_upload_limit');
 
 denied(await request('/student_materials', {
   role: 'authenticated', sub: newStudent, method: 'POST',
@@ -173,4 +187,4 @@ const dbFlag = await request('/free_study_v2_rollout?id=eq.true', { role: 'servi
 allowed(dbFlag, 'Database rollout state');
 assert.equal(dbFlag.data[0]?.enabled, true);
 
-console.log('PASS Free V2 HTTP integration: signed test JWT, RLS, Free/Premium entitlements, cancellation, daily/lifetime uploads, replay and plan guard.');
+console.log('PASS Free V2 HTTP integration: signed test JWT, RLS, Free/Premium entitlements, cancellation, post-Premium Free reset, daily/lifetime uploads, replay and plan guard.');
