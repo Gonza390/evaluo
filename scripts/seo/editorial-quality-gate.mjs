@@ -6,6 +6,10 @@
  * where a Node environment is available, and develop only two passing topics.
  * This module does NOT publish pages or call external services.
  */
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export const CHECKS = Object.freeze([
   'intent', 'market', 'competition', 'cannibalization',
   'evaluoFit', 'pedagogicalValue', 'sources'
@@ -148,4 +152,32 @@ export function evaluateBatch(topics, { now = new Date(), reserved = [] } = {}) 
     results,
     productionAuthorized: false,
   };
+}
+
+/** Validate a concrete editorial batch file; never alter or publish content. */
+export async function evaluateFile(file, { now = new Date() } = {}) {
+  const payload = JSON.parse(await readFile(file, 'utf8'));
+  return evaluateBatch(payload.topics, { now, reserved: payload.reserved ?? [] });
+}
+// Usage: node scripts/seo/editorial-quality-gate.mjs --file=/tmp/evaluo-seo-batch.json
+// Exit 0 = approved; 2 = blocked; 1 = malformed input / runtime error.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const params = Object.fromEntries(process.argv.slice(2)
+    .filter((a) => a.startsWith('--') && a.includes('='))
+    .map((a) => [a.slice(2, a.indexOf('=')), a.slice(a.indexOf('=') + 1)]));
+  if (!params.file) {
+    process.stderr.write('Missing --file=path-to-batch.json\n');
+    process.exitCode = 1;
+  } else {
+    const now = params.now ? new Date(params.now) : new Date();
+    evaluateFile(params.file, { now })
+      .then((result) => {
+        process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+        if (result.state !== 'LISTO_PARA_DESARROLLO') process.exitCode = 2;
+      })
+      .catch((error) => {
+        process.stderr.write('Editorial gate input error: ' + String(error.message).slice(0, 200) + '\n');
+        process.exitCode = 1;
+      });
+  }
 }
