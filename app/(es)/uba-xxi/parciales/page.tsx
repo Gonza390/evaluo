@@ -77,14 +77,14 @@ const FAQ = [
 ] as const;
 
 export const metadata: Metadata = {
-  title: 'Parciales UBA XXI: exámenes anteriores y práctica',
+  title: 'Parciales UBA XXI: modelos de IPC e ICSE y práctica',
   description:
-    'Consultá parciales anteriores de IPC e ICSE (2025 y 2026), practicá preguntas gratis con corrección y prepará UBA XXI con tus propios apuntes PDF.',
+    'Parciales UBA XXI: consultá modelos anteriores de IPC e ICSE, resolvé ejercicios gratuitos con corrección y estudiá con tus propios apuntes PDF.',
   alternates: { canonical: toAbsoluteUrl(PATH) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Parciales UBA XXI: exámenes anteriores y práctica | Evaluo',
+    title: 'Parciales UBA XXI: modelos de IPC e ICSE y práctica | Evaluo',
     description:
       'Ejemplos de parciales anteriores de IPC e ICSE y una práctica interactiva gratis para prepararte con tu propio material.',
     url: toAbsoluteUrl(PATH),
@@ -99,7 +99,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Parciales UBA XXI: exámenes anteriores y práctica | Evaluo',
+    title: 'Parciales UBA XXI: modelos de IPC e ICSE y práctica | Evaluo',
     description: 'Mirá exámenes anteriores de UBA XXI y practicá para el próximo parcial.',
     images: ['/opengraph-image.png'],
   },
@@ -136,7 +136,7 @@ export default function ParcialesUbaXxiPage() {
             { name: 'Parciales UBA XXI', path: PATH },
           ]),
           buildCollectionPageJsonLd({
-            name: 'Parciales UBA XXI: exámenes anteriores y práctica',
+            name: 'Parciales UBA XXI: modelos de IPC e ICSE y práctica',
             description: 'Selección de referencias externas de exámenes anteriores y práctica original para estudiantes de UBA XXI.',
             url: PATH,
           }),
