@@ -148,10 +148,76 @@ jobs:
           path: .lighthouseci/seo-reports
           if-no-files-found: ignore
           retention-days: 14
+  free-v2-db-qa:
+    name: Free V2 isolated DB QA
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: evaluo_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d evaluo_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Apply schema fixture and Free V2 migrations
+        env:
+          PGPASSWORD: postgres
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGDATABASE: evaluo_qa
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-schema-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104180000_free_study_v2_unlocks.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104183000_free_study_v2_plan_claim.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-migration-regression.sql
+          # Concurrent requests for a new account must never exceed the Free ceiling.
+          psql -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.student_materials(id,user_id,processing_status) VALUES ('50000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000005','ready')"
+          seq 1 30 | xargs -P 10 -I '{}' psql -X -qAt -v ON_ERROR_STOP=1 -c "SET ROLE service_role; SELECT allowed FROM public.claim_free_study_v2_unlock('00000000-0000-4000-8000-000000000005','50000000-0000-4000-8000-000000000001','multiple_choice','50000000-0000-4000-8000-000000000001:parallel:{}')"
+          claimed="$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.free_study_v2_unlocks WHERE user_id='00000000-0000-4000-8000-000000000005' AND kind='multiple_choice'")"
+          test "$claimed" = "12"
+
+      - name: Test signed JWT + PostgREST API without Supabase production
+        env:
+          PGPASSWORD: postgres
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGDATABASE: evaluo_qa
+          QA_POSTGREST_URL: http://127.0.0.1:3101
+          QA_JWT_SECRET: free-v2-ci-only-test-signing-key-2026-11-05-not-for-production
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-postgrest-setup.sql
+          docker run --rm -d --name free-v2-qa-postgrest --network host \
+            -e PGRST_DB_URI="postgres://postgres:postgres@127.0.0.1:5432/evaluo_qa" \
+            -e PGRST_DB_SCHEMAS="public" -e PGRST_DB_ANON_ROLE="anon" \
+            -e PGRST_JWT_SECRET="$QA_JWT_SECRET" -e PGRST_SERVER_PORT="3101" \
+            postgrest/postgrest:v12.2.12
+          trap 'docker logs free-v2-qa-postgrest || true; docker stop free-v2-qa-postgrest || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS "$QA_POSTGREST_URL/" >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          curl -fsS "$QA_POSTGREST_URL/" >/dev/null
+          node tests/db/free-study-v2-http-integration.mjs
+
   release-gate:
     name: CI required
     if: always()
-    needs: [security, quality, seo-lighthouse]
+    needs: [security, quality, seo-lighthouse, free-v2-db-qa]
     runs-on: ubuntu-latest
     steps:
       - name: Require security and quality
@@ -159,10 +225,12 @@ jobs:
           SECURITY_RESULT: ${{ needs.security.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           SEO_LIGHTHOUSE_RESULT: ${{ needs.seo-lighthouse.result }}
+          FREE_V2_DB_RESULT: ${{ needs.free-v2-db-qa.result }}
         run: |
           test "$SECURITY_RESULT" = "success"
           test "$QUALITY_RESULT" = "success"
           test "$SEO_LIGHTHOUSE_RESULT" = "success"
+          test "$FREE_V2_DB_RESULT" = "success"
 
 # Nota: el repositorio todavía no contiene un baseline inicial reproducible de
 # Supabase. Las migraciones históricas más antiguas asumen tablas preexistentes
