@@ -539,7 +539,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }
   if (freeV2 && freeSessionGate === 'error' && (mode === 'unir' || mode === 'simulacro')) {
     return <main className="mx-auto max-w-[780px] px-4 py-8">
-      <p role="alert" className="text-sm text-slate-700">No pudimos comprobar tu cupo. No se consumió un nuevo uso desde esta pantalla.</p>
+      <p role="alert" className="text-sm text-slate-700">No pudimos confirmar tu cupo. Reintentá: si el uso anterior se registró, no se descontará otra vez.</p>
       <button type="button" className="mt-4 min-h-11 rounded-xl border px-4 text-sm"
         onClick={() => { setFreeSessionGate('new'); if(mode==='simulacro') void claimSessionQuota(); }}>
         Reintentar verificación
