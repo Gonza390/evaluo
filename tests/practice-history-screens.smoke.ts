@@ -46,7 +46,9 @@ assert.match(caseScreen, /!correct && <p className="mt-2 whitespace-pre-line/,
 assert.match(caseScreen, /!correct && <p className="mt-2 font-medium[^\n]*Respuesta correcta:/,
   'Casos mantiene la respuesta correcta cuando hay un error.');
 assert.match(practiceResults, /entries\.filter\(\(entry\) => !entry\.correct\)/,
-  'Los resultados muestran únicamente las respuestas que necesitan repaso, sin explicar los casos correctos.');
+  'Las respuestas incorrectas se muestran primero, con su explicación.');
+assert.match(practiceResults, /entries\.filter\(\(entry\) => entry\.correct\)/,
+  'Las respuestas correctas se muestran al final sin explicaciones adicionales.');
 assert.match(practiceSession, /correct: correctAt\(i\)/,
   'La lista compartida de resultados conserva la evaluación real por pregunta.');
 
