@@ -205,6 +205,16 @@ export function unsafeFlashcardReason(card: StudyFlashcard): string | null {
   return null;
 }
 
+/** Adjust wording of existing PDF/DOCX cards without regenerating any content. */
+export function polishFlashcardPrompt(front: string): string {
+  const sourceNeutral = front.trim()
+    .replace(/\s+según el (?:PDF|material)(\?)/giu, '$1')
+    .replace(/^¿Qué relación establece el PDF entre (.+) y (.+)\?$/iu,
+      '¿Cómo se relacionan $1 y $2?');
+  return sourceNeutral.replace(/^¿Cómo relaciona el material (.+) con (.+)\?$/iu,
+    '¿Cómo se relacionan $1 y $2?');
+}
+
 /** La taxonomía refleja el esfuerzo mental real, no la formulación del verbo. */
 export function accurateFlashcardLevel(card: StudyFlashcard): StudyFlashcard['level'] {
   if (
@@ -243,7 +253,11 @@ export function sanitizePedagogicalArtifacts(
     const reason = unsafeFlashcardReason(card) ?? review.reasons[0] ?? null;
     if (reason) rejectedReasons.push(reason);
     return !reason;
-  }).map(card => ({ ...card, level: accurateFlashcardLevel(card) }));
+  }).map(card => ({
+    ...card,
+    front: polishFlashcardPrompt(card.front),
+    level: accurateFlashcardLevel(card),
+  }));
   const allowed = new Set(questions.map(question => question.id));
   const items = [...questions, ...flashcards];
   const prior = artifacts.integrity;
