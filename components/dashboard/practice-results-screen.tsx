@@ -42,7 +42,7 @@ type PracticeResultsScreenProps = {
 
 function ResultButton({ action, primary = false }: { action?: ResultAction; primary?: boolean }) {
   if (!action) return null;
-  const className = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold transition-colors ' +
+  const className = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[12px] font-semibold transition-colors ' +
     (primary ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] ' : 'border border-[#E7EBF4] bg-white text-[#42506A] hover:bg-[#F5F7FB] ') +
     (action.disabled ? 'cursor-not-allowed opacity-50' : '');
   if (action.href && !action.disabled) return (
@@ -90,9 +90,10 @@ export function PracticeResultsScreen({
   const hasClose = Boolean(onClose || closeHref);
 
   return (
-    <div data-practice-results-screen className="w-full min-w-0 bg-white font-sans text-[#0F1B3D]">
-      <header className="flex min-h-[56px] items-center justify-between gap-3 border-b border-[#E7EBF4] px-4 py-2 sm:px-6 lg:px-8">
-        <span className="min-w-0 truncate text-[13px] font-semibold text-[#42506A]" title={materialTitle}>
+    <div data-practice-results-screen className="w-full min-w-0 bg-transparent font-sans text-[#0F1B3D]">
+      <main className="mx-auto w-full max-w-[860px] px-3 pb-8 pt-4 sm:px-5 sm:pt-5">
+      <header className="flex min-h-9 items-center justify-between gap-3 pb-3">
+        <span className="min-w-0 truncate text-[12px] font-medium text-[#66758D]" title={materialTitle}>
           Resultados · {materialTitle}
         </span>
         {hasClose ? (closeHref && !preview ? (
@@ -106,17 +107,16 @@ export function PracticeResultsScreen({
         )) : <span aria-hidden="true" className="size-9" />}
       </header>
 
-      <main className="mx-auto w-full max-w-[860px] px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
-        <section className="flex min-w-0 flex-col gap-5" aria-label={'Resultado de ' + modeLabel}>
+        <section className="flex min-w-0 flex-col gap-4" aria-label={'Resultado de ' + modeLabel}>
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[#7F8AA3]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#7F8AA3] sm:text-[11px]">
               {modeLabel} · {flashcards ? correctCount + ' recordadas' : correctCount + ' de ' + entries.length + ' correctas'}
               {preview ? ' · Vista previa' : ''}
             </p>
-            <h1 className="text-[24px] font-bold leading-[1.2] tracking-[-0.03em] text-[#0F1B3D] sm:text-[27px]">
+            <h1 className="text-[21px] font-semibold leading-[1.25] tracking-[-0.035em] text-[#0F1B3D] sm:text-[24px]">
               {mistakes.length ? 'Repasá lo que te costó' : perfectTitle}
             </h1>
-            <p className="max-w-[720px] text-[13px] leading-[1.65] text-[#42506A] sm:text-[14px]">
+            <p className="max-w-[700px] text-[12px] leading-[1.6] text-[#42506A] sm:text-[13px]">
               {mistakes.length ? secondaryText
                 : flashcards ? 'Todas las tarjetas quedaron marcadas como recordadas. Podés cerrar el repaso o continuar con otra actividad.'
                   : 'Respondiste correctamente todas las preguntas. Podés volver a practicar para consolidar lo aprendido.'}
@@ -163,8 +163,8 @@ export function PracticeResultsScreen({
                   : summaryHref;
                 return (
                   <details key={String(entry.index) + ':' + (selectedTopic ?? 'todos')} open={position === 0}
-                    className="group overflow-hidden rounded-[20px] border border-[#E7EBF4] bg-white shadow-[0_6px_22px_rgba(15,27,61,0.04)]">
-                    <summary className="flex cursor-pointer items-center gap-3 px-4 py-4 marker:content-none sm:px-5">
+                    className="group overflow-hidden rounded-2xl border border-[#E7EBF4] bg-white shadow-[0_4px_16px_rgba(15,27,61,0.025)]">
+                    <summary className="flex cursor-pointer items-center gap-3 px-4 py-3.5 marker:content-none sm:px-4">
                       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#D92D20] text-white">
                         <X className="size-3.5" strokeWidth={3} aria-hidden="true" />
                       </span>
@@ -182,14 +182,14 @@ export function PracticeResultsScreen({
                             </span>
                           )}
                         </div>
-                        <span className="block text-[14px] font-semibold leading-[1.45] tracking-[-0.015em] text-[#0F1B3D] sm:text-[15px]">
+                        <span className="block text-[13px] font-semibold leading-[1.5] tracking-[-0.015em] text-[#0F1B3D] sm:text-[14px]">
                           {entry.prompt}
                         </span>
                       </div>
                       <ChevronDown className="size-4 shrink-0 text-[#7F8AA3] transition-transform group-open:rotate-180" aria-hidden="true" />
                     </summary>
 
-                    <div className="flex flex-col gap-2.5 px-4 pb-4 sm:px-5 sm:pb-5">
+                    <div className="flex flex-col gap-2.5 px-4 pb-4 sm:px-4 sm:pb-4">
                       <div className="flex items-start gap-2.5 rounded-xl border border-[#FDA29B] bg-[#FEF3F2] px-3 py-3">
                         <X className="mt-0.5 size-4 shrink-0 text-[#B42318]" strokeWidth={2.4} aria-hidden="true" />
                         <div className="min-w-0">
@@ -230,7 +230,7 @@ export function PracticeResultsScreen({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 border-t border-[#E7EBF4] pt-4">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
             <ResultButton action={primaryAction} primary />
             <ResultButton action={secondaryAction} />
             <ResultButton action={extraAction} />
