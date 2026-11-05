@@ -125,7 +125,11 @@ export function getCalendarGrid(month: Date) {
   const gridStart = new Date(monthStart);
   gridStart.setDate(monthStart.getDate() - startDay);
 
-  return Array.from({ length: 42 }, (_, index) => {
+  // Mostrar sólo las semanas necesarias para el mes (4, 5 o 6), sin filas vacías
+  // que obliguen a hacer scroll al final del calendario.
+  const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  const weeks = Math.ceil((startDay + daysInMonth) / 7);
+  return Array.from({ length: weeks * 7 }, (_, index) => {
     const cellDate = new Date(gridStart);
     cellDate.setDate(gridStart.getDate() + index);
     return cellDate;
