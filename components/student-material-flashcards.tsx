@@ -554,12 +554,13 @@ export function StudentMaterialFlashcards({
                 label: onPracticeTopic ? 'Practicar este tema' : 'Volver al tema',
                 onClick: onPracticeTopic ?? onReturnToTopic,
                 disabled: !onPracticeTopic && !onReturnToTopic,
+                qaId: 'topic-primary',
               }
             : unknownCount > 0
               ? { label: 'Repasar ahora', onClick: reviewDifficult }
               : { label: 'Finalizar sesión', onClick: finishSession }}
           secondaryAction={topicSession
-            ? unknownCount > 0 ? { label: 'Repasar tarjetas (' + unknownCount + ')', onClick: reviewDifficult } : undefined
+            ? unknownCount > 0 ? { label: 'Repasar tarjetas (' + unknownCount + ')', onClick: reviewDifficult, qaId: 'topic-review' } : undefined
             : unknownCount > 0 ? { label: 'Finalizar sesión', onClick: finishSession } : undefined}
           extraAction={!topicSession && !demoMode && unknownCount > 0
             ? {
