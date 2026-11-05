@@ -4,7 +4,7 @@ import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
 import { STUDY_GUIDES } from '@/lib/es-study-guides';
 import { PUBLIC_EXAMS, PUBLIC_PLANS, PUBLIC_DOCS, SEO_HUBS } from '@/lib/student-seo-content';
-import { STUDY_BLOG_ARTICLES, getStudyBlogPath } from '@/lib/study-blog-articles';
+import { STUDY_BLOG_ARTICLES, getStudyBlogPath, getTranslation } from '@/lib/study-blog-articles';
 import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
 
@@ -110,9 +110,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   routes.push({ url: `${baseUrl}/en/blog`, lastModified: new Date('2026-10-30') });
   for (const locale of ['es', 'en'] as const) {
     for (const article of STUDY_BLOG_ARTICLES[locale]) {
+      const translated = getTranslation(locale, article);
+      const esPath = locale === 'es' ? getStudyBlogPath('es', article) : translated ? getStudyBlogPath('es', translated) : null;
+      const enPath = locale === 'en' ? getStudyBlogPath('en', article) : translated ? getStudyBlogPath('en', translated) : null;
       routes.push({
         url: `${baseUrl}${getStudyBlogPath(locale, article)}`,
         lastModified: new Date(article.key.endsWith('-nov2026') ? '2026-11-05' : '2026-10-30'),
+        ...(esPath && enPath ? {
+          alternates: {
+            languages: { es: `${baseUrl}${esPath}`, en: `${baseUrl}${enPath}` },
+          },
+        } : {}),
       });
     }
   }
