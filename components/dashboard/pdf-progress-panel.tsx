@@ -1065,87 +1065,70 @@ export function PdfProgressPanel({
                 })}
                 {!showOnboardingExample && visibleTopics.map((topic) => {
                   const questionIndex = topics.findIndex((item) => item.id === topic.id);
-                  const unavailable =
-                    questionCounts?.[questionIndex] === 0 &&
-                    topicAssessmentCount(topic) === 0 &&
-                    !topic.errors.length;
-                  const status = topicStatus(topic);
-                  const { Icon, style } = status;
-                  const label = unavailable
-                    ? 'Sin evaluar'
-                    : assessmentData?.loadError && !topic.errors.length
-                      ? 'Evaluación no disponible'
-                      : status.label;
-                  const pendingCount = topic.errors.filter(
-                    (error) => error.status === 'pending'
-                  ).length;
-                  const correctCount = topic.evidence.reduce(
-                    (total, item) => total + item.correct,
-                    0
+                  const pendingCount = topic.errors.filter((error) => error.status === 'pending').length;
+                  const assessedCount = topicAssessmentCount(topic);
+                  const correctCount = topic.evidence.reduce((total, item) => total + item.correct, 0);
+                  const incorrectCount = topic.evidence.reduce((total, item) => total + item.incorrect, 0);
+                  const selfReportedCount = topic.evidence.reduce((total, item) => total + item.selfReported, 0);
+                  const { Icon, style } = topicStatus(topic);
+                  const statusLabel = assessmentData?.loadError && !topic.errors.length
+                    ? 'Evaluación no disponible'
+                    : topicStatus(topic).label;
+                  const actionLabel = pendingCount > 0 ? 'Reforzar' : assessedCount > 0 ? 'Practicar de nuevo'
+                    : selfReportedCount > 0 ? 'Comprobar' : 'Evaluar';
+                  const shouldPracticeDirectly = pendingCount === 0 && Boolean(
+                    onPracticeTopic && (questionCounts?.[questionIndex] ?? 0) > 0
                   );
-                  const incorrectCount = topic.evidence.reduce(
-                    (total, item) => total + item.incorrect,
-                    0
-                  );
-                  const selfReportedCount = topic.evidence.reduce(
-                    (total, item) => total + item.selfReported,
-                    0
-                  );
+                  const nextAction = () => {
+                    if (shouldPracticeDirectly) onPracticeTopic?.(questionIndex);
+                    else openTopic(topic.id);
+                  };
+                  const activityText = assessmentData?.loadError
+                    ? 'Resultados de preguntas temporalmente no disponibles'
+                    : assessedCount > 0
+                      ? correctCount + ' de ' + (correctCount + incorrectCount) + ' respuestas correctas registradas'
+                      : selfReportedCount > 0
+                        ? selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
+                        : pendingCount > 0
+                          ? pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
+                          : 'Todavía sin preguntas corregidas';
                   return (
-                    <li key={topic.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (topicId === topic.id) {
-                            setTopicId(null);
-                            setErrorId(null);
-                          } else openTopic(topic.id);
-                        }}
-                        aria-expanded={topicId === topic.id}
-                        aria-controls={`${panelId}-topic-detail-${topic.id}`}
-                        className={`hover:bg-muted/50 focus-visible:outline-ring flex w-full items-center gap-2.5 px-4 py-2.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 ${topicId === topic.id ? 'bg-primary/5' : ''}`}
-                      >
-                        <span
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${style}`}
-                        >
-                          <Icon size={16} />
+                    <li key={topic.id} data-progress-topic-row>
+                      <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 border-t border-[#EEF1F6] px-3 py-3 sm:grid-cols-[30px_minmax(0,1fr)_auto_auto] sm:gap-x-3 sm:px-4">
+                        <span className={'flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold sm:size-[30px] ' +
+                          (pendingCount > 0 ? 'bg-[#FEF3F2] text-[#B42318]' :
+                            assessedCount > 0 ? 'bg-[#EAF1FF] text-[#1A4FB3]' :
+                              selfReportedCount > 0 ? 'bg-[#EAF1FF] text-[#1A4FB3]' :
+                                'bg-[#F1F4F9] text-[#66758D]')}>
+                          {pendingCount > 0 ? <Flag className="size-4" aria-hidden="true" /> : questionIndex + 1}
                         </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[13px] font-medium break-words">
+                        <button type="button" onClick={() => openTopic(topic.id)}
+                          aria-expanded={topicId === topic.id}
+                          aria-controls={String(panelId) + '-topic-detail-' + topic.id}
+                          className="min-w-0 text-left focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+                          <span className="block break-words text-[12px] font-semibold leading-[1.45] text-[#0F1B3D] sm:text-[13px]">
                             {topic.title}
                           </span>
-                          <span className="text-muted-foreground mt-0.5 block text-xs">
-                            {assessmentData?.loadError
-                              ? 'Evaluación no disponible'
-                              : unavailable
-                                ? 'Aún no hay preguntas para este tema'
-                                : topicAssessmentCount(topic) > 0
-                                  ? `${correctCount} de ${correctCount + incorrectCount} ${correctCount + incorrectCount === 1 ? 'respuesta correcta' : 'respuestas correctas'}`
-                                  : selfReportedCount > 0
-                                    ? `${selfReportedCount} autoevaluaciones · falta comprobar con una pregunta`
-                                    : pendingCount
-                                      ? `${pendingCount} ${pendingCount === 1 ? 'pregunta para repasar' : 'preguntas para repasar'}`
-                                      : topic.errors.length
-                                        ? `${topic.errors.length} ${topic.errors.length === 1 ? 'error resuelto' : 'errores resueltos'}`
-                                        : 'Todavía sin preguntas corregidas'}
+                          <span className="mt-0.5 block text-[11px] leading-[1.5] text-[#66758D]">{activityText}</span>
+                          <span className={'mt-1 inline-flex items-center gap-1 text-[10px] font-medium sm:hidden ' +
+                            (pendingCount > 0 ? 'text-[#B42318]' : 'text-[#66758D]')}>
+                            <Icon className="size-3" aria-hidden="true" />{statusLabel}
                           </span>
-                          <span
-                            className={`mt-2 inline-block rounded-full px-2 py-1 text-[11px] sm:hidden ${style}`}
-                          >
-                            {label}
-                          </span>
+                        </button>
+                        <span className={'hidden min-w-[85px] items-center gap-1 text-[11px] font-semibold sm:inline-flex ' +
+                          (pendingCount > 0 ? 'text-[#B42318]' : 'text-[#42506A]')}>
+                          <span className={'flex size-5 items-center justify-center rounded-full ' + style}>
+                            <Icon className="size-3" aria-hidden="true" />
+                          </span>{statusLabel}
                         </span>
-                        <span
-                          className={`hidden shrink-0 rounded-full px-2 py-1 text-[11px] font-medium sm:block ${style}`}
-                        >
-                          {label}
-                        </span>
-                        <ChevronDown
-                          size={16}
-                          className={`text-muted-foreground shrink-0 transition-transform ${topicId === topic.id ? 'rotate-180' : ''}`}
-                        />
-                      </button>
-                      <div id={`${panelId}-topic-detail-${topic.id}`} hidden={topicId !== topic.id}>
+                        <button type="button" onClick={nextAction}
+                          className={'inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg px-2.5 text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:min-w-[90px] sm:px-3 sm:text-[12px] ' +
+                            (pendingCount > 0 ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8]' :
+                              'text-[#2563EB] hover:bg-[#EEF2FF]')}>
+                          {actionLabel}
+                        </button>
+                      </div>
+                      <div id={String(panelId) + '-topic-detail-' + topic.id} hidden={topicId !== topic.id}>
                         {topicId === topic.id ? topicDetail : null}
                       </div>
                     </li>
