@@ -5,10 +5,20 @@ const read=(path:string)=>readFileSync(path,'utf8');
 const page=read('app/(es)/dashboard/premium/page.tsx');
 const screen=read('components/pricing/PremiumDashboardScreen.tsx');
 const nav=read('components/navbar.tsx');
+const mobileMenu=read('components/mobile-profile-menu.tsx');
 
 assert.match(page,/auth\.getUser\(\)/,'Premium dashboard must require student authentication.');
 assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the current study activity should stay safe.');
 assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
+assert.match(mobileMenu,/href="\/dashboard\/premium\?source=mobile_profile_menu"/,
+  'Mobile profile upsell must open redesigned Premium, not outdated public pricing.');
+assert.match(mobileMenu,/por semana · cobro mensual/,
+  'Preserve the weekly-equivalent amount, clearly labeled as monthly billing.');
+assert.match(mobileMenu,/!isPremium \? \(/,
+  'Mobile upsell remains visible to Free accounts only.');
+assert.match(mobileMenu,/data-mobile-profile-menu-trigger/,
+  'The profile avatar remains the menu trigger.');
+
 assert.match(screen,/max-w-\[680px\]/,'Central premium page should fit Evaluo desktop dimensions.');
 assert.match(screen,/min-\[850px\]:grid-cols-3/,'Benefits should remain stacked until there is room inside the app sidebar.');
 assert.match(screen,/overflow-x-auto/,'Comparison remains accessible if browser font settings increase cell widths.');
