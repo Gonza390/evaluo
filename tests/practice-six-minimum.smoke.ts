@@ -73,10 +73,12 @@ assert.match(session,/sufficientTrueFalse\(trueFalsePool, freeV2 \? 1 : MIN_CASE
 assert.match(session,/balancedQuestions\(options, freeV2 \? 20 : reviewLength === 'rapido' \? 6 : 10, round\)/);
 assert.match(session,/fetch\('\/api\/practice\/supplement'/);
 assert.match(session,/fetch\('\/api\/practice\/cases'/);
-assert.match(session,/contexts\.length >= \(freeV2 \? 2 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(session,/contexts\.length >= \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
 const flashcards=read('components/dashboard/practice-flashcard-session.tsx');
-assert.match(flashcards,/approvedIndices\.length < MIN_CASES_PER_PRACTICE/);
+assert.match(flashcards,/approvedIndices\.length < \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
 assert.match(flashcards,/StudentMaterialFlashcards/);
+assert.match(flashcards,/approvedIndices\.length >= 1/,
+  'Free should not spend IA automatically once one usable flashcard is available.');
 
 const picker=read('components/dashboard/practice-mode-picker.tsx');
 assert.match(picker,/\/dashboard\/practicar\/\$\{materialId\}\/flashcards/);
