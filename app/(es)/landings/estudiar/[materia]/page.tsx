@@ -21,8 +21,8 @@ import {
 } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { createPublicClient } from '@/lib/supabase-public';
-import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { getPregunteroMateriaStats, getPregunteroParcialData } from '@/lib/data/preguntero';
+import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import {
   getMateriaSeoContentSignals,
   hasSubstantialStudyLandingContent,
