@@ -130,21 +130,20 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
     carreraNombre: carrera.nombre,
   });
 
-  // Solo usar estadísticas agregadas aprobadas. La vista de preguntas no permite
-  // SELECT para los roles públicos y no debemos restaurarle esos permisos.
-  const catalogClient = createPublicClient() as unknown as {
+  // Only advertise public practice when the explicitly public catalog confirms it.
+  // This RPC has a public contract; the underlying question bank has no anon grants.
+  const publicCatalogClient = createPublicClient() as unknown as {
     rpc: (name: 'get_public_preguntero_catalog') => PromiseLike<{
       data: Array<{ materia_id: string; question_count: number | string }> | null;
       error: { message: string } | null;
     }>;
   };
-  const publicPractice = materias.length
-    ? await catalogClient.rpc('get_public_preguntero_catalog')
+  const publicPractice = materias.length > 0
+    ? await publicCatalogClient.rpc('get_public_preguntero_catalog')
     : null;
   const materiaIds = new Set(materias.map((materia) => materia.id));
   const hasPublicPractice = Boolean(
-    publicPractice && !publicPractice.error &&
-    publicPractice.data?.some(
+    publicPractice && !publicPractice.error && publicPractice.data?.some(
       (row) => materiaIds.has(String(row.materia_id)) && Number(row.question_count) > 0
     )
   );
