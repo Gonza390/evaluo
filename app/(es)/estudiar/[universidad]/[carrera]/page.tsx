@@ -132,8 +132,14 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
 
   // Only advertise public practice when the explicitly public catalog confirms it.
   // This RPC has a public contract; the underlying question bank has no anon grants.
+  const publicCatalogClient = createPublicClient() as unknown as {
+    rpc: (name: 'get_public_preguntero_catalog') => PromiseLike<{
+      data: Array<{ materia_id: string; question_count: number | string }> | null;
+      error: { message: string } | null;
+    }>;
+  };
   const publicPractice = materias.length > 0
-    ? await createPublicClient().rpc('get_public_preguntero_catalog')
+    ? await publicCatalogClient.rpc('get_public_preguntero_catalog')
     : null;
   const materiaIds = new Set(materias.map((materia) => materia.id));
   const hasPublicPractice = Boolean(
