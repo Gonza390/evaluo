@@ -1,0 +1,86 @@
+name: SEO Bing keyword API smoke (master only)
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/seo-bing-keywords.yml'
+      - 'scripts/seo/bing-keyword-research.mjs'
+      - 'tests/seo-bing-keyword.smoke.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-bing-smoke-master
+  cancel-in-progress: false
+
+jobs:
+  keyword-smoke:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Unit smoke tests (synthetic data, no credentials)
+        run: node tests/seo-bing-keyword.smoke.mjs
+
+      - name: Verify Bing credential is configured
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
+            echo "::error title=Bing API secret missing::Set repository secret BING_WEBMASTER_API_KEY under Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          echo "Bing API secret is configured (secret value not displayed)."
+
+      - name: Test authenticated Bing keyword statistics (Spain)
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          mkdir -p artifacts/seo
+          node scripts/seo/bing-keyword-research.mjs \
+            --keywords="tecnica feynman;como estudiar para un examen tipo test;como usar anki para estudiar" \
+            --country=es --language=es-ES \
+            --out=artifacts/seo/bing-keyword-spain.json
+
+      - name: Validate Bing response without promoting to Google volume
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const report = JSON.parse(readFileSync('artifacts/seo/bing-keyword-spain.json', 'utf8'));
+          const records = report.records ?? [];
+          for (const record of records) {
+            if (record.googleMonthlyVolume !== null || record.eligibleForGoogle500Rule !== false) {
+              throw Error('Bing data must not be treated as validated Google keyword volume');
+            }
+            console.log(JSON.stringify({
+              keyword: record.keyword,
+              status: record.status,
+              bingMonthlyEstimate: record.bingMonthlyEstimate,
+              googleMonthlyVolume: record.googleMonthlyVolume
+            }));
+          }
+          if (records.length !== 3) throw Error('Expected 3 keyword reports');
+          if (records.every(record => record.status === 'ERROR')) {
+            throw Error('Bing API did not complete any keyword request; see sanitized statuses above');
+          }
+          NODE
+
+      - name: Upload Bing report artifact (never credentials)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-bing-spain-smoke
+          path: artifacts/seo/bing-keyword-spain.json
+          if-no-files-found: ignore
+          retention-days: 7
