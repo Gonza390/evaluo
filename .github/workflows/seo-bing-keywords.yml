@@ -7,10 +7,13 @@ on:
     paths:
       - '.github/workflows/seo-bing-keywords.yml'
       - 'scripts/seo/bing-keyword-research.mjs'
+      - 'scripts/seo/bing-batch-research.mjs'
       - 'tests/seo-bing-keyword.smoke.mjs'
+      - 'tests/seo-bing-batch.smoke.mjs'
+      - 'seo/keyword-data/bing-requests.json'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: seo-bing-smoke-master
@@ -20,10 +23,12 @@ jobs:
   keyword-smoke:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 10
     steps:
       - name: Checkout master
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Setup Node 22
         uses: actions/setup-node@v4
@@ -31,56 +36,75 @@ jobs:
           node-version: 22
 
       - name: Unit smoke tests (synthetic data, no credentials)
-        run: node tests/seo-bing-keyword.smoke.mjs
+        run: |
+          node tests/seo-bing-keyword.smoke.mjs
+          node tests/seo-bing-batch.smoke.mjs
 
-      - name: Verify Bing credential is configured
+      - name: Verify secret is configured
         env:
           BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
         run: |
           if [ -z "$BING_WEBMASTER_API_KEY" ]; then
-            echo "::error title=Bing API secret missing::Set repository secret BING_WEBMASTER_API_KEY under Settings > Secrets and variables > Actions"
+            echo "::error title=Bing API secret missing::Set BING_WEBMASTER_API_KEY in repository Actions secrets."
             exit 1
           fi
-          echo "Bing API secret is configured (secret value not displayed)."
+          echo "Bing API secret is present; its value is never logged."
 
-      - name: Test authenticated Bing keyword statistics (Spain)
+      - name: Query Bing Webmaster API
+        id: bingquery
         env:
           BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
         run: |
-          mkdir -p artifacts/seo
-          node scripts/seo/bing-keyword-research.mjs \
-            --keywords="tecnica feynman;como estudiar para un examen tipo test;como usar anki para estudiar" \
-            --country=es --language=es-ES \
-            --out=artifacts/seo/bing-keyword-spain.json
+          node scripts/seo/bing-batch-research.mjs \
+            --file=seo/keyword-data/bing-requests.json \
+            --out=artifacts/seo/bing-latest.json
 
-      - name: Validate Bing response without promoting to Google volume
-        run: |
-          node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs';
-          const report = JSON.parse(readFileSync('artifacts/seo/bing-keyword-spain.json', 'utf8'));
-          const records = report.records ?? [];
-          for (const record of records) {
-            if (record.googleMonthlyVolume !== null || record.eligibleForGoogle500Rule !== false) {
-              throw Error('Bing data must not be treated as validated Google keyword volume');
-            }
-            console.log(JSON.stringify({
-              keyword: record.keyword,
-              status: record.status,
-              bingMonthlyEstimate: record.bingMonthlyEstimate,
-              googleMonthlyVolume: record.googleMonthlyVolume
-            }));
-          }
-          if (records.length !== 3) throw Error('Expected 3 keyword reports');
-          if (records.every(record => record.status === 'ERROR')) {
-            throw Error('Bing API did not complete any keyword request; see sanitized statuses above');
-          }
-          NODE
-
-      - name: Upload Bing report artifact (never credentials)
+      - name: Upload sanitized JSON report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: seo-bing-spain-smoke
-          path: artifacts/seo/bing-keyword-spain.json
+          name: seo-bing-keyword-research
+          path: artifacts/seo/bing-latest.json
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Persist sanitized result in master for SEO tasks
+        if: steps.bingquery.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            git fetch origin master
+            git checkout -B seo-bing-sync origin/master
+            mkdir -p seo/keyword-data
+            cp artifacts/seo/bing-latest.json seo/keyword-data/bing-latest.json
+            git add seo/keyword-data/bing-latest.json
+            if git diff --cached --quiet; then
+              echo "Identical Bing report already saved."
+              exit 0
+            fi
+            git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "chore(seo): store Bing-only keyword observations [skip ci]"
+            if git push origin HEAD:master; then
+              echo "Saved sanitized Bing data in master."
+              exit 0
+            fi
+            echo "Concurrent master update, retrying ($attempt/3)."
+          done
+          echo "::error::Unable to save keyword observations after 3 attempts."
+          exit 1
+
+      - name: Validate real API responses
+        if: steps.bingquery.outcome == 'success'
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const report = JSON.parse(readFileSync('artifacts/seo/bing-latest.json', 'utf8'));
+          if (!Array.isArray(report.results) || report.results.length < 1) throw Error('No keyword rows');
+          if (report.results.some((r) => r.googleMonthlyVolume !== null || r.eligibleForGoogle500Rule !== false)) {
+            throw Error('Bing data erroneously promotes Google search volumes');
+          }
+          if (!report.successfulApiCalls) throw Error('Bing API did not return any successful responses; review sanitized per-keyword errors');
+          console.log('Bing API responses:', report.successfulApiCalls, 'successful,', report.errorCount, 'failed');
+          NODE
