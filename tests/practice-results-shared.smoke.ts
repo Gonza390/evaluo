@@ -18,12 +18,13 @@ assert.match(screen, /entries\.filter\(\(entry\) => !entry\.correct\)/, 'Las res
 assert.match(screen, /entries\.filter\(\(entry\) => entry\.correct\)/, 'Las respuestas correctas también se conservan.');
 assert.match(screen, /data-practice-correct-results/, 'Hay una sección visible para respuestas correctas.');
 assert.match(screen, /Respuestas correctas/, 'Las preguntas acertadas aparecen al pie del resultado.');
-assert.ok(screen.indexOf('data-practice-correct-results') > screen.indexOf('visible.map'), 'Las correctas van después de los errores.');
+assert.ok(screen.indexOf('data-practice-correct-results') > screen.indexOf('mistakes.map'), 'Las correctas van después de los errores.');
 assert.ok(screen.indexOf('data-practice-correct-results') < screen.indexOf('<ResultButton action={primaryAction}'), 'Las correctas van antes de las acciones finales.');
 assert.doesNotMatch(screen, /Estas son las preguntas que fallaste/, 'Sin descripción redundante de los errores.');
 assert.doesNotMatch(screen, /respuestas? para repasar/, 'Sin contador redundante.');
 assert.doesNotMatch(screen, /· Vista previa|Vista previa: resultados ficticios/, 'Sin referencias a preview dentro del resultado.');
-assert.match(screen, /selectedTopic/, 'Los errores pueden filtrarse por tema.');
+assert.doesNotMatch(screen, /selectedTopic|setSelectedTopic|Filtrar por tema|Todos \(\{mistakes\.length\}\)/, 'Las pantallas finales no presentan filtros por tema.');
+assert.match(screen, /mistakes\.map/, 'Todas las respuestas incorrectas siguen visibles, sin filtros.');
 assert.match(screen, /<details/, 'Cada error conserva un detalle expandible.');
 assert.match(screen, /TU RESPUESTA/);
 assert.match(screen, /RESPUESTA CORRECTA/);
