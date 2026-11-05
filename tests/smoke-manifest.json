@@ -116,6 +116,10 @@
     "alias": true
   },
   {
+    "file": "tests/seo-migration-growth.smoke.mjs",
+    "alias": false
+  },
+  {
     "file": "tests/text-quality.smoke.ts",
     "alias": true
   },
