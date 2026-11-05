@@ -21,6 +21,7 @@ import {
 } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { createPublicClient } from '@/lib/supabase-public';
+import { getPregunteroMateriaStats, getPregunteroParcialData } from '@/lib/data/preguntero';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import {
   getMateriaSeoContentSignals,
@@ -96,26 +97,13 @@ const loadStudyLandingData = nextCache(
   async (materiaId: string): Promise<StudyLandingData> => {
     const client = createPublicClient();
 
-    const [bootstrap, signals, partial1, partial2, questions, summaries, resources] =
+    const [bootstrap, signals, questionStats, firstPartial, secondPartial, summaries, resources] =
       await Promise.all([
         getMateriaBootstrap({ materiaId }),
         getMateriaSeoContentSignals(materiaId),
-        client
-          .from('preguntas_banco_public')
-          .select('id', { count: 'exact', head: true })
-          .eq('materia_id', materiaId)
-          .eq('parcial', 1),
-        client
-          .from('preguntas_banco_public')
-          .select('id', { count: 'exact', head: true })
-          .eq('materia_id', materiaId)
-          .eq('parcial', 2),
-        client
-          .from('preguntas_banco_public')
-          .select('id, enunciado, parcial')
-          .eq('materia_id', materiaId)
-          .order('creado_at', { ascending: false })
-          .limit(14),
+        getPregunteroMateriaStats(materiaId).catch(() => null),
+        getPregunteroParcialData(materiaId, '1').catch(() => null),
+        getPregunteroParcialData(materiaId, '2').catch(() => null),
         client
           .from('resumenes')
           .select('id, title, author_name, module_id, score, created_at')
@@ -169,15 +157,12 @@ const loadStudyLandingData = nextCache(
       resourceCount: signals.resourceCount,
       hasQuestions: signals.hasQuestions,
       hasSummaries: signals.hasSummaries,
-      partial1Count: partial1.error ? 0 : (partial1.count ?? 0),
-      partial2Count: partial2.error ? 0 : (partial2.count ?? 0),
-      sampleQuestions: normalizeQuestionRows(
-        (questions.data ?? []) as Array<{
-          id: string;
-          enunciado: string | null;
-          parcial: number | null;
-        }>
-      ),
+      partial1Count: questionStats?.preguntasPorParcial.find(item => item.parcial === 1)?.count ?? 0,
+      partial2Count: questionStats?.preguntasPorParcial.find(item => item.parcial === 2)?.count ?? 0,
+      sampleQuestions: normalizeQuestionRows([
+        ...(firstPartial?.samplePreguntas ?? []),
+        ...(secondPartial?.samplePreguntas ?? []),
+      ]),
       summaries: summaryMaterials,
       resources: resourceMaterials,
     };
