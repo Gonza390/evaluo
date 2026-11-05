@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import './practice-motion.css';
 import { ArrowLeft, LockKeyhole, X } from 'lucide-react';
 import type { PremiumGateReason } from '@/lib/premium-flow';
 
@@ -37,8 +39,16 @@ type Props = {
 export function FreePracticeLimitScreen({
   kind, premiumHref, backHref, backLabel = 'Volver', materialTitle, topicLabel, onBack,
 }: Props) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [leaving, setLeaving] = useState(false);
+  const transitionTimer = useRef<number | null>(null);
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -49,16 +59,33 @@ export function FreePracticeLimitScreen({
 
   const mode = modes[kind];
   const place = topicLabel || materialTitle || 'Tu material';
+
+  // Reuse the 280ms entrance / 200ms departure from the practice flow.
+  const transitionOut = (navigate: () => void) => {
+    if (leaving) return;
+    setLeaving(true);
+    transitionTimer.current = window.setTimeout(navigate, 200);
+  };
+  const onLinkClick = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey ||
+      event.ctrlKey || event.shiftKey || event.altKey ||
+      event.currentTarget.target === '_blank') return;
+    event.preventDefault();
+    transitionOut(() => router.push(href));
+  };
   const backControl = (className: string, children: ReactNode, ariaLabel?: string) =>
     onBack
-      ? <button type="button" onClick={onBack} className={className} aria-label={ariaLabel}>{children}</button>
-      : <Link href={backHref} className={className} aria-label={ariaLabel}>{children}</Link>;
+      ? <button type="button" onClick={() => transitionOut(onBack)} disabled={leaving}
+          className={className} aria-label={ariaLabel}>{children}</button>
+      : <Link href={backHref} onClick={event => onLinkClick(event, backHref)}
+          className={className} aria-label={ariaLabel} aria-disabled={leaving}>{children}</Link>;
 
   if (!mounted) return null;
 
   return createPortal(
     <div data-free-practice-limit role="dialog" aria-modal="true" aria-labelledby="free-practice-limit-title"
-      className="fixed inset-0 z-[200] flex h-dvh w-full flex-col overflow-y-auto bg-white font-sans text-[#0f1623]">
+      className="fixed inset-0 z-[200] h-dvh w-full overflow-y-auto bg-white font-sans text-[#0f1623]">
+      <div data-free-practice-limit-transition className={`flex min-h-full w-full flex-col ${leaving ? 'practice-screen-leave' : 'practice-screen-enter'}`}>
       <header className="flex min-h-[72px] shrink-0 items-center justify-between gap-3 border-b border-[#e8ecf2] px-4 py-3 sm:px-10 sm:py-[14px]">
         <div className="flex shrink-0 items-center gap-2.5">
           <Image src="/evaluo-logo-icono.svg" alt="" width={28} height={28} className="size-7"/>
@@ -118,7 +145,8 @@ export function FreePracticeLimitScreen({
           </p>
 
           <div className="mt-[18px] flex w-full flex-wrap items-center justify-center gap-3">
-            <Link href={premiumHref} className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full bg-[#0b63e5] px-7 text-[16px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
+            <Link href={premiumHref} onClick={event => onLinkClick(event, premiumHref)} aria-disabled={leaving}
+              className="inline-flex min-h-[52px] items-center justify-center gap-3 rounded-full bg-[#0b63e5] px-7 text-[16px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
               Practicar con <span className="rounded-full bg-white px-2.5 py-[3px] text-[12px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
             </Link>
             {backControl(
@@ -131,6 +159,7 @@ export function FreePracticeLimitScreen({
           El límite gratuito ya se agotó para esta modalidad. Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.
         </p>
       </main>
+      </div>
     </div>, document.body
   );
 }
