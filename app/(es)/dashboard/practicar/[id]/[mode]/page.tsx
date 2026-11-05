@@ -193,8 +193,9 @@ export default async function PracticeModePage({ params, searchParams }: { param
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
     freeV2={freeV2}
     quotaBackHref={backHref} quotaBackLabel={backLabel}
-    quotaPremiumHref={mode === 'unir' || mode === 'simulacro'
-      ? premiumUpgradeForLimit(mode === 'unir' ? 'matching_round' : 'simulator',
+    quotaPremiumHref={freeV2 && ['unir','simulacro','casos','opciones'].includes(mode)
+      ? premiumUpgradeForLimit(mode === 'unir' ? 'matching_round'
+        : mode === 'simulacro' ? 'simulator' : mode === 'casos' ? 'case' : 'true_false',
           {materialId:material.id, returnTo:practiceHref}).href : undefined}
     materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={freeV2 ? cases : savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={true}
