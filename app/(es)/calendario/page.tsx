@@ -1325,6 +1325,20 @@ export default function CalendarioPage() {
                         ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min`
                         : 'Examen del plan de estudio'}
                     </p>
+                    {selectedStudyPlanDay ? (
+                      <div className="mt-1.5 flex min-w-0 flex-wrap gap-1">
+                        {selectedStudyPlanDay.topics.slice(0, 2).map((topic, index) => (
+                          <span key={`calendar-editor:${topic.materialId}:${topic.topicIndex}:${index}`} className="max-w-full truncate rounded-md bg-white px-2 py-1 text-[11px] text-[#42506A]">
+                            {topic.title}
+                          </span>
+                        ))}
+                        {selectedStudyPlanDay.topics.length > 2 ? (
+                          <span className="px-1 py-1 text-[11px] text-[#66758D]">
+                            +{selectedStudyPlanDay.topics.length - 2} más
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
                     <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-[#2563EB]">
                       Ver mi plan <ArrowRight className="size-3" aria-hidden="true" />
                     </Link>
