@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Check, ChevronDown, FileText, Lightbulb, RotateCcw, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Lightbulb, X } from 'lucide-react';
 
 export type PracticeResultEntry = {
   index: number;
