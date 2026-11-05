@@ -116,6 +116,44 @@ async function fetchWithTransientRetry(input: RequestInfo | URL, init: RequestIn
   throw new Error('Se agotaron los reintentos transitorios de IA.');
 }
 
+// Gemini can return 503 during temporary capacity spikes. Retry only transient
+// server errors; quota/auth/schema responses still rotate keys or fail normally.
+// Cap the total request budget to avoid multiplying latency in student practice.
+const GEMINI_TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);
+const GEMINI_MAX_TRANSIENT_RETRIES = 2;
+const GEMINI_COMMON_BUDGET_MS = 30_000;
+
+async function fetchGeminiWithBackoff(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  options: { deadline: number; timeoutMs: number }
+): Promise<Response> {
+  for (let retry = 0; ; retry += 1) {
+    const remainingMs = options.deadline - Date.now();
+    if (remainingMs <= 0) {
+      throw new Error('Gemini agotó el tiempo permitido para esta solicitud.');
+    }
+
+    const response = await fetchWithTimeout(
+      input,
+      init,
+      Math.min(options.timeoutMs, remainingMs)
+    );
+
+    if (!GEMINI_TRANSIENT_STATUSES.has(response.status) || retry >= GEMINI_MAX_TRANSIENT_RETRIES) {
+      return response;
+    }
+
+    const delayMs = 500 * 2 ** retry + Math.floor(Math.random() * 200);
+    if (options.deadline - Date.now() <= delayMs + 1_000) {
+      return response;
+    }
+
+    await response.body?.cancel().catch(() => undefined);
+    await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+  }
+}
+
 function uniqueConfiguredValues(values: Array<string | undefined>) {
   return values.filter(
     (value, index, array): value is string => Boolean(value) && array.indexOf(value) === index
@@ -567,9 +605,11 @@ async function requestGeminiCommon(input: GeminiRequest) {
   if (apiKeys.length === 0 || models.length === 0) return null;
 
   let lastErrorMessage = '';
+  const deadline = Date.now() + GEMINI_COMMON_BUDGET_MS;
 
   for (const apiKey of apiKeys) {
     for (const model of models) {
+      if (Date.now() >= deadline) break;
       const url = `${GEMINI_ENDPOINT}/${model}:generateContent`;
       const generationConfig: Record<string, unknown> = {
         temperature: input.temperature,
@@ -585,14 +625,14 @@ async function requestGeminiCommon(input: GeminiRequest) {
 
       let response: Response;
       try {
-        response = await fetchWithTimeout(`${url}?key=${encodeURIComponent(apiKey)}`, {
+        response = await fetchGeminiWithBackoff(`${url}?key=${encodeURIComponent(apiKey)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: input.prompt }] }],
             generationConfig,
           }),
-        });
+        }, { deadline, timeoutMs: AI_REQUEST_TIMEOUT_MS });
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
           lastErrorMessage = `Gemini ${model} timeout`;
@@ -603,7 +643,7 @@ async function requestGeminiCommon(input: GeminiRequest) {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        if ([400, 401, 404, 429, 500, 503].includes(response.status)) {
+        if ([400, 401, 403, 404, 429, 500, 502, 503, 504].includes(response.status)) {
           lastErrorMessage = `Gemini ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
           continue;
         }
@@ -700,7 +740,7 @@ async function runGeminiInlineJson(input: {
 
       let response: Response;
       try {
-        response = await fetchWithTimeout(
+        response = await fetchGeminiWithBackoff(
           `${url}?key=${encodeURIComponent(apiKey)}`,
           {
             method: 'POST',
@@ -719,10 +759,10 @@ async function runGeminiInlineJson(input: {
               generationConfig,
             }),
           },
-          Math.min(
-            input.logScope === 'vision' ? 25_000 : 65_000,
-            Math.max(1_000, deadline - Date.now())
-          )
+          {
+            deadline,
+            timeoutMs: input.logScope === 'vision' ? 25_000 : 65_000,
+          }
         );
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -734,7 +774,7 @@ async function runGeminiInlineJson(input: {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        if ([400, 401, 404, 429, 500, 503].includes(response.status)) {
+        if ([400, 401, 403, 404, 429, 500, 502, 503, 504].includes(response.status)) {
           lastErrorMessage = `Gemini ${input.logScope} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
           continue;
         }
