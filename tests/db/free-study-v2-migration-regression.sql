@@ -9,23 +9,68 @@ declare
   rejected boolean;
   i integer;
 begin
-  if not exists (select 1 from public.free_study_v2_upload_claims where user_id=old_user) then
-    raise exception 'Preexisting ready material was not recorded';
+  -- El lanzamiento arranca desde CERO incluso para estudiantes con documentos
+  -- listos, planes guardados y tres altas Premium hechas previamente hoy.
+  if exists (select 1 from public.free_study_v2_upload_claims) then
+    raise exception 'Historical ready PDFs consumed the new Free launch grant';
+  end if;
+  if exists (select 1 from public.study_material_v2_upload_ledger) then
+    raise exception 'Historical uploads were imported into the new Premium ledger';
+  end if;
+  if exists (select 1 from public.free_study_v2_plan_claims) then
+    raise exception 'Historical plans consumed new Free study plan grants';
+  end if;
+  if not exists (select 1 from public.student_materials
+    where id='20000000-0000-4000-8000-000000000001'
+      and user_id=old_user and processing_status='ready') then
+    raise exception 'Previous study material was lost during migration';
+  end if;
+  if not exists (select 1 from public.student_personal_study_plans
+    where user_id=old_user) then
+    raise exception 'Previous study plan was lost during migration';
   end if;
   if (select enabled from public.free_study_v2_rollout where id=true) is distinct from false then
     raise exception 'Migration must leave commercial switch OFF';
   end if;
+
+  -- Un archivo que termina entre la instalación de migraciones y el
+  -- lanzamiento tampoco puede gastar el nuevo cupo.
   insert into public.student_materials(id,user_id,processing_status)
     values ('20000000-0000-4000-8000-000000000002',old_user,'ready');
+  if exists (select 1 from public.free_study_v2_upload_claims)
+     or exists (select 1 from public.study_material_v2_upload_ledger) then
+    raise exception 'Prelaunch upload consumed quota while rollout was disabled';
+  end if;
+
   update public.free_study_v2_rollout set enabled=true where id=true;
+
+  -- El antiguo usuario recibe una carga NUEVA completa.
+  insert into public.student_materials(id,user_id,processing_status)
+    values ('20000000-0000-4000-8000-000000000003',old_user,'ready');
+  if not exists (
+    select 1 from public.free_study_v2_upload_claims
+    where user_id=old_user
+      and first_material_id='20000000-0000-4000-8000-000000000003'
+  ) then
+    raise exception 'First postlaunch Free upload not claimed for legacy student';
+  end if;
+  -- Reprocesar un PDF anterior nunca gasta el cupo del modelo nuevo.
+  update public.student_materials set processing_status='failed'
+    where id='20000000-0000-4000-8000-000000000001';
+  update public.student_materials set processing_status='ready'
+    where id='20000000-0000-4000-8000-000000000001';
+  if (select count(*) from public.free_study_v2_upload_claims
+      where user_id=old_user) <> 1 then
+    raise exception 'Legacy PDF reprocessing changed launch quota';
+  end if;
 
   rejected:=false;
   begin
     insert into public.student_materials(id,user_id,processing_status)
-      values ('20000000-0000-4000-8000-000000000003',old_user,'uploaded');
+      values ('20000000-0000-4000-8000-000000000008',old_user,'uploaded');
   exception when sqlstate 'P0001' then rejected:=true;
   end;
-  if not rejected then raise exception 'Lifetime limit bypassed for prior student'; end if;
+  if not rejected then raise exception 'Second postlaunch upload accepted for legacy student'; end if;
 
   insert into public.student_materials(id,user_id,processing_status)
     values ('20000000-0000-4000-8000-000000000004',free_user,'uploaded');
@@ -139,6 +184,23 @@ begin
   exception when sqlstate '22023' then null;
   end;
 
+  -- El plan anterior existe, pero su primer guardado en Free V2 es gratis.
+  if exists (select 1 from public.free_study_v2_plan_claims
+    where user_id='00000000-0000-4000-8000-000000000001') then
+    raise exception 'Prelaunch study plan already consumed a new grant';
+  end if;
+  select public.save_free_study_v2_plan(
+    '00000000-0000-4000-8000-000000000001',
+    current_date+14,30,
+    array['20000000-0000-4000-8000-000000000001']::uuid[],
+    array['practicar']::text[],'[]'::jsonb) into editable;
+  if editable is distinct from true then
+    raise exception 'Legacy plan owner could not use new plan grant';
+  end if;
+  if not exists (select 1 from public.free_study_v2_plan_claims
+    where user_id='00000000-0000-4000-8000-000000000001') then
+    raise exception 'New study plan grant not recorded';
+  end if;
   select public.save_free_study_v2_plan(free_user,current_date+10,30,
     array[material]::uuid[],array['practicar']::text[],'[]'::jsonb) into editable;
   if editable is distinct from true then raise exception 'First Free plan failed'; end if;
