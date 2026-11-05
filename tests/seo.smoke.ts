@@ -276,8 +276,8 @@ assert.ok(
 
 assertIncludesAll('app/(es)/landings/resumenes/page.tsx', [
   'loadSummaryCatalog',
-  'fetchQuestionRows',
-  '.range(from, from + pageSize - 1)',
+  'getPregunteroMateriaStats',
+  'statsPerMateria',
   'ItemList',
   'Materias con resúmenes disponibles',
 ]);

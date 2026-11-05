@@ -13,7 +13,7 @@ import { buildCollectionPageJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { toAbsoluteUrl } from '@/lib/site';
 import { createPublicClient } from '@/lib/supabase-public';
-import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
+import { getPregunteroMateriaStats } from '@/lib/data/preguntero';
 
 type SummaryCatalogItem = {
   materiaId: string;
@@ -60,48 +60,25 @@ const loadSummaryCatalog = nextCache(
     const materiaIds = Array.from(grouped.keys());
     if (!materiaIds.length) return [];
 
-    const fetchQuestionRows = async () => {
-      // The question counts are optional. SEO previews and local builds can run
-      // without a service role secret; never fail the public summaries page.
-      if (!isAdminClientConfigured()) return [];
-      const admin = createAdminClient();
-      const pageSize = 1000;
-      const rows: Array<{ materia_id: string | null; parcial: number | null }> = [];
-
-      for (let from = 0; ; from += pageSize) {
-        // Aggregated counters only. The public question-bank view is restricted.
-        // This server-only query never returns questions or answer keys to the page.
-        const { data, error: questionsError } = await admin
-          .from('preguntas_banco')
-          .select('materia_id, parcial')
-          .eq('es_demo', false)
-          .in('materia_id', materiaIds)
-          .range(from, from + pageSize - 1);
-
-        // Si falla la consulta privada opcional, las métricas se omiten
-        // sin bloquear el catálogo público de resúmenes.
-        if (questionsError) return [];
-        rows.push(...((data ?? []) as Array<{ materia_id: string | null; parcial: number | null }>));
-        if (!data || data.length < pageSize) break;
-      }
-
-      return rows;
-    };
-
-    const [{ data: materias }, questions] = await Promise.all([
+    // Solo consultamos estadísticas precalculadas, no filas del banco de preguntas.
+    // Esta landing se vuelve a validar cada diez minutos y comparte la caché de
+    // getPregunteroMateriaStats con las demás páginas públicas.
+    const [{ data: materias }, statsPerMateria] = await Promise.all([
       client.from('materias').select('id, nombre').in('id', materiaIds),
-      fetchQuestionRows(),
+      Promise.all(materiaIds.map(async (materiaId) => ({
+        materiaId,
+        stats: await getPregunteroMateriaStats(materiaId).catch(() => null),
+      }))),
     ]);
 
     const questionStats = new Map<string, { total: number; partial1: number; partial2: number }>();
-    for (const row of questions) {
-      const materiaId = String(row.materia_id ?? '');
-      if (!materiaId) continue;
-      const current = questionStats.get(materiaId) ?? { total: 0, partial1: 0, partial2: 0 };
-      current.total += 1;
-      if (Number(row.parcial) === 1) current.partial1 += 1;
-      if (Number(row.parcial) === 2) current.partial2 += 1;
-      questionStats.set(materiaId, current);
+    for (const { materiaId, stats } of statsPerMateria) {
+      if (!stats) continue;
+      questionStats.set(materiaId, {
+        total: stats.totalPreguntas,
+        partial1: stats.preguntasPorParcial.find((entry) => entry.parcial === 1)?.count ?? 0,
+        partial2: stats.preguntasPorParcial.find((entry) => entry.parcial === 2)?.count ?? 0,
+      });
     }
 
     return (materias ?? [])
@@ -143,7 +120,7 @@ const loadSummaryCatalog = nextCache(
           a.materiaNombre.localeCompare(b.materiaNombre, 'es-AR')
       );
   },
-  ['summary-catalog-v2'],
+  ['summary-catalog-v3'],
   { revalidate: 600, tags: ['materia-bootstrap'] }
 );
 
