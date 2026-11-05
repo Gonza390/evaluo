@@ -88,10 +88,32 @@ assert.match(modePage, /if \(freeV2 && artifacts\.flashcards\.length > 0 && free
 assert.match(modePage, /if \(freeV2 && mode === 'casos' && sourceCases\.length > 0 && cases\.length === 0\)/);
 assert.match(modePage, /listFreeStudyUnlockedKeys/);
 assert.match(modePage, /!Array\.from\(keys\)\.some\(key => key\.startsWith\(material\.id \+ ':'\)\)/);
-assert.match(modePage, /if \(!matching\.allowed\)/);
-assert.match(modePage, /if \(!simulator\.allowed\)/);
-assert.match(modePage, /return exhausted\('matching_round'\)/);
-assert.match(modePage, /return exhausted\('simulator'\)/);
+// La navegación no debe consumir la única ronda ni el simulacro antes de estar listos.
+assert.match(modePage, /keys\.size >= 1 && !keys\.has\(ownedKey\)/);
+assert.match(modePage, /return exhausted\(kind\)/);
+assert.doesNotMatch(modePage, /await claimFreeStudyUnlock\(\{\s*userId:user\.id,materialId:material\.id,kind:'simulator'/);
+assert.match(modePage, /return exhausted\(mode === 'completar' \? 'complete' : 'mixed'\)/);
+assert.match(screen, /premiumOnly = kind === 'complete' \|\| kind === 'mixed'/);
+assert.match(screen, /Esta práctica es parte de Premium/);
+const session = read('components/dashboard/practice-session.tsx');
+assert.match(session, /const claimSessionQuota = useCallback/);
+assert.match(session, /mode === 'unir' && ready && freeSessionGate === 'new'/);
+assert.match(session, /freeV2 && response\.status === 403 && code === 'free_quota_exhausted'/);
+assert.match(session, /freeV2 && response\.status === 403 && errorCode === 'free_quota_exhausted'/);
+assert.match(session, /kind=\{mode === 'unir' \? 'matching_round' : mode === 'casos' \? 'case'/);
+assert.match(session, /contexts\.length >= \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(session, /Comenzar simulacro/);
+assert.match(session, /claimSessionQuota\(\)\.then\(allowed/);
+const flashcards = read('components/dashboard/practice-flashcard-session.tsx');
+assert.match(flashcards, /approvedIndices\.length < \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+for (const route of ['app/api/practice/cases/route.ts', 'app/api/practice/true-false/route.ts']) {
+  const text = read(route);
+  assert.match(text, /free_quota_exhausted/);
+  assert.match(text, /listFreeStudyUnlockedKeys/);
+  assert.match(text, /status:403/);
+  assert.ok(text.indexOf('free_quota_exhausted') < text.indexOf('enforceStrictRateLimit('),
+    'Do not pay for unused AI once Free exercises are exhausted.');
+}
 assert.match(modePage, /returnTo:practiceHref/, 'Premium activation should resume the attempted exercise');
 assert.match(modePage, /backHref=\{backHref\}/, 'The secondary CTA must return to the previous context');
 assert.match(modePage, /safePremiumReturnTo\(returnTo\)/, 'Never allow external return URLs');
