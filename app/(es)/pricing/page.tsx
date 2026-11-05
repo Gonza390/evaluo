@@ -118,8 +118,10 @@ export default async function PricingPage({
           <div className="mx-auto max-w-4xl rounded-2xl border border-blue-100 bg-white px-5 py-6 text-center shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Premium internacional</p>
             <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">US$ 9,99 <span className="text-base font-medium text-slate-500">/ mes</span></p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Cobro mediante Paddle, sujeto a aprobación y habilitación del checkout internacional. Todavía no disponible para comprar.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Renovación automática mensual y cancelación antes del siguiente cobro. Salvo devolución o anulación del pago, conservás Premium hasta el final del período abonado.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Paddle será el vendedor registrado (Merchant of Record) y mostrará el importe final, impuestos y moneda aplicables antes de cobrar. Sujeto a aprobación: todavía no disponible para comprar.</p>
             <p className="mt-2 text-xs text-slate-500">En Argentina se mantienen los planes en pesos y los pagos con Mercado Pago.</p>
+            <p className="mt-3 text-xs text-slate-600">Renovación automática mensual y cancelación antes del siguiente cobro. Consultá los <Link href="/terminos" className="font-semibold text-blue-700 underline">términos</Link>, la <Link href="/privacidad" className="font-semibold text-blue-700 underline">política de privacidad</Link>, la <Link href="/reembolsos" className="font-semibold text-blue-700 underline">política de reembolsos</Link> y los <Link href="/facturacion" className="font-semibold text-blue-700 underline">términos de facturación</Link>.</p>
           </div>
         </section>
 
