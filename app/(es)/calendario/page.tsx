@@ -967,7 +967,7 @@ export default function CalendarioPage() {
                       {(planDay || isPlanExamDay || cellEvents.length > 0) ? (
                         <div className="mt-auto flex min-w-0 items-center gap-1 overflow-hidden">
                           {planDay ? (
-                            <span aria-hidden="true" data-calendar-plan-day className="size-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                            <span aria-hidden="true" data-calendar-plan-day className="size-1.5 shrink-0 rounded-full bg-brand" />
                           ) : null}
                           {isPlanExamDay ? (
                             <span aria-hidden="true" data-calendar-plan-exam className="size-1.5 shrink-0 rounded-full bg-[#D97706]" />
@@ -1008,9 +1008,9 @@ export default function CalendarioPage() {
           <section data-calendar-study-plan className="min-w-0 rounded-2xl border border-[#E7EBF4] bg-white px-3 py-2.5 sm:px-4">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 items-start gap-2">
-                <BookOpenText className="mt-0.5 size-4 shrink-0 text-[#2563EB]" aria-hidden="true" />
+                <BookOpenText className="mt-0.5 size-4 shrink-0 text-brand" aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="text-[12px] font-semibold leading-4 text-[#0F1B3D] sm:text-[13px]">
+                  <p className="text-[12px] font-semibold leading-4 text-heading sm:text-[13px]">
                     {selectionInVisibleMonth && selectedStudyPlanDay
                       ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min previstos`
                       : selectionInVisibleMonth && selectedPlanExam
@@ -1026,7 +1026,7 @@ export default function CalendarioPage() {
               </div>
               <Link
                 href="/dashboard/plan-de-estudio"
-                className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-[#2563EB] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"
+                className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-brand transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 Ver mi plan <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
@@ -1047,7 +1047,7 @@ export default function CalendarioPage() {
             ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[#66758D]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-[#2563EB]" aria-hidden="true" /> Día de estudio
+                <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> Día de estudio
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> Examen del plan
@@ -1057,7 +1057,7 @@ export default function CalendarioPage() {
         ) : studyPlanLoadError && user ? (
           <p role="status" className="px-1 text-[11px] text-[#66758D]">
             No pudimos mostrar tu plan en el calendario. Podés consultarlo desde{' '}
-            <Link className="font-semibold text-[#2563EB] underline underline-offset-2" href="/dashboard/plan-de-estudio">Plan de estudio</Link>.
+            <Link className="font-semibold text-brand underline underline-offset-2" href="/dashboard/plan-de-estudio">Plan de estudio</Link>.
           </p>
         ) : null}
       </div>
@@ -1320,7 +1320,7 @@ export default function CalendarioPage() {
 
                 {(selectedStudyPlanDay || selectedPlanExam) ? (
                   <div className="rounded-xl border border-[#D9E6FF] bg-[#F4F8FF] p-3">
-                    <p className="text-[12px] font-semibold text-[#0F1B3D]">
+                    <p className="text-[12px] font-semibold text-heading">
                       {selectedStudyPlanDay
                         ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min`
                         : 'Examen del plan de estudio'}
@@ -1339,7 +1339,7 @@ export default function CalendarioPage() {
                         ) : null}
                       </div>
                     ) : null}
-                    <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-[#2563EB]">
+                    <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-brand">
                       Ver mi plan <ArrowRight className="size-3" aria-hidden="true" />
                     </Link>
                   </div>
