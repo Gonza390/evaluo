@@ -47,6 +47,15 @@ const sections = [
     ],
   },
   {
+    title: '4 bis. Compras internacionales con Paddle',
+    body: [
+      'El plan internacional previsto de Evaluo Premium cuesta US$ 9,99 por mes, con renovación mensual automática. Está sujeto a la aprobación de Paddle; por ahora no se pueden completar compras internacionales mediante ese proveedor.',
+      'Paddle será el vendedor registrado (Merchant of Record) de las compras efectuadas mediante su checkout. Mostrará el importe total, la moneda, los impuestos y la renovación antes de confirmar el pedido. Paddle gestiona pagos, comprobantes, cancelaciones y devoluciones, mientras Evaluo presta el servicio digital.',
+      'Para consultar pedidos, gestionar suscripciones o pedir una devolución por una compra realizada con Paddle, ingresá a https://paddle.net. La cancelación detiene futuras renovaciones y no genera automáticamente la devolución del período ya pagado. Se respetan siempre los derechos legales del consumidor.',
+      'Consultá la política de Paddle en https://www.paddle.com/legal/refund-policy y sus términos del comprador en https://www.paddle.com/legal/buyer-terms. También se aplica nuestra Política de Reembolsos dentro de las condiciones legalmente permitidas.',
+    ],
+  },
+  {
     title: '5. Contracargos y disputas de pago',
     body: [
       'En caso de que el Usuario inicie un contracargo, mediación o desconocimiento del pago ante su banco, emisor de tarjeta o la pasarela de pagos, recomendamos previamente contactarse con el soporte de Evaluo para intentar resolver la situación por los canales del servicio.',
@@ -96,7 +105,7 @@ export default function FacturacionPage() {
                 Términos de facturación
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-muted-foreground">
-                Última actualización: octubre de 2026. Estos términos regulan las suscripciones
+                Última actualización: noviembre de 2026. Estos términos regulan las suscripciones
                 recurrentes, las compras por período fijo, los períodos de prueba, los reembolsos y
                 el tratamiento de disputas de pago de Evaluo.
               </p>
