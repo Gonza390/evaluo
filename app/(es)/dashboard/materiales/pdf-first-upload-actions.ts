@@ -118,11 +118,17 @@ async function assertStudentMaterialQuota(userId: string) {
         .select('id, created_at, processing_status')
         .eq('user_id', userId)
         .gte('created_at', isFreeStudyV2Active() ? '1970-01-01T00:00:00Z' : intervalStart.toISOString()),
-      admin
-        .from('student_materials')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .gte('created_at', dayStart.toISOString()),
+      isFreeStudyV2Active()
+        ? admin
+            .from('study_material_v2_upload_ledger' as never)
+            .select('material_id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .gte('claimed_at', dayStart.toISOString())
+        : admin
+            .from('student_materials')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .gte('created_at', dayStart.toISOString()),
       admin
         .from('student_materials')
         .select('id', { count: 'exact', head: true })
@@ -147,8 +153,10 @@ async function assertStudentMaterialQuota(userId: string) {
       .filter(material => material.processing_status !== 'failed')
       .map(material => material.id);
     const historicalIds = await historicalFreeStudyMaterialIds(userId);
+    // El modelo nuevo comienza desde cero: sólo cuentan claims creados luego
+    // del lanzamiento, no materiales que ya tuviera el estudiante.
     const used = isFreeStudyV2Active()
-      ? new Set([...activeIds, ...historicalIds]).size
+      ? historicalIds.length
       : activeIds.length;
     if (used >= (isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT)) {
       if (isFreeStudyV2Active()) {
