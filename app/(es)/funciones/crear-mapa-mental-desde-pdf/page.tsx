@@ -50,6 +50,11 @@ const related = [
     title: 'Crear flashcards desde un PDF',
     description: 'Convertí los conceptos del material en tarjetas para repasarlos.',
   },
+  {
+    href: '/blog/como-hacer-un-mapa-conceptual-para-estudiar',
+    title: 'Mapa conceptual para estudiar',
+    description: 'Aprendé a relacionar conceptos con verbos y ejemplos: no es lo mismo que un mapa mental.',
+  },
 ];
 
 export default function CrearMapaMentalDesdePdfPage() {
