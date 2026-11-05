@@ -2,15 +2,39 @@
 
 Actualizado: 2026-11-05. **Este archivo es una lista de fuentes públicas verificadas para comenzar la búsqueda, NO un banco de keywords aprobadas.** Reconfirmar en cada tanda títulos, URLs, fechas, relevancia, competencia, contenido propio y disponibilidad.
 
-| Competidor / fuente | URL observada | Señal de contenido / fecha | Oportunidad original para Evaluo (hipótesis) |
+| Competidor y fuente | URL verificada | Temas reales observados (hasta 05/11/2026) | Cómo detectar oportunidades para Evaluo |
 | --- | --- | --- | --- |
-| Filmina, blog | https://getfilmina.com/blog | Blog con guías de estudio, exámenes, flashcards, IA y materias; actualización visible 2026-11-04 | Buscar dificultades que el estudiante aún no resuelve después de leer: práctica por tema, feedback y próximos pasos |
-| Filmina, práctica intercalada | https://getfilmina.com/blog/practica-intercalada | Guía publicada 2026-10-30; explica cuándo mezclar temas y cuándo no | Diseñar **un ejercicio original** con soluciones razonadas y proceso de repaso de errores, no repetir el artículo |
-| StudyFetch, plan de estudio | https://www.studyfetch.com/blog/study-plan-redesign | Producto/editorial 2026-06-16, distingue temas vistos de dominados | Explicar con ejemplos cómo planificar a partir de una fecha de examen y cómo interpretar errores al practicar, verificando funciones actuales de Evaluo |
-| StudyFetch, blog | https://www.studyfetch.com/blog | Contenido sobre aprendizaje espaciado, planes y tutoría IA, con fechas en 2026 | Comparar búsquedas sobre secuencias de estudio y herramientas de evaluación, no copiar sus mensajes comerciales |
-| Knowt, práctica desde apuntes | https://help.knowt.com/en/articles/10298080-how-can-i-take-a-practice-test-from-my-notes | Guía pública de tests sobre apuntes, observada 2026-11-05 | Investigar intención «crear preguntas de un PDF», evitar canibalizar landing existente, incluir errores frecuentes auténticos |
-| Knowt, flashcards desde notas | https://help.knowt.com/en/articles/10714412-how-can-i-create-flashcards-from-my-notes | Guía pública de flashcards, observada 2026-11-05 | Si ya tenemos /funciones/flashcards-desde-pdf, **optimizar página existente**, no crear blog duplicado |
-| Quizlet, hub de aprendizaje | https://quizlet.com/content/hub | Recursos de exámenes, guías y técnicas, observados 2026-11-05 | Descubrimiento de consultas; verificar SERP y competencia antes de reservar |
+| **Ask Maeve — blog EN** (prioridad alta) | https://www.ask-maeve.com/blog/ | Guías 2026 para multiple-choice exams, flashcards desde apuntes, PDF a notas, práctica y preparación por materia | Profundidad pedagógica en español, casos y feedback desde PDF/DOCX; verificar diferenciación artículo por artículo |
+| **Ask Maeve — blog ES** | https://www.ask-maeve.com/es/blog/ | Active Recall (18/02/2026), aprendizaje activo, flashcards y apps IA | Comparar preguntas de usuarios hispanohablantes; no duplicar páginas de Evaluo ya existentes |
+| **Filmina — blog** (prioridad alta) | https://getfilmina.com/blog | Publica sobre exámenes tipo test (26/10/2026), Feynman (05/10/2026), intercalada (30/10/2026), guías por materia y recursos IA | Competir con ejercicios originales y análisis de errores del material propio, nunca reescribir el post |
+| **StudyFetch — blog** (prioridad alta) | https://www.studyfetch.com/blog | Plan de estudio y progreso dominado (16/06/2026), práctica espaciada y tutoría guiada (2026) | Propuestas de plan de examen, avance tema a tema y práctica; solo funciones ya presentes en Evaluo |
+| **StudyFetch — técnicas** | https://www.studyfetch.com/study-methods | Feynman, Leitner, SQ3R, dual coding y blurting con recursos del usuario | Tutoriales académicos con ejemplos nuevos y comprobación de comprensión |
+| **Studocu — blog ES** (prioridad alta) | https://www.studocu.com/blog/es/ | Artículos 2026 sobre simulacros, flashcards, grabación de clases y comparación de herramientas | Guías por materias universitarias y preparación del parcial sin contenido duplicado |
+| **Penseum — blog** | https://www.penseum.com/blog | Cómo crear practice tests, repaso de química y exámenes, roadmap desde syllabus | Investigación de búsquedas funcionales sobre PDFs, planes y ejercicios; comprobar SERP |
+| **YouLearn — blog** | https://www.youlearn.ai/blogs | Publicaciones 30/03/2026 de AI tutors, herramientas de estudio y PDF a flashcards/quizzes | Ángulos de uso responsable, repaso desde materiales y diferencias entre herramientas |
+| **Studygenie — blog** | https://studygenie.io/blog | Scribble study method (04/03/2026), comparativas Knowt/Quizlet y alternativas StudyFetch (2026) | Comparativas justas, técnicas estudiadas y ejemplos con resultados observables |
+| **Knowt — blog** | https://knowt.com/blog | Guías de exámenes AP/IB y consejos para estudiantes (gran parte 2023–2024) | Complementar con su help center para ver producto actual; no tratar artículos viejos como tendencias |
+| **Knowt — ayuda** | https://help.knowt.com/en/articles/10722204-student-s-guide-to-getting-started | Learn, Practice Test, Spaced Repetition, preparación de examen y materiales (guía de uso actual) | Estudios con preguntas hechas desde material y camino después de equivocarse |
+| **Jungle AI — blog** | https://jungleai.com/blog | Flashcards, quiz maker, guías de medicina; contenido fechado en buena parte de 2024 | Ideas por asignatura, pero verificar actualidad y no inventar novedades |
+| **Raena AI — producto** | https://raena.ai/ | Lecciones desde notas, preguntas, plan por fecha de examen, tutor | Ideas de estudio adaptativo y recuperación de lagunas (no representa por sí solo una publicación de blog) |
+| **Raena AI — changelog** | https://feedback.raena.ai/changelog?c=New | Cambios de tutor con referencias a documentos (19/08/2026) | Radar de innovación de producto, no asumir equivalencia con keywords SEO |
+| **Coconote — producto** | https://coconote.app/ | Grabación, apuntes, flashcards, quizzes, podcasts y juegos | Señales de formatos, no fechas de contenidos editoriales verificadas |
+| **Quizlet — hub** | https://quizlet.com/content/hub | Guías de estudio y preparación de exámenes | Investigar necesidades y SERP, alta competencia de marca; no comparar volumen raíz con long-tail |
+
+### Evidencia rápida para el lote B de hoy (05/11/2026)
+
+**Tema B1 propuesto:** `cómo estudiar para un examen tipo test`.
+- Filmina 26/10/2026: https://getfilmina.com/blog/como-estudiar-para-un-examen-de-opcion-multiple
+- Ask Maeve 20/05/2026: https://www.ask-maeve.com/blog/how-to-study-for-multiple-choice-exams/
+- Ángulo propio por verificar antes del PASS: preparar una prueba por *temas del PDF*, distinguir distractores parecidos, explicar por qué fallaron las alternativas y proponer refuerzo sobre el tema. No afirmar que los competidores omiten por completo esto: ambos ya hablan de distractores y recuperación activa. Hacer una comparación MÁS ESPECÍFICA para encontrar valor adicional real y registrar evidencia comprobada. Corroborar SERP en país objetivo, slugs ES/EN, CTA real y ausencia de canibalización en master.
+
+**Tema B2 propuesto:** `técnica feynman`.
+- Filmina 05/10/2026, listado verificable: https://getfilmina.com/blog (entrada «Técnica Feynman»).
+- Ask Maeve 31/03/2026: https://www.ask-maeve.com/blog/most-effective-study-techniques/
+- StudyFetch, página de método sin fecha publicada verificable: https://www.studyfetch.com/feynman-technique
+- Ángulo propio a verificar: caso académico original *explicación simplificada -> detectar confusión -> contrastar con material -> preguntas de transferencia y explicación de error*. Advertencia: Filmina y Maeve ya incluyen explicación y ejemplos; no dar por cierta una laguna no verificada.
+
+**No hay aprobación automática de B1/B2 por registrar estos enlaces.** Para T3, se requieren dos fuentes con dominio distinto, fecha comprobada y un hueco REAL por fuente más enfoque original; hay que inspeccionar el contenido completo para registrar el análisis y 7 checks con 16 PASS por pareja. Si no se diferencia, sustituir dentro del mismo lote por otra oportunidad del radar. Ningún dato de estas webs confirma volumen de Google.
 
 ## Algoritmo de rescate de la tanda
 
