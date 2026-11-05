@@ -107,9 +107,9 @@ assert.match(session, /claimSessionQuota\(\)\.then\(allowed/);
 assert.match(modePage, /keys\.size >= FREE_STUDY_V2\.flashcards/);
 assert.match(modePage, /return exhausted\('flashcard'\)/);
 const supplemental = read('app/api/practice/supplement/route.ts');
-assert.match(supplement, /listFreeStudyUnlockedKeys/);
-assert.match(supplement, /alreadyOwnMatching/);
-assert.match(supplement, /error:'free_quota_exhausted'/);
+assert.match(supplemental, /listFreeStudyUnlockedKeys/);
+assert.match(supplemental, /alreadyOwnMatching/);
+assert.match(supplemental, /error:'free_quota_exhausted'/);
 
 const flashcards = read('components/dashboard/practice-flashcard-session.tsx');
 assert.match(flashcards, /approvedIndices\.length < \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
