@@ -72,27 +72,27 @@
 /* Short phones preserve every HTML example but use compact spacing first,
    before the fitting logic scales a scene down as a last resort. */
 @media (max-width: 639px) {
-  [data-pdf-processing-screen] [data-processing-scene-motion] { gap: 15px; }
-  [data-pdf-processing-screen] [data-processing-scene-stage] { gap: 15px; }
-  [data-pdf-processing-screen] [data-processing-scene-motion] h1 { font-size: 25px; line-height: 1.16; }
+  [data-pdf-processing-screen] [data-processing-scene-motion] { gap: 12px; }
+  [data-pdf-processing-screen] [data-processing-scene-stage] { gap: 12px; }
+  [data-pdf-processing-screen] [data-processing-scene-motion] h1 { font-size: 22px; line-height: 1.2; }
   [data-pdf-processing-screen] [data-processing-scene-content] { min-width: 0; }
-  [data-pdf-processing-screen] [data-processing-layout] { gap: 12px; }
-  [data-pdf-processing-screen] [data-processing-layout] section { padding: 14px; border-radius: 20px; }
+  [data-pdf-processing-screen] [data-processing-layout] { gap: 10px; }
+  [data-pdf-processing-screen] [data-processing-layout] section { padding: 12px; border-radius: 18px; }
   [data-pdf-processing-screen] [data-processing-layout='organize'] section [aria-hidden='true'] {
-    min-height: 155px;
-    padding: 14px;
-    gap: 6px;
+    min-height: 135px;
+    padding: 12px;
+    gap: 5px;
   }
   [data-pdf-processing-screen] [data-processing-layout='memorize'] > section {
     padding-bottom: 6px;
   }
   [data-pdf-processing-screen] [data-processing-layout='memorize'] > section > div {
-    min-height: 225px;
-    padding: 17px;
-    gap: 15px;
+    min-height: 195px;
+    padding: 15px;
+    gap: 12px;
   }
   [data-pdf-processing-screen] [data-processing-layout='memorize'] > section > div > p {
-    font-size: 23px;
+    font-size: 20px;
   }
   [data-pdf-processing-screen] footer { gap: 8px; }
 }
