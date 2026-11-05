@@ -112,7 +112,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const article of STUDY_BLOG_ARTICLES[locale]) {
       routes.push({
         url: `${baseUrl}${getStudyBlogPath(locale, article)}`,
-        lastModified: new Date('2026-10-30'),
+        lastModified: new Date(article.key.endsWith('-nov2026') ? '2026-11-05' : '2026-10-30'),
       });
     }
   }
