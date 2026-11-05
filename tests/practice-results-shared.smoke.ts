@@ -25,6 +25,7 @@ assert.match(screen, /documentLabel/, 'El enlace al material permite PDF y DOCX.
 assert.match(practice, /<PracticeResultsScreen/);
 assert.match(practice, /if \(ready && finished && fullReport\) return fullReport/);
 assert.match(practice, /saveCompletedSession\(\)/, 'El guardado real no se altera.');
+assert.doesNotMatch(practice, /Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje/, 'No mostrar una aclaración engañosa después de guardar una práctica.');
 assert.match(cards, /<PracticeResultsScreen/);
 assert.match(cards, /onClick: onPracticeTopic \?\? onReturnToTopic/);
 assert.match(cards, /onClick: reviewDifficult/);
