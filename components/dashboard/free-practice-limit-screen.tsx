@@ -126,7 +126,7 @@ export function FreePracticeLimitScreen({
           Práctica · {place}
         </span>
         {backControl(
-          'flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]',
+          'flex size-11 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]',
           <X className="size-[18px] text-[#344054]" aria-hidden="true"/>, 'Cerrar y ' + backLabel.toLowerCase(),
         )}
       </header>
