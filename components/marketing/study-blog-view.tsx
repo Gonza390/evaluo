@@ -86,7 +86,10 @@ const CONTEXTUAL_LINKS: Partial<Record<StudyBlogLocale, Record<string, {href:str
   statistics:[{href:'/en/blog/how-to-study-engineering',label:'Study engineering',description:'Work through models and unit checks.'},{href:'/en/match-concepts-with-ai',label:'Match concepts',description:'Practice distinguishing closely related definitions.'}],
   'exam-planning':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Organize cumulative revision across multiple topics.'},{href:'/en/pdf-to-quiz',label:'Quiz-based practice',description:'Use questions to assess understanding.'}],
   'active-recall':[{href:'/en/blog/spaced-repetition-for-studying',label:'Spaced repetition',description:'Review older material across study sessions.'},{href:'/en/pdf-to-flashcards',label:'Flashcards',description:'Practice retrieving concepts from your notes.'}],
-  'exam-study-time-nov2026':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Learn to organize a cumulative assessment across topics.'},{href:'/en/pdf-to-quiz',label:'Practice questions from notes',description:'Test recall and identify which topics need more work.'}]
+  'exam-study-time-nov2026':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Learn to organize a cumulative assessment across topics.'},{href:'/en/pdf-to-quiz',label:'Practice questions from notes',description:'Test recall and identify which topics need more work.'}],
+  accounting:[{href:'/en/blog/how-to-study-accounting-effectively-for-exams',label:'Accounting exam practice',description:'Follow a seven-day plan and correct common account mistakes.'},{href:'/en/pdf-to-quiz',label:'Practice from your notes',description:'Test your understanding with topic-specific questions.'}],
+  'accounting-exam-drills-nov2026':[{href:'/en/blog/how-to-study-accounting',label:'Accounting cycle worked example',description:'See complete journal, ledger and trial balance examples.'},{href:'/en/blog/how-long-should-i-study-for-an-exam',label:'Plan your study hours',description:'Budget time for topics, a practice test and corrections.'}],
+  'sociology-exam-application-nov2026':[{href:'/en/blog/how-long-should-i-study-for-an-exam',label:'Plan your exam preparation',description:'Work out a realistic time budget for review and practice.'},{href:'/en/pdf-to-quiz',label:'Practice from your sociology notes',description:'Use your own course material and check AI-generated answers.'}]
  }
 };
 
@@ -177,6 +180,9 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
     statistics: ['engineering','exam-planning','active-recall'],
     'exam-planning': ['exam-study-time-nov2026','active-recall','medicine','engineering'],
     'exam-study-time-nov2026': ['exam-planning','active-recall'],
+    'accounting-exam-drills-nov2026': ['accounting','exam-study-time-nov2026','statistics'],
+    'sociology-exam-application-nov2026': ['exam-study-time-nov2026','active-recall','oral'],
+    accounting: ['accounting-exam-drills-nov2026','exam-study-time-nov2026','statistics'],
     'active-recall': ['exam-planning','statistics','nursing'],
   };
   const available = STUDY_BLOG_ARTICLES[locale].filter(item => item.key !== article.key);
