@@ -18,6 +18,14 @@ assert.match(mobileMenu,/!isPremium \? \(/,
   'Mobile upsell remains visible to Free accounts only.');
 assert.match(mobileMenu,/data-mobile-profile-menu-trigger/,
   'The profile avatar remains the menu trigger.');
+assert.match(mobileMenu,/focus:text-\[#0F1B3D\]/,
+  'Premium menu card must remain dark and readable when it receives touch focus.');
+assert.match(mobileMenu,/hover:text-\[#0F1B3D\]/,
+  'Premium menu card must preserve readable text on hover.');
+assert.match(mobileMenu,/data-\[highlighted\]:text-\[#0F1B3D\]/,
+  'Radix highlighted state must never use the white accent foreground on the light Premium card.');
+assert.match(mobileMenu,/focus:bg-\[#EEF2FF\]/,
+  'The Premium menu focus background must have sufficient contrast with the label.');
 
 assert.match(screen,/max-w-\[680px\]/,'Central premium page should fit Evaluo desktop dimensions.');
 assert.match(screen,/min-\[850px\]:grid-cols-3/,'Benefits should remain stacked until there is room inside the app sidebar.');
