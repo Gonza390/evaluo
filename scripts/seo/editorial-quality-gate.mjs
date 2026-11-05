@@ -1,5 +1,5 @@
 /**
- * Evaluo SEO editorial two-tier approval policy.
+ * Evaluo SEO editorial three-tier approval policy, including competitor-led fallback.
  * Grounded, fail-closed decision support; never confuses Bing with Google volume.
  *
  * The scheduled ChatGPT tasks research candidates, supply evidence, run this gate
@@ -93,9 +93,41 @@ function checkSerp(e, topic, now) {
   return hosts.size >= 3;
 }
 
+
+/**
+ * Fallback when keyword tools lack useful metrics.
+ * Competitor URLs are signals of an editorial opportunity, never measured demand
+ * and never permission to copy a rival's text.
+ */
+function checkCompetitorEvidence(e, topic, now) {
+  if (!e || e.source !== 'COMPETITOR_EDITORIAL'
+      || !keyEqual(e.topicKeyword, topic.keyword)
+      || e.country !== topic.country
+      || !fresh(e.observedAt, now)
+      || typeof e.originalAngle !== 'string'
+      || e.originalAngle.trim().length < 50
+      || !Array.isArray(e.articles)) return false;
+  const candidates = e.articles.filter((article) => article
+    && validUrl(article.url)
+    && article.intentMatches === true
+    && typeof article.title === 'string'
+    && article.title.trim().length >= 12
+    && typeof article.identifiedGap === 'string'
+    && article.identifiedGap.trim().length >= 40);
+  const domains = new Set(candidates.map((article) =>
+    new URL(article.url).hostname.replace(/^www\./, '').toLowerCase()));
+  const recentCompetitor = candidates.some((article) => {
+    if (!article.publishedAt) return false;
+    const published = new Date(article.publishedAt);
+    return Number.isFinite(published.getTime()) && published <= now
+      && now.getTime() - published.getTime() <= 365 * DAY;
+  });
+  return domains.size >= 2 && recentCompetitor;
+}
+
 /**
  * Each of 7 human/editorial controls needs pass + auditable explanation, plus
- * one demand control (Tier 1 or Tier 2). Two topics = 16 PASS total.
+ * one opportunity control (Tier 1, Tier 2, or competitor-led Tier 3). Two topics = 16 PASS total.
  */
 export function evaluateTopic(topic, { now = new Date() } = {}) {
   const reasons = [];
@@ -116,14 +148,17 @@ export function evaluateTopic(topic, { now = new Date() } = {}) {
     && checkSerp(topic.signals?.serp, topic, now)
     && (checkBingEvidence(topic.signals?.bing, topic, now)
       || checkGscEvidence(topic.signals?.gsc, topic, now));
-  const tier = google ? 'T1_GOOGLE' : alternative ? 'T2_TRIANGULATED' : null;
-  if (!tier) reasons.push('no qualifying Tier 1 Google volume or Tier 2 independent signals');
+  const competitor = checkCompetitorEvidence(topic.signals?.competitors, topic, now);
+  const tier = google ? 'T1_GOOGLE' : alternative ? 'T2_TRIANGULATED'
+    : competitor ? 'T3_COMPETITOR_GAP' : null;
+  if (!tier) reasons.push('no qualifying Tier 1, Tier 2 or verified competitor-led Tier 3 evidence');
   const passCount = reviewsPassed + Number(Boolean(tier));
   const approved = reasons.length === 0 && passCount === 8;
   return {
     state: approved ? 'READY_FOR_DEVELOPMENT' : 'BLOCKED',
     tier: approved ? tier : null,
-    demandVerified: Boolean(tier),
+    demandVerified: Boolean(google || alternative),
+    competitorOpportunityVerified: Boolean(competitor),
     googleMonthlyVolume: google ? topic.signals.google.monthlyVolume : null,
     passCount,
     reasons,
