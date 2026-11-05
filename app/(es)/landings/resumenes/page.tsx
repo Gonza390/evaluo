@@ -13,7 +13,7 @@ import { buildCollectionPageJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { toAbsoluteUrl } from '@/lib/site';
 import { createPublicClient } from '@/lib/supabase-public';
-import { createAdminClient } from '@/lib/supabase-admin';
+import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
 
 type SummaryCatalogItem = {
   materiaId: string;
@@ -61,13 +61,17 @@ const loadSummaryCatalog = nextCache(
     if (!materiaIds.length) return [];
 
     const fetchQuestionRows = async () => {
+      // The question counts are optional. SEO previews and local builds can run
+      // without a service role secret; never fail the public summaries page.
+      if (!isAdminClientConfigured()) return [];
+      const admin = createAdminClient();
       const pageSize = 1000;
       const rows: Array<{ materia_id: string | null; parcial: number | null }> = [];
 
       for (let from = 0; ; from += pageSize) {
         // Aggregated counters only. The public question-bank view is restricted.
         // This server-only query never returns questions or answer keys to the page.
-        const { data, error: questionsError } = await createAdminClient()
+        const { data, error: questionsError } = await admin
           .from('preguntas_banco')
           .select('materia_id, parcial')
           .eq('es_demo', false)
