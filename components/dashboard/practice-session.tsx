@@ -25,11 +25,13 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false, quotaPremiumHref, quotaBackHref, quotaBackLabel }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false, quotaPremiumHref, quotaBackHref, quotaBackLabel, previewResult }: {
   mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
   aiAvailable?: boolean; isWord?: boolean; planTopicIndex?: number; freeV2?: boolean;
   quotaPremiumHref?: string; quotaBackHref?: string; quotaBackLabel?: string;
+  /** Vista local sin lectura/escritura de intentos, IA ni cuotas. */
+  previewResult?: { correct: number };
 }) {
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
@@ -67,7 +69,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [responses, setResponses] = useState<Record<number, string>>({});
   const [reviewed, setReviewed] = useState<number[]>([]);
   const [markedForReview, setMarkedForReview] = useState<number[]>([]);
-  const [finished, setFinished] = useState(false);
+  const [finished, setFinished] = useState(previewResult !== undefined);
   const [leavingActivity, setLeavingActivity] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
   const [examStarted, setExamStarted] = useState(false);
@@ -85,6 +87,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   ), [exercisePairs]);
 
   const tasks = useMemo<Task[]>(() => {
+    if (previewResult) {
+      if (mode === 'unir') return [];
+      if (mode === 'completar') return pairs.slice(0, 6).map(pair => ({ type: 'recall' as const, pair }));
+      if (mode === 'mixto') return [
+        ...questions.slice(0, 4).map(question => ({ type: 'question' as const, question })),
+        ...pairs.slice(0, 2).map(pair => ({ type: 'recall' as const, pair })),
+      ];
+      return questions.slice(0, 6).map(question => ({ type: 'question' as const, question }));
+    }
     if (mode === 'unir') return [];
     if (mode === 'completar')
       return shufflePracticeItems(rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
@@ -103,10 +114,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     const applied = mixed.application ? [{ type: 'question' as const, question:shufflePracticeChoices(mixed.application) }] : [];
     return shufflePracticeItems([...base.slice(0, 3), ...recalled, ...applied, ...base.slice(3)]
       .slice(0, reviewLength === 'rapido' ? 6 : 10));
-  }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength, freeV2]);
+  }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength, freeV2, questions, previewResult]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
-  const ready = mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
+  const ready = previewResult !== undefined ? true : mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
     mode === 'casos' ? contexts.length >= (freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
     mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && distinctApplicationCases(contexts).length >= 1 :
@@ -149,6 +160,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }, [freeV2, mode, ready, freeSessionGate, claimSessionQuota]);
 
   const correctAt = (index: number) => {
+    if (previewResult) return index < previewResult.correct;
     if (mode === 'unir') return matches[index] === index;
     const item = tasks[index];
     if (!item) return false;
@@ -223,7 +235,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     });
   };
   useEffect(() => {
-    if (finished && ready) saveCompletedSession();
+    if (finished && ready && !previewResult) saveCompletedSession();
     // One submission per finished round; scores are frozen at completion.
     // Finishing a round triggers a single submission for that frozen attempt.
   }, [finished]);
@@ -444,6 +456,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     transitionTo(()=>setFinished(true));
   }
   function anotherRound() {
+    if (previewResult) return;
     posted.current = '';
     setRound(value => freeV2 ? value : value + 1);
     setStep(0); setSelectedTerm(null); setMatches({}); setResponses({});
@@ -462,7 +475,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }
   const fullReport = finished ? (
     <section className="practice-screen-enter mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
-      <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}</p>
+      <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}{previewResult ? ' · Vista previa' : ''}</p>
       <h2 className="mt-2 text-[21px] font-semibold text-slate-900">{score} de {total}</h2>
       <p className="mt-2 text-sm text-slate-600">
         {score === total ? 'Completaste la actividad sin errores.' :
@@ -480,7 +493,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             <p className={correctAt(i) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
               {correctAt(i) ? 'Correcta' : 'Para reforzar'} · {pair.term}
             </p>
-            {!correctAt(i) && <p className="mt-1 text-slate-500">Tu elección: {exercisePairs[matches[i]]?.definition ?? 'Sin responder'}</p>}
+            {!correctAt(i) && <p className="mt-1 text-slate-500">Tu elección: {previewResult ? exercisePairs[(i+1)%exercisePairs.length]?.definition : exercisePairs[matches[i]]?.definition ?? 'Sin responder'}</p>}
             <p className="mt-1 text-slate-700">{pair.definition}</p>
           </article>
         )) : tasks.map((task, i) => {
@@ -491,12 +504,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               {correctAt(i) ? 'Correcta' : 'Para reforzar'} · {i + 1}
             </p>
             <p className="mt-1 text-slate-800">{prompt}</p>
-            {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {responses[i] || 'Sin responder'}</p>}
+            {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {previewResult ? (task.type === 'recall' ? 'Otro concepto' : task.question.options.find(option => option !== task.question.answer) ?? 'Otra opción') : responses[i] || 'Sin responder'}</p>}
             {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>}
             {diagnosticFor(i) && <p className="mt-1 text-slate-700">{diagnosticFor(i)}</p>}
             {task.type === 'question' && <>
               {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-600">{explanationFor(task.question)}</p>}
-              {task.question.pageStart && <Link className="mt-2 inline-block text-blue-600 underline"
+              {task.question.pageStart && !previewResult && <Link className="mt-2 inline-block text-blue-600 underline"
                 href={'/materiales/' + materialId + '?tab=resumen&page=' + task.question.pageStart}>
                 Revisar el material · página {task.question.pageStart}
               </Link>}
@@ -506,18 +519,18 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </div>
       
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={anotherRound}
-          className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">{mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'}</button>
-        <Link href={mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen'}
+        <button type="button" disabled={previewResult !== undefined} onClick={anotherRound}
+          className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60">{mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'}</button>
+        {previewResult ? <span aria-disabled="true" className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm text-slate-400">{mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}</span> : <Link href={mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen'}
           className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
           {mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}
-        </Link>
+        </Link>}
       </div>
       {historySaveFailed && <div role="alert" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-amber-800">
         No pudimos guardar esta práctica en el historial.
         <button type="button" onClick={saveCompletedSession} className="font-medium underline">Reintentar</button>
       </div>}
-      <p className="mt-3 text-xs text-slate-500">Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.</p>
+      <p className="mt-3 text-xs text-slate-500">{previewResult ? 'Ejemplo visual: no se guardan resultados ni se consumen cupos.' : 'Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.'}</p>
     </section>
   ) : null;
 
