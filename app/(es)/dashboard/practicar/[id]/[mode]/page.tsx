@@ -99,11 +99,9 @@ export default async function PracticeModePage({ params, searchParams }: { param
 
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   if (freeV2 && (mode === 'completar' || mode === 'mixto')) {
-    return <main className="mx-auto max-w-xl p-6">
-      <h1 className="text-xl font-semibold">Esta modalidad no está incluida en Free</h1>
-      <p className="mt-2 text-sm text-slate-600">Podés usar las actividades disponibles con tu material.</p>
-      <Link href="/dashboard/practicar" className="mt-4 inline-block text-blue-600 underline">Volver a Practicar</Link>
-    </main>;
+    // Modos disponibles sólo para Premium: no consumir un cupo Free ni
+    // generar ejercicios antes de mostrar el bloqueo comercial.
+    return exhausted(mode === 'completar' ? 'complete' : 'mixed');
   }
   const artifacts = await loadOrBuildPedagogicalArtifacts({
     admin, materialId: material.id, summary: studySummary, glossary,
