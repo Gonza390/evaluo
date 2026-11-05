@@ -110,6 +110,11 @@ begin
   if (select count(*) from public.study_material_v2_upload_ledger where user_id=paid_user)<>3 then
     raise exception 'Premium upload ledger lost an entry';
   end if;
+  if exists (
+    select 1 from public.free_study_v2_upload_claims where user_id=paid_user
+  ) then
+    raise exception 'Premium uploads consumed the lifetime Free grant';
+  end if;
 end;
 $test$;
 
