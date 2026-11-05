@@ -574,19 +574,6 @@
   }
 }
 
-/* The floating share action stays available on desktop and outside the mobile summary. */
-@media (max-width: 767px) {
-  body:has([data-mobile-summary-active='true']) [data-student-material-share-control] {
-    display: none;
-  }
-}
-
-/* Keep the PDF progress workspace focused on study, without the floating share action. */
-body:has([data-progress-open='true']) [data-student-material-share-control] {
-  display: none;
-}
-
-
 /* Primer PDF: destacar el beneficio concreto de cada paso sin tapar el lector.
    Estas pistas solo existen mientras el tutorial está activo (escritorio y móvil). */
 [data-onboarding-step='summary'] [data-summary-reading-section='0'] {
