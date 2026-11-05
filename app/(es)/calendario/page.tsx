@@ -741,17 +741,17 @@ export default function CalendarioPage() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-3 overflow-x-clip px-3 py-3 sm:space-y-4 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+      <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-2.5 overflow-x-clip px-3 py-2 sm:space-y-3 sm:px-4 sm:py-3 lg:px-6 lg:py-3">
         <AppPageHeader
           size="compact"
           title="Calendario"
           description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
         />
         <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
-          <div className="relative p-1.5 min-[380px]:p-2 sm:p-3">
+          <div className="relative p-1 min-[380px]:p-1.5 sm:p-2">
             <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-white">
               <div
-                className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-white px-1.5 py-2.5 min-[380px]:px-3 sm:gap-2 sm:px-4"
+                className="flex min-w-0 flex-nowrap items-center justify-between gap-1 border-b border-slate-200/80 bg-white px-1.5 py-1.5 min-[380px]:px-3 sm:gap-2 sm:px-4 sm:py-2"
               >
                 <div className="flex min-w-0 shrink items-center gap-0 sm:gap-1">
                   <button
@@ -807,7 +807,7 @@ export default function CalendarioPage() {
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-1.5 text-center text-[12px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:text-[12px]"
+                    className="min-w-0 border-r border-slate-200/80 px-0.5 py-1 text-center text-[11px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:py-1.5 sm:text-[12px]"
                   >
                     <span className="hidden sm:inline">{label}</span>
                     <span className="text-xs sm:hidden">{label.slice(0, 3)}</span>
@@ -833,7 +833,8 @@ export default function CalendarioPage() {
                       key={dateKey}
                       type="button"
                       onClick={() => openComposerForDate(date)}
-                      className={`group flex min-h-[58px] min-w-0 flex-col gap-1 border-r border-b px-1 py-1.5 text-left transition last:border-r-0 hover:bg-white min-[380px]:min-h-[64px] min-[380px]:px-1.5 sm:min-h-[64px] sm:gap-1 sm:px-2 sm:py-1.5 lg:min-h-[64px] ${
+                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''} ` .trim()}
+                      className={`group relative flex h-[48px] min-w-0 flex-col gap-0.5 overflow-hidden border-r border-b px-1 py-1 text-left transition last:border-r-0 hover:bg-white min-[380px]:h-[52px] min-[380px]:px-1.5 sm:h-[56px] sm:gap-1 sm:px-2 sm:py-1.5 ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
                       style={{
@@ -866,35 +867,30 @@ export default function CalendarioPage() {
                         </span>
                       </div>
 
-                      <div className="space-y-0.5 overflow-hidden">
-                        {cellEvents.slice(0, 1).map((event) => (
+                      {/* Mantener la altura de las semanas estable incluso con varios eventos. */}
+                      {cellEvents.length > 0 ? (
+                        <div className="mt-auto min-w-0 overflow-hidden">
+                          <span
+                            aria-hidden="true"
+                            className={`block size-1.5 rounded-full min-[480px]:hidden ${cellEvents[0]?.type === 'exam' ? 'bg-[#AD713D]' : 'bg-[#376CAD]'}`}
+                          />
                           <div
-                            key={event.id}
-                            className="truncate rounded-md border px-1.5 py-0.5 text-[11px] font-medium"
+                            className="hidden truncate rounded-md border px-1 py-0.5 text-[10px] leading-3 font-medium min-[480px]:block sm:text-[11px]"
                             style={{
-                              backgroundColor:
-                                event.type === 'exam'
-                                  ? '#FFF2E6'
-                                  : '#E8F2FF',
-                              borderColor:
-                                event.type === 'exam'
-                                  ? '#F1DFC8'
-                                  : '#D5E6FA',
-                              color:
-                                event.type === 'exam'
-                                  ? '#AD713D'
-                                  : '#376CAD',
+                              backgroundColor: cellEvents[0]?.type === 'exam' ? '#FFF2E6' : '#E8F2FF',
+                              borderColor: cellEvents[0]?.type === 'exam' ? '#F1DFC8' : '#D5E6FA',
+                              color: cellEvents[0]?.type === 'exam' ? '#AD713D' : '#376CAD',
                             }}
                           >
-                            {event.title}
+                            {cellEvents[0]?.title}
                           </div>
-                        ))}
-                        {cellEvents.length > 1 ? (
-                          <div className="text-[12px] font-medium text-slate-500">
-                            +{cellEvents.length - 1} más
-                          </div>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : null}
+                      {cellEvents.length > 1 ? (
+                        <span className="absolute right-1 top-1 text-[10px] leading-4 font-medium text-slate-500">
+                          +{cellEvents.length - 1}
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}
