@@ -147,6 +147,13 @@ assert.match(result,/notifyPremiumAccessChanged\(\)/);
 assert.match(result,/cta: 'Continuar estudiando'/);
 assert.match(result,/premiumPricingHref\(\{source, materiaId, parcial, returnTo\}\)/);
 assert.match(result,/premiumDashboardHref\(\{source, materiaId, parcial, returnTo\}\)/);
+assert.match(result,/inAppSource = source\.startsWith\('free_v2_'\)/,
+  'Payment retries from Free gates must not fall back to a second checkout.');
+assert.doesNotMatch(result,/return \`\/premium\/(?:mapa-mental|errores|simulador|explicaciones)/,
+  'Payment result must never reopen retired three-step funnels.');
+assert.match(result,/'configuracion'/,
+  'In-app subscription recovery must return to the central Premium screen.');
+
 assert.match(status,/subscriptionsError \|\| checkoutError/);
 assert.match(status,/subscription_status_unavailable/);
 assert.match(status,/\.limit\(100\)/);
