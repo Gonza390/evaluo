@@ -41,3 +41,16 @@ La futura importación de CSV desde Keyword Planner deberá conservar país, idi
 - Google Keyword Planner (UI o API): pendiente de configuración por el titular.
 - Número de keywords nuevas validadas para Google: cero.
 - Commit permitido solo en master. No desplegar producción ni tocar main.
+
+
+## Prueba autenticada automática desde GitHub Actions
+
+Se añadió el workflow **SEO Bing keyword API smoke (master only)** en `.github/workflows/seo-bing-keywords.yml`. Usa el secret de GitHub Actions `BING_WEBMASTER_API_KEY` y se activa por `push` a **master** cuando cambia el propio workflow, el adaptador o sus pruebas. No utiliza `schedule` ni altera los circuitos SEO A/B.
+
+- Workflow: https://github.com/Gonza390/evaluo/actions/workflows/seo-bing-keywords.yml
+- Ejecuta pruebas sintéticas, verifica que exista el secreto SIN mostrarlo y consulta 3 keywords de España con `GetKeywordStats`.
+- Los resultados se guardan en el artifact `seo-bing-spain-smoke` del run (JSON sin credenciales).
+- El workflow falla si ninguna de las tres consultas reales funciona, e informa el estado sin registrar URLs de autenticación.
+- GitHub Actions `workflow_dispatch` solo se habilita cuando el workflow está registrado en la rama predeterminada (`main`). Como NO hay autorización para tocar `main`, se usa exclusivamente un disparador de push limitado a `master` en cambios de estos tres archivos. No está habilitado el botón «Run workflow» por defecto.
+
+IMPORTANTE: Que el workflow exista en master NO confirma por sí solo el éxito de una consulta autenticada. Revisar el run y su artifact; si falla, investigar credenciales o compatibilidad de la API antes de conectar resultados a los circuitos A/B. El registro diario de Bing sigue siendo una métrica de Bing, NO demanda mensual Google validada.
