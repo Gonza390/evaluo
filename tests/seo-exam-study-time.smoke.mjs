@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const read = (file) => readFileSync(file, 'utf8');
+
+const article = read('lib/study-blog-exam-time-2026-11-05.ts');
+const index = read('lib/study-blog-articles.ts');
+const view = read('components/marketing/study-blog-view.tsx');
+const calc = read('components/marketing/exam-study-time-estimator.tsx');
+const enRoute = read('app/(en)/en/blog/[slug]/page.tsx');
+const sitemap = read('app/sitemap.ts');
+
+const key = 'exam-study-time-nov2026';
+const slug = 'how-long-should-i-study-for-an-exam';
+assert.match(article, /EXAM_STUDY_TIME_EN_BLOG/);
+assert.equal((article.match(/"key": "exam-study-time-nov2026"/g) ?? []).length, 1, 'One original guide');
+assert.match(article, new RegExp(slug));
+assert.match(article, /"seoTitle": "How Long Should I Study for an Exam/);
+assert.match(article, /pubmed.ncbi.nlm.nih.gov/);
+assert.match(article, /doi.org\\/10\\.3389/);
+assert.match(article, /525/);
+assert.match(article, /450/);
+assert.match(article, /closed-notes/);
+
+assert.match(index, /import \\{ EXAM_STUDY_TIME_EN_BLOG \\} from '\\.\\/study-blog-exam-time-2026-11-05';/);
+assert.match(index, /en: \\[\\s*\\.\\.\\.EXAM_STUDY_TIME_EN_BLOG/);
+assert.match(index, /return \\(locale === 'es' \\? '\\/blog\\/' : '\\/en\\/blog\\/'\\)/);
+assert.match(enRoute, /generateStaticParams/);
+assert.match(enRoute, /STUDY_BLOG_ARTICLES.en/);
+assert.match(enRoute, /canonical: toAbsoluteUrl\\(path\\)/);
+assert.match(enRoute, /robots: \\{ index: true, follow: true \\}/);
+assert.match(sitemap, /for \\(const article of STUDY_BLOG_ARTICLES\\[locale\\]\\)/);
+assert.match(view, /import \\{ ExamStudyTimeEstimator \\}/);
+assert.ok(view.includes(`article.key === '${key}' && <ExamStudyTimeEstimator />`));
+assert.match(view, /isNov5Article = article.key.endsWith\\('-nov2026'\\)/);
+assert.match(view, /datePublished: articleDate/);
+assert.match(view, /href: '\\/en\\/pdf-to-quiz'/);
+assert.match(calc, /'use client'/);
+assert.match(calc, /topics \\* \\(FIRST_PASS_MINUTES \\+ REVIEW_MINUTES\\)/);
+assert.match(calc, /days \\* minutesPerDay/);
+assert.match(calc, /aria-live="polite"/);
+const estimated = 6 * (35 + 15) + 90 + 60;
+const available = 7 * 75;
+assert.equal(estimated, 450, 'Worked study-time formula');
+assert.equal(available, 525, 'Available time');
+assert.equal(available - estimated, 75, 'Buffer');
+console.log('PASS: Exam study time EN blog registration, SEO metadata, internal links, estimator math and date.');
