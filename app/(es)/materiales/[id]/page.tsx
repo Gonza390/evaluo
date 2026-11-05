@@ -11,7 +11,6 @@ import { MaterialStudyStatusWorkspace } from '@/components/material-study-status
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
 import { StudentMaterialProcessingRefresh } from '@/components/student-material-processing-refresh';
-import { StudentMaterialShareControl } from '@/components/student-material-share-control';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isQaAccount } from '@/lib/qa-account';
@@ -308,9 +307,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
     const freeStudyV2 = isFreeStudyV2Active() && isOwner && !isPremium;
-    const hasFullAcademicContext = Boolean(
-      academicProfile.universidadId && academicProfile.carreraId && material.materia_id
-    );
     const backHref = isOwner
       ? '/dashboard/materiales'
       : material.materia_id
@@ -507,7 +503,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     // Students can voluntarily re-open it from the PDF header at any time.
     const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
 
-    const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
     if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
     if (material.carrera_id) uploadParams.set('carreraId', material.carrera_id);
@@ -519,14 +514,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
 
     return (
       <>
-        {isOwner && hasFullAcademicContext ? (
-          <StudentMaterialShareControl
-            materialId={material.id}
-            title={material.title}
-            sharePath={sharePath}
-            initialVisibility={visibility}
-          />
-        ) : null}
         <LazyMaterialStudyWorkspace
           key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
           initialProgressOpen={isOwner && query.tab === 'progreso' && !shouldShowFirstPdfGuide}
@@ -554,7 +541,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           pageCount={material.page_count}
           title={material.title}
           otherPdfOptions={otherPdfOptions}
-          shareAvailable={isOwner && hasFullAcademicContext}
           viewerUrl={viewerUrl}
           docxSourceText={docxSourceText}
           docxHasImages={docxHasImages}
