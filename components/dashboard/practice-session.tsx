@@ -229,7 +229,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }, [finished]);
 
   const generateNewCases = useCallback(async () => {
-    if (generatingRequest.current) return;
+    if (generatingRequest.current || freeSessionGate === 'denied') return;
     generatingRequest.current = true;
     attempts.current += 1;
     setGenerating(true); setGenerationError(''); setGenerationDiagnostic('');
@@ -247,6 +247,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           !Array.isArray(body.cases) || body.cases.length < 1) {
         const code = body && typeof body === 'object' && 'error' in body &&
           typeof body.error === 'string' ? body.error : 'unknown_response';
+        if (freeV2 && response.status === 403 && code === 'free_quota_exhausted') {
+          setFreeSessionGate('denied');
+          return;
+        }
         // A different batch of cited pages can yield valid exercises when
         // Gemini could not ground or independently verify the first batch.
         // Keep a strict budget: at most 3 automatic attempts per entry.
@@ -278,7 +282,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       generatingRequest.current = false;
       setGenerating(false);
     }
-  }, [materialId, contexts, options, mode]);
+  }, [materialId, contexts, options, mode, freeV2, freeSessionGate]);
   // The student enters an actual six-case session only when enough verified
   // applications exist. Try again with fresh source snippets if QA rejects any.
   useEffect(() => {
@@ -288,20 +292,20 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       : mode === 'simulacro'
         ? options.length < (freeV2 ? 20 : MIN_CASES_PER_PRACTICE) : false;
     const automaticLimit = mode === 'casos' ? 3 : 6;
-    if (!aiAvailable || !needsMore || generating || generationError ||
+    if (!aiAvailable || !needsMore || generating || generationError || freeSessionGate === 'denied' ||
         attempts.current >= automaticLimit || generatingRequest.current) return;
     void generateNewCases();
-  }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases, freeV2]);
+  }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases, freeV2, freeSessionGate]);
   useEffect(() => {
     if (mode === 'casos' && !generating && !generationError &&
-        attempts.current >= 3 && contexts.length < (freeV2 ? 2 : MIN_CASES_PER_PRACTICE)) {
+        attempts.current >= 3 && contexts.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)) {
       setGenerationError(freeV2
-        ? 'No pudimos preparar los dos casos gratuitos con evidencia suficiente. Podés reintentar.'
+        ? 'No pudimos preparar un caso gratuito con evidencia suficiente. Podés reintentar.'
         : 'No pudimos reunir seis casos distintos con respuestas verificadas. Podés reintentar con otras fuentes.');
     }
   }, [mode, generating, generationError, contexts.length, freeV2]);
   const generateTrueFalse = useCallback(async () => {
-    if (trueFalseBusy.current) return;
+    if (trueFalseBusy.current || freeSessionGate === 'denied') return;
     trueFalseBusy.current = true;
     setTrueFalseLoading(true);
     setTrueFalseError('');
@@ -325,6 +329,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         const data:unknown = await response.json().catch(() => null);
         const errorCode = data && typeof data === 'object' && 'error' in data &&
           typeof data.error === 'string' ? data.error : 'unknown_response';
+        if (freeV2 && response.status === 403 && errorCode === 'free_quota_exhausted') {
+          setFreeSessionGate('denied');
+          return;
+        }
         if (!response.ok || !data || typeof data !== 'object' ||
             !('questions' in data) || !Array.isArray(data.questions)) {
           setTrueFalseDiagnostic('HTTP ' + response.status + ' · ' + errorCode);
@@ -368,14 +376,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       trueFalseBusy.current=false;
       setTrueFalseLoading(false);
     }
-  },[materialId,trueFalsePool,freeV2]);
+  },[materialId,trueFalsePool,freeV2,freeSessionGate]);
   useEffect(() => {
     if (mode !== 'opciones' || !aiAvailable ||
         sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) ||
-        trueFalseBusy.current || trueFalseLoading || trueFalseError ||
+        trueFalseBusy.current || trueFalseLoading || trueFalseError || freeSessionGate === 'denied' ||
         trueFalseAttempts.current >= 6) return;
     void generateTrueFalse();
-  },[mode,aiAvailable,trueFalsePool,trueFalseLoading,trueFalseError,generateTrueFalse,freeV2]);
+  },[mode,aiAvailable,trueFalsePool,trueFalseLoading,trueFalseError,generateTrueFalse,freeV2,freeSessionGate]);
 
   const [pairLoading, setPairLoading] = useState(false);
   const [pairError, setPairError] = useState('');
@@ -524,7 +532,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       (aiAvailable && ['casos','mixto','simulacro','opciones','unir','completar'].includes(mode)));
   if (freeV2 && freeSessionGate === 'denied' && quotaPremiumHref && quotaBackHref) {
     return <FreePracticeLimitScreen
-      kind={mode === 'unir' ? 'matching_round' : 'simulator'}
+      kind={mode === 'unir' ? 'matching_round' : mode === 'casos' ? 'case'
+        : mode === 'opciones' ? 'true_false' : 'simulator'}
       premiumHref={quotaPremiumHref} backHref={quotaBackHref}
       backLabel={quotaBackLabel} materialTitle={materialTitle}/>;
   }
