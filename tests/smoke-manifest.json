@@ -124,6 +124,10 @@
     "alias": false
   },
   {
+    "file": "tests/seo-semrush-study-guides.smoke.mjs",
+    "alias": false
+  },
+  {
     "file": "tests/text-quality.smoke.ts",
     "alias": true
   },
