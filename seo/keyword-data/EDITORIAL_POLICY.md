@@ -22,6 +22,16 @@ En ambos niveles se exigen **8 controles PASS por tema** (1 demanda comprobada s
 
 Ejecutar `node tests/seo-editorial-quality-gate.smoke.mjs` en Node 22. El módulo `scripts/seo/editorial-quality-gate.mjs` exporta `evaluateTopic(topic)` y `evaluateBatch([topic1,topic2])`. Los casos de prueba utilizan datos **ficticios** para comprobar fallos y aprobaciones; NO son keywords reales aprobadas.
 
+### Ejecución CLI con una ficha REAL del lote
+
+La investigación A1 o B debe construir temporalmente un archivo JSON con la estructura `{"topics":[{...},{...}],"reserved":["<keyword de otro circuito>"]}`. Cada tema requiere `keyword`, `country`, `slugEs`, `slugEn`, `review` con 7 pares `{pass:true,rationale:"..."}` y `signals` con evidencia T1 o T2. Los modelos falsos del test NO cuentan como medición de producción.
+
+```sh
+node scripts/seo/editorial-quality-gate.mjs --file=/tmp/evaluo-seo-lote.json
+```
+
+Salida JSON: `LISTO_PARA_DESARROLLO` y exit code 0 si hay 2 temas y 16 PASS; `BLOQUEADO` y exit code 2 si falla algún requisito; exit code 1 para problemas de entrada. Solo guardar LISTO en Google Docs tras revisar las evidencias originales, evitar duplicados reales en master y confirmar que la prueba fue ejecutada sobre el lote correspondiente.
+
 La función *no llama APIs, no mide intención editorial por sí sola y no publica nada*: las tareas investigadoras aportan evidencias y revisan hechos; el código valida el formato, cantidades, fechas y controles indicados. Una comprobación documental sin fuentes reales no justifica marcar PASS. Cuando hay un entorno Node en la ejecución, correr el gate con fichas reales y registrar el resultado; si no, aplicar exactamente las mismas verificaciones y reportar que la validación fue documental, no ejecutada.
 
 ## Desarrollo y QA
