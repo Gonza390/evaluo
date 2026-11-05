@@ -40,6 +40,24 @@ assert.match(screen, /fixed inset-0.*h-dvh.*overflow-hidden/, 'No outer scroll i
 assert.match(screen, /flex h-full min-h-0 w-full flex-col overflow-hidden/, 'Header and body cannot overlap at short heights.');
 assert.match(screen, /size-\[72px\]/, 'Keep the Evi illustration compact.');
 assert.match(screen, /min-h-\[44px\]/, 'Primary and secondary buttons must stay visible and touch-friendly.');
+assert.match(screen, /flex-col items-stretch justify-center gap-2 sm:flex-row/,
+  'On mobile, Premium and Volver buttons must be stacked rather than squeezing side by side.');
+assert.match(screen, /min-h-\[44px\] w-full items-center/,
+  'Mobile buttons must use full width and retain touch target heights.');
+assert.match(screen, /sm:w-auto/, 'Buttons must resume natural width on desktop.');
+assert.match(screen, /min-w-0 flex-1 truncate text-center/,
+  'The contextual header label must shrink rather than push the close button outside a phone.');
+assert.match(screen, /flex size-11 shrink-0 items-center justify-center rounded-full/,
+  'The close button must remain a 44px touch target.');
+assert.match(screen, /data-free-practice-secondary-note/,
+  'The redundant note needs an optional compact-height fallback.');
+assert.match(motion, /@media \(max-height: 630px\)/,
+  'Short phones should keep Evi, the explanatory copy and buttons legible.');
+assert.match(motion, /data-free-practice-secondary-note/,
+  'Only the redundant note should disappear on very short windows.');
+assert.match(modePage, /\^\\d\{1,3\}\$/,
+  'Topic context must parse a numeric planTopic; otherwise Volver al tema breaks.');
+
 assert.doesNotMatch(screen, /overflow-y-auto/, 'Never introduce page scrolling in the quota experience.');
 assert.match(screen, /rounded-\[20px\]/, 'Preserve the layered blurred exercise card');
 assert.match(screen, /blur-\[5px\]/);
