@@ -594,7 +594,7 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
               </p>
               <p style={{ color: 'var(--t)', fontWeight: '700' }}>$0 · sin tarjeta</p>
               <ul className="home-plan-features">
-                <li>Hasta 2 PDFs cada 15 días</li>
+                <li>1 material PDF o Word gratis de por vida</li>
                 <li>Hasta 100 páginas y 20 MB por archivo</li>
                 <li>Resumen, glosario, flashcards y práctica básica</li>
               </ul>
@@ -618,7 +618,7 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
               </p>
               <p style={{ color: 'var(--t)', fontWeight: '700' }}>Mensual o por 6 meses</p>
               <ul className="home-plan-features">
-                <li>Hasta 3 PDFs por día, sin límite de páginas</li>
+                <li>Hasta 3 materiales PDF o Word por día</li>
                 <li>Simuladores completos y más explicaciones</li>
                 <li>Práctica personalizada según tus errores</li>
               </ul>
