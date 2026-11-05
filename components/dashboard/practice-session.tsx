@@ -482,7 +482,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           ? exercisePairs[(i + 1) % exercisePairs.length]?.definition ?? 'Otra definición'
           : exercisePairs[matches[i]]?.definition ?? 'Sin responder',
         correctAnswer: pair.definition,
-        explanation: 'La definición correcta de «' + pair.term + '» es la que aparece en el material.',
+        explanation: '',
         correct: correctAt(i),
         chapterTitle: pair.chapterTitle,
         modeLabel: 'Unir conceptos',
@@ -504,7 +504,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           selectedAnswer: selected,
           correctAnswer: answer,
           explanation: task.type === 'recall'
-            ? 'El término correcto para esta definición es «' + task.pair.term + '».'
+            ? diagnosticFor(i) ?? ''
             : explanationFor(task.question),
           correct: correctAt(i),
           chapterTitle: task.type === 'recall' ? task.pair.chapterTitle : task.question.chapterTitle,
