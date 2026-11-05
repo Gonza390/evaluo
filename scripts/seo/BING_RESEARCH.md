@@ -24,7 +24,7 @@ Bing GetKeywordStats devuelve impresiones históricas por término. El adaptador
 
 **Importante:** los resultados NO son estimaciones de volumen de **Google**, no se pueden sumar a cifras de Ubersuggest ni aprobar con ellos el umbral editorial de >=500 búsquedas mensuales de Google. El campo eligibleForGoogle500Rule siempre es false; usarlo para descubrir/priorizar, nunca aprobar publicaciones automáticamente.
 
-La fuente de verdad SEO sigue siendo el Google Doc «Evaluo — Plan editorial SEO compartido e historial». No se incorporaron automatizaciones nuevas ni modificaciones de producto. La activación de la fuente en las tareas A/B queda PENDIENTE de verificar acceso real y definir cómo intercambiar el archivo con el banco compartido.
+La fuente de verdad SEO sigue siendo el Google Doc «Evaluo — Plan editorial SEO compartido e historial». No se incorporaron automatizaciones nuevas ni modificaciones de producto. Las tareas A/B usan el reporte Bing de GitHub como señal de priorización, sin alterar el gate Google >=500.
 
 ## Google Keyword Planner: no conectado todavía
 
@@ -34,14 +34,23 @@ La API de Google Ads NO se considera accesible aquí: requiere una cuenta autori
 
 La futura importación de CSV desde Keyword Planner deberá conservar país, idioma, período, fuente y rangos cuando correspondan; el promedio de búsquedas incluye variantes cercanas. Nunca convertir un rango 100-1000 en un volumen confirmado >=500.
 
-## Estado
+## Verificación real — 05/11/2026
 
-- Adaptador implementado y pruebas simuladas: sí.
-- Consulta real a Bing con evaluoapp.com: pendiente de verificación y clave.
-- Google Keyword Planner (UI o API): pendiente de configuración por el titular.
-- Número de keywords nuevas validadas para Google: cero.
-- Commit permitido solo en master. No desplegar producción ni tocar main.
+La integración **sí funciona en GitHub Actions**: el workflow `.github/workflows/seo-bing-keywords.yml` autenticó `BING_WEBMASTER_API_KEY`, hizo 12 llamadas a la API de Bing Webmaster Tools sin errores y guardó el JSON saneado en `seo/keyword-data/bing-latest.json` en `master`. El reporte es recuperable desde las tareas A/B mediante GitHub; el resultado no contiene la clave.
 
+Los términos de muestra más amplios en España muestran estimaciones mensuales de **Bing**: `chatgpt` 785597, `anki` 1323, `resumen` 653, `examen` 486, `flashcards` 412. Consultas long-tail específicas pueden devolver cero observaciones o un historial insuficiente: eso significa `SIN_DATO`, no cero búsquedas.
+
+**No se ha desbloqueado la publicación de artículos por este hecho.** Bing no permite acreditar el umbral editorial de >=500 búsquedas mensuales de Google. Para desarrollar nuevos artículos se necesitan los datos de Google (Ubersuggest gratuito, con cuota; o Google Keyword Planner una vez configurado) y los restantes 16 controles editoriales.
+
+### Cómo se mantiene actualizado sin una tarea adicional
+
+- El archivo de solicitudes `seo/keyword-data/bing-requests.json` admite hasta 15 frases/mercados de AR, ES, MX, CO.
+- Una modificación de ese archivo en `master` dispara el workflow de GitHub Actions por `push`.
+- GitHub Actions prueba el adaptador con datos sintéticos, consulta el API real y guarda la salida `seo/keyword-data/bing-latest.json` en un commit de datos en `master`.
+- Los circuitos ChatGPT A/B consultan esta salida y el Google Doc compartido. Pueden cambiar **solo el archivo auxiliar de solicitudes**, con SHA vigente y sin modificar calendarios ni contenidos no aprobados.
+- Si el resultado no está actualizado o faltan series históricas, registrar `SIN_DATO` y no inventar métricas.
+
+Repositorio y fuentes: https://github.com/Gonza390/evaluo/blob/master/seo/keyword-data/bing-latest.json , https://github.com/Gonza390/evaluo/actions/workflows/seo-bing-keywords.yml , Google Doc editorial compartido sección 8.10.
 
 ## Prueba autenticada automática desde GitHub Actions
 
@@ -53,4 +62,4 @@ Se añadió el workflow **SEO Bing keyword API smoke (master only)** en `.github
 - El workflow falla si ninguna de las tres consultas reales funciona, e informa el estado sin registrar URLs de autenticación.
 - GitHub Actions `workflow_dispatch` solo se habilita cuando el workflow está registrado en la rama predeterminada (`main`). Como NO hay autorización para tocar `main`, se usa exclusivamente un disparador de push limitado a `master` en cambios de estos tres archivos. No está habilitado el botón «Run workflow» por defecto.
 
-IMPORTANTE: Que el workflow exista en master NO confirma por sí solo el éxito de una consulta autenticada. Revisar el run y su artifact; si falla, investigar credenciales o compatibilidad de la API antes de conectar resultados a los circuitos A/B. El registro diario de Bing sigue siendo una métrica de Bing, NO demanda mensual Google validada.
+IMPORTANTE: La conexión API y la escritura de un reporte quedaron verificadas con datos reales el 05/11/2026. Cada nueva ejecución debe revisarse según fetchedAt, successfulApiCalls y observaciones disponibles. El reporte de Bing no valida demanda mensual de Google.
