@@ -185,8 +185,11 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
   const mainIndex = locale === 'es' ? '/' : '/en';
   const blogIndex = locale === 'es' ? '/blog' : '/en/blog';
   const newArticleKeys = new Set(['medicine','nursing','engineering','statistics','exam-planning','active-recall']);
-  const articleDate = newArticleKeys.has(article.key) ? '2026-11-02' : '2026-10-30';
-  const articleDateLabel = newArticleKeys.has(article.key) ? (locale === 'es' ? '2 de noviembre de 2026' : 'November 2, 2026') : copy.published;
+  const isNov5Article = article.key.endsWith('-nov2026');
+  const articleDate = isNov5Article ? '2026-11-05' : newArticleKeys.has(article.key) ? '2026-11-02' : '2026-10-30';
+  const articleDateLabel = isNov5Article
+    ? (locale === 'es' ? '5 de noviembre de 2026' : 'November 5, 2026')
+    : newArticleKeys.has(article.key) ? (locale === 'es' ? '2 de noviembre de 2026' : 'November 2, 2026') : copy.published;
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
