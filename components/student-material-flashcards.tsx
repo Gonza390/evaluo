@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   ArrowRight,
-  Bell,
   Check,
   Expand,
   RotateCcw,
