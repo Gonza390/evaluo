@@ -7,6 +7,7 @@ import {
   incompleteOpenAnswerReason,
   unsafeFlashcardReason,
   accurateFlashcardLevel,
+  polishFlashcardPrompt,
 } from '../lib/student-materials/pedagogical-integrity.ts';
 import {
   getTopicStudyResources, tagGlossaryChapters,
@@ -441,4 +442,13 @@ assert.match(
   /cachedRow\?\.pedagogical_artifacts_version \?\? 0/,
   'No conservar como 100/100 el score de un banco v12 anterior al generador corregido.'
 );
+// Legacy DOCX cards should read naturally, without reprocessing or AI calls.
+assert.equal(polishFlashcardPrompt('¿Qué significa “Reino Antiguo” según el material?'),
+  '¿Qué significa “Reino Antiguo”?');
+assert.equal(polishFlashcardPrompt('¿Qué elementos incluye “Fuentes históricas” según el PDF?'),
+  '¿Qué elementos incluye “Fuentes históricas”?');
+assert.equal(polishFlashcardPrompt('¿Cómo relaciona el material “Crisis” con “Reorganizaciones”?'),
+  '¿Cómo se relacionan “Crisis” y “Reorganizaciones”?');
+assert.equal(polishFlashcardPrompt('¿Cómo distinguís dos procesos?'),
+  '¿Cómo distinguís dos procesos?');
 console.log('pedagogical-integrity.smoke: OK');
