@@ -93,6 +93,14 @@ for (const path of ['app/api/practice/true-false/route.ts', 'app/api/practice/ca
 }
 assert.match(helper,/export async function claimVerifiedFreeStudySample/);
 assert.match(helper,/export async function claimFreeStudyPairSample/);
+// El backend debe filtrar tarjetas que el frontend no mostraría, antes de
+// registrar el cupo irreversible. El índice original identifica al banco.
+assert.match(helper,/auditPracticeFlashcard\(/);
+assert.match(helper,/!review\.approved \|\| seenPrompts\.has\(prompt\) \|\| seenAnswers\.has\(answer\)/);
+assert.ok(helper.indexOf('const review = auditPracticeFlashcard') <
+  helper.indexOf('kind:\'flashcard\', itemKey:input.materialId + \':supplement-flashcard:\''),
+  'Supplementary flashcards must pass quality control before the Free claim.');
+
 const supplement=read('app/api/practice/supplement/route.ts');
 assert.match(supplement,/claimFreeStudyPairSample/);
 assert.match(supplement,/free_study_sample_unavailable/);
