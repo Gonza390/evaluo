@@ -221,17 +221,31 @@ function emptyReference(sectionTitle: string | null, excerpt: string): Pedagogic
   return { pageStart: null, pageEnd: null, sectionTitle, excerpt: truncateAtWord(excerpt, 220) };
 }
 
-function findReference(term: string, chunks: PedagogicalChunk[], fallback: PedagogicalReference) {
+function findReference(
+  term: string,
+  chunks: PedagogicalChunk[],
+  fallback: PedagogicalReference,
+  expectedAnswer = ''
+) {
   const needle = normalizeForDedupe(term);
   const words = needle.split(/\s+/).filter((word) => word.length >= 4);
-  // A DOCX has no page numbers. Prefer evidence that actually mentions
-  // the subject rather than a nearby unrelated paragraph. Keep the
-  // original source fragment verbatim; this does not call AI.
-  const match = chunks.find((chunk) => {
+  // In DOCX there is no physical page. Prefer a fragment mentioning both
+  // the topic and the explanation, not simply the first mention of the topic.
+  // This only ranks real source fragments; it does not manufacture evidence.
+  const evidenceWords = [...new Set(normalizeForDedupe(expectedAnswer)
+    .split(/\s+/).filter((word) => word.length >= 5))].slice(0, 24);
+  const matches = chunks.filter((chunk) => {
     const haystack = normalizeForDedupe(chunk.text);
     return haystack.includes(needle) ||
       (words.length > 0 && words.every((word) => haystack.includes(word)));
   });
+  const match = evidenceWords.length ? matches.sort((left, right) => {
+    const score = (chunk: PedagogicalChunk) => {
+      const text = normalizeForDedupe(chunk.text);
+      return evidenceWords.filter((word) => text.includes(word)).length;
+    };
+    return score(right) - score(left);
+  })[0] : matches[0];
 
   return match
     ? {
@@ -322,7 +336,7 @@ function referenceFromPages(
     } satisfies PedagogicalReference;
   }
 
-  return findReference(sectionTitle ?? excerpt, chunks, emptyReference(sectionTitle, excerpt));
+  return findReference(sectionTitle ?? excerpt, chunks, emptyReference(sectionTitle, excerpt), excerpt);
 }
 
 function referenceFromBinding(
