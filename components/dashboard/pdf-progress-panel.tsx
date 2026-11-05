@@ -55,12 +55,12 @@ function topicStatus(topic: PdfProgressTopic) {
     return {
       label: topic.evidence.some((item) => item.correct > 0)
         ? 'Repaso comprobado'
-        : 'Seguir practicando',
+        : 'Repasado',
       Icon: CheckCircle2,
       style: 'bg-primary/10 text-primary',
     };
   if (topicAssessmentCount(topic) > 0)
-    return { label: 'Seguir practicando', Icon: CheckCircle2, style: 'bg-primary/10 text-primary' };
+    return { label: 'Con preguntas', Icon: CheckCircle2, style: 'bg-primary/10 text-primary' };
   if (topic.evidence.some((item) => item.selfReported > 0))
     return { label: 'Autoevaluado', Icon: Circle, style: 'bg-muted text-muted-foreground' };
   return {
@@ -226,6 +226,7 @@ export function PdfProgressPanel({
     if (topic.errors.some((error) => error.status === 'pending')) return 'review' as const;
     if (topicAssessmentCount(topic) > 0) return 'assessed' as const;
     if (topic.evidence.some((item) => item.selfReported > 0)) return 'self' as const;
+    if (topic.errors.some((error) => error.status === 'resolved')) return 'reviewed' as const;
     return 'none' as const;
   });
   const touchedTopics = topicStates.filter((state) => state !== 'none').length;
@@ -966,7 +967,7 @@ export function PdfProgressPanel({
                         <span key={topics[index].id} title={topics[index].title}
                           className={'h-1.5 min-w-0 flex-1 rounded-full ' +
                             (state === 'review' ? 'bg-[#D92D20]' : state === 'assessed' ? 'bg-[#2563EB]' :
-                              state === 'self' ? 'bg-[#A6C5FA]' : 'bg-[#E7EBF4]')} />
+                              state === 'self' ? 'bg-[#A6C5FA]' : state === 'reviewed' ? 'bg-[#8CCBA9]' : 'bg-[#E7EBF4]')} />
                       ))}
                     </div>
                   )}
@@ -974,6 +975,7 @@ export function PdfProgressPanel({
                     {[
                       { label: 'Con preguntas', color: 'bg-[#2563EB]' },
                       { label: 'Autoevaluado', color: 'bg-[#A6C5FA]' },
+                      { label: 'Repasado', color: 'bg-[#8CCBA9]' },
                       { label: 'Por reforzar', color: 'bg-[#D92D20]' },
                       { label: 'Sin evaluar', color: 'bg-[#E7EBF4]' },
                     ].map((item) => (
