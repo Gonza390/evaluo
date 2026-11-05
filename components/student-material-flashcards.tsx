@@ -84,6 +84,7 @@ export function StudentMaterialFlashcards({
   onComplete,
   onSessionComplete,
   demoMode = false,
+  previewFinished = false,
   allowedCardIndices,
   persistentCardCount,
   topicTitle,
@@ -96,6 +97,8 @@ export function StudentMaterialFlashcards({
   /** Se usa desde Practicar para registrar el intento, no modifica la evaluación. */
   onSessionComplete?: (result: { correct: number; total: number; answers: { prompt: string; selectedAnswer: string; correctAnswer: string; correct: boolean }[] }) => void;
   demoMode?: boolean;
+  /** Sólo para la galería local: muestra el cierre real sin recorrer tarjetas. */
+  previewFinished?: boolean;
   allowedCardIndices?: number[];
   /** On-demand cards are session-only; do not map their changing indices onto
    * the persistent recall data for the original uploaded PDF/DOCX deck. */
@@ -122,7 +125,11 @@ export function StudentMaterialFlashcards({
   const [flipReady, setFlipReady] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
-  const [sessionRecall, setSessionRecall] = useState<Record<number, RecallResult>>({});
+  const [sessionRecall, setSessionRecall] = useState<Record<number, RecallResult>>(() =>
+    previewFinished && demoMode
+      ? Object.fromEntries(cards.map((_, index) => [index, index % 3 === 0 ? 'unknown' : 'known'])) as Record<number, RecallResult>
+      : {}
+  );
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
