@@ -7,6 +7,7 @@ on:
       - 'supabase/migrations/20261104180000_free_study_v2_unlocks.sql'
       - 'supabase/migrations/20261104183000_free_study_v2_plan_claim.sql'
       - 'tests/db/free-study-v2-*.sql'
+      - 'tests/db/free-study-v2-*.mjs'
       - '.github/workflows/free-study-v2-db-qa.yml'
   workflow_dispatch:
 
@@ -16,7 +17,7 @@ permissions:
 jobs:
   migration-integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 18
     services:
       postgres:
         image: postgres:17
@@ -54,3 +55,27 @@ jobs:
           claimed="$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.free_study_v2_unlocks WHERE user_id='00000000-0000-4000-8000-000000000005' AND kind='multiple_choice'")"
           test "$claimed" = "12"
 
+      - name: Test signed JWT + PostgREST API without Supabase production
+        env:
+          PGPASSWORD: postgres
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGDATABASE: evaluo_qa
+          QA_POSTGREST_URL: http://127.0.0.1:3101
+          QA_JWT_SECRET: free-v2-ci-only-test-signing-key-2026-11-05-not-for-production
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-postgrest-setup.sql
+          docker run --rm -d --name free-v2-qa-postgrest --network host \
+            -e PGRST_DB_URI="postgres://postgres:postgres@127.0.0.1:5432/evaluo_qa" \
+            -e PGRST_DB_SCHEMAS="public" -e PGRST_DB_ANON_ROLE="anon" \
+            -e PGRST_JWT_SECRET="$QA_JWT_SECRET" -e PGRST_SERVER_PORT="3101" \
+            postgrest/postgrest:v12.2.12
+          trap 'docker logs free-v2-qa-postgrest || true; docker stop free-v2-qa-postgrest || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS "$QA_POSTGREST_URL/" >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          curl -fsS "$QA_POSTGREST_URL/" >/dev/null
+          node tests/db/free-study-v2-http-integration.mjs
