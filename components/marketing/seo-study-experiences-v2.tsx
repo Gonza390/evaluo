@@ -561,6 +561,12 @@ export function IaParaEstudiantesExperience() {
               cta: 'Cómo generar preguntas desde PDF',
             },
             {
+              href: '/blog/como-estudiar-examen-tipo-test',
+              title: 'Cómo estudiar para un examen tipo test',
+              description: 'Ejercicios resueltos con distractores explicados para practicar desde tus apuntes.',
+              cta: 'Ver guía de opción múltiple',
+            },
+            {
               href: '/funciones/practicar-por-tema',
               title: 'Practicar por tema con IA',
               description: 'Comprobá qué sabés de una unidad y volvé a sus conceptos cuando tengas dudas.',
@@ -744,6 +750,12 @@ export function EstudiarPdfExperience() {
               title: 'Crear preguntas desde tu PDF',
               description: 'Comprobá lo aprendido con ejercicios basados en el material que acabás de estudiar.',
               cta: 'Generar preguntas desde un PDF',
+            },
+            {
+              href: '/blog/metodo-pomodoro-para-estudiar',
+              title: 'Método Pomodoro para estudiar por temas',
+              description: 'Organizá bloques cortos de estudio y comprobá qué aprendiste en cada uno.',
+              cta: 'Ver ejemplo de estudio de 85 minutos',
             },
             {
               href: '/funciones/simulacro-examen-con-ia',
@@ -1025,6 +1037,12 @@ export function ResumirPdfExperience() {
               cta: 'Ver el método de estudio con IA',
             },
                       {
+              href: '/blog/como-hacer-un-mapa-conceptual-para-estudiar',
+              title: 'Mapa conceptual para estudiar: pasos y ejemplo',
+              description: 'Aprendé a verificar relaciones entre conceptos y diferenciá el mapa conceptual del mapa mental.',
+              cta: 'Cómo construir un mapa conceptual',
+            },
+            {
               href: '/funciones/practicar-por-tema',
               title: 'Practicar el tema que acabás de resumir',
               description: 'Pasá del resumen a preguntas sobre un capítulo y revisá en qué conceptos necesitás más práctica.',
