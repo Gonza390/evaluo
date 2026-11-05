@@ -14,7 +14,15 @@ assert.match(screen, /bg-transparent font-sans/, 'La pantalla comparte el fondo 
 assert.doesNotMatch(screen, /border-b border-\[#E7EBF4\]/, 'No hay divisor de cabecera a ancho completo.');
 assert.match(screen, /text-\[21px\].*sm:text-\[24px\]/, 'El título mantiene la misma escala que las pantallas de práctica.');
 assert.match(screen, /sm:text-\[14px\]/, 'Las preguntas mantienen el tamaño habitual de Evaluo.');
-assert.match(screen, /entries\.filter\(\(entry\) => !entry\.correct\)/, 'Sólo mostrar respuestas pendientes.');
+assert.match(screen, /entries\.filter\(\(entry\) => !entry\.correct\)/, 'Las respuestas incorrectas siguen visibles primero.');
+assert.match(screen, /entries\.filter\(\(entry\) => entry\.correct\)/, 'Las respuestas correctas también se conservan.');
+assert.match(screen, /data-practice-correct-results/, 'Hay una sección visible para respuestas correctas.');
+assert.match(screen, /Respuestas correctas/, 'Las preguntas acertadas aparecen al pie del resultado.');
+assert.ok(screen.indexOf('data-practice-correct-results') > screen.indexOf('visible.map'), 'Las correctas van después de los errores.');
+assert.ok(screen.indexOf('data-practice-correct-results') < screen.indexOf('<ResultButton action={primaryAction}'), 'Las correctas van antes de las acciones finales.');
+assert.doesNotMatch(screen, /Estas son las preguntas que fallaste/, 'Sin descripción redundante de los errores.');
+assert.doesNotMatch(screen, /respuestas? para repasar/, 'Sin contador redundante.');
+assert.doesNotMatch(screen, /· Vista previa|Vista previa: resultados ficticios/, 'Sin referencias a preview dentro del resultado.');
 assert.match(screen, /selectedTopic/, 'Los errores pueden filtrarse por tema.');
 assert.match(screen, /<details/, 'Cada error conserva un detalle expandible.');
 assert.match(screen, /TU RESPUESTA/);
