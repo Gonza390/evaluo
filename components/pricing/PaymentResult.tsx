@@ -82,21 +82,15 @@ function contextualPremiumRoute(
   parcial: number | undefined,
   returnTo: string | undefined
 ) {
-  const params = new URLSearchParams();
-  if (materiaId) params.set('materia', materiaId);
-  if (parcial) params.set('parcial', String(parcial));
-  if (returnTo) params.set('returnTo', returnTo);
-
-  const query = params.toString();
-  const suffix = query ? `?${query}` : '';
-  if (source === 'material_mapa_mental') return `/premium/mapa-mental${suffix}`;
-  if (source === 'simulator_explanations') return `/premium/explicaciones${suffix}`;
-  if (source === 'errores_review') return `/premium/errores${suffix}`;
-  if (source === 'premium_simulator') return `/premium/simulador${suffix}`;
-  if (source.startsWith('free_v2_') || source === 'dashboard_premium') {
-    return premiumDashboardHref({source, materiaId, parcial, returnTo});
-  }
-  return premiumPricingHref({source, materiaId, parcial, returnTo});
+  // Los intentos iniciados dentro de Evaluo siempre vuelven a la misma
+  // pantalla Premium. Conservar /pricing sólo para la adquisición pública.
+  const inAppSource = source.startsWith('free_v2_') || [
+    'material_mapa_mental', 'simulator_explanations', 'errores_review',
+    'premium_simulator', 'dashboard_premium', 'configuracion',
+  ].includes(source);
+  return inAppSource
+    ? premiumDashboardHref({source, materiaId, parcial, returnTo})
+    : premiumPricingHref({source, materiaId, parcial, returnTo});
 }
 
 function successContext(source: string, returnTo: string | undefined) {
