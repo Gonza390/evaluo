@@ -41,7 +41,10 @@ assert.match(login, /const redirectPath = nextPath;/, 'Email should honor the sa
 assert.match(login, /getEmailSignupDestination\(data\.session, nextPath\)/, 'Do not change signup confirmation logic.');
 
 const upsell = source('components/premium/premium-upsell.tsx');
-assert.match(upsell, /isPremiumFunnelDismissReturn\(window\.location\.search, source\)/);
+assert.match(upsell, /premiumDashboardHref\(/,
+  'All in-app Premium upsells must open the central subscription page.');
+assert.doesNotMatch(upsell, /isPremiumFunnelDismissReturn|openContextualFlow|PREMIUM_FLOWS/,
+  'Do not automatically reopen abandoned legacy commercial funnels.');
 for (const path of ['components/premium/mapa-mental-premium-funnel.tsx', 'components/premium/errores-premium-funnel.tsx']) {
   const file = source(path);
   assert.match(file, /router\.replace\(withPremiumDismissMarker\(returnTo, SOURCE,/);
