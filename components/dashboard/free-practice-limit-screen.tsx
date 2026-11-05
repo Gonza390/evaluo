@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -43,6 +43,9 @@ export function FreePracticeLimitScreen({
   const [mounted, setMounted] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const transitionTimer = useRef<number | null>(null);
+  const fitViewport = useRef<HTMLDivElement>(null);
+  const fitContent = useRef<HTMLDivElement>(null);
+  const [fitScale, setFitScale] = useState(1);
   useEffect(() => {
     setMounted(true);
     return () => {
@@ -56,6 +59,30 @@ export function FreePracticeLimitScreen({
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = previous; };
   }, [mounted]);
+
+  // Fit the WHOLE screen including the CTAs into the space below the header.
+  // Reduce spacing first; scale only as needed on zoomed or short viewports.
+  useLayoutEffect(() => {
+    if (!mounted) return;
+    const viewport = fitViewport.current;
+    const content = fitContent.current;
+    if (!viewport || !content) return;
+    const fit = () => {
+      const height = content.scrollHeight;
+      const width = content.scrollWidth;
+      if (!height || !width || !viewport.clientHeight || !viewport.clientWidth) return;
+      const next = Math.min(1,
+        (viewport.clientHeight - 8) / height,
+        (viewport.clientWidth - 8) / width);
+      const safe = Math.max(0.1, next);
+      setFitScale(current => Math.abs(current - safe) < 0.005 ? current : safe);
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(viewport);
+    observer.observe(content);
+    fit();
+    return () => observer.disconnect();
+  }, [mounted, kind, materialTitle, topicLabel, backLabel]);
 
   const mode = modes[kind];
   const place = topicLabel || materialTitle || 'Tu material';
@@ -88,9 +115,9 @@ export function FreePracticeLimitScreen({
 
   return createPortal(
     <div data-free-practice-limit role="dialog" aria-modal="true" aria-labelledby="free-practice-limit-title"
-      className="fixed inset-0 z-[200] h-dvh w-full overflow-y-auto bg-white font-sans text-[#0f1623]">
-      <div data-free-practice-limit-transition className={`flex min-h-full w-full flex-col ${leaving ? 'practice-screen-leave' : 'practice-screen-enter'}`}>
-      <header className="flex min-h-[72px] shrink-0 items-center justify-between gap-3 border-b border-[#e8ecf2] px-4 py-3 sm:px-10 sm:py-[14px]">
+      className="fixed inset-0 z-[200] h-dvh w-full overflow-hidden bg-white font-sans text-[#0f1623]">
+      <div data-free-practice-limit-transition className={`flex h-full min-h-0 w-full flex-col overflow-hidden ${leaving ? 'practice-screen-leave' : 'practice-screen-enter'}`}>
+      <header className="flex min-h-[54px] shrink-0 items-center justify-between gap-3 border-b border-[#e8ecf2] px-4 py-2 sm:min-h-[60px] sm:px-8">
         <div className="flex shrink-0 items-center gap-2.5">
           <Image src="/evaluo-logo-icono.svg" alt="" width={28} height={28} className="size-7"/>
           <span className="text-[18px] font-bold tracking-[-.01em]">Evaluo</span>
@@ -104,8 +131,12 @@ export function FreePracticeLimitScreen({
         )}
       </header>
 
-      <main className="flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
-        <section className="flex w-full max-w-[520px] flex-col items-center text-center">
+      <main className="flex min-h-0 w-full flex-1 flex-col px-3 py-2 sm:px-6 sm:py-3">
+        <div ref={fitViewport} data-free-practice-fit-viewport className="relative min-h-0 w-full flex-1 overflow-hidden">
+          <div ref={fitContent} data-free-practice-fit-content
+            className="absolute left-1/2 top-1/2 flex w-full max-w-[460px] flex-col items-center text-center"
+            style={{ transform: `translate(-50%, -50%) scale(${fitScale})`, transformOrigin: 'center center' }}>
+        <section className="flex w-full flex-col items-center text-center">
           <Image src="/evi-practica-limite.svg" width={104} height={104} alt="Evi con un candado" className="size-[104px] shrink-0"/>
           <h1 id="free-practice-limit-title" className="mt-2 text-[27px] font-bold leading-[1.15] tracking-[-.03em] sm:text-[32px]">
             Ya agotaste tu límite gratuito
@@ -162,6 +193,8 @@ export function FreePracticeLimitScreen({
         <p className="mt-3 max-w-[520px] text-center text-[13px] leading-5 text-[#667085]">
           El límite gratuito ya se agotó para esta modalidad. Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.
         </p>
+          </div>
+        </div>
       </main>
       </div>
     </div>, document.body
