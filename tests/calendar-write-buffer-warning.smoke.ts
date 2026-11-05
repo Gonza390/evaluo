@@ -68,6 +68,16 @@ assert.match(studyPlanApi, /\.eq\('user_id',user\.id\)\.maybeSingle\(\)/,
   'El plan del calendario se consulta únicamente para el usuario autenticado.');
 assert.match(page, /fetch\('\/api\/study-plans\?view=calendar'/,
   'El calendario consulta el plan persistido, no genera actividades ficticias.');
+assert.match(page, /const activeStudyPlan = ownerStudyPlan && user && ownerStudyPlan\.userId === user\.id/,
+  'El calendario no accede al plan cuando la sesión todavía no existe.');
+assert.doesNotMatch(page, /ownerStudyPlan\?\.userId === user\?\.id \? ownerStudyPlan\.plan/,
+  'No se debe comparar undefined con undefined durante el primer render.');
+assert.match(page, /normalizeCalendarStudyPlan\(data\?\.plan\)/,
+  'Las respuestas incompletas del plan se normalizan antes del render.');
+assert.match(page, /Array\.isArray\(day\.topics\)/,
+  'Los días dañados o antiguos no deben romper el calendario.');
+assert.match(page, /Number\.isFinite\(day\.estimatedMinutes\)/,
+  'Los minutos del plan se validan antes de mostrarse.');
 assert.match(page, /data-calendar-plan-day/,
   'Los días con temas guardados tienen una marca azul.');
 assert.match(page, /data-calendar-plan-exam/,
