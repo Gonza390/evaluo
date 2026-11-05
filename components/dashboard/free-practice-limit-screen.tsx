@@ -117,12 +117,12 @@ export function FreePracticeLimitScreen({
     <div data-free-practice-limit role="dialog" aria-modal="true" aria-labelledby="free-practice-limit-title"
       className="fixed inset-0 z-[200] h-dvh w-full overflow-hidden bg-white font-sans text-[#0f1623]">
       <div data-free-practice-limit-transition className={`flex h-full min-h-0 w-full flex-col overflow-hidden ${leaving ? 'practice-screen-leave' : 'practice-screen-enter'}`}>
-      <header className="flex min-h-[54px] shrink-0 items-center justify-between gap-3 border-b border-[#e8ecf2] px-4 py-2 sm:min-h-[60px] sm:px-8">
-        <div className="flex shrink-0 items-center gap-2.5">
-          <Image src="/evaluo-logo-icono.svg" alt="" width={28} height={28} className="size-7"/>
-          <span className="text-[18px] font-bold tracking-[-.01em]">Evaluo</span>
+      <header className="flex min-h-[54px] shrink-0 items-center justify-between gap-2 border-b border-[#e8ecf2] px-3 py-2 sm:min-h-[60px] sm:gap-3 sm:px-8">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+          <Image src="/evaluo-logo-icono.svg" alt="" width={28} height={28} className="size-6 sm:size-7"/>
+          <span className="text-[16px] font-bold tracking-[-.01em] sm:text-[18px]">Evaluo</span>
         </div>
-        <span className="min-w-0 max-w-[42vw] truncate text-center text-[12px] font-semibold text-[#344054] sm:text-[15px]">
+        <span className="min-w-0 flex-1 truncate text-center text-[11px] font-semibold text-[#344054] sm:max-w-[42vw] sm:text-[15px]">
           Práctica · {place}
         </span>
         {backControl(
@@ -176,16 +176,16 @@ export function FreePracticeLimitScreen({
           </div>
 
           <p className="mt-3 max-w-[440px] text-[12px] leading-[1.5] text-[#4b5565] sm:text-[13px]">
-            Ya agotaste tu cupo de {mode.noun} del plan gratis. Podés repetir las actividades que ya desbloqueaste. Con Premium accedés a nuevas prácticas.
+            Ya agotaste el cupo de {mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.
           </p>
 
-          <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-2.5">
+          <div className="mt-3 flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
             <Link href={premiumHref} onClick={event => onLinkClick(event, premiumHref)} aria-disabled={leaving}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2.5 rounded-full bg-[#0b63e5] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-full bg-[#0b63e5] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] sm:w-auto hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
               Practicar con <span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
             </Link>
             {backControl(
-              'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-[13px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5] sm:text-[14px]',
+              'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-[13px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5] sm:w-auto sm:text-[14px]',
               <><ArrowLeft className="size-[18px]" aria-hidden="true"/>{backLabel}</>,
             )}
           </div>
