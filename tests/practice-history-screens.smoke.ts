@@ -5,6 +5,7 @@ const read = (path: string) => readFileSync(path, 'utf8');
 const picker = read('components/dashboard/practice-mode-picker.tsx');
 const exerciseScreens = read('components/dashboard/practice-visual-screens.tsx');
 const practiceSession = read('components/dashboard/practice-session.tsx');
+const practiceResults = read('components/dashboard/practice-results-screen.tsx');
 const panel = read('components/dashboard/practice-history-panel.tsx');
 const detail = read('components/dashboard/practice-history-detail.tsx');
 const page = read('app/(es)/dashboard/practicar/page.tsx');
@@ -44,8 +45,10 @@ assert.match(caseScreen, /!correct && <p className="mt-2 whitespace-pre-line/,
   'Casos no muestra explicaciones cuando la respuesta es correcta.');
 assert.match(caseScreen, /!correct && <p className="mt-2 font-medium[^\n]*Respuesta correcta:/,
   'Casos mantiene la respuesta correcta cuando hay un error.');
-assert.match(practiceSession, /mode !== 'casos' \|\| !correctAt\(i\)/,
-  'Los resultados tampoco explican casos respondidos correctamente.');
+assert.match(practiceResults, /entries\.filter\(\(entry\) => !entry\.correct\)/,
+  'Los resultados muestran únicamente las respuestas que necesitan repaso, sin explicar los casos correctos.');
+assert.match(practiceSession, /correct: correctAt\(i\)/,
+  'La lista compartida de resultados conserva la evaluación real por pregunta.');
 
 assert.match(caseScreen, /scrollIntoView/, 'Al confirmar un error, se desliza hacia la explicación.');
 assert.match(caseScreen, /justConfirmedIncorrect/, 'El scroll no se dispara en respuestas correctas.');
