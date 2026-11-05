@@ -90,6 +90,8 @@ export function PricingPlanSelector({
             features={premiumFeatures}
             source={source}
             materiaId={materiaId}
+            parcial={parcial}
+            returnTo={returnTo}
             offerCode="semester"
           />
         </div>
