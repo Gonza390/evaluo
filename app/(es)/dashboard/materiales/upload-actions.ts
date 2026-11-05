@@ -158,8 +158,10 @@ async function getStudentMaterialUploadQuotaForUser(
   }
 
   const historicalIds = await historicalFreeStudyMaterialIds(userId);
+  // Free V2 reinicia el cupo comercial en el lanzamiento. Los PDFs viejos
+  // siguen disponibles, pero sólo cuenta el claim creado bajo el nuevo modelo.
   const used = isFreeStudyV2Active()
-    ? new Set([...countedMaterials.map(material => material.id), ...historicalIds]).size
+    ? historicalIds.length
     : countedMaterials.length;
   const freeLimit = isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT;
   const remaining = Math.max(0, freeLimit - used);
@@ -210,11 +212,17 @@ async function assertStudentMaterialQuota(userId: string) {
   dayStart.setUTCHours(0, 0, 0, 0);
 
   const [dailyResult, pendingResult, quota, hasUnlimitedUploads] = await Promise.all([
-    admin
-      .from('student_materials')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', dayStart.toISOString()),
+    isFreeStudyV2Active()
+      ? admin
+          .from('study_material_v2_upload_ledger' as never)
+          .select('material_id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .gte('claimed_at', dayStart.toISOString())
+      : admin
+          .from('student_materials')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .gte('created_at', dayStart.toISOString()),
     admin
       .from('student_materials')
       .select('id', { count: 'exact', head: true })
