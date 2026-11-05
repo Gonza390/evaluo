@@ -5,6 +5,7 @@ import Link from 'next/link';
 import './practice-motion.css';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
+import { PracticeResultsScreen, type PracticeResultEntry } from '@/components/dashboard/practice-results-screen';
 import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
@@ -473,65 +474,70 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     if (step < tasks.length - 1) { setStep(old => old + 1); return; }
     completeWithTransition();
   }
+  const resultEntries: PracticeResultEntry[] = mode === 'unir'
+    ? exercisePairs.map((pair, i) => ({
+        index: i,
+        prompt: 'Unir «' + pair.term + '» con su definición',
+        selectedAnswer: previewResult && i >= previewResult.correct
+          ? exercisePairs[(i + 1) % exercisePairs.length]?.definition ?? 'Otra definición'
+          : exercisePairs[matches[i]]?.definition ?? 'Sin responder',
+        correctAnswer: pair.definition,
+        explanation: 'La definición correcta de «' + pair.term + '» es la que aparece en el material.',
+        correct: correctAt(i),
+        chapterTitle: pair.chapterTitle,
+        modeLabel: 'Unir conceptos',
+        pageStart: pair.pageStart,
+      }))
+    : tasks.map((task, i) => {
+        const answer = task.type === 'recall' ? task.pair.term : task.question.answer;
+        const selected = previewResult && i >= previewResult.correct
+          ? task.type === 'recall'
+            ? 'Otro concepto'
+            : task.question.options.find(option => option !== answer) ?? 'Otra opción'
+          : responses[i] || 'Sin responder';
+        const modeLabel = mode === 'mixto'
+          ? task.type === 'recall' ? 'Completar' : 'Opción múltiple'
+          : mode === 'opciones' ? 'Verdadero o falso' : title[mode];
+        return {
+          index: i,
+          prompt: task.type === 'recall' ? task.pair.definition : task.question.prompt,
+          selectedAnswer: selected,
+          correctAnswer: answer,
+          explanation: task.type === 'recall'
+            ? 'El término correcto para esta definición es «' + task.pair.term + '».'
+            : explanationFor(task.question),
+          correct: correctAt(i),
+          chapterTitle: task.type === 'recall' ? task.pair.chapterTitle : task.question.chapterTitle,
+          modeLabel,
+          pageStart: task.type === 'recall' ? task.pair.pageStart : task.question.pageStart,
+        };
+      });
   const fullReport = finished ? (
-    <section className="practice-screen-enter mt-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-live="polite">
-      <p className="text-xs text-slate-500">Resultado de {title[mode].toLowerCase()}{previewResult ? ' · Vista previa' : ''}</p>
-      <h2 className="mt-2 text-[21px] font-semibold text-slate-900">{score} de {total}</h2>
-      <p className="mt-2 text-sm text-slate-600">
-        {score === total ? 'Completaste la actividad sin errores.' :
-          'Revisá las respuestas que te costaron y volvé al material para reforzarlas.'}
-      </p>
-      {missedTopics.length > 0 && <div className="mt-4 rounded-xl bg-blue-50/60 p-4">
-        <p className="text-sm font-medium text-slate-800">Temas sugeridos para repasar</p>
-        <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-slate-600">
-          {missedTopics.map(topic => <li key={topic}>{topic}</li>)}
-        </ul>
-      </div>}
-      <div className="mt-4 space-y-2">
-        {mode === 'unir' ? exercisePairs.map((pair, i) => (
-          <article key={i} className="rounded-xl bg-slate-50 p-3 text-sm">
-            <p className={correctAt(i) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
-              {correctAt(i) ? 'Correcta' : 'Para reforzar'} · {pair.term}
-            </p>
-            {!correctAt(i) && <p className="mt-1 text-slate-500">Tu elección: {previewResult ? exercisePairs[(i+1)%exercisePairs.length]?.definition : exercisePairs[matches[i]]?.definition ?? 'Sin responder'}</p>}
-            <p className="mt-1 text-slate-700">{pair.definition}</p>
-          </article>
-        )) : tasks.map((task, i) => {
-          const answer = task.type === 'recall' ? task.pair.term : task.question.answer;
-          const prompt = task.type === 'recall' ? task.pair.definition : task.question.prompt;
-          return <article className="rounded-xl bg-slate-50 p-3 text-sm" key={i}>
-            <p className={correctAt(i) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
-              {correctAt(i) ? 'Correcta' : 'Para reforzar'} · {i + 1}
-            </p>
-            <p className="mt-1 text-slate-800">{prompt}</p>
-            {!correctAt(i) && <p className="mt-1 text-slate-600">Tu respuesta: {previewResult ? (task.type === 'recall' ? 'Otro concepto' : task.question.options.find(option => option !== task.question.answer) ?? 'Otra opción') : responses[i] || 'Sin responder'}</p>}
-            {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-700">Respuesta esperada: {answer}</p>}
-            {diagnosticFor(i) && <p className="mt-1 text-slate-700">{diagnosticFor(i)}</p>}
-            {task.type === 'question' && <>
-              {(mode !== 'casos' || !correctAt(i)) && <p className="mt-1 text-slate-600">{explanationFor(task.question)}</p>}
-              {task.question.pageStart && !previewResult && <Link className="mt-2 inline-block text-blue-600 underline"
-                href={'/materiales/' + materialId + '?tab=resumen&page=' + task.question.pageStart}>
-                Revisar el material · página {task.question.pageStart}
-              </Link>}
-            </>}
-          </article>;
-        })}
-      </div>
-      
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" disabled={previewResult !== undefined} onClick={anotherRound}
-          className="min-h-10 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60">{mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'}</button>
-        {previewResult ? <span aria-disabled="true" className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm text-slate-400">{mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}</span> : <Link href={mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen'}
-          className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-5 text-sm">
-          {mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'}
-        </Link>}
-      </div>
-      {historySaveFailed && <div role="alert" className="mt-3 flex flex-wrap items-center gap-2 text-xs text-amber-800">
-        No pudimos guardar esta práctica en el historial.
-        <button type="button" onClick={saveCompletedSession} className="font-medium underline">Reintentar</button>
-      </div>}
-      <p className="mt-3 text-xs text-slate-500">{previewResult ? 'Ejemplo visual: no se guardan resultados ni se consumen cupos.' : 'Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.'}</p>
-    </section>
+    <PracticeResultsScreen
+      materialTitle={materialTitle}
+      materialId={materialId}
+      modeLabel={mode === 'opciones' ? 'Verdadero o falso' : title[mode]}
+      entries={resultEntries}
+      preview={Boolean(previewResult)}
+      closeHref={previewResult ? undefined : '/dashboard/practicar'}
+      primaryAction={{
+        label: mode === 'simulacro'
+          ? freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro'
+          : 'Practicar otra vez',
+        onClick: anotherRound,
+        disabled: Boolean(previewResult),
+      }}
+      secondaryAction={previewResult ? undefined : {
+        label: mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen',
+        href: mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen',
+      }}
+      extraAction={historySaveFailed && !previewResult
+        ? { label: 'Reintentar guardado', onClick: saveCompletedSession }
+        : undefined}
+      note={historySaveFailed && !previewResult
+        ? 'No pudimos guardar esta práctica en el historial.'
+        : 'Este resultado es orientativo y todavía no modifica tu progreso de aprendizaje.'}
+    />
   ) : null;
 
   const [revealPractice,setRevealPractice]=useState(false);
@@ -564,6 +570,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     return <PracticePreparing mode={mode} ready={false}/>;
   if (!finished && (pendingPreparation || (ready && !revealPractice)))
     return <PracticePreparing mode={mode} ready={ready} />;
+
+  if (ready && finished && fullReport) return fullReport;
 
   if (ready && !finished && mode === 'simulacro' && examStarted && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><ExamPracticeScreen key={step}
     materialTitle={materialTitle} index={step} secondsLeft={secondsLeft}
