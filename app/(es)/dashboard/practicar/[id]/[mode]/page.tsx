@@ -50,7 +50,7 @@ async function firstFreeItems<T>(args: {
 export default async function PracticeModePage({ params, searchParams }: { params: Promise<{ id: string; mode: string }>; searchParams: Promise<{ repaso?: string; planTopic?: string; returnTo?: string }> }) {
   const { id, mode } = await params;
   const { repaso, planTopic, returnTo } = await searchParams;
-  const planTopicIndex = planTopic !== undefined && /^\\d{1,3}$/.test(planTopic) ? Number(planTopic) : undefined;
+  const planTopicIndex = planTopic !== undefined && /^\d{1,3}$/.test(planTopic) ? Number(planTopic) : undefined;
   const reviewLength = repaso === 'rapido' ? 'rapido' : 'completo';
   const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards'];
   if (!supported.includes(mode) || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
