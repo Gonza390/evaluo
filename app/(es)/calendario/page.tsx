@@ -1290,6 +1290,18 @@ export default function CalendarioPage() {
                   </div>
                 ) : null}
 
+                {(selectedStudyPlanDay || selectedPlanExam) ? (
+                  <div className="rounded-xl border border-[#D9E6FF] bg-[#F4F8FF] p-3">
+                    <p className="text-[12px] font-semibold text-[#0F1B3D]">
+                      {selectedStudyPlanDay
+                        ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min`
+                        : 'Examen del plan de estudio'}
+                    </p>
+                    <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-[#2563EB]">
+                      Ver mi plan <ArrowRight className="size-3" aria-hidden="true" />
+                    </Link>
+                  </div>
+                ) : null}
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
                     <p className="text-[13px] font-medium text-slate-900">
