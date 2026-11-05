@@ -16,3 +16,5 @@ create policy qa_student_material_owner on public.student_materials
 -- New RESTRICTIVE policies installed by Free V2 must deny direct writes.
 insert into auth.users(id) values ('00000000-0000-4000-8000-000000000006');
 insert into public.profiles(id) values ('00000000-0000-4000-8000-000000000006');
+insert into auth.users(id) values ('00000000-0000-4000-8000-000000000007');
+insert into public.profiles(id) values ('00000000-0000-4000-8000-000000000007');
