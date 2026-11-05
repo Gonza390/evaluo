@@ -14,7 +14,8 @@ assert.match(materials, /onPrimaryAction=\{\(\) => openUploadPicker\(/);
 assert.match(dashboardChrome, /usePdfUploadTrigger\(\)/);
 const calendar = source('app/(es)/calendario/page.tsx');
 const calendarStyles = source('app/(es)/calendario/calendar-clean.css');
-assert.match(calendar, /event\.type === 'exam'[\s\S]*?'#AD713D'/);
+assert.match(calendar, /event\.type === 'exam'\s*\?\s*'border-\[#F1DFC8\] bg-\[#FFF2E6\] text-\[#AD713D\]'/,
+  'Calendar exam badges keep the current accessible amber colors.');
 assert.match(calendar, /'#376CAD'/);
 assert.match(calendarStyles, /--calendar-exam-text: #92400e/);
 assert.match(calendar, /text-slate-500' : 'text-slate-900'/);
