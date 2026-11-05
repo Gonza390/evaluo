@@ -182,6 +182,7 @@ export function StudentMaterialExam({
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const preclaimedFreeQuestionIds = useRef<Set<string>>(new Set());
   const [freeClaimPending, setFreeClaimPending] = useState(false);
   const [freeQuotaMessage, setFreeQuotaMessage] = useState('');
   const [openAssessments, setOpenAssessments] = useState<Record<string, OpenAssessment>>({});
@@ -387,6 +388,7 @@ export function StudentMaterialExam({
 
   const clearAttempt = (newSessionId = crypto.randomUUID()) => {
     answerIds.current = {};
+    preclaimedFreeQuestionIds.current.clear();
     sessionIdRef.current = newSessionId;
     savedAnswerIdsRef.current = [];
     objectiveRequestRef.current += 1;
@@ -407,6 +409,8 @@ export function StudentMaterialExam({
     if (preparing) return;
     setPreparing(true);
     setTopicGenerationUnavailable(false);
+    setFreeQuotaMessage('');
+    setFreeQuotaReached(false);
     let pool=eligibleQuestions;
     if (topicSectionIndex !== undefined && !simulation &&
         verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS) {
@@ -456,7 +460,8 @@ export function StudentMaterialExam({
         loadError: true,
       })));
     const nextQuestions = selectTopicPracticeQuestions({
-      questions: pool,
+      questions: freeStudyV2 && !simulation
+        ? pool.filter(question => question.type === 'multiple_choice') : pool,
       preferredQuestionIds,
       targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize :
         topicPracticeQuestionCount(pool.length),
@@ -468,24 +473,58 @@ export function StudentMaterialExam({
       context,
       unansweredOnly: topicSectionIndex !== undefined,
     });
-    // El cupo Free se consume al COMPROBAR la respuesta (más abajo).
-    // Abrir la práctica o navegar por preguntas nunca debe gastar créditos.
-    // El backend valida el ID canónico antes de confirmar cada nueva pregunta.
+    // Free: the complete batch is server-verified and reserved before the first
+    // answer is shown. The final remaining credit may yield a shorter session.
+    // Previously unlocked questions can still be repeated without new credits.
     let accessibleQuestions = nextQuestions;
-    if (freeStudyV2 && !simulation) {
-      accessibleQuestions = nextQuestions.filter(question => question.type === 'multiple_choice');
-      setFreeQuotaReached(false);
+    let approvedFreeIds: string[] = [];
+    if (freeStudyV2 && !simulation && nextQuestions.length) {
+      const choices = getDistinctEligibleExamQuestions(pool)
+        .filter(question => question.type === 'multiple_choice');
+      const byId = new Map(choices.map(question => [question.id, question]));
+      const candidateIds = [...new Set([...nextQuestions, ...choices].map(question => question.id))]
+        .slice(0, 300);
+      try {
+        const response = await fetch('/api/free-study-v2/practice-session', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            materialId, questionIds: candidateIds,
+            maxQuestions: Math.min(MAX_TOPIC_PRACTICE_QUESTIONS, nextQuestions.length),
+          }),
+        });
+        const data: unknown = await response.json();
+        if (!response.ok || !data || typeof data !== 'object' ||
+          !('questionIds' in data) || !Array.isArray(data.questionIds) ||
+          !data.questionIds.every((id: unknown) => typeof id === 'string') ||
+          !('exhausted' in data) || typeof data.exhausted !== 'boolean')
+          throw new Error('reservation_unavailable');
+        approvedFreeIds = data.questionIds as string[];
+        accessibleQuestions = approvedFreeIds.flatMap(id => {
+          const question = byId.get(id);
+          return question ? [question] : [];
+        });
+        if (!accessibleQuestions.length && data.exhausted) {
+          setFreeQuotaReached(true);
+          setPreparing(false);
+          return;
+        }
+      } catch {
+        setFreeQuotaMessage('No pudimos verificar las preguntas disponibles. Reintentá para continuar.');
+        setPreparing(false);
+        return;
+      }
     }
-    if(!accessibleQuestions.length){
-      if (!freeStudyV2) setTopicGenerationUnavailable(true);
+    if (!accessibleQuestions.length) {
+      setTopicGenerationUnavailable(true);
       setPreparing(false);
       return;
     }
     const nextSessionId = crypto.randomUUID();
+    clearAttempt(nextSessionId);
+    preclaimedFreeQuestionIds.current = new Set(approvedFreeIds);
     setQuestions(accessibleQuestions.map(question => shuffleStudyQuestionOptions(question, nextSessionId)));
     setContextUnavailable(Boolean(context.loadError));
     setSavedDraft(null);
-    clearAttempt(nextSessionId);
     attemptEntryRef.current = { source: entrySource, id: entryId };
     setStarted(true);
     setPreparing(false);
@@ -639,6 +678,13 @@ export function StudentMaterialExam({
               </button>
             </div>
           </div>
+        ) : freeQuotaMessage ? (
+          <div role="alert" className="border-border rounded-xl border p-4">
+            <p className="text-sm text-slate-700">{freeQuotaMessage}</p>
+            <Button type="button" className="mt-3" onClick={() => void startExam()}>
+              Reintentar práctica
+            </Button>
+          </div>
         ) : (
           <p role="status" className="text-muted-foreground text-sm">
             {preparing ? 'Preparando tus preguntas…' : 'Abriendo la práctica…'}
@@ -750,7 +796,10 @@ export function StudentMaterialExam({
           })}
         </div>
 
-        {freeQuotaReached && freeStudyV2 ? (
+        {freeQuotaMessage && freeStudyV2 ? (
+        <p role="alert" className="mb-3 text-sm text-amber-700">{freeQuotaMessage}</p>
+      ) : null}
+      {freeQuotaReached && freeStudyV2 ? (
         <p role="status" className="mb-3 text-sm text-slate-600">
           Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las que ya desbloqueaste.
         </p>
@@ -1846,7 +1895,8 @@ export function StudentMaterialExam({
               disabled={freeClaimPending || (current.type === 'multiple_choice' && !selectedAnswer)}
               onClick={() => {
                 void (async () => {
-                  if (freeStudyV2 && current.type === 'multiple_choice') {
+                  if (freeStudyV2 && current.type === 'multiple_choice' &&
+                      !preclaimedFreeQuestionIds.current.has(current.id)) {
                     setFreeClaimPending(true);
                     setFreeQuotaMessage('');
                     try {

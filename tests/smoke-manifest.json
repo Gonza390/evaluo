@@ -324,6 +324,10 @@
     "alias": false
   },
   {
+    "file": "tests/free-study-multiple-choice-session.smoke.ts",
+    "alias": false
+  },
+  {
     "file": "tests/free-practice-limit-screen.smoke.ts",
     "alias": false
   }
