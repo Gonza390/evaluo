@@ -89,7 +89,10 @@ import {
 
 assert.equal(formatStorageDate(new Date(2026, 5, 17)), '2026-06-17');
 assert.equal(addMonths(new Date(2026, 5, 1), 1).getMonth(), 6);
-assert.equal(getCalendarGrid(new Date(2026, 5, 1)).length, 42);
+// The compact calendar deliberately renders only the weeks needed for each month.
+assert.equal(getCalendarGrid(new Date(2026, 5, 1)).length, 35);
+assert.equal(getCalendarGrid(new Date(2026, 7, 1)).length, 42);
+assert.equal(getCalendarGrid(new Date(2027, 1, 1)).length, 28);
 assert.equal(examInstanceLabel('integrador'), 'Integrador');
 
 const examPayload = buildEventPayload({
