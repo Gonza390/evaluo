@@ -109,6 +109,16 @@ export default async function PracticeModePage({ params, searchParams }: { param
   // No consumir flashcards al abrir Casos, Simulacro, Opciones o Unir.
   // El estudiante gasta el cupo sólo si entra efectivamente a Flashcards.
   if (mode === 'flashcards') {
+    // La cuota es por cuenta: no intentar generar tarjetas nuevas ni gastar IA
+    // si las 25 están usadas en otros materiales.
+    if (freeV2) {
+      const keys = await listFreeStudyUnlockedKeys({
+        userId:user.id, kind:'flashcard', premium:false,
+      });
+      if (keys && keys.size >= FREE_STUDY_V2.flashcards &&
+          !Array.from(keys).some(key => key.startsWith(material.id + ':')))
+        return exhausted('flashcard');
+    }
     const freeFlashcards = freeV2
       ? await firstFreeItems({
         userId: user.id, materialId: material.id, kind: 'flashcard',
