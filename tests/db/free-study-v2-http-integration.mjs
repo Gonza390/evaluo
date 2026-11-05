@@ -64,6 +64,9 @@ denied(await request('/free_study_v2_unlocks', { role: 'authenticated' }), 'Stud
 denied(await request('/free_study_v2_upload_claims', { role: 'authenticated' }), 'Student lifetime claim read');
 denied(await request('/free_study_v2_banks', { role: 'authenticated' }), 'Student cached bank read');
 denied(await request(api, {
+  role: 'anon', method: 'POST', body: claim(material + ':q:13'),
+}), 'Anonymous quota claim');
+denied(await request(api, {
   role: 'authenticated', method: 'POST', body: claim(material + ':q:13'),
 }), 'Forged authenticated quota claim');
 denied(await request('/rpc/save_free_study_v2_plan', {
