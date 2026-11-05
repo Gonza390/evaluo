@@ -524,7 +524,8 @@ export function StudentMaterialFlashcards({
         prompt: card?.front ?? 'Tarjeta de estudio',
         selectedAnswer: sessionRecall[cardIndex] === 'known' ? 'Lo sabía' : 'No lo sabía',
         correctAnswer: card?.back ?? '',
-        explanation: 'Repasá el concepto y tratá de recordarlo antes de dar vuelta la tarjeta.',
+        // Flashcards no tienen una explicación separada: no repetir la respuesta ni inventar contenido.
+        explanation: '',
         correct: sessionRecall[cardIndex] === 'known',
         chapterTitle: card?.reference.sectionTitle,
         modeLabel: 'Flashcards',
