@@ -105,6 +105,15 @@ assert.match(session, /contexts\.length >= \(freeV2 \? 1 : MIN_CASES_PER_PRACTIC
 assert.match(session, /Comenzar simulacro/);
 assert.match(session, /claimSessionQuota\(\)\.then\(allowed/);
 assert.match(modePage, /keys\.size >= FREE_STUDY_V2\.flashcards/);
+assert.match(modePage, /auditPracticeFlashcard\(card\)\.approved/,
+  'Invalid generated flashcards may never burn a lifetime Free grant.');
+assert.match(modePage, /seenPrompts\.has\(prompt\) \|\| seenAnswers\.has\(answer\)/,
+  'Duplicate cards must be deduplicated before charging Free.');
+assert.match(modePage, /if \(args\.valid && !args\.valid\(item, index\)\) continue;/,
+  'Validate before claim, preserving the original canonical index.');
+assert.ok(modePage.indexOf('args.valid(item, index)') < modePage.indexOf('await claimFreeStudyUnlock({'),
+  'Do not consume grants before the content quality gate.');
+
 assert.match(modePage, /return exhausted\('flashcard'\)/);
 const supplemental = read('app/api/practice/supplement/route.ts');
 assert.match(supplemental, /listFreeStudyUnlockedKeys/);
