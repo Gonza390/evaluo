@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/seo-migration-audit.yml'
       - 'scripts/seo/migration-live-check.mjs'
+      - 'scripts/seo/bing-robots-diagnostic.mjs'
       - 'tests/seo-migration-growth.smoke.mjs'
       - 'app/(es)/ia-para-estudiantes/page.tsx'
       - 'app/(es)/como-estudiar-ingreso-unlam/page.tsx'
@@ -46,6 +47,18 @@ jobs:
         run: node tests/seo-migration-growth.smoke.mjs
       - name: Check public permanent redirects, canonicals, robots and sitemap
         run: node scripts/seo/migration-live-check.mjs
+      - name: Read-only Bing crawl diagnostics (NOT recommendations)
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: node scripts/seo/bing-robots-diagnostic.mjs
+      - name: Archive sanitized Bing crawl diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluo-bing-crawl-diagnostics
+          path: artifacts/seo/bing-crawl-issues.json
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Save non-secret HTTP audit
         if: always()
         uses: actions/upload-artifact@v4
