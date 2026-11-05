@@ -124,7 +124,6 @@ export function PdfProgressPanel({
     ...item,
     ...viewOverrides[item.id],
   }));
-  const [filter, setFilter] = useState('Todos');
   const [search, setSearch] = useState('');
   const initialTopic = buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find(
     (topic) => topic.id === `section-${initialTopicSectionIndex}`
@@ -222,23 +221,19 @@ export function PdfProgressPanel({
         currentErrors.some((error) => error.prompt === prompt && error.status === 'resolved')
       )
     : hasReinforced;
-  const visibleTopics = topics.filter(
-    (topic) =>
-      topic.title
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .includes(
-          search
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim()
-        ) &&
-      (filter === 'Todos' ||
-        (filter === 'Por reforzar'
-          ? topic.errors.some((error) => error.status === 'pending')
-          : topicAssessmentCount(topic) === 0))
+  // Coverage is based on actual study events, not a prediction of topic mastery.
+  const topicStates = topics.map((topic) => {
+    if (topic.errors.some((error) => error.status === 'pending')) return 'review' as const;
+    if (topicAssessmentCount(topic) > 0) return 'assessed' as const;
+    if (topic.evidence.some((item) => item.selfReported > 0)) return 'self' as const;
+    return 'none' as const;
+  });
+  const touchedTopics = topicStates.filter((state) => state !== 'none').length;
+  const assessedTopics = topics.filter((topic) => topicAssessmentCount(topic) > 0).length;
+  const visibleTopics = topics.filter((topic) =>
+    topic.title.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().includes(
+      search.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim()
+    )
   );
   const router = useRouter();
   const materialHref = simulation ? simulation.pdfHref : `/materiales/${material.id}`;
@@ -731,7 +726,7 @@ export function PdfProgressPanel({
 
   return (
     <div
-      className={`${embedded ? 'w-full py-2 sm:py-3' : 'mx-auto w-full max-w-[1240px] px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
+      className={`${embedded ? 'mx-auto w-full max-w-[1000px] py-2 sm:py-3' : 'mx-auto w-full max-w-[1000px] px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
     >
       {!embedded && !simulation && (
         <PdfMobileNavigation
