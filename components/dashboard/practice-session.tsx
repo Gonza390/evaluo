@@ -516,6 +516,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     <PracticeResultsScreen
       materialTitle={materialTitle}
       materialId={materialId}
+      documentLabel={isWord ? 'DOC' : 'PDF'}
       modeLabel={mode === 'opciones' ? 'Verdadero o falso' : title[mode]}
       entries={resultEntries}
       preview={Boolean(previewResult)}
