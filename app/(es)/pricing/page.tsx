@@ -39,11 +39,11 @@ export const metadata: Metadata = {
 };
 
 const freeFeatures = [
-  '2 PDFs cada 15 días',
-  'Resúmenes y flashcards de tus apuntes',
-  'Práctica para conocer tu progreso por tema',
-  'Identificá qué errores necesitás reforzar',
-  'Calendario de exámenes y simuladores básicos',
+  '1 material PDF o Word gratis de por vida',
+  'Resúmenes y glosario del material',
+  '12 preguntas de opción múltiple y 10 de verdadero/falso',
+  '25 flashcards, 2 casos prácticos y 1 ronda de unir conceptos',
+  '1 simulacro y 1 plan de estudio gratuito',
 ];
 
 const premiumFeatures = [
@@ -55,15 +55,17 @@ const premiumFeatures = [
 ];
 
 const comparison = [
-  ['Carga de PDFs propios', '2 cada 15 días', 'Hasta 3 por día'],
+  ['Carga de PDF o Word', '1 material de por vida', 'Hasta 3 nuevos por día'],
   ['Resúmenes y glosario', 'Incluidos', 'Incluidos'],
-  ['Flashcards', 'Incluidas', 'Incluidas'],
-  ['Práctica y resultados de tus PDFs', 'Incluidos', 'Incluidos'],
-  ['Progreso por tema y repaso de errores', 'Incluidos', 'Incluidos'],
-  ['Ayudas y comprobaciones con IA para errores', 'Con cupos', 'Uso ampliado'],
-  ['Mapa mental de tus PDFs', 'No incluido', 'Incluido'],
-  ['Simuladores de materias', 'Básicos', 'Modos Premium'],
-  ['Explicaciones con IA en simuladores', 'Hasta 3', 'Más explicaciones'],
+  ['Opción múltiple', '12 preguntas', 'Sin cupo Free'],
+  ['Verdadero o falso', '10 preguntas', 'Sin cupo Free'],
+  ['Unir conceptos', '1 ronda de 6 pares', 'Sin cupo Free'],
+  ['Casos prácticos', '2', 'Sin cupo Free'],
+  ['Flashcards', '25', 'Sin cupo Free'],
+  ['Simulacros de examen', '1 de 20 preguntas', 'Sin cupo Free'],
+  ['Planes de estudio', '1 editable', 'Sin cupo Free'],
+  ['Resultados y explicaciones de errores', 'Incluidos', 'Incluidos'],
+  ['Mapa mental desde PDF', 'No incluido', 'Incluido'],
   ['Calendario de exámenes', 'Incluido', 'Incluido'],
 ] as const;
 
