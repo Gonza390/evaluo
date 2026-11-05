@@ -200,7 +200,7 @@ assert.match(progressPanelSource, /data-tour-example-topic/,
   'El ejemplo visual debe mostrarse en la lista de temas.');
 assert.match(progressPanelSource, /Dominado.*Reforzar.*Sin evaluar/s,
   'El ejemplo debe distinguir dominado, reforzar y sin evaluar.');
-assert.match(progressPanelSource, /no representan tus resultados/,
+assert.match(progressPanelSource, /son ejemplos ilustrativos, no resultados reales/,
   'Los estados ilustrativos no deben atribuirse al estudiante.');
 assert.match(progressPanelSource, /topics\.slice\(0, 3\)/,
   'El ejemplo debe usar nombres de temas de ese PDF.');
