@@ -57,6 +57,37 @@ type CalendarStorageMode = 'supabase' | 'local';
 type CalendarStudyPlan = { exam_date: string; schedule: PlanDay[]; updated_at: string };
 type OwnerStudyPlan = { userId: string; plan: CalendarStudyPlan | null };
 
+function normalizeCalendarStudyPlan(value: unknown): CalendarStudyPlan | null {
+  if (!value || typeof value !== 'object') return null;
+  const plan = value as Partial<CalendarStudyPlan>;
+  if (typeof plan.exam_date !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(plan.exam_date) ||
+      !Array.isArray(plan.schedule)) return null;
+
+  // Un plan antiguo o parcialmente corrupto no debe romper el calendario.
+  const schedule: PlanDay[] = [];
+  for (const day of plan.schedule) {
+    if (!day || typeof day.date !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(day.date) ||
+        !Array.isArray(day.topics)) continue;
+    const topics = day.topics.filter(topic =>
+      topic && typeof topic.materialId === 'string' &&
+      typeof topic.title === 'string' && Number.isInteger(topic.topicIndex)
+    );
+    if (!topics.length) continue;
+    const minutes = Number.isFinite(day.estimatedMinutes)
+      ? Math.max(0, day.estimatedMinutes)
+      : topics.reduce((sum, topic) =>
+          sum + (Number.isFinite(topic.estimatedMinutes) ? Math.max(0, topic.estimatedMinutes) : 0), 0);
+    schedule.push({ ...day, topics, estimatedMinutes: minutes });
+  }
+  return {
+    exam_date: plan.exam_date,
+    updated_at: typeof plan.updated_at === 'string' ? plan.updated_at : '',
+    schedule,
+  };
+}
+
 const WEEKDAY_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const DEFAULT_FORM_STATE = DEFAULT_CALENDAR_FORM_STATE;
@@ -420,13 +451,9 @@ export default function CalendarioPage() {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error('No pudimos recuperar la planificación del calendario.');
-        const data = (await response.json()) as { plan?: CalendarStudyPlan | null };
+        const data = (await response.json()) as { plan?: unknown };
         if (controller.signal.aborted) return;
-        const plan = data.plan;
-        const validPlan = plan &&
-          /^\d{4}-\d{2}-\d{2}$/.test(plan.exam_date) &&
-          Array.isArray(plan.schedule) ? plan : null;
-        setOwnerStudyPlan({ userId, plan: validPlan });
+        setOwnerStudyPlan({ userId, plan: normalizeCalendarStudyPlan(data?.plan) });
         setStudyPlanLoadError(false);
       } catch (error) {
         if (controller.signal.aborted) return;
