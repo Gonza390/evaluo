@@ -63,6 +63,10 @@ export function FreePracticeLimitScreen({
   // Reuse the 280ms entrance / 200ms departure from the practice flow.
   const transitionOut = (navigate: () => void) => {
     if (leaving) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      navigate();
+      return;
+    }
     setLeaving(true);
     transitionTimer.current = window.setTimeout(navigate, 200);
   };
