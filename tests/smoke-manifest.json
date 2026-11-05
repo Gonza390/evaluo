@@ -120,6 +120,10 @@
     "alias": false
   },
   {
+    "file": "tests/seo-exam-study-time.smoke.mjs",
+    "alias": false
+  },
+  {
     "file": "tests/text-quality.smoke.ts",
     "alias": true
   },
