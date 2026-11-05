@@ -231,8 +231,8 @@ export function PdfProgressPanel({
   const touchedTopics = topicStates.filter((state) => state !== 'none').length;
   const assessedTopics = topics.filter((topic) => topicAssessmentCount(topic) > 0).length;
   const visibleTopics = topics.filter((topic) =>
-    topic.title.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().includes(
-      search.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().trim()
+    topic.title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(
+      search.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
     )
   );
   const router = useRouter();
@@ -1008,48 +1008,26 @@ export function PdfProgressPanel({
           <div className="space-y-3">
             <section
               data-recommended-topics
-              className="border-border bg-card overflow-hidden rounded-xl border"
-              aria-labelledby={`real-topics-title-${panelId}`}
+              className="overflow-hidden rounded-2xl border border-[#E7EBF4] bg-white"
+              aria-labelledby={String(panelId) + '-topics-heading'}
             >
-              <div className="p-4 pb-2">
-                <h2 id={`real-topics-title-${panelId}`} className="text-[16px] font-medium">
+              <div className="px-4 pb-3 pt-4 sm:px-5">
+                <h2 id={String(panelId) + '-topics-heading'} className="text-[15px] font-semibold text-[#0F1B3D] sm:text-[16px]">
                   {showOnboardingExample ? 'Así vas a ver tu progreso' : 'Contenido de tu PDF'}
                 </h2>
                 {showOnboardingExample && (
-                  <p data-tour-progress-disclaimer role="status" className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-[12px] leading-5 text-blue-800">
-                    Ejemplo visual con temas de tu PDF. Dominado, Reforzar y Sin evaluar son estados ilustrativos; no representan tus resultados.
+                  <p data-tour-progress-disclaimer role="status" className="mt-2 rounded-lg bg-[#EEF2FF] px-3 py-2 text-[12px] leading-5 text-[#254C98]">
+                    Los estados de los tres temas siguientes son ejemplos ilustrativos, no resultados reales.
                   </p>
                 )}
                 {!showOnboardingExample && topics.length >= 8 && (
-                  <label className="mt-3 block text-[13px]">
-                    <span className="text-muted-foreground">Buscar tema</span>
-                    <input
-                      type="search"
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
+                  <label className="mt-3 block max-w-[420px] text-[12px] text-[#42506A]">
+                    <span>Buscar tema</span>
+                    <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
                       placeholder="Nombre del tema o capítulo"
-                      className="border-border bg-background focus-visible:outline-ring mt-2 min-h-11 w-full rounded-lg border px-3"
-                    />
+                      className="mt-1.5 min-h-10 w-full rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] text-[#0F1B3D] outline-none focus-visible:border-[#2563EB] focus-visible:ring-1 focus-visible:ring-[#2563EB]" />
                   </label>
                 )}
-                {!showOnboardingExample && <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtrar temas">
-                  {['Todos', 'Por reforzar', 'Sin evaluar'].map((label) => (
-                    <button
-                      type="button"
-                      key={label}
-                      aria-pressed={filter === label}
-                      disabled={label === 'Sin evaluar' && assessmentData?.loadError}
-                      onClick={() => {
-                        setFilter(label);
-                        setTopicId(null);
-                        setErrorId(null);
-                      }}
-                      className={`focus-visible:outline-ring min-h-10 rounded-full px-4 text-xs font-medium focus-visible:outline-2 ${filter === label ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>}
               </div>
               <ul className="divide-border divide-y">
                 {showOnboardingExample && topics.slice(0, 3).map((topic, index) => {
