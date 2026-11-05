@@ -175,12 +175,12 @@ await check('topic practice -> result -> return to same topic', async () => {
 await check('topic reinforcement: saved explanation -> optional help -> independent check', async () => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   try {
-    await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso&error=preview-pdf-error-2', {
+      waitUntil: 'domcontentloaded', timeout: 60000,
+    });
     await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
-    // La prueba se centra en el refuerzo del tema 2. Entramos directamente
-    // desde el listado para no depender de la navegación del CTA de continuación.
-    await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
-    await page.getByRole('button', { name: /Reforzar (?:las )?dificultades/i }).first().click();
+    // El acceso directo a un error pendiente debe abrir su revisión.
+    // Evita depender de un CTA condicionado por la cobertura de la práctica.
     const review = page.locator('[data-topic-reinforcement]:visible').first();
     await review.waitFor(wait);
     await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
