@@ -129,15 +129,15 @@ assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI la
 assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
 assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
 assertIncludesAll('app/(es)/como-estudiar-ingreso-unlam/page.tsx', [
-  'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
+  'Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar',
   'canonical: toAbsoluteUrl(path)',
-  "const modifiedAt = '2026-10-29';",
+  "const modifiedAt = '2026-11-05';",
   'UnlamEditorialGuide',
 ]);
 assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
   'UnlamIngresoToolkit',
   '/estudiar-pdf-con-ia?source=ingreso-unlam-2027',
-  'Revisado el 29 de octubre de 2026',
+  'Revisado el 5 de noviembre de 2026',
 ]);
 assertIncludesAll('components/marketing/unlam-ingreso-toolkit.tsx', [
   'Profesorado en Educación Física',
@@ -160,7 +160,7 @@ assertIncludesAll('lib/analytics-events.ts', [
   'seo_unlam_practice_answered',
   'seo_unlam_practice_completed',
 ]);
-assert.ok(source('app/sitemap.ts').includes("new Date('2026-10-29')"), 'Updated UNLaM guide must have recent sitemap modification date');
+assert.ok(source('app/sitemap.ts').includes("new Date('2026-11-05')"), 'Updated UNLaM guide must have recent sitemap modification date');
 assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
   'linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)',
   'Parciales UBA XXI: exámenes anteriores y práctica',
