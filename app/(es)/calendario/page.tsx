@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   BellRing,
+  BookOpenText,
+  ArrowRight,
   CalendarPlus,
   ChevronLeft,
   ChevronRight,
@@ -48,8 +51,11 @@ import { validateCalendarWrite, describeCalendarSaveError } from '@/lib/calendar
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { AppPageHeader } from '@/components/ui/app-page-header';
+import type { PlanDay } from '@/lib/student-materials/study-plan-distribution';
 
 type CalendarStorageMode = 'supabase' | 'local';
+type CalendarStudyPlan = { exam_date: string; schedule: PlanDay[]; updated_at: string };
+type OwnerStudyPlan = { userId: string; plan: CalendarStudyPlan | null };
 
 const WEEKDAY_LABELS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -162,6 +168,8 @@ export default function CalendarioPage() {
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [formState, setFormState] = useState(DEFAULT_FORM_STATE);
   const [events, setEvents] = useState<StudyCalendarEvent[]>([]);
+  const [ownerStudyPlan, setOwnerStudyPlan] = useState<OwnerStudyPlan | null>(null);
+  const [studyPlanLoadError, setStudyPlanLoadError] = useState(false);
   const [hasLoadedEvents, setHasLoadedEvents] = useState(false);
   const [storageMode, setStorageMode] = useState<CalendarStorageMode>('supabase');
   const [careerMateriaOptions, setCareerMateriaOptions] = useState<CareerMateriaOption[]>([]);
@@ -400,7 +408,53 @@ export default function CalendarioPage() {
     };
   }, [user]);
 
+  // Fechas calculadas desde el plan persistido: no se agregan eventos de calendario.
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+    const controller = new AbortController();
+    const loadStudyPlan = async () => {
+      try {
+        const response = await fetch('/api/study-plans?view=calendar', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error('No pudimos recuperar la planificación del calendario.');
+        const data = (await response.json()) as { plan?: CalendarStudyPlan | null };
+        if (controller.signal.aborted) return;
+        const plan = data.plan;
+        const validPlan = plan &&
+          /^\\d{4}-\\d{2}-\\d{2}$/.test(plan.exam_date) &&
+          Array.isArray(plan.schedule) ? plan : null;
+        setOwnerStudyPlan({ userId, plan: validPlan });
+        setStudyPlanLoadError(false);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        logError('calendario.loadStudyPlan', error, { userId });
+        setOwnerStudyPlan({ userId, plan: null });
+        setStudyPlanLoadError(true);
+      }
+    };
+    void loadStudyPlan();
+    return () => controller.abort();
+  }, [user?.id]);
+
+  const activeStudyPlan = ownerStudyPlan?.userId === user?.id ? ownerStudyPlan.plan : null;
+  const studyPlanDaysByDate = useMemo(() => {
+    const result = new Map<string, PlanDay>();
+    for (const day of activeStudyPlan?.schedule ?? []) {
+      if (!day || typeof day.date !== 'string' || !Array.isArray(day.topics) || day.topics.length === 0) continue;
+      result.set(day.date, day);
+    }
+    return result;
+  }, [activeStudyPlan]);
+
   const selectedDateKey = formatStorageDate(selectedDate);
+  const selectedStudyPlanDay = studyPlanDaysByDate.get(selectedDateKey);
+  const selectedPlanExam = activeStudyPlan?.exam_date === selectedDateKey;
+  const selectionInVisibleMonth =
+    selectedDate.getFullYear() === visibleMonth.getFullYear() &&
+    selectedDate.getMonth() === visibleMonth.getMonth();
 
   const eventsByDate = useMemo(() => {
     return events.reduce<Record<string, StudyCalendarEvent[]>>((accumulator, event) => {
