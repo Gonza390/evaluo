@@ -424,7 +424,7 @@ export default function CalendarioPage() {
         if (controller.signal.aborted) return;
         const plan = data.plan;
         const validPlan = plan &&
-          /^\\d{4}-\\d{2}-\\d{2}$/.test(plan.exam_date) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(plan.exam_date) &&
           Array.isArray(plan.schedule) ? plan : null;
         setOwnerStudyPlan({ userId, plan: validPlan });
         setStudyPlanLoadError(false);
