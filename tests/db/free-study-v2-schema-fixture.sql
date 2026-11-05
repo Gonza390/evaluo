@@ -61,7 +61,21 @@ insert into public.subscription_plans(id,code) values
 insert into public.user_subscriptions(user_id,plan_id,status,expires_at)
 values ('00000000-0000-4000-8000-000000000004',
         '10000000-0000-4000-8000-000000000001','active',now()+interval '30 days');
--- Preexisting ready material must consume the lifetime Free grant on migration.
+-- Historial real anterior al lanzamiento: NO debe consumir cupos nuevos.
 insert into public.student_materials(id,user_id,processing_status) values
  ('20000000-0000-4000-8000-000000000001',
-  '00000000-0000-4000-8000-000000000001','ready');
+  '00000000-0000-4000-8000-000000000001','ready'),
+ ('40000000-0000-4000-8000-000000000001',
+  '00000000-0000-4000-8000-000000000004','ready'),
+ ('40000000-0000-4000-8000-000000000002',
+  '00000000-0000-4000-8000-000000000004','ready'),
+ ('40000000-0000-4000-8000-000000000003',
+  '00000000-0000-4000-8000-000000000004','ready');
+-- También se conserva el plan de estudio anterior y se regala un cupo nuevo.
+insert into public.student_personal_study_plans
+ (user_id,exam_date,daily_minutes,material_ids,preferences,schedule)
+values
+ ('00000000-0000-4000-8000-000000000001',
+  current_date+8,30,
+  array['20000000-0000-4000-8000-000000000001']::uuid[],
+  array['practicar']::text[],'[]'::jsonb);
