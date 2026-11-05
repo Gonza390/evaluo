@@ -39,7 +39,6 @@ import {
   selectVisionPageNumbers,
 } from '@/lib/student-materials/vision-extract';
 import { buildClientVisionPagePaths } from '@/lib/student-materials/client-vision-cache';
-import { ensureStudentMaterialThumbnail } from '@/lib/student-materials/thumbnail';
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
@@ -214,16 +213,6 @@ export async function processStudentMaterial(input: {
   const { text: nativeText, pageCount, pages: nativePages } = nativeSource;
   const documentAnalysis = sourceCheckpoint?.documentAnalysis ??
     wordExtraction?.documentAnalysis ?? analyzePdfDocument(buffer!, nativeText, pageCount);
-
-  if (buffer && !isDocx) {
-    try {
-      await ensureStudentMaterialThumbnail(admin, material.file_path, buffer);
-    } catch (thumbnailError) {
-      logError('processStudentMaterial.thumbnail', thumbnailError, {
-        materialId: material.id,
-      });
-    }
-  }
 
   if (sourceCheckpoint) {
     logInfo('processStudentMaterial.sourceCheckpointHit', {
