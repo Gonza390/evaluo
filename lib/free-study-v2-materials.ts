@@ -2,7 +2,11 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isFreeStudyV2Active } from '@/lib/free-study-v2';
 
-/** El primer material procesado sigue contando aun si se elimina el archivo. */
+/**
+ * Solo lee el cupo generado BAJO Free V2, después de activar el lanzamiento.
+ * Los PDFs previos permanecen en la biblioteca, pero no consumen esta cuota.
+ * Un material nuevo ya consumido sigue contando aun si se elimina.
+ */
 export async function historicalFreeStudyMaterialIds(userId: string): Promise<string[]> {
   if (!isFreeStudyV2Active()) return [];
   const { data, error } = await createAdminClient()
