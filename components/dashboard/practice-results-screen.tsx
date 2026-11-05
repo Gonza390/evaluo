@@ -28,6 +28,7 @@ type PracticeResultsScreenProps = {
   modeLabel: string;
   entries: PracticeResultEntry[];
   materialId?: string;
+  documentLabel?: 'PDF' | 'DOC' | 'MAT';
   kind?: 'questions' | 'flashcards';
   preview?: boolean;
   onClose?: () => void;
@@ -58,6 +59,7 @@ export function PracticeResultsScreen({
   modeLabel,
   entries,
   materialId,
+  documentLabel = 'MAT',
   kind = 'questions',
   preview = false,
   onClose,
@@ -208,7 +210,7 @@ export function PracticeResultsScreen({
                       {materialHref && (
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                           <Link href={materialHref} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2563EB] hover:text-[#084BB0]">
-                            <span aria-hidden="true" className="flex h-6 w-5 items-center justify-center rounded bg-[#D92D3A] text-[7px] font-bold text-white">PDF</span>
+                            <span aria-hidden="true" className="flex h-6 min-w-5 items-center justify-center rounded bg-[#D92D3A] px-0.5 text-[7px] font-bold text-white">{documentLabel}</span>
                             {entry.pageStart ? 'Ver en tu material · pág. ' + entry.pageStart : 'Ver en tu material'}
                           </Link>
                           <Link href={summaryHref!} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2563EB] hover:text-[#084BB0]">
