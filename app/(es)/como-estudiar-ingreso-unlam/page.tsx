@@ -6,17 +6,17 @@ import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/como-estudiar-ingreso-unlam';
 const publishedAt = '2026-09-17';
-const modifiedAt = '2026-10-29';
+const modifiedAt = '2026-11-05';
 
 export const metadata: Metadata = {
-  title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
+  title: 'Ingreso UNLaM 2027: fechas, materias y práctica gratis',
   description:
-    'Ingreso UNLaM 2027: materias por carrera, requisitos para aprobar, modelos anteriores y práctica gratuita con tus apuntes PDF.',
+    'Curso de ingreso UNLaM 2027: fechas oficiales, materias por carrera, modelos de examen y ejercicios gratuitos desde tus apuntes.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'article',
-    title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar | Evaluo',
+    title: 'Ingreso UNLaM 2027: fechas, materias y práctica gratis | Evaluo',
     description:
       'Modelos de examen de ingreso UNLaM de años anteriores, materias según la carrera y ejercicios originales para practicar con tus apuntes PDF.',
     url: toAbsoluteUrl(path),
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar | Evaluo',
+    title: 'Ingreso UNLaM 2027: fechas, materias y práctica gratis | Evaluo',
     description:
       'Materias, fechas y estrategias para preparar el manual de ingreso UNLaM 2027. Probá ejercicios gratis antes de estudiar tu PDF.',
     images: ['/opengraph-image.png'],
