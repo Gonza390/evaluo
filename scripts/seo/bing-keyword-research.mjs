@@ -21,12 +21,12 @@ export function parseBingDate(raw) {
 /** Calculate Bing-only monthly estimate when reporting cadence is recognizable. */
 export function summarizeBingStats(payload, { now = new Date() } = {}) {
   const raw = Array.isArray(payload?.d) ? payload.d : Array.isArray(payload) ? payload : [];
-  const parsed = raw.map((item) => ({
+  const historical = raw.map((item) => ({
     date: parseBingDate(item.Date),
     exact: Number(item.Impressions),
   })).filter((x) => x.date && Number.isFinite(x.exact) && x.exact >= 0)
-    .filter((x) => x.date.getTime() <= now.getTime() && now.getTime() - x.date.getTime() <= 183 * DAY_MS)
     .sort((a, b) => a.date - b.date);
+  const parsed = historical.filter((x) => x.date.getTime() <= now.getTime() && now.getTime() - x.date.getTime() <= 183 * DAY_MS);
   const rows = [...new Map(parsed.map((x) => [x.date.toISOString().slice(0, 10), x])).values()];
   const gaps = rows.slice(1).map((row, i) => (row.date - rows[i].date) / DAY_MS);
   const median = gaps.length ? [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)] : null;
@@ -41,6 +41,15 @@ export function summarizeBingStats(payload, { now = new Date() } = {}) {
     searchEngine: 'BING',
     metric: 'strict-match Bing impressions, NOT Google searches',
     cadence,
+    sourceRowCount: raw.length,
+    parsedRowCount: historical.length,
+    recentRowCount: parsed.length,
+    firstHistoricalDate: historical[0]?.date.toISOString().slice(0, 10) ?? null,
+    lastHistoricalDate: historical.at(-1)?.date.toISOString().slice(0, 10) ?? null,
+    insufficientReason: monthly !== null ? null : raw.length === 0 ? 'no_rows_returned'
+      : historical.length === 0 ? 'unparseable_rows'
+      : parsed.length === 0 ? 'all_rows_stale_or_future'
+      : 'too_few_or_irregular_intervals',
     observations: sample.length,
     firstDate: sample.length ? sample[0].date.toISOString().slice(0, 10) : null,
     lastDate: sample.length ? sample[sample.length - 1].date.toISOString().slice(0, 10) : null,
