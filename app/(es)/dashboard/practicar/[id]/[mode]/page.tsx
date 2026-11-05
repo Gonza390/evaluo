@@ -156,22 +156,17 @@ export default async function PracticeModePage({ params, searchParams }: { param
       userId:user.id, materialId:material.id, kind:'multiple_choice',
       items:sourceQuestions, limit:FREE_STUDY_V2.multipleChoice, keyPrefix:'question',
     }) : sourceQuestions;
-  if (freeV2 && mode === 'unir') {
-    const matching = await claimFreeStudyUnlock({
-      userId:user.id,materialId:material.id,kind:'matching_round',
-      itemKey:material.id + ':matching:first',premium:false,
+  // Al abrir una ruta no se gasta una ronda ni un simulacro. Primero
+  // comprobamos si el cupo está agotado en otro material. La ronda se reclama
+  // al estar lista y el simulacro cuando el estudiante pulsa «Comenzar».
+  if (freeV2 && (mode === 'unir' || mode === 'simulacro')) {
+    const kind = mode === 'unir' ? 'matching_round' : 'simulator';
+    const keys = await listFreeStudyUnlockedKeys({
+      userId:user.id,kind,premium:false,
     });
-    if (!matching.allowed) {
-      return exhausted('matching_round');
-    }
-  }
-  if (freeV2 && mode === 'simulacro') {
-    const simulator = await claimFreeStudyUnlock({
-      userId:user.id,materialId:material.id,kind:'simulator',
-      itemKey:material.id + ':simulator:first',premium:false,
-    });
-    if (!simulator.allowed) {
-      return exhausted('simulator');
+    const ownedKey = material.id + (mode === 'unir' ? ':matching:first' : ':simulator:first');
+    if (keys && keys.size >= 1 && !keys.has(ownedKey)) {
+      return exhausted(kind);
     }
   }
   // A missing bank table during rollout is safe: keep the original source-backed practice.
@@ -197,6 +192,10 @@ export default async function PracticeModePage({ params, searchParams }: { param
   }
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
     freeV2={freeV2}
+    quotaBackHref={backHref} quotaBackLabel={backLabel}
+    quotaPremiumHref={mode === 'unir' || mode === 'simulacro'
+      ? premiumUpgradeForLimit(mode === 'unir' ? 'matching_round' : 'simulator',
+          {materialId:material.id, returnTo:practiceHref}).href : undefined}
     materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={freeV2 ? cases : savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={true}
     isWord={material.file_name.toLowerCase().endsWith('.docx')}
