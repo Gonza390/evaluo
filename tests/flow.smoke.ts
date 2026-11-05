@@ -705,7 +705,10 @@ assert.match(pdfStudyWorkspace, /getTopicStudyResources\(studySummary\.sections,
 assert.match(pdfStudyWorkspace, /className="min-h-10 rounded-lg text-\[13px\]"/);
 
 const appStyles = readFileSync('app/globals.css', 'utf8');
-assert.match(appStyles, /body:has\(\[data-progress-open='true'\]\) \[data-student-material-share-control\]/);
+// El botón flotante se retiró: compartir sigue disponible en el menú móvil
+// del lector, y no necesita reglas globales para ocultarse sobre Progreso.
+assert.doesNotMatch(appStyles, /data-student-material-share-control/,
+  'El lector sin acción flotante no debe depender de CSS obsoleto.');
 
 
 // Portabilidad master → main: la imagen de vista previa real desplaza al OG anterior.
