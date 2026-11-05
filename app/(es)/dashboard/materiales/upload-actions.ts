@@ -148,10 +148,24 @@ async function getStudentMaterialUploadQuotaForUser(
   );
 
   if (hasUnlimitedUploads || isPremium) {
+    let used = countedMaterials.length;
+    if (isFreeStudyV2Active()) {
+      // La cifra visible de Premium también arranca en cero desde el
+      // lanzamiento; no mostrar como consumos los PDFs históricos.
+      const dayStart = new Date(now);
+      dayStart.setUTCHours(0, 0, 0, 0);
+      const { count, error: dailyError } = await admin
+        .from('study_material_v2_upload_ledger' as never)
+        .select('material_id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('claimed_at', dayStart.toISOString());
+      if (dailyError) throw dailyError;
+      used = count ?? 0;
+    }
     return {
       isPremium: true,
       limit: null,
-      used: countedMaterials.length,
+      used,
       remaining: null,
       nextAvailableAt: null,
     };
