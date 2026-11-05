@@ -10,7 +10,7 @@ import { ArrowLeft, LockKeyhole, X } from 'lucide-react';
 import type { PremiumGateReason } from '@/lib/premium-flow';
 
 export type FreePracticeLimitKind = Extract<PremiumGateReason,
-  'multiple_choice' | 'true_false' | 'matching_round' | 'case' | 'flashcard' | 'simulator'>;
+  'multiple_choice' | 'true_false' | 'matching_round' | 'case' | 'flashcard' | 'simulator' | 'complete' | 'mixed'>;
 
 const modes: Record<FreePracticeLimitKind, { label: string; noun: string; preview: string }> = {
   multiple_choice: { label: 'Opción múltiple', noun: 'preguntas de opción múltiple', preview: 'PREGUNTA 1' },
@@ -19,6 +19,8 @@ const modes: Record<FreePracticeLimitKind, { label: string; noun: string; previe
   case: { label: 'Casos prácticos', noun: 'casos prácticos', preview: 'CASO 1' },
   flashcard: { label: 'Flashcards', noun: 'flashcards', preview: 'TARJETA 1' },
   simulator: { label: 'Simulacro', noun: 'simulacros de examen', preview: 'SIMULACRO' },
+  complete: { label: 'Completar', noun: 'ejercicios para completar', preview: 'EJERCICIO 1' },
+  mixed: { label: 'Mixto', noun: 'prácticas mixtas', preview: 'PRÁCTICA 1' },
 };
 
 type Props = {
@@ -85,6 +87,7 @@ export function FreePracticeLimitScreen({
   }, [mounted, kind, materialTitle, topicLabel, backLabel]);
 
   const mode = modes[kind];
+  const premiumOnly = kind === 'complete' || kind === 'mixed';
   const place = topicLabel || materialTitle || 'Tu material';
 
   // Reuse the 280ms entrance / 200ms departure from the practice flow.
@@ -139,7 +142,7 @@ export function FreePracticeLimitScreen({
         <section className="flex w-full flex-col items-center text-center">
           <Image src="/evi-practica-limite.svg" width={104} height={104} alt="Evi con un candado" className="size-[72px] shrink-0"/>
           <h1 id="free-practice-limit-title" className="mt-1.5 text-[23px] font-bold leading-[1.16] tracking-[-.03em] sm:text-[27px]">
-            Ya agotaste tu límite gratuito
+            {premiumOnly ? 'Esta práctica es parte de Premium' : 'Ya agotaste tu límite gratuito'}
           </h1>
 
           <div className="mt-2.5 flex max-w-full flex-wrap justify-center gap-2">
@@ -176,7 +179,9 @@ export function FreePracticeLimitScreen({
           </div>
 
           <p className="mt-3 max-w-[440px] text-[12px] leading-[1.5] text-[#4b5565] sm:text-[13px]">
-            Ya agotaste el cupo de {mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.
+            {premiumOnly
+              ? `Con Premium desbloqueás ${mode.noun} para seguir estudiando con tu material.`
+              : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`}
           </p>
 
           <div className="mt-3 flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
