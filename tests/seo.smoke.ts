@@ -129,15 +129,15 @@ assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI la
 assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
 assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
 assertIncludesAll('app/(es)/como-estudiar-ingreso-unlam/page.tsx', [
-  'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
+  'Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar',
   'canonical: toAbsoluteUrl(path)',
-  "const modifiedAt = '2026-10-29';",
+  "const modifiedAt = '2026-11-05';",
   'UnlamEditorialGuide',
 ]);
 assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
   'UnlamIngresoToolkit',
   '/estudiar-pdf-con-ia?source=ingreso-unlam-2027',
-  'Revisado el 29 de octubre de 2026',
+  'Revisado el 5 de noviembre de 2026',
 ]);
 assertIncludesAll('components/marketing/unlam-ingreso-toolkit.tsx', [
   'Profesorado en Educación Física',
@@ -160,10 +160,10 @@ assertIncludesAll('lib/analytics-events.ts', [
   'seo_unlam_practice_answered',
   'seo_unlam_practice_completed',
 ]);
-assert.ok(source('app/sitemap.ts').includes("new Date('2026-10-29')"), 'Updated UNLaM guide must have recent sitemap modification date');
+assert.ok(source('app/sitemap.ts').includes("new Date('2026-11-05')"), 'Updated UNLaM guide must have recent sitemap modification date');
 assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
   'linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)',
-  'Parciales UBA XXI: exámenes anteriores y práctica',
+  'Parciales UBA XXI: modelos de IPC e ICSE y práctica',
   'canonical: toAbsoluteUrl(PATH)',
   'index: true',
   'follow: true',
@@ -677,9 +677,9 @@ assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', ['index: false', 'f
 
 /* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
 const acquisitionSeoTitles: Array<[string, string]> = [
-  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes: estudiá apuntes y practicá'],
-  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen y práctica por tema'],
-  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: resumen útil para estudiar'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes: resumí PDFs y prepará exámenes'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen, preguntas y práctica'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: ejemplo de resumen y práctica'],
   ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de PDF con IA'],
   ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde PDF con IA'],
   ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de PDF con IA'],
@@ -1023,7 +1023,7 @@ if (countryHubExists) assertIncludesAll('app/(es)/es/paises/[slug]/page.tsx', [
 // Career landing must never promise a public simulator when no public
 // questions are published for that career.
 assertIncludesAll('app/(es)/estudiar/[universidad]/[carrera]/page.tsx', [
-  "get_public_preguntero_catalog",
+  "rpc('get_public_preguntero_catalog')",
   'const hasPublicPractice =',
   '{hasPublicPractice ? (',
   'Crear práctica desde mi PDF',
