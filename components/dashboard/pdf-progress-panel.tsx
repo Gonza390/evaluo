@@ -172,6 +172,7 @@ export function PdfProgressPanel({
     topics.find((topic) => topic.errors.some((error) => error.id === next?.id)) ??
     topics.find((topic) => topicAssessmentCount(topic) === 0) ??
     topics[0];
+  const recommendedNeedsReview = Boolean(recommendedTopic?.errors.some((error) => error.status === 'pending'));
   const selected = views.find((error) => error.id === errorId);
   const currentTopic = topics.find((topic) => topic.id === topicId);
   const currentSectionIndex = currentTopic ? Number(currentTopic.id.replace('section-', '')) : -1;
@@ -989,19 +990,19 @@ export function PdfProgressPanel({
               {recommendedTopic && (
                 <section aria-label="Actividad recomendada" className="rounded-2xl border border-[#D9E6FF] bg-[#F4F8FF] p-4 sm:p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2563EB]">
-                    {next ? 'Para seguir avanzando' : evaluated === 0 ? 'Empezá por este tema' : 'Tu próxima actividad'}
+                    {recommendedNeedsReview ? 'Para seguir avanzando' : evaluated === 0 ? 'Empezá por este tema' : 'Tu próxima actividad'}
                   </p>
                   <h2 className="mt-2 break-words text-[15px] font-semibold leading-[1.4] text-[#0F1B3D] sm:text-[16px]">
                     {recommendedTopic.title}
                   </h2>
                   <p className="mt-2 text-[12px] leading-[1.6] text-[#42506A]">
-                    {next
+                    {recommendedNeedsReview
                       ? 'Retomá la dificultad que registraste y comprobá lo aprendido.'
                       : 'Leé el tema y comprobá lo aprendido con una práctica.'}
                   </p>
                   <button type="button" onClick={() => openTopic(recommendedTopic.id)}
                     className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
-                    {next ? 'Continuar estudiando' : 'Comenzar a estudiar'} <ArrowRight className="size-4" aria-hidden="true" />
+                    {recommendedNeedsReview ? 'Continuar estudiando' : 'Comenzar a estudiar'} <ArrowRight className="size-4" aria-hidden="true" />
                   </button>
                 </section>
               )}
