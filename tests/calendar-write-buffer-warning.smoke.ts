@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { getCalendarGrid } from '../lib/calendar-utils.ts';
 import {
   validateCalendarWrite,
   describeCalendarSaveError,
@@ -47,7 +48,27 @@ assert.match(describeCalendarSaveError({ code: '23503' }), /materia o carrera/);
 assert.match(describeCalendarSaveError({ code: '42501' }), /sesión/);
 assert.doesNotMatch(describeCalendarSaveError({ code: '23514', message: 'sensitive-data' }), /sensitive-data/);
 
+// La grilla usa sólo las semanas necesarias y mantiene todas las fechas del mes.
+assert.equal(getCalendarGrid(new Date(2027, 1, 1)).length, 28, 'Febrero 2027 entra en cuatro semanas.');
+assert.equal(getCalendarGrid(new Date(2027, 2, 1)).length, 35, 'Marzo 2027 necesita cinco semanas.');
+assert.equal(getCalendarGrid(new Date(2026, 10, 1)).length, 42, 'Noviembre 2026 necesita seis semanas.');
+for (const [year, month] of [[2026, 10], [2027, 1], [2027, 2]]) {
+  const grid = getCalendarGrid(new Date(year, month, 1));
+  assert.equal(grid[0].getDay(), 1, 'Cada calendario empieza un lunes.');
+  assert.equal(grid[grid.length - 1].getDay(), 0, 'Cada calendario termina un domingo.');
+  const dates = grid.map(date => date.toISOString().slice(0, 10));
+  assert.equal(new Set(dates).size, dates.length, 'No se repiten fechas.');
+}
+
 const page = readFileSync('app/(es)/calendario/page.tsx', 'utf8');
+assert.match(page, /h-\\[48px\\][^\\n]*sm:h-\\[56px\\]/,
+  'Las fechas son compactas en móvil y escritorio, conservando un área táctil mínima.');
+assert.doesNotMatch(page, /min-h-\\[64px\\]/,
+  'Las casillas no deben expandirse a la altura antigua.');
+assert.match(page, /cellEvents\\.length > 1 \\? \\([\\s\\S]*?absolute right-1 top-1/,
+  'La cantidad adicional de eventos no debe crear una tercera línea dentro de la fecha.');
+assert.match(page, /min-\\[480px\\]:hidden/,
+  'En pantallas pequeñas los eventos se distinguen mediante un indicador compacto.');
 const instrumentation = readFileSync('instrumentation.ts', 'utf8');
 const runtimeTracer = readFileSync('lib/server-runtime-warnings.ts', 'utf8');
 // El recorrido guiado del Calendario fue eliminado, no deshabilitado.
