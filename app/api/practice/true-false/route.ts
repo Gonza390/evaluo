@@ -7,7 +7,8 @@ import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import { appliesFreeStudyV2, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
-import { getFreeStudyBank, saveFirstFreeStudyBank, claimVerifiedFreeStudySample } from '@/lib/free-study-v2-server';
+import { getFreeStudyBank, saveFirstFreeStudyBank, claimVerifiedFreeStudySample, listFreeStudyUnlockedKeys } from '@/lib/free-study-v2-server';
+import { premiumUpgradeForLimit } from '@/lib/premium-flow';
 import {
   applyIndependentTrueFalseReview, selectTrueFalseFragments, verifyGeneratedTrueFalse, type TrueFalseFragment,
 } from '@/lib/student-materials/practice-true-false';
@@ -82,9 +83,24 @@ async function handleVerifiedTrueFalse(request: Request) {
     const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:'true_false' });
     if (saved) {
       const allowed = await claimVerifiedFreeStudySample({ userId:user.id, materialId:material.id, kind:'true_false', items:saved });
+      if (!allowed.length) {
+        const unlocked = await listFreeStudyUnlockedKeys({userId:user.id,kind:'true_false',premium:false});
+        if (unlocked && unlocked.size >= FREE_STUDY_V2.trueFalse)
+          return NextResponse.json({error:'free_quota_exhausted',
+            upgrade:premiumUpgradeForLimit('true_false',{materialId:material.id})},
+            {status:403,headers:{'Cache-Control':'private, no-store'}});
+      }
       return NextResponse.json({questions:allowed,source:'free_sample_cached'},
         {headers:{'Cache-Control':'private, no-store'}});
     }
+  }
+
+  if (freeV2) {
+    const unlocked = await listFreeStudyUnlockedKeys({userId:user.id,kind:'true_false',premium:false});
+    if (unlocked && unlocked.size >= FREE_STUDY_V2.trueFalse)
+      return NextResponse.json({error:'free_quota_exhausted',
+        upgrade:premiumUpgradeForLimit('true_false',{materialId:material.id})},
+        {status:403,headers:{'Cache-Control':'private, no-store'}});
   }
 
   // This endpoint is reached only after an explicit Practicar > Opciones
