@@ -566,6 +566,16 @@ export function RealPdfProgressPreview({
                 <StudentMaterialExam
                   key={practiceSectionIndex ?? 'all'}
                   topicSectionIndex={practiceSectionIndex}
+                  // En la demo, continuar al siguiente tema debe conservar
+                  // este documento y su índice, no navegar a /materiales/demo-id.
+                  onStudyNextTopic={(index) => {
+                    setTopicReturn({ index, reinforce: false });
+                    setProgressOpen(true);
+                  }}
+                  onViewAllTopics={() => {
+                    setTopicReturn(null);
+                    setProgressOpen(true);
+                  }}
                   onReturnToTopic={(reinforce, outcome) => {
                     if (practiceSectionIndex === undefined) return;
                     setTopicReturn((previous) => ({
