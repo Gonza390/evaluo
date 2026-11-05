@@ -163,7 +163,7 @@ assertIncludesAll('lib/analytics-events.ts', [
 assert.ok(source('app/sitemap.ts').includes("new Date('2026-11-05')"), 'Updated UNLaM guide must have recent sitemap modification date');
 assertIncludesAll('app/(es)/uba-xxi/parciales/page.tsx', [
   'linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)',
-  'Parciales UBA XXI: exámenes anteriores y práctica',
+  'Parciales UBA XXI: modelos de IPC e ICSE y práctica',
   'canonical: toAbsoluteUrl(PATH)',
   'index: true',
   'follow: true',
