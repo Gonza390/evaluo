@@ -91,5 +91,15 @@ assert.doesNotMatch(styles, /sticky bottom-0/, 'Evitar un CTA flotante sobre las
 const exam = readFileSync('components/student-material-exam.tsx', 'utf8');
 assert.match(exam, /data-pdf-question-actions/);
 assert.match(exam, /text-\[13px\] font-medium">{topicTitle}/);
+assert.doesNotMatch(exam, /Práctica basada en este PDF/,
+  'La práctica general dentro del PDF no muestra el subtítulo redundante.');
+assert.match(exam, /data-onboarding-practice-options className="grid w-full max-w-\[720px\] grid-cols-3/,
+  'Los tres tamaños de práctica se muestran en una misma fila desde móvil.');
+assert.doesNotMatch(exam, /index === 2 && sizeOptions\.length === 3 && 'col-span-2'/,
+  'La última tarjeta no debe ocupar dos columnas ni producir una segunda fila.');
+assert.match(exam, /onClick=\{\(\) => setSelectedSize\(option\.count\)\}/,
+  'Seleccionar cualquier tarjeta conserva la interacción real.');
+assert.match(exam, /hidden text-\[11px\] leading-\[1\.4\] opacity-80 sm:block/,
+  'Las descripciones largas se ocultan solo en móvil para mantener las tres tarjetas legibles.');
 
 console.log('Compact material study layout smoke: OK.');
