@@ -76,16 +76,14 @@ export function PracticeResultsScreen({
 }: PracticeResultsScreenProps) {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const mistakes = useMemo(() => entries.filter((entry) => !entry.correct), [entries]);
+  const correctEntries = useMemo(() => entries.filter((entry) => entry.correct), [entries]);
   const topics = useMemo(() => Array.from(new Set(
     mistakes.map((entry) => entry.chapterTitle?.trim()).filter((topic): topic is string => Boolean(topic))
   )), [mistakes]);
   const visible = selectedTopic ? mistakes.filter((entry) => entry.chapterTitle === selectedTopic) : mistakes;
-  const correctCount = entries.length - mistakes.length;
+  const correctCount = correctEntries.length;
   const flashcards = kind === 'flashcards';
   const summaryHref = materialId && !preview ? '/materiales/' + encodeURIComponent(materialId) + '?tab=resumen' : undefined;
-  const secondaryText = flashcards
-    ? 'Estas son las tarjetas que marcaste como “No lo sabía”. Repasá el concepto y volvé a intentarlo cuando quieras.'
-    : 'Estas son las preguntas que fallaste. Mirá la explicación y volvé al material cuando lo necesites.';
   const perfectTitle = flashcards ? '¡Recordaste todas las tarjetas!' : '¡Completaste la práctica sin errores!';
   const hasClose = Boolean(onClose || closeHref);
 
@@ -111,19 +109,15 @@ export function PracticeResultsScreen({
           <div className="space-y-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#7F8AA3] sm:text-[11px]">
               {modeLabel} · {flashcards ? correctCount + ' recordadas' : correctCount + ' de ' + entries.length + ' correctas'}
-              {preview ? ' · Vista previa' : ''}
             </p>
             <h1 className="text-[21px] font-semibold leading-[1.25] tracking-[-0.035em] text-[#0F1B3D] sm:text-[24px]">
               {mistakes.length ? 'Repasá lo que te costó' : perfectTitle}
             </h1>
-            <p className="max-w-[700px] text-[12px] leading-[1.6] text-[#42506A] sm:text-[13px]">
-              {mistakes.length ? secondaryText
-                : flashcards ? 'Todas las tarjetas quedaron marcadas como recordadas. Podés cerrar el repaso o continuar con otra actividad.'
+            {mistakes.length === 0 && (
+              <p className="max-w-[700px] text-[12px] leading-[1.6] text-[#42506A] sm:text-[13px]">
+                {flashcards
+                  ? 'Todas las tarjetas quedaron marcadas como recordadas. Podés cerrar el repaso o continuar con otra actividad.'
                   : 'Respondiste correctamente todas las preguntas. Podés volver a practicar para consolidar lo aprendido.'}
-            </p>
-            {mistakes.length > 0 && (
-              <p className="text-[12px] font-medium text-[#7F8AA3]">
-                {mistakes.length} {flashcards ? 'tarjeta' : 'respuesta'}{mistakes.length === 1 ? '' : 's'} para repasar
               </p>
             )}
           </div>
@@ -230,13 +224,44 @@ export function PracticeResultsScreen({
             </div>
           )}
 
+          {correctEntries.length > 0 && (
+            <section data-practice-correct-results aria-labelledby="practice-correct-results-title" className="space-y-2.5 pt-1">
+              <h2 id="practice-correct-results-title" className="text-[14px] font-semibold text-[#0F1B3D]">
+                {flashcards ? 'Tarjetas recordadas' : 'Respuestas correctas'}
+              </h2>
+              <ol className="flex flex-col gap-2">
+                {correctEntries.map((entry) => (
+                  <li key={entry.index} className="rounded-xl border border-[#E7EBF4] bg-white px-3 py-3 sm:px-4">
+                    <div className="flex items-start gap-2.5">
+                      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#ECFDF3] text-[#067647]">
+                        <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#7F8AA3]">
+                          {flashcards ? 'Tarjeta ' : 'Pregunta '}{entry.index + 1}
+                          {entry.modeLabel ? ' · ' + entry.modeLabel : ''}
+                        </p>
+                        <p className="mt-1 break-words text-[13px] font-semibold leading-[1.5] text-[#0F1B3D] sm:text-[14px]">
+                          {entry.prompt}
+                        </p>
+                        <p className="mt-1.5 break-words text-[12px] leading-[1.6] text-[#42506A]">
+                          <span className="font-semibold text-[#067647]">{flashcards ? 'Recordaste: ' : 'Respuesta: '}</span>
+                          {entry.correctAnswer}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <ResultButton action={primaryAction} primary />
             <ResultButton action={secondaryAction} />
             <ResultButton action={extraAction} />
           </div>
           {note && <p className="text-[12px] leading-5 text-[#7F8AA3]">{note}</p>}
-          {preview && <p className="text-[11px] leading-5 text-[#7F8AA3]">Vista previa: resultados ficticios. No se guardan datos ni se consumen cupos.</p>}
         </section>
       </main>
     </div>
