@@ -25,7 +25,7 @@ assert.match(workspace, /data-pdf-mobile-title-trigger/,
 assert.match(workspace, /data-pdf-mobile-more-trigger/,
   'The three-dot control must open a functional menu.');
 assert.match(workspace, /data-mobile-summary-active=\{activeTab === 'resumen' && !progressOpen \? 'true' : undefined\}/,
-  'Only the active mobile summary should hide the floating share action.');
+  'The mobile summary state remains scoped to the active tab.');
 const mobileOverflow = workspace.split('data-pdf-mobile-more-trigger')[1]?.split('</DropdownMenuContent>')[0] ?? '';
 assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
   'The three-dot menu must not duplicate the visible Back button.');
