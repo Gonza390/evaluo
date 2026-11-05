@@ -52,6 +52,7 @@ import { useUser } from '@/hooks/useUser';
 import { usePremium } from '@/hooks/usePremium';
 import { buildShareReferralUrl, createShareTrackingId } from '@/lib/attribution';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { premiumDashboardHref } from '@/lib/premium-flow';
 import {
   trackSimulatorAbandonEvent,
   trackSimulatorFunnelEvent,
@@ -2789,12 +2790,11 @@ export default function SimuladorExamen({
                               source: 'simulator_explanations',
                               materia_id: materiaId,
                             });
-                            const params = new URLSearchParams({
-                              materia: materiaId,
-                              parcial: String(parcial),
-                              returnTo: '/dashboard/explicaciones',
-                            });
-                            window.location.assign(`/premium/explicaciones?${params.toString()}`);
+                            window.location.assign(premiumDashboardHref({
+                              source:'simulator_explanations',
+                              materiaId, parcial,
+                              returnTo:'/dashboard/explicaciones',
+                            }));
                           }}
                         />
                       ) : null
