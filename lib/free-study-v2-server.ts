@@ -3,6 +3,8 @@ import 'server-only';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { hasPremiumAccess } from '@/lib/premium';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-quality';
+import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
 
 export type FreeStudyUnlockKind =
   | 'multiple_choice' | 'true_false' | 'matching_round' | 'case'
@@ -169,7 +171,24 @@ export async function claimFreeStudyPairSample<T extends { term: string; definit
     return unlock.allowed ? sample : [];
   }
   const accessible: T[] = [];
-  for (const [index, pair] of sample.entries()) {
+  const seenPrompts = new Set<string>(), seenAnswers = new Set<string>();
+  // El orden y el índice deben ser los del banco canónico. Nunca descontar
+  // un cupo por una tarjeta que el cliente descartaría por calidad o duplicado.
+  for (const [index, pair] of input.items.slice(0, maximum).entries()) {
+    if (typeof pair.term !== 'string' || typeof pair.definition !== 'string') continue;
+    const source = pair as T & {pageStart?: number | null; chapterTitle?: string | null};
+    const front = '¿Qué significa “' + pair.term + '”?';
+    const back = pair.definition;
+    const review = auditPracticeFlashcard({
+      front, back, reference: {
+        pageStart:source.pageStart ?? null, sectionTitle:source.chapterTitle ?? null,
+        excerpt:pair.definition,
+      },
+    });
+    const prompt = normalizedAnswer(front), answer = normalizedAnswer(back);
+    if (!review.approved || seenPrompts.has(prompt) || seenAnswers.has(answer)) continue;
+    seenPrompts.add(prompt);
+    seenAnswers.add(answer);
     const unlock = await claimFreeStudyUnlock({
       userId:input.userId, materialId:input.materialId,
       kind:'flashcard', itemKey:input.materialId + ':supplement-flashcard:' + index,
