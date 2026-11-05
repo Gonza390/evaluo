@@ -284,7 +284,7 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
           <div className="min-w-0 flex-1"><p className="truncate text-[16px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">Resúmenes por tema · Tarjetas y glosario · Práctica</p></div>
         </div>
         <div className="mt-5 flex w-full max-w-[320px] flex-col gap-3">
-          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0b63e5]" px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
+          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-6 text-[15px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
           <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-5 text-[14px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
         </div>
       </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[980px] flex-1 flex-col items-center justify-center gap-5 sm:gap-6">
