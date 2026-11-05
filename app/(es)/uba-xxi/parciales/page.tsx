@@ -432,6 +432,13 @@ export default function ParcialesUbaXxiPage() {
                 Resolver un modelo viejo puede mostrarte cómo preguntan. No reemplaza la bibliografía
                 ni el programa de la materia que cursás hoy.
               </p>
+              <p className="mt-4 text-sm leading-7 text-slate-600">
+                Si tu evaluación incluye opción múltiple, también podés consultar{' '}
+                <Link href="/blog/como-estudiar-examen-tipo-test" className="font-semibold text-blue-700 underline decoration-blue-200 underline-offset-4">
+                  cómo estudiar para un examen tipo test y corregir distractores
+                </Link>
+                . El formato concreto depende de la cátedra.
+              </p>
             </div>
             <ol className="space-y-5">
               {[
