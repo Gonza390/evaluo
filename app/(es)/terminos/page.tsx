@@ -134,6 +134,21 @@ const sections: LegalSection[] = [
     ],
   },
   {
+    title: '10 bis. Ventas internacionales a través de Paddle',
+    body: [
+      'Evaluo es la marca comercial de esta plataforma de estudio. Para las compras internacionales que se realicen mediante Paddle, el proceso de pedido se gestiona por Paddle.com, que actúa como Merchant of Record (vendedor registrado). Paddle atiende consultas sobre los pedidos y gestiona las devoluciones, mientras Evaluo presta el servicio digital y brinda soporte de producto.',
+      'Antes de confirmar una compra internacional, el checkout mostrará el precio total, moneda, impuestos aplicables, duración y renovación. El plan Premium internacional previsto cuesta US$ 9,99 al mes y se renovará automáticamente cada mes hasta su cancelación. La compra internacional aún no está disponible, sujeta a la aprobación de Paddle y activación del checkout.',
+      'La cancelación impide renovaciones futuras y, salvo reembolso o anulación, el acceso continúa hasta el final del período pagado. La cancelación no equivale automáticamente a un reembolso. Para soporte de pagos y solicitudes de devolución de Paddle, visitá https://paddle.net y consultá sus términos para compradores y política de reembolsos.',
+      'Para consultas sobre el uso de Evaluo y soporte comercial escribí a facturacion@evaluo.com.ar. Para consultas legales o de privacidad: legal@evaluo.com.ar y privacidad@evaluo.com.ar.',
+    ],
+  },
+  {
+    title: '10 ter. Identificación comercial',
+    body: [
+      'El servicio se presenta comercialmente bajo la marca Evaluo, en https://evaluoapp.com. La identidad legal y fiscal del titular de la cuenta de vendedor se verifica directamente ante Paddle; esta referencia a la marca comercial no sustituye la identificación legal que corresponda al titular del negocio.',
+    ],
+  },
+  {
     title: '10 bis. Modificaciones de estos términos',
     body: [
       'Podemos modificar estos Términos cuando sea necesario para reflejar cambios en el producto, la normativa o el funcionamiento del servicio. Las modificaciones se publicarán en esta página con su fecha de entrada en vigencia. El uso continuado de la Plataforma después de la publicación de cambios constituye aceptación de los nuevos términos.',
