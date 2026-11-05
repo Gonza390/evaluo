@@ -300,6 +300,10 @@
     "alias": true
   },
   {
+    "file": "tests/practice-results-shared.smoke.ts",
+    "alias": false
+  },
+  {
     "file": "tests/practice-history-screens.smoke.ts",
     "alias": false
   },
