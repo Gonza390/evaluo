@@ -253,8 +253,8 @@ const subscriptionSettingsSource = readFileSync(
 );
 assert.match(
   subscriptionSettingsSource,
-  /\/pricing\?source=configuracion#elegir-plan/,
-  'Configuración debe llevar de forma directa al checkout de Premium.'
+  /\/dashboard\/premium\?source=configuracion&returnTo=%2Fconfiguracion/,
+  'Configuración debe usar el mismo Premium interno que las prácticas.'
 );
 assert.match(
   subscriptionSettingsSource,
