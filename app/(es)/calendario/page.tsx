@@ -833,7 +833,7 @@ export default function CalendarioPage() {
                       key={dateKey}
                       type="button"
                       onClick={() => openComposerForDate(date)}
-                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''} ` .trim()}
+                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''}`}
                       className={`group relative flex h-[48px] min-w-0 flex-col gap-0.5 overflow-hidden border-r border-b px-1 py-1 text-left transition last:border-r-0 hover:bg-white min-[380px]:h-[52px] min-[380px]:px-1.5 sm:h-[56px] sm:gap-1 sm:px-2 sm:py-1.5 ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
