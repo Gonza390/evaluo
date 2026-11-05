@@ -73,6 +73,60 @@ const QUESTIONS: PracticeQuestion[] = [
   },
 ];
 
+const TRUE_FALSE_QUESTIONS: PracticeQuestion[] = [
+  { id: 'tf-1', prompt: 'La cantidad demandada de un bien suele disminuir cuando su precio aumenta, si lo demás permanece constante.',
+    options: ['Verdadero', 'Falso'], answer: 'Verdadero',
+    explanation: 'La ley de la demanda describe una relación inversa entre precio y cantidad demandada.',
+    level: 'comprender', pageStart: null, chapterTitle: 'Oferta y demanda' },
+  { id: 'tf-2', prompt: 'El equilibrio de mercado se alcanza cuando la cantidad ofrecida coincide con la demandada.',
+    options: ['Verdadero', 'Falso'], answer: 'Verdadero',
+    explanation: 'En equilibrio, compradores y vendedores coinciden en la cantidad transada a un precio dado.',
+    level: 'comprender', pageStart: null, chapterTitle: 'Oferta y demanda' },
+  { id: 'tf-3', prompt: 'Los costos fijos totales varían obligatoriamente con cada unidad adicional producida.',
+    options: ['Verdadero', 'Falso'], answer: 'Falso',
+    explanation: 'Los costos fijos totales se mantienen constantes dentro de un rango relevante de producción.',
+    level: 'comprender', pageStart: null, chapterTitle: 'Costos de producción' },
+  { id: 'tf-4', prompt: 'Una mayor disponibilidad de productos sustitutos puede volver más elástica la demanda.',
+    options: ['Verdadero', 'Falso'], answer: 'Verdadero',
+    explanation: 'Con más sustitutos, es más sencillo cambiar de producto ante un aumento de precio.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Elasticidad' },
+  { id: 'tf-5', prompt: 'Una demanda inelástica implica que la cantidad demandada cambia más que proporcionalmente ante una suba del precio.',
+    options: ['Verdadero', 'Falso'], answer: 'Falso',
+    explanation: 'La demanda inelástica responde menos que proporcionalmente a variaciones porcentuales del precio.',
+    level: 'comprender', pageStart: null, chapterTitle: 'Elasticidad' },
+  { id: 'tf-6', prompt: 'El costo variable total se mantiene fijo aunque la empresa produzca el doble de unidades.',
+    options: ['Verdadero', 'Falso'], answer: 'Falso',
+    explanation: 'El costo variable total depende del volumen producido y normalmente aumenta cuando crece la producción.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Costos de producción' },
+];
+
+const CASE_QUESTIONS: PracticeQuestion[] = [
+  { id: 'case-1', prompt: 'Un comercio sube el precio de un producto y observa una fuerte caída en las ventas. ¿Qué describe mejor la situación?',
+    options: ['Demanda elástica', 'Costo fijo', 'Oferta constante'], answer: 'Demanda elástica',
+    explanation: 'Una caída proporcionalmente importante en la cantidad comprada es compatible con una demanda elástica.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Elasticidad' },
+  { id: 'case-2', prompt: 'En una feria, los vendedores ofrecen exactamente la cantidad que los compradores desean adquirir. ¿Qué ocurre?',
+    options: ['Equilibrio', 'Escasez obligatoria', 'Exceso de oferta'], answer: 'Equilibrio',
+    explanation: 'El equilibrio se produce cuando la cantidad ofrecida y demandada coincide.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Oferta y demanda' },
+  { id: 'case-3', prompt: 'Una panadería produce más unidades y compra más harina. ¿Qué tipo de costo aumentó?',
+    options: ['Costo variable', 'Costo fijo', 'Costo hundido'], answer: 'Costo variable',
+    explanation: 'La harina es un insumo ligado a la cantidad que produce la panadería.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Costos de producción' },
+  { id: 'case-4', prompt: 'Un comprador deja una marca de café por otra más económica. ¿Qué relación existe entre ambas?',
+    options: ['Bienes sustitutos', 'Bienes sin relación', 'Costos marginales'], answer: 'Bienes sustitutos',
+    explanation: 'Dos marcas que satisfacen la misma necesidad pueden actuar como sustitutos.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Elasticidad' },
+  { id: 'case-5', prompt: 'Una empresa vende una unidad más y obtiene un ingreso adicional de $2.000. ¿Qué indicador mide ese cambio?',
+    options: ['Ingreso marginal', 'Costo fijo', 'Equilibrio'], answer: 'Ingreso marginal',
+    explanation: 'El ingreso marginal es el incremento del ingreso total por vender una unidad adicional.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Costos de producción' },
+  { id: 'case-6', prompt: 'A un precio dado, los compradores desean más unidades de las que las empresas ofrecen. ¿Qué situación representa?',
+    options: ['Escasez', 'Equilibrio', 'Exceso de oferta'], answer: 'Escasez',
+    explanation: 'Si la cantidad demandada supera a la ofrecida, aparece un exceso de demanda o escasez.',
+    level: 'aplicar', pageStart: null, chapterTitle: 'Oferta y demanda' },
+];
+
 const CARDS: StudyFlashcard[] = PAIRS.slice(0, 6).map((pair) => ({
   front: `¿Qué significa ${pair.term}?`,
   back: pair.definition,
@@ -129,8 +183,8 @@ export function PracticeResultsDemo({ type }: { type: string }) {
             materialId={MATERIAL_ID}
             materialTitle={MATERIAL_TITLE}
             glossary={PAIRS}
-            questions={QUESTIONS}
-            cases={QUESTIONS}
+            questions={current === 'opciones' ? TRUE_FALSE_QUESTIONS : current === 'casos' ? CASE_QUESTIONS : QUESTIONS}
+            cases={CASE_QUESTIONS}
             reviewLength="rapido"
             aiAvailable={false}
             freeV2={false}
