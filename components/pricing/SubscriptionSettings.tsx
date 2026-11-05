@@ -72,7 +72,7 @@ const COMPARISON = [
   ['Progreso avanzado por tema', false, true],
 ] as const;
 
-const PREMIUM_CHECKOUT_HREF = '/pricing?source=configuracion#elegir-plan';
+const PREMIUM_CHECKOUT_HREF = '/dashboard/premium?source=configuracion&returnTo=%2Fconfiguracion';
 
 export function SubscriptionSettings() {
   const [data, setData] = useState<SubscriptionPayload | null>(null);
