@@ -79,7 +79,8 @@ assert.equal(distinctApplicationCases(multi.slice(0,5)).length,5,
   'A bank of five good applications cannot masquerade as six.');
 const sessionSource=await import('node:fs').then(fs=>fs.readFileSync(
   new URL('../components/dashboard/practice-session.tsx',import.meta.url),'utf8'));
-assert.match(sessionSource,/contexts\.length >= \(freeV2 \? 2 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(sessionSource,/contexts\.length >= \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/,
+  'Free may use its final verified case, while Premium retains the six-case pedagogical minimum.');
 assert.match(sessionSource,/setGeneratedCases\(previous => distinctApplicationCases/,
   'New AI cases must be merged with validated existing ones, not overwrite them.');
 
