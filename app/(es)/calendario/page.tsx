@@ -976,6 +976,62 @@ export default function CalendarioPage() {
             </div>
           </div>
         </section>
+        {activeStudyPlan ? (
+          <section data-calendar-study-plan className="min-w-0 rounded-2xl border border-[#E7EBF4] bg-white px-3 py-2.5 sm:px-4">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 items-start gap-2">
+                <BookOpenText className="mt-0.5 size-4 shrink-0 text-[#2563EB]" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold leading-4 text-[#0F1B3D] sm:text-[13px]">
+                    {selectionInVisibleMonth && selectedStudyPlanDay
+                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min previstos`
+                      : selectionInVisibleMonth && selectedPlanExam
+                        ? 'Examen de tu plan de estudio'
+                        : 'Tu plan de estudio'}
+                  </p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-[#66758D]">
+                    {selectionInVisibleMonth && (selectedStudyPlanDay || selectedPlanExam)
+                      ? formatLongDate(selectedDate)
+                      : `${studyPlanDaysByDate.size} días programados · Examen ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/plan-de-estudio"
+                className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-[#2563EB] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"
+              >
+                Ver mi plan <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+            {selectionInVisibleMonth && selectedStudyPlanDay ? (
+              <div data-calendar-selected-plan-day className="mt-2 flex min-w-0 flex-wrap gap-1.5 border-t border-[#EEF1F6] pt-2">
+                {selectedStudyPlanDay.topics.slice(0, 2).map((topic, index) => (
+                  <span key={`${topic.materialId}:${topic.topicIndex}:${index}`} className="max-w-full truncate rounded-md bg-[#EEF2FF] px-2 py-1 text-[11px] font-medium text-[#254C98]">
+                    {topic.title}
+                  </span>
+                ))}
+                {selectedStudyPlanDay.topics.length > 2 ? (
+                  <span className="px-1 py-1 text-[11px] font-medium text-[#66758D]">
+                    +{selectedStudyPlanDay.topics.length - 2} temas más
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[#66758D]">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-[#2563EB]" aria-hidden="true" /> Día de estudio
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> Examen del plan
+              </span>
+            </div>
+          </section>
+        ) : studyPlanLoadError && user ? (
+          <p role="status" className="px-1 text-[11px] text-[#66758D]">
+            No pudimos mostrar tu plan en el calendario. Podés consultarlo desde{' '}
+            <Link className="font-semibold text-[#2563EB] underline underline-offset-2" href="/dashboard/plan-de-estudio">Plan de estudio</Link>.
+          </p>
+        ) : null}
       </div>
 
       <Dialog open={isComposerOpen} onOpenChange={setIsComposerOpen}>
