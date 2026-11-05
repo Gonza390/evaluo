@@ -8,11 +8,9 @@ alter table public.free_study_v2_plan_claims enable row level security;
 revoke all on public.free_study_v2_plan_claims from public, anon, authenticated;
 grant select, insert on public.free_study_v2_plan_claims to service_role;
 
--- Los planes creados antes del nuevo modelo conservan su derecho de edición,
--- pero cuentan como el primer plan ya utilizado.
-insert into public.free_study_v2_plan_claims(user_id)
-select user_id from public.student_personal_study_plans
-on conflict (user_id) do nothing;
+-- Reinicio comercial al lanzamiento: los planes creados antes de Free V2
+-- se conservan y siguen siendo editables, pero NO consumen el nuevo cupo.
+-- El primer guardado hecho bajo Free V2 utilizará el único cupo nuevo.
 
 -- Guardado y cargo de cupo en una única transacción para no cobrar intentos fallidos.
 create or replace function public.save_free_study_v2_plan(
