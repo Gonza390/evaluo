@@ -137,6 +137,11 @@ const premiumHook=read('hooks/usePremium.tsx');
 assert.match(pricing,/safePremiumReturnTo\(params\.returnTo\)/);
 assert.match(pricing,/returnTo=\{returnTo\}/);
 assert.match(selector,/returnTo=\{returnTo\}/);
+assert.match(selector, /offerCode="semester"[\s\S]*?\/?>/);
+assert.match(selector, /returnTo=\{returnTo\}\s+offerCode="semester"/,
+  'El plan semestral debe retomar la actividad original después del checkout.');
+assert.match(selector, /parcial=\{parcial\}\s+returnTo=\{returnTo\}\s+offerCode="semester"/,
+  'El plan semestral debe preservar el parcial además del contexto de regreso.');
 assert.match(card,/returnTo,/);
 assert.match(card,/premiumPurchaseDisplayState\(payload\)/);
 assert.match(checkout,/returnTo:|checkoutReturnPath\(requestBody\.returnTo\)/);
