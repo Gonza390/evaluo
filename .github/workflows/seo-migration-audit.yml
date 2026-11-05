@@ -1,0 +1,56 @@
+name: Evaluo SEO migration and landing QA (master)
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/seo-migration-audit.yml'
+      - 'scripts/seo/migration-live-check.mjs'
+      - 'tests/seo-migration-growth.smoke.mjs'
+      - 'app/(es)/ia-para-estudiantes/page.tsx'
+      - 'app/(es)/como-estudiar-ingreso-unlam/page.tsx'
+      - 'app/(es)/uba-xxi/parciales/page.tsx'
+      - 'app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx'
+      - 'app/(es)/funciones/resumir-pdf-con-ia/page.tsx'
+      - 'app/(es)/estudiar-pdf-con-ia/page.tsx'
+      - 'app/sitemap.ts'
+      - 'app/robots.ts'
+      - 'lib/site.ts'
+      - 'components/marketing/study-blog-view.tsx'
+      - 'components/marketing/seo-study-experiences-v2.tsx'
+      - 'components/marketing/unlam-editorial-guide.tsx'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-migration-master
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out read-only master
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify route metadata, internal links and bilingual sitemap
+        run: node tests/seo-migration-growth.smoke.mjs
+      - name: Check public permanent redirects, canonicals, robots and sitemap
+        run: node scripts/seo/migration-live-check.mjs
+      - name: Save non-secret HTTP audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluo-seo-migration-http-audit
+          path: artifacts/seo/migration-live-check.json
+          if-no-files-found: ignore
+          retention-days: 7
