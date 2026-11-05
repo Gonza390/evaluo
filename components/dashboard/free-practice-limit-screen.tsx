@@ -190,7 +190,7 @@ export function FreePracticeLimitScreen({
             )}
           </div>
         </section>
-        <p className="mt-3 max-w-[440px] text-center text-[11px] leading-[1.45] text-[#667085]">
+        <p data-free-practice-secondary-note className="mt-3 max-w-[440px] text-center text-[11px] leading-[1.45] text-[#667085]">
           Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.
         </p>
           </div>
