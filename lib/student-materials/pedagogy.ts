@@ -224,12 +224,13 @@ function emptyReference(sectionTitle: string | null, excerpt: string): Pedagogic
 function findReference(term: string, chunks: PedagogicalChunk[], fallback: PedagogicalReference) {
   const needle = normalizeForDedupe(term);
   const words = needle.split(/\s+/).filter((word) => word.length >= 4);
+  // A DOCX has no page numbers. Prefer evidence that actually mentions
+  // the subject rather than a nearby unrelated paragraph. Keep the
+  // original source fragment verbatim; this does not call AI.
   const match = chunks.find((chunk) => {
     const haystack = normalizeForDedupe(chunk.text);
-    return (
-      haystack.includes(needle) ||
-      (words.length > 0 && words.every((word) => haystack.includes(word)))
-    );
+    return haystack.includes(needle) ||
+      (words.length > 0 && words.every((word) => haystack.includes(word)));
   });
 
   return match
@@ -503,8 +504,8 @@ function resolveFlashcardLevel(concept: StudyGlossaryItem): StudyFlashcard['leve
 function buildFlashcardFront(concept: StudyGlossaryItem, level: StudyFlashcard['level']) {
   const term = cleanLine(concept.term);
   return level === 'recordar'
-    ? `¿Qué significa “${term}” según el material?`
-    : `¿Cómo explicarías “${term}” con tus palabras según el material?`;
+    ? `¿Qué significa “${term}”?`
+    : `¿Cómo explicarías “${term}” con tus palabras?`;
 }
 
 function isCleanAcademicLabel(value: string) {
@@ -677,7 +678,7 @@ function buildCanonicalFlashcards(
     push({
       front:
         level === 'recordar'
-          ? `¿Qué describe “${concept.term}” según el PDF?`
+          ? `¿Qué describe “${concept.term}”?`
           : `¿Cómo explicarías “${concept.term}” con tus palabras?`,
       back: truncateAtWord(concept.detail, 420),
       level,
@@ -702,7 +703,7 @@ function buildCanonicalFlashcards(
     (item) => item.pageReferences
   ).forEach((classification) => {
     push({
-      front: `¿Cómo se clasifica “${classification.title}” según el PDF?`,
+      front: `¿Cuáles son las categorías de “${classification.title}”?`,
       back: classification.items.map((item) => `• ${cleanLine(item)}`).join('\n'),
       level: 'comprender',
       kind: 'classification',
@@ -771,7 +772,7 @@ function buildCanonicalFlashcards(
     (item) => item.pageReferences
   ).forEach((relationship) => {
     push({
-      front: `¿Qué relación establece el PDF entre “${relationship.source}” y “${relationship.target}”?`,
+      front: `¿Cómo se relacionan “${relationship.source}” y “${relationship.target}”?`,
       back: truncateAtWord(relationship.description, 420),
       level: 'comprender',
       kind: 'relationship',
