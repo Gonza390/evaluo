@@ -93,7 +93,7 @@ assert.equal(replay.data[0].already_unlocked, true);
 
 denied(await request('/student_materials', {
   role: 'authenticated', sub: newStudent, method: 'POST',
-  body: { id: newMaterial, user_id: free, processing_status: 'ready' },
+  body: { id: newMaterial, user_id: '00000000-0000-4000-8000-000000000007', processing_status: 'ready' },
 }), 'Student impersonation on file insertion');
 
 const first = await request('/student_materials', {
