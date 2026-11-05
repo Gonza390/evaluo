@@ -32,7 +32,6 @@ import {
   Map as MapIcon,
   Sparkles,
   SquareLibrary,
-  Share2,
 } from 'lucide-react';
 import { StudyRichText } from '@/components/study-rich-text';
 import type { DiagnosticSession } from '@/components/student-material-diagnostic';
@@ -212,7 +211,6 @@ type MaterialStudyWorkspaceProps = {
   pageCount: number | null;
   title: string;
   otherPdfOptions?: Array<{ id: string; title: string }>;
-  shareAvailable?: boolean;
   viewerUrl: string;
   docxSourceText?: string;
   docxHasImages?: boolean;
@@ -348,7 +346,6 @@ export function MaterialStudyWorkspace({
   pageCount: _pageCount,
   title,
   otherPdfOptions = [],
-  shareAvailable = false,
   viewerUrl,
   docxSourceText = '',
   docxHasImages = false,
@@ -2820,12 +2817,6 @@ export function MaterialStudyWorkspace({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="min-w-[200px] rounded-xl p-2">
-              {shareAvailable && isOwner && !demo ? (
-                <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}>
-                  <Share2 className="size-4" aria-hidden="true" />
-                  Compartir
-                </DropdownMenuItem>
-              ) : null}
               <DropdownMenuItem asChild>
                 <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="size-4" aria-hidden="true" />
