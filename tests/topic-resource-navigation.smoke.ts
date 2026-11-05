@@ -51,9 +51,9 @@ assert.match(cards, /data-flashcard-face="front"/);
 assert.match(cards, /data-flashcard-face="back"/);
 assert.match(cards, /const learningCount = allowedCardIndices !== undefined/, 'Aprendiendo debe representar la tarjeta actual.');
 assert.match(cards, /topicMode \? 'max-w-\[610px\]' : 'max-w-\[720px\]'/, 'Las calificaciones se mantienen centradas en ambos modos y en móvil.');
-assert.match(cards, /data-topic-flashcards-review/);
-assert.match(cards, /data-topic-flashcards-primary/);
-assert.match(cards, /onClick=\{onPracticeTopic \?\? onReturnToTopic\}/, 'Priorizar la práctica y permitir regresar si el tema no tiene preguntas.');
+assert.match(cards, /label: 'Repasar tarjetas \(' \+ unknownCount/, 'Las tarjetas difíciles conservan la opción de repaso.');
+assert.match(cards, /label: onPracticeTopic \? 'Practicar este tema' : 'Volver al tema'/, 'La salida ofrece la práctica o el regreso al tema.');
+assert.match(cards, /onClick: onPracticeTopic \?\? onReturnToTopic/, 'Priorizar la práctica y permitir regresar si el tema no tiene preguntas.');
 assert.match(workspace, /onReturnToTopic=\{/, 'El regreso debe conservar el capítulo seleccionado.');
 
 assert.equal(shouldOfferTopicGlossaryPractice(0, 10, 6), false,
