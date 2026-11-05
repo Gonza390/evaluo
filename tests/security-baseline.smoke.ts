@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { isInternalQueueRequestAuthorized } from '../lib/student-materials/job-auth.ts';
+import { isTerminalAuthSessionError } from '../lib/auth-session-errors.ts';
 
 const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8')) as {
   dependencies?: Record<string, string>;
@@ -85,6 +86,50 @@ if (previousInternalQueueSecret === undefined) delete process.env.INTERNAL_QUEUE
 else process.env.INTERNAL_QUEUE_SECRET = previousInternalQueueSecret;
 if (previousCronSecret === undefined) delete process.env.CRON_SECRET;
 else process.env.CRON_SECRET = previousCronSecret;
+
+// La vista de preguntas fue revocada a anon/authenticated: no restaurar el GRANT
+// para solucionar errores 401 de versiones antiguas. Las rutas nuevas deben
+// usar las RPC públicas agregadas o lecturas privadas con autorización.
+// Los SQL de migraciones no son rutas de aplicación y quedan fuera de este control.
+const unsafeQuestionBankReads: string[] = [];
+const unsafeViewRead = /\\.from\\s*\\(\\s*['"`]preguntas_banco_public['"`]\\s*\\)|\\/rest\\/v1\\/preguntas_banco_public/g;
+function auditApplicationSource(directory: string) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.name.startsWith('.')) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      auditApplicationSource(path);
+      continue;
+    }
+    if (!/\\.(?:ts|tsx|js|jsx|mjs)$/.test(entry.name)) continue;
+    const text = readFileSync(path, 'utf8');
+    if (unsafeViewRead.test(text)) unsafeQuestionBankReads.push(path);
+    unsafeViewRead.lastIndex = 0;
+  }
+}
+for (const root of ['app', 'components', 'lib', 'services', 'hooks', 'src']) {
+  try { auditApplicationSource(resolve(root)); }
+  catch (error) {
+    if (!(error && typeof error === 'object' && 'code' in error &&
+          error.code === 'ENOENT')) throw error;
+  }
+}
+assert.deepEqual(
+  unsafeQuestionBankReads, [],
+  'Nunca consultar directamente preguntas_banco_public: se revocó por seguridad. Usar RPC o acceso privado verificado.'
+);
+
+// Un refresh inválido es terminal y debe limpiar únicamente las cookies de Auth.
+// Los problemas de red no deben cerrar sesiones válidas ni afectar otros dispositivos.
+assert.equal(isTerminalAuthSessionError({ code: 'session_not_found' }), true);
+assert.equal(isTerminalAuthSessionError({ code: 'refresh_token_not_found' }), true);
+assert.equal(isTerminalAuthSessionError({ message: 'Invalid Refresh Token: Refresh Token Not Found' }), true);
+assert.equal(isTerminalAuthSessionError({ message: 'fetch failed' }), false);
+const proxySource = readFileSync(resolve('proxy.ts'), 'utf8');
+assert.match(proxySource, /isTerminalAuthSessionError\\(authError\\)/);
+assert.match(proxySource, /response\\.cookies\\.delete\\(cookie\\.name\\)/);
+const idleGuardSource = readFileSync(resolve('components/SessionIdleGuard.tsx'), 'utf8');
+assert.match(idleGuardSource, /supabase\\.auth\\.signOut\\(\\{\\s*scope:\\s*'local'\\s*\\}\\)/);
 
 await import('./proxy-home.smoke.ts');
 
