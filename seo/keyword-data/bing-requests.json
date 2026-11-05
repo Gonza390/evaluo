@@ -1,0 +1,45 @@
+{
+  "description": "Initial candidate pool from Evaluo editorial plan 2026-11-05. Bing signals only; no Google-volume approval.",
+  "requests": [
+    {
+      "keyword": "tecnica feynman",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "tecnica feynman",
+      "country": "mx",
+      "language": "es-MX"
+    },
+    {
+      "keyword": "como estudiar para un examen tipo test",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "como usar anki para estudiar",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "chatgpt para estudiar",
+      "country": "ar",
+      "language": "es-AR"
+    },
+    {
+      "keyword": "notebooklm para estudiar",
+      "country": "mx",
+      "language": "es-MX"
+    },
+    {
+      "keyword": "resumir pdf con ia",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "flashcards desde pdf",
+      "country": "es",
+      "language": "es-ES"
+    }
+  ]
+}
