@@ -33,3 +33,17 @@ assert.match(finishedResult, /Reintentar guardar objetivo/,
   'Mantener la opción de reintento si falló el guardado.');
 assert.match(finishedResult, /onReturnToTopic\(result\.wrong\.length > 0/,
   'La navegación para entender errores debe seguir funcionando.');
+
+
+const practiceSession = readFileSync('components/dashboard/practice-session.tsx', 'utf8');
+const sessionResults = practiceSession.slice(
+  practiceSession.indexOf('  const fullReport = finished ? ('),
+  practiceSession.indexOf('  const [revealPractice,setRevealPractice]'),
+);
+const commercialActions = /FreePracticeLimitScreen|premiumUpgradeForLimit|premiumDashboardHref|premiumPricingHref|\/pricing|Practicar con PREMIUM/;
+assert.doesNotMatch(finishedResult, commercialActions,
+  'El cierre de opción múltiple debe mostrar resultados y recomendaciones sin Premium.');
+assert.doesNotMatch(sessionResults, commercialActions,
+  'El cierre de simulacro y otras prácticas tampoco debe ofrecer Premium.');
+assert.match(practiceSession, /if \(ready && finished && fullReport\) return fullReport;/,
+  'El resultado debe mostrarse antes de evaluar un nuevo bloqueo de acceso.');
