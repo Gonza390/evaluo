@@ -11,6 +11,9 @@ on:
       - 'tests/seo-bing-keyword.smoke.mjs'
       - 'tests/seo-bing-batch.smoke.mjs'
       - 'seo/keyword-data/bing-requests.json'
+      - 'scripts/seo/editorial-quality-gate.mjs'
+      - 'tests/seo-editorial-quality-gate.smoke.mjs'
+      - 'seo/keyword-data/EDITORIAL_POLICY.md'
 
 permissions:
   contents: write
@@ -39,6 +42,7 @@ jobs:
         run: |
           node tests/seo-bing-keyword.smoke.mjs
           node tests/seo-bing-batch.smoke.mjs
+          node tests/seo-editorial-quality-gate.smoke.mjs
 
       - name: Verify secret is configured
         env:
