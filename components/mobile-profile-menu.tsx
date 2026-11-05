@@ -18,6 +18,10 @@ const FeedbackDialog = dynamic(() =>
   import('@/components/FeedbackDialog').then((module) => module.FeedbackDialog)
 );
 
+// Un solo estado de resaltado para todas las opciones del menú de perfil móvil.
+const mobileMenuItemHighlight =
+  'text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] hover:text-[#0F1B3D] focus:bg-[#EEF2FF] focus:text-[#0F1B3D] data-[highlighted]:bg-[#EEF2FF] data-[highlighted]:text-[#0F1B3D]';
+
 type MobileProfileMenuProps = {
   initials: string;
   avatarUrl?: string;
@@ -66,25 +70,23 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
           sideOffset={8}
           className="w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg md:hidden"
         >
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
             <Link href="/configuracion" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]">
               <Settings className="h-4 w-4" aria-hidden="true" />
               Ajustes
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]"
+            className={'flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] ' + mobileMenuItemHighlight}
             onSelect={() => setFeedbackOpen(true)}
           >
             <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
             Sugerencias
           </DropdownMenuItem>
           {!isPremium ? (
-            <DropdownMenuItem asChild
-              className="focus:bg-[#EEF2FF] focus:text-[#0F1B3D] data-[highlighted]:bg-[#EEF2FF] data-[highlighted]:text-[#0F1B3D]"
-            >
+            <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
               <Link href="/dashboard/premium?source=mobile_profile_menu"
-                className="mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] hover:text-[#0F1B3D] focus:bg-[#EEF2FF] focus:text-[#0F1B3D] data-[highlighted]:bg-[#EEF2FF] data-[highlighted]:text-[#0F1B3D]">
+                className={'mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 ' + mobileMenuItemHighlight}>
                 <Crown className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[12px] font-medium">Pasate a Premium</span>
