@@ -80,9 +80,11 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
             Sugerencias
           </DropdownMenuItem>
           {!isPremium ? (
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild
+              className="focus:bg-[#EEF2FF] focus:text-[#0F1B3D] data-[highlighted]:bg-[#EEF2FF] data-[highlighted]:text-[#0F1B3D]"
+            >
               <Link href="/dashboard/premium?source=mobile_profile_menu"
-                className="mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-slate-700 focus:bg-slate-100">
+                className="mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] hover:text-[#0F1B3D] focus:bg-[#EEF2FF] focus:text-[#0F1B3D] data-[highlighted]:bg-[#EEF2FF] data-[highlighted]:text-[#0F1B3D]">
                 <Crown className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[12px] font-medium">Pasate a Premium</span>
