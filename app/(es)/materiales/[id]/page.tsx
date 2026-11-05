@@ -525,6 +525,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
             title={material.title}
             sharePath={sharePath}
             initialVisibility={visibility}
+            mobileMenuOnly
           />
         ) : null}
         <LazyMaterialStudyWorkspace
