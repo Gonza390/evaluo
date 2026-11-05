@@ -1,4 +1,9 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { evaluateTopic, evaluateBatch, normalizeKeyword, CHECKS } from '../scripts/seo/editorial-quality-gate.mjs';
 
 const now = new Date('2026-11-05T13:00:00.000Z');
@@ -59,3 +64,21 @@ const noFacts = structuredClone(cornell);
 noFacts.review.pedagogicalValue={pass:true,rationale:'ok'};
 assert.equal(evaluateTopic(noFacts,{now}).state,'BLOCKED');
 console.log('PASS: Tier 1, Tier 2, 16 PASS, fail-closed, country, keyword, freshness, duplicate, Google-range and production protections');
+
+// CLI round trip: ephemeral, intentionally synthetic evidence. No real keyword is approved here.
+const tmp = mkdtempSync(join(tmpdir(), 'seo-quality-gate-'));
+try {
+  const file = join(tmp, 'sample-batch.json');
+  const script = fileURLToPath(new URL('../scripts/seo/editorial-quality-gate.mjs', import.meta.url));
+  writeFileSync(file, JSON.stringify({ topics: [cornell, feynman], reserved: [] }));
+  const passed = spawnSync(process.execPath, [script, '--file=' + file, '--now=2026-11-05T13:00:00.000Z'], { encoding: 'utf8' });
+  assert.equal(passed.status, 0, passed.stderr || passed.stdout);
+  assert.equal(JSON.parse(passed.stdout).state, 'LISTO_PARA_DESARROLLO');
+  writeFileSync(file, JSON.stringify({ topics: [cornell, cornell], reserved: [] }));
+  const blocked = spawnSync(process.execPath, [script, '--file=' + file, '--now=2026-11-05T13:00:00.000Z'], { encoding: 'utf8' });
+  assert.equal(blocked.status, 2, blocked.stderr || blocked.stdout);
+  assert.equal(JSON.parse(blocked.stdout).state, 'BLOQUEADO');
+} finally {
+  rmSync(tmp, { recursive: true, force: true });
+}
+console.log('PASS: editorial gate CLI exit codes and JSON output');
