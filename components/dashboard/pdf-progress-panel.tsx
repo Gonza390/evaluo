@@ -1073,7 +1073,7 @@ export function PdfProgressPanel({
                   const incorrectCount = topic.evidence.reduce((total, item) => total + item.incorrect, 0);
                   const selfReportedCount = topic.evidence.reduce((total, item) => total + item.selfReported, 0);
                   const { Icon, style } = topicStatus(topic);
-                  const statusLabel = assessmentData?.loadError && !topic.errors.length
+                  const statusLabel = assessmentData?.loadError && !topic.errors.length && assessedCount === 0 && selfReportedCount === 0
                     ? 'Evaluación no disponible'
                     : topicStatus(topic).label;
                   const actionLabel = pendingCount > 0 ? 'Reforzar' : assessedCount > 0 ? 'Practicar de nuevo'
@@ -1085,15 +1085,15 @@ export function PdfProgressPanel({
                     if (shouldPracticeDirectly) onPracticeTopic?.(questionIndex);
                     else openTopic(topic.id);
                   };
-                  const activityText = assessmentData?.loadError
-                    ? 'Resultados de preguntas temporalmente no disponibles'
-                    : assessedCount > 0
+                  const activityText = pendingCount > 0
+                    ? pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
+                    : assessmentData?.loadError
+                      ? 'Resultados de preguntas temporalmente no disponibles'
+                      : assessedCount > 0
                       ? correctCount + ' de ' + (correctCount + incorrectCount) + ' respuestas correctas registradas'
                       : selfReportedCount > 0
                         ? selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
-                        : pendingCount > 0
-                          ? pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
-                          : 'Todavía sin preguntas corregidas';
+                        : 'Todavía sin preguntas corregidas';
                   return (
                     <li key={topic.id} data-progress-topic-row>
                       <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 px-3 py-3 sm:grid-cols-[30px_minmax(0,1fr)_auto_auto] sm:gap-x-3 sm:px-4">
