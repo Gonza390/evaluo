@@ -162,7 +162,7 @@ export function PracticeResultsScreen({
                   ? summaryHref + '&page=' + encodeURIComponent(String(entry.pageStart))
                   : summaryHref;
                 return (
-                  <details key={entry.index} open={position === 0 && selectedTopic === null}
+                  <details key={String(entry.index) + ':' + (selectedTopic ?? 'todos')} open={position === 0}
                     className="group overflow-hidden rounded-[20px] border border-[#E7EBF4] bg-white shadow-[0_6px_22px_rgba(15,27,61,0.04)]">
                     <summary className="flex cursor-pointer items-center gap-3 px-4 py-4 marker:content-none sm:px-5">
                       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#D92D20] text-white">
