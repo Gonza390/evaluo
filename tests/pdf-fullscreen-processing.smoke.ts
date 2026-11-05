@@ -71,6 +71,14 @@ assert.match(motion, /@container processing-scene \(max-width: 719px\)/,
   'The supplied two-column layout must be retained when enough space is available.');
 assert.match(motion, /prefers-reduced-motion: reduce/, 'Reduced-motion preference must disable transitions.');
 assert.match(motion, /data-processing-scene-stage/, 'The complete scene is measured as one visual unit.');
+assert.match(screen, /max-w-\[800px\]/, 'All four processing scenes share a compact desktop width.');
+assert.match(screen, /sm:text-\[25px\] lg:text-\[27px\]/, 'Processing scene headings match the compact Evaluo typography.');
+assert.match(screen, /min-h-\[165px\]/, 'Document preview is compact without deleting its content.');
+assert.match(screen, /min-h-\[205px\]/, 'Flashcard keeps a smaller readable minimum height.');
+assert.match(screen, /sm:min-h-\[230px\]/, 'Flashcard preserves a compact desktop minimum height.');
+assert.match(motion, /font-size: 22px; line-height: 1\.2;/, 'Small-screen headings do not override compact styles with oversized text.');
+assert.match(motion, /font-size: 20px;/, 'Small-screen flashcard text stays proportional.');
+
 
 for (const heading of [
   'Estamos organizando tu material',
