@@ -95,6 +95,50 @@ begin
     where user_id=free_user and kind='multiple_choice';
   if count_value<>12 then raise exception 'Idempotent MCQ claim changed the count'; end if;
 
+  -- Free V2 per-account quotas across all exercise modalities.
+  for i in 1..10 loop
+    select allowed into allowed_value from public.claim_free_study_v2_unlock(
+      free_user,material,'true_false',material::text||':tf:'||i);
+    if allowed_value is distinct from true then raise exception 'True/false % rejected',i; end if;
+  end loop;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'true_false',material::text||':tf:11');
+  if allowed_value is distinct from false then raise exception '11th true/false accepted'; end if;
+  for i in 1..2 loop
+    select allowed into allowed_value from public.claim_free_study_v2_unlock(
+      free_user,material,'case',material::text||':case:'||i);
+    if allowed_value is distinct from true then raise exception 'Case % rejected',i; end if;
+  end loop;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'case',material::text||':case:3');
+  if allowed_value is distinct from false then raise exception 'Third case accepted'; end if;
+  for i in 1..25 loop
+    select allowed into allowed_value from public.claim_free_study_v2_unlock(
+      free_user,material,'flashcard',material::text||':flashcard:'||i);
+    if allowed_value is distinct from true then raise exception 'Flashcard % rejected',i; end if;
+  end loop;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'flashcard',material::text||':flashcard:26');
+  if allowed_value is distinct from false then raise exception '26th flashcard accepted'; end if;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'matching_round',material::text||':matching:first');
+  if allowed_value is distinct from true then raise exception 'First matching round rejected'; end if;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'matching_round',material::text||':matching:second');
+  if allowed_value is distinct from false then raise exception 'Second matching round accepted'; end if;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'simulator',material::text||':simulator:first');
+  if allowed_value is distinct from true then raise exception 'First simulation rejected'; end if;
+  select allowed into allowed_value from public.claim_free_study_v2_unlock(
+    free_user,material,'simulator',material::text||':simulator:second');
+  if allowed_value is distinct from false then raise exception 'Second simulation accepted'; end if;
+  begin
+    perform public.claim_free_study_v2_unlock(free_user,
+      '90000000-0000-4000-8000-000000000001','multiple_choice','invalid');
+    raise exception 'Claim accepted a nonexistent material';
+  exception when sqlstate '22023' then null;
+  end;
+
   select public.save_free_study_v2_plan(free_user,current_date+10,30,
     array[material]::uuid[],array['practicar']::text[],'[]'::jsonb) into editable;
   if editable is distinct from true then raise exception 'First Free plan failed'; end if;
@@ -113,6 +157,19 @@ reset role;
 
 -- A direct browser JWT cannot sidestep the restrictive RLS policies.
 set role authenticated;
+do $rpc_privileges$
+declare denied boolean:=false;
+begin
+  begin
+    perform public.claim_free_study_v2_unlock(
+      '00000000-0000-4000-8000-000000000002',
+      '20000000-0000-4000-8000-000000000004',
+      'multiple_choice','forged');
+  exception when insufficient_privilege then denied:=true;
+  end;
+  if not denied then raise exception 'Browser JWT executed quota claim RPC'; end if;
+end;
+$rpc_privileges$;
 do $rls$
 declare denied boolean:=false;
 begin
