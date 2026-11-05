@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
-import { safePremiumReturnTo } from '@/lib/premium-flow';
+import { premiumDashboardHref, safePremiumReturnTo } from '@/lib/premium-flow';
 import { PremiumDashboardScreen } from '@/components/pricing/PremiumDashboardScreen';
 
 export const metadata: Metadata = {
@@ -15,10 +15,6 @@ export default async function DashboardPremiumPage({
   searchParams?: Promise<{ source?: string; materia?: string; parcial?: string; returnTo?: string }>;
 }) {
   const params = (await searchParams) ?? {};
-  const supabase = await createClientServer();
-  const {data:{user}} = await supabase.auth.getUser();
-  if(!user) redirect('/login?mode=login&intent=premium&next=/dashboard/premium');
-
   const source = typeof params.source==='string' && /^[a-zA-Z0-9_:-]{1,80}$/.test(params.source)
     ? params.source : 'dashboard_premium';
   const materiaId = typeof params.materia==='string' && /^[0-9a-f-]{36}$/i.test(params.materia)
@@ -28,6 +24,13 @@ export default async function DashboardPremiumPage({
     ? parsedParcial : undefined;
   const safeReturn = safePremiumReturnTo(params.returnTo);
   const returnTo = safeReturn && !safeReturn.startsWith('/dashboard/premium') ? safeReturn : undefined;
+  const supabase = await createClientServer();
+  const {data:{user}} = await supabase.auth.getUser();
+  if (!user) {
+    // El login no debe borrar la modalidad, materia y tema del upsell.
+    const nextPath = premiumDashboardHref({source, materiaId, parcial, returnTo});
+    redirect('/login?mode=login&intent=premium&next=' + encodeURIComponent(nextPath));
+  }
 
   return <PremiumDashboardScreen source={source} materiaId={materiaId}
     parcial={parcial} returnTo={returnTo} />;
