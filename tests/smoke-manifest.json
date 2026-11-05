@@ -60,6 +60,10 @@
     "alias": true
   },
   {
+    "file": "tests/practice-gemini-transient-retry.smoke.ts",
+    "alias": true
+  },
+  {
     "file": "tests/practice-quality-hardening.smoke.ts",
     "alias": true
   },
