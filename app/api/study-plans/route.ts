@@ -25,7 +25,7 @@ async function userDb() {
   const {data:{user}} = await supabase.auth.getUser();
   return {supabase,user};
 }
-export async function GET() {
+export async function GET(request: NextRequest) {
   const {supabase,user}=await userDb();
   if(!user)return fail('Iniciá sesión para consultar tu plan.',401);
   const {data,error}=await supabase.from('student_personal_study_plans' as never)
@@ -33,6 +33,15 @@ export async function GET() {
     .eq('user_id',user.id).maybeSingle();
   if(error)return fail('No pudimos recuperar tu plan. Probá nuevamente.',503);
   const plan=data as SavedPlan|null;
+  // El calendario sólo necesita la planificación; evitar consultas adicionales de progreso.
+  // Siempre se consulta la fila del usuario autenticado.
+  if(request.nextUrl.searchParams.get('view')==='calendar') {
+    return NextResponse.json({
+      plan:plan
+        ? {exam_date:plan.exam_date,schedule:plan.schedule,updated_at:plan.updated_at}
+        : null,
+    });
+  }
   if(!plan)return NextResponse.json({plan:null,completedKeys:[],planCompletedKeys:[],preparationProgress:{completed:0,total:0,percent:0}});
   const ids=Array.isArray(plan.material_ids)?plan.material_ids:[];
   if(!ids.length)return NextResponse.json({plan,completedKeys:[],planCompletedKeys:[],preparationProgress:{completed:0,total:0,percent:0}});
