@@ -252,16 +252,16 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   },[materialId,retrying,preview]);
   const readHref=`${getStudentMaterialRoute(materialId)}?inicio=1${state.isFirstReadyMaterial?'&recorrido=1':'&tab=resumen'}`;
   return <main data-pdf-processing-screen className="flex h-dvh min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white font-sans text-[#0f1623]">
-    <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-7 gap-y-2 border-b border-[#e8ecf2] px-3.5 py-2.5 sm:px-6 sm:py-3 lg:px-8">
-      <div className="flex shrink-0 items-center gap-2.5" aria-label="Evaluo">
+    <header className="grid shrink-0 grid-cols-2 items-center gap-x-3 gap-y-1.5 border-b border-[#e8ecf2] px-3.5 py-2 sm:grid-cols-3 sm:gap-x-4 sm:px-6 sm:py-2.5 lg:px-8">
+      <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2.5" aria-label="Evaluo">
         <Image src="/evaluo-logo-icono.svg" width={24} height={24} alt="" className="size-6 object-contain"/>
         <span className="text-[14px] font-bold tracking-[-.01em]">Evaluo</span>
       </div>
-      {!ready?<div className="flex min-w-0 flex-1 items-center justify-start gap-3 sm:justify-center">
-        <span className="flex h-7 w-[26px] shrink-0 items-center justify-center rounded-[7px] bg-[#d92d3a] text-[10px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
-        <span className="max-w-[160px] truncate text-[12px] font-semibold sm:max-w-[280px] sm:text-[13px]">{state.fileName}</span>
+      {!ready?<div data-processing-file-name className="col-span-2 row-start-2 flex min-w-0 items-center justify-center gap-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+        <span className="flex h-6 w-[22px] shrink-0 items-center justify-center rounded-md bg-[#d92d3a] text-[9px] font-semibold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
+        <span title={state.fileName} className="max-w-[min(72vw,280px)] truncate text-[11px] font-medium text-[#42506A] sm:max-w-[190px] sm:text-[12px] lg:max-w-[250px]">{state.fileName}</span>
       </div>:null}
-      <div className="flex min-w-[130px] flex-[0_1_280px] items-center gap-3 sm:gap-3.5">
+      <div className="col-start-2 row-start-1 flex w-full max-w-[280px] min-w-0 items-center justify-self-end gap-2.5 sm:col-start-3 sm:gap-3">
         <div role="progressbar" aria-label={state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
           <div className={`h-full rounded-full transition-[width] duration-500 ${ready?'bg-[#067647]':'bg-[#0b63e5]'}`} style={{width:`${progress}%`}}/>
         </div>
