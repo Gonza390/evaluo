@@ -19,7 +19,9 @@ for (const term of ['pubmed.ncbi.nlm.nih.gov', 'doi.org/10.3389', '525', '450', 
   assert.ok(article.includes(term), 'Article content: ' + term);
 }
 assert.ok(index.includes("import { EXAM_STUDY_TIME_EN_BLOG } from './study-blog-exam-time-2026-11-05';"));
-assert.ok(index.includes('en: [\\n    ...EXAM_STUDY_TIME_EN_BLOG,'.replace('\\n', '\n')));
+const englishCatalog = index.slice(index.indexOf('  en: ['));
+assert.ok(englishCatalog.includes('...EXAM_STUDY_TIME_EN_BLOG,'),
+  'The guide must be registered in the English blog regardless of article ordering.');
 assert.ok(index.includes("'/en/blog/'"), 'English canonical path');
 assert.ok(enRoute.includes('generateStaticParams'));
 assert.ok(enRoute.includes('STUDY_BLOG_ARTICLES.en'));
