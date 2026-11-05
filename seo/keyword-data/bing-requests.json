@@ -1,58 +1,58 @@
 {
-  "description": "Editorial verification candidate A replacement (Cornell note taking; study outlines), plus existing circuit B candidates; Bing-only discovery, never Google 500 gate.",
+  "description": "Editorial research: candidate A alternate broad search themes; Bing only for triage; B still reserved separately.",
   "requests": [
     {
-      "keyword": "metodo cornell",
+      "keyword": "metodo pomodoro",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "metodo cornell",
+      "keyword": "pomodoro para estudiar",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "metodo pomodoro para estudiar",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "mapa conceptual",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "mapa conceptual",
       "country": "mx",
       "language": "es-MX"
     },
     {
-      "keyword": "metodo cornell para estudiar",
+      "keyword": "como hacer un mapa conceptual",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "como hacer un esquema",
+      "keyword": "mapa conceptual para estudiar",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "hacer esquemas para estudiar",
+      "keyword": "mapa mental",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "hacer esquemas para estudiar",
-      "country": "mx",
-      "language": "es-MX"
-    },
-    {
-      "keyword": "esquemas para estudiar",
+      "keyword": "metodos de estudio",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "como hacer un resumen",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "tomar apuntes",
+      "keyword": "tecnicas de estudio",
       "country": "es",
       "language": "es-ES"
     },
     {
       "keyword": "tecnica feynman",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "como estudiar para un examen tipo test",
       "country": "es",
       "language": "es-ES"
     },
