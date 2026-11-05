@@ -153,7 +153,7 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
     status==='attention'?'Revisar mi suscripción':
     status==='unavailable'?'No pudimos verificar tu plan':
     monthlyDisabled?'Verificando tu plan…':'Activar Premium';
-  const mainAction=status==='active'?'/dashboard':status==='attention'?'/configuracion':null;
+  const mainAction=status==='active'?(returnTo??'/dashboard'):status==='attention'?'/configuracion':null;
   const backHref=returnTo??'/dashboard';
 
   const monthlyButton=(position:'main'|'final')=>
