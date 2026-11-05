@@ -6,7 +6,7 @@
 export type PremiumGateReason =
   | 'material_upload' | 'multiple_choice' | 'true_false'
   | 'matching_round' | 'case' | 'flashcard'
-  | 'simulator' | 'study_plan' | 'mind_map';
+  | 'simulator' | 'study_plan' | 'mind_map' | 'complete' | 'mixed';
 
 export type PremiumUpgrade = {
   reason: PremiumGateReason;
@@ -70,6 +70,8 @@ const GATE_MODES: Record<PremiumGateReason, string | null> = {
   case: 'casos',
   flashcard: 'flashcards',
   simulator: 'simulacro',
+  complete: 'completar',
+  mixed: 'mixto',
   study_plan: null,
   mind_map: null,
 };
