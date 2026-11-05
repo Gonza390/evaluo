@@ -1,18 +1,48 @@
 {
-  "description": "Second-phase Bing coverage check on generic vs long-tail topics. Bing-only signals, not validated Google volumes. All candidates align with Evaluo product themes.",
+  "description": "Editorial verification candidate A replacement (Cornell note taking; study outlines), plus existing circuit B candidates; Bing-only discovery, never Google 500 gate.",
   "requests": [
     {
-      "keyword": "estudiar",
+      "keyword": "metodo cornell",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "examen",
+      "keyword": "metodo cornell",
+      "country": "mx",
+      "language": "es-MX"
+    },
+    {
+      "keyword": "metodo cornell para estudiar",
       "country": "es",
       "language": "es-ES"
     },
     {
-      "keyword": "examen tipo test",
+      "keyword": "como hacer un esquema",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "hacer esquemas para estudiar",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "hacer esquemas para estudiar",
+      "country": "mx",
+      "language": "es-MX"
+    },
+    {
+      "keyword": "esquemas para estudiar",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "como hacer un resumen",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "tomar apuntes",
       "country": "es",
       "language": "es-ES"
     },
@@ -22,42 +52,12 @@
       "language": "es-ES"
     },
     {
-      "keyword": "anki",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "chatgpt",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "resumir pdf",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "flashcards",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "resumen",
-      "country": "es",
-      "language": "es-ES"
-    },
-    {
-      "keyword": "estudiar",
-      "country": "ar",
-      "language": "es-AR"
-    },
-    {
-      "keyword": "estudiar",
-      "country": "mx",
-      "language": "es-MX"
-    },
-    {
       "keyword": "como estudiar para un examen tipo test",
+      "country": "es",
+      "language": "es-ES"
+    },
+    {
+      "keyword": "examen tipo test",
       "country": "es",
       "language": "es-ES"
     }
