@@ -439,7 +439,8 @@ export default function CalendarioPage() {
     return () => controller.abort();
   }, [user?.id]);
 
-  const activeStudyPlan = ownerStudyPlan?.userId === user?.id ? ownerStudyPlan.plan : null;
+  const activeStudyPlan = ownerStudyPlan && user && ownerStudyPlan.userId === user.id
+    ? ownerStudyPlan.plan : null;
   const studyPlanDaysByDate = useMemo(() => {
     const result = new Map<string, PlanDay>();
     for (const day of activeStudyPlan?.schedule ?? []) {
