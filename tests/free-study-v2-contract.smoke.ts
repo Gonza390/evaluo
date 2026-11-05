@@ -77,9 +77,30 @@ assert.match(read('app/api/study-plans/route.ts'),/save_free_study_v2_plan/);
 assert.match(read('app\/(es)\/dashboard\/materiales\/upload-actions.ts'),/historicalFreeStudyMaterialIds/);
 assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts'),/historicalFreeStudyMaterialIds/);
 
+// Nuevo lanzamiento: jamás consumir cupos por PDFs/planes anteriores.
+assert.doesNotMatch(schema, /select distinct on \(m\.user_id\)/,
+  'Free V2 must not backfill lifetime grants from old PDFs.');
+assert.doesNotMatch(schema, /select id,user_id,created_at from public\.student_materials/,
+  'Premium daily ledger must not import previous uploads.');
+assert.match(schema, /if not public\.is_free_study_v2_rollout_enabled\(\) then return new; end if;/);
+for (const path of [
+  'app/(es)/dashboard/materiales/upload-actions.ts',
+  'app/(es)/dashboard/materiales/pdf-first-upload-actions.ts',
+]) {
+  const upload=read(path);
+  assert.match(upload, /\? historicalIds\.length/,
+    'Legacy PDFs must not consume the new Free slot in either upload flow.');
+  assert.doesNotMatch(upload, /new Set\(\[\.\.\.(?:activeIds|countedMaterials)/,
+    'Old uploads cannot be merged into Free V2 claim count.');
+  assert.match(upload, /from\('study_material_v2_upload_ledger' as never\)/,
+    'Premium daily limit must use only post-launch ledger rows.');
+}
+
 const planSql=read('supabase/migrations/20261104183000_free_study_v2_plan_claim.sql');
 assert.match(schema,/create table if not exists public\.free_study_v2_rollout/);
 assert.match(schema,/is_free_study_v2_rollout_enabled/);
+assert.doesNotMatch(planSql, /select user_id from public\.student_personal_study_plans/,
+  'Prelaunch study plans cannot consume the new Free plan grant.');
 assert.match(planSql,/as restrictive for insert to authenticated/);
 assert.match(planSql,/as restrictive for update to authenticated/);
 assert.match(planSql,/as restrictive for delete to authenticated/);
