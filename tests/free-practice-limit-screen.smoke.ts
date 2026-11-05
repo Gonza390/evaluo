@@ -16,6 +16,18 @@ assert.match(screen, /\/evi-practica-limite\.svg/);
 assert.match(screen, /data-free-practice-limit/);
 assert.match(screen, /role="dialog"/);
 assert.match(screen, /createPortal\(/, 'Standalone full-viewport screen must cover existing sidebar/navigation');
+assert.match(screen, /import '\.\/practice-motion\.css'/, 'Reuse the existing practice transition stylesheet');
+assert.match(screen, /practice-screen-enter/, 'Animated entry is required on the centered screen');
+assert.match(screen, /practice-screen-leave/, 'Animated exit is required when the student leaves');
+assert.match(screen, /window\.setTimeout\(navigate, 200\)/, 'Keep the exit animation visible before navigation');
+assert.match(screen, /onClick=\{event => onLinkClick\(event, premiumHref\)\}/,
+  'Premium navigation must play the exit transition');
+assert.match(screen, /transitionOut\(onBack\)/, 'Returning to the original topic must animate too');
+const motion = read('components/dashboard/practice-motion.css');
+assert.match(motion, /practice-screen-arrive 280ms/);
+assert.match(motion, /practice-screen-depart 200ms/);
+assert.match(motion, /prefers-reduced-motion:reduce/, 'Respect reduced motion preferences');
+
 assert.match(screen, /fixed inset-0.*h-dvh/);
 assert.match(screen, /max-w-\[520px\]/, 'Keep the original centered HTML width');
 assert.match(screen, /rounded-\[20px\]/, 'Preserve the layered blurred exercise card');
