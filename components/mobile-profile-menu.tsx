@@ -6,6 +6,7 @@ import { ChevronRight, Crown, MessageSquarePlus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { usePremium } from '@/hooks/usePremium';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { LanguageMenuItem } from '@/components/i18n/language-menu-item';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -72,6 +73,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
           sideOffset={8}
           className="w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg md:hidden"
         >
+          <LanguageMenuItem className={'flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-[13px] ' + mobileMenuItemHighlight} />
           <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
             <Link href="/configuracion" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]">
               <Settings className="h-4 w-4" aria-hidden="true" />

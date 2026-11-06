@@ -30,6 +30,7 @@ import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavL
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { LanguageMenuItem } from '@/components/i18n/language-menu-item';
 import { supabase } from '@/lib/supabase-client';
 
 type NavbarProps = {
@@ -318,6 +319,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     ) : null}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <LanguageMenuItem />
                     <DropdownMenuItem asChild>
                       <Link href="/configuracion" className="w-full text-sm">
                         <Settings className="mr-2 h-4 w-4" />
