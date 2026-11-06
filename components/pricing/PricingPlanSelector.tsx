@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Check, ShieldCheck } from 'lucide-react';
 import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
+import { CreemCheckoutCard } from '@/components/pricing/CreemCheckoutCard';
 
 
 type BillingMode = 'monthly' | 'semester';
@@ -29,10 +30,19 @@ export function PricingPlanSelector({
   // Las tres alternativas están visibles. El único selector pendiente es para
   // validar a qué modalidad Premium corresponde un código de referido.
   const [referralPlan, setReferralPlan] = useState<BillingMode>('monthly');
+  const [market, setMarket] = useState<{market: 'argentina' | 'international';creemAvailable:boolean;previewTestAvailable:boolean} | null>(null);
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/payments/creem/availability', { cache: 'no-store' })
+      .then(async r => r.ok ? await r.json() : null)
+      .then(payload => { if (active) setMarket(payload && (payload.market === 'argentina' || payload.market === 'international') ? payload : { market:'argentina', creemAvailable:false, previewTestAvailable:false }); })
+      .catch(() => { if (active) setMarket({market:'argentina',creemAvailable:false,previewTestAvailable:false}); });
+    return () => { active = false; };
+  }, []);
 
   return (
     <>
-      <div className="mx-auto grid max-w-6xl items-stretch gap-5 lg:auto-rows-fr lg:grid-cols-3 lg:gap-6">
+      <div className={`mx-auto grid items-stretch gap-5 lg:auto-rows-fr lg:gap-6 ${market?.market === 'international' ? 'max-w-4xl lg:grid-cols-2' : 'max-w-6xl lg:grid-cols-3'}`}>
         <article className="flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-5 min-[360px]:p-6 sm:p-8">
           <div>
             <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
@@ -73,6 +83,12 @@ export function PricingPlanSelector({
           </div>
         </article>
 
+        {market === null ? (
+          <div className="flex min-h-[380px] items-center justify-center text-sm text-slate-600">Consultando precios para tu región…</div>
+        ) : market.market === 'international' ? (
+          <CreemCheckoutCard features={premiumFeatures} mode="live" available={market.creemAvailable} />
+        ) : (
+          <>
         <div className="h-full min-w-0 [&>article]:h-full">
           <PaymentCheckoutCard
             features={premiumFeatures}
@@ -95,9 +111,17 @@ export function PricingPlanSelector({
             offerCode="semester"
           />
         </div>
+          </>
+        )}
       </div>
 
-      <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
+      {market?.previewTestAvailable ? (
+        <div className="mx-auto mt-8 max-w-xl">
+          <CreemCheckoutCard features={premiumFeatures} mode="test" available />
+        </div>
+      ) : null}
+
+      {market?.market !== 'international' ? <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
         <summary className="cursor-pointer text-center text-sm font-semibold text-slate-700">
           ¿Tenés un código de descuento?
         </summary>
@@ -122,7 +146,7 @@ export function PricingPlanSelector({
           </div>
           <ManualReferralCode offerCode={referralPlan} variant="compact" />
         </div>
-      </details>
+      </details> : null}
     </>
   );
 }
