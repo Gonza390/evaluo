@@ -4,9 +4,11 @@ import { Languages } from 'lucide-react';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { useToast } from '@/components/ui/use-toast';
+import { settingsMessages } from '@/lib/i18n/settings-messages';
 
 export function LanguageMenuItem({ className }: { className?: string }) {
-  const { locale, messages, savingLocale, changeLocale } = useAppLocale();
+  const { locale, savingLocale, changeLocale } = useAppLocale();
+  const settingsCopy = settingsMessages[locale];
   const { toast } = useToast();
   return (
     <DropdownMenuItem
@@ -14,12 +16,12 @@ export function LanguageMenuItem({ className }: { className?: string }) {
       className={className}
       onSelect={() => {
         void changeLocale(locale === 'es' ? 'en' : 'es').catch(() => {
-          toast({ title: messages.settings.languageSaveError, variant: 'destructive' });
+          toast({ title: settingsCopy.languageSaveError, variant: 'destructive' });
         });
       }}
     >
       <Languages className="mr-2 h-4 w-4" aria-hidden="true" />
-      {messages.settings.language}: {locale === 'es' ? 'English' : 'Español'}
+      {settingsCopy.language}: {locale === 'es' ? 'English' : 'Español'}
     </DropdownMenuItem>
   );
 }

@@ -30,7 +30,8 @@ import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavL
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
-import { LanguageMenuItem } from '@/components/i18n/language-menu-item';
+import dynamic from 'next/dynamic';
+const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
 import { supabase } from '@/lib/supabase-client';
 
 type NavbarProps = {
