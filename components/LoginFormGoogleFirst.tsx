@@ -10,6 +10,7 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { getPdfFirstDraftMeta } from '@/lib/pdf-first-draft';
 import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
+import { accountAppLocale } from '@/lib/i18n/app-locale';
 
 type AuthMode = 'login' | 'signup';
 
@@ -271,7 +272,10 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          ...(emailRedirectTo ? { options: { emailRedirectTo } } : {}),
+          options: {
+            ...(emailRedirectTo ? { emailRedirectTo } : {}),
+            ...(english ? { data: { ui_locale: 'en' } } : {}),
+          },
         });
         if (error) return setMessage(error.message);
         trackMarketingEvent(
@@ -311,8 +315,12 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
+      if (english && !accountAppLocale(loginData.user?.user_metadata)) {
+        // Apply the English choice only when the account has no saved preference.
+        await supabase.auth.updateUser({ data: { ui_locale: 'en' } });
+      }
       // El perfil académico es opcional y se solicita después del primer PDF,
       // igual que en el callback de Google. No desviar a /completar-perfil.
       const redirectPath = nextPath;
