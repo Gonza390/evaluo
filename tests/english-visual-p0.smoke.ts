@@ -38,4 +38,22 @@ const enHome=read('components/marketing/home-redesign.tsx');
 assert.match(enHome,/english \? "\/en\/login\?mode=login" : "\/login\?mode=login"/);
 assert.match(enHome,/const premiumHref = english \? '\/en\/pricing'/);
 assert.match(enHome,/<HomePdfPickerButton locale=\{locale\}/);
-console.log('[english-visual-p0] Mobile study nav, practice, feedback, tutorial, expired sessions, English public CTAs and PDF-first destination checked.');
+const practice = read('components/dashboard/practice-session.tsx');
+for (const phrase of ['First, choose a concept', 'Then, select its definition', 'Want to try new real-world scenarios?', ' · Matched']) {
+  assert.ok(practice.includes(phrase), 'English practice instructions missing '+phrase);
+}
+
+const navbar=read('components/navbar.tsx');
+assert.match(navbar, /window\.location\.assign\(locale === 'en' \? '\/en\/login'/);
+assert.match(navbar, /href=\{locale === 'en' \? '\/en\/login'/);
+assert.ok(navbar.includes('Save your progress and study materials'));
+
+const seoHeader=read('components/marketing/english-seo-header.tsx');
+assert.match(seoHeader, /href="\/en\/login\?mode=signup&next=%2Fdashboard%3FopenUpload%3D1"/);
+assert.ok(seoHeader.includes('Start studying'));
+
+const enLayout=read('app/(en)/layout.tsx');
+assert.ok(enLayout.includes('Study your PDF with AI and prepare for exams'));
+assert.doesNotMatch(enLayout, /Estudiá tu PDF con IA y prepará tu examen/);
+
+console.log('[english-visual-p0] Mobile nav, practice, feedback, study guide, English SEO CTA, sidebar login, metadata and auth destinations checked.');
