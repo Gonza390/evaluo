@@ -14,6 +14,8 @@ const CORE_ROUTES = [
   '/en/study-pdf-with-ai',
   '/en/ai-test-prep',
   '/en/compare/evaluo-vs-quizlet',
+  '/en/features',
+  '/en/practice-by-topic',
   '/es/estudiar-pdf-con-ia',
   '/es-mx/estudiar-pdf-con-ia',
   '/es-co/estudiar-pdf-con-ia',

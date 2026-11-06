@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { ResumirPdfExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
 
@@ -7,7 +8,7 @@ const path = '/funciones/resumir-pdf-con-ia';
 export const metadata: Metadata = {
   title: "Resumir PDF con IA: ejemplo de resumen y práctica",
   description: "Resumí tus apuntes PDF con IA: mirá un ejemplo resuelto, revisá conceptos importantes y continuá con flashcards y preguntas del mismo documento.",
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: hreflangAlternates('pdf-summary', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

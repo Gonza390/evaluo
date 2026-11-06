@@ -97,6 +97,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/en/compare/evaluo-vs-notebooklm`, lastModified: new Date('2026-11-06') },
     { url: `${baseUrl}/en/compare/evaluo-vs-chatgpt`, lastModified: new Date('2026-11-06') },
     { url: `${baseUrl}/en/compare/evaluo-vs-quizlet`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/compare`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/features`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/ai-for-students`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/ai-pdf-summarizer`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/pdf-to-mind-map`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/practice-by-topic`, lastModified: new Date('2026-11-06') },
     {
       url: `${baseUrl}/funciones/resumir-pdf-con-ia`,
     },
