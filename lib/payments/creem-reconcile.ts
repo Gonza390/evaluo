@@ -26,14 +26,15 @@ function date(value: unknown): string | null {
   const t = Date.parse(value);
   return Number.isFinite(t) ? new Date(t).toISOString() : null;
 }
-function eventDate(payload: Json): string {
+function eventDate(payload: Json): string | null {
+  // Creem uses Unix milliseconds. Never replace a stale or malformed event
+  // timestamp with "now": doing so can resurrect access after a refund.
   const stamp = payload.created_at;
-  const ts = typeof stamp === 'number' && Number.isFinite(stamp)
-    ? new Date(stamp > 10_000_000_000 ? stamp : stamp * 1000).getTime()
-    : Date.now();
-  return Number.isFinite(ts) && Math.abs(ts - Date.now()) < 90 * 24 * 60 * 60_000
-    ? new Date(ts).toISOString()
-    : new Date().toISOString();
+  if (typeof stamp !== 'number' || !Number.isFinite(stamp)) return null;
+  const ts = stamp > 10_000_000_000 ? stamp : stamp * 1000;
+  if (!Number.isFinite(ts) || ts > Date.now() + 5 * 60_000 ||
+      ts < Date.now() - 90 * 24 * 60 * 60_000) return null;
+  return new Date(ts).toISOString();
 }
 async function assertNoDbError(promise: PromiseLike<{ error: { message?: string } | null }>, hint: string) {
   const { error } = await promise;
@@ -157,7 +158,7 @@ export async function reconcileCreemBillingEvent(
   if (!envelope || !object || typeof type !== 'string' || !eventModeMatches(object, mode)) return 'ignored';
   const expectedProduct = creemProductId(mode);
   const changedAt = eventDate(envelope);
-  if (!expectedProduct) return 'ignored';
+  if (!expectedProduct || !changedAt) return 'ignored';
 
   if (type === 'checkout.completed') {
     const requestId = object.request_id;
@@ -207,7 +208,13 @@ export async function reconcileCreemBillingEvent(
   }
   if (session.product_id !== expectedProduct || session.currency !== 'USD' ||
       session.expected_amount_cents !== CREEM_USD_MONTHLY_CENTS) return 'ignored';
-  if (session.last_event_at && Date.parse(session.last_event_at) > Date.parse(changedAt)) return 'ignored';
+  // Initial paid may arrive after checkout.completed even when its Creem
+  // creation timestamp is earlier. Allow this specific unpaid -> paid transition,
+  // but never resurrect an old payment after cancellation/refund/dispute.
+  const initialPaidBeforeCheckout =
+    type === 'subscription.paid' && session.status === 'paid' && !session.current_period_end;
+  if (session.last_event_at && Date.parse(session.last_event_at) > Date.parse(changedAt) &&
+      !initialPaidBeforeCheckout) return 'ignored';
 
   if (type === 'subscription.paid') {
     const product = asObject(object.product);
