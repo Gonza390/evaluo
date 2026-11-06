@@ -17,7 +17,7 @@ const slugs: Record<EnglishPageKey, string> = {
 export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
   const page = ENGLISH_PAGES[pageKey];
   const otherPages = ENGLISH_PAGE_ORDER.filter((key) => key !== pageKey);
-  const breadcrumbs = [{ name: 'English', path: '/en' }];
+  const breadcrumbs = [{ name: 'English study guides', path: '/en/resources' }];
   if (pageKey !== 'home') breadcrumbs.push({ name: slugs[pageKey], path: page.path });
   const breadcrumbData = buildBreadcrumbJsonLd(breadcrumbs);
 
@@ -176,18 +176,18 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
           <div className="mx-auto max-w-6xl px-5 sm:px-8">
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-blue-200"><Globe2 className="h-4 w-4" aria-hidden="true"/> Product language</div>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides are here. The English app is coming later.</h2>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides are here. We’re translating the student experience step by step.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-200">
-                The current product, including sign-in, navigation and pricing, is primarily in Spanish.
-                You can explore it now if you are comfortable using a Spanish-language interface.
-                We are not presenting the current app as fully translated or promising international checkout.
+                The English homepage, sign-in and first PDF upload flow are available in English.
+                Advanced study tools, AI-generated explanations, account emails and billing are still being localized.
+                We do not present the entire study product as translated or promise international checkout everywhere.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/en/login?mode=signup" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">
                   Create an account (English sign-up) <ArrowRight className="h-4 w-4" aria-hidden="true"/>
                 </Link>
-                <Link href="/estudiar-pdf-con-ia" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                  Explore the current Spanish-language app
+                <Link href="/en" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                  Explore the English homepage
                 </Link>
               </div>
             </div>

@@ -46,8 +46,8 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean,
         : 'Sign in to resume your previous practice.';
     }
     return isSignUp
-      ? 'Create an account to save your study materials and progress. The current study dashboard is in Spanish.'
-      : 'Welcome back. Sign in to continue studying in the current Spanish-language dashboard.';
+      ? 'Create an account to upload materials, organize your studies and track your progress.'
+      : 'Welcome back. Sign in to continue studying with your materials.';
   }
   if (reason === 'pdf-first') {
     return isSignUp
@@ -404,7 +404,7 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
         <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
         {english ? (
           <p className="mx-auto mt-4 max-w-[360px] rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950" role="note">
-            Sign-in is available in English. After signing in, the current dashboard, study tools, support and account emails remain primarily in Spanish.
+            The English dashboard and first upload flow are available. Some advanced study tools, account emails and payment screens are still being translated.
           </p>
         ) : null}
 

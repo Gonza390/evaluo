@@ -6,7 +6,7 @@ import '../../../(es)/login/login-clean.css';
 
 export const metadata: Metadata = {
   title: 'Sign in or create an account | Evaluo',
-  description: 'Sign in to Evaluo using Google or email. The full study dashboard is currently available primarily in Spanish.',
+  description: 'Sign in to Evaluo using Google or email and continue to your first PDF or Word upload.',
   robots: { index: false, follow: true },
 };
 

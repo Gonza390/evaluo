@@ -22,7 +22,7 @@ export type EnglishPage = {
 
 export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
   home: {
-    path: '/en',
+    path: '/en/resources',
     title: 'Study PDFs with AI: Quizzes, Flashcards and Active Recall',
     description: 'Explore practical ways to study a PDF: turn notes into quizzes, create effective flashcards, check answers and revisit weak topics. Free examples from Evaluo.',
     eyebrow: 'English study resources from Evaluo',
