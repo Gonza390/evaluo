@@ -14,7 +14,7 @@ export const CHECKS = Object.freeze([
   'intent', 'market', 'competition', 'cannibalization',
   'evaluoFit', 'pedagogicalValue', 'sources'
 ]);
-export const TARGET_COUNTRIES = Object.freeze(['AR', 'ES', 'MX', 'CO']);
+export const TARGET_COUNTRIES = Object.freeze(['AR', 'ES', 'MX', 'CO', 'US']);
 const DAY = 86400000;
 const MAX_AGE_DAYS = 90;
 
