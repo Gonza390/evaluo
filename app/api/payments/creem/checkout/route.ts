@@ -30,7 +30,8 @@ export async function POST(request: Request) {
   if (process.env.VERCEL_ENV === 'production' && site) {
     allowed.add(new URL(site).origin.replace('://', '://www.'));
   }
-  if (!site || !origin || !allowed.has(origin)) {
+  if (!site || !origin || !allowed.has(origin) ||
+      (mode === 'test' && origin !== requestOrigin)) {
     return NextResponse.json({ error: 'invalid_origin' }, { status: 403 });
   }
   if (mode === 'live') {
@@ -85,7 +86,10 @@ export async function POST(request: Request) {
   });
   if (insertError) return NextResponse.json({ error: 'creem_attempt_not_created' }, { status: 503 });
 
-  const successUrl = new URL(mode === 'test' ? '/pricing/creem-prueba' : '/pricing/resultado', site);
+  // Preview uses its actual login origin, not VERCEL_URL (a different ephemeral
+  // host that cannot access the authenticated session cookie).
+  const successOrigin = mode === 'test' ? requestOrigin : site;
+  const successUrl = new URL(mode === 'test' ? '/pricing/creem-prueba' : '/pricing/resultado', successOrigin);
   successUrl.searchParams.set('attemptId', attemptId);
   try {
     const checkout = await createCreemCheckout(mode, {
