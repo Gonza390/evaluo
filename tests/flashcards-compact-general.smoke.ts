@@ -49,4 +49,6 @@ assert.match(cards, /disabled=\{!flipped \|\| isFlipping \|\| advancePhase !== '
 assert.match(cards, /onClick=\{\(\) => markRecall\('unknown'\)\}/);
 assert.match(cards, /onClick=\{\(\) => markRecall\('known'\)\}/);
 
+assert.doesNotMatch(cards, /Estos resultados reflejan lo que marcaste al estudiar las tarjetas/,
+  'La pantalla final de flashcards no debe mostrar el aviso redundante.');
 console.log('Flashcards general compact and visible smoke: OK.');
