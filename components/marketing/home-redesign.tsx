@@ -63,7 +63,7 @@ const universityLogos = [
 export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: string; locale?: AppLocale }) {
   const english = locale === 'en';
   const t = (text: string) => english ? HOME_ENGLISH_TEXT[text] ?? text : text;
-  const premiumHref = english ? '/en/login?mode=signup&intent=premium' : '/pricing?source=home_planes#elegir-plan';
+  const premiumHref = english ? '/en/pricing' : '/pricing?source=home_planes#elegir-plan';
   return (
     <div className="home-redesign" style={{ width: '100%' }}>
       <div

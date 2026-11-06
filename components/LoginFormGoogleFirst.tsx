@@ -228,6 +228,7 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
     try {
       const callback = new URL('/auth/callback', window.location.origin);
       callback.searchParams.set('next', nextPath);
+    callback.searchParams.set('ui_locale', locale);
       if (reason) callback.searchParams.set('reason', reason);
       callback.searchParams.set('analytics_session', getAnalyticsSessionKey());
       const { error } = await supabase.auth.signInWithOAuth({
@@ -317,8 +318,8 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
 
       const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
-      if (english && !accountAppLocale(loginData.user?.user_metadata)) {
-        // Apply the English choice only when the account has no saved preference.
+      if (english && accountAppLocale(loginData.user?.user_metadata) !== 'en') {
+        // Explicit English login also changes the preference for returning accounts.
         await supabase.auth.updateUser({ data: { ui_locale: 'en' } });
       }
       // El perfil académico es opcional y se solicita después del primer PDF,
