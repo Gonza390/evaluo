@@ -26,7 +26,7 @@ const sections: LegalSection[] = [
   {
     title: '1. Aceptación de los términos',
     body: [
-      'Al acceder, navegar, registrarte o utilizar la plataforma Evaluo ("la Plataforma", "Evaluo"), aceptás estos Términos y Condiciones ("Términos") en su totalidad, junto con la Política de Privacidad y la Política de Copyright. Si no estás de acuerdo con alguna parte de estos documentos, no deberías utilizar el servicio.',
+      'Al acceder, navegar, registrarte o utilizar la plataforma Evaluo ("la Plataforma", "Evaluo"), aceptás estos Términos y Condiciones ("Términos") en su totalidad, junto con la Política de Privacidad, la Política de Uso Aceptable y la Política de Copyright. Si no estás de acuerdo con alguna parte de estos documentos, no deberías utilizar el servicio.',
       'Estos Términos constituyen un acuerdo legal entre vos ("el Usuario") y Evaluo. El uso de la Plataforma con fines de estudio, práctica y organización académica implica la aceptación plena e incondicional de estas condiciones.',
     ],
   },
@@ -259,6 +259,7 @@ export default function TermsPage() {
                       <p>Uso académico, razonable y legítimo de la plataforma.</p>
                       <p>El usuario es responsable del contenido que sube y de sus derechos.</p>
                       <p>La IA es una herramienta de apoyo, no infalible ni vinculante.</p>
+                      <Link href="/politica-de-uso-aceptable" className="inline-block font-semibold text-blue-600 hover:underline">Leé la Política de Uso Aceptable →</Link>
                       <p>Posibilidad de moderar contenido y suspender cuentas cuando corresponda.</p>
                     </div>
                   </div>

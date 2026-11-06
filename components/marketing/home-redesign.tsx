@@ -309,7 +309,7 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
 
       <section id="universidades" className="university-band" aria-label="Universidades">
         <div className="w">
-          <p className="university-band-label">Estudiantes de estas universidades ya usan Evaluo</p>
+          <p className="university-band-label">Universidades disponibles para organizar tu estudio</p>
           <HomeUniversityCarousel universities={universityLogos} />
         </div>
       </section>
@@ -525,53 +525,6 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
                   height={80}
                 />
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="sec" style={{ paddingBottom: '48px' }}>
-        <div className="w">
-          <div className="eb l">Lo que cuentan</div>
-          <h2 style={{ fontSize: '36px', maxWidth: '640px' }}>
-            Estudiantes que ya saben dónde están parados.
-          </h2>
-          <div className="cells">
-            <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                <Image src="/testimonials/sofia-martinez.jpg" alt="Sofía Martínez" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                <div>
-                  <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Sofía Martínez</b>
-                  <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Derecho · Universidad de Buenos Aires</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '14px', margin: 0 }}>
-                “Antes estudiaba releyendo todo el apunte y no sabía si realmente estaba preparado. Con Evaluo pude practicar a partir de mi PDF y ver qué temas necesitaba repasar. Me sirvió para organizar mejor el estudio antes del parcial.”
-              </p>
-            </div>
-            <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                <Image src="/testimonials/tomas-fernandez.jpg" alt="Tomás Fernández" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                <div>
-                  <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Tomás Fernández</b>
-                  <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Psicología · Universidad Nacional de Tres de Febrero</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '14px', margin: 0 }}>
-                “Practiqué sobre mis apuntes y aproveché mejor el tiempo de repaso.”
-              </p>
-            </div>
-            <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                <Image src="/testimonials/lucia-gonzalez.jpg" alt="Lucía González" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                <div>
-                  <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Lucía González</b>
-                  <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Marketing · Universidad Siglo 21</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '14px', margin: 0 }}>
-                “Con el progreso por tema supe qué volver a estudiar, en vez de releer todo.”
-              </p>
             </div>
           </div>
         </div>
