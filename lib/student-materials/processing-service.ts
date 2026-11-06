@@ -673,6 +673,7 @@ export async function processStudentMaterial(input: {
   ]);
 
   const pedagogicalArtifacts = buildPedagogicalArtifacts({
+    studyLocale,
     summary,
     glossary,
     pageCount,
