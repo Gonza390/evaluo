@@ -533,7 +533,6 @@ export function StudentMaterialFlashcards({
       };
     });
     const note = [
-      'Estos resultados reflejan lo que marcaste al estudiar las tarjetas, no una calificación de examen.',
       !demoMode && progressSyncError ? 'El progreso quedó guardado en este navegador, pero todavía no pudimos sincronizarlo.' : '',
       reminderError ?? '',
       reminderScheduled ? 'Listo. Mañana te enviamos un recordatorio para retomar estos temas.' : '',
