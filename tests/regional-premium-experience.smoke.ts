@@ -59,6 +59,13 @@ assert.match(regional, /market === 'international'/);
 assert.match(regional, /market === 'unknown'/);
 assert.match(regional, /US\$ 9,99/);
 assert.match(regional, /Mercado Pago/);
+assert.match(regional, /PREMIUM_MONTHLY_PRICE_ARS/,
+  'The Argentina featured offer must display the ARS monthly price');
+assert.match(regional, /market === 'argentina' \\? \\(/,
+  'The ARS featured price must be restricted to Argentina');
+assert.doesNotMatch(spanish, /incluidos en los tres planes/i,
+  'The public page must not promise three plans to international visitors');
+
 assert.match(regional, /Creem/);
 assert.match(mp, /argentina_checkout_only/);
 assert.match(creem, /international_checkout_only/);
