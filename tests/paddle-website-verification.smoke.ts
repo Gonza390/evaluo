@@ -34,6 +34,10 @@ assert.match(pricing, /<RegionalPricingMessage locale="es" placement="featured" 
 assert.match(pricing, /<RegionalPricingMessage locale="es" placement="billing" \/>/);
 assert.match(regionalPricing, /US\$ 9,99/);
 assert.match(regionalPricing, /renovación mensual automática/);
+// Links legales visibles junto al precio (recuperados de main).
+for (const url of ['/terminos', '/privacidad', '/reembolsos', '/facturacion']) {
+  assert.ok(regionalPricing.includes('href="' + url + '"'), 'pricing legal link ' + url);
+}
 assert.match(footer, /mailto:facturacion@evaluo\.com\.ar/);
 assert.doesNotMatch(refunds, /reembolso garantizado durante 30 días/i);
 console.log('Creem website compliance smoke passed.');
