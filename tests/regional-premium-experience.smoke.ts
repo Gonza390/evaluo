@@ -9,6 +9,7 @@ const countries: Array<[string | null, 'argentina' | 'international' | 'unknown'
   ['MX', 'international'], ['BR', 'international'],
   ['CL', 'international'], ['UY', 'international'], ['CO', 'international'],
   [null, 'unknown'], ['', 'unknown'], ['bad', 'unknown'],
+  ['XX', 'unknown'], ['ZZ', 'unknown'], ['EU', 'unknown'],
 ];
 for (const [country, expected] of countries) {
   assert.equal(resolveCheckoutMarket(country, 'production'), expected);
