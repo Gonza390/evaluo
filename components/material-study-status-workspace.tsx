@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import type { AppLocale } from '@/lib/i18n/app-locale';
 import {
   BookOpenText,
   BrainCircuit,
@@ -20,6 +21,7 @@ type MaterialStudyStatusWorkspaceProps = {
   message: string;
   progress?: number | null;
   actions?: ReactNode;
+  locale?: AppLocale;
 };
 
 const TABS = [
@@ -39,15 +41,24 @@ export function MaterialStudyStatusWorkspace({
   message,
   progress,
   actions,
+  locale = 'es',
 }: MaterialStudyStatusWorkspaceProps) {
+  const english = locale === 'en';
   const failed = status === 'failed';
   const syncing = status === 'syncing';
   const safeProgress = syncing ? 100 : Math.min(100, Math.max(0, progress ?? 0));
   const statusTitle = failed
-    ? 'El procesamiento se interrumpió'
+    ? (english ? 'Processing was interrupted' : 'El procesamiento se interrumpió')
     : syncing
-      ? 'Estamos sincronizando el material'
-      : 'Estamos preparando este material';
+      ? (english ? 'Finishing your study materials' : 'Estamos sincronizando el material')
+      : (english ? 'Preparing your study materials' : 'Estamos preparando este material');
+  const displayMessage = english
+    ? failed
+      ? "We couldn't finish processing your document. Please retry or return later."
+      : syncing
+        ? "Your document is processed. We're preparing its summary, glossary and study tools."
+        : "We're turning your document into study materials. You can return while we finish."
+    : message;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
@@ -58,7 +69,7 @@ export function MaterialStudyStatusWorkspace({
             className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
           >
             <ChevronLeft className="h-4 w-4" />
-            Volver
+            {english ? 'Back' : 'Volver'}
           </Link>
 
           <div className="mt-5 min-w-0">
@@ -83,7 +94,7 @@ export function MaterialStudyStatusWorkspace({
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  {label}
+                  {english ? ({Resumen:'Summary',Glosario:'Glossary',Tarjetas:'Flashcards',Examen:'Practice exam','Mapa mental':'Mind map'} as Record<string,string>)[label] ?? label : label}
                 </div>
               ))}
             </div>
@@ -120,14 +131,14 @@ export function MaterialStudyStatusWorkspace({
                   <h2 className="mt-1.5 text-[1.15rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-[1.3rem]">
                     {statusTitle}
                   </h2>
-                  <p className="mt-2 text-[13px] leading-6 text-slate-600">{message}</p>
+                  <p className="mt-2 text-[13px] leading-6 text-slate-600">{displayMessage}</p>
                 </div>
               </div>
 
               {!failed ? (
                 <div className="mt-5">
                   <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-                    <span>Preparando tu espacio de estudio</span>
+                    <span>{english ? 'Preparing your study space' : 'Preparando tu espacio de estudio'}</span>
                     <span>{safeProgress}%</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
