@@ -48,7 +48,7 @@ function escapeHtml(value: string) {
     .replaceAll("'", '&#039;');
 }
 
-function buildReactivationMessage(input: {
+export function buildReactivationMessage(input: {
   firstname: string;
   materia: string;
   uploadUrl: string;
