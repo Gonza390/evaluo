@@ -338,7 +338,7 @@ export async function generateCanonicalStudentMaterialSummary(
       });
 
       const parsed = parseCanonicalSummaryPayload(result.content);
-      const summary = sanitizeCanonicalSummaryPayload(parsed, model, result.model);
+      const summary = sanitizeCanonicalSummaryPayload(parsed, model, result.model, input.studyLocale ?? 'es');
 
       if (summary) {
         return summary;
@@ -415,7 +415,8 @@ function parseCanonicalSummaryPayload(raw: string): CanonicalSummaryPayload {
 export function sanitizeCanonicalSummaryPayload(
   payload: CanonicalSummaryPayload,
   model: CanonicalPedagogicalModel,
-  providerModel: string
+  providerModel: string,
+  studyLocale: 'es' | 'en' = 'es'
 ): StudentMaterialSummary | null {
   const source = buildStudyCanonicalSummarySource(model);
   if (source.topics.length === 0) return null;
@@ -489,7 +490,7 @@ export function sanitizeCanonicalSummaryPayload(
       return {
         title,
         body: cleanMultilineBlock(
-          [body, formatPdfReference(pages)].filter(Boolean).join('\n')
+          [body, formatPdfReference(pages, studyLocale)].filter(Boolean).join('\n')
         ),
       };
     })
@@ -528,7 +529,9 @@ export function sanitizeCanonicalSummaryPayload(
   );
 
   const needsCanonicalExpansion = totalBodyChars < minimumBodyChars;
-  const completeSections = needsCanonicalExpansion
+  // Supplemental text and injected tables derive from the original-language
+  // canonical model. Never silently append them to an English AI guide.
+  const completeSections = needsCanonicalExpansion && studyLocale !== 'en'
     ? sections.map((section, index) => {
         const topics = (sectionTopicNumbers[index] ?? [])
           .map((topicNumber) => source.topics[topicNumber - 1])
@@ -543,11 +546,9 @@ export function sanitizeCanonicalSummaryPayload(
       })
     : sections;
 
-  const enrichedSections = injectCanonicalTables(
-    completeSections,
-    sectionTopicNumbers,
-    source
-  );
+  const enrichedSections = studyLocale === 'en'
+    ? completeSections
+    : injectCanonicalTables(completeSections, sectionTopicNumbers, source);
 
   return {
     shortSummary,
@@ -555,7 +556,7 @@ export function sanitizeCanonicalSummaryPayload(
     sections: enrichedSections,
     hasContent: true,
     status: 'ready',
-    provider: needsCanonicalExpansion
+    provider: needsCanonicalExpansion && studyLocale !== 'en'
       ? `${providerModel}-canonical-expanded`
       : `${providerModel}-canonical`,
     errorMessage: null,
@@ -980,13 +981,13 @@ function coerceBody(value: unknown): string {
   return '';
 }
 
-function formatPdfReference(pages: number[]) {
+function formatPdfReference(pages: number[], locale: 'es' | 'en' = 'es') {
   const normalized = normalizePages(pages);
   if (normalized.length === 0) return '';
 
   if (normalized.length === 1) {
-    return `Ver en PDF · página ${normalized[0]}`;
+    return locale === 'en' ? `View in PDF · page ${normalized[0]}` : `Ver en PDF · página ${normalized[0]}`;
   }
 
-  return `Ver en PDF · páginas ${normalized.join(', ')}`;
+  return locale === 'en' ? `View in PDF · pages ${normalized.join(', ')}` : `Ver en PDF · páginas ${normalized.join(', ')}`;
 }
