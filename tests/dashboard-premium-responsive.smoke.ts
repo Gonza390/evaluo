@@ -12,6 +12,24 @@ assert.match(localeMessages,/por semana · cobro mensual/, 'The Spanish monthly-
 assert.match(page,/auth\.getUser\(\)/,'Premium dashboard must require student authentication.');
 assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the current study activity should stay safe.');
 assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
+assert.match(nav, /data-sidebar-plan-upgrade/,
+  'The plans link remains a distinct entry in the desktop sidebar.');
+assert.match(nav, /<TrendingUp className="h-4 w-4" aria-hidden="true" \/>/,
+  'The improvement link uses a progress icon instead of a crown.');
+assert.doesNotMatch(nav, /<Crown/,
+  'The sidebar upgrade link should not display a crown.');
+assert.match(nav, /messages\.navigation\.improvePlan/,
+  'The new label must follow the current application language.');
+assert.match(localeMessages, /improvePlan: 'Mejorar mi plan'/,
+  'Spanish should display exactly the selected upgrade label.');
+assert.match(localeMessages, /improvePlan: 'Improve my plan'/,
+  'The English sidebar must be localized too.');
+assert.match(nav, /hover:bg-\[#EEF2FF\]/,
+  'Keep the indigo highlight subtle, with no permanently tinted card.');
+assert.match(nav, /collapsed \? messages\.navigation\.improvePlan : undefined/,
+  'The collapsed sidebar must expose an accessible label.');
+assert.match(nav, /isNavItemActive\(pathname, '\/dashboard\/premium'\)/,
+  'The upgrade entry should signal the current page when opened.');
 assert.match(mobileMenu,/href="\/dashboard\/premium\?source=mobile_profile_menu"/,
   'Mobile profile upsell must open redesigned Premium, not outdated public pricing.');
 assert.match(mobileMenu,/messages\.navigation\.perWeek/,
