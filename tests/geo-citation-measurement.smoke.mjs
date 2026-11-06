@@ -24,7 +24,7 @@ const attribution = read('lib/attribution.ts');
 
 for (const [text,slug] of [[qa,'verificar-preguntas-ia'],[method,'metodo-estudio-pdf-practica-activa']]) {
   assert.match(text, /StudentArticleLayout/);
-  assert.match(text, /'@type': 'Article'/);
+  assert.match(text, /['"]@type['"]\s*:\s*['"]Article['"]/);
   assert.match(text, /2026-11-06/);
   assert.match(text, /doi\.org/);
   assert.ok(sitemap.includes('/recursos/'+slug));
