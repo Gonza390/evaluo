@@ -86,7 +86,7 @@ assert.match(exam, /for \(const offset of \[-1, 0, 1\]\)/);
 const settings = read('app/(es)/configuracion/page.tsx');
 const zoneUi = read('components/i18n/time-zone-preference.tsx');
 assert.match(settings, /<TimeZonePreference\s*\/>/);
-assert.match(zoneUi, /time_zone: deviceZone/);
+assert.match(read('components/i18n/app-locale-provider.tsx'), /time_zone: detected/);
 assert.match(zoneUi, /time_zone: value/);
 assert.match(zoneUi, /Time zone for exam reminders/);
 assert.match(read('components/dashboard/study-error-detail.tsx'), /english \? t\('No pudimos generar la ayuda\.'/);
