@@ -103,13 +103,13 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
   if (selectedMode && available(selectedMode)) return (
     <main className={`${leavingReview ? "practice-screen-leave" : "practice-screen-enter"} mx-auto flex w-full max-w-[880px] items-start justify-center px-3 py-3 sm:items-center sm:px-5 sm:py-5`}>
       <div className="w-full max-w-[650px] text-center">
-        <img src="/evi-pensando.svg" alt="Evi pensando"
+        <img src="/evi-pensando.svg" alt={english ? "Evi thinking" : "Evi pensando"}
           className="mx-auto mb-1.5 h-[56px] w-[56px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:mb-2 sm:h-[76px] sm:w-[76px]" />
-        <h1 className="text-[21px] font-semibold leading-[1.2] tracking-[-.045em] text-[#0F1B3D] sm:text-[23px]">¿Cómo querés repasar?</h1>
+        <h1 className="text-[21px] font-semibold leading-[1.2] tracking-[-.045em] text-[#0F1B3D] sm:text-[23px]">{english ? "How would you like to review?" : "¿Cómo querés repasar?"}</h1>
         <p className="mx-auto mt-1 max-w-[370px] text-[11px] leading-[1.4] text-slate-500 sm:text-[12px]">
-          Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo.
+          {english ? "Choose how much time to spend. You can change this later." : "Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo."}
         </p>
-        <div role="radiogroup" aria-label="Tipo de repaso" className="mt-3 grid gap-2 text-left sm:mt-4 sm:grid-cols-2 sm:gap-3">
+        <div role="radiogroup" aria-label={english ? "Review duration" : "Tipo de repaso"} className="mt-3 grid gap-2 text-left sm:mt-4 sm:grid-cols-2 sm:gap-3">
           {([
             {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',Icon:Zap,iconClass:'bg-[#FFF3D0] text-[#8B650F]'},
             {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#2563EB]'},
@@ -133,7 +133,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
           <button type="button" onClick={backToPicker} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">{t("Volver")}</button>
           <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
-            Continuar <ArrowRight className="size-4"/>
+            {english ? "Continue" : "Continuar"} <ArrowRight className="size-4"/>
           </button>
         </div>
       </div>
@@ -145,7 +145,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
           <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
-            Practicar
+            {english ? "Practice" : "Practicar"}
           </h1>
           <p className="mt-1 text-[12px] text-[#66758D]">{english ? "Choose how to test what you have learned." : "Elegí cómo querés poner a prueba lo que aprendiste."}</p>
         </div>
@@ -167,7 +167,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
       {!material && (
         <section aria-label={english ? "Start practicing with your notes" : "Empezá a practicar con tus apuntes"} className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#E7EBF4] bg-[#F6F8FF] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="flex min-w-0 items-center gap-3">
-            <img src="/evi-bienvenida.svg" alt="Evi te da la bienvenida" className="size-16 shrink-0 object-contain sm:size-20"/>
+            <img src="/evi-bienvenida.svg" alt={english ? "Evi welcomes you" : "Evi te da la bienvenida"} className="size-16 shrink-0 object-contain sm:size-20"/>
             <div className="min-w-0">
               <h2 className="text-[15px] font-semibold tracking-tight text-[#0F1B3D]">{english ? "Start practicing with your first material" : "Tus prácticas empiezan con tu primer material"}</h2>
               <p className="mt-1 text-[12px] leading-5 text-[#526079]">{english ? "Upload your notes to unlock all practice modes." : "Subí tu material y desbloqueá las modalidades para practicar."}</p>
