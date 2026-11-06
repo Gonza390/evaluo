@@ -21,12 +21,14 @@ export function trackMarketingEvent(
 
   const attribution = getAttributionSnapshot();
   const pathname = window.location.pathname;
+  const uiLocale = pathname === '/en' || pathname.startsWith('/en/') || document.documentElement.lang === 'en' ? 'en' : 'es';
   const pageType = getAnalyticsPageType(pathname);
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({
     event,
     app_name: 'Evaluo',
     page_type: pageType,
+    ui_locale: uiLocale,
     ...attribution,
     ...payload,
   });
@@ -41,6 +43,7 @@ export function trackMarketingEvent(
     userId: userId ?? null,
     metadata: {
       page_type: pageType,
+      ui_locale: uiLocale,
       ...payload,
     },
   }).catch(() => undefined);
