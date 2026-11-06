@@ -6,6 +6,7 @@ import { Loader2, RefreshCw } from 'lucide-react';
 import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 /**
  * Cuando el watchdog recupera un timeout, relanzamos automáticamente el trabajo
@@ -20,6 +21,8 @@ export function StudentMaterialProcessingRetry({
   autoRetry?: boolean;
 }) {
   const router = useRouter();
+  const english = useOptionalAppLocale() === 'en';
+  const tr = (es:string,en:string) => english ? en : es;
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const startedRef = useRef(false);
@@ -36,14 +39,14 @@ export function StudentMaterialProcessingRetry({
         if (!autoRetry || !result.success) {
           toast({
             description: result.success
-              ? 'Reintentamos el procesamiento. El estado se actualizará automáticamente.'
-              : result.message,
+              ? tr('Reintentamos el procesamiento. El estado se actualizará automáticamente.','Processing restarted. The status will update automatically.')
+              : (english ? 'We could not restart processing. Please try again.' : result.message),
             variant: result.success ? 'default' : 'destructive',
           });
         }
       } catch {
         toast({
-          description: 'No pudimos reanudar este PDF. Podés volver a intentarlo.',
+          description: tr('No pudimos reanudar este PDF. Podés volver a intentarlo.','We could not resume processing this PDF. You can try again.'),
           variant: 'destructive',
         });
       } finally {
@@ -51,7 +54,7 @@ export function StudentMaterialProcessingRetry({
         router.refresh();
       }
     });
-  }, [autoRetry, materialId, router, startTransition, toast]);
+  }, [autoRetry, materialId, router, startTransition, toast, english]);
 
   useEffect(() => {
     if (autoRetry && !autoTriggeredRef.current) {
@@ -68,7 +71,7 @@ export function StudentMaterialProcessingRetry({
       className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
     >
       {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-      {isPending ? 'Reanudando…' : 'Reintentar procesamiento'}
+      {isPending ? tr('Reanudando…','Resuming…') : tr('Reintentar procesamiento','Retry processing')}
     </Button>
   );
 }
