@@ -1,5 +1,6 @@
 import 'server-only';
 import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
+import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -21,10 +22,10 @@ type ReactivationCandidate = {
   last_active_at: string;
 };
 
-function firstName(value: string | null | undefined) {
+function firstName(value: string | null | undefined, locale: AppLocale = 'es') {
   const normalized = value?.trim();
-  if (!normalized) return 'estudiante';
-  return normalized.split(/\s+/)[0] || 'estudiante';
+  if (!normalized) return locale === 'en' ? 'student' : 'estudiante';
+  return normalized.split(/\s+/)[0] || (locale === 'en' ? 'student' : 'estudiante');
 }
 
 function buildUploadUrl() {
@@ -51,14 +52,16 @@ function buildReactivationMessage(input: {
   firstname: string;
   materia: string;
   uploadUrl: string;
+  locale?: AppLocale;
 }) {
-  const subject = `¿Qué materia sigue después de ${input.materia}?`;
+  const english = input.locale === 'en';
+  const subject = english ? `What are you studying after ${input.materia}?` : `¿Qué materia sigue después de ${input.materia}?`;
   const safeFirstName = escapeHtml(input.firstname);
   const safeMateria = escapeHtml(input.materia);
   const safeUploadUrl = escapeHtml(input.uploadUrl);
 
   const html = `<!doctype html>
-<html lang="es">
+<html lang="${english ? 'en' : 'es'}">
   <body style="margin:0;padding:0;background:#F5F7FB;font-family:Inter,Arial,sans-serif;color:#0F1B3D;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;padding:32px 16px;">
       <tr>
@@ -67,14 +70,14 @@ function buildReactivationMessage(input: {
             <tr>
               <td style="padding:32px;">
                 <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
-                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
-                <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">¿Qué materia sigue después de ${safeMateria}?</h1>
-                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">Hace un tiempo practicaste ${safeMateria} en Evaluo. Si ya estás con la próxima materia, subí tu PDF y prepará resumen, glosario, flashcards y práctica desde el mismo material.</p>
-                <a href="${safeUploadUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">Subir mi PDF</a>
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque usaste el simulador de Evaluo y hace un tiempo que no volvés.</p>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${english ? 'Hi' : 'Hola'} ${safeFirstName},</p>
+                <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${english ? `What are you studying after ${safeMateria}?` : `¿Qué materia sigue después de ${safeMateria}?`}</h1>
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${english ? `You practiced ${safeMateria} in Evaluo a while ago. Ready for your next subject? Upload a PDF and create your study summary, glossary, flashcards and exercises from your own notes.` : `Hace un tiempo practicaste ${safeMateria} en Evaluo. Si ya estás con la próxima materia, subí tu PDF y prepará resumen, glosario, flashcards y práctica desde el mismo material.`}</p>
+                <a href="${safeUploadUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${english ? 'Upload my PDF' : 'Subir mi PDF'}</a>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${english ? 'You received this message because you used an Evaluo mock exam and have not returned for a while.' : 'Te enviamos este mensaje porque usaste el simulador de Evaluo y hace un tiempo que no volvés.'}</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 
-                  <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+                  <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">${english ? 'Evaluo Team' : 'Equipo Evaluo'}</p>
                   <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
@@ -86,7 +89,7 @@ function buildReactivationMessage(input: {
   </body>
 </html>`;
 
-  const text = `Hola ${input.firstname}. Hace un tiempo practicaste ${input.materia} en Evaluo. Si ya estás con la próxima materia, subí tu PDF acá: ${input.uploadUrl}`;
+  const text = english ? `Hi ${input.firstname}. You previously practiced ${input.materia} in Evaluo. Ready for your next subject? Upload your PDF: ${input.uploadUrl}` : `Hola ${input.firstname}. Hace un tiempo practicaste ${input.materia} en Evaluo. Si ya estás con la próxima materia, subí tu PDF acá: ${input.uploadUrl}`;
 
   return { subject, html, text };
 }
@@ -184,11 +187,15 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
     }
 
     try {
-      const displayFirstName = firstName(candidate.display_name);
+      const { data: userData, error: userError } = await admin.auth.admin.getUserById(candidate.user_id);
+      if (userError) throw userError;
+      const locale = accountAppLocale(userData.user?.user_metadata) ?? 'es';
+      const displayFirstName = firstName(candidate.display_name, locale);
       const message = buildReactivationMessage({
         firstname: displayFirstName,
         materia: candidate.materia_nombre,
         uploadUrl,
+        locale,
       });
 
       const senderResult = await sendSenderTransactional({
