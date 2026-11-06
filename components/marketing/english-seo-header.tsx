@@ -16,7 +16,7 @@ export function EnglishSeoHeader({ alternateHref }: { alternateHref?: string }) 
       </nav>
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <LandingLanguageSelector locale="en" alternateHref={alternateHref} />
-        <Link href="/en/study-pdf-with-ai" className="hidden min-h-11 items-center rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-800 sm:inline-flex">Study with AI</Link>
+        <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" className="hidden min-h-11 items-center rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-800 sm:inline-flex">Start studying</Link>
       </div>
     </header>
   );
