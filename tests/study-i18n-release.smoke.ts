@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { localizePedagogicalFlashcards } from '../lib/student-materials/flashcard-language.ts';
+import { localizeExamEventTitle } from '../lib/i18n/calendar-event-title.ts';
 
 const read = (p: string) => readFileSync(p, 'utf8');
 const types = read('lib/student-materials/types.ts');
@@ -71,6 +72,11 @@ assert.equal(unchanged.flashcards[0]?.back, 'Dividir el mercado en grupos.');
 assert.equal(unchanged.flashcards[0]?.reference.pageStart, 4);
 
 // Safeguard the whole P1 student journey, not only the PDF-generated artifacts.
+assert.equal(localizeExamEventTitle('Algebra - Parcial 1', 'en'), 'Algebra - Exam 1');
+assert.equal(localizeExamEventTitle('Algebra - Exam 2', 'es'), 'Algebra - Parcial 2');
+assert.equal(localizeExamEventTitle('Economía - Integrador', 'en'), 'Economía - Final exam');
+assert.equal(localizeExamEventTitle('Student project - Final exam', 'es'), 'Student project - Integrador');
+assert.equal(localizeExamEventTitle('Constitutional Law', 'en'), 'Constitutional Law');
 const calendar = read('app/(es)/calendario/page.tsx');
 const reminderBell = read('components/notifications/notification-bell.tsx');
 const planPage = read('app/(es)/dashboard/plan-de-estudio/page.tsx');
@@ -85,6 +91,9 @@ assert.ok(reminderBell.includes("useOptionalAppLocale"));
 assert.ok(reminderBell.includes("locale === 'en' ? 'en-US' : 'es-AR'"));
 assert.ok(reminderBell.includes("Dismiss reminder"));
 assert.ok(calendar.includes("english ? 'Will be saved as'"));
+assert.ok(calendar.includes('localizeExamEventTitle(event.title, locale)'));
+assert.ok(calendar.includes('selectedMateria: selectedCareerMateria'));
+assert.ok(reminderBell.includes('localizeExamEventTitle(reminder.title, locale)'));
 assert.match(calendar, /english\s*\?\s*['"]Study plan exam['"]/);
 assert.ok(calendar.includes("english ? 'Unlimited exams'") || calendar.includes("features={english ? ['Unlimited exams'"));
 assert.ok(planPage.includes("accountAppLocale(user.user_metadata)"));
