@@ -1,11 +1,12 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { StudyBlogWorkshopView } from '@/components/marketing/study-blog-workshop';
 import { ExamStudyTimeEstimator } from '@/components/marketing/exam-study-time-estimator';
 import { STUDY_BLOG_WORKSHOPS_ES } from '@/lib/study-blog-workshops-es';
 import { STUDY_BLOG_WORKSHOPS_EN } from '@/lib/study-blog-workshops-en';
-import { PublicBrandLink, PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -89,7 +90,11 @@ const CONTEXTUAL_LINKS: Partial<Record<StudyBlogLocale, Record<string, {href:str
   'exam-study-time-nov2026':[{href:'/en/blog/how-to-study-for-final-exams',label:'Preparing for finals',description:'Learn to organize a cumulative assessment across topics.'},{href:'/en/pdf-to-quiz',label:'Practice questions from notes',description:'Test recall and identify which topics need more work.'}],
   accounting:[{href:'/en/blog/how-to-study-accounting-effectively-for-exams',label:'Accounting exam practice',description:'Follow a seven-day plan and correct common account mistakes.'},{href:'/en/pdf-to-quiz',label:'Practice from your notes',description:'Test your understanding with topic-specific questions.'}],
   'accounting-exam-drills-nov2026':[{href:'/en/blog/how-to-study-accounting',label:'Accounting cycle worked example',description:'See complete journal, ledger and trial balance examples.'},{href:'/en/blog/how-long-should-i-study-for-an-exam',label:'Plan your study hours',description:'Budget time for topics, a practice test and corrections.'}],
-  'sociology-exam-application-nov2026':[{href:'/en/blog/how-long-should-i-study-for-an-exam',label:'Plan your exam preparation',description:'Work out a realistic time budget for review and practice.'},{href:'/en/pdf-to-quiz',label:'Practice from your sociology notes',description:'Use your own course material and check AI-generated answers.'}]
+  'sociology-exam-application-nov2026':[{href:'/en/blog/how-long-should-i-study-for-an-exam',label:'Plan your exam preparation',description:'Work out a realistic time budget for review and practice.'},{href:'/en/pdf-to-quiz',label:'Practice from your sociology notes',description:'Use your own course material and check AI-generated answers.'}],
+  'concept-maps-nov2026':[{href:'/en/match-concepts-with-ai',label:'Match related ideas',description:'Practice the difference between closely related definitions.'},{href:'/en/pdf-to-flashcards',label:'Make study flashcards',description:'Test key concepts from your own course PDF.'}],
+  'pomodoro-nov2026':[{href:'/en/blog/how-long-should-i-study-for-an-exam',label:'Plan your study sessions',description:'Estimate study time before choosing work intervals.'},{href:'/en/study-pdf-with-ai',label:'Study your own notes',description:'Use a PDF to build a focused practice routine.'}],
+  'mcq-exam-nov2026':[{href:'/en/pdf-to-quiz',label:'Turn notes into a quiz',description:'Check answer explanations and avoid weak distractors.'},{href:'/en/ai-true-false-questions',label:'True-or-false practice',description:'Check claims and reasoning against the source.'}],
+  'feynman-nov2026':[{href:'/en/pdf-to-quiz',label:'Test your explanation',description:'Check understanding with a question you can verify.'},{href:'/en/resources',label:'Active study resources',description:'Build a practice session around your own material.'}]
  }
 };
 
@@ -102,9 +107,12 @@ function BlogHeader({ locale }: { locale: StudyBlogLocale }) {
           <PublicSiteHeader variant="landing" trackingLocation="study_blog_es" />
         ) : (
           <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-slate-200 py-3">
-            <PublicBrandLink />
+            <Link href="/en" aria-label="Evaluo English homepage" className="group flex min-w-0 items-center gap-2 text-lg font-black tracking-[-0.045em] text-slate-950 sm:gap-2.5 sm:text-2xl">
+              <Image src="/evaluo-logo-icono.svg" alt="" width={40} height={40} className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9" />
+              <span className="truncate">Evaluo</span>
+            </Link>
             <nav aria-label="Study navigation" className="flex items-center gap-4 text-sm font-semibold text-slate-700">
-              <Link href="/en" className="min-h-11 py-3 hover:text-blue-700">Study guides</Link>
+              <Link href="/en/resources" className="min-h-11 py-3 hover:text-blue-700">Study guides</Link>
               <Link href="/en/blog" className="min-h-11 py-3 hover:text-blue-700">Blog</Link>
               <Link href="/en/study-pdf-with-ai" className="hidden min-h-11 rounded-xl bg-blue-700 px-4 py-3 text-white hover:bg-blue-800 sm:inline-flex">Study with AI</Link>
             </nav>
@@ -138,6 +146,20 @@ export function StudyBlogHub({ locale }: { locale: StudyBlogLocale }) {
           </div>
         </header>
         <section className="mx-auto max-w-[1080px] px-4 py-12 sm:px-8 sm:py-16" aria-label={copy.index}>
+          {locale === 'en' && (
+            <nav aria-label="English study topics" className="mb-10 grid gap-3 sm:grid-cols-3">
+              {[
+                { href: '/en/pdf-to-quiz', title: 'PDF to Quiz', note: 'Write and verify questions from course notes.' },
+                { href: '/en/pdf-to-flashcards', title: 'PDF to Flashcards', note: 'Turn key ideas into retrieval practice.' },
+                { href: '/en/study-pdf-with-ai', title: 'Study PDFs with AI', note: 'Follow a topic-by-topic study routine.' },
+              ].map(item => (
+                <Link key={item.href} href={item.href} className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 hover:border-blue-300">
+                  <span className="block text-sm font-bold text-blue-800">{item.title} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></span>
+                  <span className="mt-2 block text-xs leading-6 text-slate-600">{item.note}</span>
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="grid gap-5 sm:grid-cols-2">
             {articles.map((article, index) => (
               <article key={article.key} className={"flex flex-col border-b border-slate-200 pb-8 " + (index === 0 ? "sm:col-span-2" : "")}>
@@ -161,7 +183,7 @@ export function StudyBlogHub({ locale }: { locale: StudyBlogLocale }) {
           </div>
         </section>
       </main>
-      <FooterHome variant="full" />
+      <FooterHome variant="full" locale={locale} />
     </div>
   );
 }
@@ -364,7 +386,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
           </div>
         </section>
       </main>
-      <FooterHome variant="full" />
+      <FooterHome variant="full" locale={locale} />
     </div>
   );
 }

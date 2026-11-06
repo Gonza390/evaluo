@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { FooterHome } from '@/components/footer-home';
 import { ArrowRight, BookOpen, CheckCircle2, FileText, Globe2, Layers3, ShieldCheck } from 'lucide-react';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { LandingLanguageSelector } from '@/components/marketing/landing-language-selector';
@@ -172,22 +173,40 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
           </div>
         </section>
 
+        <section aria-labelledby="english-topic-pathways" className="border-t border-slate-200 bg-white py-14">
+          <div className="mx-auto max-w-6xl px-5 sm:px-8">
+            <h2 id="english-topic-pathways" className="text-2xl font-bold tracking-tight text-slate-950">Practice in a different way</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">Choose a study method that fits the topic. These guides include examples to check against the source.</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {[
+                {href:'/en/blog',title:'Study methods and exam guides',text:'Find worked examples for exams and university subjects.'},
+                {href:'/en/ai-true-false-questions',title:'True-or-false questions',text:'Check claims and explanations using your material.'},
+                {href:'/en/match-concepts-with-ai',title:'Match concepts',text:'Compare terms and distinguish related ideas.'},
+              ].map(item=>(
+                <Link href={item.href} key={item.href} className="rounded-2xl border border-slate-200 p-5 transition hover:border-blue-300 hover:shadow-sm">
+                  <span className="block text-sm font-bold text-blue-700">{item.title} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></span>
+                  <span className="mt-2 block text-xs leading-6 text-slate-600">{item.text}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="bg-[#101D42] py-12 text-white">
           <div className="mx-auto max-w-6xl px-5 sm:px-8">
             <div className="max-w-3xl">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-blue-200"><Globe2 className="h-4 w-4" aria-hidden="true"/> Product language</div>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides are here. We’re translating the student experience step by step.</h2>
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-blue-200"><Globe2 className="h-4 w-4" aria-hidden="true"/> Your own course material</div>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Turn the next study session into progress you can check.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-200">
-                The English homepage, sign-in and first PDF upload flow are available in English.
-                Advanced study tools, AI-generated explanations, account emails and billing are still being localized.
-                We do not present the entire study product as translated or promise international checkout everywhere.
+                Start with your PDF or Word notes, practice by topic, then check answers against the source.
+                These guides are free to read. Use the English entry flow to see the latest account features and availability.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/en/login?mode=signup" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">
-                  Create an account (English sign-up) <ArrowRight className="h-4 w-4" aria-hidden="true"/>
+                  Start studying with my notes <ArrowRight className="h-4 w-4" aria-hidden="true"/>
                 </Link>
-                <Link href="/en" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
-                  Explore the English homepage
+                <Link href="/en/blog" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                  Explore study methods
                 </Link>
               </div>
             </div>
@@ -195,17 +214,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 bg-white py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 text-sm text-slate-600 sm:px-8">
-          <span>© Evaluo · Independent study resources, not official examination materials.</span>
-          <nav aria-label="Language and legal links" className="flex flex-wrap gap-x-5 gap-y-2">
-            <Link href="/en" className="font-semibold hover:text-blue-700">English</Link>
-            <Link href="/es/estudiar-pdf-con-ia" className="hover:text-blue-700">Español</Link>
-            <Link href="/privacidad" className="hover:text-blue-700">Privacy (Spanish)</Link>
-            <Link href="/terminos" className="hover:text-blue-700">Terms (Spanish)</Link>
-          </nav>
-        </div>
-      </footer>
+      <FooterHome locale="en" />
     </div>
   );
 }

@@ -49,7 +49,7 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
     faq: [
       { question: 'Can I prepare a quiz from my own course PDF?', answer: 'Yes. A useful method is to identify the learning goals, write questions that require recall or application, and check the answers against the PDF. Read the quiz guide for an example.' },
       { question: 'Should I choose flashcards or quizzes?', answer: 'Use flashcards to retrieve concise terms and relationships. Use quizzes to test explanations, scenarios and reasoning. Both can be part of one study session.' },
-      { question: 'Does Evaluo already offer a full English-language app?', answer: 'Not yet. These educational pages are in English, but the current product interface and account flow are primarily in Spanish. An English product experience is planned.' },
+      { question: 'Can I use Evaluo in English?', answer: 'You can read these study guides and start from the English homepage or sign-in page. Check the live app for current account features as localization evolves. The worked examples in this guide are available without an account.' },
     ],
   },
   'pdf-to-quiz': {

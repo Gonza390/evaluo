@@ -418,5 +418,9 @@
   {
     "file": "tests/regional-premium-experience.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/seo-english-acquisition.smoke.mjs",
+    "alias": false
   }
 ]
