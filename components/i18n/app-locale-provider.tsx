@@ -43,22 +43,11 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = locale;
     try {
       window.localStorage.setItem(APP_LOCALE_STORAGE_KEY, locale);
-      document.cookie = `evaluo_ui_locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     } catch {
       // Auth metadata remains the persisted preference when storage is unavailable.
     }
     return () => { document.documentElement.lang = previous; };
   }, [initialized, locale]);
-
-  useEffect(() => {
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== APP_LOCALE_STORAGE_KEY) return;
-      const incoming = parseAppLocale(event.newValue);
-      if (incoming) setLocale(incoming);
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
 
   const changeLocale = useCallback(async (next: AppLocale) => {
     if (next === locale) return;
