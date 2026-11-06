@@ -31,7 +31,7 @@ for (const value of ['Understand your notes','Check your understanding','See how
 
 const proxy=read('proxy.ts');
 assert.match(proxy, /savedLocale === 'en' \? '\/en\/login' : '\/login'/);
-assert.match(proxy, /loginUrl\.searchParams\.set\('next', `${pathname}${request\.nextUrl\.search}`\)/);
+assert.ok(proxy.includes("loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)"));
 assert.match(proxy, /if \(isSharedMaterialRoute\) loginUrl\.searchParams\.set\('reason', 'shared-pdf'\)/);
 
 const enHome=read('components/marketing/home-redesign.tsx');
