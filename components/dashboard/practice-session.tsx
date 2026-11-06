@@ -626,13 +626,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← {t('Volver a Practicar')}</Link>
     {mode === 'opciones' ? (
       <div className="mt-3 flex min-w-0 items-center gap-2.5">
-        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900"{t(title[mode])}</h1>
+        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900">{t(title[mode])}</h1>
         <span aria-hidden="true" className="shrink-0 text-slate-300">·</span>
         <span className="min-w-0 flex-1 truncate text-[12px] text-slate-500 sm:text-sm" title={materialTitle}>{materialTitle}</span>
       </div>
     ) : (
       <>
-        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900"{t(title[mode])}</h1>
+        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{t(title[mode])}</h1>
         <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
       </>
     )}
