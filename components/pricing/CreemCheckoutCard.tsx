@@ -24,10 +24,12 @@ type Props = {
   features: string[];
   mode: 'test' | 'live';
   available: boolean;
+  locale?: 'es' | 'en';
 };
 
-export function CreemCheckoutCard({ features, mode, available }: Props) {
-  const english = useOptionalAppLocale() === 'en';
+export function CreemCheckoutCard({ features, mode, available, locale }: Props) {
+  const currentLocale = useOptionalAppLocale();
+  const english = (locale ?? currentLocale) === 'en';
   const tr = (es: string, en: string) => english ? en : es;
   const displayFeatures = english ? features.map(item => FEATURE_EN[item] ?? item) : features;
   const [loading, setLoading] = useState(false);
