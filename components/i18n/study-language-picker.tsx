@@ -16,8 +16,8 @@ export function StudyLanguagePicker() {
         </label>
         <p className="mt-1 max-w-lg text-xs leading-5 text-slate-500">
           {english
-            ? 'Choose the language for new study exercises and explanations. The original PDF/Word remains unchanged, and source quotes stay in their original language.'
-            : 'Elegí el idioma de nuevos ejercicios y explicaciones. El PDF/Word original no cambia y las citas conservan su idioma.'}
+            ? 'Choose the language for newly generated summaries, flashcards and exercises. Existing materials are not automatically translated. Original PDF/Word files and source quotations remain unchanged.'
+            : 'Elegí el idioma de nuevos resúmenes, tarjetas y ejercicios. Los materiales ya procesados no se traducen automáticamente. El PDF/Word original y las citas se conservan intactos.'}
         </p>
       </div>
       <select id="evaluo-study-language" value={studyLocale} disabled={savingStudyLocale}
