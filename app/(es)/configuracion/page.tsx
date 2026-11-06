@@ -32,6 +32,8 @@ export default function ConfiguracionPage() {
   const router = useRouter();
   const { user, loading, getUserName } = useUser();
   const { locale } = useAppLocale();
+  const english = locale === 'en';
+  const tr = (es: string,en: string) => english ? en : es;
   const settingsCopy = settingsMessages[locale];
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -117,8 +119,8 @@ export default function ConfiguracionPage() {
       } catch (error) {
         logError('configuracion.loadProfile', error);
         toast({
-          title: 'No pudimos cargar tu perfil',
-          description: 'Intentá de nuevo en unos segundos.',
+          title: tr("No pudimos cargar tu perfil","Could not load your profile"),
+          description: tr("Intentá de nuevo en unos segundos.","Please try again in a few seconds."),
           variant: 'destructive',
         });
       } finally {
@@ -318,8 +320,8 @@ export default function ConfiguracionPage() {
       setInitialProfileState({ ...currentProfileState });
 
       toast({
-        title: 'Perfil actualizado',
-        description: 'Guardamos únicamente los datos que modificaste.',
+        title: tr("Perfil actualizado","Profile updated"),
+        description: tr("Guardamos únicamente los datos que modificaste.","Only the changed fields were saved."),
       });
 
       router.refresh();
@@ -330,8 +332,8 @@ export default function ConfiguracionPage() {
         carreraId,
       });
       toast({
-        title: 'No pudimos guardar los cambios',
-        description: 'Revisá los datos que modificaste e intentá de nuevo.',
+        title: tr("No pudimos guardar los cambios","Could not save changes"),
+        description: tr("Revisá los datos que modificaste e intentá de nuevo.","Review the updated fields and try again."),
         variant: 'destructive',
       });
     } finally {
@@ -344,7 +346,7 @@ export default function ConfiguracionPage() {
       <div className="flex min-h-[70vh] items-center justify-center rounded-[var(--radius-panel)] border border-slate-200/85 bg-white shadow-[var(--shadow-panel)]">
         <div className="flex items-center gap-3 text-slate-600">
           <Spinner size="sm" />
-          <span className="text-sm font-medium">Cargando tu configuración...</span>
+          <span className="text-sm font-medium">{tr("Cargando tu configuración...","Loading settings...")}</span>
         </div>
       </div>
     );
@@ -355,7 +357,7 @@ export default function ConfiguracionPage() {
   const settingRow = (label: string, value: string) => (
     <div className="flex min-h-12 items-center justify-between gap-4 border-b border-slate-100 py-3 text-[13px] last:border-b-0">
       <span className="font-medium text-slate-800">{label}</span>
-      <span className="max-w-[55%] truncate text-right text-slate-500">{value || 'Sin especificar'}</span>
+      <span className="max-w-[55%] truncate text-right text-slate-500">{value || tr("Sin especificar","Not specified")}</span>
     </div>
   );
 
@@ -369,18 +371,18 @@ export default function ConfiguracionPage() {
       <section aria-labelledby="settings-general" className="space-y-1">
         <h2 id="settings-general" className="text-xs font-normal text-slate-500">{settingsCopy.general}</h2>
         <LanguagePicker />
-                  <StudyLanguagePicker />
+        <StudyLanguagePicker />
         {settingRow(settingsCopy.appearance, settingsCopy.light)}
         <p className="pt-1 text-xs text-slate-400">{settingsCopy.themeUnavailable}</p>
         <p className="pt-1 text-xs text-slate-400">{settingsCopy.languageHelp}</p>
       </section>
 
       <section aria-labelledby="settings-account" className="space-y-1">
-        <h2 id="settings-account" className="text-xs font-normal text-slate-500">Cuenta</h2>
-        {settingRow('Correo electrónico', user.email ?? '')}
+        <h2 id="settings-account" className="text-xs font-normal text-slate-500">{tr("Cuenta","Account")}</h2>
+        {settingRow(tr("Correo electrónico","Email address"), user.email ?? '')}
         <details className="group border-b border-slate-100">
           <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-medium text-slate-800 [&::-webkit-details-marker]:hidden">
-            Mi plan y suscripción <ChevronDown className="size-4 text-slate-400 transition-transform group-open:rotate-180" />
+            {tr("Mi plan y suscripción","My plan and subscription")} <ChevronDown className="size-4 text-slate-400 transition-transform group-open:rotate-180" />
           </summary>
           <div className="pb-4"><SubscriptionSettings /></div>
         </details>
@@ -388,26 +390,26 @@ export default function ConfiguracionPage() {
 
       <section aria-labelledby="settings-personal" className="space-y-1">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="settings-personal" className="text-xs font-normal text-slate-500">Información personal</h2>
+          <h2 id="settings-personal" className="text-xs font-normal text-slate-500">{tr("Información personal","Personal information")}</h2>
           <button type="button" onClick={() => setEditingProfile((value) => !value)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600">
-            <Pencil className="size-3.5" /> {editingProfile ? 'Cerrar edición' : 'Editar datos'}
+            <Pencil className="size-3.5" /> {editingProfile ? tr("Cerrar edición","Close editor") : tr("Editar datos","Edit details")}
           </button>
         </div>
-        {settingRow('Nombre', nombre)}
-        {settingRow('País', pais)}
-        {settingRow('Teléfono', telefono)}
+        {settingRow(tr("Nombre","Name"), nombre)}
+        {settingRow(tr("País","Country"), pais)}
+        {settingRow(tr("Teléfono","Phone"), telefono)}
       </section>
 
       <section aria-labelledby="settings-academic" className="space-y-1">
-        <h2 id="settings-academic" className="text-xs font-normal text-slate-500">Información académica</h2>
-        {settingRow('Universidad', universidadSearch)}
-        {settingRow('Carrera', carreraSearch)}
-        {settingRow('Año de cursado', anioCarrera ? anioCarrera + '° año' : '')}
+        <h2 id="settings-academic" className="text-xs font-normal text-slate-500">{tr("Información académica","Academic information")}</h2>
+        {settingRow(tr("Universidad","University"), universidadSearch)}
+        {settingRow(tr("Carrera","Degree program"), carreraSearch)}
+        {settingRow(tr("Año de cursado","Year of study"), anioCarrera ? (english ? `Year ${anioCarrera}` : anioCarrera + '° año') : '')}
       </section>
 
       {editingProfile ? (
-        <section className="space-y-2" aria-label="Editar información personal y académica">
-          <p className="text-xs text-slate-500">Modificá los campos necesarios y guardá los cambios.</p>
+        <section className="space-y-2" aria-label={tr("Editar información personal y académica","Edit personal and academic details")}>
+          <p className="text-xs text-slate-500">{tr("Modificá los campos necesarios y guardá los cambios.","Edit the fields you need and save your changes.")}</p>
           <ProfileSettingsForm
             nombre={nombre}
             pais={pais}
@@ -440,21 +442,21 @@ export default function ConfiguracionPage() {
       ) : null}
 
       <section aria-labelledby="settings-session" className="space-y-1">
-        <h2 id="settings-session" className="text-xs font-normal text-slate-500">Sesión y privacidad</h2>
+        <h2 id="settings-session" className="text-xs font-normal text-slate-500">{tr("Sesión y privacidad","Session and privacy")}</h2>
         <button type="button" disabled={signingOut} onClick={async () => {
           setSigningOut(true);
           try {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
-            window.location.assign('/login');
+            window.location.assign(english ? '/en/login' : '/login');
           } catch (error) {
             logError('configuracion.signOut', error);
-            toast({ title: 'No pudimos cerrar tu sesión', variant: 'destructive' });
+            toast({ title: tr("No pudimos cerrar tu sesión","Could not sign you out"), variant: 'destructive' });
             setSigningOut(false);
           }
         }} className="flex min-h-12 w-full items-center gap-2 border-b border-slate-100 py-3 text-left text-[13px] font-medium text-slate-700 hover:text-blue-600 disabled:opacity-50">
           <LogOut className="size-4 text-slate-400" />
-          {signingOut ? 'Cerrando sesión…' : 'Cerrar sesión'}
+          {signingOut ? tr("Cerrando sesión…","Signing out…") : tr("Cerrar sesión","Sign out")}
         </button>
       </section>
     </div>
