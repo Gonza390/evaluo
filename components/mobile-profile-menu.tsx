@@ -6,7 +6,6 @@ import { ChevronRight, Crown, MessageSquarePlus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { usePremium } from '@/hooks/usePremium';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
-const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -16,6 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 // Keep the profile menu and feedback flow out of the global app-shell bundle.
+const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
+
 const FeedbackDialog = dynamic(() =>
   import('@/components/FeedbackDialog').then((module) => module.FeedbackDialog)
 );
