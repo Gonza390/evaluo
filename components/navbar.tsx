@@ -10,7 +10,8 @@ import {
   ListChecks,
   CircleAlert,
   CircleHelp,
-  Crown,
+  TrendingUp,
+  ChevronRight,
   Home,
   LogIn,
   LogOut,
@@ -266,16 +267,24 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               <div className="space-y-1">
                 <Link
                   href="/dashboard/premium"
-                  title={collapsed ? messages.navigation.plans : undefined}
-                  className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
+                  data-sidebar-plan-upgrade
+                  title={collapsed ? messages.navigation.improvePlan : undefined}
+                  aria-label={collapsed ? messages.navigation.improvePlan : undefined}
+                  aria-current={isNavItemActive(pathname, '/dashboard/premium') ? 'page' : undefined}
+                  className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] ${
                     collapsed
-                      ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
+                      ? 'mx-auto h-10 w-10 justify-center p-0'
+                      : compact ? 'min-h-10 w-full gap-2 px-1.5 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
-                  <Crown className="h-4 w-4 shrink-0" />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4F5DFF] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
+                    <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                  </span>
                   {!collapsed ? (
-                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>{messages.navigation.plans}</p>
+                    <>
+                      <span className="min-w-0 flex-1 whitespace-nowrap font-semibold">{messages.navigation.improvePlan}</span>
+                      {!compact ? <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#7F8AA3]" aria-hidden="true" /> : null}
+                    </>
                   ) : null}
                 </Link>
 
