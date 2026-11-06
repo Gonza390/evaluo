@@ -1,5 +1,6 @@
 import 'server-only';
 import { SITE_URL } from '@/lib/site';
+import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -76,9 +77,9 @@ function addDays(dateKey: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatExamDate(dateKey: string) {
+function formatExamDate(dateKey: string, locale: AppLocale = 'es') {
   const [year, month, day] = dateKey.split('-').map(Number);
-  return new Intl.DateTimeFormat('es-AR', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-AR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -86,7 +87,12 @@ function formatExamDate(dateKey: string) {
   }).format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 
-function getReminderSubject(days: ReminderDays, materia: string) {
+function getReminderSubject(days: ReminderDays, materia: string, locale: AppLocale = 'es') {
+  if (locale === 'en') {
+    if (days === 7) return `Your ${materia} exam is in one week`;
+    if (days === 3) return `3 days until your ${materia} exam`;
+    return `Your ${materia} exam is tomorrow`;
+  }
   if (days === 7) return `Tu examen de ${materia} es en una semana`;
   if (days === 3) return `Te quedan 3 días para tu examen de ${materia}`;
   return `Mañana rendís ${materia}`;
@@ -95,6 +101,7 @@ function getReminderSubject(days: ReminderDays, materia: string) {
 function buildExamReminderMessage(input: {
   firstname: string;
   materia: string;
+  locale?: AppLocale;
   examDate: string;
   days: ReminderDays;
   materialTitle: string;
@@ -102,8 +109,11 @@ function buildExamReminderMessage(input: {
   hasMaterial: boolean;
   pendingTopics: string[];
 }) {
-  const subject = getReminderSubject(input.days, input.materia);
-  const heading =
+  const english = input.locale === 'en';
+  const subject = getReminderSubject(input.days, input.materia, input.locale);
+  const heading = english
+    ? (input.days === 7 ? 'Your exam is in one week' : input.days === 3 ? '3 days to go' : 'Your exam is tomorrow')
+    :
     input.days === 7
       ? 'Tu examen es en una semana'
       : input.days === 3
@@ -111,32 +121,41 @@ function buildExamReminderMessage(input: {
         : 'Mañana rendís';
 
   const topics = [...new Set(input.pendingTopics.map((topic) => topic.trim()).filter(Boolean))].slice(0, 3);
-  const guidance = input.days === 7
+  const guidance = english
+    ? (input.days === 7
+      ? 'You still have time to organize your review and practice challenging topics.'
+      : input.days === 3
+        ? 'Focus on difficult topics and check your understanding with another practice session.'
+        : 'Today, review the topics you found difficult rather than starting all over again.')
+    : input.days === 7
     ? 'Todavía tenés tiempo para organizar el repaso y practicar los temas que te cuestan.'
     : input.days === 3
       ? 'Enfocate en los temas que te costaron y comprobá qué entendiste con una nueva práctica.'
       : 'Hoy conviene repasar los puntos que te costaron, sin empezar todo de nuevo.';
   const topicsHtml = topics.length
-    ? `<p style="margin:14px 0 8px;font-weight:700;color:#0F1B3D;">Según tus respuestas, estos temas necesitan refuerzo:</p><ul style="margin:0;padding-left:20px;">${topics.map((topic) => `<li style="margin:0 0 6px;">${escapeEmailHtml(topic)}</li>`).join('')}</ul>`
+    ? `<p style="margin:14px 0 8px;font-weight:700;color:#0F1B3D;">${english ? 'Based on your answers, review these topics:' : 'Según tus respuestas, estos temas necesitan refuerzo:'}</p><ul style="margin:0;padding-left:20px;">${topics.map((topic) => `<li style="margin:0 0 6px;">${escapeEmailHtml(topic)}</li>`).join('')}</ul>`
     : input.hasMaterial
-      ? '<p style="margin:12px 0 0;">Si todavía no practicaste lo suficiente, una tanda de ejercicios puede ayudarte a identificar qué reforzar.</p>'
-      : '<p style="margin:12px 0 0;">Entrá a tu espacio y prepará una práctica con tus apuntes.</p>';
-  const bodyHtml = `<p style="margin:0 0 12px;">Tu examen de <strong>${escapeEmailHtml(input.materia)}</strong> está programado para <strong>${escapeEmailHtml(input.examDate)}</strong>.</p>
+      ? `<p style="margin:12px 0 0;">${english ? 'If you have not practiced enough yet, a few questions can help you identify what to review.' : 'Si todavía no practicaste lo suficiente, una tanda de ejercicios puede ayudarte a identificar qué reforzar.'}</p>`
+      : `<p style="margin:12px 0 0;">${english ? 'Open your study space and prepare a practice session using your notes.' : 'Entrá a tu espacio y prepará una práctica con tus apuntes.'}</p>`;
+  const bodyHtml = `<p style="margin:0 0 12px;">${english ? 'Your exam for' : 'Tu examen de'} <strong>${escapeEmailHtml(input.materia)}</strong> ${english ? 'is scheduled for' : 'está programado para'} <strong>${escapeEmailHtml(input.examDate)}</strong>.</p>
 <p style="margin:0 0 12px;">${escapeEmailHtml(guidance)}</p>
-${input.hasMaterial ? `<p style="margin:0;">Podés continuar con <strong>${escapeEmailHtml(input.materialTitle)}</strong>.</p>` : ''}
+${input.hasMaterial ? `<p style="margin:0;">${english ? 'You can continue studying' : 'Podés continuar con'} <strong>${escapeEmailHtml(input.materialTitle)}</strong>.</p>` : ''}
 ${topicsHtml}`;
 
   const html = buildEvaluoEmailHtml({
     firstname: input.firstname,
+    locale: input.locale,
     heading,
     eyebrow: input.materia,
     bodyHtml,
-    ctaLabel: topics.length ? 'Repasar mis temas pendientes' : input.hasMaterial ? 'Practicar con mi PDF' : 'Ir a mi espacio',
+    ctaLabel: english ? (topics.length ? 'Review topics to reinforce' : input.hasMaterial ? 'Practice with my PDF' : 'Go to my space') : (topics.length ? 'Repasar mis temas pendientes' : input.hasMaterial ? 'Practicar con mi PDF' : 'Ir a mi espacio'),
     ctaUrl: input.destinationUrl,
-    reason: 'Te enviamos este recordatorio porque registraste esta fecha de examen en Evaluo.',
+    reason: english ? 'You received this reminder because you added this exam date in Evaluo.' : 'Te enviamos este recordatorio porque registraste esta fecha de examen en Evaluo.',
   });
 
-  const text = `Hola ${input.firstname}. ${subject}. Tu examen es el ${input.examDate}. Continuá estudiando: ${input.destinationUrl}`;
+  const text = english
+    ? `Hi ${input.firstname}. ${subject}. Your exam date is ${input.examDate}. Continue studying: ${input.destinationUrl}`
+    : `Hola ${input.firstname}. ${subject}. Tu examen es el ${input.examDate}. Continuá estudiando: ${input.destinationUrl}`;
   return { subject, html, text };
 }
 
@@ -162,10 +181,10 @@ function buildMySpaceUrl(days: ReminderDays) {
   return buildTrackedUrl('/dashboard', days, 'my_space');
 }
 
-function firstName(value: string | null | undefined) {
+function firstName(value: string | null | undefined, locale: AppLocale = 'es') {
   const normalized = value?.trim();
-  if (!normalized) return 'estudiante';
-  return normalized.split(/\s+/)[0] || 'estudiante';
+  if (!normalized) return locale === 'en' ? 'student' : 'estudiante';
+  return normalized.split(/\s+/)[0] || (locale === 'en' ? 'student' : 'estudiante');
 }
 
 function normalizeSubjectName(value: string) {
@@ -393,12 +412,13 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
             ? user.user_metadata.name
             : null;
       const displayName = profileName || fallbackName;
-      const displayFirstName = firstName(displayName);
+      const locale = accountAppLocale(user.user_metadata) ?? 'es';
+      const displayFirstName = firstName(displayName, locale);
       const materia =
         (candidate.materiaId ? materiaNameById.get(candidate.materiaId) : null) ||
         candidate.materiaFallback ||
-        'tu materia';
-      const formattedExamDate = formatExamDate(candidate.examDate);
+        (locale === 'en' ? 'your subject' : 'tu materia');
+      const formattedExamDate = formatExamDate(candidate.examDate, locale);
       const topics = candidate.materialId
         ? [...(pendingTopics.get(`${candidate.userId}:${candidate.materialId}`) ?? [])].slice(0, 3)
         : [];
@@ -414,6 +434,7 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
       const displayTitle = candidate.materialTitle || candidate.calendarTitle || materia;
       const message = buildExamReminderMessage({
         firstname: displayFirstName,
+        locale,
         materia,
         examDate: formattedExamDate,
         days: candidate.days,
