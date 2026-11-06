@@ -383,7 +383,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
               href={backHref}
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              {isEnglishStudyEntry ? 'Continue later' : '{isEnglishStudyEntry ? 'Continue later' : 'Continuar luego'}'}
+              {isEnglishStudyEntry ? 'Continue later' : 'Continuar luego'}
             </Link>
           }
         />
