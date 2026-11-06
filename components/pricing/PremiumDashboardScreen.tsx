@@ -114,34 +114,34 @@ const formatArs = (amount: number) =>
   '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(amount);
 
 const benefits = [
-  t("Hasta 3 materiales nuevos por día"),
-  t("Más preguntas, casos prácticos y flashcards"),
-  t("Nuevos simulacros y más planes de estudio"),
-  t("Mapas mentales y seguimiento del progreso"),
+  'Hasta 3 materiales nuevos por día',
+  'Más preguntas, casos prácticos y flashcards',
+  'Nuevos simulacros y más planes de estudio',
+  'Mapas mentales y seguimiento del progreso',
 ] as const;
 const reasons = [
-  { title: t("Estudiá más"), description: t("Cargá nuevos PDF y Word de distintas materias, hasta 3 por día."), icon: BookOpen, color: '#2a49c9', bg: '#e8eefc' },
-  { title: t("Practicá mejor"), description: t("Generá preguntas, casos, flashcards y simulacros sin los cupos del Free."), icon: ListChecks, color: '#16774f', bg: '#e7f7ef' },
-  { title: t("Llegá preparado"), description: t("Organizá tu tiempo con planes de estudio y seguí tu progreso por tema."), icon: Flag, color: '#b86a0f', bg: '#fff1de' },
+  { title: 'Estudiá más', description: 'Cargá nuevos PDF y Word de distintas materias, hasta 3 por día.', icon: BookOpen, color: '#2a49c9', bg: '#e8eefc' },
+  { title: 'Practicá mejor', description: 'Generá preguntas, casos, flashcards y simulacros sin los cupos del Free.', icon: ListChecks, color: '#16774f', bg: '#e7f7ef' },
+  { title: 'Llegá preparado', description: 'Organizá tu tiempo con planes de estudio y seguí tu progreso por tema.', icon: Flag, color: '#b86a0f', bg: '#fff1de' },
 ] as const;
 const comparison = [
-  [t("Materiales"), t("1 de por vida"), t("Hasta 3 nuevos por día")],
-  [t("Resumen y glosario"), 'Sí', 'Sí'],
-  [t("Opción múltiple"), t("12 preguntas"), t("Más preguntas")],
-  [t("Verdadero o falso"), '10', t("Más ejercicios")],
-  [t("Unir conceptos"), t("1 ronda"), t("Más rondas")],
-  [t("Casos prácticos"), '2', t("Más casos")],
-  ['Flashcards', '25', t("Más tarjetas")],
-  [t("Simulacros"), '1', t("Nuevos simulacros")],
-  [t("Plan de estudios"), '1', t("Más planificaciones")],
-  [t("Mapas mentales"), 'No', 'Sí'],
+  ['Materiales', '1 de por vida', 'Hasta 3 nuevos por día'],
+  ['Resumen y glosario', 'Sí', 'Sí'],
+  ['Opción múltiple', '12 preguntas', 'Más preguntas'],
+  ['Verdadero o falso', '10', 'Más ejercicios'],
+  ['Unir conceptos', '1 ronda', 'Más rondas'],
+  ['Casos prácticos', '2', 'Más casos'],
+  ['Flashcards', '25', 'Más tarjetas'],
+  ['Simulacros', '1', 'Nuevos simulacros'],
+  ['Plan de estudios', '1', 'Más planificaciones'],
+  ['Mapas mentales', 'No', 'Sí'],
 ] as const;
 const faq = [
-  [t("¿Puedo cancelar cuando quiera?"), t("Sí. El mensual permite cancelar futuras renovaciones y conservar el acceso hasta finalizar el período pagado.")],
-  [t("¿Qué pasa con mis materiales si cancelo?"), t("Se conservan los materiales y el progreso guardados, pero vuelven a aplicarse los permisos Free cuando vence Premium.")],
-  [t("¿Premium tiene materiales ilimitados?"), t("No. Permite cargar hasta tres materiales nuevos por día.")],
-  [t("¿Puedo seguir estudiando gratis?"), t("Sí. Podés continuar utilizando las funciones y los ejercicios que ya tenés disponibles en Free.")],
-  [t("¿Qué diferencia hay entre mensual y semestral?"), t("Las funcionalidades son iguales. El mensual se renueva automáticamente; el semestral se paga una sola vez por seis meses.")],
+  ['¿Puedo cancelar cuando quiera?', 'Sí. El mensual permite cancelar futuras renovaciones y conservar el acceso hasta finalizar el período pagado.'],
+  ['¿Qué pasa con mis materiales si cancelo?', 'Se conservan los materiales y el progreso guardados, pero vuelven a aplicarse los permisos Free cuando vence Premium.'],
+  ['¿Premium tiene materiales ilimitados?', 'No. Permite cargar hasta tres materiales nuevos por día.'],
+  ['¿Puedo seguir estudiando gratis?', 'Sí. Podés continuar utilizando las funciones y los ejercicios que ya tenés disponibles en Free.'],
+  ['¿Qué diferencia hay entre mensual y semestral?', 'Las funcionalidades son iguales. El mensual se renueva automáticamente; el semestral se paga una sola vez por seis meses.'],
 ] as const;
 
 export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: PremiumDashboardScreenProps) {
@@ -301,7 +301,7 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
         <summary className="cursor-pointer text-[13px] text-[#475569] marker:hidden sm:text-[14px] [&::-webkit-details-marker]:hidden">{t("¿Preferís pagar una sola vez?")} <strong className="text-[#2a49c9]">{t("Ver plan semestral")}</strong></summary>
         <div className="mt-3 flex flex-col items-stretch gap-3 rounded-[20px] border border-[#e6eaf2] bg-white p-4 text-left sm:flex-row sm:items-center sm:px-5">
           <div className="min-w-0 flex-1">
-            <h2 className="text-[13px] font-bold sm:text-[14px]">{t('Premium semestral','Six-month Premium')} · {priceSemester} ARS</h2>
+            <h2 className="text-[13px] font-bold sm:text-[14px]">{(english ? 'Six-month Premium' : 'Premium semestral')} · {priceSemester} ARS</h2>
             <p className="mt-1 text-[12px] leading-[1.5] text-[#5b6475] sm:text-[13px]">{english ? `One-time payment for six months, without auto-renewal. Equivalent to ${formatArs(offer?.semesterEquivalentMonthlyArs??7500)} per month.` : `Pago único por seis meses, sin renovación automática. Equivale a ${formatArs(offer?.semesterEquivalentMonthlyArs??7500)} por mes.`}</p>
             {offer?.semesterAvailable===false?<p className="mt-1 text-[12px] text-[#a16207]">{t("Esta oferta no está disponible en este momento.")}</p>:null}
           </div>
