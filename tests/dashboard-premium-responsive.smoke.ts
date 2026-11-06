@@ -14,7 +14,7 @@ assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the cu
 assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
 assert.match(mobileMenu,/href="\/dashboard\/premium\?source=mobile_profile_menu"/,
   'Mobile profile upsell must open redesigned Premium, not outdated public pricing.');
-assert.match(mobileMenu,/messages\\.navigation\\.perWeek/,
+assert.match(mobileMenu,/messages\.navigation\.perWeek/,
   'Preserve the weekly-equivalent amount, clearly labeled as monthly billing.');
 assert.match(mobileMenu,/!isPremium \? \(/,
   'Mobile upsell remains visible to Free accounts only.');

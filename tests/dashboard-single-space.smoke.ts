@@ -163,7 +163,7 @@ assert.doesNotMatch(appChromeSource, /NotificationBell|notification-bell/,
   'The shared header must not render the notification bell at any viewport size.');
 assert.match(appChromeSource, /stablePrivateHeader\s*\? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,
   'All authenticated mobile routes should share the same topbar height.');
-assert.match(appChromeSource, /aria-label=\\{messages\\.navigation\\.mySpace\\}/,
+assert.match(appChromeSource, /aria-label=\{messages\.navigation\.mySpace\}/,
   'The Evaluo logo remains an accessible link on mobile.');
 assert.match(appChromeSource, /className="hidden min-w-0 md:block"/,
   'The mobile authenticated header must consistently display only the icon.');
@@ -195,9 +195,9 @@ assert.match(mobileProfileMenuSource, /data-mobile-profile-menu-trigger/,
   'The profile avatar must open a mobile menu instead of immediately navigating.');
 assert.match(mobileProfileMenuSource, /data-mobile-profile-menu/,
   'The menu should be identified for responsive verification.');
-assert.match(mobileProfileMenuSource, /messages\\.navigation\\.settings/,
+assert.match(mobileProfileMenuSource, /messages\.navigation\.settings/,
   'The profile menu must offer Ajustes.');
-assert.match(mobileProfileMenuSource, /messages\\.navigation\\.feedback/,
+assert.match(mobileProfileMenuSource, /messages\.navigation\.feedback/,
   'The profile menu must offer Sugerencias.');
 assert.match(mobileProfileMenuSource, /href="\/configuracion"/,
   'Ajustes must lead to the existing configuration page.');
