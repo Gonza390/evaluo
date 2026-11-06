@@ -28,6 +28,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
@@ -119,6 +121,8 @@ export function PdfFirstUploadShell({
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
+  const { locale } = useAppLocale();
+  const t = (value: string) => studentEntryText(locale, value);
   const isPreAuthPdfResume =
     initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
   // El catálogo y el perfil académico se solicitan sólo si el estudiante
@@ -226,7 +230,7 @@ export function PdfFirstUploadShell({
       })
       .catch(() => {
         if (requestVersion !== academicFetchVersionRef.current) return;
-        setAcademicChoicesError('No pudimos cargar universidades y carreras. Intentá nuevamente.');
+        setAcademicChoicesError(t("No pudimos cargar universidades y carreras. Intentá nuevamente."));
         setAcademicChoicesStatus('failed');
       })
       .finally(() => {
@@ -282,7 +286,7 @@ export function PdfFirstUploadShell({
         if (outcome.consecutiveFailures === 3) {
           setProcessing((current) =>
             current?.materialId === materialId
-              ? { ...current, message: 'Seguimos procesando tu PDF. Estamos restableciendo la conexión…' }
+              ? { ...current, message: t("Seguimos procesando tu PDF. Estamos restableciendo la conexión…") }
               : current
           );
         }
@@ -304,7 +308,7 @@ export function PdfFirstUploadShell({
           status: 'processing',
           stage: 'extracting',
           progress: Math.max(12, state.progress),
-          message: 'Tuvimos una interrupción temporal. Reintentando automáticamente…',
+          message: t("Tuvimos una interrupción temporal. Reintentando automáticamente…"),
           error: null,
         });
         window.setTimeout(() => {
@@ -406,12 +410,12 @@ export function PdfFirstUploadShell({
     if (
       !isSupportedStudentMaterialFile(selected.name, selected.type)
     ) {
-      toast({ description: 'Aceptamos archivos PDF y Word (.docx).', variant: 'destructive' });
+      toast({ description: t("Aceptamos archivos PDF y Word (.docx)."), variant: 'destructive' });
       return;
     }
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
       toast({
-        description: 'El PDF supera el tamaño máximo permitido de 20 MB.',
+        description: t("El PDF supera el tamaño máximo permitido de 20 MB."),
         variant: 'destructive',
       });
       return;
@@ -606,7 +610,7 @@ export function PdfFirstUploadShell({
         status: 'uploaded',
         stage: 'uploaded',
         progress: 10,
-        message: 'PDF subido. Empezamos a procesarlo.',
+        message: t("PDF subido. Empezamos a procesarlo."),
         error: null,
       };
       processingPollRef.current.reset();
@@ -624,7 +628,7 @@ export function PdfFirstUploadShell({
         await cancelPdfFirstUploadAction(preparedPath).catch(() => undefined);
       }
       toast({
-        description: error instanceof Error ? error.message : 'No pudimos subir tu PDF.',
+        description: error instanceof Error ? error.message : t("No pudimos subir tu PDF."),
         variant: 'destructive',
       });
     } finally {
@@ -654,7 +658,7 @@ export function PdfFirstUploadShell({
       })
       .catch(() => {
         toast({
-          description: 'No pudimos recuperar el PDF seleccionado. Elegilo nuevamente.',
+          description: t("No pudimos recuperar el PDF seleccionado. Elegilo nuevamente."),
           variant: 'destructive',
         });
       })
@@ -704,7 +708,7 @@ export function PdfFirstUploadShell({
       status: 'processing',
       stage: 'extracting',
       progress: Math.max(12, processing.progress),
-      message: 'Reintentando el procesamiento…',
+      message: t("Reintentando el procesamiento…"),
       error: null,
     });
 
@@ -715,8 +719,8 @@ export function PdfFirstUploadShell({
         ...current,
         status: 'failed',
         stage: 'failed',
-        message: 'No pudimos iniciar el reintento. Podés volver a intentarlo.',
-        error: 'Se interrumpió la conexión al iniciar el procesamiento.',
+        message: t("No pudimos iniciar el reintento. Podés volver a intentarlo."),
+        error: t("Se interrumpió la conexión al iniciar el procesamiento."),
       } : null);
     } finally {
       if (autoRetryingMaterialRef.current === processing.materialId) {
@@ -846,14 +850,14 @@ export function PdfFirstUploadShell({
             <DialogTitle className="sr-only">
               {processing
                 ? failed
-                  ? 'No pudimos procesar tu PDF'
+                  ? t("No pudimos procesar tu PDF")
                   : ready
-                    ? 'Tu PDF está listo'
-                    : 'Preparación de tu PDF'
-                : 'Subir PDF o Word'}
+                    ? t("Tu PDF está listo")
+                    : t("Preparación de tu PDF")
+                : t("Subir PDF o Word")}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
+              {t("Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.")}
             </DialogDescription>
             {(!processing || failed || showReadyContext) && (
               <div className="flex items-start justify-between gap-4 pr-10">
@@ -864,22 +868,22 @@ export function PdfFirstUploadShell({
                   >
                     {processing
                       ? failed
-                        ? 'No pudimos procesar tu PDF'
+                        ? t("No pudimos procesar tu PDF")
                         : ready
-                          ? 'Tu PDF está listo'
-                          : 'Estamos procesando tu PDF'
-                      : 'Subir PDF o Word'}
+                          ? t("Tu PDF está listo")
+                          : t("Estamos procesando tu PDF")
+                      : t("Subir PDF o Word")}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
                     {processing
                       ? ready
-                        ? 'Terminamos de preparar tu material.'
+                        ? t("Terminamos de preparar tu material.")
                         : isPreAuthPdfResume
-                          ? 'Ya tenemos tu archivo. Lo estamos convirtiendo en material de estudio.'
-                          : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
+                          ? t("Ya tenemos tu archivo. Lo estamos convirtiendo en material de estudio.")
+                          : t("Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.")
                       : restoringDraft
-                        ? 'Recuperando el PDF que elegiste antes del registro.'
-                        : 'Elegí el archivo y poné un nombre.'}
+                        ? t("Recuperando el PDF que elegiste antes del registro.")
+                        : t("Elegí el archivo y poné un nombre.")}
                   </p>
                 </div>
               </div>
@@ -890,10 +894,10 @@ export function PdfFirstUploadShell({
                   <div className="mt-6 flex min-h-44 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center">
                     <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-hidden="true" />
                     <span className="mt-3 text-sm font-semibold text-slate-950">
-                      Recuperando tu PDF…
+                      {t("Recuperando tu PDF…")}
                     </span>
                     <span className="mt-1 text-xs text-slate-400">
-                      No hace falta elegirlo de nuevo.
+                      {t("No hace falta elegirlo de nuevo.")}
                     </span>
                   </div>
                 ) : !file ? (
@@ -906,9 +910,9 @@ export function PdfFirstUploadShell({
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-sm font-semibold text-slate-950">
-                      Elegir PDF o Word
+                      {t("Elegir PDF o Word")}
                     </span>
-                    <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
+                    <span className="mt-1 text-xs text-slate-400">{t("Máximo 20 MB")}</span>
                   </button>
                 ) : (
                   <div className="mt-6">
@@ -925,7 +929,7 @@ export function PdfFirstUploadShell({
                           {file.name}
                         </span>
                         <span className="mt-0.5 block text-xs text-slate-400">
-                          Tocá para cambiar archivo
+                          {t("Tocá para cambiar archivo")}
                         </span>
                       </span>
                     </button>
@@ -935,7 +939,7 @@ export function PdfFirstUploadShell({
                         htmlFor="pdf-first-title"
                         className="mb-1.5 block text-xs font-semibold text-slate-700"
                       >
-                        Nombre del material
+                        {t("Nombre del material")}
                       </label>
                       <Input
                         id="pdf-first-title"
@@ -956,7 +960,7 @@ export function PdfFirstUploadShell({
                           className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700"
                         >
                           <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
-                          Fecha de examen
+                          {t("Fecha de examen")}
                         </label>
                         <Input
                           id="pdf-first-exam-date"
@@ -971,7 +975,7 @@ export function PdfFirstUploadShell({
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
-                    Cancelar
+                    {t("Cancelar")}
                   </Button>
                   <Button
                     type="button"
@@ -1002,7 +1006,7 @@ export function PdfFirstUploadShell({
                     className="journey-tools-button"
                     onClick={() => setShowReadyContext(true)}
                   >
-                    Agregar universidad y carrera
+                    {t("Agregar universidad y carrera")}
                   </button>
                 )}
               </>
@@ -1024,9 +1028,9 @@ export function PdfFirstUploadShell({
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
                       {failed
-                        ? (processing.error ?? 'El procesamiento se interrumpió.')
+                        ? (processing.error ?? t("El procesamiento se interrumpió."))
                         : ready
-                          ? 'Procesamiento completado'
+                          ? t("Procesamiento completado")
                           : processing.message}
                     </p>
                   </div>
@@ -1049,21 +1053,20 @@ export function PdfFirstUploadShell({
                           <>
                             <p className="text-sm text-red-700">{academicChoicesError}</p>
                             <Button type="button" variant="outline" onClick={() => setAcademicChoicesStatus('idle')}>
-                              Reintentar carga de universidades
+                              {t("Reintentar carga de universidades")}
                             </Button>
                           </>
                         ) : (
                           <p className="flex items-center gap-2 text-sm text-slate-500">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Cargando universidades y carreras...
+                            {t("Cargando universidades y carreras...")}
                           </p>
                         )}
                       </div>
                     ) : !contextSaved ? (
                       <div className="mt-5 space-y-4">
                         <p className="text-xs leading-5 text-slate-500">
-                          Universidad y carrera se guardan en tu perfil una sola vez. No te las
-                          volvemos a pedir en cada PDF.
+                          {t("Universidad y carrera se guardan en tu perfil una sola vez. No te las volvemos a pedir en cada PDF.")}
                         </p>
 
                         <div>
@@ -1071,7 +1074,7 @@ export function PdfFirstUploadShell({
                             htmlFor="pdf-first-university"
                             className="mb-1.5 block text-xs font-semibold text-slate-700"
                           >
-                            Universidad
+                            {t("Universidad")}
                           </label>
                           {profileUniversitySaved ? (
                             <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-700">
@@ -1101,14 +1104,14 @@ export function PdfFirstUploadShell({
                                 }}
                                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                               >
-                                <option value="">Seleccionar universidad</option>
+                                <option value="">{t("Seleccionar universidad")}</option>
                                 {universidades.map((uni) => (
                                   <option key={uni.id} value={uni.id}>
                                     {uni.nombre}
                                   </option>
                                 ))}
                                 <option value={MISSING_UNIVERSITY_VALUE}>
-                                  Mi universidad no aparece
+                                  {t("Mi universidad no aparece")}
                                 </option>
                               </select>
                               <button
@@ -1122,7 +1125,7 @@ export function PdfFirstUploadShell({
                                 }}
                                 className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
                               >
-                                Mi universidad no aparece
+                                {t("Mi universidad no aparece")}
                               </button>
                             </>
                           ) : (
@@ -1130,12 +1133,11 @@ export function PdfFirstUploadShell({
                               <Input
                                 value={newUniversity}
                                 onChange={(event) => setNewUniversity(event.target.value)}
-                                placeholder="Nombre de tu universidad"
+                                placeholder={t("Nombre de tu universidad")}
                                 autoFocus
                               />
                               <p className="text-[11px] leading-4 text-slate-400">
-                                La universidad se habilita automáticamente y queda guardada en tu
-                                perfil.
+                                {t("La universidad se habilita automáticamente y queda guardada en tu perfil.")}
                               </p>
                               <Button
                                 type="button"
@@ -1147,7 +1149,7 @@ export function PdfFirstUploadShell({
                                   setUniversityId(initialUniversidadId);
                                 }}
                               >
-                                Volver al listado
+                                {t("Volver al listado")}
                               </Button>
                             </div>
                           )}
@@ -1159,7 +1161,7 @@ export function PdfFirstUploadShell({
                               htmlFor="pdf-first-career"
                               className="mb-1.5 block text-xs font-semibold text-slate-700"
                             >
-                              Carrera
+                              {t("Carrera")}
                             </label>
                             {!addingCareer ? (
                               <>
@@ -1170,7 +1172,7 @@ export function PdfFirstUploadShell({
                                   className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                                   disabled={requestingUniversity}
                                 >
-                                  <option value="">Seleccionar carrera</option>
+                                  <option value="">{t("Seleccionar carrera")}</option>
                                   {availableCareers.map((career) => (
                                     <option key={career.id} value={career.id}>
                                       {career.nombre}
@@ -1186,8 +1188,8 @@ export function PdfFirstUploadShell({
                                   className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
                                 >
                                   {requestingUniversity || availableCareers.length === 0
-                                    ? 'Solicitar carrera'
-                                    : '+ Añadir carrera'}                                </button>
+                                    ? t("Solicitar carrera")
+                                    : t("+ Añadir carrera")}                                </button>
                               </>
                             ) : (
                               <div className="space-y-2">
@@ -1195,7 +1197,7 @@ export function PdfFirstUploadShell({
                                   <Input
                                     value={newCareer}
                                     onChange={(event) => setNewCareer(event.target.value)}
-                                    placeholder="Nombre de la carrera"
+                                    placeholder={t("Nombre de la carrera")}
                                     autoFocus
                                   />
                                   <Button
@@ -1206,11 +1208,11 @@ export function PdfFirstUploadShell({
                                       setNewCareer('');
                                     }}
                                   >
-                                    Cancelar
+                                    {t("Cancelar")}
                                   </Button>
                                 </div>
                                 <p className="text-[11px] leading-4 text-slate-400">
-                                  Si no está en el listado, la pedimos para tu uso privado.
+                                  {t("Si no está en el listado, la pedimos para tu uso privado.")}
                                 </p>
                               </div>
                             )}
@@ -1226,7 +1228,7 @@ export function PdfFirstUploadShell({
                     <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
                       {!contextSaved ? (
                         <Button type="button" variant="ghost" onClick={skipContext}>
-                          Saltar
+                          {t("Saltar")}
                         </Button>
                       ) : null}
                       {!contextSaved && academicChoicesStatus === 'loaded' ? (
@@ -1238,14 +1240,14 @@ export function PdfFirstUploadShell({
                           {savingContext ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                           {!profileUniversitySaved
                             ? hasCareer
-                              ? 'Guardar universidad y carrera'
-                              : 'Guardar universidad'
-                            : 'Guardar carrera'}
+                              ? t("Guardar universidad y carrera")
+                              : t("Guardar universidad")
+                            : t("Guardar carrera")}
                         </Button>
                       ) : null}
                       {contextSaved && ready ? (
                         <Button type="button" onClick={() => setShowReadyContext(false)}>
-                          Continuar
+                          {t("Continuar")}
                         </Button>
                       ) : null}
                       {contextSaved && !ready ? (
@@ -1254,7 +1256,7 @@ export function PdfFirstUploadShell({
                           variant="outline"
                           onClick={() => setShowReadyContext(false)}
                         >
-                          Continuar
+                          {t("Continuar")}
                         </Button>
                       ) : null}
                     </div>
@@ -1262,10 +1264,10 @@ export function PdfFirstUploadShell({
                 ) : failed ? (
                   <div className="mt-6 flex justify-end gap-2">
                     <Button type="button" variant="ghost" onClick={close}>
-                      Cerrar
+                      {t("Cerrar")}
                     </Button>
                     <Button type="button" variant="outline" onClick={() => void retryFailedProcessing()}>
-                      Reintentar
+                      {t("Reintentar")}
                     </Button>
                   </div>
                 ) : null}
