@@ -15,6 +15,7 @@ import { StudentMaterialProcessingRefresh } from '@/components/student-material-
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isQaAccount } from '@/lib/qa-account';
+import { accountAppLocale } from '@/lib/i18n/app-locale';
 import { hasPremiumAccess } from '@/lib/premium';
 import { isFreeStudyV2Active, FREE_STUDY_V2 } from '@/lib/free-study-v2';
 import { getMateriaRoute } from '@/lib/routes';
@@ -502,7 +503,11 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     }
     // The tour begins automatically only for eligible accounts.
     // Students can voluntarily re-open it from the PDF header at any time.
-    const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
+    // An English student's first action should be reading or practicing,
+    // not completing a forced four-step tutorial. The guide remains available
+    // on demand from the study workspace.
+    const isEnglishStudyEntry = accountAppLocale(user?.user_metadata) === 'en';
+    const shouldShowFirstPdfGuide = !isEnglishStudyEntry && eligibleByAccount && !previouslyCompleted;
 
     const shareAvailable = isOwner && Boolean(
       academicProfile.universidadId && academicProfile.carreraId && material.materia_id
@@ -582,7 +587,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           }
           recommendedStudyAvailable={isOwner && material.processing_status === 'ready'}
           initialRecommendedStudy={shouldShowFirstPdfGuide}
-          initialStudyStartGuideRequested={isOwner && material.processing_status === 'ready' && query.inicio === '1'}
+          initialStudyStartGuideRequested={!isEnglishStudyEntry && isOwner && material.processing_status === 'ready' && query.inicio === '1'}
           initialTab={shouldShowFirstPdfGuide ? 'resumen' : (
             query.tab === 'tarjetas' ||
             query.tab === 'mapa' ||
