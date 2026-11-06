@@ -12,6 +12,7 @@ const MAX_BYTES = 65536;
 const acceptedTypes = new Set([
   'checkout.completed','subscription.active','subscription.paid',
   'subscription.canceled','subscription.expired','subscription.trialing',
+  'subscription.scheduled_cancel','subscription.past_due',
   'subscription.paused','subscription.update','refund.created','dispute.created',
 ]);
 
