@@ -26,6 +26,25 @@ type StudyErrorReviewCheckRow = {
   answered_at: string | null;
 };
 
+type CreemCheckoutSessionRow = {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  mode: 'test' | 'live';
+  product_id: string;
+  expected_amount_cents: number;
+  currency: 'USD';
+  status: 'created' | 'pending' | 'paid' | 'canceled' | 'expired' | 'refunded' | 'disputed' | 'failed';
+  checkout_id: string | null;
+  subscription_id: string | null;
+  customer_id: string | null;
+  last_transaction_id: string | null;
+  current_period_end: string | null;
+  last_event_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -59,6 +78,15 @@ export type Database = {
   };
   public: {
     Tables: {
+      // Matches the dedicated Creem checkout ledger migration; RLS restricts
+      // authenticated reads to the owning user.
+      creem_checkout_sessions: {
+        Row: CreemCheckoutSessionRow;
+        Insert: Pick<CreemCheckoutSessionRow, 'user_id' | 'plan_id' | 'mode' | 'product_id' | 'expected_amount_cents'> &
+          Partial<Omit<CreemCheckoutSessionRow, 'user_id' | 'plan_id' | 'mode' | 'product_id' | 'expected_amount_cents'>>;
+        Update: Partial<CreemCheckoutSessionRow>;
+        Relationships: [];
+      };
       student_material_answer_events: {
         Row: {
           id: string;
