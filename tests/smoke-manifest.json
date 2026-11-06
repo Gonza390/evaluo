@@ -382,5 +382,9 @@
   {
     "file": "tests/landing-locale-detection.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/creem-checkout.smoke.ts",
+    "alias": false
   }
 ]
