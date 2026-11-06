@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const read = (p: string) => readFileSync(p, 'utf8');
+const types = read('lib/student-materials/types.ts');
+const worker = read('lib/student-materials/processing-service.ts');
+const canonical = read('lib/student-materials/canonical-summary.ts');
+const localizer = read('lib/student-materials/glossary-localizer.ts');
+const store = read('lib/student-materials/persistence.ts');
+const schema = read('supabase/migrations/20261106200000_free_study_v2_i18n_cache_modes.sql');
+const bank = read('lib/free-study-v2-server.ts');
+
+assert.ok(types.includes("studyLocale?: 'es' | 'en'"));
+assert.ok(worker.includes('resolveStudyLocale(ownerAuth.user?.user_metadata)'));
+assert.ok(worker.includes("studyLocale === 'en'"));
+assert.ok(worker.includes('localizeCanonicalGlossary'));
+assert.ok(canonical.includes("studyGenerationInstruction(input.studyLocale ?? 'es')"));
+assert.ok(localizer.includes('term: item.term'));
+assert.ok(localizer.includes('sourceQuotes.some'));
+assert.ok(store.includes("englishTerm: 'englishTerm' in item"));
+assert.ok(store.includes("chapterTitle: 'chapterTitle' in item"));
+assert.ok(read('components/material-study-workspace.tsx').includes('english && englishTerm ? englishTerm : item.term'));
+for (const suffix of ["'cases:en'", "'true_false:en'"]) {
+  assert.ok(schema.includes(suffix), 'Missing migration key: ' + suffix);
+  assert.ok(bank.includes(suffix), 'Missing backend bank mode: ' + suffix);
+}
+assert.ok(schema.includes("mode ~ '^topic:[0-9]{1,3}:round:[0-4](:en)?$'"));
+assert.ok(!schema.toLowerCase().includes('truncate public.free_study_v2_unlocks'));
+assert.ok(!schema.toLowerCase().includes('delete from public.free_study_v2_unlocks'));
+assert.ok(read('app/api/practice/cases/route.ts').includes("studyLocale === 'en' ? 'cases:en'"));
+assert.ok(read('app/api/practice/true-false/route.ts').includes("studyLocale === 'en' ? 'true_false:en'"));
+console.log('[study-i18n-release] English study data, source preservation and Free V2 cache release guards verified.');
