@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import './practice-motion.css';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
@@ -34,6 +36,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   /** Vista local sin lectura/escritura de intentos, IA ni cuotas. */
   previewResult?: { correct: number };
 }) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => studyUiText(locale, value);
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
   const [generatedTrueFalse, setGeneratedTrueFalse] = useState<PracticeQuestion[]>([]);
@@ -438,7 +443,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       </p>
       <button type="button" disabled={generating} onClick={() => { attempts.current=0;void generateNewCases(); }}
         className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-blue-700 disabled:opacity-50">
-        {generating ? 'Generando situaciones…' : ready ? 'Generar más casos con IA' : 'Reintentar generar casos'}
+        {t(generating ? 'Generando situaciones…' : ready ? 'Generar más casos con IA' : 'Reintentar generar casos')}
       </button>
       {generationError && <p role="status" className="mt-2 text-xs text-amber-800">{generationError}</p>}
       {generationDiagnostic && generationError &&
@@ -477,7 +482,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const resultEntries: PracticeResultEntry[] = mode === 'unir'
     ? exercisePairs.map((pair, i) => ({
         index: i,
-        prompt: 'Unir «' + pair.term + '» con su definición',
+        prompt: t('Unir «') + pair.term + t('» con su definición'),
         selectedAnswer: previewResult && i >= previewResult.correct
           ? exercisePairs[(i + 1) % exercisePairs.length]?.definition ?? 'Otra definición'
           : exercisePairs[matches[i]]?.definition ?? 'Sin responder',
@@ -517,26 +522,24 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       materialTitle={materialTitle}
       materialId={materialId}
       documentLabel={isWord ? 'DOC' : 'PDF'}
-      modeLabel={mode === 'opciones' ? 'Verdadero o falso' : title[mode]}
+      modeLabel={t(mode === 'opciones' ? 'Verdadero o falso' : title[mode])}
       entries={resultEntries}
       preview={Boolean(previewResult)}
       closeHref={previewResult ? undefined : '/dashboard/practicar'}
       primaryAction={{
-        label: mode === 'simulacro'
-          ? freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro'
-          : 'Practicar otra vez',
+        label: english ? (mode === 'simulacro' ? (freeV2 ? 'Repeat mock exam' : 'New mock exam') : 'Practice again') : (mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'),
         onClick: anotherRound,
         disabled: Boolean(previewResult),
       }}
       secondaryAction={previewResult ? undefined : {
-        label: mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen',
+        label: t(mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'),
         href: mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen',
       }}
       extraAction={historySaveFailed && !previewResult
-        ? { label: 'Reintentar guardado', onClick: saveCompletedSession }
+        ? { label: t('Reintentar guardado'), onClick: saveCompletedSession }
         : undefined}
       note={historySaveFailed && !previewResult
-        ? 'No pudimos guardar esta práctica en el historial.'
+        ? (english ? 'We could not save this practice to your history.' : 'No pudimos guardar esta práctica en el historial.')
         : undefined}
     />
   ) : null;
@@ -606,7 +609,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.pair.term}
-    explanation={checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.'}
+    explanation={t(checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.')}
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
@@ -620,16 +623,16 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     /></div>;
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
-    <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
+    <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← {t('Volver a Practicar')}</Link>
     {mode === 'opciones' ? (
       <div className="mt-3 flex min-w-0 items-center gap-2.5">
-        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900"{t(title[mode])}</h1>
         <span aria-hidden="true" className="shrink-0 text-slate-300">·</span>
         <span className="min-w-0 flex-1 truncate text-[12px] text-slate-500 sm:text-sm" title={materialTitle}>{materialTitle}</span>
       </div>
     ) : (
       <>
-        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900"{t(title[mode])}</h1>
         <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
       </>
     )}
@@ -703,7 +706,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               }
               void claimSessionQuota().then(allowed => { if (allowed) transitionTo(()=>setExamStarted(true)); });
             }} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
-              {freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro'}
+              {t(freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro')}
             </button>
             <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">Ahora no, volver a Practicar</Link>
           </div>
@@ -791,12 +794,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
                 ? 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: '
                 : 'Elegiste: '}{responses[step]}
             </p>}
-          <p className="mt-1 text-slate-700">{mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: '}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
+          <p className="mt-1 text-slate-700">{t(mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: ')}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
           {current.type === 'question' && <p className="mt-1 text-slate-600">{explanationFor(current.question)}</p>}
           {current.type === 'recall' && current.pair.pageStart && <Link
             href={'/materiales/' + materialId + '?tab=resumen&page=' + current.pair.pageStart}
-            className="mt-2 inline-block text-blue-600 underline">Revisar el concepto en el material · página {current.pair.pageStart}</Link>}
+            className="mt-2 inline-block text-blue-600 underline">{english ? "Review this concept in the source · page" : "Revisar el concepto en el material · página"} {current.pair.pageStart}</Link>}
 
         </div>}
         <div className={mode === 'opciones'
@@ -809,7 +812,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           {mode === 'simulacro' ? <>
             {step < total - 1 && <button type="button" onClick={() => setStep(value => value + 1)}
               className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
-              {responses[step] ? 'Siguiente' : 'Omitir'}
+              {t(responses[step] ? 'Siguiente' : 'Omitir')}
             </button>}
             <button type="button" onClick={completeWithTransition}
               className={'min-h-11 rounded-xl border px-4 text-sm ' +
@@ -818,7 +821,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             </button>
           </> : <button type="button" disabled={!checked && !responses[step]?.trim()} onClick={reviewOrNext}
             className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
-            {!checked ? 'Comprobar respuesta' : step === total - 1 ? 'Ver resultados' : 'Siguiente'}
+            {t(!checked ? 'Comprobar respuesta' : step === total - 1 ? 'Ver resultados' : 'Siguiente')}
           </button>}
         </div>
       </>}
