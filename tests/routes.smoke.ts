@@ -227,14 +227,14 @@ assert.match(rootLayoutSource, /@vercel\/speed-insights\/next/);
 assert.match(rootLayoutSource, /<SpeedInsights\s*\/>/);
 assert.match(seoLandingSource, /generateStaticParams\(\)[\s\S]*return \[\]/);
 assert.match(seoLandingSource, /loadStudyLandingData/);
-assert.match(clientLayoutUiSource, /\{ label: 'Inicio', href: '\/', icon: Home \}/);
+assert.match(clientLayoutUiSource, /\{ label: messages.navigation.home, href: '\/', icon: Home \}/);
 assert.match(
   clientLayoutUiSource,
-  /\{ label: 'Pregunteros', href: '\/pregunteros', icon: GraduationCap \}/
+  /\{ label: messages.navigation.questionBanks, href: '\/pregunteros', icon: GraduationCap \}/
 );
 assert.match(
   clientLayoutUiSource,
-  /\{\s*label: 'Iniciar sesión',\s*href: '\/login\?mode=login',\s*icon: LogIn,\s*variant: 'cta' as const,?\s*\}/
+  /\{\s*label: messages.navigation.signIn,\s*href: '\/login\?mode=login',\s*icon: LogIn,\s*variant: 'cta' as const,?\s*\}/
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);

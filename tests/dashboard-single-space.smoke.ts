@@ -163,7 +163,7 @@ assert.doesNotMatch(appChromeSource, /NotificationBell|notification-bell/,
   'The shared header must not render the notification bell at any viewport size.');
 assert.match(appChromeSource, /stablePrivateHeader\s*\? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,
   'All authenticated mobile routes should share the same topbar height.');
-assert.match(appChromeSource, /aria-label="Ir a Mi espacio"/,
+assert.match(appChromeSource, /aria-label=\\{messages\\.navigation\\.mySpace\\}/,
   'The Evaluo logo remains an accessible link on mobile.');
 assert.match(appChromeSource, /className="hidden min-w-0 md:block"/,
   'The mobile authenticated header must consistently display only the icon.');
@@ -173,12 +173,12 @@ assert.doesNotMatch(appChromeSource, /label: 'Perfil', href: '\/configuracion'/,
   'Remove Perfil from the mobile bottom navigation.');
 assert.match(appChromeSource, /grid-cols-4/,
   'Keep four balanced mobile destinations for authenticated students and guests.');
-assert.match(appChromeSource, /label: 'Mi plan', href: '\/dashboard\/plan-de-estudio'/,
+assert.match(appChromeSource, /label: messages.navigation.shortStudyPlan, href: '\/dashboard\/plan-de-estudio'/,
   'Keep Mi plan available on the authenticated mobile navigation.');
 const bottomNavSource = appChromeSource.split('function BottomNav()')[1]?.split('export default function ClientLayoutClient')[0] ?? '';
-assert.match(bottomNavSource, /label: 'Mi espacio', href: '\/dashboard'/,
+assert.match(bottomNavSource, /label: messages.navigation.mySpace, href: '\/dashboard'/,
   'Keep Mi espacio in the bottom navigation.');
-assert.match(bottomNavSource, /label: 'Estudiar', href: '\/dashboard\/estudiar'/,
+assert.match(bottomNavSource, /label: messages.navigation.study, href: '\/dashboard\/estudiar'/,
   'Keep Estudiar in the bottom navigation.');
 assert.doesNotMatch(bottomNavSource, /label: 'Calendario'|label: 'Perfil'/,
   'Move Calendario out of the bottom bar and keep Perfil in the avatar menu.');
@@ -195,9 +195,9 @@ assert.match(mobileProfileMenuSource, /data-mobile-profile-menu-trigger/,
   'The profile avatar must open a mobile menu instead of immediately navigating.');
 assert.match(mobileProfileMenuSource, /data-mobile-profile-menu/,
   'The menu should be identified for responsive verification.');
-assert.match(mobileProfileMenuSource, /Ajustes/,
+assert.match(mobileProfileMenuSource, /messages\\.navigation\\.settings/,
   'The profile menu must offer Ajustes.');
-assert.match(mobileProfileMenuSource, /Sugerencias/,
+assert.match(mobileProfileMenuSource, /messages\\.navigation\\.feedback/,
   'The profile menu must offer Sugerencias.');
 assert.match(mobileProfileMenuSource, /href="\/configuracion"/,
   'Ajustes must lead to the existing configuration page.');

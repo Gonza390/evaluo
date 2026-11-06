@@ -6,13 +6,15 @@ const page=read('app/(es)/dashboard/premium/page.tsx');
 const screen=read('components/pricing/PremiumDashboardScreen.tsx');
 const nav=read('components/navbar.tsx');
 const mobileMenu=read('components/mobile-profile-menu.tsx');
+const localeMessages=read('lib/i18n/messages.ts');
+assert.match(localeMessages,/por semana · cobro mensual/, 'The Spanish monthly-billing disclosure must remain in the ES dictionary.');
 
 assert.match(page,/auth\.getUser\(\)/,'Premium dashboard must require student authentication.');
 assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the current study activity should stay safe.');
 assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
 assert.match(mobileMenu,/href="\/dashboard\/premium\?source=mobile_profile_menu"/,
   'Mobile profile upsell must open redesigned Premium, not outdated public pricing.');
-assert.match(mobileMenu,/por semana · cobro mensual/,
+assert.match(mobileMenu,/messages\\.navigation\\.perWeek/,
   'Preserve the weekly-equivalent amount, clearly labeled as monthly billing.');
 assert.match(mobileMenu,/!isPremium \? \(/,
   'Mobile upsell remains visible to Free accounts only.');
