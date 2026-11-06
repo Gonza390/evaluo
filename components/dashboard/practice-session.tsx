@@ -277,12 +277,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             attempts.current < 3) return;
         setGenerationDiagnostic('HTTP ' + response.status + ' · ' + code);
         setGenerationError(response.status === 429
-          ? 'Se alcanzó el límite de generación por hoy. Este material todavía no tiene seis casos verificables.'
+          ? (english ? 'Today\'s generation limit was reached. This material does not yet have six verified cases.' : 'Se alcanzó el límite de generación por hoy. Este material todavía no tiene seis casos verificables.')
           : response.status === 401
-            ? 'Tu sesión venció. Iniciá sesión nuevamente.'
+            ? (english ? 'Your session expired. Please sign in again.' : 'Tu sesión venció. Iniciá sesión nuevamente.')
           : response.status === 503 || response.status >= 500
-            ? 'El servicio de IA no pudo completar la generación o verificación. Podés reintentar.'
-          : 'No encontramos más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.');
+            ? (english ? 'The AI service could not finish generating or verifying cases. Please retry.' : 'El servicio de IA no pudo completar la generación o verificación. Podés reintentar.')
+          : (english ? 'We could not find enough source-backed cases. We will not invent cases to reach six.' : 'No encontramos más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.'));
         return;
       }
       const incoming = body.cases as PracticeQuestion[];
@@ -295,7 +295,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       }
     } catch (error) {
       setGenerationDiagnostic(error instanceof Error ? error.name : 'network_error');
-      setGenerationError('No pudimos conectarnos para generar los casos. Podés reintentar.');
+      setGenerationError((english ? 'The connection failed while generating cases. Please try again.' : 'No pudimos conectarnos para generar los casos. Podés reintentar.'));
     } finally {
       generatingRequest.current = false;
       setGenerating(false);
@@ -359,22 +359,22 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           if (retryableSourceFailure && retry<2 && trueFalseAttempts.current<6) continue;
           setTrueFalseError(
             response.status === 401
-              ? 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.'
+              ? (english ? 'Your Evaluo session expired. Sign in and try again.' : 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.')
             : response.status === 403
-              ? 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.'
+              ? (english ? 'The server blocked this practice request. Please check your account access.' : 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.')
             : response.status === 404 && errorCode === 'material_not_found'
-              ? 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.'
+              ? (english ? 'This material was not found in your account. Open it again from Your materials.' : 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.')
             : response.status === 404
-              ? 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá la página y reintentá.'
+              ? (english ? 'The true-or-false service is unavailable. Refresh the page and try again.' : 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá la página y reintentá.')
             : response.status === 429
-              ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
+              ? (english ? 'Today\'s generation limit was reached. We will not show unverified statements.' : 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.')
             : response.status === 422
-              ? 'No conseguimos suficientes afirmaciones verificadas. Probamos distintos apartados; podés reintentar con otras páginas.'
+              ? (english ? 'We could not verify enough statements from the selected sections. Try other pages.' : 'No conseguimos suficientes afirmaciones verificadas. Probamos distintos apartados; podés reintentar con otras páginas.')
             : response.status === 503
-              ? 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.'
+              ? (english ? 'The AI service could not complete or verify the statements. Please try again later.' : 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.')
             : response.status === 500
-              ? 'Se produjo un error interno al preparar Verdadero o Falso.'
-            : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.'
+              ? (english ? 'An internal error occurred while preparing true-or-false practice.' : 'Se produjo un error interno al preparar Verdadero o Falso.')
+            : (english ? 'We could not prepare the practice. The server returned an unexpected response.' : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.')
           );
           break;
         }
@@ -385,11 +385,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       if (accumulated.length> trueFalsePool.length) setGeneratedTrueFalse(accumulated);
       if (!sufficientTrueFalse(accumulated,freeV2 ? 1 : MIN_CASES_PER_PRACTICE) &&
           trueFalseAttempts.current>=6) {
-        setTrueFalseError('No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.');
+        setTrueFalseError((english ? 'We could not verify six statements across the material. Please try again later.' : 'No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.'));
       }
     } catch (error) {
       setTrueFalseDiagnostic(error instanceof Error ? error.name : 'network_error');
-      setTrueFalseError('La conexión se interrumpió mientras preparábamos Verdadero o Falso. Revisá tu conexión y reintentá.');
+      setTrueFalseError((english ? 'The connection dropped while preparing true-or-false questions. Please retry.' : 'La conexión se interrumpió mientras preparábamos Verdadero o Falso. Revisá tu conexión y reintentá.'));
     } finally {
       trueFalseBusy.current=false;
       setTrueFalseLoading(false);
@@ -422,9 +422,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           !('pairs' in body) || !Array.isArray(body.pairs)) throw new Error('invalid');
       const fresh = selectPracticePairs([...(body.pairs as PracticePair[])]).filter(
         next=>!pairs.some(existing=>existing.term.toLowerCase()===next.term.toLowerCase()));
-      if (!fresh.length) setPairError('No encontramos otros conceptos independientes y verificables en este material.');
+      if (!fresh.length) setPairError((english ? 'No additional distinct, verifiable concepts were found in this material.' : 'No encontramos otros conceptos independientes y verificables en este material.'));
       else setAddedPairs(previous=>[...previous,...fresh]);
-    } catch {setPairError('No pudimos completar seis conceptos confiables. Podés reintentar.');}
+    } catch {setPairError((english ? 'We could not prepare six reliable concepts. Please try again.' : 'No pudimos completar seis conceptos confiables. Podés reintentar.'));}
     finally {pairBusy.current=false;setPairLoading(false);}
   },[materialId,mode,pairs]);
   useEffect(()=>{
