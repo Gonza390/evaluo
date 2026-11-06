@@ -260,7 +260,15 @@ export async function reconcileCreemBillingEvent(
   }
 
   if (type === 'refund.created' || type === 'dispute.created') {
-    if (type === 'refund.created' && object.status !== 'succeeded') return 'ignored';
+    if (type === 'refund.created') {
+      if (object.status !== 'succeeded') return 'ignored';
+      // Creem differentiates fully refunded vs partially_refunded transactions.
+      // Partial refunds are accounting events; they must not automatically
+      // revoke an otherwise paid subscription.
+      const transaction = asObject(object.transaction);
+      if (!transaction || transaction.status !== 'refunded' ||
+          !providerId(transaction.id)?.startsWith('tran_')) return 'ignored';
+    }
     if (mode === 'live') await upsertLiveEntitlement(
       admin, session, subscriptionId, type === 'refund.created' ? 'refunded' : 'charged_back',
       new Date().toISOString(), changedAt, null,
