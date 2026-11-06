@@ -1,28 +1,55 @@
-# Creem · webhook en Preview (etapa de validación)
+# Creem — Implementación de cobros internacionales de Evaluo
 
-## Estado y límites de seguridad
+## Estado
 
-- Endpoint preparado en `app/api/webhooks/creem/route.ts`: `POST /api/webhooks/creem`.
-- **No habilita Premium** ni altera `user_subscriptions` o `payment_transactions` con eventos de prueba. Preview y Production comparten hoy el proyecto Supabase.
-- El endpoint devuelve 503 en `VERCEL_ENV=production`, por diseño.
-- Solo procesa eventos firmados con HMAC-SHA256 (header `creem-signature`), con `CREEM_API_KEY` de prueba y `CREEM_WEBHOOK_SECRET`.
-- Los eventos de prueba se registran en la tabla existente `payment_webhook_events` con `provider='creem_test'` y deduplicación por `(provider, provider_event_id)`.
-- Sin `CREEM_WEBHOOK_SECRET`, devuelve 503. No inventar claves ni usar una API key como webhook secret.
+- Argentina: Mercado Pago en ARS, código y flujos previos intactos.
+- Resto del mundo: Premium mensual en USD 9.99, sin prometer importes adicionales (impuestos se informan en checkout de Creem).
+- En Preview se puede probar Creem Test Mode sin otorgar Premium real.
+- En Production el cobro Creem Live permanece **apagado** hasta configurar y probar el producto y las claves Live. Control: `CREEM_INTERNATIONAL_ENABLED=true` más las tres variables Live.
+- Los intentos Creem se almacenan en `public.creem_checkout_sessions` separados de ARS, con RLS owner-only.
+- La suscripción Live se activa solo con `subscription.paid` firmado y asociado a un checkout y producto que coincide con monto USD 999, período válido e ID de transacción.
+- Renovación `subscription.paid`: extensión del período; cancelación: sin nuevas renovaciones y acceso hasta el final pagado; reembolso/disputa: revocación.
+- Eventos duplicados/reintentos se registran en `payment_webhook_events`.
+- Retorno de checkout por URL **no desbloquea Premium**.
 
-## Configuración pendiente (no publicar todavía)
+## Endpoints y UI
 
-1. Crear/editar un endpoint **Test Mode** en Creem Dashboard > Developers > Webhooks.
-2. Usar la URL HTTPS del despliegue **Preview de `master`** que contenga el commit de la integración y agregar `/api/webhooks/creem`. No usar `https://evaluoapp.com/api/webhooks/creem`.
-3. Suscribir `checkout.completed`, `subscription.active`, `subscription.paid`, `subscription.canceled`, `subscription.expired`, `subscription.paused`, `subscription.update`, `refund.created`, `dispute.created`.
-4. Guardar el **webhook signing secret** generado por Creem como `CREEM_WEBHOOK_SECRET` en Vercel **Preview** (dato sensible). Nunca enviarlo por chat ni exponerlo con `NEXT_PUBLIC_`.
-5. Desplegar nuevamente Preview para que el secreto esté disponible. Verificar que el endpoint sea accesible desde Creem sin exigir login o CAPTCHA (revisar protección de Vercel/Cloudflare).
-6. Enviar eventos de test desde Creem y revisar `payment_webhook_events`. Duplicados deben responder 200 sin volver a procesar; firmas inválidas deben responder 401.
+- `POST /api/payments/creem/checkout` — checkout autenticado, CSRF, rate limit, bloqueo AR para Live.
+- `GET /api/payments/creem/availability` — mercado (Argentina/internacional), disponibilidad, monto.
+- `GET /api/payments/creem/status?attemptId=UUID` — historial propio con RLS.
+- `POST /api/webhooks/creem` — **solo Test Mode en Preview** (firma CREEM_WEBHOOK_SECRET).
+- `POST /api/webhooks/creem-live` — **solo Live en Production cuando está habilitado** (firma CREEM_LIVE_WEBHOOK_SECRET).
+- `GET /pricing/creem-prueba?attemptId=UUID` — confirma el estado del pago ficticio.
+- Selector público de planes y pantalla in-app Premium enrutan por país; Argentina conserva ambos planes ARS.
 
-## Falta para habilitar cobros internacionales reales
+## Variables Vercel
 
-- Crear producto y claves **Live** distintos de Test.
-- Implementar creación de checkout internacional autenticado y persistir el intento con monto en **USD**, no en `amount_ars`; conciliar IDs, importe, moneda, usuario y producto.
-- Usar una base aislada para validar el ciclo de Premium sin afectar a estudiantes reales.
-- Incorporar un handler **Live** independiente con firma propia, idempotencia, reconciliación de renovaciones, cancelaciones, reembolsos y disputas, y fecha de fin de acceso confirmada.
-- Integrar el estado internacional al selector de checkout, pantalla de retorno, gestión de suscripciones y panel de administración.
-- Validar todas las pruebas y habilitar únicamente tras revisión explícita.
+Preview:
+- `CREEM_API_KEY` (prefijo creem_test_)
+- `CREEM_WEBHOOK_SECRET`
+
+Production (todavía sin configurar; nunca reutilizar claves Test):
+- `CREEM_LIVE_API_KEY` (prefijo creem_live_)
+- `CREEM_LIVE_PRODUCT_ID` (el producto **Live** recurrente mensual de US$ 9.99)
+- `CREEM_LIVE_WEBHOOK_SECRET` (secreto de webhook **Live**, distinto del Test)
+- `CREEM_INTERNATIONAL_ENABLED` = `false` inicialmente; activar a `true` **solo al final de la validación**
+
+Nunca pegar secretos en conversaciones, commits, ni variables `NEXT_PUBLIC_`.
+
+## Checklist antes de activar Live
+
+1. Verificar que se compila `master`, que las 102+ pruebas smoke y quality CI pasan y que no hay regresión de Mercado Pago.
+2. Ejecutar checkout Test Mode de extremo a extremo y comprobar `creem_checkout_sessions` recibe `pending` → `paid` (sin `user_subscriptions`).
+3. Validar eventos firmados válidos/firmas inválidas, replays, renewals, cancelaciones, reembolsos, disputas y eventos fuera de orden.
+4. Crear producto **Live** recurrente `every-month`, `currency=USD`, `price=999`, `status=active`. El backend comprueba el contrato contra el producto antes de iniciar cobro.
+5. Configurar credenciales Production, mantener inicialmente `CREEM_INTERNATIONAL_ENABLED=false`.
+6. Crear webhook en **Creem Live Mode**, URL `https://evaluoapp.com/api/webhooks/creem-live`, seleccionar eventos activos/pagos/cancelación/caducidad/reembolsos/disputas, configurar su secreto en Production.
+7. Realizar una prueba controlada real Live, validar el registro y el acceso, reintentos, futura cancelación y que toda la transacción queda USD (nunca `amount_ars`).
+8. Cambiar flag a true y desplegar Production una vez aprobado el control. Monitorear las primeras entregas Live.
+9. No enviar webhook de prueba a Production. El webhook Test Mode tiene bloqueo `VERCEL_ENV='production'`.
+
+## Notas técnicas
+
+- Una Preview Vercel protegida por SSO requiere bypass de automatización configurado en el endpoint Test de Creem. No publicar ese secreto.
+- `main` es Production; `master` es desarrollo. No fusionar sin aprobación y CI.
+- Si Creem rechaza un producto por moneda, precio o modalidad distinta, el checkout debe fallar cerrado para evitar cobros que no puedan otorgar Premium.
