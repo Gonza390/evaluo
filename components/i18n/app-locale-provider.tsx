@@ -39,6 +39,9 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   const savedStudyLocale = accountStudyLocale(user?.user_metadata);
   const studyLocale = studyOverride ?? savedStudyLocale ?? locale;
 
+  // Never carry a temporary language override across account changes.
+  useEffect(() => { setStudyOverride(null); }, [user?.id]);
+
   useEffect(() => {
     if (loading) return;
     setLocale(accountLocale ?? storedLocale() ?? 'es');
