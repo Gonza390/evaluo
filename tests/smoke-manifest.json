@@ -410,5 +410,9 @@
   {
     "file": "tests/preview-oauth-origin.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/international-market-and-english-checkout.smoke.ts",
+    "alias": false
   }
 ]
