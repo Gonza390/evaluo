@@ -38,8 +38,11 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
             <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.5rem]">{page.headline}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{page.intro}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <a href="#worked-example" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800">
-                Explore the worked example <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800">
+                Study with my PDF or Word <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <a href="#worked-example" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-blue-200">
+                Explore the worked example
               </a>
               <a href="#study-method" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-blue-200">
                 Read the study method
@@ -187,7 +190,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
                 These guides are free to read. Use the English entry flow to see the latest account features and availability.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/en/login?mode=signup" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">
+                <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">
                   Start studying with my notes <ArrowRight className="h-4 w-4" aria-hidden="true"/>
                 </Link>
                 <Link href="/en/blog" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
