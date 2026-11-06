@@ -120,8 +120,15 @@ export async function processStudentMaterial(input: {
 
   // Read the owner account, not client input, to determine output language.
   // Only the generated study guide changes; extraction and citations stay original.
-  const { data: ownerAuth } = await admin.auth.admin.getUserById(material.user_id);
-  const studyLocale = resolveStudyLocale(ownerAuth.user?.user_metadata);
+  let studyLocale: 'es' | 'en' = 'es';
+  try {
+    const { data: ownerAuth, error: ownerError } = await admin.auth.admin.getUserById(material.user_id);
+    if (ownerError) throw ownerError;
+    studyLocale = resolveStudyLocale(ownerAuth?.user?.user_metadata);
+  } catch (error) {
+    // A transient account preference lookup must not turn a valid PDF into a failed upload.
+    logError('processStudentMaterial.studyLanguageLookup', error, { materialId: material.id });
+  }
   const isDocx = material.file_name.toLowerCase().endsWith('.docx');
   const geminiPdfKeySlot = isDocx ? undefined : await getOrAssignGeminiPdfKeySlot(admin, material.id);
   logInfo('processStudentMaterial.geminiPdfKeySlot', {
