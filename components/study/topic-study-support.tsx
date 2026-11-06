@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 
@@ -13,20 +14,21 @@ export function TopicStudySupport({
   flashcards: StudyFlashcard[];
   pdfHref?: string;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const [cardIndex, setCardIndex] = useState(0);
   const card = flashcards[cardIndex];
   return (
     <div className="divide-border border-border mt-6 divide-y border-t">
-      <section className="py-3" aria-label="Conceptos importantes de este tema">
-        <h3 className="text-[16px] font-semibold">2 · Conceptos importantes</h3>
+      <section className="py-3" aria-label={english ? "Key concepts for this topic" : "Conceptos importantes de este tema"}>
+        <h3 className="text-[16px] font-semibold">{english ? '2 · Key concepts' : '2 · Conceptos importantes'}</h3>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-          Revisá estas definiciones del glosario antes de continuar.
+          {english ? 'Review these glossary definitions before continuing.' : 'Revisá estas definiciones del glosario antes de continuar.'}
         </p>
         {concepts.length ? (
           <dl className="divide-border mt-3 divide-y">
             {concepts.map((concept, index) => (
               <div key={`${concept.term}-${index}`} className="py-3">
-                <dt className="text-foreground text-[14px] font-semibold">{concept.term}</dt>
+                <dt className="text-foreground text-[14px] font-semibold">{english && concept.englishTerm ? concept.englishTerm : concept.term}</dt>
                 <dd className="text-foreground mt-1.5 max-w-prose text-[13.5px] leading-6 whitespace-pre-line">
                   {concept.definition}
                 </dd>
@@ -35,23 +37,23 @@ export function TopicStudySupport({
           </dl>
         ) : (
           <p className="text-muted-foreground py-3 text-sm">
-            Todavía no hay conceptos del glosario con una asociación clara a este tema.
+            {english ? 'No glossary concepts are clearly linked to this topic yet.' : 'Todavía no hay conceptos del glosario con una asociación clara a este tema.'}
           </p>
         )}
       </section>
       <details className="py-3">
         <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
-          Repasar con flashcards {flashcards.length > 0 && `(${flashcards.length})`}
+          {english ? 'Review with flashcards' : 'Repasar con flashcards'} {flashcards.length > 0 && `(${flashcards.length})`}
         </summary>
         {card ? (
           <div key={cardIndex} className="pb-4">
             <p className="text-muted-foreground mb-3 text-xs">
-              Tarjeta {cardIndex + 1} de {flashcards.length} · Intentá responder antes de mirar.
+              {english ? `Card ${cardIndex + 1} of ${flashcards.length} · Try to answer before looking.` : `Tarjeta ${cardIndex + 1} de ${flashcards.length} · Intentá responder antes de mirar.`}
             </p>
             <p className="text-foreground text-[16px] leading-6 font-medium">{card.front}</p>
             <details className="mt-4">
               <summary className="text-primary min-h-11 cursor-pointer py-3 text-sm font-semibold">
-                Mostrar respuesta
+                {english ? 'Show answer' : 'Mostrar respuesta'}
               </summary>
               <p className="text-foreground py-2 text-[13.5px] leading-6 whitespace-pre-line">
                 {card.back}
@@ -61,7 +63,7 @@ export function TopicStudySupport({
                 card.reference.excerpt.trim() && (
                   <div className="text-muted-foreground mt-3 text-xs leading-5">
                     <p>
-                      Fuente de esta tarjeta · pág. {card.reference.pageStart}
+                      {english ? 'Card source · p.' : 'Fuente de esta tarjeta · pág.'} {card.reference.pageStart}
                       {card.reference.pageEnd && card.reference.pageEnd !== card.reference.pageStart
                         ? `–${card.reference.pageEnd}`
                         : ''}
@@ -73,7 +75,7 @@ export function TopicStudySupport({
                         rel="noopener noreferrer"
                         className="text-primary inline-flex min-h-11 items-center underline underline-offset-4"
                       >
-                        Ver en PDF
+                        {english ? 'View in PDF' : 'Ver en PDF'}
                       </a>
                     )}
                   </div>
@@ -86,7 +88,7 @@ export function TopicStudySupport({
                 onClick={() => setCardIndex((index) => index - 1)}
                 className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-[13px] disabled:opacity-40"
               >
-                Anterior
+                {english ? 'Previous' : 'Anterior'}
               </button>
               <button
                 type="button"
@@ -94,17 +96,16 @@ export function TopicStudySupport({
                 onClick={() => setCardIndex((index) => index + 1)}
                 className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-[13px] disabled:opacity-40"
               >
-                Siguiente tarjeta
+                {english ? 'Next card' : 'Siguiente tarjeta'}
               </button>
             </div>
             <p className="text-muted-foreground mt-3 text-xs">
-              Consultar tarjetas no cambia tu evaluación del tema.
+              {english ? 'Viewing flashcards does not change your topic assessment.' : 'Consultar tarjetas no cambia tu evaluación del tema.'}
             </p>
           </div>
         ) : (
           <p className="text-muted-foreground py-3 text-sm">
-            Todavía no hay tarjetas con una asociación clara a este tema. Podés estudiar su resumen
-            y consultar las flashcards generales.
+            {english ? 'No flashcards are clearly linked to this topic yet. You can review its summary or use the general flashcards.' : 'Todavía no hay tarjetas con una asociación clara a este tema. Podés estudiar su resumen y consultar las flashcards generales.'}
           </p>
         )}
       </details>
