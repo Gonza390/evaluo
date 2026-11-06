@@ -562,12 +562,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }
   if (freeV2 && freeSessionGate === 'error' && (mode === 'unir' || mode === 'simulacro')) {
     return <main className="mx-auto max-w-[780px] px-4 py-8">
-      <p role="alert" className="text-sm text-slate-700">No pudimos confirmar tu cupo. Reintentá: si el uso anterior se registró, no se descontará otra vez.</p>
+      <p role="alert" className="text-sm text-slate-700">{english ? 'We could not confirm your quota. Trying again will not deduct an already recorded session twice.' : 'No pudimos confirmar tu cupo. Reintentá: si el uso anterior se registró, no se descontará otra vez.'}</p>
       <button type="button" className="mt-4 min-h-11 rounded-xl border px-4 text-sm"
         onClick={() => { setFreeSessionGate('new'); if(mode==='simulacro') void claimSessionQuota(); }}>
-        Reintentar verificación
+        {english ? 'Try checking again' : 'Reintentar verificación'}
       </button>
-      <Link href={quotaBackHref ?? '/dashboard/practicar'} className="ml-4 text-sm text-blue-600 underline">Volver a Practicar</Link>
+      <Link href={quotaBackHref ?? '/dashboard/practicar'} className="ml-4 text-sm text-blue-600 underline">{english ? 'Back to practice' : 'Volver a Practicar'}</Link>
     </main>;
   }
   if (freeV2 && mode === 'unir' && ready && freeSessionGate !== 'allowed')
@@ -638,28 +638,27 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     )}
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
       <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
-        ? 'Preparando afirmaciones de Verdadero o Falso…'
+        ? (english ? 'Preparing true-or-false statements…' : 'Preparando afirmaciones de Verdadero o Falso…')
         : mode === 'opciones' && trueFalseError
-          ? 'No pudimos iniciar Verdadero o Falso'
+          ? (english ? 'Could not start true-or-false practice' : 'No pudimos iniciar Verdadero o Falso')
           : mode === 'casos' && generating
-            ? 'Preparando tus casos prácticos…'
-            : 'No hay suficientes ejercicios confiables'}</h2>
-      {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.</p> : null}
+            ? (english ? 'Preparing your practice cases…' : 'Preparando tus casos prácticos…')
+            : (english ? 'Not enough reliable exercises' : 'No hay suficientes ejercicios confiables')}</h2>
+      {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">{english ? 'At least one applied case is needed alongside the questions and concepts. We are trying to create one from your document.' : 'Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.'}</p> : null}
       {mode === 'opciones' ? <p className="mt-2">
-        {trueFalsePool.length} de {MIN_CASES_PER_PRACTICE} afirmaciones verificadas.
-        {trueFalseLoading ? ' Estamos comprobando afirmaciones y sus correcciones contra el documento.' :
-          ' Para comenzar necesitamos al menos seis afirmaciones, con respuestas verdaderas y falsas.'}
+        {trueFalsePool.length} {english ? 'of' : 'de'} {MIN_CASES_PER_PRACTICE} {english ? 'verified statements.' : 'afirmaciones verificadas.'}
+        {trueFalseLoading ? (english ? ' We are checking statements and explanations against your document.' : ' Estamos comprobando afirmaciones y sus correcciones contra el documento.') :
+          (english ? ' We need at least six statements, including true and false answers.' : ' Para comenzar necesitamos al menos seis afirmaciones, con respuestas verdaderas y falsas.')}
       </p> : mode === 'casos' ? <p className="mt-2">
-        {contexts.length} de {MIN_CASES_PER_PRACTICE} casos de aplicación verificados.
-        {generating ? ' Estamos creando situaciones nuevas a partir de tu material.' :
-          ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.'}
-      </p> : <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
-        No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>}
+        {contexts.length} {english ? 'of' : 'de'} {MIN_CASES_PER_PRACTICE} {english ? 'verified practice cases.' : 'casos de aplicación verificados.'}
+        {generating ? (english ? ' We are creating new cases from your material.' : ' Estamos creando situaciones nuevas a partir de tu material.') :
+          (english ? ' We need six distinct cases with verifiable answers to begin.' : ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.')}
+      </p> : <p className="mt-2">{english ? 'This material does not yet contain enough verified content for this activity. We will not invent questions or assess you using ambiguous answers.' : <>Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}. No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</>}</p>}
       {aiCaseButton}
       {trueFalseError && <p role="status" className="mt-3 text-sm text-amber-800">{trueFalseError}</p>}
       {mode === 'opciones' && trueFalseError && process.env.NODE_ENV !== 'production' && trueFalseDiagnostic &&
         <p className="mt-1 text-xs text-slate-500" data-practice-diagnostic>{trueFalseDiagnostic}</p>}
-      {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">Preparando conceptos del material…</p>}
+      {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">{english ? 'Preparing concepts from your material…' : 'Preparando conceptos del material…'}</p>}
       {pairError && <p role="status" className="mt-3 text-sm text-amber-800">{pairError}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-3">
       {mode !== 'casos' && <button type="button" disabled={pairLoading || generating || trueFalseLoading}
@@ -674,28 +673,28 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           }
         }}
         className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-sm text-blue-700">
-        {pairLoading || generating || trueFalseLoading ? 'Preparando práctica…' : 'Reintentar completar seis ejercicios'}
+        {pairLoading || generating || trueFalseLoading ? (english ? 'Preparing practice…' : 'Preparando práctica…') : (english ? 'Retry generating six exercises' : 'Reintentar completar seis ejercicios')}
       </button>}
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="inline-flex min-h-11 items-center text-blue-600 underline">
-        Volver a la práctica general
+        {english ? 'Back to general practice' : 'Volver a la práctica general'}
       </Link>
       </div>
     </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
       <section className={`${leavingActivity?'practice-screen-leave':'practice-screen-enter'} mx-auto mt-4 w-full max-w-[920px] rounded-[22px] bg-white px-4 py-5 sm:border sm:border-[#E7EBF4] sm:px-10 sm:py-9 sm:shadow-[0_8px_28px_rgba(15,23,42,0.04)] lg:px-14`}>
         <div className="mx-auto max-w-[650px] text-center">
           <img src="/evi-pensando.svg" alt="" className="mx-auto mb-4 size-[92px] object-contain sm:size-[112px]" />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F7EF] px-3 py-1 text-[12px] font-bold text-[#16774F]"><span aria-hidden="true">✓</span> Listo</span>
-          <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">Tu simulacro está listo</h1>
-          <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.</p>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F7EF] px-3 py-1 text-[12px] font-bold text-[#16774F]"><span aria-hidden="true">✓</span> {english ? 'Ready' : 'Listo'}</span>
+          <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">{english ? 'Your mock exam is ready' : 'Tu simulacro está listo'}</h1>
+          <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">{english ? 'The questions are based on your uploaded material. Start whenever you are ready.' : 'Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.'}</p>
           <div className="mx-auto mt-5 flex min-w-0 max-w-full items-center gap-3 rounded-[14px] border border-[#E7EBF4] px-4 py-3 text-left sm:max-w-[440px]">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><span aria-hidden="true">▤</span></span>
             <div className="min-w-0"><p className="text-[10px] font-bold tracking-[.08em] text-slate-500">MATERIAL</p><p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{materialTitle}</p></div>
           </div>
           <div className="mx-auto mt-5 divide-y divide-[#EEF1F6] rounded-[18px] border border-[#E7EBF4] px-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:max-w-[560px] sm:px-6">
             {[
-              [`${total} preguntas`, verifiedChapterCount >= 2 ? 'De distintos temas de tu material.' : 'Preparadas a partir de tu material.', '❔'],
-              ['15 minutos', 'Podés entregar antes si terminás.', '◷'],
-              ['Sin soluciones hasta el final', 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
+              [`${total} ${english ? 'questions' : 'preguntas'}`, verifiedChapterCount >= 2 ? (english ? 'From different topics in your material.' : 'De distintos temas de tu material.') : (english ? 'Created from your material.' : 'Preparadas a partir de tu material.'), '❔'],
+              [english ? '15 minutes' : '15 minutos', english ? 'You can submit early if you finish.' : 'Podés entregar antes si terminás.', '◷'],
+              [english ? 'Answers shown at the end' : 'Sin soluciones hasta el final', english ? 'You can go back or leave questions unanswered.' : 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
             ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
           </div>
           <div className="mx-auto mt-6 flex max-w-[560px] flex-col gap-2">
@@ -708,18 +707,18 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             }} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
               {t(freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro')}
             </button>
-            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">Ahora no, volver a Practicar</Link>
+            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
           </div>
         </div>
       </section>
     ) : <section className="mt-6">
       {aiCaseButton}
       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-slate-500">
-        <span>{mode === 'unir' ? 'Relacioná los conceptos con sus definiciones' :
-          'Pregunta ' + (step + 1) + ' de ' + total}</span>
+        <span>{mode === 'unir' ? (english ? 'Match concepts with their definitions' : 'Relacioná los conceptos con sus definiciones') :
+          (english ? 'Question ' : 'Pregunta ') + (step + 1) + (english ? ' of ' : ' de ') + total}</span>
         {mode === 'simulacro' ? <span role="timer" className="font-medium tabular-nums">
-          {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} restantes
-        </span> : <span>{answeredCount} de {total} respondidas</span>}
+          {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} {english ? 'remaining' : 'restantes'}
+        </span> : <span>{answeredCount} {english ? 'of' : 'de'} {total} {english ? 'answered' : 'respondidas'}</span>}
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
         <div className="h-full rounded-full bg-blue-600 transition-all"
