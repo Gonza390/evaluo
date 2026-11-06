@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClientServer } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
@@ -11,7 +12,8 @@ export async function GET(request: Request) {
   const supabase = await createClientServer();
   const {data:{user}} = await supabase.auth.getUser();
   if (!user) return NextResponse.json({error:'unauthorized'},{status:401});
-  const {data,error} = await supabase.from('creem_checkout_sessions')
+  const paymentsDb = supabase as unknown as SupabaseClient;
+  const {data,error} = await paymentsDb.from('creem_checkout_sessions')
     .select('id,mode,status,expected_amount_cents,currency,current_period_end,updated_at')
     .eq('id',id).eq('user_id',user.id).maybeSingle();
   if (error) return NextResponse.json({error:'status_unavailable'},{status:503});
