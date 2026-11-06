@@ -2194,7 +2194,7 @@ export function MaterialStudyWorkspace({
                 Glosario
               </h2>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-                Conceptos clave para repasar tu material.
+                {english ? 'Key concepts to review your material.' : 'Conceptos clave para repasar tu material.'}
               </p>
             </header>
           ) : renderTopicResourceHeader('glosario')}
@@ -2202,10 +2202,10 @@ export function MaterialStudyWorkspace({
             <div className="w-full max-w-[1040px]">
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-4 border-b px-2 py-2.5 md:grid">
                 <p className="text-muted-foreground text-[11px] font-medium tracking-[0.13em] uppercase">
-                  Término
+                  {english ? 'Term' : 'Término'}
                 </p>
                 <p className="text-muted-foreground text-[11px] font-medium tracking-[0.13em] uppercase">
-                  Definición
+                  {english ? 'Definition' : 'Definición'}
                 </p>
               </div>
               <div className="space-y-2 md:space-y-0 md:divide-y md:divide-slate-200/80">
@@ -2222,11 +2222,11 @@ export function MaterialStudyWorkspace({
                     >
                       <div className="min-w-0 space-y-1">
                         <h3 className="text-foreground text-[14px] leading-5 font-normal tracking-[-0.025em] [overflow-wrap:anywhere]">
-                          {item.term}
+                          {english && englishTerm ? englishTerm : item.term}
                         </h3>
                         {englishTerm ? (
                           <p className="text-muted-foreground text-[12px] leading-5 font-medium italic [overflow-wrap:anywhere]">
-                            {englishTerm}
+                            {english ? item.term : englishTerm}
                           </p>
                         ) : null}
                       </div>
@@ -2243,7 +2243,7 @@ export function MaterialStudyWorkspace({
               {!demo && isOwner && glossaryTopicIndex !== null ? (
                 <button type="button" onClick={() => markActivity(materialId, glossaryTopicIndex, 'glossary')}
                   className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-medium text-blue-700 hover:bg-blue-100">
-                  Terminé de revisar los conceptos
+                  {english ? 'I finished reviewing these concepts' : 'Terminé de revisar los conceptos'}
                 </button>
               ) : null}
               {showLongTopicGlossaryPracticeCta && glossaryTopicIndex !== null ? (
@@ -2252,7 +2252,7 @@ export function MaterialStudyWorkspace({
                   className="border-border mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="text-foreground text-[13px] font-medium">¿Seguimos con la práctica?</p>
+                    <p className="text-foreground text-[13px] font-medium">{english ? 'Ready to keep practicing?' : '¿Seguimos con la práctica?'}</p>
                     <p className="text-muted-foreground mt-1 text-[12px] leading-5">
                       Comprobá cuánto aprendiste de este tema.
                     </p>
