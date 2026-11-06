@@ -756,21 +756,21 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         })}</div>
         <button type="button" disabled={answeredCount !== total} onClick={completeWithTransition}
           className="mt-5 min-h-11 w-full rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
-          Corregir asociaciones
+          {english ? 'Check matches' : 'Corregir asociaciones'}
         </button>
       </> : current && <>
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
           {current.type === 'recall' ? <>
-            <p className="text-xs text-slate-500">Escribí el término específico que aparece en el material. Aceptamos tildes, variantes gramaticales y equivalencias documentadas.</p>
+            <p className="text-xs text-slate-500">{english ? 'Type the specific term from your material. Spelling variants and source-supported equivalents are accepted.' : 'Escribí el término específico que aparece en el material. Aceptamos tildes, variantes gramaticales y equivalencias documentadas.'}</p>
             <p className="mt-3 text-base leading-7 text-slate-900">________: {current.pair.definition}</p>
-            <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">Concepto</label>
+            <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">{english ? 'Concept' : 'Concepto'}</label>
             <input id="practice-input" type="text" autoComplete="off" maxLength={120}
               disabled={checked || mode === 'simulacro'} value={responses[step] ?? ''}
               onChange={event => setResponse(event.target.value)}
               className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500"
-              placeholder="Escribí el término" />
+              placeholder={english ? 'Enter the term' : 'Escribí el término'} />
           </> : <>
-            {mode === 'opciones' && <p className="mb-2 text-center text-xs font-medium text-slate-500">¿Verdadero o falso?</p>}
+            {mode === 'opciones' && <p className="mb-2 text-center text-xs font-medium text-slate-500">{english ? 'True or false?' : '¿Verdadero o falso?'}</p>}
             <p className="text-base font-medium leading-7 text-slate-900">{current.question.prompt}</p>
             <div className={mode === 'opciones' ? 'mt-5 grid grid-cols-2 gap-3' : 'mt-5 space-y-2'}>{current.question.options.map(option =>
               <button key={option} type="button" disabled={checked} aria-pressed={responses[step] === option}
@@ -785,13 +785,13 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         </div>
         {checked && mode !== 'simulacro' && <div role="status" className="mt-3 rounded-xl bg-slate-50 p-4 text-sm">
           <p className={correctAt(step) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
-            {correctAt(step) ? 'Bien resuelto' : 'Para reforzar'}
+            {correctAt(step) ? (english ? 'Correct' : 'Bien resuelto') : (english ? 'Needs review' : 'Para reforzar')}
           </p>
           {!correctAt(step) && responses[step]?.trim() &&
             <p className="mt-1 text-slate-600">
               {current.type === 'recall'
-                ? 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: '
-                : 'Elegiste: '}{responses[step]}
+                ? (english ? 'Your answer does not match a term or an explicit equivalent in the material: ' : 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: ')
+                : (english ? 'You selected: ' : 'Elegiste: ')}{responses[step]}
             </p>}
           <p className="mt-1 text-slate-700">{t(mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: ')}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
