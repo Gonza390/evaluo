@@ -124,6 +124,24 @@ try {
   assert.ok(Date.parse(String(db.user_subscriptions[0].expires_at)) <= Date.now()+10000);
   assert.equal(await reconcileCreemBillingEvent(client,'live',paid),'ignored','old payment event cannot revive refunded access');
 
+  // Signature-verified but stale deliveries must NOT reactivate a refunded
+  // subscription (a previous implementation replaced old timestamps with now).
+  const oldReplayed = {...paid, created_at: baseTime - 100 * 24 * 60 * 60_000};
+  assert.equal(await reconcileCreemBillingEvent(client,'live',oldReplayed),'ignored');
+  assert.equal(db.user_subscriptions[0].status,'refunded');
+
+  // Creem may deliver checkout.completed before an earlier-created initial
+  // subscription.paid. The later delivery still needs to grant paid access.
+  db.creem_checkout_sessions.splice(0,db.creem_checkout_sessions.length,newSession('live'));
+  db.user_subscriptions.splice(0);
+  db.payment_transactions.splice(0);
+  const checkoutCreatedAfterPayment = {...checkout,created_at:baseTime + 1000};
+  const paidCreatedBeforeCheckout = {...paid,created_at:baseTime};
+  assert.equal(await reconcileCreemBillingEvent(client,'live',checkoutCreatedAfterPayment),'processed');
+  assert.equal(await reconcileCreemBillingEvent(client,'live',paidCreatedBeforeCheckout),'processed');
+  assert.equal(db.user_subscriptions.length,1);
+  assert.equal(db.payment_transactions.length,1);
+
   // A completely separate test-mode simulation cannot touch canonical Premium.
   db.creem_checkout_sessions.splice(0,db.creem_checkout_sessions.length,newSession('test'));
   db.user_subscriptions.splice(0);
