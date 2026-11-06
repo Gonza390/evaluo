@@ -394,5 +394,9 @@
   {
     "file": "tests/english-entry-funnel.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/study-language.smoke.ts",
+    "alias": false
   }
 ]

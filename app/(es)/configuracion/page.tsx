@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase-client';
 import { useUser } from '@/hooks/useUser';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { LanguagePicker } from '@/components/i18n/language-picker';
+import { StudyLanguagePicker } from '@/components/i18n/study-language-picker';
 import { settingsMessages } from '@/lib/i18n/settings-messages';
 import { Spinner } from '@/components/ui/spinner';
 import { ProfileSettingsForm } from '@/components/settings/profile-settings-form';
@@ -368,6 +369,7 @@ export default function ConfiguracionPage() {
       <section aria-labelledby="settings-general" className="space-y-1">
         <h2 id="settings-general" className="text-xs font-normal text-slate-500">{settingsCopy.general}</h2>
         <LanguagePicker />
+                  <StudyLanguagePicker />
         {settingRow(settingsCopy.appearance, settingsCopy.light)}
         <p className="pt-1 text-xs text-slate-400">{settingsCopy.themeUnavailable}</p>
         <p className="pt-1 text-xs text-slate-400">{settingsCopy.languageHelp}</p>

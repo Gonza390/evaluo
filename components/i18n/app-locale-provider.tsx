@@ -7,9 +7,13 @@ import {
   APP_LOCALE_STORAGE_KEY, accountAppLocale, parseAppLocale, type AppLocale,
 } from '@/lib/i18n/app-locale';
 import { uiMessages } from '@/lib/i18n/messages';
+import { accountStudyLocale } from '@/lib/i18n/study-language';
 
 type AppLocaleContextValue = {
   locale: AppLocale;
+  studyLocale: AppLocale;
+  changeStudyLocale: (next: AppLocale) => Promise<void>;
+  savingStudyLocale: boolean;
   messages: typeof uiMessages[AppLocale];
   savingLocale: boolean;
   changeLocale: (next: AppLocale) => Promise<void>;
@@ -29,7 +33,11 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<AppLocale>('es');
   const [initialized, setInitialized] = useState(false);
   const [savingLocale, setSavingLocale] = useState(false);
+  const [studyOverride, setStudyOverride] = useState<AppLocale | null>(null);
+  const [savingStudyLocale, setSavingStudyLocale] = useState(false);
   const accountLocale = accountAppLocale(user?.user_metadata);
+  const savedStudyLocale = accountStudyLocale(user?.user_metadata);
+  const studyLocale = studyOverride ?? savedStudyLocale ?? locale;
 
   useEffect(() => {
     if (loading) return;
@@ -64,9 +72,23 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
     }
   }, [locale, user]);
 
+  const changeStudyLocale = useCallback(async (next: AppLocale) => {
+    if (next === studyLocale) return;
+    setSavingStudyLocale(true);
+    try {
+      if (!user) throw new Error('Study language requires a signed-in account');
+      const { error } = await supabase.auth.updateUser({ data: { study_locale: next } });
+      if (error) throw error;
+      setStudyOverride(next);
+    } finally {
+      setSavingStudyLocale(false);
+    }
+  }, [studyLocale, user]);
+
   const value = useMemo<AppLocaleContextValue>(() => ({
-    locale, messages: uiMessages[locale], savingLocale, changeLocale,
-  }), [locale, savingLocale, changeLocale]);
+    locale, studyLocale, changeStudyLocale, savingStudyLocale,
+    messages: uiMessages[locale], savingLocale, changeLocale,
+  }), [locale, studyLocale, changeStudyLocale, savingStudyLocale, savingLocale, changeLocale]);
 
   return <AppLocaleContext.Provider value={value}>{children}</AppLocaleContext.Provider>;
 }
