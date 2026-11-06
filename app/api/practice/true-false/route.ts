@@ -81,9 +81,9 @@ async function handleVerifiedTrueFalse(request: Request) {
   if (!material||material.processing_status!=='ready')
     return NextResponse.json({error:'material_not_found'},{status:404});
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
+  const bankMode = studyLocale === 'en' ? 'true_false:en' as const : 'true_false' as const;
   if (freeV2) {
-    const bankMode = studyLocale === 'en' ? 'true_false:en' as const : 'true_false' as const;
-  const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:bankMode });
+    const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:bankMode });
     if (saved) {
       const allowed = await claimVerifiedFreeStudySample({ userId:user.id, materialId:material.id, kind:'true_false', items:saved });
       if (!allowed.length) {
