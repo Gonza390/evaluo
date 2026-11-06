@@ -70,4 +70,29 @@ const unchanged = localizePedagogicalFlashcards(original, []);
 assert.equal(unchanged.flashcards[0]?.back, 'Dividir el mercado en grupos.');
 assert.equal(unchanged.flashcards[0]?.reference.pageStart, 4);
 
-console.log('[study-i18n-release] English study data, source preservation and Free V2 cache release guards verified.');
+// Safeguard the whole P1 student journey, not only the PDF-generated artifacts.
+const calendar = read('app/(es)/calendario/page.tsx');
+const reminderBell = read('components/notifications/notification-bell.tsx');
+const planPage = read('app/(es)/dashboard/plan-de-estudio/page.tsx');
+const planEmpty = read('components/dashboard/empty-study-plan.tsx');
+const planNext = read('components/dashboard/study-plan-next.tsx');
+const planNextStep = read('components/dashboard/study-plan-next-step.tsx');
+const planRoadmap = read('components/dashboard/study-plan-roadmap.tsx');
+const planCard = read('components/dashboard/study-plan-exam-card.tsx');
+const planSelector = read('components/dashboard/study-plan-material-selector.tsx');
+
+assert.ok(reminderBell.includes("useOptionalAppLocale"));
+assert.ok(reminderBell.includes("locale === 'en' ? 'en-US' : 'es-AR'"));
+assert.ok(reminderBell.includes("Dismiss reminder"));
+assert.ok(calendar.includes("english ? 'Will be saved as'"));
+assert.ok(calendar.includes("english ? 'Study plan exam'"));
+assert.ok(calendar.includes("english ? 'Unlimited exams'") || calendar.includes("features={english ? ['Unlimited exams'"));
+assert.ok(planPage.includes("accountAppLocale(user.user_metadata)"));
+assert.ok(planPage.includes('<EmptyStudyPlan locale={locale} />'));
+assert.ok(planEmpty.includes("english ? 'Your plan preview'"));
+assert.ok(planCard.includes("english ? 'Prepare for your exam'"));
+assert.ok(planSelector.includes("Choose PDF for study plan"));
+assert.ok(planNext.includes("english ? 'Topic' : 'Tema'"));
+assert.ok(planNextStep.includes("english ? 'Material progress'"));
+assert.ok(planRoadmap.includes("english ? 'Your journey'"));
+console.log('[study-i18n-release] English study artifacts, source fidelity, calendar notifications and study plan coverage verified.');
