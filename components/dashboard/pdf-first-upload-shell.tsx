@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
+import { firstUploadErrorMessage } from '@/lib/i18n/first-upload-error';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
@@ -582,7 +583,7 @@ export function PdfFirstUploadShell({
           examDate,
         });
         if (!examResult.success) {
-          toast({ description: examResult.message, variant: 'destructive' });
+          toast({ description: firstUploadErrorMessage(examResult.message, locale), variant: 'destructive' });
         }
       }
 
@@ -628,7 +629,7 @@ export function PdfFirstUploadShell({
         await cancelPdfFirstUploadAction(preparedPath).catch(() => undefined);
       }
       toast({
-        description: error instanceof Error ? error.message : t("No pudimos subir tu PDF."),
+        description: firstUploadErrorMessage(error instanceof Error ? error.message : null, locale),
         variant: 'destructive',
       });
     } finally {
@@ -745,7 +746,7 @@ export function PdfFirstUploadShell({
     });
 
     if (!result.success) {
-      toast({ description: result.message, variant: 'destructive' });
+      toast({ description: firstUploadErrorMessage(result.message, locale), variant: 'destructive' });
       setSavingContext(false);
       return;
     }
@@ -983,7 +984,7 @@ export function PdfFirstUploadShell({
                     onClick={() => void startProcessing()}
                   >
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    Procesar este PDF
+                    {t("Procesar este PDF")}
                   </Button>
                 </div>
               </>
@@ -1028,7 +1029,7 @@ export function PdfFirstUploadShell({
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
                       {failed
-                        ? (processing.error ?? t("El procesamiento se interrumpió."))
+                        ? firstUploadErrorMessage(processing.error ?? t("El procesamiento se interrumpió."), locale)
                         : ready
                           ? t("Procesamiento completado")
                           : processing.message}
@@ -1221,7 +1222,7 @@ export function PdfFirstUploadShell({
                       </div>
                     ) : (
                       <p className="mt-4 text-sm font-medium text-emerald-700">
-                        Guardado · {savedContextLabel}
+                        {t("Guardado ·")} {savedContextLabel}
                       </p>
                     )}
 
