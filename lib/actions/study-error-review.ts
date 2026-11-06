@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { loadReviewContext, loadExpandedReviewCheckEvidence, reviewIdPattern } from '@/lib/study-error-review-context';
 import { createHash } from 'node:crypto';
 import { generateTutorQuickHelp, generateStudyErrorReviewQuestion } from '@/lib/ai-tutor';
+import { resolveStudyLocale } from '@/lib/i18n/study-language';
 import { markStudyErrorReviewed } from '@/lib/study-errors';
 import { hasPremiumAccess } from '@/lib/premium';
 import { enforceStrictRateLimit } from '@/lib/rate-limit';
@@ -74,6 +75,8 @@ export async function generateReviewHelpAction(
     if (!context || context.row.status !== 'pending')
       return { success: false, message: 'Este error ya no está pendiente. Actualizá la pantalla.' };
     const { row, source, contextKey, helpContextKey } = context;
+    const studyLocale = resolveStudyLocale(user.user_metadata);
+    const localeHelpKey = studyLocale === 'en' ? createHash('sha256').update(helpContextKey + ':en').digest('hex') : helpContextKey;
     if (source && !source.excerpt)
       return {
         success: false,
@@ -86,7 +89,7 @@ export async function generateReviewHelpAction(
       .select('help_text, context_key')
       .eq('error_id', errorId)
       .eq('user_id', user.id)
-      .in('context_key', [helpContextKey, contextKey])
+      .in('context_key', studyLocale === 'en' ? [localeHelpKey] : [helpContextKey, contextKey])
       .eq('kind', kind)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -104,6 +107,7 @@ export async function generateReviewHelpAction(
       if (limitMessage) return { success: false, message: limitMessage };
       const result = await generateTutorQuickHelp({
         kind,
+        locale: studyLocale,
         question: row.prompt.slice(0, 2000),
         selectedAnswer: row.selected_answer?.slice(0, 1000),
         correctAnswer: row.correct_answer?.slice(0, 1000),
@@ -120,7 +124,7 @@ export async function generateReviewHelpAction(
         {
           error_id: errorId,
           user_id: user.id,
-          context_key: helpContextKey,
+          context_key: localeHelpKey,
           kind,
           help_text: text,
         },
@@ -128,12 +132,12 @@ export async function generateReviewHelpAction(
       );
       if (error) throw error;
     }
-    if (reusableCache && cached.context_key !== helpContextKey) {
+    if (reusableCache && cached.context_key !== localeHelpKey) {
       const { error } = await admin.from('study_error_help_cache').upsert(
         {
           error_id: errorId,
           user_id: user.id,
-          context_key: helpContextKey,
+          context_key: localeHelpKey,
           kind,
           help_text: text,
         },
@@ -199,6 +203,7 @@ export async function generateInlineSummaryCheckHelpAction(
 
     const result = await generateTutorQuickHelp({
       kind: 'why_wrong',
+      locale: resolveStudyLocale(user.user_metadata),
       question: row.prompt.slice(0, 2000),
       selectedAnswer: row.selected_answer?.slice(0, 1000),
       correctAnswer: row.correct_answer?.slice(0, 1000),
@@ -285,6 +290,8 @@ export async function generateReviewCheckAction(
       return fail('invalid_context', 'Este error ya no está pendiente. Actualizá la pantalla.');
 
     const { row, source, contextKey, helpContextKey } = context;
+    const studyLocale = resolveStudyLocale(user.user_metadata);
+    const localeHelpKey = studyLocale === 'en' ? createHash('sha256').update(helpContextKey + ':en').digest('hex') : helpContextKey;
     metadata.source_type = row.source_type;
     metadata.original_evidence_chars = source?.excerpt?.length ?? 0;
     if (!row.correct_answer) {
@@ -315,7 +322,7 @@ export async function generateReviewCheckAction(
     const checkContextKey = createHash('sha256')
       // Nueva versión: no reciclar comprobaciones antiguas demasiado similares
       // a la pregunta original; las futuras se validan por diferenciación.
-      .update(JSON.stringify(['distinct-review-v2', contextKey, evidence.excerpt]))
+      .update(JSON.stringify(['distinct-review-v2', contextKey, evidence.excerpt, studyLocale]))
       .digest('hex');
     const admin = createAdminClient();
     const { data: cached, error: cacheError } = await admin
@@ -344,7 +351,7 @@ export async function generateReviewCheckAction(
       .select('kind, help_text')
       .eq('error_id', errorId)
       .eq('user_id', user.id)
-      .in('context_key', [helpContextKey, contextKey])
+      .in('context_key', studyLocale === 'en' ? [localeHelpKey] : [helpContextKey, contextKey])
       .order('created_at', { ascending: false })
       .limit(6);
     if (helpError) throw helpError;
@@ -358,6 +365,7 @@ export async function generateReviewCheckAction(
       .map((help) => `${help.kind}: ${help.help_text.slice(0, 750)}`)
       .join('\n');
     const generated = await generateStudyErrorReviewQuestion({
+      locale: studyLocale,
       question: row.prompt.slice(0, 2000),
       topic: row.topic ?? '',
       correctAnswer: row.correct_answer.slice(0, 1000),
