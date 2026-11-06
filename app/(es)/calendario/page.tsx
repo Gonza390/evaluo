@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import Link from 'next/link';
 import {
   BellRing,
@@ -190,6 +192,15 @@ function buildEventPayload({
 
 export default function CalendarioPage() {
   const { user, loading } = useUser();
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => studyUiText(locale, value);
+  const displayLongDate = (date: Date) => english
+    ? new Intl.DateTimeFormat('en-US', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)
+    : formatLongDate(date);
+  const displayMonth = (date: Date) => english
+    ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
+    : formatMonthLabel(date);
   const router = useRouter();
   const { toast } = useToast();
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -779,9 +790,9 @@ export default function CalendarioPage() {
           icon={Loader2}
           iconSpin
           tone="loading"
-          eyebrow="Calendario"
-          title="Estamos preparando tu calendario"
-          description="Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar."
+          eyebrow={t("Calendario")}
+          title={english ? "Preparing your calendar" : "Estamos preparando tu calendario"}
+          description={english ? "Loading dates, courses and reminders." : "Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar."}
           secondaryText="Si tarda demasiado, probá recargando la página."
           className="w-full"
         />
@@ -795,10 +806,10 @@ export default function CalendarioPage() {
         <StudyStatePanel
           icon={CalendarPlus}
           className="w-full"
-          title="Tu calendario académico"
+          title={english ? "Your academic calendar" : "Tu calendario académico"}
           description="Iniciá sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."
           secondaryText="Cuando entres, podrás organizar tus fechas clave y seguirlas desde un solo lugar."
-          primaryActionLabel="Iniciar sesión"
+          primaryActionLabel={english ? "Sign in" : "Iniciar sesión"}
           onPrimaryAction={() => router.push('/login?next=%2Fcalendario')}
         />
       </div>
@@ -812,8 +823,8 @@ export default function CalendarioPage() {
           icon={Loader2}
           iconSpin
           tone="loading"
-          eyebrow="Calendario"
-          title="Estamos trayendo tus fechas del mes"
+          eyebrow={t("Calendario")}
+          title={english ? "Loading this month’s dates" : "Estamos trayendo tus fechas del mes"}
           description="Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante."
           className="w-full"
         />
@@ -826,8 +837,8 @@ export default function CalendarioPage() {
       <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-2.5 overflow-x-clip px-3 py-2 sm:space-y-3 sm:px-4 sm:py-3 lg:px-6 lg:py-3">
         <AppPageHeader
           size="compact"
-          title="Calendario"
-          description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
+          title={t('Calendario')}
+          description={english ? 'Organize your exams, assignments and reminders in one place.' : 'Organizá parciales, trabajos prácticos y recordatorios en un solo lugar.'}
         />
         <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
           <div className="relative p-1 min-[380px]:p-1.5 sm:p-2">
@@ -840,18 +851,18 @@ export default function CalendarioPage() {
                     type="button"
                     onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
                     className="inline-flex h-8 w-6 shrink-0 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900 sm:h-9 sm:w-9"
-                    aria-label="Mes anterior"
+                    aria-label={english ? 'Previous month' : 'Mes anterior'}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-medium tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
-                    {formatMonthLabel(visibleMonth)}
+                    {displayMonth(visibleMonth)}
                   </h2>
                   <button
                     type="button"
                     onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900"
-                    aria-label="Mes siguiente"
+                    aria-label={english ? 'Next month' : 'Mes siguiente'}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -873,11 +884,11 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     onClick={() => openComposerForDate(selectedDate)}
-                    aria-label="Agregar evento"
+                    aria-label={t('Agregar evento')}
                     className="h-8 min-w-8 rounded-xl bg-primary px-2 text-white shadow-sm hover:opacity-95 sm:px-4"
                   >
                     <CalendarPlus className="h-4 w-4" />
-                    <span className="hidden whitespace-nowrap sm:inline">Agregar evento</span>
+                    <span className="hidden whitespace-nowrap sm:inline">{t("Agregar evento")}</span>
                   </Button>
                 </div>
               </div>
@@ -886,7 +897,7 @@ export default function CalendarioPage() {
                 className="border-b border-slate-200/80 bg-slate-50/60"
                 style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
               >
-                {WEEKDAY_LABELS.map((label) => (
+                {(english ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] : WEEKDAY_LABELS).map((label) => (
                   <div
                     key={label}
                     className="min-w-0 border-r border-slate-200/80 px-0.5 py-1 text-center text-[11px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:py-1.5 sm:text-[12px]"
@@ -925,7 +936,7 @@ export default function CalendarioPage() {
                           setVisibleMonth(getMonthStart(date));
                         }
                       }}
-                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''}${planDay ? `, ${planDay.topics.length} temas del plan` : ''}${isPlanExamDay ? ', examen del plan' : ''}`}
+                      aria-label={`${displayLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? (english ? 'event' : 'evento') : (english ? 'events' : 'eventos')}` : ''}${planDay ? `, ${planDay.topics.length} temas del plan` : ''}${isPlanExamDay ? ', examen del plan' : ''}`}
                       className={`group relative flex h-[48px] min-w-0 flex-col gap-0.5 overflow-hidden border-r border-b px-1 py-1 text-left transition last:border-r-0 hover:bg-white min-[380px]:h-[52px] min-[380px]:px-1.5 sm:h-[56px] sm:gap-1 sm:px-2 sm:py-1.5 ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
@@ -1012,15 +1023,15 @@ export default function CalendarioPage() {
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold leading-4 text-heading sm:text-[13px]">
                     {selectionInVisibleMonth && selectedStudyPlanDay
-                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min previstos`
+                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} min previstos`
                       : selectionInVisibleMonth && selectedPlanExam
-                        ? 'Examen de tu plan de estudio'
-                        : 'Tu plan de estudio'}
+                        ? (english ? 'Exam in your study plan' : 'Examen de tu plan de estudio')
+                        : (english ? 'Your study plan' : 'Tu plan de estudio')}
                   </p>
                   <p className="mt-0.5 text-[11px] leading-4 text-[#66758D]">
                     {selectionInVisibleMonth && (selectedStudyPlanDay || selectedPlanExam)
-                      ? formatLongDate(selectedDate)
-                      : `${studyPlanDaysByDate.size} días programados · Examen ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`}
+                      ? displayLongDate(selectedDate)
+                      : `${studyPlanDaysByDate.size} días programados · Examen ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR', { day: 'numeric', month: 'short' })}`}
                   </p>
                 </div>
               </div>
@@ -1071,7 +1082,7 @@ export default function CalendarioPage() {
                   Agregar fecha
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
-                  {formatLongDate(selectedDate)}
+                  {displayLongDate(selectedDate)}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1140,7 +1151,7 @@ export default function CalendarioPage() {
                                 selectedMateriaId: null,
                               }))
                             }
-                            placeholder="Ej: Derecho Constitucional"
+                            placeholder={english ? "e.g., Constitutional Law" : "Ej: Derecho Constitucional"}
                             className="h-10 rounded-xl border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                           />
                         </div>
@@ -1167,7 +1178,7 @@ export default function CalendarioPage() {
                                   }))
                                 }
                               >
-                                {examInstanceLabel(examInstance)}
+                                {english ? (examInstance === 'integrador' ? 'Final exam' : `Exam ${examInstance}`) : examInstanceLabel(examInstance)}
                               </Button>
                             ))}
                           </div>
@@ -1237,7 +1248,7 @@ export default function CalendarioPage() {
                               assignmentTitle: event.target.value,
                             }))
                           }
-                          placeholder="Ej: TP final de Derecho Privado"
+                          placeholder={english ? "e.g., Final coursework assignment" : "Ej: TP final de Derecho Privado"}
                           className="h-10 rounded-xl border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                         />
                       </div>
@@ -1252,7 +1263,7 @@ export default function CalendarioPage() {
                               className="h-9 rounded-xl border-slate-200 bg-white px-2 text-[13px] text-slate-500"
                               disabled
                             >
-                              {examInstanceLabel(examInstance)}
+                              {english ? (examInstance === 'integrador' ? 'Final exam' : `Exam ${examInstance}`) : examInstanceLabel(examInstance)}
                             </Button>
                           ))}
                         </div>
@@ -1310,7 +1321,7 @@ export default function CalendarioPage() {
                   <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-blue-500" />
-                      <p className="text-[12px] font-medium text-slate-800">Recordatorios</p>
+                      <p className="text-[12px] font-medium text-slate-800">{english ? "Reminders" : "Recordatorios"}</p>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
                       Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen.
@@ -1322,8 +1333,8 @@ export default function CalendarioPage() {
                   <div className="rounded-xl border border-[#D9E6FF] bg-[#F4F8FF] p-3">
                     <p className="text-[12px] font-semibold text-heading">
                       {selectedStudyPlanDay
-                        ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min`
-                        : 'Examen del plan de estudio'}
+                        ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} min`
+                        : (english ? 'Exam in the study plan' : 'Examen del plan de estudio')}
                     </p>
                     {selectedStudyPlanDay ? (
                       <div className="mt-1.5 flex min-w-0 flex-wrap gap-1">
@@ -1364,7 +1375,7 @@ export default function CalendarioPage() {
                               }
                               variant="outline"
                             >
-                              {eventTypeLabel(event.type)}
+                              {t(eventTypeLabel(event.type))}
                             </Badge>
                           </div>
                           <p className="mt-1.5 text-[13px] font-medium text-slate-900">
@@ -1375,7 +1386,7 @@ export default function CalendarioPage() {
                           type="button"
                           onClick={() => void handleDeleteEvent(event.id)}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-white hover:text-rose-500"
-                          aria-label="Eliminar fecha"
+                          aria-label={english ? 'Delete date' : 'Eliminar fecha'}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1403,7 +1414,7 @@ export default function CalendarioPage() {
                     disabled={isSavingEvent}
                   >
                     <Plus className="h-4 w-4" />
-                    {isSavingEvent ? 'Guardando...' : 'Guardar'}
+                    {t(isSavingEvent ? 'Guardando...' : 'Guardar')}
                   </Button>
                 </div>
               </div>
