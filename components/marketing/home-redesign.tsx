@@ -315,12 +315,14 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
         </div>
       </div>
 
-      <section id="universidades" className="university-band" aria-label={t("Universidades")}>
-        <div className="w">
-          <p className="university-band-label">{t("Universidades disponibles para organizar tu estudio")}</p>
-          <HomeUniversityCarousel universities={universityLogos} />
-        </div>
-      </section>
+      {!english && (
+        <section id="universidades" className="university-band" aria-label={t("Universidades")}>
+          <div className="w">
+            <p className="university-band-label">{t("Universidades disponibles para organizar tu estudio")}</p>
+            <HomeUniversityCarousel universities={universityLogos} />
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="herramientas-pdf" className="sec" style={{ padding: '48px 0' }}>
         <div className="w">
