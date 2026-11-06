@@ -230,7 +230,7 @@ export async function reconcileCreemBillingEvent(
     return 'processed';
   }
 
-  if (['subscription.canceled','subscription.expired','subscription.paused','subscription.update'].includes(type)) {
+  if (['subscription.canceled','subscription.expired','subscription.paused','subscription.update','subscription.scheduled_cancel','subscription.past_due'].includes(type)) {
     if (!validProduct(object,expectedProduct)) return 'ignored';
     const currentEnd = session.current_period_end;
     const eventEnd = date(object.current_period_end_date);
@@ -238,9 +238,9 @@ export async function reconcileCreemBillingEvent(
       ? new Date(Math.min(Date.parse(currentEnd),Date.parse(eventEnd))).toISOString()
       : currentEnd;
     if (!end) return 'ignored';
-    const state = type === 'subscription.canceled' || (type === 'subscription.update' && object.status === 'scheduled_cancel')
+    const state = type === 'subscription.canceled' || type === 'subscription.scheduled_cancel' || (type === 'subscription.update' && object.status === 'scheduled_cancel')
       ? 'canceled'
-      : type === 'subscription.expired' ? 'expired'
+      : (type === 'subscription.expired' || type === 'subscription.past_due') ? 'expired'
       : type === 'subscription.paused' ? 'canceled' : null;
     if (!state) return 'ignored';
     const cutoff = type === 'subscription.expired' ? new Date(Math.min(Date.parse(end),Date.now())).toISOString() : end;
