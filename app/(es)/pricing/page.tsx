@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { safePremiumReturnTo } from '@/lib/premium-flow';
-import { ShieldCheck, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import { RegionalPricingMessage } from '@/components/pricing/RegionalPricingMessage';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
@@ -109,23 +110,11 @@ export default async function PricingPage({
               Practicá con tus apuntes, descubrí qué temas dominás y qué necesitás reforzar.
               Con Premium, seguí avanzando con más materiales y más ayuda para estudiar.
             </p>
-            <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
-              <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
-              Pago disponible en Argentina con Mercado Pago
-            </p>
+            <RegionalPricingMessage locale="es" placement="hero" />
           </div>
         </section>
 
-        <section aria-label="Precio internacional de Evaluo" className="border-b border-blue-100 bg-blue-50/50 px-4 py-8 sm:px-6">
-          <div className="mx-auto max-w-4xl rounded-2xl border border-blue-100 bg-white px-5 py-6 text-center shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Premium internacional</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">US$ 9,99 <span className="text-base font-medium text-slate-500">/ mes</span></p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Renovación automática mensual y cancelación antes del siguiente cobro. Salvo devolución o anulación del pago, conservás Premium hasta el final del período abonado.</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Creem gestionará el pago internacional y mostrará el importe final y los impuestos aplicables antes de confirmar. Los cobros reales estarán disponibles cuando finalicen las pruebas de integración.</p>
-            <p className="mt-2 text-xs text-slate-500">En Argentina se mantienen los planes en pesos y los pagos con Mercado Pago.</p>
-            <p className="mt-3 text-xs text-slate-600">Renovación automática mensual y cancelación antes del siguiente cobro. Consultá los <Link href="/terminos" className="font-semibold text-blue-700 underline">términos</Link>, la <Link href="/privacidad" className="font-semibold text-blue-700 underline">política de privacidad</Link>, la <Link href="/reembolsos" className="font-semibold text-blue-700 underline">política de reembolsos</Link> y los <Link href="/facturacion" className="font-semibold text-blue-700 underline">términos de facturación</Link>.</p>
-          </div>
-        </section>
+        <RegionalPricingMessage locale="es" placement="featured" />
 
         <section id="elegir-plan" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl">
@@ -192,7 +181,7 @@ export default async function PricingPage({
             </p>
 
             <div className="mt-12 text-center text-sm text-slate-600">
-              <p>En Argentina los pagos se procesan con Mercado Pago en ARS. Fuera de Argentina, el plan mensual internacional cuesta US$ 9,99 y se procesa con Creem cuando la modalidad internacional está habilitada.</p>
+              <RegionalPricingMessage locale="es" placement="billing" />
               <p className="mt-2">
                 Al comprar aceptás los{' '}
                 <Link href="/facturacion" className="font-semibold text-blue-700 hover:underline">
