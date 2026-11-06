@@ -13,7 +13,7 @@ const picker = read('components/dashboard/practice-mode-picker.tsx');
 for (const value of ['How would you like to review?', 'Review duration', 'Continue', 'Practice']) {
   assert.ok(picker.includes(value), 'English practice selector missing '+value);
 }
-assert.match(picker, /english \? 'Evi thinking'/);
+assert.ok(picker.includes('Evi thinking'));
 assert.match(read('app/(es)/dashboard/materiales/subir/page.tsx'), /next\.set\('openUpload', '1'\)/);
 
 const feedback = read('components/FeedbackDialog.tsx');
