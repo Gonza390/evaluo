@@ -11,6 +11,7 @@ type HomePdfPickerButtonProps = {
   location: string;
   ctaName: string;
   children: ReactNode;
+  locale?: 'es' | 'en';
 };
 
 export function HomePdfPickerButton({
@@ -18,6 +19,7 @@ export function HomePdfPickerButton({
   location,
   ctaName,
   children,
+  locale = 'es',
 }: HomePdfPickerButtonProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [saving, setSaving] = useState(false);
@@ -52,12 +54,12 @@ export function HomePdfPickerButton({
       (!file.type || file.type === 'application/pdf');
 
     if (!isPdf) {
-      window.alert('Por ahora solo aceptamos archivos PDF.');
+      window.alert(locale === 'en' ? 'Please choose a PDF file.' : 'Por ahora solo aceptamos archivos PDF.');
       return;
     }
 
     if (file.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
-      window.alert('El PDF supera el tamaño máximo permitido de 20 MB.');
+      window.alert(locale === 'en' ? 'This PDF exceeds the 20 MB limit.' : 'El PDF supera el tamaño máximo permitido de 20 MB.');
       return;
     }
 
@@ -73,14 +75,14 @@ export function HomePdfPickerButton({
       await savePdfFirstDraft(file, source);
 
       const nextPath = `/dashboard?openUpload=1&source=${encodeURIComponent(source)}`;
-      const login = new URL('/login', window.location.origin);
+      const login = new URL(locale === 'en' ? '/en/login' : '/login', window.location.origin);
       login.searchParams.set('mode', 'signup');
       login.searchParams.set('reason', 'pdf-first');
       login.searchParams.set('next', nextPath);
       window.location.href = `${login.pathname}${login.search}`;
     } catch {
       setSaving(false);
-      window.alert('No pudimos conservar el PDF para continuar. Probá nuevamente.');
+      window.alert(locale === 'en' ? 'We could not save your PDF for the next step. Please try again.' : 'No pudimos conservar el PDF para continuar. Probá nuevamente.');
     }
   };
 
