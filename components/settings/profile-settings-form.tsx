@@ -291,7 +291,7 @@ export function ProfileSettingsForm({
       </section>
       <div className="space-y-1.5 sm:max-w-xs">
         <Label htmlFor="anio-carrera" className="text-foreground text-[13px] font-medium">
-          Año de carrera que cursás{' '}
+          {tr("Año de carrera que cursás","Current year of your degree program")}{" "}
           <span className="text-muted-foreground font-normal">{tr("(opcional)","(optional)")}</span>
         </Label>
         <Select value={anioCarrera || undefined} onValueChange={setAnioCarrera}>
