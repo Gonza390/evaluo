@@ -1,5 +1,9 @@
 'use client';
 
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
+
+
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
   ClipboardCheck,
@@ -32,6 +36,9 @@ export function SummaryCompletionPopup({
   onErrors,
   onReview,
 }: Props) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (v: string) => studyUiText(locale, v);
   const hasPending = pendingCount > 0;
 
   return (
@@ -52,7 +59,7 @@ export function SummaryCompletionPopup({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-primary text-[10.5px] font-extrabold tracking-[0.15em] uppercase">
-                Siguiente paso
+                {t("Siguiente paso")}
               </p>
               <DialogTitle asChild>
                 <h2
@@ -84,7 +91,7 @@ export function SummaryCompletionPopup({
                 <ClipboardCheck className="size-5" aria-hidden="true" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-foreground text-[16px] font-bold">Practicá con tu PDF</h3>
+                <h3 className="text-foreground text-[16px] font-bold">{t("Practicá con tu PDF")}</h3>
                 <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                   Respondé ejercicios creados a partir de este mismo material y descubrí qué conceptos conviene reforzar.
                 </p>
@@ -96,7 +103,7 @@ export function SummaryCompletionPopup({
               onClick={onPractice}
               className="bg-primary hover:bg-primary/90 focus-visible:ring-ring mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-semibold text-white transition focus-visible:ring-2 focus-visible:ring-offset-2"
             >
-              Comenzar práctica
+              {t("Comenzar práctica")}
               <ClipboardCheck className="size-4" aria-hidden="true" />
             </button>
           </div>
@@ -132,7 +139,7 @@ export function SummaryCompletionPopup({
                 className="border-border bg-card text-foreground hover:bg-muted flex min-h-12 items-center gap-2.5 rounded-lg border px-3.5 text-left text-[13px] font-semibold transition hover:border-slate-300"
               >
                 <Sparkles className="text-primary h-4 w-4 shrink-0" />
-                Flashcards
+                {t("Flashcards")}
               </button>
 
               <button
@@ -141,7 +148,7 @@ export function SummaryCompletionPopup({
                 className="border-border bg-card text-foreground hover:bg-muted flex min-h-12 items-center gap-2.5 rounded-lg border px-3.5 text-left text-[13px] font-semibold transition hover:border-slate-300"
               >
                 <SquareLibrary className="text-primary h-4 w-4 shrink-0" />
-                Glosario
+                {t("Glosario")}
               </button>
 
               <button
@@ -151,7 +158,7 @@ export function SummaryCompletionPopup({
               >
                 <span className="inline-flex min-w-0 items-center gap-2.5">
                   <MapIcon className="text-primary h-4 w-4 shrink-0" />
-                  <span>Mapa mental</span>
+                  <span>{t("Mapa mental")}</span>
                 </span>
                 {!isPremium ? <Crown className="h-3.5 w-3.5 shrink-0 text-amber-500" /> : null}
               </button>
