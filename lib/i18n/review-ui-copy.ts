@@ -1,4 +1,12 @@
 export const REVIEW_UI_ENGLISH: Record<string, string> = {
+  "No pudimos completar la acción. Revisá tu conexión y reintentá.": "We could not complete the action. Check your connection and try again.",
+  "No pudimos guardar el repaso. Reintentá antes de comprobarlo.": "We could not save your review. Please retry before checking your understanding.",
+  "No pudimos generar la ayuda.": "We could not generate help.",
+  "No pudimos abrir el fragmento.": "We could not open the excerpt.",
+  "No pudimos preparar la pregunta.": "We could not prepare a question.",
+  "No pudimos guardar la respuesta.": "We could not save your answer.",
+  "No pudimos asociarlo.": "We could not link the PDF.",
+  "Mi PDF": "My PDF",
   "Tu respuesta anterior": "Your previous answer",
   "Respuesta correcta": "Correct answer",
   "Por qué tu elección era diferente": "Why your answer was different",
