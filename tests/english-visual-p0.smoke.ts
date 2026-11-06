@@ -48,6 +48,14 @@ assert.match(navbar, /window\.location\.assign\(locale === 'en' \? '\/en\/login'
 assert.match(navbar, /href=\{locale === 'en' \? '\/en\/login'/);
 assert.ok(navbar.includes('Save your progress and study materials'));
 
+const shell=read('components/ClientLayoutClient.tsx');
+assert.match(shell, /window\.location\.assign\(locale === 'en' \? '\/en\/login'/);
+for (const text of ['This week','Next milestone','Active streak','Keep studying','Close study streak summary','View study streak: ']) {
+  assert.ok(shell.includes(text), 'English study shell missing '+text);
+}
+assert.ok(shell.includes("href: locale === 'en' ? '/en/resources'"));
+assert.ok(shell.includes("href: locale === 'en' ? '/en/pdf-to-quiz'"));
+
 const seoHeader=read('components/marketing/english-seo-header.tsx');
 assert.match(seoHeader, /href="\/en\/login\?mode=signup&next=%2Fdashboard%3FopenUpload%3D1"/);
 assert.ok(seoHeader.includes('Start studying'));
