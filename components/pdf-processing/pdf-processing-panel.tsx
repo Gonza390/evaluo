@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { FileText } from 'lucide-react';
 import { PdfProcessingJourney } from './pdf-processing-journey';
 import { useProcessingScene } from './use-processing-scene';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
 
 const PdfFirstPageThumbnail = dynamic(() => import('./pdf-first-page-thumbnail'), {
   ssr: false,
@@ -37,9 +38,11 @@ export function PdfProcessingPanel({
   onViewTools: () => void;
 }) {
   const { scene, waitingForProcessing } = useProcessingScene(complete);
+  const { locale } = useAppLocale();
   return (
     <PdfProcessingJourney
       scene={scene}
+      locale={locale}
       complete={complete}
       firstPdf={firstPdf}
       waitingForProcessing={waitingForProcessing}
