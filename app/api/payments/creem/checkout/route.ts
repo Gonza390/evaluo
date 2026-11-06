@@ -21,7 +21,16 @@ export async function POST(request: Request) {
   const site = process.env.VERCEL_ENV === 'production'
     ? process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '')
     : process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : null;
-  if (!site || !origin || origin !== new URL(site).origin) {
+  const requestOrigin = new URL(request.url).origin;
+  const allowed = new Set(site ? [new URL(site).origin] : []);
+  if (process.env.VERCEL_ENV !== 'production' &&
+      new URL(requestOrigin).hostname.endsWith('.vercel.app')) {
+    allowed.add(requestOrigin);
+  }
+  if (process.env.VERCEL_ENV === 'production' && site) {
+    allowed.add(new URL(site).origin.replace('://', '://www.'));
+  }
+  if (!site || !origin || !allowed.has(origin)) {
     return NextResponse.json({ error: 'invalid_origin' }, { status: 403 });
   }
   if (mode === 'live') {
