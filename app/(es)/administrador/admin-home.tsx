@@ -2,6 +2,8 @@
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { AdminHomeSnapshot } from './admin-home-actions';
+import type { LanguageMetrics } from './admin-language-actions';
+import { AdminLanguageMetrics } from './admin-language-metrics';
 import './admin-home.css';
 
 const fmt = (n: number) => n.toLocaleString('es-AR');
@@ -28,7 +30,7 @@ function StatRows({items}:{items:Item[]}) {
     <div className="eh-stat-values"><strong className={item.highlight?'eh-green':''}>{item.value}</strong>{item.suffix&&<span>{item.suffix}</span>}</div>
   </div>)}</div>;
 }
-export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) {
+export function AdminHome({data,minDay,language}:{data:AdminHomeSnapshot;minDay:string;language:LanguageMetrics}) {
   const [days,setDays]=useState<7|14|30>(14);
   const graph=useMemo(()=>{
     const selected=data.daily.slice(-2*days);
@@ -91,6 +93,7 @@ export function AdminHome({data,minDay}:{data:AdminHomeSnapshot;minDay:string}) 
         <section className="eh-panel eh-half" aria-label="Usuarios"><Title number="01">Usuarios</Title><div className="eh-user-grid">{users.map(u=><div className="eh-user-card" key={u.label}><div className="eh-kicker">{u.label}</div><strong>{u.value}</strong><div className="eh-note">{u.note}</div></div>)}</div></section>
         <section className="eh-panel eh-half" aria-label="Actividad académica"><Title number="02">Actividad académica</Title><StatRows items={academic}/></section>
       </div>
+      <div className="eh-grid-row"><AdminLanguageMetrics data={language}/></div>
       <div className="eh-grid-row">
         <section className="eh-panel eh-wide" aria-label="Evolución">
           <div className="eh-section-head eh-between"><div className="eh-head-content"><span className="eh-index">03</span><h2>Evolución</h2><small>Usuarios activos diarios · totales en usuario-días</small></div>
