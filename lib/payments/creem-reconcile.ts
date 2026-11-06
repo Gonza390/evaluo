@@ -11,7 +11,7 @@ type BillingSession = {
   status: string; current_period_end: string | null;
   last_event_at: string | null;
 };
-const idPattern = /^(?:ch|sub|tran|cust|ref|disp)_[A-Za-z0-9_-]{4,120}$/;
+const idPattern = /^(?:ch|sub|tran|cust|ref|disp|prod)_[A-Za-z0-9_-]{4,120}$/;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function asObject(value: unknown): Json | null {
