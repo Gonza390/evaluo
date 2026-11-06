@@ -81,10 +81,10 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
       const fresh = newCards.filter(card=>!known.has(normalizedAnswer(card.front)) &&
         auditPracticeFlashcard(card).approved);
       if (!fresh.length) {
-        setError('El documento no aporta suficientes tarjetas nuevas y verificables para completar seis.');
+        setError(english ? 'This document does not contain enough new, verifiable cards to complete six.' : 'El documento no aporta suficientes tarjetas nuevas y verificables para completar seis.');
       } else setSupplement(old=>[...old,...fresh]);
     } catch {
-      setError('No pudimos completar las flashcards con evidencia suficiente. Podés reintentar.');
+      setError(english ? 'We could not create enough source-backed flashcards. Please try again.' : 'No pudimos completar las flashcards con evidencia suficiente. Podés reintentar.');
     } finally {
       busy.current=false;setLoading(false);
     }
@@ -99,26 +99,26 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
   // una práctica por exigir seis cuando ya se desbloqueó una tarjeta válida.
   if (approvedIndices.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)) return (
     <main className="practice-screen-enter mx-auto max-w-[780px] px-3 py-4 sm:px-5 sm:py-5">
-      <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
+      <Link href="/dashboard/practicar" className="text-sm text-slate-500">← {english ? 'Back to practice' : 'Volver a Practicar'}</Link>
       <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <h1 className="text-lg font-medium text-slate-900">Preparando tus flashcards</h1>
-        <p className="mt-2 text-sm text-slate-600">{freeV2 ? 'Buscando tarjetas verificadas para estudiar.' : approvedIndices.length + ' de ' + MIN_CASES_PER_PRACTICE + ' tarjetas verificadas.'}</p>
-        {loading ? <p className="mt-2 text-sm text-slate-500" role="status">Buscando conceptos del material…</p> : null}
+        <h1 className="text-lg font-medium text-slate-900">{english ? 'Preparing your flashcards' : 'Preparando tus flashcards'}</h1>
+        <p className="mt-2 text-sm text-slate-600">{freeV2 ? (english ? 'Finding verified flashcards for your study session.' : 'Buscando tarjetas verificadas para estudiar.') : approvedIndices.length + (english ? ' of ' : ' de ') + MIN_CASES_PER_PRACTICE + (english ? ' verified cards.' : ' tarjetas verificadas.')}</p>
+        {loading ? <p className="mt-2 text-sm text-slate-500" role="status">{english ? 'Finding concepts in your material…' : 'Buscando conceptos del material…'}</p> : null}
         {error ? <p role="status" className="mt-2 text-sm text-amber-800">{error}</p> : null}
         {!loading ? <button onClick={() => {tries.current=0;void fetchMore();}}
-          className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm text-white">Reintentar</button> : null}
+          className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm text-white">{english ? 'Try again' : 'Reintentar'}</button> : null}
       </section>
     </main>
   );
   return <main className="practice-screen-enter mx-auto max-w-[860px] px-3 py-4 sm:px-5 sm:py-5">
-    <Link href="/dashboard/practicar" className="text-sm text-slate-500">← Volver a Practicar</Link>
+    <Link href="/dashboard/practicar" className="text-sm text-slate-500">← {english ? 'Back to practice' : 'Volver a Practicar'}</Link>
     <StudentMaterialFlashcards key={combined.length} cards={combined}
       allowedCardIndices={reviewLength === 'rapido' ? approvedIndices.slice(0, 6) : freeV2 ? approvedIndices.slice(0, 25) : approvedIndices} persistentCardCount={cards.length}
       materialId={materialId} onSessionComplete={onSessionComplete}/>
     {saveError && <p role="alert" className="mt-3 text-sm text-amber-800">
-      No pudimos guardar esta sesión en Tus prácticas.
+      {english ? 'We could not save this session to your practice history.' : 'No pudimos guardar esta sesión en Tus prácticas.'}
       <button type="button" className="ml-2 font-medium underline"
-        onClick={() => { if (latestAttempt.current) void persistSession(latestAttempt.current); }}>Reintentar</button>
+        onClick={() => { if (latestAttempt.current) void persistSession(latestAttempt.current); }}>{english ? 'Try again' : 'Reintentar'}</button>
     </p>}
   </main>;
 }
