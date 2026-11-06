@@ -576,8 +576,8 @@ export default function CalendarioPage() {
       toast({
         description:
           formState.type === 'exam'
-            ? 'Escribí el nombre de la materia para guardar ese parcial.'
-            : 'Escribí el nombre del trabajo práctico para guardarlo.',
+            ? (english ? 'Enter a subject name to save this exam.' : 'Escribí el nombre de la materia para guardar ese parcial.')
+            : (english ? 'Enter an assignment name to save it.' : 'Escribí el nombre del trabajo práctico para guardarlo.'),
         variant: 'destructive',
       });
       return;
