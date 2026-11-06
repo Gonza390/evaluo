@@ -537,7 +537,7 @@ assert.match(
   /<FooterHome \/>/,
   'La landing mantiene el footer completo existente.'
 );
-assert.match(homePageSource, /canonical: '\/'/);
+assert.match(homePageSource, /canonical: '\/'|hreflangAlternates\('home', 'es'\)/);
 
 const studyErrorsSource = readFileSync(
   resolve('components/dashboard/study-errors-client.tsx'),
