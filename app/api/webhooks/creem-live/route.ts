@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { verifyCreemWebhookSignature } from '@/lib/payments/creem';
 import { asObject, reconcileCreemBillingEvent } from '@/lib/payments/creem-reconcile';
-import { isCreemModeEnabled } from '@/lib/payments/creem-international';
+import { canProcessCreemLiveWebhooks } from '@/lib/payments/creem-international';
 import { canReclaimCreemPreviewEvent } from '@/lib/payments/creem-events';
 
 export const runtime = 'nodejs';
@@ -22,7 +22,7 @@ function reply(data: Record<string, unknown>, status = 200) {
 
 /** Separate LIVE endpoint, secret and credentials; test events cannot activate Premium. */
 export async function POST(request: Request) {
-  if (!isCreemModeEnabled('live')) return reply({error:'creem_live_disabled'},503);
+  if (!canProcessCreemLiveWebhooks()) return reply({error:'creem_live_not_configured'},503);
   const secret = process.env.CREEM_LIVE_WEBHOOK_SECRET?.trim();
   if (!secret) return reply({error:'creem_live_webhook_not_configured'},503);
   const length = Number(request.headers.get('content-length'));
