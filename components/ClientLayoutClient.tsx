@@ -391,7 +391,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <Link
                     href="/calendario"
                     data-mobile-calendar-link
-                    aria-label="Abrir calendario"
+                    aria-label={messages.navigation.calendar}
                     aria-current={pathname === '/calendario' || pathname.startsWith('/calendario/') ? 'page' : undefined}
                     className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
                       pathname === '/calendario' || pathname.startsWith('/calendario/')
@@ -581,7 +581,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                             }}
                           >
                             <LogOut className="h-3.5 w-3.5" />
-                            Cerrar sesión
+                            {messages.navigation.signOut}
                           </button>
                         </div>
                       </div>

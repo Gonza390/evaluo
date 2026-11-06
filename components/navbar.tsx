@@ -29,6 +29,7 @@ import { FeedbackDialog } from '@/components/FeedbackDialog';
 import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavLink';
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { supabase } from '@/lib/supabase-client';
 
 type NavbarProps = {
@@ -127,6 +128,17 @@ function NavItem({
 export function Navbar({ collapsed, onToggleCollapsed, compact = false }: NavbarProps) {
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
+  const { messages } = useAppLocale();
+  const localizedNavItems = navItems.map((item) => ({
+    ...item,
+    label: ({
+      '/dashboard': messages.navigation.mySpace,
+      '/dashboard/estudiar': messages.navigation.study,
+      '/dashboard/practicar': messages.navigation.practice,
+      '/dashboard/plan-de-estudio': messages.navigation.studyPlan,
+      '/calendario': messages.navigation.calendar,
+    } as Record<string, string>)[item.href] ?? item.label,
+  }));
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
   const [activeIndicator, setActiveIndicator] = useState<{
@@ -185,28 +197,28 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
     >
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
-          <nav ref={navRef} aria-label="Navegación principal" className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
+          <nav ref={navRef} aria-label={messages.navigation.mainNavigation} className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
               }`}
             >
               <NavItem
-                href={navItems[0].href}
-                label={navItems[0].label}
-                icon={navItems[0].icon}
-                iconTone={navItems[0].iconTone}
-                disabled={navItems[0].disabled}
+                href={localizedNavItems[0].href}
+                label={localizedNavItems[0].label}
+                icon={localizedNavItems[0].icon}
+                iconTone={localizedNavItems[0].iconTone}
+                disabled={localizedNavItems[0].disabled}
                 collapsed={collapsed}
                 compact={compact}
-                active={isNavItemActive(pathname, navItems[0].href)}
+                active={isNavItemActive(pathname, localizedNavItems[0].href)}
               />
               {!collapsed ? (
                 <button
                   type="button"
                   onClick={onToggleCollapsed}
-                  aria-label="Ocultar barra lateral"
-                  title="Ocultar barra lateral"
+                  aria-label={messages.navigation.hideSidebar}
+                  title={messages.navigation.hideSidebar}
                   className={`flex h-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800 ${compact ? 'w-8' : 'w-10'}`}
                 >
                   <ToggleIcon className="h-4 w-4" />
@@ -214,7 +226,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               ) : null}
             </div>
 
-            {navItems.slice(1).map((item) => (
+            {localizedNavItems.slice(1).map((item) => (
               <NavItem
                 key={item.label}
                 href={item.href}
@@ -251,7 +263,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               <div className="space-y-1">
                 <Link
                   href="/dashboard/premium"
-                  title={collapsed ? 'Planes' : undefined}
+                  title={collapsed ? messages.navigation.plans : undefined}
                   className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
@@ -260,13 +272,13 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 >
                   <Crown className="h-4 w-4 shrink-0" />
                   {!collapsed ? (
-                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>Planes</p>
+                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>{messages.navigation.plans}</p>
                   ) : null}
                 </Link>
 
                 <button
                   type="button"
-                  title={collapsed ? 'Sugerencias' : undefined}
+                  title={collapsed ? messages.navigation.feedback : undefined}
                   onClick={(event) => {
                     event.stopPropagation();
                     setFeedbackOpen(true);
@@ -278,7 +290,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   }`}
                 >
                   <CircleHelp className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>Sugerencias</p> : null}
+                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>{messages.navigation.feedback}</p> : null}
                 </button>
 
                 <DropdownMenu>
@@ -309,7 +321,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     <DropdownMenuItem asChild>
                       <Link href="/configuracion" className="w-full text-sm">
                         <Settings className="mr-2 h-4 w-4" />
-                        Configuración
+                        {messages.navigation.settings}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -323,7 +335,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                       }}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      Cerrar sesión
+                      {messages.navigation.signOut}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

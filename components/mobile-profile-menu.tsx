@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight, Crown, MessageSquarePlus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { usePremium } from '@/hooks/usePremium';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [weeklyPrice, setWeeklyPrice] = useState<number | null>(null);
   const { isPremium } = usePremium();
+  const { messages } = useAppLocale();
 
   const refreshPrice = () => {
     if (isPremium) return;
@@ -53,7 +55,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
           <button
             type="button"
             data-mobile-profile-menu-trigger
-            aria-label="Abrir menú de perfil"
+            aria-label={messages.navigation.profileMenu}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
           >
             <Avatar className="h-8 w-8 shrink-0">
@@ -73,7 +75,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
           <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
             <Link href="/configuracion" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]">
               <Settings className="h-4 w-4" aria-hidden="true" />
-              Ajustes
+              {messages.navigation.settings}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -81,7 +83,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
             onSelect={() => setFeedbackOpen(true)}
           >
             <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
-            Sugerencias
+            {messages.navigation.feedback}
           </DropdownMenuItem>
           {!isPremium ? (
             <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
@@ -89,11 +91,11 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
                 className={'mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 ' + mobileMenuItemHighlight}>
                 <Crown className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-medium">Pasate a Premium</span>
+                  <span className="block text-[12px] font-medium">{messages.navigation.upgrade}</span>
                   <span className="block text-[10px] text-slate-500">
                     {weeklyPrice !== null
-                      ? `≈ ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(weeklyPrice)} por semana · cobro mensual`
-                      : 'Consultá los planes'}
+                      ? `≈ ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(weeklyPrice)} ${messages.navigation.perWeek}`
+                      : messages.navigation.viewPlans}
                   </span>
                 </span>
                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
