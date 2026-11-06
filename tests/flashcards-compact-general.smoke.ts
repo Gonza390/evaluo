@@ -40,8 +40,10 @@ assert.match(cards, /min-h-11 min-w-0 w-full rounded-lg border-emerald-200/,
   'Lo sabía ocupa sólo su columna y no genera overflow.');
 assert.match(cards, /cursor-pointer overflow-hidden rounded-xl bg-white/,
   'La tarjeta tiene una sola superficie, sin capas decorativas sobresalientes.');
-assert.doesNotMatch(cards, /max-w-\[720px\]|justify-between gap-3/,
-  'No regresar a un mazo excesivamente ancho con botones en los extremos.');
+assert.doesNotMatch(cards, /max-w-\[720px\]/,
+  'El mazo del PDF no debe expandirse nuevamente a 720 px.');
+assert.doesNotMatch(cards, /const recallControls = \(\s*<div className="[^"]*justify-between/,
+  'Los botones de respuesta no deben estar ubicados en extremos opuestos.');
 assert.match(cards, /disabled=\{!flipped \|\| isFlipping \|\| advancePhase !== 'idle'\}/,
   'Sólo se permite clasificar después de girar la tarjeta.');
 assert.match(cards, /onClick=\{\(\) => markRecall\('unknown'\)\}/);
