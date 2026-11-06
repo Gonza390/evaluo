@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 export type RecommendedStudyStep = 'summary' | 'practice' | 'progress' | 'reinforce';
 
@@ -41,6 +42,33 @@ const steps = {
     icon: RefreshCcw,
   },
 } as const;
+
+const englishSteps: typeof steps = {
+  summary: {
+    label: 'Understand',
+    title: 'Understand your notes',
+    description: 'Your document is organized into topics so you can start learning.',
+    icon: BookOpenText,
+  },
+  practice: {
+    label: 'Practice',
+    title: 'Check your understanding',
+    description: 'Answer practice questions created from your own document.',
+    icon: BrainCircuit,
+  },
+  progress: {
+    label: 'Progress',
+    title: 'See how you are doing',
+    description: 'After practicing, review which topics need more work.',
+    icon: ChartNoAxesColumnIncreasing,
+  },
+  reinforce: {
+    label: 'Review',
+    title: 'Learn how to review',
+    description: 'Return to a topic, review the key ideas and practice when ready.',
+    icon: RefreshCcw,
+  },
+};
 
 const order: RecommendedStudyStep[] = ['summary', 'practice', 'progress', 'reinforce'];
 
@@ -144,7 +172,8 @@ export function RecommendedStudyGuide({
   const [mounted, setMounted] = useState(false);
   const [spotlight, setSpotlight] = useState<Spotlight | null>(null);
   const cardRef = useRef<HTMLElement | null>(null);
-  const current = steps[step];
+  const english = useOptionalAppLocale() === 'en';
+  const current = english ? englishSteps[step] : steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
   // Progreso y Reforzar necesitan una fila propia para los botones en todo viewport.
@@ -320,7 +349,7 @@ export function RecommendedStudyGuide({
         ref={cardRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Guía rápida del primer PDF"
+        aria-label={english ? 'Quick guide to your first document' : 'Guía rápida del primer PDF'}
         tabIndex={-1}
         data-first-pdf-guide
         aria-busy={transitioning}
@@ -337,7 +366,7 @@ export function RecommendedStudyGuide({
           </span>
           <div key={step} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
             <p className="text-primary text-[11px] font-semibold tracking-wide uppercase">
-              {number} de 4 · {current.label}
+              {number} {english ? 'of' : 'de'} 4 · {current.label}
             </p>
             <h2 className="text-foreground mt-0.5 text-[15px] font-semibold leading-5 tracking-tight">
               {current.title}
@@ -349,8 +378,8 @@ export function RecommendedStudyGuide({
           <button
             type="button"
             onClick={onExit}
-            aria-label="Saltar guía e ir a estudiar"
-            title="Saltar guía"
+            aria-label={english ? 'Skip the guide and start studying' : 'Saltar guía e ir a estudiar'}
+            title={english ? 'Skip guide' : 'Saltar guía'}
             className="text-muted-foreground hover:bg-muted focus-visible:outline-ring -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full focus-visible:outline-2"
           >
             <X className="size-4" />
@@ -359,14 +388,14 @@ export function RecommendedStudyGuide({
 
         {step === 'progress' && (
           <p className="text-muted-foreground mt-2 hidden text-[11px] leading-4 sm:block">
-            Los estados que ves son ilustrativos: tus resultados aparecerán después de practicar.
+            {english ? 'These progress states are illustrative. Your own results will appear after you practice.' : 'Los estados que ves son ilustrativos: tus resultados aparecerán después de practicar.'}
           </p>
         )}
 
         <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${stackedControls
           ? 'flex flex-col items-stretch gap-2'
           : 'flex items-center justify-between gap-2'}`}>
-          <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 4'}>
+          <div className="flex items-center gap-1.5" role="img" aria-label={(english ? 'Step ' : 'Paso ') + number + (english ? ' of 4' : ' de 4')}>
             {order.map((item, index) => (
               <span
                 key={item}
@@ -384,11 +413,11 @@ export function RecommendedStudyGuide({
           <div className={`flex min-w-0 items-center gap-1.5 ${stackedControls ? 'w-full justify-between' : ''}`}>
             {onBack ? (
               <Button type="button" variant="ghost" size="sm" onClick={handleBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
-                <ArrowLeft className="size-3.5" /> Atrás
+                <ArrowLeft className="size-3.5" /> {english ? 'Back' : 'Atrás'}
               </Button>
             ) : null}
             <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 min-w-0 gap-1.5 whitespace-normal rounded-full px-3 text-[12px] leading-4 sm:px-4">
-              {step === 'reinforce' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5 shrink-0" />
+              {english ? (step === 'reinforce' ? 'Start studying' : 'Next') : (step === 'reinforce' ? 'Empezar a estudiar' : 'Siguiente')} <ArrowRight className="size-3.5 shrink-0" />
             </Button>
           </div>
         </div>
