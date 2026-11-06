@@ -27,23 +27,28 @@ const UNAVAILABLE: CheckoutAvailability = {
 let marketRequest: Promise<CheckoutAvailability> | null = null;
 
 function loadCheckoutMarket(): Promise<CheckoutAvailability> {
-  if (marketRequest) return marketRequest;
-  const request: Promise<CheckoutAvailability> = fetch('/api/payments/creem/availability', { cache: 'no-store' })
-    .then(async response => response.ok ? await response.json() as unknown : null)
-    .then((payload): CheckoutAvailability => {
-      if (!payload || typeof payload !== 'object') return UNAVAILABLE;
-      const value = payload as Record<string, unknown>;
-      if (value.market !== 'argentina' && value.market !== 'international' && value.market !== 'unknown') {
+  if (marketRequest !== null) return marketRequest;
+  const request = (async (): Promise<CheckoutAvailability> => {
+    try {
+      const response = await fetch('/api/payments/creem/availability', { cache: 'no-store' });
+      if (!response.ok) return UNAVAILABLE;
+      const raw: unknown = await response.json();
+      if (!raw || typeof raw !== 'object') return UNAVAILABLE;
+      const payload = raw as Record<string, unknown>;
+      const { market } = payload;
+      if (market !== 'argentina' && market !== 'international' && market !== 'unknown') {
         return UNAVAILABLE;
       }
       return {
-        market: value.market,
-        creemAvailable: value.creemAvailable === true,
-        previewTestAvailable: value.previewTestAvailable === true,
-        monthlyUsdCents: value.monthlyUsdCents === 999 ? 999 : UNAVAILABLE.monthlyUsdCents,
+        market,
+        creemAvailable: payload.creemAvailable === true,
+        previewTestAvailable: payload.previewTestAvailable === true,
+        monthlyUsdCents: payload.monthlyUsdCents === 999 ? 999 : UNAVAILABLE.monthlyUsdCents,
       };
-    })
-    .catch(() => UNAVAILABLE);
+    } catch {
+      return UNAVAILABLE;
+    }
+  })();
   marketRequest = request;
   return request;
 }
