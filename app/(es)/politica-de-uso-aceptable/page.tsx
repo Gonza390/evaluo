@@ -5,7 +5,7 @@ import { FooterHome } from '@/components/footer-home';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 
 export const metadata: Metadata = {
-  title: 'Política de Uso Aceptable | Evaluo',
+  title: 'Política de Uso Aceptable',
   description:
     'Conocé las reglas de uso de Evaluo para cargar PDF y Word, generar contenidos con IA, respetar los derechos de terceros y practicar de forma académicamente responsable.',
   alternates: { canonical: '/politica-de-uso-aceptable' },

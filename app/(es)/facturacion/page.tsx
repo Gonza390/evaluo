@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Términos de facturación y reembolsos | Evaluo',
+  title: 'Términos de facturación y reembolsos',
   description:
     'Términos de facturación, suscripciones recurrentes, compras por período fijo, política de reembolsos y contracargos de Evaluo.',
   alternates: {

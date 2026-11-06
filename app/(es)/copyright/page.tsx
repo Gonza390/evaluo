@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Política de copyright | Evaluo',
+  title: 'Política de copyright',
   description:
     'Política de copyright y propiedad intelectual de Evaluo: responsabilidad de los usuarios, puerto seguro para contenido subido y procedimiento de reclamos.',
   alternates: {

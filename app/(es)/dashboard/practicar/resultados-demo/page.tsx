@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { PracticeResultsDemo } from '@/components/dashboard/practice-results-demo';
 
 export const metadata: Metadata = {
-  title: 'Vistas previas de resultados de práctica | Evaluo',
+  title: 'Vistas previas de resultados de práctica',
   robots: { index: false, follow: false },
 };
 

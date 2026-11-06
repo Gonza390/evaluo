@@ -6,7 +6,7 @@ import { RegionalPricingMessage } from '@/components/pricing/RegionalPricingMess
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata: Metadata = {
- title: 'Free and Premium Plans | Evaluo',
+ title: 'Free and Premium Plans',
  description: 'Compare Free and Premium study plans. Study PDF and Word documents with AI, practice by topic, review mistakes and track progress.',
  alternates: hreflangAlternates('pricing', 'en'),
 };

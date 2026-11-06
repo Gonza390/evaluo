@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Política de reembolsos | Evaluo',
+  title: 'Política de reembolsos',
   description: 'Información sobre reembolsos en Evaluo para compras en Argentina e internacionales.',
   alternates: { canonical: '/reembolsos' },
   robots: { index: false, follow: true },
