@@ -102,7 +102,7 @@ export default async function DashboardPage({
     // Preguntar los datos académicos sólo después de tener un PDF listo.
     // El formulario de carga inicial y la guía del primer PDF no se interrumpen.
     const hasReadyMaterial = materials.some((material) => material.processing_status === 'ready');
-    const profileContext = hasReadyMaterial && openUpload !== '1'
+    const profileContext = locale !== 'en' && hasReadyMaterial && openUpload !== '1'
       ? await supabase
           .from('profiles')
           .select('universidad_id, carrera_id')
