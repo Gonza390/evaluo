@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Check, ShieldCheck } from 'lucide-react';
 import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { CreemCheckoutCard } from '@/components/pricing/CreemCheckoutCard';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { useCheckoutMarket } from '@/hooks/use-checkout-market';
 
 
 type BillingMode = 'monthly' | 'semester';
@@ -33,18 +34,10 @@ export function PricingPlanSelector({
   const currentLocale = useOptionalAppLocale();
   const english = (forcedLocale ?? currentLocale) === 'en';
   const tr = (es: string, en: string) => english ? en : es;
-  // Las tres alternativas están visibles. El único selector pendiente es para
-  // validar a qué modalidad Premium corresponde un código de referido.
+  // Cada usuario ve únicamente los planes de su país. El selector local
+  // se usa para aplicar el código de referido a mensual o semestral ARS.
   const [referralPlan, setReferralPlan] = useState<BillingMode>('monthly');
-  const [market, setMarket] = useState<{market: 'argentina' | 'international' | 'unknown';creemAvailable:boolean;previewTestAvailable:boolean} | null>(null);
-  useEffect(() => {
-    let active = true;
-    void fetch('/api/payments/creem/availability', { cache: 'no-store' })
-      .then(async r => r.ok ? await r.json() : null)
-      .then(payload => { if (active) setMarket(payload && (payload.market === 'argentina' || payload.market === 'international' || payload.market === 'unknown') ? payload : { market:'unknown', creemAvailable:false, previewTestAvailable:false }); })
-      .catch(() => { if (active) setMarket({market:'unknown',creemAvailable:false,previewTestAvailable:false}); });
-    return () => { active = false; };
-  }, []);
+  const market = useCheckoutMarket();
 
   return (
     <>
@@ -126,12 +119,6 @@ export function PricingPlanSelector({
           </>
         )}
       </div>
-
-      {market?.previewTestAvailable ? (
-        <div className="mx-auto mt-8 max-w-xl">
-          <CreemCheckoutCard locale={english ? "en" : "es"} features={premiumFeatures} mode="test" available />
-        </div>
-      ) : null}
 
       {market?.market === 'argentina' ? <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
         <summary className="cursor-pointer text-center text-sm font-semibold text-slate-700">
