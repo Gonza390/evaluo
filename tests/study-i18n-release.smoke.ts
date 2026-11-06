@@ -12,7 +12,8 @@ const schema = read('supabase/migrations/20261106200000_free_study_v2_i18n_cache
 const bank = read('lib/free-study-v2-server.ts');
 
 assert.ok(types.includes("studyLocale?: 'es' | 'en'"));
-assert.ok(worker.includes('resolveStudyLocale(ownerAuth.user?.user_metadata)'));
+assert.ok(worker.includes('resolveStudyLocale(ownerAuth?.user?.user_metadata)'));
+assert.ok(worker.includes("processStudentMaterial.studyLanguageLookup"));
 assert.ok(worker.includes("studyLocale === 'en'"));
 assert.ok(worker.includes('localizeCanonicalGlossary'));
 assert.ok(canonical.includes("studyGenerationInstruction(input.studyLocale ?? 'es')"));
