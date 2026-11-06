@@ -26,6 +26,8 @@ import {
   submitReviewCheckAction,
 } from '@/lib/actions/study-error-review';
 import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { reviewUiText } from '@/lib/i18n/review-ui-copy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { buildGroundedErrorContrast } from '@/lib/student-materials/error-contrast';
 import type {
@@ -101,6 +103,9 @@ export function StudyErrorDetail({
     update: (current: StudyErrorConversation) => StudyErrorConversation
   ) => void;
 }) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => reviewUiText(locale, value);
   const { messages, source, reviewed } = conversation;
   function setMessages(update: (current: StudyErrorHelpMessage[]) => StudyErrorHelpMessage[]) {
     onConversationChange((current) => ({ ...current, messages: update(current.messages) }));
@@ -317,12 +322,10 @@ export function StudyErrorDetail({
           <section data-study-error-tour="error" className="border-border bg-card rounded-xl border p-3.5 sm:p-4" aria-labelledby="reinforcement-difficulty-heading">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 id="reinforcement-difficulty-heading" className="text-primary text-xs font-bold tracking-wide uppercase">
-                La pregunta que te costó
+                {t("La pregunta que te costó")}
               </h3>
               <span className="text-muted-foreground text-xs">
-                {resolved
-                  ? 'Refuerzo completado'
-                  : `${item.failureCount} ${item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad'}`}
+                {resolved ? (english ? 'Review completed' : 'Refuerzo completado') : `${item.failureCount} ${english ? (item.failureCount === 1 ? 'difficult attempt' : 'difficult attempts') : (item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad')}`}
               </span>
             </div>
             <h2 ref={heading} tabIndex={-1} className="text-foreground mt-3 text-[16px] font-semibold leading-6 break-words outline-none">
@@ -332,13 +335,13 @@ export function StudyErrorDetail({
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {item.selectedAnswer && (
                   <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3">
-                    <p className="text-destructive text-xs font-semibold">Tu respuesta anterior</p>
+                    <p className="text-destructive text-xs font-semibold">{t("Tu respuesta anterior")}</p>
                     <p className="text-foreground mt-1.5 text-[13px] leading-5 break-words">{item.selectedAnswer}</p>
                   </div>
                 )}
                 {item.correctAnswer && (
                   <div className="border-primary/20 bg-primary/5 rounded-lg border p-3">
-                    <p className="text-primary text-xs font-semibold">Respuesta correcta</p>
+                    <p className="text-primary text-xs font-semibold">{t("Respuesta correcta")}</p>
                     <p className="text-foreground mt-1.5 text-[13px] leading-5 break-words">{item.correctAnswer}</p>
                   </div>
                 )}
@@ -348,15 +351,15 @@ export function StudyErrorDetail({
           <div ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
             <div>
               <h3 id="reinforcement-explanation-heading" className="text-[16px] font-semibold">
-                Entendamos por qué
+                {t("Entendamos por qué")}
               </h3>
               <p className="text-muted-foreground mt-1 text-sm leading-6">
-                Revisá la explicación de tu actividad antes de probar con otra pregunta.
+                {t("Revisá la explicación de tu actividad antes de probar con otra pregunta.")}
               </p>
             </div>
             {groundedContrast && (
               <div className="border-primary/20 bg-primary/5 rounded-lg border p-3 sm:p-5">
-                <p className="text-primary mb-2 text-xs font-semibold">Por qué tu elección era diferente</p>
+                <p className="text-primary mb-2 text-xs font-semibold">{t("Por qué tu elección era diferente")}</p>
                 <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words">
                   {groundedContrast}
                 </p>
@@ -370,34 +373,34 @@ export function StudyErrorDetail({
               </div>
             ) : (
               <p className="text-muted-foreground rounded-xl border p-4 text-sm leading-6">
-                Esta respuesta no tiene una explicación guardada. Podés pedir una explicación basada en tu material.
+                {t("Esta respuesta no tiene una explicación guardada. Podés pedir una explicación basada en tu material.")}
               </p>
             )}
             {messages.map((message) => (
               <div key={message.kind} className="border-border rounded-lg border p-3 sm:p-4">
                 <p className="text-primary mb-2 text-xs font-semibold">
-                  {message.kind === 'simpler' ? 'Explicación más simple' : message.kind === 'example' ? 'Un ejemplo para entenderlo' : 'Explicación adicional'}
+                  {t(message.kind === 'simpler' ? 'Explicación más simple' : message.kind === 'example' ? 'Un ejemplo para entenderlo' : 'Explicación adicional')}
                 </p>
                 <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words whitespace-pre-line">{message.text}</p>
               </div>
             ))}
             {pendingHelp && (
               <p role="status" className="text-muted-foreground text-sm">
-                {materialId ? 'Revisando tus apuntes…' : 'Preparando explicación…'}
+                {t(materialId ? 'Revisando tus apuntes…' : 'Preparando explicación…')}
               </p>
             )}
             {!resolved && (
-              <div className="flex flex-wrap gap-2" aria-label="Otras formas de entender la dificultad">
+              <div className="flex flex-wrap gap-2" aria-label={t("Otras formas de entender la dificultad")}>
                 {!originalExplanation && (
                   <button type="button" className={reviewSecondaryButton} onClick={() => help('why_wrong')} disabled={Boolean(busy)}>
-                    Generar explicación
+                    {t("Generar explicación")}
                   </button>
                 )}
                 <button type="button" className={reviewSecondaryButton} onClick={() => help('simpler')} disabled={Boolean(busy)}>
-                  Explicámelo más simple
+                  {t("Explicámelo más simple")}
                 </button>
                 <button type="button" className={reviewSecondaryButton} onClick={() => help('example')} disabled={Boolean(busy)}>
-                  Dame un ejemplo
+                  {t("Dame un ejemplo")}
                 </button>
               </div>
             )}
@@ -405,7 +408,7 @@ export function StudyErrorDetail({
               <div className="border-border border-t pt-2" data-study-error-tour="source">
                 <button type="button" onClick={openSource} disabled={Boolean(busy)} aria-expanded={sourceOpen} aria-controls={`topic-source-${item.id}`} className="text-primary inline-flex min-h-11 items-center gap-2 text-left text-sm font-medium">
                   <BookOpen className="h-4 w-4" aria-hidden="true" />
-                  Fuente: {source.sectionTitle ?? source.materialTitle}
+                  {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
                   {pageLabel(source.pageStart, source.pageEnd) ? ` · ${pageLabel(source.pageStart, source.pageEnd)}` : ''}
                   <ChevronDown className={`h-4 w-4 transition-transform ${sourceOpen ? 'rotate-180' : ''}`} aria-hidden="true"/>
                 </button>
@@ -419,7 +422,7 @@ export function StudyErrorDetail({
                         href={documentHref ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}` : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`}
                         className="text-primary inline-flex min-h-11 items-center text-sm font-semibold underline"
                       >
-                        Consultar PDF original
+                        {t("Consultar PDF original")}
                       </Link>
                     )}
                   </div>
@@ -431,26 +434,26 @@ export function StudyErrorDetail({
           </div>
           {resolved ? (
             <section className="border-primary/20 bg-primary/5 rounded-xl border p-5">
-              <h3 className="text-[16px] font-semibold">Esta dificultad ya fue reforzada</h3>
+              <h3 className="text-[16px] font-semibold">{t("Esta dificultad ya fue reforzada")}</h3>
               <p className="text-muted-foreground mt-2 text-sm leading-6">
-                Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.
+                {t("Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.")}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button className={reviewPrimaryButton} onClick={onFinish}>
-                  {topicContext ? 'Volver al tema' : 'Terminar por hoy'}
+                  {t(topicContext ? 'Volver al tema' : 'Terminar por hoy')}
                 </button>
                 {pendingCount > 0 && (
                   <button className={reviewSecondaryButton} onClick={onNext}>
-                    {topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error'} <ArrowRight className="h-4 w-4" />
+                    {t(topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error')} <ArrowRight className="h-4 w-4" />
                   </button>
                 )}
               </div>
             </section>
           ) : (
             <section className="border-border border-t pt-5" data-study-error-tour="practice">
-              <h3 className="text-[16px] font-semibold">¿Lo entendiste? Comprobémoslo.</h3>
+              <h3 className="text-[16px] font-semibold">{t("¿Lo entendiste? Comprobémoslo.")}</h3>
               <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-6">
-                Respondé una situación distinta, sin consultar la explicación. Un acierto resuelve esta dificultad, pero no demuestra dominio de todo el tema.
+                {t("Respondé una situación distinta, sin consultar la explicación. Un acierto resuelve esta dificultad, pero no demuestra dominio de todo el tema.")}
               </p>
               {materialId ? (
                 <button type="button" className={reviewPrimaryButton + ' mt-4'} disabled={Boolean(busy)} onClick={checkUnderstanding}>
@@ -459,7 +462,7 @@ export function StudyErrorDetail({
                 </button>
               ) : (
                 <p className="text-muted-foreground mt-3 text-sm">
-                  Necesitás asociar un PDF para comprobar esta dificultad con una nueva pregunta.
+                  {t("Necesitás asociar un PDF para comprobar esta dificultad con una nueva pregunta.")}
                 </p>
               )}
               {noticeAction === 'check' && inlineNotice}
@@ -473,14 +476,14 @@ export function StudyErrorDetail({
             tabIndex={-1}
             className="scroll-mt-24 text-[20px] font-bold tracking-[-0.04em] outline-none sm:text-[22px]"
           >
-            Comprobá lo aprendido
+            {t("Comprobá lo aprendido")}
           </h2>
           <p className="!text-muted-foreground mt-2 !text-sm">
-            Mismo concepto, una situación diferente. Respondé sin consultar la explicación.
+            {t("Mismo concepto, una situación diferente. Respondé sin consultar la explicación.")}
           </p>
           <p className="!text-foreground mt-3 !text-[16px]">{question.question}</p>
           <fieldset className="mt-6 space-y-3" disabled={Boolean(result) || Boolean(busy)}>
-            <legend className="sr-only">Elegí una respuesta</legend>
+            <legend className="sr-only">{t("Elegí una respuesta")}</legend>
             {question.options.map((option, index) => (
               <label
                 key={index}
@@ -499,9 +502,7 @@ export function StudyErrorDetail({
                     <span
                       className={`mt-1 block text-xs font-semibold ${result.correctIndex === index ? 'text-primary' : 'text-destructive'}`}
                     >
-                      {result.correctIndex === index
-                        ? 'Respuesta correcta'
-                        : 'Tu respuesta incorrecta'}
+                      {t(result.correctIndex === index ? 'Respuesta correcta' : 'Tu respuesta incorrecta')}
                     </span>
                   )}
                 </span>
@@ -523,7 +524,7 @@ export function StudyErrorDetail({
                 disabled={Boolean(busy)}
                 onClick={returnToReview}
               >
-                Volver al repaso
+                {t("Volver al repaso")}
               </button>
             </div>
           ) : (
@@ -538,7 +539,7 @@ export function StudyErrorDetail({
                 ) : (
                   <CircleAlert className="text-destructive h-5 w-5" />
                 )}
-                {result.correct ? 'Resolviste el refuerzo' : 'Todavía queda por reforzar'}
+                {t(result.correct ? 'Resolviste el refuerzo' : 'Todavía queda por reforzar')}
               </h3>
               <p className="!text-foreground mt-2">
                 {result.correct
@@ -561,7 +562,7 @@ export function StudyErrorDetail({
                   <>
                     {embedded && (
                       <button className={reviewPrimaryButton} onClick={onFinish}>
-                        {topicContext ? 'Volver al tema' : 'Volver a Progreso'}
+                        {t(topicContext ? 'Volver al tema' : 'Volver a Progreso')}
                       </button>
                     )}
                     <button
@@ -569,18 +570,18 @@ export function StudyErrorDetail({
                       disabled={pendingCount === 0}
                       onClick={onNext}
                     >
-                      {topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error'}
+                      {t(topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error')}
                       <ArrowRight className="h-4 w-4" />
                     </button>
                     {!embedded && (
                       <button className={reviewSecondaryButton} onClick={onFinish}>
-                        Terminar por hoy
+                        {t("Terminar por hoy")}
                       </button>
                     )}
                   </>
                 ) : (
                   <button className={reviewPrimaryButton} onClick={returnToReview}>
-                    Volver a la explicación
+                    {t("Volver a la explicación")}
                   </button>
                 )}
               </div>
@@ -592,12 +593,10 @@ export function StudyErrorDetail({
           <div data-study-error-tour="error">
             <div className="mb-3 flex flex-wrap gap-2 text-xs">
               <span className="text-muted-foreground py-1 text-xs">
-                {studyErrorSourceLabels[item.sourceType]}
+                {t(studyErrorSourceLabels[item.sourceType])}
               </span>
               <span className="text-muted-foreground py-1">
-                {resolved
-                  ? 'Resuelto después del repaso'
-                  : `${item.failureCount} ${item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad'}`}
+                {resolved ? t('Resuelto después del repaso') : `${item.failureCount} ${english ? (item.failureCount === 1 ? 'difficult attempt' : 'difficult attempts') : (item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad')}`}
               </span>
             </div>
             <h2
@@ -617,7 +616,7 @@ export function StudyErrorDetail({
             {(item.selectedAnswer || item.correctAnswer) && (
               <details open={embedded || undefined} className="group mt-3">
                 <summary className="text-muted-foreground hover:text-foreground focus-visible:outline-ring flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
-                  Ver mi respuesta anterior
+                  {t("Ver mi respuesta anterior")}
                   <ChevronDown
                     className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"
                     aria-hidden="true"
@@ -627,7 +626,7 @@ export function StudyErrorDetail({
                   {item.selectedAnswer && (
                     <div className="border-destructive/40 border-l-2 pl-4">
                       <p className="!text-destructive !text-xs font-semibold">
-                        Respuesta incorrecta
+                        {t("Respuesta incorrecta")}
                       </p>
                       <p className="!text-foreground mt-2 !text-sm break-words">
                         {item.selectedAnswer}
@@ -636,7 +635,7 @@ export function StudyErrorDetail({
                   )}
                   {item.correctAnswer && (
                     <div className="border-l-2 border-emerald-500/40 pl-4">
-                      <p className="!text-xs font-semibold !text-emerald-700">Respuesta correcta</p>
+                      <p className="!text-xs font-semibold !text-emerald-700">{t("Respuesta correcta")}</p>
                       <p className="!text-foreground mt-2 !text-sm break-words">
                         {item.correctAnswer}
                       </p>
@@ -683,12 +682,12 @@ export function StudyErrorDetail({
                 >
                   <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   <span className="min-w-0 flex-1 text-[11px] leading-4 break-words">
-                    Fuente: {source.sectionTitle ?? source.materialTitle}
+                    {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
                     {pageLabel(source.pageStart, source.pageEnd)
                       ? ` · ${pageLabel(source.pageStart, source.pageEnd)}`
                       : ''}{' '}
                     <span className="text-primary font-medium">
-                      — {sourceOpen ? 'Cerrar fragmento' : 'Ver fragmento'}
+                      — {t(sourceOpen ? 'Cerrar fragmento' : 'Ver fragmento')}
                     </span>
                   </span>
                   <ChevronDown
@@ -715,7 +714,7 @@ export function StudyErrorDetail({
                       }
                       className="text-primary mt-2 inline-flex min-h-11 items-center text-xs font-semibold underline"
                     >
-                      Abrir PDF completo
+                      {t("Abrir PDF completo")}
                     </Link>
                   </div>
                 )}
@@ -723,7 +722,7 @@ export function StudyErrorDetail({
             ) : (
               <div className="border-border mt-5 border-l-2 pl-4">
                 <h3 className="text-sm font-semibold">
-                  Este error todavía no tiene un PDF asociado
+                  {t("Este error todavía no tiene un PDF asociado")}
                 </h3>
                 <p className="!text-muted-foreground mt-2 !text-sm">
                   Elegí tus apuntes. Evaluo verificará si contienen información para repasar este
@@ -732,12 +731,12 @@ export function StudyErrorDetail({
                 {materials.length > 0 && !resolved && (
                   <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                     <select
-                      aria-label="PDF para asociar"
+                      aria-label={t("PDF para asociar")}
                       value={associateId}
                       onChange={(event) => setAssociateId(event.target.value)}
                       className="border-border bg-background min-h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm"
                     >
-                      <option value="">Elegir mi PDF</option>
+                      <option value="">{t("Elegir mi PDF")}</option>
                       {materials.map((material) => (
                         <option key={material.id} value={material.id}>
                           {material.title}
@@ -762,7 +761,7 @@ export function StudyErrorDetail({
                         })
                       }
                     >
-                      Asociar PDF
+                      {t("Asociar PDF")}
                     </button>
                   </div>
                 )}
@@ -770,7 +769,7 @@ export function StudyErrorDetail({
                   href={`/dashboard/materiales?openUpload=1&source=study_error${item.materiaId ? `&materiaId=${item.materiaId}` : ''}`}
                   className="text-primary mt-3 inline-flex min-h-11 items-center text-sm font-semibold underline"
                 >
-                  Subir mis apuntes
+                  {t("Subir mis apuntes")}
                 </Link>
               </div>
             )}
@@ -780,12 +779,12 @@ export function StudyErrorDetail({
             <section data-study-error-tour="practice" className="border-border mt-3 border-t pt-3">
               {resolved ? (
                 <p className="!text-foreground !text-sm">
-                  Este error quedó resuelto después de tu repaso.
+                  {t("Este error quedó resuelto después de tu repaso.")}
                 </p>
               ) : materialId && reviewed ? (
                 <>
                   <p className="!text-foreground font-semibold">
-                    ¿Querés probar con otra situación?
+                    {t("¿Querés probar con otra situación?")}
                   </p>
                   <button
                     className={reviewPrimaryButton + ' mt-3'}
@@ -799,7 +798,7 @@ export function StudyErrorDetail({
                 </>
               ) : !materialId ? (
                 <p className="!text-muted-foreground !text-sm">
-                  Asociá un PDF para comprobar lo aprendido con una pregunta basada en tu material.
+                  {t("Asociá un PDF para comprobar lo aprendido con una pregunta basada en tu material.")}
                 </p>
               ) : null}
               {activityHref && resolved && (
@@ -807,7 +806,7 @@ export function StudyErrorDetail({
                   href={activityHref}
                   className="text-muted-foreground mt-3 inline-flex min-h-11 w-fit items-center py-2 text-xs font-semibold underline"
                 >
-                  Volver a la actividad original
+                  {t("Volver a la actividad original")}
                 </Link>
               )}
               {noticeAction === 'check' && inlineNotice}
@@ -823,11 +822,11 @@ export function StudyErrorDetail({
             disabled={Boolean(busy) || pendingCount <= (resolved ? 0 : 1)}
             onClick={onNext}
           >
-            {topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error'}
+            {t(topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error')}
             <ArrowRight className="h-4 w-4" />
           </button>
           <button className={reviewSecondaryButton} disabled={Boolean(busy)} onClick={onFinish}>
-            {topicContext ? 'Volver al tema' : 'Terminar por hoy'}
+            {t(topicContext ? 'Volver al tema' : 'Terminar por hoy')}
           </button>
         </div>
       )}
