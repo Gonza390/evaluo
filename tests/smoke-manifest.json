@@ -402,5 +402,9 @@
   {
     "file": "tests/study-i18n-release.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/creem-live-billing.smoke.ts",
+    "alias": true
   }
 ]
