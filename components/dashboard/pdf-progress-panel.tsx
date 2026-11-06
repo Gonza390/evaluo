@@ -52,7 +52,8 @@ const StudyErrorDetail = dynamic(
 const actionClass =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring';
 
-function topicStatus(topic: PdfProgressTopic) {
+function topicStatus(topic: PdfProgressTopic, english = false) {
+  const tr = (es:string,en:string) => english ? en : es;
   if (topic.errors.some((error) => error.status === 'pending'))
     return { label: tr("Por reforzar","Needs review"), Icon: Flag, style: 'bg-destructive/10 text-destructive' };
   if (topic.errors.some((error) => error.status === 'resolved'))
@@ -1081,10 +1082,10 @@ export function PdfProgressPanel({
                   const correctCount = topic.evidence.reduce((total, item) => total + item.correct, 0);
                   const incorrectCount = topic.evidence.reduce((total, item) => total + item.incorrect, 0);
                   const selfReportedCount = topic.evidence.reduce((total, item) => total + item.selfReported, 0);
-                  const { Icon, style } = topicStatus(topic);
+                  const { Icon, style } = topicStatus(topic, english);
                   const statusLabel = assessmentData?.loadError && !topic.errors.length && assessedCount === 0 && selfReportedCount === 0
                     ? tr("Evaluación no disponible","Assessment unavailable")
-                    : topicStatus(topic).label;
+                    : topicStatus(topic, english).label;
                   const actionLabel = pendingCount > 0 ? tr("Reforzar","Review") : assessedCount > 0 ? tr("Practicar de nuevo","Practice again")
                     : selfReportedCount > 0 ? tr("Comprobar","Check") : tr("Evaluar","Assess");
                   const shouldPracticeDirectly = pendingCount === 0 && Boolean(
