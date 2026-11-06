@@ -117,8 +117,12 @@ try {
   assert.equal(db.user_subscriptions[0].expires_at,end);
   const refund={
     id:'evt_mock_refund_1234',eventType:'refund.created',created_at:baseTime+3000,
-    object:{id:'ref_mock_refund_1234',status:'succeeded',subscription:{id:subscriptionId}},
+    object:{id:'ref_mock_refund_1234',status:'succeeded',transaction:{id:'tran_mock_payment_1234',status:'refunded'},subscription:{id:subscriptionId}},
   };
+  const partialRefund={...refund,id:'evt_partial_refund',created_at:baseTime+2500,
+    object:{...refund.object,transaction:{id:'tran_mock_payment_1234',status:'partially_refunded'}}};
+  assert.equal(await reconcileCreemBillingEvent(client,'live',partialRefund),'ignored');
+  assert.equal(db.user_subscriptions[0].status,'canceled');
   assert.equal(await reconcileCreemBillingEvent(client,'live',refund),'processed');
   assert.equal(db.user_subscriptions[0].status,'refunded');
   assert.ok(Date.parse(String(db.user_subscriptions[0].expires_at)) <= Date.now()+10000);
