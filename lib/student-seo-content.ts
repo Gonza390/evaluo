@@ -137,7 +137,7 @@ export const SEO_HUBS:Record<string,SeoHub>={
  },
  funciones:{
   path:'/funciones',kicker:'Funciones de Evaluo',title:'Una manera de estudiar tus apuntes, varias formas de practicar',
-  description:'Resumí PDFs, creá flashcards, mapas mentales y simulacros para repasar por temas.',
+  description:'Resumí PDFs, creá flashcards y simulacros; los mapas mentales están en Premium.',
   intro:'No necesitás elegir una herramienta para toda la materia. Empezá por entender un tema y usá preguntas, tarjetas o un simulacro según lo que necesites comprobar.',
   benefitTitle:'Herramientas conectadas con el estudio',benefit:'El contenido generado por IA puede contener errores: contrastá explicaciones, fórmulas y datos técnicos con el material original.',
   cards:[

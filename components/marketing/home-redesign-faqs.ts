@@ -2,7 +2,7 @@ export const HOME_REDESIGN_FAQS = [
   {
     question: '¿Cómo empiezo a estudiar con Evaluo?',
     answer:
-      'Elegí «Subir mis apuntes», seleccioná tu PDF y creá tu cuenta para continuar. Al procesarlo, vas a tener un resumen por temas, glosario, flashcards, mapa mental y práctica sobre ese material. Podés empezar por leer o ponerte a prueba.',
+      'Elegí «Subir mis apuntes», seleccioná tu PDF y creá tu cuenta para continuar. Al procesarlo, vas a tener un resumen por temas, glosario, flashcards y práctica sobre ese material. Los mapas mentales están disponibles en Premium. Podés empezar por leer o ponerte a prueba.',
   },
   {
     question: '¿Qué me aporta además de un resumen?',
@@ -27,7 +27,7 @@ export const HOME_REDESIGN_FAQS = [
   {
     question: '¿Qué puedo probar gratis?',
     answer:
-      'Podés empezar sin tarjeta con 1 archivo PDF o Word gratis de por vida. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo no se renueva. Si ya tenías archivos en Evaluo, se conservan y recibís un nuevo cupo con este lanzamiento. También podés probar la demo sin crear una cuenta.',
+      'Podés empezar sin tarjeta con 1 archivo PDF o Word gratis de por vida. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo no se renueva. También podés probar la demo sin crear una cuenta.',
   },
   {
     question: '¿Qué cambia con Premium?',
