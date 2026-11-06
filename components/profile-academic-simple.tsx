@@ -11,6 +11,8 @@ import {
 import { saveSimpleAcademicProfileAction } from '@/app/completar-perfil/academic-profile-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 
 type University = { id: string; nombre: string };
 type Career = { id: string; nombre: string; universidad_id: string | null };
@@ -31,6 +33,8 @@ export function AcademicProfileSimpleForm({
   onlyMissingFields?: boolean;
 }) {
   const router = useRouter();
+  const { locale } = useAppLocale();
+  const t = (value: string) => studentEntryText(locale, value);
   const [universities, setUniversities] = useState<University[]>([]);
   const [careers, setCareers] = useState<Career[]>([]);
   const [universityId, setUniversityId] = useState('');
@@ -67,7 +71,7 @@ export function AcademicProfileSimpleForm({
         setCareerSearch(career.nombre);
       }
     }).catch(() => {
-      if (active) setError('No pudimos cargar las opciones académicas. Recargá la página.');
+      if (active) setError(t("No pudimos cargar las opciones académicas. Recargá la página."));
     }).finally(() => {
       if (active) setLoading(false);
     });
@@ -101,7 +105,7 @@ export function AcademicProfileSimpleForm({
       setUniversities((current) => [university, ...current.filter((item) => item.id !== university.id)]);
       selectUniversity(university);
     } catch {
-      setError('No pudimos agregar la universidad. Intentá nuevamente.');
+      setError(t("No pudimos agregar la universidad. Intentá nuevamente."));
     } finally {
       setBusy(false);
     }
@@ -139,7 +143,7 @@ export function AcademicProfileSimpleForm({
       setCareerSearch(career.nombre);
       setCareerSuggestions(false);
     } catch {
-      setError('No pudimos agregar la carrera. Intentá nuevamente.');
+      setError(t("No pudimos agregar la carrera. Intentá nuevamente."));
     } finally {
       setBusy(false);
     }
@@ -159,7 +163,7 @@ export function AcademicProfileSimpleForm({
       else router.replace(nextPath);
       router.refresh();
     } catch {
-      setError('No pudimos guardar tus datos. Intentá nuevamente.');
+      setError(t("No pudimos guardar tus datos. Intentá nuevamente."));
     } finally {
       setBusy(false);
     }
@@ -172,9 +176,9 @@ export function AcademicProfileSimpleForm({
           <GraduationCap className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-950">{onlyMissingFields && savedUniversity ? '¿Qué carrera estudiás?' : '¿Dónde estudiás?'}</h1>
+          <h1 className="text-xl font-bold tracking-tight text-slate-950">{onlyMissingFields && savedUniversity ? t("¿Qué carrera estudiás?") : t("¿Dónde estudiás?")}</h1>
           <p className="mt-1 text-sm leading-6 text-slate-500">
-            Contanos tu universidad y carrera. Son dos datos, y podés completarlos más adelante.
+            {t("Contanos tu universidad y carrera. Son dos datos, y podés completarlos más adelante.")}
           </p>
         </div>
       </div>
@@ -186,12 +190,12 @@ export function AcademicProfileSimpleForm({
           </p>
         ) : <div>
           <label htmlFor="academic-university" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <School className="h-4 w-4 text-slate-500" /> Universidad
+            <School className="h-4 w-4 text-slate-500" /> {t("Universidad")}
           </label>
           <Input
             id="academic-university"
             autoComplete="off"
-            placeholder="Ej. Universidad Nacional de Córdoba"
+            placeholder={t("Ej. Universidad Nacional de Córdoba")}
             value={universitySearch}
             disabled={loading || busy}
             onFocus={() => setUniversitySuggestions(true)}
@@ -214,7 +218,7 @@ export function AcademicProfileSimpleForm({
               {universitySearch.trim().length >= 3 ? (
                 <button type="button" onClick={() => void createUniversity()} disabled={busy}
                   className="block w-full rounded-lg border-t border-slate-100 px-3 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-50">
-                  Mi universidad no aparece · Agregarla
+                  {t("Mi universidad no aparece · Agregarla")}
                 </button>
               ) : null}
             </div>
@@ -223,11 +227,11 @@ export function AcademicProfileSimpleForm({
 
         {universityId ? (
           <div>
-            <label htmlFor="academic-career" className="mb-2 block text-sm font-semibold text-slate-800">Carrera</label>
+            <label htmlFor="academic-career" className="mb-2 block text-sm font-semibold text-slate-800">{t("Carrera")}</label>
             <Input
               id="academic-career"
               autoComplete="off"
-              placeholder="Ej. Contador Público"
+              placeholder={t("Ej. Contador Público")}
               value={careerSearch}
               disabled={loading || busy}
               onFocus={() => setCareerSuggestions(true)}
@@ -252,7 +256,7 @@ export function AcademicProfileSimpleForm({
                 {careerSearch.trim().length >= 3 ? (
                   <button type="button" onClick={() => void createCareer()} disabled={busy}
                     className="block w-full rounded-lg border-t border-slate-100 px-3 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-50">
-                    Mi carrera no aparece · Agregarla
+                    {t("Mi carrera no aparece · Agregarla")}
                   </button>
                 ) : null}
               </div>
@@ -261,15 +265,15 @@ export function AcademicProfileSimpleForm({
         ) : null}
       </div>
 
-      {loading ? <p className="mt-4 text-sm text-slate-500">Cargando universidades y carreras…</p> : null}
+      {loading ? <p className="mt-4 text-sm text-slate-500">{t("Cargando universidades y carreras…")}</p> : null}
       {error ? <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
       <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" onClick={() => { if (onLater) onLater(); else router.replace(nextPath); }} disabled={busy}>
-          Ahora no
+          {t("Ahora no")}
         </Button>
         <Button type="button" className="min-h-11 w-full whitespace-normal text-center sm:w-auto" onClick={() => void save()} disabled={loading || busy || !universityId || !careerId}>
-          {busy ? 'Guardando…' : 'Guardar y continuar'}
+          {busy ? t("Guardando…") : t("Guardar y continuar")}
         </Button>
       </div>
     </div>
