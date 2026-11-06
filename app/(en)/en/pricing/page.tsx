@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
+import { RegionalPricingMessage } from '@/components/pricing/RegionalPricingMessage';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata: Metadata = {
@@ -37,8 +38,8 @@ export default function EnglishPricingPage() {
    </header>
    <PricingPlanSelector locale="en" freeFeatures={freeFeatures} premiumFeatures={premiumFeatures} source="english_pricing" />
    <section className="mx-auto mt-12 max-w-3xl border-t border-[#E7EBF4] py-8 text-sm leading-7 text-[#42506A]">
-    <h2 className="text-lg font-bold text-[#0F1B3D]">About international billing</h2>
-    <p className="mt-2">Outside Argentina, eligible Premium purchases are billed monthly in USD through Creem when international checkout is available. The advertised price is US$9.99 per month, plus applicable taxes at checkout. You can cancel future renewals. In Argentina, local offers are billed in ARS through Mercado Pago.</p>
+    <h2 className="text-lg font-bold text-[#0F1B3D]">Billing for your country</h2>
+    <RegionalPricingMessage locale="en" placement="billing" />
     <p className="mt-3">Review our <Link href="/en/terms" className="text-blue-700 underline">Terms</Link>, <Link href="/en/billing" className="text-blue-700 underline">Billing Terms</Link>, <Link href="/en/refunds" className="text-blue-700 underline">Refund Policy</Link>, and <Link href="/en/privacy" className="text-blue-700 underline">Privacy Policy</Link> before buying.</p>
    </section>
   </div>
