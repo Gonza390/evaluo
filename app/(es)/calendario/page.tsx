@@ -285,7 +285,7 @@ export default function CalendarioPage() {
         setEvents([]);
         setHasLoadedEvents(true);
         toast({
-          description: 'No pudimos cargar tu calendario. Volvé a intentarlo en unos segundos.',
+          description: t('No pudimos cargar tu calendario. Volvé a intentarlo en unos segundos.'),
           variant: 'destructive',
         });
         return;
@@ -581,7 +581,7 @@ export default function CalendarioPage() {
 
     if (!user) {
       toast({
-        description: 'Iniciá sesión para guardar fechas en tu calendario.',
+        description: t('Iniciá sesión para guardar fechas en tu calendario.'),
         variant: 'destructive',
       });
       return;
@@ -685,7 +685,7 @@ export default function CalendarioPage() {
         writeLocalCalendarEvents(user.id, nextEvents);
         resetForm();
         setIsComposerOpen(false);
-        toast({ description: 'Fecha guardada en tu calendario.' });
+        toast({ description: t('Fecha guardada en tu calendario.') });
         return;
       }
 
@@ -757,7 +757,7 @@ export default function CalendarioPage() {
 
     if (storageMode === 'local') {
       writeLocalCalendarEvents(user.id, nextEvents);
-      toast({ description: 'Fecha eliminada del calendario.' });
+      toast({ description: t('Fecha eliminada del calendario.') });
       return;
     }
 
@@ -767,20 +767,20 @@ export default function CalendarioPage() {
       if (isMissingCalendarTableError(error)) {
         setStorageMode('local');
         writeLocalCalendarEvents(user.id, nextEvents);
-        toast({ description: 'Fecha eliminada del calendario.' });
+        toast({ description: t('Fecha eliminada del calendario.') });
         return;
       }
 
       logError('calendario.deleteEvent', error, { userId: user.id, eventId });
       setEvents(previousEvents);
       toast({
-        description: 'No pudimos eliminar ese evento. Inténtalo nuevamente.',
+        description: t('No pudimos eliminar ese evento. Inténtalo nuevamente.'),
         variant: 'destructive',
       });
       return;
     }
 
-    toast({ description: 'Fecha eliminada del calendario.' });
+    toast({ description: t('Fecha eliminada del calendario.') });
   };
 
   if (loading || isCheckingProfile) {
@@ -936,7 +936,7 @@ export default function CalendarioPage() {
                           setVisibleMonth(getMonthStart(date));
                         }
                       }}
-                      aria-label={`${displayLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? (english ? 'event' : 'evento') : (english ? 'events' : 'eventos')}` : ''}${planDay ? `, ${planDay.topics.length} temas del plan` : ''}${isPlanExamDay ? ', examen del plan' : ''}`}
+                      aria-label={`${displayLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? (english ? 'event' : 'evento') : (english ? 'events' : 'eventos')}` : ''}${planDay ? `, ${planDay.topics.length} ${english ? 'topics in the study plan' : 'temas del plan'}` : ''}${isPlanExamDay ? (english ? ', study plan exam' : ', examen del plan') : ''}`}
                       className={`group relative flex h-[48px] min-w-0 flex-col gap-0.5 overflow-hidden border-r border-b px-1 py-1 text-left transition last:border-r-0 hover:bg-white min-[380px]:h-[52px] min-[380px]:px-1.5 sm:h-[56px] sm:gap-1 sm:px-2 sm:py-1.5 ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
@@ -1031,7 +1031,7 @@ export default function CalendarioPage() {
                   <p className="mt-0.5 text-[11px] leading-4 text-[#66758D]">
                     {selectionInVisibleMonth && (selectedStudyPlanDay || selectedPlanExam)
                       ? displayLongDate(selectedDate)
-                      : `${studyPlanDaysByDate.size} días programados · Examen ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR', { day: 'numeric', month: 'short' })}`}
+                      : `${studyPlanDaysByDate.size} ${english ? 'scheduled days' : 'días programados'} · ${english ? 'Exam' : 'Examen'} ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR', { day: 'numeric', month: 'short' })}`}
                   </p>
                 </div>
               </div>
@@ -1039,7 +1039,7 @@ export default function CalendarioPage() {
                 href="/dashboard/plan-de-estudio"
                 className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-brand transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
-                Ver mi plan <ArrowRight className="size-3.5" aria-hidden="true" />
+                {t('Ver mi plan')} <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
             {selectionInVisibleMonth && selectedStudyPlanDay ? (
@@ -1068,7 +1068,7 @@ export default function CalendarioPage() {
         ) : studyPlanLoadError && user ? (
           <p role="status" className="px-1 text-[11px] text-[#66758D]">
             No pudimos mostrar tu plan en el calendario. Podés consultarlo desde{' '}
-            <Link className="font-semibold text-brand underline underline-offset-2" href="/dashboard/plan-de-estudio">Plan de estudio</Link>.
+            <Link className="font-semibold text-brand underline underline-offset-2" href="/dashboard/plan-de-estudio">{t("Plan de estudio")}</Link>.
           </p>
         ) : null}
       </div>
