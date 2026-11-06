@@ -249,6 +249,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               >
                 Política de privacidad
               </Link>
+              <Link href="/politica-de-uso-aceptable" className="text-xs text-white/80 transition hover:text-white">
+                Política de uso aceptable
+              </Link>
               <Link href="/copyright" className="text-xs text-white/80 transition hover:text-white">
                 Copyright
               </Link>
