@@ -5,6 +5,7 @@ import { CheckCircle2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 type ReferralOfferCode = 'monthly' | 'semester';
 
@@ -31,20 +32,21 @@ const currency = new Intl.NumberFormat('es-AR', {
   maximumFractionDigits: 0,
 });
 
-function referralError(error: string | undefined, offerCode: ReferralOfferCode) {
-  if (error === 'invalid_referral_code') return 'Ingresá un código válido.';
+function referralError(error: string | undefined, offerCode: ReferralOfferCode, english: boolean) {
+  const tr=(es:string,en:string)=>english?en:es;
+  if (error === 'invalid_referral_code') return tr("Ingresá un código válido.","Enter a valid code.");
   if (error === 'referral_code_not_applicable') {
-    return `Este código no aplica al plan ${offerCode === 'semester' ? 'de 6 meses' : 'mensual'}.`;
+    return english ? `This code does not apply to the ${offerCode === 'semester' ? '6-month' : 'monthly'} plan.` : `Este código no aplica al plan ${offerCode === 'semester' ? 'de 6 meses' : 'mensual'}.`;
   }
   if (error === 'referral_already_attributed') {
-    return 'Tu cuenta ya está asociada a otro código de referido.';
+    return tr("Tu cuenta ya está asociada a otro código de referido.","Your account is already linked to another referral code.");
   }
-  if (error === 'referral_code_limit_reached') return 'Este código alcanzó su límite de usos.';
-  if (error === 'rate_limited') return 'Probaste varios códigos. Esperá unos minutos e intentá de nuevo.';
+  if (error === 'referral_code_limit_reached') return tr("Este código alcanzó su límite de usos.","This code has reached its usage limit.");
+  if (error === 'rate_limited') return tr("Probaste varios códigos. Esperá unos minutos e intentá de nuevo.","Too many attempts. Please wait a few minutes and try again.");
   if (error === 'referral_service_unavailable') {
-    return 'No pudimos validar el código ahora. Intentá nuevamente en unos minutos.';
+    return tr("No pudimos validar el código ahora. Intentá nuevamente en unos minutos.","We could not validate your code. Please try again shortly.");
   }
-  return 'El código no existe, venció o está pausado.';
+  return tr("El código no existe, venció o está pausado.","This code is invalid, expired or paused.");
 }
 
 export function ManualReferralCode({
@@ -52,6 +54,8 @@ export function ManualReferralCode({
   variant = 'default',
   hideHeading = false,
 }: ManualReferralCodeProps) {
+  const english = useOptionalAppLocale() === 'en';
+  const tr = (es:string,en:string)=>english?en:es;
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export function ManualReferralCode({
   async function applyCode() {
     const normalized = code.trim().toUpperCase();
     if (!normalized) {
-      setError('Ingresá tu código de descuento.');
+      setError(tr('Ingresá tu código de descuento.','Enter your discount code.'));
       return;
     }
 
@@ -81,7 +85,7 @@ export function ManualReferralCode({
       const payload = (await response.json()) as Partial<AppliedReferral> & { error?: string };
       if (!response.ok || !payload.code) {
         setApplied(null);
-        setError(referralError(payload.error, offerCode));
+        setError(referralError(payload.error, offerCode, english));
         return;
       }
 
@@ -104,7 +108,7 @@ export function ManualReferralCode({
       });
     } catch {
       setApplied(null);
-      setError('No pudimos validar el código ahora. Intentá nuevamente en unos minutos.');
+      setError(tr('No pudimos validar el código ahora. Intentá nuevamente en unos minutos.','We could not validate your code. Please try again shortly.'))
     } finally {
       setLoading(false);
     }
@@ -115,7 +119,7 @@ export function ManualReferralCode({
       <div className={hideHeading ? "w-full text-left" : "w-full border-t border-slate-200 pt-3 text-left"}>
         {!hideHeading ? <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
           <Tag className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-          ¿Tenés un código de descuento?
+          {tr('¿Tenés un código de descuento?','Have a discount code?')}
         </div> : null}
 
         <div className={hideHeading ? "flex gap-2" : "mt-2 flex gap-2"}>
@@ -132,11 +136,11 @@ export function ManualReferralCode({
                 void applyCode();
               }
             }}
-            placeholder={hideHeading ? "Código" : "Ej. MARCA20"}
+            placeholder={hideHeading ? tr("Código","Code") : tr("Ej. MARCA20","e.g. BRAND20")}
             autoComplete="off"
             spellCheck={false}
             className="h-10 min-w-0 rounded-xl bg-white text-xs font-medium uppercase tracking-wide sm:text-sm"
-            aria-label="Código de descuento"
+            aria-label={tr("Código de descuento","Discount code")}
           />
           <Button
             type="button"
@@ -146,7 +150,7 @@ export function ManualReferralCode({
             loading={loading}
             disabled={!code.trim()}
           >
-            Aplicar
+            {tr('Aplicar','Apply')}
           </Button>
         </div>
 
@@ -155,10 +159,10 @@ export function ManualReferralCode({
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <p>
               <span className="font-bold">
-                {applied.code} · {applied.discountPercent}% aplicado.
+                {applied.code} · {applied.discountPercent}% {tr('aplicado','applied')}.
               </span>{' '}
-              Total {offerCode === 'semester' ? 'por 6 meses' : 'mensual'}:{' '}
-              <span className="font-bold">{currency.format(applied.amountArs)}</span> · ahorrás{' '}
+              {tr('Total','Total')} {offerCode === 'semester' ? tr('por 6 meses','for 6 months') : tr('mensual','monthly')}:{' '}
+              <span className="font-bold">{currency.format(applied.amountArs)}</span> · {tr('ahorrás','you save')}{' '}
               {currency.format(applied.discountAmountArs)}.
             </p>
           </div>
@@ -178,7 +182,7 @@ export function ManualReferralCode({
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
           <Tag className="h-4 w-4 text-blue-600" aria-hidden="true" />
-          ¿Tenés un código de descuento?
+          {tr('¿Tenés un código de descuento?','Have a discount code?')}
         </div>
 
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -195,11 +199,11 @@ export function ManualReferralCode({
                 void applyCode();
               }
             }}
-            placeholder="Ej. MARCA20"
+            placeholder={tr("Ej. MARCA20","e.g. BRAND20")}
             autoComplete="off"
             spellCheck={false}
             className="h-11 rounded-xl bg-white font-medium uppercase tracking-wide"
-            aria-label="Código de descuento"
+            aria-label={tr("Código de descuento","Discount code")}
           />
           <Button
             type="button"
@@ -209,7 +213,7 @@ export function ManualReferralCode({
             loading={loading}
             disabled={!code.trim()}
           >
-            Aplicar
+            {tr('Aplicar','Apply')}
           </Button>
         </div>
 
@@ -218,16 +222,16 @@ export function ManualReferralCode({
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
             <div className="min-w-0">
               <p className="font-semibold text-emerald-900">
-                {applied.code} · {applied.discountPercent}% de descuento
+                {applied.code} · {applied.discountPercent}% {tr('de descuento','off')}
               </p>
               <p className="mt-0.5 text-xs leading-5 text-emerald-800">
                 {applied.brandName ? `${applied.brandName} · ` : ''}
-                {offerCode === 'semester' ? 'Total por 6 meses' : 'Total mensual'}:{' '}
+                {offerCode === 'semester' ? tr('Total por 6 meses','Total for 6 months') : tr('Total mensual','Monthly total')}:{' '}
                 <span className="font-bold">{currency.format(applied.amountArs)}</span>
-                {' · '}Ahorrás {currency.format(applied.discountAmountArs)}.
+                {' · '}{tr('Ahorrás','You save')} {currency.format(applied.discountAmountArs)}.
               </p>
               <p className="mt-0.5 text-[11px] leading-4 text-emerald-700">
-                El descuento y la disponibilidad se vuelven a confirmar al iniciar el pago.
+                {tr('El descuento y la disponibilidad se vuelven a confirmar al iniciar el pago.','Discount and availability are verified again at checkout.')}
               </p>
             </div>
           </div>
