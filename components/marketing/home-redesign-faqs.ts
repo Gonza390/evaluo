@@ -37,7 +37,7 @@ export const HOME_REDESIGN_FAQS = [
   {
     question: '¿Cómo se paga Premium? ¿Puedo cancelar?',
     answer:
-      'Pagás en pesos argentinos mediante Mercado Pago. El plan mensual se renueva automáticamente y podés cancelar las próximas renovaciones cuando quieras. Si elegís el acceso por 6 meses, hacés un solo pago y no se renueva automáticamente.',
+      'Las opciones de pago y la moneda dependen del país desde donde ingreses. Evaluo muestra únicamente las ofertas disponibles en tu región. Antes de pagar vas a ver el importe, la renovación y cómo cancelar futuras renovaciones.',
   },
 ];
 
@@ -73,6 +73,6 @@ export const HOME_REDESIGN_FAQS_EN = [
   },
   {
     "question": "How do I pay for Premium? Can I cancel?",
-    "answer": "Payment options depend on your country. In Argentina, available billing uses Mercado Pago in Argentine pesos. International checkout is only offered when available for your region. Review subscription and cancellation terms at checkout."
+    "answer": "Billing options and currency depend on the country you visit from. Evaluo displays only the offers for your region. You can review the total, renewal and cancellation terms before paying."
   }
 ];
