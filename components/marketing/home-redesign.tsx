@@ -78,7 +78,7 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
               <a href="#plan-estudio">Plan de estudio</a>
               <a href="#planes">Planes</a>
             </nav>
-            <div className="nav-auth">
+            <div className="nav-auth flex items-center gap-2 sm:gap-3">
               <LandingLanguageSelector locale="es" />
               <a
                 className="btn"
