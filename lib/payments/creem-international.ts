@@ -16,6 +16,22 @@ export function isCreemModeEnabled(mode: CreemMode): boolean {
     process.env.CREEM_INTERNATIONAL_ENABLED === 'true';
 }
 
+/**
+ * Checkout is disabled by the launch switch, but existing paid subscriptions
+ * MUST keep receiving signed webhook events and allow customer cancellation.
+ * Turning off new purchases cannot strand paid customers.
+ */
+export function canProcessCreemLiveWebhooks(): boolean {
+  return process.env.VERCEL_ENV === 'production' &&
+    Boolean(process.env.CREEM_LIVE_PRODUCT_ID?.trim().startsWith('prod_')) &&
+    Boolean(process.env.CREEM_LIVE_WEBHOOK_SECRET?.trim());
+}
+
+export function canManageExistingCreemSubscriptions(): boolean {
+  return process.env.VERCEL_ENV === 'production' &&
+    Boolean(process.env.CREEM_LIVE_API_KEY?.trim().startsWith('creem_live_'));
+}
+
 export function creemProductId(mode: CreemMode): string {
   return mode === 'test' ? CREEM_TEST_PRODUCT_ID : process.env.CREEM_LIVE_PRODUCT_ID?.trim() || '';
 }
@@ -85,7 +101,7 @@ export async function createCreemCheckout(mode: CreemMode, input: {
 }
 
 export async function cancelCreemSubscription(subscriptionId: string) {
-  if (!isCreemModeEnabled('live') || !/^sub_[a-zA-Z0-9_-]{4,100}$/.test(subscriptionId)) {
+  if (!canManageExistingCreemSubscriptions() || !/^sub_[a-zA-Z0-9_-]{4,100}$/.test(subscriptionId)) {
     throw new Error('creem_cancel_not_configured');
   }
   const response = await fetch(
