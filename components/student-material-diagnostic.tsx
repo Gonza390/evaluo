@@ -1,5 +1,9 @@
 'use client';
 
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
+
+
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -64,6 +68,9 @@ export function StudentMaterialDiagnostic({
   session,
   onSessionChange,
 }: Props) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (v: string) => studyUiText(locale, v);
   const questions = useMemo(
     () => selectDiagnosticQuestions(artifacts, guided ? 5 : 6, sections),
     [artifacts, guided, sections]
@@ -131,7 +138,7 @@ export function StudentMaterialDiagnostic({
           Podés seguir con la práctica normal del material.
         </p>
         <Button type="button" variant="outline" onClick={onExit} className="mt-5">
-          Ir a práctica
+          {t("Ir a práctica")}
         </Button>
       </div>
     );
@@ -162,7 +169,7 @@ export function StudentMaterialDiagnostic({
           <p className="text-foreground text-[26px] font-bold tracking-[-0.055em]">
             {result.correct}/{questions.length}
           </p>
-          <p className="text-muted-foreground mt-1 text-[13px]">respuestas correctas</p>
+          <p className="text-muted-foreground mt-1 text-[13px]">{t("respuestas correctas")}</p>
         </div>
 
         <div className="mt-5">
@@ -186,7 +193,7 @@ export function StudentMaterialDiagnostic({
             </>
           ) : (
             <>
-              <p className="text-foreground text-sm font-semibold">Buen dominio inicial</p>
+              <p className="text-foreground text-sm font-semibold">{t("Buen dominio inicial")}</p>
               <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                 {guided
                   ? `Respondiste correctamente estas ${questions.length} preguntas. Podés seguir practicando con este material.`
