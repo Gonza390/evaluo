@@ -370,5 +370,9 @@
   {
     "file": "tests/geo-citation-measurement.smoke.mjs",
     "alias": false
+  },
+  {
+    "file": "tests/ui-locale.smoke.ts",
+    "alias": false
   }
 ]

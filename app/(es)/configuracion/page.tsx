@@ -5,6 +5,8 @@ import { ChevronDown, LogOut, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import { useUser } from '@/hooks/useUser';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { LanguagePicker } from '@/components/i18n/language-picker';
 import { Spinner } from '@/components/ui/spinner';
 import { ProfileSettingsForm } from '@/components/settings/profile-settings-form';
 import { useToast } from '@/components/ui/use-toast';
@@ -27,6 +29,7 @@ type Carrera = {
 export default function ConfiguracionPage() {
   const router = useRouter();
   const { user, loading, getUserName } = useUser();
+  const { messages } = useAppLocale();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -356,15 +359,16 @@ export default function ConfiguracionPage() {
   return (
     <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header className="space-y-1">
-        <h1 className="text-[20px] font-semibold tracking-[-0.035em] text-slate-950 sm:text-[22px] lg:text-[24px]">Configuración</h1>
-        <p className="text-[13px] text-slate-500">Administrá tu cuenta y tus datos de estudio.</p>
+        <h1 className="text-[20px] font-semibold tracking-[-0.035em] text-slate-950 sm:text-[22px] lg:text-[24px]">{messages.settings.title}</h1>
+        <p className="text-[13px] text-slate-500">{messages.settings.subtitle}</p>
       </header>
 
       <section aria-labelledby="settings-general" className="space-y-1">
-        <h2 id="settings-general" className="text-xs font-normal text-slate-500">General</h2>
-        {settingRow('Idioma', 'Español')}
-        {settingRow('Apariencia', 'Claro')}
-        <p className="pt-1 text-xs text-slate-400">Estas preferencias todavía no se pueden modificar.</p>
+        <h2 id="settings-general" className="text-xs font-normal text-slate-500">{messages.settings.general}</h2>
+        <LanguagePicker />
+        {settingRow(messages.settings.appearance, messages.settings.light)}
+        <p className="pt-1 text-xs text-slate-400">{messages.settings.themeUnavailable}</p>
+        <p className="pt-1 text-xs text-slate-400">{messages.settings.languageHelp}</p>
       </section>
 
       <section aria-labelledby="settings-account" className="space-y-1">

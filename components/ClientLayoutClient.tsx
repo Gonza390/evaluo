@@ -20,6 +20,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { UserProvider, useUser } from '@/hooks/useUser';
+import { AppLocaleProvider, useAppLocale } from '@/components/i18n/app-locale-provider';
 import { supabase } from '@/lib/supabase-client';
 import { shiftDayKey } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
@@ -97,6 +98,7 @@ function getNextStreakMilestone(streakDays: number) {
 
 function BottomNav() {
   const pathname = usePathname();
+  const { messages } = useAppLocale();
   const { user } = useUser();
   // Private pages must keep the same nav on the first paint, even before
   // Supabase finishes restoring the session after a hard reload.
@@ -153,17 +155,17 @@ function BottomNav() {
 
   const bottomNavItems = studentNav
     ? [
-        { label: 'Mi espacio', href: '/dashboard', icon: Home },
-        { label: 'Estudiar', href: '/dashboard/estudiar', icon: BookOpen },
-        { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks },
-        { label: 'Mi plan', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
+        { label: messages.navigation.mySpace, href: '/dashboard', icon: Home },
+        { label: messages.navigation.study, href: '/dashboard/estudiar', icon: BookOpen },
+        { label: messages.navigation.practice, href: '/dashboard/practicar', icon: ListChecks },
+        { label: messages.navigation.shortStudyPlan, href: '/dashboard/plan-de-estudio', icon: ClipboardList },
       ]
     : [
-        { label: 'Inicio', href: '/', icon: Home },
-        { label: 'Explorar', href: '/explorar', icon: Search },
-        { label: 'Pregunteros', href: '/pregunteros', icon: GraduationCap },
+        { label: messages.navigation.home, href: '/', icon: Home },
+        { label: messages.navigation.explore, href: '/explorar', icon: Search },
+        { label: messages.navigation.questionBanks, href: '/pregunteros', icon: GraduationCap },
         {
-          label: 'Iniciar sesión',
+          label: messages.navigation.signIn,
           href: '/login?mode=login',
           icon: LogIn,
           variant: 'cta' as const,
@@ -226,10 +228,12 @@ export default function ClientLayoutClient({
 }) {
   return (
     <UserProvider initialUser={initialUser}>
-      <ShellDataProvider initialProfileSummary={initialProfileSummary}>
-        <ClientLayoutInner>{children}</ClientLayoutInner>
-      </ShellDataProvider>
-      <Toaster />
+      <AppLocaleProvider>
+        <ShellDataProvider initialProfileSummary={initialProfileSummary}>
+          <ClientLayoutInner>{children}</ClientLayoutInner>
+        </ShellDataProvider>
+        <Toaster />
+      </AppLocaleProvider>
     </UserProvider>
   );
 }
@@ -237,6 +241,7 @@ export default function ClientLayoutClient({
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading: userLoading, getUserInitials, getUserName } = useUser();
+  const { messages } = useAppLocale();
   const { profileSummary, streak } = useShellData();
   const streakDays = streak?.streakDays ?? 0;
   const streakDayKeys = streak?.streakDayKeys ?? [];
@@ -348,7 +353,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/dashboard"
-                aria-label="Ir a Mi espacio"
+                aria-label={messages.navigation.mySpace}
                 className={`group flex min-w-0 items-center transition hover:opacity-90 ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
               >
                 <Image
