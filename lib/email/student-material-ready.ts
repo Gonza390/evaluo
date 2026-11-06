@@ -1,5 +1,6 @@
 import 'server-only';
 import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
+import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -27,7 +28,9 @@ export function buildStudentMaterialReadyMessage(input: {
   firstname: string;
   materialFileName: string | null;
   materialId: string;
+  locale?: AppLocale;
 }) {
+  const english = input.locale === 'en';
   const baseUrl = SITE_URL.replace(/\/$/, '');
   const url = new URL(`/materiales/${input.materialId}`, baseUrl);
   url.searchParams.set('utm_source', 'sender');
@@ -37,15 +40,15 @@ export function buildStudentMaterialReadyMessage(input: {
 
   const fileName = formatMaterialFileName(input.materialFileName);
   const intro = fileName
-    ? `Terminamos de preparar “${fileName}”.`
-    : 'Terminamos de preparar tu PDF.';
+    ? (english ? `We finished preparing “${fileName}”.` : `Terminamos de preparar “${fileName}”.`)
+    : (english ? 'We finished preparing your PDF.' : 'Terminamos de preparar tu PDF.');
 
   const safeFirstName = escapeHtml(input.firstname);
   const safeIntro = escapeHtml(intro);
   const safeUrl = escapeHtml(url.toString());
 
   const html = `<!doctype html>
-<html lang="es">
+<html lang="${english ? 'en' : 'es'}">
   <body style="margin:0;padding:0;background:#F5F7FB;font-family:Inter,Arial,sans-serif;color:#0F1B3D;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;padding:32px 16px;">
       <tr>
@@ -55,17 +58,17 @@ export function buildStudentMaterialReadyMessage(input: {
               <td style="padding:32px;">
                 <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
 
-                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
-                <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">Tu PDF ya está listo para estudiar</h1>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${english ? 'Hi' : 'Hola'} ${safeFirstName},</p>
+                <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${english ? 'Your PDF is ready to study' : 'Tu PDF ya está listo para estudiar'}</h1>
                 <p style="margin:0 0 8px;font-size:16px;line-height:1.65;color:#475569;">${safeIntro}</p>
-                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">Tu resumen, flashcards, ejercicios y seguimiento del progreso ya están disponibles para empezar a trabajar con tus apuntes.</p>
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${english ? 'Your summary, flashcards, practice questions and progress tracking are ready. Start studying with your notes.' : 'Tu resumen, flashcards, ejercicios y seguimiento del progreso ya están disponibles para empezar a trabajar con tus apuntes.'}</p>
 
-                <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">Empezar con mi PDF</a>
+                <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${english ? 'Start studying my PDF' : 'Empezar con mi PDF'}</a>
 
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te avisamos porque el PDF que subiste terminó de procesarse.</p>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${english ? 'You received this email because the PDF you uploaded has finished processing.' : 'Te avisamos porque el PDF que subiste terminó de procesarse.'}</p>
 
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">${english ? 'Evaluo Team' : 'Equipo Evaluo'}</p>
                   <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
@@ -77,10 +80,14 @@ export function buildStudentMaterialReadyMessage(input: {
   </body>
 </html>`;
 
-  const text = `Hola ${input.firstname}. ${intro} Tu PDF ya está listo para estudiar. Empezá acá: ${url.toString()}`;
+  const text = english
+    ? `Hi ${input.firstname}. ${intro} Your PDF is ready to study. Get started: ${url.toString()}`
+    : `Hola ${input.firstname}. ${intro} Tu PDF ya está listo para estudiar. Empezá acá: ${url.toString()}`;
 
   return {
-    subject: fileName ? `${fileName} ya está listo para estudiar` : 'Tu PDF ya está listo para estudiar',
+    subject: english
+      ? (fileName ? `${fileName} is ready to study` : 'Your PDF is ready to study')
+      : (fileName ? `${fileName} ya está listo para estudiar` : 'Tu PDF ya está listo para estudiar'),
     text,
     html,
     url: url.toString(),
@@ -190,6 +197,7 @@ export async function sendStudentMaterialReadyEmailIfInactive(input: {
       (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : null);
 
     const message = buildStudentMaterialReadyMessage({
+      locale: accountAppLocale(user.user_metadata) ?? 'es',
       firstname: firstName(displayName),
       materialFileName: material.file_name ?? input.materialFileName,
       materialId: input.materialId,
