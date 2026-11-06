@@ -389,6 +389,6 @@
   },
   {
     "file": "tests/creem-webhook.smoke.ts",
-    "alias": false
+    "alias": true
   }
 ]
