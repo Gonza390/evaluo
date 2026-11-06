@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { studyUiText } from '@/lib/i18n/study-ui-copy';
+import { localizeExamEventTitle } from '@/lib/i18n/calendar-event-title';
 import Link from 'next/link';
 import {
   BellRing,
@@ -132,7 +133,9 @@ function buildEventPayload({
   careerId,
   careerName,
   selectedMateria,
+  locale,
 }: {
+  locale: 'es' | 'en';
   formState: typeof DEFAULT_FORM_STATE;
   careerId: string | null;
   careerName: string | null;
@@ -146,7 +149,7 @@ function buildEventPayload({
 
     return {
       type: formState.type,
-      title: `${subjectName} - ${examInstanceLabel(formState.examInstance)}`,
+      title: `${subjectName} - ${locale === 'en' ? (formState.examInstance === 'integrador' ? 'Final exam' : `Exam ${formState.examInstance}`) : examInstanceLabel(formState.examInstance)}`,
       notes: '',
       materialId: null,
       materiaId: selectedMateria?.id ?? null,
@@ -566,6 +569,7 @@ export default function CalendarioPage() {
       careerId,
       careerName,
       selectedMateria: selectedCareerMateria,
+      locale,
     });
 
     if (!payload) {
@@ -1376,7 +1380,7 @@ export default function CalendarioPage() {
                             </Badge>
                           </div>
                           <p className="mt-1.5 text-[13px] font-medium text-slate-900">
-                            {event.title}
+                            {localizeExamEventTitle(event.title, locale)}
                           </p>
                         </div>
                         <button
