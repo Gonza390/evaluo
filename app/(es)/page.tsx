@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     'Subí tus apuntes en PDF o Word y estudiá con IA: resúmenes, flashcards, práctica por tema y seguimiento de errores para preparar tus exámenes.',
   alternates: {
     canonical: '/',
-    languages: { 'es-AR': '/' },
+    languages: { 'es-AR': '/', en: '/en' },
   },
   other: {
     'geo.region': 'AR',
