@@ -51,6 +51,7 @@ import type {
 import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial, flushPendingAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
 import { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy-v2';
+import { localizeCanonicalGlossary } from '@/lib/student-materials/glossary-localizer';
 import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
 import {
   buildStudentMaterialPedagogicalQualityReport,
@@ -589,7 +590,11 @@ export async function processStudentMaterial(input: {
     pedagogicalModel !== null && canonicalGlossary.length > 0;
 
   const glossaryPromise = glossaryUsesCanonicalModel
-    ? Promise.resolve(canonicalGlossary)
+    ? (studyLocale === 'en'
+      ? localizeCanonicalGlossary(canonicalGlossary, {
+          materialId: material.id, userId: material.user_id, geminiPdfKeySlot,
+        })
+      : Promise.resolve(canonicalGlossary))
     : generateStudentMaterialGlossary(
         generationInput,
         mapLocalSummaryToView(
