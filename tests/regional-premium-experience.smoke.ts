@@ -27,6 +27,8 @@ const mp = read('app/api/payments/checkout/route.ts');
 const creem = read('app/api/payments/creem/checkout/route.ts');
 
 assert.match(availability, /resolveCheckoutMarket\(country, process\.env\.VERCEL_ENV\)/);
+assert.match(availability, /creemAvailable: mode === 'live' && isCreemModeEnabled\('live'\)/,
+  'A Preview TEST key must not enable the LIVE checkout card');
 assert.match(hook, /fetch\('\/api\/payments\/creem\/availability'/);
 assert.match(hook, /market: 'unknown'/);
 assert.match(selector, /useCheckoutMarket\(\)/);
