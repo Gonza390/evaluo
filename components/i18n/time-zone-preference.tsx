@@ -25,15 +25,6 @@ export function TimeZonePreference() {
   }, []);
   useEffect(() => { setChoice(saved ?? deviceZone ?? ''); }, [user?.id, saved, deviceZone]);
 
-  // Capture a user's local time zone once, if no preference was stored yet.
-  useEffect(() => {
-    if (!user || saved || !deviceZone) return;
-    let active = true;
-    void supabase.auth.updateUser({data: { time_zone: deviceZone }}).then(({error}) => {
-      if (active && error) setMessage(english ? 'Could not save your detected time zone.' : 'No pudimos guardar tu zona horaria detectada.');
-    });
-    return () => { active = false; };
-  }, [user?.id, saved, deviceZone, english]);
 
   async function saveZone(value: string) {
     setChoice(value);
