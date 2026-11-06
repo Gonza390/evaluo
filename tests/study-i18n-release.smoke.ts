@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { localizePedagogicalFlashcards } from '../lib/student-materials/flashcard-language.ts';
 
 const read = (p: string) => readFileSync(p, 'utf8');
 const types = read('lib/student-materials/types.ts');
@@ -29,4 +30,43 @@ assert.ok(!schema.toLowerCase().includes('truncate public.free_study_v2_unlocks'
 assert.ok(!schema.toLowerCase().includes('delete from public.free_study_v2_unlocks'));
 assert.ok(read('app/api/practice/cases/route.ts').includes("studyLocale === 'en' ? 'cases:en'"));
 assert.ok(read('app/api/practice/true-false/route.ts').includes("studyLocale === 'en' ? 'true_false:en'"));
+// Exercise the pure renderer transformation: translations must never alter grading
+// IDs, question banks, original source quotations or page references.
+const originalReference = {
+  pageStart: 4, pageEnd: 4, sectionTitle: 'Segmentación de mercados',
+  excerpt: 'La segmentación consiste en dividir el mercado en grupos de consumidores.',
+};
+const original = {
+  flashcards: [{
+    front: '¿Qué significa “Segmentación”?',
+    back: 'Dividir el mercado en grupos.',
+    level: 'recordar' as const,
+    reference: originalReference,
+  }],
+  questions: [{
+    id: 'q-1', type: 'multiple_choice' as const, level: 'recordar' as const,
+    prompt: '¿Qué significa la segmentación?', options: ['A', 'B'],
+    answer: 'A', explanation: 'En el material dice A.',
+    reference: originalReference,
+  }],
+  miniExamQuestionIds: ['q-1'],
+  coverage: { conceptsUsed: 1, sectionsUsed: 1, referencedItems: 2, totalItems: 2 },
+};
+const localized = localizePedagogicalFlashcards(original, [{
+  term: 'Segmentación',
+  englishTerm: 'Market segmentation',
+  definition: 'Dividing a market into groups of consumers.',
+  context: 'Marketing course', importance: 'alta',
+}]);
+assert.equal(localized.flashcards[0]?.front, 'What does “Market segmentation (Segmentación)” mean?');
+assert.equal(localized.flashcards[0]?.back, 'Dividing a market into groups of consumers.');
+assert.equal(localized.flashcards[0]?.reference.excerpt, originalReference.excerpt);
+assert.deepEqual(localized.flashcards[0]?.reference, originalReference);
+assert.deepEqual(localized.questions, original.questions);
+assert.deepEqual(localized.miniExamQuestionIds, ['q-1']);
+assert.equal(original.flashcards[0]?.front, '¿Qué significa “Segmentación”?');
+const unchanged = localizePedagogicalFlashcards(original, []);
+assert.equal(unchanged.flashcards[0]?.back, 'Dividir el mercado en grupos.');
+assert.equal(unchanged.flashcards[0]?.reference.pageStart, 4);
+
 console.log('[study-i18n-release] English study data, source preservation and Free V2 cache release guards verified.');
