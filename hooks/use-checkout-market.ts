@@ -28,9 +28,9 @@ let marketRequest: Promise<CheckoutAvailability> | null = null;
 
 function loadCheckoutMarket(): Promise<CheckoutAvailability> {
   if (marketRequest) return marketRequest;
-  marketRequest = fetch('/api/payments/creem/availability', { cache: 'no-store' })
+  const request: Promise<CheckoutAvailability> = fetch('/api/payments/creem/availability', { cache: 'no-store' })
     .then(async response => response.ok ? await response.json() as unknown : null)
-    .then(payload => {
+    .then((payload): CheckoutAvailability => {
       if (!payload || typeof payload !== 'object') return UNAVAILABLE;
       const value = payload as Record<string, unknown>;
       if (value.market !== 'argentina' && value.market !== 'international' && value.market !== 'unknown') {
@@ -44,7 +44,8 @@ function loadCheckoutMarket(): Promise<CheckoutAvailability> {
       };
     })
     .catch(() => UNAVAILABLE);
-  return marketRequest;
+  marketRequest = request;
+  return request;
 }
 
 export function useCheckoutMarket(): CheckoutAvailability | null {
