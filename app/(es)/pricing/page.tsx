@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import Link from 'next/link';
 import { safePremiumReturnTo } from '@/lib/premium-flow';
 import { Sparkles } from 'lucide-react';
@@ -14,7 +15,7 @@ const pricingDescription =
 export const metadata: Metadata = {
   title: 'Planes y precios',
   description: pricingDescription,
-  alternates: { canonical: '/pricing' },
+  alternates: hreflangAlternates('pricing', 'es'),
   openGraph: {
     type: 'website',
     url: '/pricing',

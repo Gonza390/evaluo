@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { FlashcardsPdfExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
 
@@ -7,7 +8,7 @@ const path = '/funciones/crear-flashcards-desde-pdf';
 export const metadata: Metadata = {
   title: "Crear flashcards a partir de PDF con IA",
   description: "Creá flashcards a partir de un PDF con IA: convertí tus apuntes en tarjetas de repaso, comprobá conceptos y continuá practicando por tema en Evaluo.",
-  alternates: { canonical: toAbsoluteUrl(path), languages: { es: toAbsoluteUrl(path), en: toAbsoluteUrl('/en/pdf-to-flashcards') } },
+  alternates: hreflangAlternates('pdf-to-flashcards', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

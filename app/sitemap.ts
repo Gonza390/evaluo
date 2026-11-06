@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
+import { hreflangSitemapEntries } from '@/lib/seo/hreflang-clusters';
 import { STUDY_GUIDES } from '@/lib/es-study-guides';
 import { PUBLIC_EXAMS, PUBLIC_PLANS, PUBLIC_DOCS, SEO_HUBS } from '@/lib/student-seo-content';
 import { STUDY_BLOG_ARTICLES, getStudyBlogPath, getTranslation } from '@/lib/study-blog-articles';
@@ -161,6 +162,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   routes.push({ url: `${baseUrl}/recursos/registro-de-errores` });
   routes.push({ url: `${baseUrl}/recursos/verificar-preguntas-ia`, lastModified: new Date('2026-11-06') });
   routes.push({ url: `${baseUrl}/recursos/metodo-estudio-pdf-practica-activa`, lastModified: new Date('2026-11-06') });
+
+  // hreflang de clusters ES↔EN (home, precios, funciones, landings regionales):
+  // misma fuente que el <head> de cada página, así sitemap y metadata no se contradicen.
+  const clusterAlternates = new Map(hreflangSitemapEntries().map((entry) => [entry.url, entry.alternates]));
+  for (const route of routes) {
+    const alternates = clusterAlternates.get(route.url);
+    if (alternates && !route.alternates) route.alternates = alternates;
+  }
 
   // Previews are not public/indexable. Their Supabase anon role can lack access
   // to production-only catalog views. Keep all dynamic sitemap validation on

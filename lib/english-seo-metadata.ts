@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { ENGLISH_PAGES, type EnglishPageKey } from '@/lib/english-seo-content';
-import { STUDY_HREFLANG } from '@/lib/international-study-landings';
+import { hreflangLanguages } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
 // hreflang only pairs genuinely comparable topics; do not map the English
@@ -10,11 +10,11 @@ export function getEnglishSeoMetadata(key: EnglishPageKey): Metadata {
   const url = toAbsoluteUrl(page.path);
   const languages: Record<string, string> | undefined =
     key === 'study-pdf-with-ai'
-      ? { ...STUDY_HREFLANG, en: url }
+      ? hreflangLanguages('study-pdf')
       : key === 'pdf-to-quiz'
-        ? { en: url, es: toAbsoluteUrl('/convertir-pdf-en-preguntas') }
+        ? hreflangLanguages('pdf-to-quiz')
         : key === 'pdf-to-flashcards'
-          ? { en: url, es: toAbsoluteUrl('/funciones/crear-flashcards-desde-pdf') }
+          ? hreflangLanguages('pdf-to-flashcards')
           : undefined;
 
   return {

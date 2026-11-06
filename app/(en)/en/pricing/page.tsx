@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import Link from 'next/link';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 import { RegionalPricingMessage } from '@/components/pricing/RegionalPricingMessage';
@@ -7,7 +8,7 @@ import { FooterHome } from '@/components/footer-home';
 export const metadata: Metadata = {
  title: 'Free and Premium Plans | Evaluo',
  description: 'Compare Free and Premium study plans. Study PDF and Word documents with AI, practice by topic, review mistakes and track progress.',
- alternates: { canonical: '/en/pricing', languages: {en:'/en/pricing','es-AR':'/pricing'} },
+ alternates: hreflangAlternates('pricing', 'en'),
 };
 const freeFeatures = [
  '1 lifetime PDF or Word upload',

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { FooterHome } from '@/components/footer-home';
 import { HomeRedesign } from '@/components/marketing/home-redesign';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   title: { absolute: 'Evaluo | Study with your PDF and prepare for exams using AI' },
   description:
     'Upload your PDF or Word notes and study with AI: topic summaries, flashcards, practice questions and progress tracking to prepare for your exams.',
-  alternates: { canonical: '/en', languages: { en: '/en', 'es-AR': '/' } },
+  alternates: hreflangAlternates('home', 'en'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
