@@ -386,5 +386,9 @@
   {
     "file": "tests/creem-checkout.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/creem-webhook.smoke.ts",
+    "alias": false
   }
 ]
