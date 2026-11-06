@@ -362,5 +362,9 @@
   {
     "file": "tests/paddle-website-verification.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/geo-public-contract.smoke.mjs",
+    "alias": false
   }
 ]

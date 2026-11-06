@@ -24,6 +24,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/`,
     },
     {
+      url: `${baseUrl}/sobre-evaluo`,
+    },
+    {
       url: `${baseUrl}/explorar`,
     },
     {

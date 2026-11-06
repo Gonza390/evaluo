@@ -8,7 +8,7 @@ import { FooterHome } from '@/components/footer-home';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
-  'Descubrí qué temas dominás, reforzá tus errores y continuá avanzando con tus apuntes. Evaluo Free y Premium desde $9.990 al mes.';
+  'Conocé los planes Gratis y Premium de Evaluo para estudiar apuntes PDF o Word, practicar por tema, revisar errores y seguir tu progreso.';
 
 export const metadata: Metadata = {
   title: 'Planes y precios',
@@ -48,7 +48,7 @@ const freeFeatures = [
 
 const premiumFeatures = [
   'Todo lo de Gratis: práctica, resultados y progreso por tema',
-  'Subí hasta 3 PDFs por día para preparar más materias',
+  'Subí hasta 3 materiales PDF o Word por día para preparar más materias',
   'Pedí más explicaciones con IA y preguntas para repasar tus errores',
   'Creá mapas mentales para relacionar conceptos de tus apuntes',
   'Accedé a modos Premium de simuladores con más explicaciones',

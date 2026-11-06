@@ -11,7 +11,7 @@ import './home-redesign.css';
 export const metadata: Metadata = {
   title: { absolute: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen' },
   description:
-    'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
+    'Subí tus apuntes en PDF o Word y estudiá con IA: resúmenes, flashcards, práctica por tema y seguimiento de errores para preparar tus exámenes.',
   alternates: {
     canonical: '/',
     languages: { 'es-AR': '/' },
