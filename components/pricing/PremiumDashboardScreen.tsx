@@ -9,6 +9,7 @@ import { premiumPurchaseDisplayState } from '@/lib/payments/status';
 import { PREMIUM_MONTHLY_PRICE_ARS, PREMIUM_SEMESTER_PRICE_ARS } from '@/lib/payments/offers';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { useCheckoutMarket } from '@/hooks/use-checkout-market';
 
 const PREMIUM_EN: Record<string,string> = {
   "1": "1",
@@ -152,17 +153,11 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const [loading,setLoading] = useState<Plan|null>(null);
   const [error,setError] = useState<string|null>(null);
   const [checkoutUrl,setCheckoutUrl] = useState<string|null>(null);
-  const [market,setMarket] = useState<{market:'argentina'|'international'|'unknown';creemAvailable:boolean}|null>(null);
-  useEffect(()=>{
-    let active=true;
-    void fetch('/api/payments/creem/availability',{cache:'no-store'})
-      .then(async r=>r.ok?await r.json():null)
-      .then(d=>{if(active)setMarket(d&&['argentina','international','unknown'].includes(d.market)?d:{market:'unknown',creemAvailable:false})})
-      .catch(()=>{if(active)setMarket({market:'unknown',creemAvailable:false})});
-    return ()=>{active=false};
-  },[]);
+  const market = useCheckoutMarket();
 
   useEffect(()=>{
+    // Never load local ARS offers for international visitors.
+    if (market?.market !== 'argentina') return;
     let active=true;
     void Promise.allSettled([
       fetch('/api/payments/offer',{cache:'no-store'}).then(async res=>{
@@ -191,10 +186,10 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
       else setStatus('unavailable');
     });
     return ()=>{active=false};
-  },[]);
+  },[market?.market]);
 
   async function checkout(plan:Plan){
-    if(!offer||status!=='inactive'||loading||!offer.semesterAvailable&&plan==='semester')return;
+    if(market?.market !== 'argentina'||!offer||status!=='inactive'||loading||!offer.semesterAvailable&&plan==='semester')return;
     const amount=plan==='semester'?offer.semesterPriceArs:offer.monthlyPriceArs;
     setError(null);setLoading(plan);setCheckoutUrl(null);
     trackMarketingEvent('premium_checkout_clicked',{
