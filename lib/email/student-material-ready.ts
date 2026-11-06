@@ -103,10 +103,11 @@ function isUniqueViolation(error: unknown) {
   );
 }
 
-function firstName(value: string | null | undefined) {
+function firstName(value: string | null | undefined, locale: AppLocale = 'es') {
   const normalized = value?.trim();
-  if (!normalized) return 'estudiante';
-  return normalized.split(/\s+/)[0] || 'estudiante';
+  const fallback = locale === 'en' ? 'student' : 'estudiante';
+  if (!normalized) return fallback;
+  return normalized.split(/\s+/)[0] || fallback;
 }
 
 export async function sendStudentMaterialReadyEmailIfInactive(input: {
@@ -196,9 +197,10 @@ export async function sendStudentMaterialReadyEmailIfInactive(input: {
       (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null) ||
       (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : null);
 
+    const locale = accountAppLocale(user.user_metadata) ?? 'es';
     const message = buildStudentMaterialReadyMessage({
-      locale: accountAppLocale(user.user_metadata) ?? 'es',
-      firstname: firstName(displayName),
+      locale,
+      firstname: firstName(displayName, locale),
       materialFileName: material.file_name ?? input.materialFileName,
       materialId: input.materialId,
     });
