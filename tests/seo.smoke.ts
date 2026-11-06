@@ -1081,10 +1081,17 @@ assertIncludesAll('app/(es)/landings/parciales/page.tsx', [
 ]);
 
 
+assertIncludesAll('app/(en)/en/page.tsx', [
+  'HomeRedesign',
+  'locale="en"',
+  "canonical: '/en'",
+  'FooterHome',
+]);
+assertIncludesAll('components/marketing/home-redesign.tsx', ['LandingLanguageSelector locale={locale}', 'HOME_REDESIGN_FAQS_EN']);
 // English organic launch: self-canonicals, real English page content, and
 // reciprocal language signals only where Spanish equivalents exist.
 for (const [route, pageKey] of [
-  ['app/(en)/en/page.tsx', 'home'],
+  ['app/(en)/en/resources/page.tsx', 'home'],
   ['app/(en)/en/pdf-to-quiz/page.tsx', 'pdf-to-quiz'],
   ['app/(en)/en/pdf-to-flashcards/page.tsx', 'pdf-to-flashcards'],
   ['app/(en)/en/study-pdf-with-ai/page.tsx', 'study-pdf-with-ai'],
@@ -1104,7 +1111,7 @@ assertIncludesAll('lib/english-seo-metadata.ts', [
   "'/funciones/crear-flashcards-desde-pdf'",
 ]);
 assertIncludesAll('lib/english-seo-content.ts', [
-  "path: '/en'",
+  "path: '/en/resources'",
   "path: '/en/pdf-to-quiz'",
   "path: '/en/pdf-to-flashcards'",
   "path: '/en/study-pdf-with-ai'",
@@ -1116,10 +1123,10 @@ assertIncludesAll('components/marketing/english-study-page.tsx', [
   'lang="en"',
   '<InternationalDocumentLanguage lang="en" />',
   "href={ENGLISH_PAGES[key].path}",
-  'The current product, including sign-in, navigation and pricing, is primarily in Spanish',
+  'The English homepage, sign-in and first PDF upload flow are available in English',
   'Illustrative study examples',
   'How to verify this answer',
-  'Explore the current Spanish-language app',
+  'Explore the English homepage',
 ]);
 assertIncludesAll('app/sitemap.ts', [
   '${baseUrl}/en`',
@@ -1172,8 +1179,8 @@ assertIncludesAll('components/LoginFormGoogleFirst.tsx', [
   "locale = 'es'",
   "const english = locale === 'en'",
   "getAuthContextCopy(nextPath, reason, isSignUp, english)",
-  "Sign-in is available in English",
-  "After signing in, the current dashboard",
+  "The English dashboard and first upload flow are available",
+  "Some advanced study tools, account emails and payment screens",
   "Terms (Spanish)",
   "Privacy Policy (Spanish)",
   "Account created. Check your email",
@@ -1181,7 +1188,7 @@ assertIncludesAll('components/LoginFormGoogleFirst.tsx', [
 assertIncludesAll('components/marketing/english-study-page.tsx', [
   'href="/en/login?mode=signup"',
   'Create an account (English sign-up)',
-  'Explore the current Spanish-language app',
+  'Explore the English homepage',
 ]);
 assertIncludesAll('components/GlobalClientRuntime.tsx', [
   "pathname === '/en' || pathname.startsWith('/en/')",
