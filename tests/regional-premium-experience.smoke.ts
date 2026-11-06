@@ -69,4 +69,15 @@ assert.doesNotMatch(spanish, /incluidos en los tres planes/i,
 assert.match(regional, /Creem/);
 assert.match(mp, /argentina_checkout_only/);
 assert.match(creem, /international_checkout_only/);
+// La API de ofertas en ARS y el menú móvil nunca deben mostrar pesos fuera de Argentina.
+const offerApi = read('app/api/payments/offer/route.ts');
+assert.match(offerApi, /resolveCheckoutMarket\(/);
+assert.match(offerApi, /if \(market !== 'argentina'\)[\s\S]{0,200}offer_unavailable_for_region/);
+const mobileMenu = read('components/mobile-profile-menu.tsx');
+assert.match(mobileMenu, /loadCheckoutMarket\(\)/);
+assert.match(mobileMenu, /availability\.market !== 'argentina'[\s\S]{0,120}setWeeklyPrice\(null\)/);
+assert.ok(
+  mobileMenu.indexOf("availability.market !== 'argentina'") < mobileMenu.indexOf("fetch('/api/payments/offer'"),
+  'El menú móvil sólo puede pedir la oferta en ARS después de confirmar Argentina.'
+);
 console.log('[regional-premium] ARS in Argentina, USD abroad, no mixed public pricing, country-specific checkout passed.');

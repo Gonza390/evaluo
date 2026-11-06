@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight, Crown, MessageSquarePlus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { usePremium } from '@/hooks/usePremium';
+import { loadCheckoutMarket } from '@/hooks/use-checkout-market';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -33,18 +34,42 @@ type MobileProfileMenuProps = {
 
 export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobileProfileMenuProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [weeklyPrice, setWeeklyPrice] = useState<number | null>(null);
+  // Precio semanal ya formateado en la moneda de la región del visitante.
+  // Argentina ve sólo ARS; el resto del mundo ve sólo USD; región desconocida no ve precio.
+  const [weeklyPrice, setWeeklyPrice] = useState<string | null>(null);
   const { isPremium } = usePremium();
-  const { messages } = useAppLocale();
+  const { messages, locale } = useAppLocale();
 
   const refreshPrice = () => {
     if (isPremium) return;
-    void fetch('/api/payments/offer', { cache: 'no-store' })
-      .then(async (response) => {
+    void loadCheckoutMarket()
+      .then(async (availability) => {
+        if (availability.market === 'international') {
+          const weeklyUsd = Math.round((availability.monthlyUsdCents * 7) / 30) / 100;
+          setWeeklyPrice(
+            new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-AR', {
+              style: 'currency',
+              currency: 'USD',
+              currencyDisplay: 'code',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(weeklyUsd)
+          );
+          return;
+        }
+        if (availability.market !== 'argentina') {
+          setWeeklyPrice(null);
+          return;
+        }
+        const response = await fetch('/api/payments/offer', { cache: 'no-store' });
         if (!response.ok) return;
         const offer = (await response.json()) as { monthlyPriceArs?: number };
         if (typeof offer.monthlyPriceArs === 'number' && Number.isFinite(offer.monthlyPriceArs) && offer.monthlyPriceArs > 0) {
-          setWeeklyPrice(Math.round(offer.monthlyPriceArs * 7 / 30));
+          setWeeklyPrice(
+            new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(
+              Math.round((offer.monthlyPriceArs * 7) / 30)
+            )
+          );
         }
       })
       .catch(() => {});
@@ -97,7 +122,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
                   <span className="block text-[12px] font-medium">{messages.navigation.upgrade}</span>
                   <span className="block text-[10px] text-slate-500">
                     {weeklyPrice !== null
-                      ? `≈ ${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(weeklyPrice)} ${messages.navigation.perWeek}`
+                      ? `≈ ${weeklyPrice} ${messages.navigation.perWeek}`
                       : messages.navigation.viewPlans}
                   </span>
                 </span>

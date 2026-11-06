@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   isPremiumFunnelDismissReturn,
   withPremiumDismissMarker,
@@ -45,10 +45,10 @@ assert.match(upsell, /premiumDashboardHref\(/,
   'All in-app Premium upsells must open the central subscription page.');
 assert.doesNotMatch(upsell, /isPremiumFunnelDismissReturn|openContextualFlow|PREMIUM_FLOWS/,
   'Do not automatically reopen abandoned legacy commercial funnels.');
-for (const path of ['components/premium/mapa-mental-premium-funnel.tsx', 'components/premium/errores-premium-funnel.tsx']) {
-  const file = source(path);
-  assert.match(file, /router\.replace\(withPremiumDismissMarker\(returnTo, SOURCE,/);
-  assert.doesNotMatch(file, /router\.back\(\)/, 'Closing should use explicit source path.');
+// Los funnels comerciales legacy (ARS + Mercado Pago fijos) se eliminaron para no mezclar regiones.
+for (const path of ['mapa-mental', 'errores', 'explicaciones', 'simulador']) {
+  assert.ok(!existsSync(`components/premium/${path}-premium-funnel.tsx`),
+    'Legacy Premium funnels must not return: they hard-code ARS for every country.');
 }
 
 const notifications = source('components/notifications/notification-bell.tsx');

@@ -26,7 +26,7 @@ const UNAVAILABLE: CheckoutAvailability = {
 // per browser navigation so they never momentarily disagree about the country.
 let marketRequest: Promise<CheckoutAvailability> | null = null;
 
-function loadCheckoutMarket(): Promise<CheckoutAvailability> {
+export function loadCheckoutMarket(): Promise<CheckoutAvailability> {
   if (marketRequest !== null) return marketRequest;
   const request = (async (): Promise<CheckoutAvailability> => {
     try {

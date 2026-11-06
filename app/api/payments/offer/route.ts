@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { resolveCheckoutMarket } from '@/lib/payments/checkout-market';
 import {
   PREMIUM_MONTHLY_PRICE_ARS,
   PREMIUM_MONTHLY_REFERENCE_PRICE_ARS,
@@ -10,7 +11,17 @@ import {
   semesterSavingsPercent,
 } from '@/lib/payments/offers';
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Las ofertas en ARS son exclusivas de Argentina. Fuera de Argentina (o si Vercel
+  // no confirma el país) nunca devolvemos precios en pesos.
+  const market = resolveCheckoutMarket(request.headers.get('x-vercel-ip-country'), process.env.VERCEL_ENV);
+  if (market !== 'argentina') {
+    return NextResponse.json(
+      { error: 'offer_unavailable_for_region', market },
+      { status: 404, headers: { 'Cache-Control': 'private, no-store' } }
+    );
+  }
+
   try {
     const admin = createAdminClient() as unknown as SupabaseClient;
     const pendingCutoff = new Date(Date.now() - 30 * 60_000).toISOString();
