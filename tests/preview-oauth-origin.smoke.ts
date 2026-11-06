@@ -39,4 +39,7 @@ const primaryLogin = readFileSync('components/LoginFormGoogleFirst.tsx', 'utf8')
 assert.match(primaryLogin, /new URL\('\/auth\/callback', window\.location\.origin\)/);
 const callback = readFileSync('app/(es)/auth/callback/route.ts','utf8');
 assert.match(callback, /requestUrl\.origin/);
+const creemCheckout = readFileSync('app/api/payments/creem/checkout/route.ts', 'utf8');
+assert.match(creemCheckout, /const successOrigin = mode === 'test' \? requestOrigin : site/);
+assert.match(creemCheckout, /mode === 'test' && origin !== requestOrigin/);
 console.log('Auth: master Preview login uses stable canonical origin, preserving path, production unchanged.');
