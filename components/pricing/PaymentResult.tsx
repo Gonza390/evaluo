@@ -38,6 +38,11 @@ type PaymentDetails = {
   plan: 'free' | 'premium';
   status: string;
   amountArs: number | null;
+  amountUsdCents: number | null;
+  provider: string | null;
+  checkoutProvider: string | null;
+  checkoutMode: string | null;
+  checkoutAmountUsdCents: number | null;
   nextPaymentDate: string | null;
   accessUntil: string | null;
   promotion: string | null;
@@ -53,6 +58,11 @@ const INITIAL_DETAILS: PaymentDetails = {
   plan: 'free',
   status: 'pending',
   amountArs: null,
+  amountUsdCents: null,
+  provider: null,
+  checkoutProvider: null,
+  checkoutMode: null,
+  checkoutAmountUsdCents: null,
   nextPaymentDate: null,
   accessUntil: null,
   promotion: null,
@@ -176,6 +186,11 @@ export function PaymentResult({
         plan: payload.plan === 'premium' ? 'premium' : 'free',
         status: payload.status ?? 'pending',
         amountArs: payload.amountArs ?? null,
+        amountUsdCents: payload.amountUsdCents ?? null,
+        provider: payload.provider ?? null,
+        checkoutProvider: payload.checkoutProvider ?? null,
+        checkoutMode: payload.checkoutMode ?? null,
+        checkoutAmountUsdCents: payload.checkoutAmountUsdCents ?? null,
         nextPaymentDate: payload.nextPaymentDate ?? null,
         accessUntil: payload.accessUntil ?? null,
         promotion: payload.promotion ?? null,
@@ -254,7 +269,9 @@ export function PaymentResult({
     source,
   ]);
 
-  const amount = details.amountArs
+  const amount = details.amountUsdCents && details.provider === 'creem'
+    ? `US$ ${(details.amountUsdCents / 100).toFixed(2).replace('.', ',')}`
+    : details.amountArs
     ? new Intl.NumberFormat('es-AR', {
         style: 'currency',
         currency: 'ARS',
@@ -287,7 +304,7 @@ export function PaymentResult({
           Estamos confirmando tu pago
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
-          Mercado Pago puede tardar unos instantes en notificarnos. No vuelvas a pagar mientras
+          El proveedor de pago puede tardar unos instantes en notificarnos. No vuelvas a pagar mientras
           verificamos el estado de este intento.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
@@ -324,7 +341,7 @@ export function PaymentResult({
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
           El pago fue rechazado, cancelado o venció antes de completarse. Podés volver a intentarlo;
-          Premium se activa únicamente cuando Mercado Pago confirma el cobro.
+          Premium se activa únicamente cuando el proveedor confirma el cobro.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild className="h-11 rounded-lg px-6 shadow-none">
@@ -352,7 +369,7 @@ export function PaymentResult({
           Necesitamos que revises tu suscripción
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
-          Mercado Pago informó un problema con el cobro o dejó la suscripción pausada. Revisá tu
+          El proveedor informó un problema con el cobro o dejó la suscripción pausada. Revisá tu
           plan para ver el estado actual antes de volver a intentar un pago.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
