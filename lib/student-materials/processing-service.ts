@@ -52,6 +52,7 @@ import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial, flushPendingAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
 import { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy-v2';
 import { localizeCanonicalGlossary } from '@/lib/student-materials/glossary-localizer';
+import { localizePedagogicalFlashcards } from '@/lib/student-materials/flashcard-language';
 import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
 import {
   buildStudentMaterialPedagogicalQualityReport,
@@ -697,10 +698,16 @@ export async function processStudentMaterial(input: {
       visionUsed,
     });
 
+  // Semantic quality is assessed on the canonical, source-verified version.
+  // The English card wording is a display projection; IDs and references remain stable.
+  const displayedArtifacts = studyLocale === 'en'
+    ? localizePedagogicalFlashcards(pedagogicalArtifacts, glossary)
+    : pedagogicalArtifacts;
+
   const { error: derivedArtifactsPersistError } = await admin
     .from('student_materials')
     .update({
-      pedagogical_artifacts: pedagogicalArtifacts as unknown as Json,
+      pedagogical_artifacts: displayedArtifacts as unknown as Json,
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
       pedagogical_quality_report:
         pedagogicalQualityReport as unknown as Json,
