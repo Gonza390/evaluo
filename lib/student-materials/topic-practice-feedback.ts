@@ -10,8 +10,16 @@ export type TopicPracticeOutcome = {
 export function topicPracticeFeedback(
   outcome: TopicPracticeOutcome | undefined,
   pending: number,
-  reinforced: boolean
+  reinforced: boolean,
+  locale: 'es' | 'en' = 'es'
 ) {
+  if (locale === 'en') {
+    if (pending > 0) return 'Review explanations for pending questions before practicing again. You can reread the topic below.';
+    if (outcome && outcome.incorrect === 0) return 'All answers in this session were correct. Continue with another topic and check again later.';
+    if (reinforced) return 'You completed the review. Check your understanding in another session; one correct answer does not prove mastery.';
+    if (outcome?.incorrect) return 'Review this session and the topic content. Any unresolved difficulties will appear here when your results load.';
+    return 'Keep studying and practice when you are ready. There is not enough evidence yet to consider this topic mastered.';
+  }
   if (pending > 0)
     return 'Revisá las explicaciones de las preguntas pendientes antes de volver a practicar. Podés consultar el contenido del tema debajo.';
   if (outcome && outcome.incorrect === 0)
