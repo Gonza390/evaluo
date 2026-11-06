@@ -126,7 +126,7 @@ export default async function PricingPage({
                 Elegí cómo querés seguir avanzando.
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                Tu progreso y tus resultados están incluidos en los tres planes.
+                Tu progreso y tus resultados están incluidos tanto en Gratis como en Premium.
                 Elegí Premium cuando necesites estudiar más materiales y reforzar con más ayuda.
               </p>
             </div>
