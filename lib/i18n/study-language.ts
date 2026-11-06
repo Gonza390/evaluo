@@ -1,4 +1,12 @@
-import { accountAppLocale, parseAppLocale, type AppLocale } from './app-locale';
+import type { AppLocale } from './app-locale';
+
+function parseAppLocale(value: unknown): AppLocale | null {
+  return value === 'es' || value === 'en' ? value : null;
+}
+function accountAppLocale(metadata: unknown): AppLocale | null {
+  return metadata && typeof metadata === 'object'
+    ? parseAppLocale((metadata as Record<string, unknown>).ui_locale) : null;
+}
 
 /** Study language controls generated learning content, never source extraction or authorization. */
 export function accountStudyLocale(metadata: unknown): AppLocale | null {
