@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Bell, Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { localizeExamEventTitle } from '@/lib/i18n/calendar-event-title';
 import { dismissExamReminderAction, getExamReminders } from '@/lib/actions/calendario';
 import { usePremium } from '@/hooks/usePremium';
 import { useUser } from '@/hooks/useUser';
@@ -157,7 +158,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean } = {}
                       {daysRemainingLabel(reminder.daysRemaining, locale)}
                     </span>
                     <p className="mt-1.5 truncate text-sm font-semibold text-slate-900">
-                      {reminder.title}
+                      {localizeExamEventTitle(reminder.title, locale)}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-500">
                       {formatEventDate(reminder.eventDate, locale)}
