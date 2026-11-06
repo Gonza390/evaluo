@@ -83,6 +83,7 @@ const ANALYTICS_EVENT_NAMES = [
   'first_pdf_study_plan_started',
   'first_pdf_practice_opened',
   'pdf_progress_panel_opened',
+  'pdf_progress_content_rendered',
   'pdf_progress_practice_clicked',
   'summary_reading_started',
   'summary_topic_check_prompted',

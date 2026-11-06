@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
@@ -44,6 +45,15 @@ export function MaterialProgressContent({
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<MaterialProgressDataResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const progressContentTrackedRef = useRef(false);
+
+  // Track actual loaded PDF progress, not just a click on the Progreso tab.
+  // Never record a view for failed requests or loading placeholders.
+  useEffect(() => {
+    if (loading || !result?.success || progressContentTrackedRef.current) return;
+    progressContentTrackedRef.current = true;
+    trackMarketingEvent('pdf_progress_content_rendered', { material_id: material.id });
+  }, [loading, result?.success, material.id]);
 
   useEffect(() => {
     let cancelled = false;
