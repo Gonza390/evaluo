@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolveCheckoutMarket } from '../lib/payments/checkout-market.ts';
+
+const read = (path: string) => readFileSync(path, 'utf8');
+const countries: Array<[string | null, 'argentina' | 'international' | 'unknown']> = [
+  ['AR', 'argentina'], ['ar', 'argentina'],
+  ['US', 'international'], ['ES', 'international'],
+  ['MX', 'international'], ['BR', 'international'],
+  ['CL', 'international'], ['UY', 'international'], ['CO', 'international'],
+  [null, 'unknown'], ['', 'unknown'], ['bad', 'unknown'],
+];
+for (const [country, expected] of countries) {
+  assert.equal(resolveCheckoutMarket(country, 'production'), expected);
+  assert.equal(resolveCheckoutMarket(country, 'preview'), expected);
+}
+const availability = read('app/api/payments/creem/availability/route.ts');
+const selector = read('components/pricing/PricingPlanSelector.tsx');
+const premium = read('components/pricing/PremiumDashboardScreen.tsx');
+const spanish = read('app/(es)/pricing/page.tsx');
+const english = read('app/(en)/en/pricing/page.tsx');
+const home = read('components/marketing/home-redesign.tsx');
+const regional = read('components/pricing/RegionalPricingMessage.tsx');
+const hook = read('hooks/use-checkout-market.ts');
+const mp = read('app/api/payments/checkout/route.ts');
+const creem = read('app/api/payments/creem/checkout/route.ts');
+
+assert.match(availability, /resolveCheckoutMarket\(country, process\.env\.VERCEL_ENV\)/);
+assert.match(hook, /fetch\('\/api\/payments\/creem\/availability'/);
+assert.match(hook, /market: 'unknown'/);
+assert.match(selector, /useCheckoutMarket\(\)/);
+assert.match(selector, /market\.market === 'international'/);
+assert.match(selector, /market\.market === 'unknown'/);
+assert.match(selector, /market\?\.market === 'argentina' \? <details/);
+assert.doesNotMatch(selector, /<CreemCheckoutCard[^>]*mode="test"/,
+  'Preview must not mix a USD test card with Argentina ARS plans');
+assert.match(premium, /useCheckoutMarket\(\)/);
+assert.match(premium, /market\?\.market !== 'argentina'/);
+assert.match(premium, /market\.market==='international'/);
+assert.match(spanish, /<RegionalPricingMessage locale="es" placement="featured"/);
+assert.match(spanish, /<RegionalPricingMessage locale="es" placement="hero"/);
+assert.match(spanish, /<RegionalPricingMessage locale="es" placement="billing"/);
+assert.doesNotMatch(spanish, /<section aria-label="Precio internacional de Evaluo"/);
+assert.match(english, /<RegionalPricingMessage locale="en" placement="billing"/);
+assert.doesNotMatch(english, /In Argentina, local offers are billed/);
+assert.match(home, /<RegionalPricingMessage placement="home-plan"/);
+assert.match(home, /<RegionalPricingMessage placement="home-footer"/);
+assert.match(home, /<RegionalPricingMessage placement="home-faq"/);
+assert.doesNotMatch(home, /\{t\("Empezá gratis · Sin tarjeta · Pagás en pesos con Mercado Pago"\)\}/);
+assert.match(regional, /market === 'argentina'/);
+assert.match(regional, /market === 'international'/);
+assert.match(regional, /market === 'unknown'/);
+assert.match(regional, /US\$ 9,99/);
+assert.match(regional, /Mercado Pago/);
+assert.match(regional, /Creem/);
+assert.match(mp, /argentina_checkout_only/);
+assert.match(creem, /international_checkout_only/);
+console.log('[regional-premium] ARS in Argentina, USD abroad, no mixed public pricing, country-specific checkout passed.');
