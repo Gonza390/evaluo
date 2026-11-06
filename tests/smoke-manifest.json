@@ -422,5 +422,9 @@
   {
     "file": "tests/seo-english-acquisition.smoke.mjs",
     "alias": false
+  },
+  {
+    "file": "tests/seo-single-language-selector.smoke.mjs",
+    "alias": false
   }
 ]

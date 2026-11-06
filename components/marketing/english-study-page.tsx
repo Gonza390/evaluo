@@ -1,9 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { FooterHome } from '@/components/footer-home';
 import { ArrowRight, BookOpen, CheckCircle2, FileText, Globe2, Layers3, ShieldCheck } from 'lucide-react';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
-import { LandingLanguageSelector } from '@/components/marketing/landing-language-selector';
+import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { ENGLISH_PAGES, ENGLISH_PAGE_ORDER, type EnglishPageKey } from '@/lib/english-seo-content';
@@ -26,23 +25,9 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
     <div lang="en" className="min-h-screen bg-white text-slate-950">
       <InternationalDocumentLanguage lang="en" />
       <JsonLd data={breadcrumbData} />
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8">
-          <Link href="/en" className="inline-flex items-center gap-2.5 text-xl font-black tracking-tight text-slate-950" aria-label="Evaluo English study resources">
-            <Image src="/evaluo-logo-icono.svg" alt="" width={34} height={34} className="h-9 w-9" />
-            Evaluo
-            <span className="ml-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">English</span>
-          </Link>
-          <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-5">
-            <LandingLanguageSelector locale="en" />
-          <nav aria-label="English study guides" className="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-700 md:flex">
-            <Link className="hover:text-blue-700" href="/en/pdf-to-quiz">PDF to Quiz</Link>
-            <Link className="hover:text-blue-700" href="/en/pdf-to-flashcards">Flashcards</Link>
-            <Link className="hover:text-blue-700" href="/en/study-pdf-with-ai">Study PDFs</Link>
-          </nav>
-          </div>
-        </div>
-      </header>
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <EnglishSeoHeader />
+      </div>
 
       <main>
         <section className="border-b border-slate-100 bg-[linear-gradient(118deg,#F0F5FF_0%,#FFFFFF_72%)]">

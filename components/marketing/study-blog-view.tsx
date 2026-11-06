@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { StudyBlogWorkshopView } from '@/components/marketing/study-blog-workshop';
@@ -7,6 +6,7 @@ import { ExamStudyTimeEstimator } from '@/components/marketing/exam-study-time-e
 import { STUDY_BLOG_WORKSHOPS_ES } from '@/lib/study-blog-workshops-es';
 import { STUDY_BLOG_WORKSHOPS_EN } from '@/lib/study-blog-workshops-en';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -35,7 +35,6 @@ const words = {
     sources: 'Fuentes y lectura adicional',
     sourcesNote: 'Referencias sobre técnicas de aprendizaje. Los ejercicios originales de esta guía son ejemplos educativos y deben contrastarse con la bibliografía de tu materia.',
     other: 'También puede interesarte',
-    otherLocale: 'Read in English',
     optional: '¿Querés practicar con tus propios apuntes?',
     optionalLink: 'Subir mi material',
     optionalNote: 'Opcional: podés aplicar los ejercicios de estas guías sin crear una cuenta.',
@@ -59,7 +58,6 @@ const words = {
     sources: 'Sources and further reading',
     sourcesNote: 'References on learning strategies. The original activities in this guide are educational examples and should be checked against your course materials.',
     other: 'Keep reading',
-    otherLocale: 'Leer en español',
     optional: 'Want to use your own study notes?',
     optionalLink: 'Study my material',
     optionalNote: 'Optional: you can use the methods on this page without creating an account.',
@@ -98,25 +96,15 @@ const CONTEXTUAL_LINKS: Partial<Record<StudyBlogLocale, Record<string, {href:str
  }
 };
 
-function BlogHeader({ locale }: { locale: StudyBlogLocale }) {
+function BlogHeader({ locale, alternateHref }: { locale: StudyBlogLocale; alternateHref?: string }) {
   return (
     <>
       <InternationalDocumentLanguage lang={locale} />
       <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
         {locale === 'es' ? (
-          <PublicSiteHeader variant="landing" trackingLocation="study_blog_es" />
+          <PublicSiteHeader variant="landing" trackingLocation="study_blog_es" alternateHref={alternateHref} />
         ) : (
-          <header className="flex min-h-20 flex-wrap items-center justify-between gap-3 border-b border-slate-200 py-3">
-            <Link href="/en" aria-label="Evaluo English homepage" className="group flex min-w-0 items-center gap-2 text-lg font-black tracking-[-0.045em] text-slate-950 sm:gap-2.5 sm:text-2xl">
-              <Image src="/evaluo-logo-icono.svg" alt="" width={40} height={40} className="h-8 w-8 shrink-0 object-contain sm:h-9 sm:w-9" />
-              <span className="truncate">Evaluo</span>
-            </Link>
-            <nav aria-label="Study navigation" className="flex items-center gap-4 text-sm font-semibold text-slate-700">
-              <Link href="/en/resources" className="min-h-11 py-3 hover:text-blue-700">Study guides</Link>
-              <Link href="/en/blog" className="min-h-11 py-3 hover:text-blue-700">Blog</Link>
-              <Link href="/en/study-pdf-with-ai" className="hidden min-h-11 rounded-xl bg-blue-700 px-4 py-3 text-white hover:bg-blue-800 sm:inline-flex">Study with AI</Link>
-            </nav>
-          </header>
+          <EnglishSeoHeader alternateHref={alternateHref} />
         )}
       </div>
     </>
@@ -133,16 +121,13 @@ export function StudyBlogHub({ locale }: { locale: StudyBlogLocale }) {
         { name: locale === 'es' ? 'Inicio' : 'Home', path: locale === 'es' ? '/' : '/en' },
         { name: copy.index, path },
       ])} />
-      <BlogHeader locale={locale} />
+      <BlogHeader locale={locale} alternateHref={locale === 'es' ? '/en/blog' : '/blog'} />
       <main>
         <header className="border-b border-slate-200 bg-[#F8FAFC]">
           <div className="mx-auto max-w-[1080px] px-4 py-14 sm:px-8 sm:py-20">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">{copy.index} / Evaluo</p>
             <h1 className="mt-4 max-w-3xl text-4xl font-extrabold leading-[1.12] tracking-[-0.04em] sm:text-5xl">{copy.subtitle}</h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-slate-700">{copy.intro}</p>
-            <Link href={locale === 'es' ? '/en/blog' : '/blog'} hrefLang={locale === 'es' ? 'en' : 'es'} className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline underline-offset-4">
-              {locale === 'es' ? 'English version' : 'Versión en español'} <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-            </Link>
           </div>
         </header>
         <section className="mx-auto max-w-[1080px] px-4 py-12 sm:px-8 sm:py-16" aria-label={copy.index}>
@@ -244,7 +229,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
         ]),
         articleJsonLd,
       ]} />
-      <BlogHeader locale={locale} />
+      <BlogHeader locale={locale} alternateHref={translation ? getStudyBlogPath(locale === 'es' ? 'en' : 'es', translation) : undefined} />
       <main>
         <header className="border-b border-slate-200 bg-[#F8FAFC]">
           <div className="mx-auto max-w-[1080px] px-4 py-10 sm:px-8 sm:py-16">
@@ -257,13 +242,6 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
             </div>
             <h1 className="mt-4 max-w-[880px] text-[2.2rem] font-extrabold leading-[1.13] tracking-[-0.04em] sm:text-5xl">{article.title}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{article.lead}</p>
-            {translation && (
-              <Link href={getStudyBlogPath(locale === 'es' ? 'en' : 'es', translation)}
-                hrefLang={locale === 'es' ? 'en' : 'es'}
-                className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline underline-offset-4">
-                {copy.otherLocale} <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            )}
           </div>
         </header>
 
