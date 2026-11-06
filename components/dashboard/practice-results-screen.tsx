@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import Link from 'next/link';
 import { ArrowRight, Check, ChevronDown, Lightbulb, X } from 'lucide-react';
 
@@ -41,6 +43,8 @@ type PracticeResultsScreenProps = {
 };
 
 function ResultButton({ action, primary = false }: { action?: ResultAction; primary?: boolean }) {
+  const locale = useOptionalAppLocale();
+  const t = (value: string) => studyUiText(locale, value);
   if (!action) return null;
   const className = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[12px] font-semibold transition-colors ' +
     (primary ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] ' : 'border border-[#E7EBF4] bg-white text-[#42506A] hover:bg-[#F5F7FB] ') +
@@ -48,13 +52,13 @@ function ResultButton({ action, primary = false }: { action?: ResultAction; prim
   if (action.href && !action.disabled) return (
     <Link href={action.href} className={className}
       data-topic-flashcards-primary={action.qaId === 'topic-primary' ? '' : undefined}
-      data-topic-flashcards-review={action.qaId === 'topic-review' ? '' : undefined}>{action.label}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}</Link>
+      data-topic-flashcards-review={action.qaId === 'topic-review' ? '' : undefined}>{t(action.label)}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}</Link>
   );
   return (
     <button type="button" onClick={action.onClick} disabled={action.disabled || !action.onClick} className={className}
       data-topic-flashcards-primary={action.qaId === 'topic-primary' ? '' : undefined}
       data-topic-flashcards-review={action.qaId === 'topic-review' ? '' : undefined}>
-      {action.label}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
+      {t(action.label)}{primary ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
     </button>
   );
 }
@@ -74,12 +78,15 @@ export function PracticeResultsScreen({
   extraAction,
   note,
 }: PracticeResultsScreenProps) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => studyUiText(locale, value);
   const mistakes = useMemo(() => entries.filter((entry) => !entry.correct), [entries]);
   const correctEntries = useMemo(() => entries.filter((entry) => entry.correct), [entries]);
   const correctCount = correctEntries.length;
   const flashcards = kind === 'flashcards';
   const summaryHref = materialId && !preview ? '/materiales/' + encodeURIComponent(materialId) + '?tab=resumen' : undefined;
-  const perfectTitle = flashcards ? '¡Recordaste todas las tarjetas!' : '¡Completaste la práctica sin errores!';
+  const perfectTitle = t(flashcards ? '¡Recordaste todas las tarjetas!' : '¡Completaste la práctica sin errores!');
   const hasClose = Boolean(onClose || closeHref);
 
   return (
@@ -87,32 +94,32 @@ export function PracticeResultsScreen({
       <main className="mx-auto w-full max-w-[860px] px-3 pb-8 pt-4 sm:px-5 sm:pt-5">
       <header className="flex min-h-9 items-center justify-between gap-3 pb-3">
         <span className="min-w-0 truncate text-[12px] font-medium text-[#66758D]" title={materialTitle}>
-          Resultados · {materialTitle}
+          {english ? 'Results' : 'Resultados'} · {materialTitle}
         </span>
         {hasClose ? (closeHref && !preview ? (
-          <Link href={closeHref} aria-label="Cerrar resultados" className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#E7EBF4] text-[#42506A] hover:bg-[#F5F7FB]">
+          <Link href={closeHref} aria-label={english ? "Close results" : "Cerrar resultados"} className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#E7EBF4] text-[#42506A] hover:bg-[#F5F7FB]">
             <X className="size-4" aria-hidden="true" />
           </Link>
         ) : (
-          <button type="button" onClick={onClose} disabled={preview || !onClose} aria-label="Cerrar resultados" className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#E7EBF4] text-[#42506A] hover:bg-[#F5F7FB] disabled:opacity-50">
+          <button type="button" onClick={onClose} disabled={preview || !onClose} aria-label={english ? "Close results" : "Cerrar resultados"} className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#E7EBF4] text-[#42506A] hover:bg-[#F5F7FB] disabled:opacity-50">
             <X className="size-4" aria-hidden="true" />
           </button>
         )) : <span aria-hidden="true" className="size-9" />}
       </header>
 
-        <section className="flex min-w-0 flex-col gap-4" aria-label={'Resultado de ' + modeLabel}>
+        <section className="flex min-w-0 flex-col gap-4" aria-label={(english ? 'Result for ' : 'Resultado de ') + t(modeLabel)}>
           <div className="space-y-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.07em] text-[#7F8AA3] sm:text-[11px]">
-              {modeLabel} · {flashcards ? correctCount + ' recordadas' : correctCount + ' de ' + entries.length + ' correctas'}
+              {t(modeLabel)} · {flashcards ? correctCount + (english ? ' remembered' : ' recordadas') : correctCount + (english ? ' of ' : ' de ') + entries.length + (english ? ' correct' : ' correctas')}
             </p>
             <h1 className="text-[21px] font-semibold leading-[1.25] tracking-[-0.035em] text-[#0F1B3D] sm:text-[24px]">
-              {mistakes.length ? 'Repasá lo que te costó' : perfectTitle}
+              {mistakes.length ? (english ? 'Review what needs work' : 'Repasá lo que te costó') : perfectTitle}
             </h1>
             {mistakes.length === 0 && (
               <p className="max-w-[700px] text-[12px] leading-[1.6] text-[#42506A] sm:text-[13px]">
                 {flashcards
-                  ? 'Todas las tarjetas quedaron marcadas como recordadas. Podés cerrar el repaso o continuar con otra actividad.'
-                  : 'Respondiste correctamente todas las preguntas. Podés volver a practicar para consolidar lo aprendido.'}
+                  ? (english ? 'All cards were marked as remembered. You can finish this review or continue with another activity.' : 'Todas las tarjetas quedaron marcadas como recordadas. Podés cerrar el repaso o continuar con otra actividad.')
+                  : (english ? 'You answered every question correctly. Practice again to strengthen what you learned.' : 'Respondiste correctamente todas las preguntas. Podés volver a practicar para consolidar lo aprendido.')}
               </p>
             )}
           </div>
@@ -121,9 +128,9 @@ export function PracticeResultsScreen({
             <div className="flex items-start gap-3 rounded-[20px] border border-[#D1FADF] bg-[#F6FEF9] px-4 py-5 sm:p-6">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#067647] text-white"><Check className="size-5" aria-hidden="true" /></span>
               <div>
-                <p className="text-[14px] font-semibold text-[#054F31]">{flashcards ? 'Tarjetas recordadas' : 'Práctica completada'}</p>
+                <p className="text-[14px] font-semibold text-[#054F31]">{flashcards ? t('Tarjetas recordadas') : t('Práctica completada')}</p>
                 <p className="mt-1 text-[13px] leading-5 text-[#42506A]">
-                  {flashcards ? 'No quedaron tarjetas pendientes en esta sesión.' : 'No quedaron respuestas incorrectas en esta sesión.'}
+                  {flashcards ? t('No quedaron tarjetas pendientes en esta sesión.') : t('No quedaron respuestas incorrectas en esta sesión.')}
                 </p>
               </div>
             </div>
@@ -143,10 +150,10 @@ export function PracticeResultsScreen({
                       <div className="min-w-0 flex-1 space-y-1.5">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#42506A]">
-                            {flashcards ? 'TARJETA ' : 'PREGUNTA '}{entry.index + 1}
+                            {flashcards ? t('TARJETA ') : t('PREGUNTA ')}{entry.index + 1}
                           </span>
                           <span className="rounded-full bg-[#F2F4F7] px-2.5 py-0.5 text-[11px] font-semibold text-[#42506A]">
-                            {entry.modeLabel || modeLabel}
+                            {t(entry.modeLabel || modeLabel)}
                           </span>
                           {entry.chapterTitle && (
                             <span className="max-w-full truncate rounded-full bg-[#EAF0FB] px-2.5 py-0.5 text-[11px] font-semibold text-[#084BB0]">
@@ -165,21 +172,21 @@ export function PracticeResultsScreen({
                       <div className="flex items-start gap-2.5 rounded-xl border border-[#FDA29B] bg-[#FEF3F2] px-3 py-3">
                         <X className="mt-0.5 size-4 shrink-0 text-[#B42318]" strokeWidth={2.4} aria-hidden="true" />
                         <div className="min-w-0">
-                          <p className="text-[10px] font-bold tracking-[0.08em] text-[#B42318]">{flashcards ? 'NO LO SABÍA' : 'TU RESPUESTA'}</p>
-                          <p className="mt-0.5 break-words text-[13px] leading-5 text-[#7A271A]">{entry.selectedAnswer || 'Sin responder'}</p>
+                          <p className="text-[10px] font-bold tracking-[0.08em] text-[#B42318]">{flashcards ? t('NO LO SABÍA') : t('TU RESPUESTA')}</p>
+                          <p className="mt-0.5 break-words text-[13px] leading-5 text-[#7A271A]">{entry.selectedAnswer || (english ? 'No answer' : 'Sin responder')}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5 rounded-xl border border-[#ABEFC6] bg-[#ECFDF3] px-3 py-3">
                         <Check className="mt-0.5 size-4 shrink-0 text-[#067647]" strokeWidth={2.6} aria-hidden="true" />
                         <div className="min-w-0">
-                          <p className="text-[10px] font-bold tracking-[0.08em] text-[#067647]">{flashcards ? 'CONCEPTO A RECORDAR' : 'RESPUESTA CORRECTA'}</p>
+                          <p className="text-[10px] font-bold tracking-[0.08em] text-[#067647]">{flashcards ? t('CONCEPTO A RECORDAR') : t('RESPUESTA CORRECTA')}</p>
                           <p className="mt-0.5 break-words text-[13px] leading-5 text-[#054F31]">{entry.correctAnswer}</p>
                         </div>
                       </div>
                       {entry.explanation?.trim() && (
                         <div className="rounded-xl border border-[#DBE6F8] bg-[#F7FAFF] px-3.5 py-3">
                           <p className="flex items-center gap-2 text-[13px] font-semibold text-[#0F1B3D]">
-                            <Lightbulb className="size-4 text-[#2563EB]" aria-hidden="true" /> Por qué
+                            <Lightbulb className="size-4 text-[#2563EB]" aria-hidden="true" /> {english ? 'Why' : 'Por qué'}
                           </p>
                           <p className="mt-1.5 whitespace-pre-line break-words text-[13px] leading-[1.6] text-[#42506A]">{entry.explanation}</p>
                         </div>
@@ -188,10 +195,10 @@ export function PracticeResultsScreen({
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                           <Link href={materialHref} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2563EB] hover:text-[#084BB0]">
                             <span aria-hidden="true" className="flex h-6 min-w-5 items-center justify-center rounded bg-[#D92D3A] px-0.5 text-[7px] font-bold text-white">{documentLabel}</span>
-                            {entry.pageStart ? 'Ver en tu material · pág. ' + entry.pageStart : 'Ver en tu material'}
+                            {entry.pageStart ? t('Ver en tu material · pág. ') + entry.pageStart : t('Ver en tu material')}
                           </Link>
                           <Link href={summaryHref!} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2563EB] hover:text-[#084BB0]">
-                            Repasar el resumen del tema <ArrowRight className="size-3.5" aria-hidden="true" />
+                            {english ? 'Review this topic summary' : 'Repasar el resumen del tema'} <ArrowRight className="size-3.5" aria-hidden="true" />
                           </Link>
                         </div>
                       )}
@@ -205,7 +212,7 @@ export function PracticeResultsScreen({
           {correctEntries.length > 0 && (
             <section data-practice-correct-results aria-labelledby="practice-correct-results-title" className="space-y-2.5 pt-1">
               <h2 id="practice-correct-results-title" className="text-[14px] font-semibold text-[#0F1B3D]">
-                {flashcards ? 'Tarjetas recordadas' : 'Respuestas correctas'}
+                {flashcards ? t('Tarjetas recordadas') : t('Respuestas correctas')}
               </h2>
               <ol className="flex flex-col gap-2">
                 {correctEntries.map((entry) => (
@@ -216,14 +223,14 @@ export function PracticeResultsScreen({
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#7F8AA3]">
-                          {flashcards ? 'Tarjeta ' : 'Pregunta '}{entry.index + 1}
-                          {entry.modeLabel ? ' · ' + entry.modeLabel : ''}
+                          {flashcards ? t('Tarjeta ') : t('Pregunta ')}{entry.index + 1}
+                          {entry.modeLabel ? ' · ' + t(entry.modeLabel) : ''}
                         </p>
                         <p className="mt-1 break-words text-[13px] font-semibold leading-[1.5] text-[#0F1B3D] sm:text-[14px]">
                           {entry.prompt}
                         </p>
                         <p className="mt-1.5 break-words text-[12px] leading-[1.6] text-[#42506A]">
-                          <span className="font-semibold text-[#067647]">{flashcards ? 'Recordaste: ' : 'Respuesta: '}</span>
+                          <span className="font-semibold text-[#067647]">{flashcards ? t('Recordaste: ') : t('Respuesta: ')}</span>
                           {entry.correctAnswer}
                         </p>
                       </div>
