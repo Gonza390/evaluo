@@ -102,7 +102,7 @@ assert.ok(planEmpty.includes("english ? 'Your plan preview'"));
 assert.ok(planCard.includes("english ? 'Prepare for your exam'"));
 assert.ok(planSelector.includes("Choose PDF for study plan"));
 assert.ok(planNext.includes("english ? 'Topic' : 'Tema'"));
-assert.ok(planNextStep.includes("english ? 'Material progress'"));
+assert.match(planNextStep, /english\s*\?\s*['"]Material progress['"]/);
 assert.ok(planRoadmap.includes("english ? 'Your journey'"));
 const examReminderEmail = read('lib/email/exam-reminders.ts');
 const materialReadyEmail = read('lib/email/student-material-ready.ts');
