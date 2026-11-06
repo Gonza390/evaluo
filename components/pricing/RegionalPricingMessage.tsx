@@ -2,6 +2,7 @@
 
 import { ShieldCheck } from 'lucide-react';
 import { useCheckoutMarket, type CheckoutMarket } from '@/hooks/use-checkout-market';
+import { PREMIUM_MONTHLY_PRICE_ARS } from '@/lib/payments/offers';
 
 type Placement = 'hero' | 'featured' | 'billing' | 'home-plan' | 'home-footer' | 'home-faq';
 type Props = { placement: Placement; locale?: 'es' | 'en' };
@@ -85,6 +86,11 @@ export function RegionalPricingMessage({ placement, locale = 'es' }: Props) {
             : market === 'argentina' ? (english ? 'Premium in Argentina' : 'Premium en Argentina')
               : (english ? 'Premium by region' : 'Premium según tu país')}
         </p>
+        {market === 'argentina' ? (
+          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
+            ARS {new Intl.NumberFormat('es-AR').format(PREMIUM_MONTHLY_PRICE_ARS)} <span className="text-base font-medium text-slate-500">{english ? '/ month' : '/ mes'}</span>
+          </p>
+        ) : null}
         {market === 'international' ? (
           <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
             {english ? 'US$ 9.99' : 'US$ 9,99'} <span className="text-base font-medium text-slate-500">{english ? '/ month' : '/ mes'}</span>
