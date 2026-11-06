@@ -120,10 +120,10 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               className={`relative flex h-full min-w-0 flex-col rounded-xl border px-3 py-2.5 text-left transition-colors sm:rounded-2xl sm:p-3.5 ${chosen?'border-[#2563EB] bg-[#F7FAFF] ring-2 ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
               <span className="flex items-center gap-2.5 pr-7">
                 <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${option.iconClass}`}><option.Icon className="size-[16px]"/></span>
-                <span className="text-[14px] font-semibold tracking-tight text-[#0F1B3D]"{t(option.title)}</span>
+                <span className="text-[14px] font-semibold tracking-tight text-[#0F1B3D]">{t(option.title)}</span>
               </span>
               <span aria-hidden="true" className={`absolute right-3 top-3 flex size-[18px] items-center justify-center rounded-full border ${chosen?'border-[#2563EB] bg-[#2563EB]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
-              <span className="mt-2 block text-[11px] leading-[1.4] text-slate-600 sm:min-h-[32px]"{t(option.description)}</span>
+              <span className="mt-2 block text-[11px] leading-[1.4] text-slate-600 sm:min-h-[32px]">{t(option.description)}</span>
               <span className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-2 text-[10px] font-medium leading-[1.35] text-slate-700 sm:text-[11px]">
                 <Clock3 className="size-3.5 shrink-0 text-slate-500"/>{option.time}
               </span>
@@ -199,8 +199,8 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
                     {!material && <LockKeyhole className="size-[13px] opacity-75" aria-hidden="true" />}
                     {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                   </span>
-                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4"{t(title)}</span>
-                  <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85"{t(description)}</span>
+                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{t(title)}</span>
+                  <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{t(description)}</span>
                   {material && !supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">{english ? "Coming soon" : "Próximamente"}</span> : null}
                 </button>
               );
