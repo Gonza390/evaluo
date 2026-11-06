@@ -374,5 +374,9 @@
   {
     "file": "tests/ui-locale.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/landing-language-selector.smoke.ts",
+    "alias": false
   }
 ]

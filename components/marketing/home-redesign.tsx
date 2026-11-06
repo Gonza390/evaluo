@@ -4,6 +4,7 @@ import { HomeRedesignDemo } from './home-redesign-demo';
 import { HOME_REDESIGN_FAQS } from './home-redesign-faqs';
 import { TrackedLink } from './tracked-link';
 import { HomeUniversityCarousel } from './home-university-carousel';
+import { LandingLanguageSelector } from './landing-language-selector';
 
 const universityLogos = [
   {
@@ -78,12 +79,14 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
               <a href="#planes">Planes</a>
             </nav>
             <div className="nav-auth">
+              <LandingLanguageSelector locale="es" />
               <a
                 className="btn"
                 href="/login?mode=login"
                 style={{ border: '0', background: 'none' }}
               >
-                Iniciar sesión
+                <span className="sm:hidden">Entrar</span>
+                <span className="hidden sm:inline">Iniciar sesión</span>
               </a>{' '}
               <a className="btn g" href={primaryHref}>
                 Crear cuenta gratis →

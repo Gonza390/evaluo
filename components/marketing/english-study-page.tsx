@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CheckCircle2, FileText, Globe2, Layers3, ShieldCheck } from 'lucide-react';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
+import { LandingLanguageSelector } from '@/components/marketing/landing-language-selector';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { ENGLISH_PAGES, ENGLISH_PAGE_ORDER, type EnglishPageKey } from '@/lib/english-seo-content';
@@ -31,11 +32,14 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
             Evaluo
             <span className="ml-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">English</span>
           </Link>
-          <nav aria-label="English study guides" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-700">
+          <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-5">
+            <LandingLanguageSelector locale="en" />
+          <nav aria-label="English study guides" className="hidden flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-700 md:flex">
             <Link className="hover:text-blue-700" href="/en/pdf-to-quiz">PDF to Quiz</Link>
             <Link className="hover:text-blue-700" href="/en/pdf-to-flashcards">Flashcards</Link>
             <Link className="hover:text-blue-700" href="/en/study-pdf-with-ai">Study PDFs</Link>
           </nav>
+          </div>
         </div>
       </header>
 
