@@ -85,7 +85,7 @@ assert.ok(reminderBell.includes("useOptionalAppLocale"));
 assert.ok(reminderBell.includes("locale === 'en' ? 'en-US' : 'es-AR'"));
 assert.ok(reminderBell.includes("Dismiss reminder"));
 assert.ok(calendar.includes("english ? 'Will be saved as'"));
-assert.ok(calendar.includes("english ? 'Study plan exam'"));
+assert.match(calendar, /english\s*\?\s*['"]Study plan exam['"]/);
 assert.ok(calendar.includes("english ? 'Unlimited exams'") || calendar.includes("features={english ? ['Unlimited exams'"));
 assert.ok(planPage.includes("accountAppLocale(user.user_metadata)"));
 assert.ok(planPage.includes('<EmptyStudyPlan locale={locale} />'));
