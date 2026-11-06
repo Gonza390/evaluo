@@ -102,19 +102,19 @@ function formatDate(value: string | null, english: boolean) {
 }
 
 const PREMIUM_BENEFITS = [
-  t("Convertí tus apuntes en una guía de estudio priorizada"),
-  t("Practicá un parcial basado en el material de tu curso"),
-  t("Explicaciones paso a paso y práctica personalizada de errores"),
-  t("Progreso avanzado por tema y simuladores completos"),
+  'Convertí tus apuntes en una guía de estudio priorizada',
+  'Practicá un parcial basado en el material de tu curso',
+  'Explicaciones paso a paso y práctica personalizada de errores',
+  'Progreso avanzado por tema y simuladores completos',
 ];
 
 const COMPARISON = [
-  [t("Resúmenes y materiales"), true, true],
-  [t("Pregunteros"), true, true],
-  [t("Simuladores completos"), false, true],
-  [t("Explicaciones con IA sin límite"), false, true],
-  [t("Práctica personalizada de errores"), false, true],
-  [t("Progreso avanzado por tema"), false, true],
+  ['Resúmenes y materiales', true, true],
+  ['Pregunteros', true, true],
+  ['Simuladores completos', false, true],
+  ['Explicaciones con IA sin límite', false, true],
+  ['Práctica personalizada de errores', false, true],
+  ['Progreso avanzado por tema', false, true],
 ] as const;
 
 const PREMIUM_CHECKOUT_HREF = '/dashboard/premium?source=configuracion&returnTo=%2Fconfiguracion';
