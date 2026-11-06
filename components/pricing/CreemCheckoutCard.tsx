@@ -52,7 +52,7 @@ export function CreemCheckoutCard({ features, mode, available, locale }: Props) 
     try {
       const r = await fetch('/api/payments/creem/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerCode: 'monthly' }),
+        body: JSON.stringify({ offerCode: 'monthly', locale: english ? 'en' : 'es' }),
       });
       const data = await r.json() as {
         checkoutUrl?: string; error?: string; amountCents?: number; currency?: string; mode?: string;
