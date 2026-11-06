@@ -854,7 +854,15 @@ for (const guide of guideRows) {
 // contract when the feature ships; do not advertise missing routes meanwhile.
 const countryHubExists = existsSync(new URL('../app/(es)/es/paises/page.tsx', import.meta.url));
 if (!countryHubExists) {
-  assert.ok(!source('app/sitemap.ts').includes('/es/paises'), 'Do not advertise an unpublished country hub in the sitemap');
+  const sitemapSource = source('app/sitemap.ts');
+  // The generic country hub and the retired dynamic guides must stay excluded.
+  // One reviewed USAC PCB page has been restored at its original indexed URL.
+  const publishedCountryPaths = [...sitemapSource.matchAll(/`\$\{baseUrl\}(\/es\/paises(?:\/[a-z0-9-]+)?)`/g)]
+    .map((match) => match[1]);
+  assert.deepEqual(publishedCountryPaths, ['/es/paises/guatemala-pruebas-basicas-usac'],
+    'Only the restored USAC PCB guide may appear in the sitemap, not the retired country hub or other pages');
+  assert.ok(existsSync(new URL('../app/(es)/es/paises/guatemala-pruebas-basicas-usac/page.tsx', import.meta.url)),
+    'The sole country URL in the sitemap must resolve to an actual reviewed page');
 } else {
 // Hispanic-market expansion: do not weaken Argentina, rewrite established
 // international URLs, or generate 20 thin same-language country clones.

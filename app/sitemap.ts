@@ -125,6 +125,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Restore only the USAC PCB guide: this URL still receives organic impressions.
+  // All other retired /es/paises/* URLs intentionally remain HTTP 410.
+  routes.push({ url: `${baseUrl}/es/paises/guatemala-pruebas-basicas-usac`, lastModified: new Date('2026-11-05') });
   routes.push({ url: `${baseUrl}/es/guias`, lastModified: new Date('2026-10-29') });
   for (const guide of STUDY_GUIDES) {
     routes.push({
