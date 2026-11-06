@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { verifyCreemWebhookSignature } from '../lib/payments/creem.ts';
-import { isCreemModeEnabled, CREEM_USD_MONTHLY_CENTS } from '../lib/payments/creem-international.ts';
+import { isCreemModeEnabled, canProcessCreemLiveWebhooks, canManageExistingCreemSubscriptions, CREEM_USD_MONTHLY_CENTS } from '../lib/payments/creem-international.ts';
 import { reconcileCreemBillingEvent } from '../lib/payments/creem-reconcile.ts';
 
 assert.equal(CREEM_USD_MONTHLY_CENTS,999);
@@ -21,6 +21,9 @@ try {
   process.env.CREEM_LIVE_WEBHOOK_SECRET = 'mock_secret';
   assert.equal(isCreemModeEnabled('test'),false);
   assert.equal(isCreemModeEnabled('live'),false);
+  // Disabling acquisition cannot stop servicing existing subscribers.
+  assert.equal(canProcessCreemLiveWebhooks(),true);
+  assert.equal(canManageExistingCreemSubscriptions(),true);
   process.env.CREEM_INTERNATIONAL_ENABLED = 'true';
   assert.equal(isCreemModeEnabled('live'),true);
   const body = JSON.stringify({id:'evt_fake',eventType:'subscription.paid'});
@@ -167,6 +170,7 @@ try {
   const liveRoute=readFileSync('app/api/webhooks/creem-live/route.ts','utf8');
   const testRoute=readFileSync('app/api/webhooks/creem/route.ts','utf8');
   assert.match(liveRoute,/CREEM_LIVE_WEBHOOK_SECRET/);
+  assert.match(liveRoute,/canProcessCreemLiveWebhooks\(\)/);
   assert.match(liveRoute,/reconcileCreemBillingEvent\(admin,'live',payload\)/);
   assert.match(testRoute,/reconcileCreemBillingEvent\(admin, 'test', payload\)/);
   assert.match(testRoute,/VERCEL_ENV === 'production'/);
