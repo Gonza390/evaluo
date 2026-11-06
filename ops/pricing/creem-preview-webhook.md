@@ -48,6 +48,15 @@ Nunca pegar secretos en conversaciones, commits, ni variables `NEXT_PUBLIC_`.
 8. Cambiar flag a true y desplegar Production una vez aprobado el control. Monitorear las primeras entregas Live.
 9. No enviar webhook de prueba a Production. El webhook Test Mode tiene bloqueo `VERCEL_ENV='production'`.
 
+## Cortafuegos de producción y continuidad del servicio
+
+- `CREEM_INTERNATIONAL_ENABLED=false` bloquea **nuevas compras Live**. No deshabilita el procesamiento de webhooks firmados, renovaciones, reembolsos ni la cancelación de suscriptores existentes.
+- Mantener en Vercel Production `CREEM_LIVE_API_KEY`, `CREEM_LIVE_PRODUCT_ID` y `CREEM_LIVE_WEBHOOK_SECRET` aun si pausamos temporalmente la venta. Rotar credenciales bajo procedimiento seguro, sin desconfigurar eventos de clientes activos.
+- La tabla compartida `user_subscriptions` tiene índice único parcial para `payment_provider='creem'` + `provider_subscription_id`, evitando accesos duplicados por concurrencia. El índice no afecta Mercado Pago.
+- La detección de mercado debe dar AR solo con país AR confirmado; sin país verificable, mostrar estado de región desconocida y no ofrecer un checkout incorrecto. Confirmar con pruebas manuales desde AR y otro país tras publicar.
+- Antes de activar Live, validar que el último commit de `master` compile en Vercel; un despliegue READY anterior **no valida automáticamente** commits posteriores.
+- No usar pagos de prueba para habilitar Premium real. Para la primera compra Live supervisada, limitar la exposición del checkout y comprobar webhook, plan, acceso y cancelación antes de abrirlo al público.
+
 ## Notas técnicas
 
 - Una Preview Vercel protegida por SSO requiere bypass de automatización configurado en el endpoint Test de Creem. No publicar ese secreto.
