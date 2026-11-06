@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ArrowRight, RotateCcw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 
@@ -30,6 +32,8 @@ export function MaeveStudyHero({
   heroRef,
 }: Props) {
   const { user, getUserName } = useUser();
+  const { locale } = useAppLocale();
+  const t = (value: string) => studentEntryText(locale, value);
   const firstPdfViewTrackedRef = useRef(false);
   const nextActionViewTrackedRef = useRef<string | null>(null);
   const firstName = user ? getUserName().split(' ')[0] : '';
@@ -64,17 +68,17 @@ export function MaeveStudyHero({
     >
       <div className="mx-auto flex max-w-[950px] flex-col items-center">
         <div className="h-[84px] w-[84px] sm:h-[104px] sm:w-[104px]">
-          <EviMascot />
+          <EviMascot english={locale === 'en'} />
         </div>
         <h1 className="mt-2 text-[25px] leading-[1.18] font-bold tracking-[-0.04em] text-[#0b0c1e] sm:mt-2 sm:text-[32px]">
           {firstName && firstName !== 'Estudiante'
-            ? `¿Qué estudiamos hoy, ${firstName}?`
-            : '¿Qué estudiamos hoy?'}
+            ? locale === 'en' ? `What are we studying today, ${firstName}?` : `¿Qué estudiamos hoy, ${firstName}?`
+            : t('¿Qué estudiamos hoy?')}
         </h1>
         <p className="mt-3 max-w-[760px] text-[13px] leading-[1.5] text-[#5a6481] sm:text-[14px]">
           {isFirstPdfState
-            ? 'Subí el PDF que tenés que estudiar y Evaluo te ayuda a entenderlo, practicar y reforzar.'
-            : nextStudyAction?.description ?? 'Elegí un material para continuar o sumá uno nuevo.'}
+            ? t('Subí el PDF que tenés que estudiar y Evaluo te ayuda a entenderlo, practicar y reforzar.')
+            : t(nextStudyAction?.description ?? 'Elegí un material para continuar o sumá uno nuevo.')}
         </p>
 
         {isFirstPdfState ? (
@@ -82,7 +86,7 @@ export function MaeveStudyHero({
             {FIRST_PDF_STEPS.map((step, index) => (
               <div key={step} className="flex items-center gap-2 rounded-xl border border-blue-100/80 bg-white/80 px-2.5 py-2 text-left">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{index + 1}</span>
-                <span className="text-xs font-semibold text-slate-700">{step}</span>
+                <span className="text-xs font-semibold text-slate-700">{t(step)}</span>
               </div>
             ))}
           </div>
@@ -103,7 +107,7 @@ export function MaeveStudyHero({
                     });
                   }}
                 >
-                  {nextStudyAction?.cta ?? (primaryMaterialReady ? 'Continuar estudiando' : 'Ver estado del PDF')}
+                  {t(nextStudyAction?.cta ?? (primaryMaterialReady ? 'Continuar estudiando' : 'Ver estado del PDF'))}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -117,19 +121,19 @@ export function MaeveStudyHero({
                   })}
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Tenés {pendingReinforcementCount} {pendingReinforcementCount === 1 ? 'tema' : 'temas'} para reforzar
+                  {locale === 'en' ? `You have ${pendingReinforcementCount} ${pendingReinforcementCount === 1 ? 'topic' : 'topics'} to review` : `Tenés ${pendingReinforcementCount} ${pendingReinforcementCount === 1 ? 'tema' : 'temas'} para reforzar`}
                 </Link>
               ) : null}
               <button type="button" onClick={onUploadClick}
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#526582] transition-colors hover:text-[#0f1b3d] sm:w-auto">
                 <Upload className="h-4 w-4" />
-                Subir otro PDF
+                {t('Subir otro PDF')}
               </button>
             </>
           ) : (
             <Button type="button" data-first-pdf-cta="dashboard_empty" onClick={onUploadClick}
               className="h-11 w-full max-w-xs rounded-xl bg-[#0066ee] px-5 text-[14px] font-semibold text-white hover:bg-[#0058d4] sm:w-auto">
-              Subir mi PDF <Upload className="ml-2 h-4 w-4" />
+              {t('Subir mi PDF')} <Upload className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>
@@ -151,9 +155,9 @@ export function MaeveStudyHero({
   );
 }
 
-function EviMascot() {
+function EviMascot({ english = false }: { english?: boolean }) {
   return (
-    <svg viewBox="0 -80 1024 1104" role="img" aria-label="Evi, la mascota de Evaluo" className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 -80 1024 1104" role="img" aria-label={english ? "Evi, Evaluo’s mascot" : "Evi, la mascota de Evaluo"} className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
       <ellipse className="evi-shadow" cx="535" cy="975" rx="260" ry="30" fill="#d5d9ee" />
       <g className="evi-float">
         <path d="M437 940V985M632 940V985" stroke="#1b1c3a" strokeWidth="32" strokeLinecap="round" />
