@@ -15,7 +15,10 @@ export function LanguageMenuItem({ className }: { className?: string }) {
       disabled={savingLocale}
       className={className}
       onSelect={() => {
-        void changeLocale(locale === 'es' ? 'en' : 'es').catch(() => {
+        const next = locale === 'es' ? 'en' : 'es';
+        void changeLocale(next).then(() => {
+          document.cookie = `evaluo_ui_locale=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+        }).catch(() => {
           toast({ title: settingsCopy.languageSaveError, variant: 'destructive' });
         });
       }}

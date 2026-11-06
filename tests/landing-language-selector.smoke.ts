@@ -12,6 +12,8 @@ assert.match(selector, /<summary/);
 assert.match(selector, /Globe2/);
 assert.match(selector, /aria-current=\{locale === option\.locale \? 'page'/);
 assert.match(selector, /window\.localStorage\.setItem\(APP_LOCALE_STORAGE_KEY, next\)/);
+assert.match(selector, /document\.cookie =/);
+assert.match(selector, /prefetch=\{false\}/);
 assert.match(selector, /locale: 'es', label: 'Español',[^\n]+href: '\/'/);
 assert.match(selector, /locale: 'en', label: 'English',[^\n]+href: '\/en'/);
 assert.ok(selector.indexOf("locale: 'es'") < selector.indexOf("locale: 'en'"), 'Spanish should be first in menu');

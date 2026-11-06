@@ -21,6 +21,8 @@ export function LandingLanguageSelector({ locale }: { locale: AppLocale }) {
     } catch {
       // Navigation still works in browsers where storage is unavailable.
     }
+    // Proxy cannot read localStorage on the server before routing.
+    document.cookie = `evaluo_ui_locale=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
   };
 
   return (
@@ -43,6 +45,7 @@ export function LandingLanguageSelector({ locale }: { locale: AppLocale }) {
             key={option.locale}
             href={option.href}
             hrefLang={option.locale}
+            prefetch={false}
             lang={option.locale}
             aria-current={locale === option.locale ? 'page' : undefined}
             onClick={() => rememberLocale(option.locale)}

@@ -14,7 +14,9 @@ export function LanguagePicker() {
   const onChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = parseAppLocale(event.target.value);
     if (!next) return;
-    void changeLocale(next).catch(() => {
+    void changeLocale(next).then(() => {
+      document.cookie = `evaluo_ui_locale=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    }).catch(() => {
       toast({ title: settingsCopy.languageSaveError, variant: 'destructive' });
     });
   };

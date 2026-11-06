@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase';
+import { detectLandingLocale } from '@/lib/i18n/landing-locale-detection';
 import { isTerminalAuthSessionError } from '@/lib/auth-session-errors';
 import {
   checkProxyRateLimit,
@@ -193,6 +194,27 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isHomeRoute && !hasSessionCookie(request)) {
+    // Keep / as the Spanish canonical homepage; redirect only English visitors
+    // without a session. Explicit language URLs and SEO crawlers stay stable.
+    const userAgent = request.headers.get('user-agent') ?? '';
+    const isPrefetch =
+      request.headers.has('next-router-prefetch') ||
+      request.headers.get('purpose') === 'prefetch' ||
+      request.headers.get('sec-purpose')?.includes('prefetch');
+    if (!isLikelyBotUserAgent(userAgent) && !isPrefetch) {
+      const preferred = detectLandingLocale({
+        savedLocale: request.cookies.get('evaluo_ui_locale')?.value,
+        acceptLanguage: request.headers.get('accept-language'),
+        country: request.headers.get('x-vercel-ip-country'),
+      });
+      if (preferred === 'en') {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = '/en';
+        const localeRedirect = NextResponse.redirect(redirectUrl);
+        localeRedirect.headers.set('Cache-Control', 'private, no-store');
+        return persistReferralCookie(request, localeRedirect);
+      }
+    }
     return persistReferralCookie(request, response);
   }
 

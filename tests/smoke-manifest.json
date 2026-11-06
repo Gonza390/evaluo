@@ -378,5 +378,9 @@
   {
     "file": "tests/landing-language-selector.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/landing-locale-detection.smoke.ts",
+    "alias": false
   }
 ]

@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import { detectLandingLocale } from '../lib/i18n/landing-locale-detection.ts';
+
+assert.equal(detectLandingLocale({}), 'es');
+assert.equal(detectLandingLocale({ country: 'AR' }), 'es');
+assert.equal(detectLandingLocale({ country: 'ES' }), 'es');
+assert.equal(detectLandingLocale({ country: 'CO' }), 'es');
+assert.equal(detectLandingLocale({ country: 'MX' }), 'es');
+assert.equal(detectLandingLocale({ country: 'US' }), 'en');
+assert.equal(detectLandingLocale({ country: 'GB' }), 'en');
+assert.equal(detectLandingLocale({ country: 'BR' }), 'en');
+assert.equal(detectLandingLocale({ country: 'ZZ' }), 'es');
+assert.equal(detectLandingLocale({ country: 'x!' }), 'es');
+assert.equal(detectLandingLocale({ country: 'US', acceptLanguage: 'es-AR,es;q=0.9,en;q=0.7' }), 'es');
+assert.equal(detectLandingLocale({ country: 'AR', acceptLanguage: 'en-US,en;q=0.9' }), 'en');
+assert.equal(detectLandingLocale({ country: 'US', acceptLanguage: 'fr-FR,es;q=0.8' }), 'es');
+assert.equal(detectLandingLocale({ country: 'AR', acceptLanguage: 'en;q=0.3,es;q=0.9' }), 'es');
+assert.equal(detectLandingLocale({ country: 'US', acceptLanguage: 'en;q=0,es;q=1' }), 'es');
+assert.equal(detectLandingLocale({ savedLocale: 'es', country: 'US', acceptLanguage: 'en' }), 'es');
+assert.equal(detectLandingLocale({ savedLocale: 'en', country: 'AR', acceptLanguage: 'es' }), 'en');
+assert.equal(detectLandingLocale({ savedLocale: 'de', country: 'MX' }), 'es');
+console.log('[landing-locale] Browser, country and saved-language priority verified.');
