@@ -217,8 +217,8 @@ type IndexedCanonicalSummarySource = Omit<CanonicalSummarySource, 'topics'> & {
 export function buildCanonicalSummaryPrompt(
   input: Pick<
     GenerateSummaryInput,
-    'title' | 'universidadName' | 'carreraName' | 'materiaName' | 'studyLocale'
-  > & Partial<Pick<GenerateSummaryInput, 'text' | 'pages'>>,
+    'title' | 'universidadName' | 'carreraName' | 'materiaName'
+  > & Partial<Pick<GenerateSummaryInput, 'text' | 'pages' | 'studyLocale'>>,
   model: CanonicalPedagogicalModel
 ) {
   const source = buildIndexedCanonicalSummarySource(model);
