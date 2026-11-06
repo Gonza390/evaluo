@@ -93,6 +93,11 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   return <AppLocaleContext.Provider value={value}>{children}</AppLocaleContext.Provider>;
 }
 
+/** Safe fallback for public study demos rendered outside the authenticated shell. */
+export function useOptionalAppLocale() {
+  return useContext(AppLocaleContext)?.locale ?? 'es';
+}
+
 export function useAppLocale() {
   const context = useContext(AppLocaleContext);
   if (!context) throw new Error('useAppLocale must be used within AppLocaleProvider');
