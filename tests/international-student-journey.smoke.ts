@@ -19,7 +19,7 @@ const testAccount = {
 assert.equal(accountAppLocale(testAccount), 'en');
 assert.equal(resolveStudyLocale(testAccount), 'en');
 assert.equal(resolveStudyLocale({ ...testAccount, study_locale: 'es' }), 'es',
-  'A student's explicit study-language override must be respected');
+  "An explicit study-language override must be respected");
 const generatedLanguage = studyGenerationInstruction(resolveStudyLocale(testAccount));
 assert.match(generatedLanguage, /Write student-facing questions, scenarios, summaries, definitions and explanations in clear academic English/);
 assert.match(generatedLanguage, /Keep all literal evidence quotes verbatim in the ORIGINAL document language/);
