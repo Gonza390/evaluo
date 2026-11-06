@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useUser } from '@/hooks/useUser';
 import { supabase } from '@/lib/supabase-client';
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/lib/i18n/app-locale';
 import { uiMessages } from '@/lib/i18n/messages';
 import { accountStudyLocale } from '@/lib/i18n/study-language';
+import { parseAccountTimeZone } from '@/lib/i18n/account-time-zone';
 
 type AppLocaleContextValue = {
   locale: AppLocale;
@@ -37,6 +38,19 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   const [savingStudyLocale, setSavingStudyLocale] = useState(false);
   const accountLocale = accountAppLocale(user?.user_metadata);
   const savedStudyLocale = accountStudyLocale(user?.user_metadata);
+  const timeZoneCaptureAttempted = useRef<string | null>(null);
+  // Persist the device IANA time zone once for authenticated students, so global
+  // exam reminders work even if they never open Settings. This is a preference,
+  // not an authorization claim. Users can change it manually in Settings.
+  useEffect(() => {
+    if (!user?.id || parseAccountTimeZone(user.user_metadata?.time_zone) ||
+        timeZoneCaptureAttempted.current === user.id) return;
+    timeZoneCaptureAttempted.current = user.id;
+    const detected = parseAccountTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (!detected) return;
+    void supabase.auth.updateUser({ data: { time_zone: detected } }).catch(() => undefined);
+  }, [user?.id, user?.user_metadata?.time_zone]);
+
   const studyLocale = studyOverride ?? savedStudyLocale ?? locale;
 
   // Never carry a temporary language override across account changes.
