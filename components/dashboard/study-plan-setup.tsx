@@ -61,7 +61,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
         setPreview(mode==='view');
       }
     }).catch((cause:unknown)=>{
-      if(mounted)setError(cause instanceof Error?cause.message:'No pudimos recuperar el plan.');
+      if(mounted)setError(cause instanceof Error ? t(cause.message) : (english ? 'Could not load the study plan.' : 'No pudimos recuperar el plan.'));
     }).finally(()=>{if(mounted)setLoading(false)});
     return ()=>{mounted=false};
   },[]);
@@ -96,7 +96,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
       setPreparationPercent(data.preparationProgress?.percent??0);
       if(mode==='setup') router.push('/dashboard/plan-de-estudio');
       else setPreview(true);
-    }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el plan.')}
+    }catch(cause){setError(cause instanceof Error ? t(cause.message) : (english ? 'Could not save the study plan.' : 'No pudimos guardar el plan.'))}
     finally{setSaving(false)}
   }
   async function markCompleted(materialId:string,topicIndex:number) {
@@ -108,7 +108,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
       const result=await response.json() as {error?:string};
       if(!response.ok)throw new Error(result.error||'No pudimos registrar esta actividad.');
       setCompletedKeys(previous=>[...new Set([...previous,key])]);
-    }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos guardar el avance.')}
+    }catch(cause){setError(cause instanceof Error ? t(cause.message) : (english ? 'Could not save your progress.' : 'No pudimos guardar el avance.'))}
     finally{setMarking(null)}
   }
   const toggle = (list:string[],id:string,save:(x:string[])=>void) => save(list.includes(id) ? list.filter(x=>x!==id) : [...list,id]);
@@ -117,8 +117,8 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
     {error&&<p role="alert" className="mx-auto mb-3 max-w-[500px] rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-800">{error}</p>}
     {mode==='view' && (loading || !savedPlan) ? <div role="status" className="mx-auto max-w-[500px] rounded-xl border border-[#E7EBF4] bg-white px-4 py-5 text-[12px] text-[#66758D]">{t(loading ? 'Cargando tu plan de estudio…' : 'No encontramos un plan guardado. Podés crear uno desde Plan de estudio.')}</div> : <div className={`relative mx-auto ${preview ? "w-full xl:h-full xl:min-h-0" : "max-w-[500px]"}`}>
       {!preview && step!==2 && (step===0
-        ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</Link>
-        : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> Volver</button>)}
+        ? <Link href="/dashboard/plan-de-estudio" className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> {t('Volver')}</Link>
+        : <button type="button" onClick={()=>setStep(s=>s-1)} className="absolute right-0 top-0 z-10 inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#42506A] hover:bg-[#EEF2FF] hover:text-[#2563EB]"><ArrowLeft className="size-3.5"/> {t('Volver')}</button>)}
       {!preview ? <div key={`plan-step-${step}`} className="practice-screen-enter">
         <div className={step===2 ? 'mb-6 text-center sm:mb-7' : 'mb-4 pr-[76px]'}>
           <h1 className="text-[20px] font-semibold leading-tight tracking-[-0.035em] sm:text-[22px]">{(english ? ['When is your exam?', 'What will you study?', 'How much time can you study each day?', 'How would you like to study?'] : ['¿Cuándo es tu examen?','¿Qué vas a estudiar?','¿Cuánto tiempo tenés por día?','¿Cómo querés estudiar?'])[step]}</h1>
@@ -141,7 +141,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
                 return <button key={value} type="button" disabled={past} onClick={()=>setExam(value)} aria-label={date.toLocaleDateString(english ? 'en-US' : 'es-AR',{day:'numeric',month:'long',year:'numeric'})} aria-pressed={exam===value} className={`mx-auto flex size-9 items-center justify-center rounded-lg text-[12px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-25 ${exam===value?'bg-[#2563EB] text-white':'text-[#0F1B3D] hover:bg-[#EEF2FF]'}`}>{i+1}</button>
               })}
             </div>
-            {exam && <p className="mx-auto mt-2 flex max-w-[364px] items-center gap-2 text-[11px] font-medium text-[#2563EB]"><CalendarDays className="size-3.5"/> Examen: {new Date(`${exam}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR',{day:'numeric',month:'long',year:'numeric'})}</p>}
+            {exam && <p className="mx-auto mt-2 flex max-w-[364px] items-center gap-2 text-[11px] font-medium text-[#2563EB]"><CalendarDays className="size-3.5"/> {english ? 'Exam' : 'Examen'}: {new Date(`${exam}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR',{day:'numeric',month:'long',year:'numeric'})}</p>}
           </div>}
           {step===1 && <div className="space-y-2.5">
             {materials.length===0 ? <p className="text-[12px] leading-[18px] text-[#42506A]">{t("Todavía no tenés materiales procesados. Subí uno desde Mi espacio para continuar.")}</p> : materials.map(m=><button key={m.id} type="button" onClick={()=>toggle(selected,m.id,setSelected)} aria-pressed={selected.includes(m.id)} className={`flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors ${selected.includes(m.id)?'border-[#2563EB] bg-[#EEF2FF]':'border-[#E7EBF4] hover:border-[#2563EB]/40'}`}>
@@ -177,7 +177,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
             <div className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-2">
               <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">{t("Plan de estudio")}</h1>
-              <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-3.5"/> Editar plan</Link>
+              <Link href="/dashboard/plan-de-estudio/preparar" className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] font-medium text-[#42506A] hover:bg-[#F5F7FB]"><CalendarDays className="size-3.5"/> {english ? 'Edit plan' : 'Editar plan'}</Link>
             </div>
             <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
             {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={planCompletedKeys}/>}
@@ -188,7 +188,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
           </div>
           <aside className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">
             <section className="h-[210px] overflow-hidden rounded-[18px] bg-[#EAF1FF] px-4 py-5 sm:h-[218px] sm:px-5 sm:py-6">
-              <p className="flex items-center gap-2 text-[12px] font-medium text-[#2563EB]"><CalendarDays className="size-4"/> Próximo examen</p>
+              <p className="flex items-center gap-2 text-[12px] font-medium text-[#2563EB]"><CalendarDays className="size-4"/> {english ? 'Next exam' : 'Próximo examen'}</p>
               <h2 className="mt-2 text-[23px] font-semibold leading-tight tracking-[-0.045em]">{exam?`${english ? 'In' : 'En'} ${Math.max(0,Math.ceil((new Date(`${exam}T12:00:00`).getTime()-new Date(`${localDate(today)}T12:00:00`).getTime())/86400000))} ${english ? 'days' : 'días'}`:(english ? 'No date' : 'Sin fecha')}</h2>
               {exam&&<p className="mt-1 text-[12px] text-[#42506A]">{new Date(`${exam}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>}
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[#D8E3FF]"><div className="h-full rounded-full bg-[#4F5DFF]" style={{width:`${assignedKeys.size?Math.round(100*completedCount/assignedKeys.size):0}%`}}/></div>
