@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, Check, Flag, ListChecks, LockKeyhole, Loader2 } from 'lucide-react';
 import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
+import { CreemCheckoutCard } from '@/components/pricing/CreemCheckoutCard';
 import { premiumPurchaseDisplayState } from '@/lib/payments/status';
 import { PREMIUM_MONTHLY_PRICE_ARS, PREMIUM_SEMESTER_PRICE_ARS } from '@/lib/payments/offers';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -63,6 +64,15 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const [loading,setLoading] = useState<Plan|null>(null);
   const [error,setError] = useState<string|null>(null);
   const [checkoutUrl,setCheckoutUrl] = useState<string|null>(null);
+  const [market,setMarket] = useState<{market:'argentina'|'international';creemAvailable:boolean}|null>(null);
+  useEffect(()=>{
+    let active=true;
+    void fetch('/api/payments/creem/availability',{cache:'no-store'})
+      .then(async r=>r.ok?await r.json():null)
+      .then(d=>{if(active)setMarket(d&&['argentina','international'].includes(d.market)?d:{market:'argentina',creemAvailable:false})})
+      .catch(()=>{if(active)setMarket({market:'argentina',creemAvailable:false})});
+    return ()=>{active=false};
+  },[]);
 
   useEffect(()=>{
     let active=true;
@@ -159,6 +169,17 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const monthlyButton=(position:'main'|'final')=>
     mainAction?<Link href={mainAction} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff]">{monthlyCta}</Link>
     :<button type="button" disabled={monthlyDisabled} onClick={()=>void checkout('monthly')} data-premium-purchase={position} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff] disabled:cursor-not-allowed disabled:opacity-60">{loading==='monthly'?<Loader2 className="size-4 animate-spin"/>:null}{loading==='monthly'?'Abriendo Mercado Pago…':monthlyCta}</button>;
+  if (market===null) return <main className="mx-auto max-w-xl px-5 py-24 text-center text-sm text-slate-600"><Loader2 className="mx-auto mb-4 size-6 animate-spin"/> Consultando Premium para tu región…</main>;
+  if (market.market==='international') return (
+    <main className="mx-auto max-w-[840px] px-4 py-10 sm:py-16">
+      <header className="mb-8 text-center">
+        <h1 className="text-3xl font-extrabold text-slate-950">Evaluo Premium internacional</h1>
+        <p className="mt-3 text-sm leading-6 text-slate-600">Estudiá más, practicá tus temas y reforzá errores con un pago mensual en USD.</p>
+      </header>
+      <div className="mx-auto max-w-xl"><CreemCheckoutCard features={[...benefits]} mode="live" available={market.creemAvailable}/></div>
+      <Link href={returnTo??'/dashboard'} className="mx-auto mt-6 block text-center text-sm font-semibold text-blue-700">Volver al estudio sin comprar</Link>
+    </main>
+  );
   return <main data-premium-dashboard className="mx-auto w-full max-w-[1240px] px-3 py-7 text-[#0f172a] sm:px-4 sm:py-9 lg:px-6 lg:pb-16 lg:pt-12">
     <div className="mx-auto w-full max-w-[680px] min-w-0">
       <header className="text-center">
