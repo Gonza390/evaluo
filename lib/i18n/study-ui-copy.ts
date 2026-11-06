@@ -1,5 +1,6 @@
 /** UI strings for the study reader, practice, results and planner. Source text is never translated here. */
 export const STUDY_UI_ENGLISH: Record<string, string> = {
+  "Reintentar": "Try again",
   "Tu estudio": "Your study space",
   "Tus PDFs": "Your PDFs",
   "Buscar entre tus PDFs": "Search your PDFs",
