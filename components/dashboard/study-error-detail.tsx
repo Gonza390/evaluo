@@ -66,8 +66,8 @@ export type StudyErrorConversation = {
   reviewed: boolean;
 };
 
-function pageLabel(start: number | null, end: number | null) {
-  return start ? (end && end !== start ? `págs. ${start}–${end}` : `pág. ${start}`) : null;
+function pageLabel(start: number | null, end: number | null, english = false) {
+  return start ? (end && end !== start ? `${english ? 'pp.' : 'págs.'} ${start}–${end}` : `${english ? 'p.' : 'pág.'} ${start}`) : null;
 }
 
 export function StudyErrorDetail({
@@ -190,7 +190,7 @@ export function StudyErrorDetail({
     try {
       await task();
     } catch {
-      setNotice('No pudimos completar la acción. Revisá tu conexión y reintentá.');
+      setNotice(t('No pudimos completar la acción. Revisá tu conexión y reintentá.'));
     } finally {
       operation.current = false;
       setBusy(null);
@@ -207,7 +207,7 @@ export function StudyErrorDetail({
         void run('review', async () => {
           const marked = await reviewActions.markReviewed(item.id);
           if (!marked.success) {
-            setNotice('No pudimos guardar el repaso. Reintentá antes de comprobarlo.');
+            setNotice(t('No pudimos guardar el repaso. Reintentá antes de comprobarlo.'));
             return;
           }
           setReviewed(true);
@@ -219,7 +219,7 @@ export function StudyErrorDetail({
     void run(kind, async () => {
       const generated = await reviewActions.generateHelp(item.id, kind, materialId);
       if (!generated.success || !generated.text) {
-        setNotice(generated.message ?? 'No pudimos generar la ayuda.');
+        setNotice(english ? t('No pudimos generar la ayuda.') : (generated.message ?? 'No pudimos generar la ayuda.'));
         return;
       }
       setMessages((current) => [
@@ -243,7 +243,7 @@ export function StudyErrorDetail({
     void run('source', async () => {
       const loaded = await reviewActions.openSource(item.id, materialId);
       if (!loaded.success || !loaded.source) {
-        setNotice(loaded.message ?? 'No pudimos abrir el fragmento.');
+        setNotice(english ? t('No pudimos abrir el fragmento.') : (loaded.message ?? 'No pudimos abrir el fragmento.'));
         return;
       }
       setSource(loaded.source);
@@ -259,14 +259,14 @@ export function StudyErrorDetail({
       if (topicReinforcement && !reviewed) {
         const marked = await reviewActions.markReviewed(item.id);
         if (!marked.success) {
-          setNotice('No pudimos guardar el repaso. Reintentá antes de comprobarlo.');
+          setNotice(t('No pudimos guardar el repaso. Reintentá antes de comprobarlo.'));
           return;
         }
         setReviewed(true);
       }
       const generated = await reviewActions.generateCheck(item.id, materialId);
       if (!generated.success || !generated.question) {
-        setNotice(generated.message ?? 'No pudimos preparar la pregunta.');
+        setNotice(english ? t('No pudimos preparar la pregunta.') : (generated.message ?? 'No pudimos preparar la pregunta.'));
         return;
       }
       setQuestion(generated.question);
@@ -283,7 +283,7 @@ export function StudyErrorDetail({
     void run('answer', async () => {
       const checked = await reviewActions.submitCheck(question.id, answer);
       if (!checked.success) {
-        setNotice(checked.message ?? 'No pudimos guardar la respuesta.');
+        setNotice(english ? t('No pudimos guardar la respuesta.') : (checked.message ?? 'No pudimos guardar la respuesta.'));
         return;
       }
       setResult(checked);
@@ -312,7 +312,7 @@ export function StudyErrorDetail({
       void run('review', async () => {
         const marked = await reviewActions.markReviewed(item.id);
         if (marked.success) setReviewed(true);
-        else setNotice('No pudimos guardar el repaso. Reintentá antes de comprobarlo.');
+        else setNotice(t('No pudimos guardar el repaso. Reintentá antes de comprobarlo.'));
       });
   }
   return (
@@ -409,7 +409,7 @@ export function StudyErrorDetail({
                 <button type="button" onClick={openSource} disabled={Boolean(busy)} aria-expanded={sourceOpen} aria-controls={`topic-source-${item.id}`} className="text-primary inline-flex min-h-11 items-center gap-2 text-left text-sm font-medium">
                   <BookOpen className="h-4 w-4" aria-hidden="true" />
                   {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
-                  {pageLabel(source.pageStart, source.pageEnd) ? ` · ${pageLabel(source.pageStart, source.pageEnd)}` : ''}
+                  {pageLabel(source.pageStart, source.pageEnd, english) ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}` : ''}
                   <ChevronDown className={`h-4 w-4 transition-transform ${sourceOpen ? 'rotate-180' : ''}`} aria-hidden="true"/>
                 </button>
                 {sourceOpen && (
@@ -683,8 +683,8 @@ export function StudyErrorDetail({
                   <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   <span className="min-w-0 flex-1 text-[11px] leading-4 break-words">
                     {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
-                    {pageLabel(source.pageStart, source.pageEnd)
-                      ? ` · ${pageLabel(source.pageStart, source.pageEnd)}`
+                    {pageLabel(source.pageStart, source.pageEnd, english)
+                      ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}`
                       : ''}{' '}
                     <span className="text-primary font-medium">
                       — {t(sourceOpen ? 'Cerrar fragmento' : 'Ver fragmento')}
@@ -702,8 +702,8 @@ export function StudyErrorDetail({
                     </blockquote>
                     <p className="!text-muted-foreground mt-3 !text-xs">
                       {source.materialTitle}
-                      {pageLabel(source.pageStart, source.pageEnd)
-                        ? ` · ${pageLabel(source.pageStart, source.pageEnd)}`
+                      {pageLabel(source.pageStart, source.pageEnd, english)
+                        ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}`
                         : ''}
                     </p>
                     <Link
@@ -750,7 +750,7 @@ export function StudyErrorDetail({
                         void run('associate', async () => {
                           const associated = await reviewActions.associatePdf(item.id, associateId);
                           if (!associated.success || !associated.source) {
-                            setNotice(associated.message ?? 'No pudimos asociarlo.');
+                            setNotice(english ? t('No pudimos asociarlo.') : (associated.message ?? 'No pudimos asociarlo.'));
                             return;
                           }
                           setSource(associated.source);
