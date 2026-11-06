@@ -390,5 +390,9 @@
   {
     "file": "tests/creem-webhook.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/english-entry-funnel.smoke.ts",
+    "alias": false
   }
 ]

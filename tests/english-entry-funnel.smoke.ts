@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { HOME_ENGLISH_TEXT } from '../lib/i18n/home-copy.ts';
+import { STUDENT_ENTRY_ENGLISH, studentEntryText } from '../lib/i18n/student-entry-copy.ts';
+
+const read = (file: string) => readFileSync(file, 'utf8');
+const home = read('components/marketing/home-redesign.tsx');
+const english = read('app/(en)/en/page.tsx');
+const spanish = read('app/(es)/page.tsx');
+const picker = read('components/marketing/home-pdf-picker-button.tsx');
+const login = read('components/LoginFormGoogleFirst.tsx');
+const callback = read('app/(es)/auth/callback/route.ts');
+const shell = read('components/dashboard/pdf-first-upload-shell.tsx');
+const materials = read('components/dashboard/student-materials-workspace.tsx');
+const academic = read('components/profile-academic-simple.tsx');
+const processing = read('components/pdf-processing/pdf-processing-journey.tsx');
+const resources = read('app/(en)/en/resources/page.tsx');
+
+assert.match(english, /<HomeRedesign primaryHref=\{signupHref\} locale="en" \/>/);
+assert.match(home, /locale = 'es'/);
+assert.match(home, /HOME_REDESIGN_FAQS_EN/);
+assert.match(home, /<HomeRedesignDemo locale=\{locale\}/);
+assert.match(home, /<HomePdfPickerButton locale=\{locale\}/);
+assert.match(spanish, /languages: \{ 'es-AR': '\/', en: '\/en' \}/);
+assert.match(resources, /EnglishStudyPage pageKey="home"/);
+assert.match(picker, /locale === 'en' \? '\/en\/login' : '\/login'/);
+assert.match(picker, /savePdfFirstDraft\(file, source\)/);
+assert.match(login, /ui_locale: 'en'/);
+assert.match(login, /getEmailSignupDestination\(data.session, nextPath\)/);
+assert.match(callback, /ui_locale: 'en'/);
+assert.match(shell, /useAppLocale/);
+assert.match(shell, /PdfProcessingPanel/);
+assert.match(academic, /studentEntryText/);
+assert.match(materials, /studentEntryText/);
+assert.match(processing, /PROCESSING_ENGLISH/);
+assert.match(read('components/dashboard/maeve-study-hero.tsx'), /What are we studying today/);
+assert.match(read('components/dashboard/study-reading-cards.tsx'), /english \? 'Study'/);
+assert.match(read('app\/\(es\)\/completar-perfil\/page.tsx'.replaceAll('\\', '')), /Preparing your academic details/);
+
+assert.equal(HOME_ENGLISH_TEXT['Sabé qué tan preparado estás para tu examen.'], 'Know how ready you are for your exam.');
+assert.equal(studentEntryText('en', 'Subir mi PDF'), 'Upload my PDF');
+assert.equal(studentEntryText('es', 'Subir mi PDF'), 'Subir mi PDF');
+assert.ok(Object.keys(STUDENT_ENTRY_ENGLISH).length >= 100);
+assert.ok(Object.keys(HOME_ENGLISH_TEXT).length >= 100);
+console.log('[english-entry] Shared homepage, language persistence, first upload and onboarding contracts passed.');
