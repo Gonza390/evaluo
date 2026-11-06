@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { cancelMercadoPagoSubscription } from '@/lib/payments/mercadopago';
+import { cancelCreemSubscription } from '@/lib/payments/creem-international';
 import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
@@ -40,9 +41,9 @@ export async function POST(request: Request) {
   const admin = createAdminClient() as unknown as SupabaseClient;
   const { data: subscription, error } = await admin
     .from('user_subscriptions')
-    .select('id, provider_subscription_id, current_period_end, next_payment_date')
+    .select('id, payment_provider, provider_subscription_id, current_period_end, next_payment_date')
     .eq('user_id', user.id)
-    .eq('payment_provider', 'mercadopago')
+    .in('payment_provider', ['mercadopago', 'creem'])
     .in('status', ['active', 'approved', 'authorized', 'trialing', 'past_due', 'paused'])
     .not('provider_subscription_id', 'is', null)
     .order('created_at', { ascending: false })
@@ -55,8 +56,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const canceled = await cancelMercadoPagoSubscription(subscription.provider_subscription_id);
-    if (canceled.status.toLowerCase() !== 'canceled') {
+    const canceled = subscription.payment_provider === 'creem'
+      ? await cancelCreemSubscription(subscription.provider_subscription_id)
+      : await cancelMercadoPagoSubscription(subscription.provider_subscription_id);
+    if (!['canceled', 'scheduled_cancel'].includes(String(canceled.status).toLowerCase())) {
       return NextResponse.json({ error: 'provider_did_not_cancel' }, { status: 502 });
     }
 
