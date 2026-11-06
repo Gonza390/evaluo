@@ -43,7 +43,7 @@ const steps = {
   },
 } as const;
 
-const englishSteps: typeof steps = {
+const englishSteps = {
   summary: {
     label: 'Understand',
     title: 'Understand your notes',
