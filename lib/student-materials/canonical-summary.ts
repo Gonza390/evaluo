@@ -1,4 +1,5 @@
 import { extractJsonObject } from '@/lib/ai/json';
+import { studyGenerationInstruction } from '@/lib/i18n/study-language';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import {
   isolateUntrustedContent,
@@ -216,7 +217,7 @@ type IndexedCanonicalSummarySource = Omit<CanonicalSummarySource, 'topics'> & {
 export function buildCanonicalSummaryPrompt(
   input: Pick<
     GenerateSummaryInput,
-    'title' | 'universidadName' | 'carreraName' | 'materiaName'
+    'title' | 'universidadName' | 'carreraName' | 'materiaName' | 'studyLocale'
   > & Partial<Pick<GenerateSummaryInput, 'text' | 'pages'>>,
   model: CanonicalPedagogicalModel
 ) {
@@ -237,6 +238,7 @@ export function buildCanonicalSummaryPrompt(
     .join('\n');
 
   return [
+    studyGenerationInstruction(input.studyLocale ?? 'es'),
     'Sos un tutor académico experto en convertir un modelo pedagógico canónico en una Guía de estudio.',
     'El documento ya fue analizado y consolidado. Usá el modelo canónico para la estructura y los fragmentos originales seleccionados para recuperar detalles fieles. No agregues conocimiento externo.',
     'Respondé únicamente con JSON válido.',
