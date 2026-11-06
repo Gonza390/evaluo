@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { FileText, Sparkles } from 'lucide-react';
 import type { ReviewHelpKind } from '@/lib/study-error-review-contract';
 import { StudyErrorTutorAvatar } from './study-error-tutor-avatar';
@@ -70,6 +71,7 @@ export function StudyErrorHelpChat({
   notice?: string;
   compact?: boolean;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const conversation = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!messages.length && !pendingKind) return;
@@ -93,12 +95,12 @@ export function StudyErrorHelpChat({
         <div className="min-w-0 flex-1">
           <p className="!text-primary !text-xs !leading-5 font-semibold">Evaluo</p>
           <h3 className="mt-0.5 text-base leading-6 font-semibold break-words sm:text-lg">
-            {compact ? 'Entendamos el error' : `Entendamos ${topic}`}
+            {english ? (compact ? 'Let’s understand the mistake' : `Let’s understand ${topic}`) : (compact ? 'Entendamos el error' : `Entendamos ${topic}`)}
           </h3>
           <p className="!text-muted-foreground mt-1.5 flex items-start gap-2 !text-sm !leading-5">
             <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="min-w-0 break-words">
-              {pdfTitle ?? 'Este error todavía no tiene un PDF asociado'}
+              {pdfTitle ?? (english ? 'This mistake is not yet linked to a PDF' : 'Este error todavía no tiene un PDF asociado')}
             </span>
           </p>
         </div>
@@ -109,7 +111,7 @@ export function StudyErrorHelpChat({
         tabIndex={0}
         className={`focus-visible:outline-ring overscroll-y-contain p-4 [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${hasConversation ? 'max-h-[var(--study-chat-height)] overflow-y-auto' : 'py-3'}`}
         role="log"
-        aria-label="Conversación con Evaluo"
+        aria-label={english ? "Conversation with Evaluo" : "Conversación con Evaluo"}
         aria-live="polite"
         aria-relevant="additions"
       >
@@ -120,10 +122,10 @@ export function StudyErrorHelpChat({
               <p className="!text-foreground mb-2 !text-sm font-semibold">Evaluo</p>
               <p className="!text-foreground max-w-[60ch] !text-base !leading-7 break-words">
                 {resolved
-                  ? 'Este error ya quedó resuelto. Podés consultar tu respuesta anterior o seguir con otro tema.'
+                  ? (english ? 'You have already resolved this mistake. You can review your previous answer or move to another topic.' : 'Este error ya quedó resuelto. Podés consultar tu respuesta anterior o seguir con otro tema.')
                   : hasPdf
-                    ? 'Repasemos la diferencia con tu PDF.'
-                    : 'Podemos aclarar qué te confundió con una explicación general. Para usar tus apuntes, asociá un PDF.'}
+                    ? (english ? 'Let’s review the difference using your PDF.' : 'Repasemos la diferencia con tu PDF.')
+                    : (english ? 'We can clarify the issue in general terms. Link a PDF to use your own notes.' : 'Podemos aclarar qué te confundió con una explicación general. Para usar tus apuntes, asociá un PDF.')}
               </p>
               {!resolved && (
                 <button
@@ -132,7 +134,7 @@ export function StudyErrorHelpChat({
                   onClick={() => onRequest('why_wrong')}
                 >
                   <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {notice ? 'Reintentar explicación' : 'Ayudame a entenderlo'}
+                  {english ? (notice ? 'Retry explanation' : 'Help me understand') : (notice ? 'Reintentar explicación' : 'Ayudame a entenderlo')}
                 </button>
               )}
             </div>
@@ -144,8 +146,8 @@ export function StudyErrorHelpChat({
               {!(compact && turn.kind === 'why_wrong') && (
                 <div className="mb-5 flex justify-end">
                   <div className="bg-primary/7 max-w-[90%] rounded-2xl rounded-br-md px-4 py-3 sm:max-w-[80%]">
-                    <p className="!text-muted-foreground mb-1 !text-[11px] font-medium">Vos</p>
-                    <p className="!text-foreground !text-sm !leading-6">{requests[turn.kind]}</p>
+                    <p className="!text-muted-foreground mb-1 !text-[11px] font-medium">{english ? 'You' : 'Vos'}</p>
+                    <p className="!text-foreground !text-sm !leading-6">{english ? ({why_wrong: 'Help me understand', simpler: 'Can you explain more simply?', example: 'Give me an example'} as const)[turn.kind] : requests[turn.kind]}</p>
                   </div>
                 </div>
               )}
@@ -156,7 +158,7 @@ export function StudyErrorHelpChat({
                     <span className="text-sm font-semibold">Evaluo</span>
                     {index === 0 && (
                       <span className="text-muted-foreground text-xs">
-                        {hasPdf ? 'Con tu PDF' : 'Sobre este concepto'}
+                        {english ? (hasPdf ? 'Using your PDF' : 'About this concept') : (hasPdf ? 'Con tu PDF' : 'Sobre este concepto')}
                       </span>
                     )}
                   </div>
@@ -165,7 +167,7 @@ export function StudyErrorHelpChat({
                       className="!text-muted-foreground flex items-center gap-2 !text-sm"
                       role="status"
                     >
-                      {hasPdf ? 'Estoy revisando tu PDF…' : 'Estoy preparando la explicación…'}
+                      {english ? (hasPdf ? 'I’m reviewing your PDF…' : 'Preparing an explanation…') : (hasPdf ? 'Estoy revisando tu PDF…' : 'Estoy preparando la explicación…')}
                     </p>
                   ) : (
                     <TutorAnswer text={turn.text} />
@@ -180,7 +182,7 @@ export function StudyErrorHelpChat({
             <StudyErrorTutorAvatar />
             <div className="min-w-0 flex-1 space-y-3">
               <p className="!text-muted-foreground !text-xs font-semibold">
-                Explicación de la actividad
+                {english ? 'Activity explanation' : 'Explicación de la actividad'}
               </p>
               <TutorAnswer text={savedExplanation} />
             </div>
@@ -198,11 +200,11 @@ export function StudyErrorHelpChat({
       {messages.length > 0 && (
         <details className="border-border bg-muted/20 border-t px-4 py-2">
           <summary className="text-muted-foreground focus-visible:outline-ring flex min-h-10 cursor-pointer items-center text-xs font-medium focus-visible:outline-2">
-            Necesito otra explicación
+            {english ? 'I need another explanation' : 'Necesito otra explicación'}
           </summary>
           <div
             role="group"
-            aria-label="Opciones de la explicación"
+            aria-label={english ? "Explanation options" : "Opciones de la explicación"}
             className="grid grid-cols-2 items-center gap-2 pb-1 sm:flex sm:flex-wrap"
           >
             {(['simpler', 'example'] as const).map((kind) => (
@@ -212,7 +214,7 @@ export function StudyErrorHelpChat({
                 disabled={busy || (resolved && !messages.some((message) => message.kind === kind))}
                 onClick={() => onRequest(kind)}
               >
-                {kind === 'simpler' ? 'Más simple' : 'Dame un ejemplo'}
+                {english ? (kind === 'simpler' ? 'Simpler' : 'Give me an example') : (kind === 'simpler' ? 'Más simple' : 'Dame un ejemplo')}
               </button>
             ))}
             {turns.some((turn) => turn.kind === 'why_wrong') && (
@@ -221,7 +223,7 @@ export function StudyErrorHelpChat({
                 disabled={busy}
                 onClick={() => onRequest('why_wrong')}
               >
-                Ver explicación inicial
+                {english ? 'See initial explanation' : 'Ver explicación inicial'}
               </button>
             )}
           </div>
