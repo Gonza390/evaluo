@@ -268,7 +268,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isProtectedRoute && !user) {
-    const loginUrl = new URL('/login', request.url);
+    // Keep the account's selected language when an English session expires.
+    // Do not infer account language from IP or country.
+    const savedLocale = request.cookies.get('evaluo_ui_locale')?.value;
+    const loginUrl = new URL(savedLocale === 'en' ? '/en/login' : '/login', request.url);
     loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
     if (isSharedMaterialRoute) loginUrl.searchParams.set('reason', 'shared-pdf');
     return persistReferralCookie(request, redirectPreservingSessionCookies(response, loginUrl));
