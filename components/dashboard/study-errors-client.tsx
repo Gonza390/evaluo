@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,9 +32,34 @@ import {
   type StudyErrorConversation,
 } from './study-error-detail';
 
+const STUDY_ERROR_EN: Record<string,string> = {
+  "Progreso": "Progress",
+  "No pudimos cargar tus errores. Tu progreso sigue guardado.": "We could not load your mistakes. Your progress is saved.",
+  "Reintentar": "Try again",
+  "Elegir material para repasar": "Choose a material to review",
+  "Al día": "Up to date",
+  "Simulador y otros conceptos": "Question bank and other concepts",
+  "Repasá el error y comprobá lo aprendido.": "Review the mistake and check what you learned.",
+  "Subir mi PDF": "Upload my PDF",
+  "Mis PDFs": "My PDFs",
+  "Cambiar material": "Change material",
+  "Elegí un error": "Choose a mistake",
+  "Cambiar error": "Change mistake",
+  "Errores de este PDF": "Mistakes in this PDF",
+  "Buscar tema": "Search topic",
+  "Repaso del error": "Mistake review",
+  "Seguir estudiando mi PDF": "Keep studying my PDF",
+  "No encontramos ese tema.": "Topic not found.",
+  "No quedan errores pendientes.": "No pending mistakes.",
+  "Todavía no hay errores resueltos.": "No resolved mistakes yet.",
+  "Todavía no hay errores resueltos": "No resolved mistakes yet",
+  "Todo al día en este PDF": "All caught up in this PDF",
+  "Los errores que compruebes después del repaso van a aparecer acá.": "Mistakes checked after review will appear here.",
+  "Podés seguir estudiando tu material o revisar tus conceptos resueltos.": "Continue studying or revisit resolved concepts.",
+  "Resuelto": "Resolved"
+};
 const unlinkedId = 'unlinked';
-const pendingLabel = (count: number) => `${count} ${count === 1 ? 'pendiente' : 'pendientes'}`;
-const resolvedLabel = (count: number) => `${count} ${count === 1 ? 'resuelto' : 'resueltos'}`;
+const sourceLabelsEn: Record<keyof typeof studyErrorSourceLabels, string> = { simulator:'Question bank',flashcard:'Flashcards',exercise:'Practice',diagnostic:'Diagnostic' };
 
 export function StudyErrorsClient({
   data,
@@ -49,6 +75,10 @@ export function StudyErrorsClient({
   preview?: boolean;
 }) {
   const router = useRouter();
+  const english = useOptionalAppLocale() === 'en';
+  const t = (es: string) => english ? (STUDY_ERROR_EN[es] ?? es) : es;
+  const pendingLabel = (n: number) => `${n} ${english ? 'pending' : n === 1 ? 'pendiente' : 'pendientes'}`;
+  const resolvedLabel = (n: number) => `${n} ${english ? 'resolved' : n === 1 ? 'resuelto' : 'resueltos'}`;
   const initialError = initialErrorId
     ? [...data.pending, ...data.resolved].find((item) => item.id === initialErrorId)
     : initialMaterialId
@@ -132,24 +162,13 @@ export function StudyErrorsClient({
   const headerPendingCount = materialId ? pending.length : totalPending;
   const headerDescription = headerPendingCount ? (
     <>
-      Tenés{' '}
-      <strong className="text-foreground font-semibold">
-        {headerPendingCount} {headerPendingCount === 1 ? 'concepto' : 'conceptos'}
-      </strong>{' '}
-      para reforzar{selectedPdf ? ' en este PDF' : ''}.
-      {!materialId
-        ? ' Elegí un PDF.'
-        : materialId === unlinkedId
-          ? ' Repasá cada concepto conservando su origen.'
-          : ''}
+      {english ? 'You have ' : 'Tenés '}<strong className="text-foreground font-semibold">{headerPendingCount} {english ? (headerPendingCount === 1 ? 'concept' : 'concepts') : (headerPendingCount === 1 ? 'concepto' : 'conceptos')}</strong>{' '}
+      {english ? 'to review' : 'para reforzar'}{selectedPdf ? (english ? ' in this PDF' : ' en este PDF') : ''}.
+      {!materialId ? (english ? ' Choose a PDF.' : ' Elegí un PDF.') : materialId === unlinkedId ? (english ? ' Review each concept while keeping its source.' : ' Repasá cada concepto conservando su origen.') : ''}
     </>
-  ) : selectedPdf ? (
-    'No te quedan conceptos pendientes en este PDF.'
-  ) : views.length ? (
-    'No tenés conceptos pendientes. Tu progreso de repaso está guardado.'
-  ) : (
-    'Los conceptos que te cuesten al practicar van a quedar acá para repasarlos.'
-  );
+  ) : selectedPdf ? (english ? 'No pending concepts in this PDF.' : 'No te quedan conceptos pendientes en este PDF.') :
+    views.length ? (english ? 'No concepts left to review. Your progress was saved.' : 'No tenés conceptos pendientes. Tu progreso de repaso está guardado.') :
+    (english ? 'Concepts you find difficult during practice will appear here for review.' : 'Los conceptos que te cuesten al practicar van a quedar acá para repasarlos.');
 
   useEffect(() => {
     if (preview) return;
@@ -218,7 +237,7 @@ export function StudyErrorsClient({
   }
   function finish() {
     setNotice(
-      `Terminaste el repaso por hoy. ${pending.length === 1 ? 'Te queda 1 error pendiente' : pending.length ? `Te quedan ${pending.length} errores pendientes` : 'No te quedan errores pendientes'}${selectedPdf ? ` en ${selectedPdf.title}` : ''}. Tu avance quedó guardado.`
+      english ? `Review complete for today. ${pending.length ? `${pending.length} pending mistake${pending.length===1?'':'s'}` : 'No pending mistakes'}${selectedPdf ? ` in ${selectedPdf.title}` : ''}. Your progress was saved.` : `Terminaste el repaso por hoy. ${pending.length === 1 ? 'Te queda 1 error pendiente' : pending.length ? `Te quedan ${pending.length} errores pendientes` : 'No te quedan errores pendientes'}${selectedPdf ? ` en ${selectedPdf.title}` : ''}. Tu avance quedó guardado.`
     );
     returnToMaterials();
     if (!preview) router.refresh();
@@ -226,12 +245,12 @@ export function StudyErrorsClient({
   if (data.loadError)
     return (
       <div className="mx-auto max-w-3xl px-5 py-10">
-        <AppPageHeader title="Progreso" />
+        <AppPageHeader title={t("Progreso")} />
         <p role="alert" className="!text-foreground mt-4">
-          No pudimos cargar tus errores. Tu progreso sigue guardado.
+          {t("No pudimos cargar tus errores. Tu progreso sigue guardado.")}
         </p>
         <button className={reviewPrimaryButton + ' mt-4'} onClick={() => router.refresh()}>
-          Reintentar
+          {t("Reintentar")}
         </button>
       </div>
     );
@@ -244,9 +263,9 @@ export function StudyErrorsClient({
       >
         <div ref={pageIntro} tabIndex={-1} className="scroll-mt-24 outline-none">
           <AppPageHeader
-            eyebrow="Progreso"
+            eyebrow={t("Progreso")}
             size="compact"
-            title="Progreso"
+            title={t("Progreso")}
             description={<span role="status">{headerDescription}</span>}
           />
         </div>
@@ -261,7 +280,7 @@ export function StudyErrorsClient({
         {!materialId ? (
           <section aria-labelledby="choose-pdf" className="mt-3">
             <h2 id="choose-pdf" className="sr-only">
-              Elegir material para repasar
+              {t("Elegir material para repasar")}
             </h2>
             <div className="divide-border border-border divide-y border-b">
               {pdfs.map((pdf) => {
@@ -298,7 +317,7 @@ export function StudyErrorsClient({
                         {count ? (
                           <>
                             <span className="text-primary block text-sm font-semibold">
-                              {count} {count === 1 ? 'tema' : 'temas'} para reforzar
+                              {count} {english ? `${count === 1 ? 'topic' : 'topics'} to review` : `${count === 1 ? 'tema' : 'temas'} para reforzar`}
                             </span>
                             {errors.length > count && (
                               <span className="text-muted-foreground mt-1 block text-xs">
@@ -309,11 +328,11 @@ export function StudyErrorsClient({
                         ) : (
                           <span className="text-muted-foreground inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-                            Al día
+                            {t("Al día")}
                             {errors.length > 0 && (
                               <span className="text-xs">
                                 · {errors.length}{' '}
-                                {errors.length === 1 ? 'tema resuelto' : 'temas resueltos'}
+                                {english ? (errors.length === 1 ? 'resolved topic' : 'resolved topics') : (errors.length === 1 ? 'tema resuelto' : 'temas resueltos')}
                               </span>
                             )}
                           </span>
@@ -343,10 +362,10 @@ export function StudyErrorsClient({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold break-words">
-                      Simulador y otros conceptos
+                      {t("Simulador y otros conceptos")}
                     </span>
                     <span className="text-muted-foreground mt-2 block text-sm">
-                      {pendingLabel(unlinkedPending)} · Repasá el error y comprobá lo aprendido.
+                      {pendingLabel(unlinkedPending)} · {t("Repasá el error y comprobá lo aprendido.")}
                     </span>
                     {unlinked.length > unlinkedPending && (
                       <span className="text-muted-foreground mt-1 block text-xs">
@@ -363,15 +382,14 @@ export function StudyErrorsClient({
             </div>
             {!pdfs.length && !views.length && (
               <p className="!text-foreground mt-5">
-                Todavía no tenés errores guardados. Subí un PDF y practicá: lo que te cueste quedará
-                listo para repasar.
+                {english ? 'No saved mistakes yet. Upload a PDF and practice; difficult topics will appear here.' : 'Todavía no tenés errores guardados. Subí un PDF y practicá: lo que te cueste quedará listo para repasar.'}
               </p>
             )}
             <Link
               href="/dashboard/materiales?openUpload=1"
               className="text-muted-foreground hover:text-foreground focus-visible:outline-ring mt-4 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium underline underline-offset-4 transition focus-visible:outline-2"
             >
-              Subir mi PDF
+              {t("Subir mi PDF")}
             </Link>
           </section>
         ) : (
@@ -386,7 +404,7 @@ export function StudyErrorsClient({
                 }}
               >
                 <ArrowLeft className="h-4 w-4" />
-                Mis PDFs
+                {t("Mis PDFs")}
               </button>
               <Select value={materialId} onValueChange={chooseMaterial}>
                 <SelectTrigger
@@ -395,10 +413,10 @@ export function StudyErrorsClient({
                 >
                   <SelectValue>
                     <span className="text-muted-foreground block text-xs font-normal">
-                      Cambiar material
+                      {t("Cambiar material")}
                     </span>
                     <span className="text-foreground mt-0.5 block text-sm font-semibold [overflow-wrap:anywhere] sm:text-base">
-                      {selectedPdf?.title ?? 'Simulador y otros conceptos'}
+                      {selectedPdf?.title ?? t("Simulador y otros conceptos")}
                     </span>
                   </SelectValue>
                 </SelectTrigger>
@@ -420,7 +438,7 @@ export function StudyErrorsClient({
                   ))}
                   {unlinked.length > 0 && (
                     <SelectItem value={unlinkedId} className="min-h-11">
-                      Simulador y otros conceptos
+                      {t("Simulador y otros conceptos")}
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -435,12 +453,12 @@ export function StudyErrorsClient({
               >
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold">
-                    {selected?.topic ?? 'Elegí un error'}
+                    {selected?.topic ?? t("Elegí un error")}
                     {selected && selected.status === 'pending'
-                      ? ` · Error ${Math.max(1, pending.findIndex((item) => item.id === selected.id) + 1)} de ${pending.length}`
+                      ? (english ? ` · Mistake ${Math.max(1, pending.findIndex((item) => item.id === selected.id) + 1)} of ${pending.length}` : ` · Error ${Math.max(1, pending.findIndex((item) => item.id === selected.id) + 1)} de ${pending.length}`)
                       : ''}
                   </span>
-                  <span className="text-primary block text-xs">Cambiar error</span>
+                  <span className="text-primary block text-xs">{t("Cambiar error")}</span>
                 </span>
                 <ChevronDown className={`h-4 w-4 shrink-0 ${mobileListOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -448,7 +466,7 @@ export function StudyErrorsClient({
             <div className="grid min-w-0 gap-4 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-5">
               <aside
                 id="mobile-errors"
-                aria-label="Errores de este PDF"
+                aria-label={t("Errores de este PDF")}
                 className={`${mobileListOpen ? 'block' : 'hidden'} lg:border-border min-w-0 pt-4 lg:block lg:border-r lg:pr-5`}
               >
                 <div className="flex gap-2">
@@ -464,8 +482,8 @@ export function StudyErrorsClient({
                       }}
                     >
                       {value === 'pending'
-                        ? `Pendientes (${pending.length})`
-                        : `Resueltos (${resolved.length})`}
+                        ? (english ? `Pending (${pending.length})` : `Pendientes (${pending.length})`)
+                        : (english ? `Resolved (${resolved.length})` : `Resueltos (${resolved.length})`)}
                     </button>
                   ))}
                 </div>
@@ -473,8 +491,8 @@ export function StudyErrorsClient({
                   <Search className="text-muted-foreground h-4 w-4 shrink-0" />
                   <input
                     type="search"
-                    aria-label="Buscar tema"
-                    placeholder="Buscar tema"
+                    aria-label={t("Buscar tema")}
+                    placeholder={t("Buscar tema")}
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     className="w-full min-w-0 bg-transparent text-sm outline-none"
@@ -492,10 +510,10 @@ export function StudyErrorsClient({
                     >
                       <span className="block text-sm font-semibold break-words">{item.topic}</span>
                       <span className="text-muted-foreground mt-1 block text-xs">
-                        {studyErrorSourceLabels[item.sourceType]} ·{' '}
+                        {english ? sourceLabelsEn[item.sourceType] : studyErrorSourceLabels[item.sourceType]} ·{' '}
                         {item.status === 'resolved'
-                          ? 'Resuelto'
-                          : `Fallaste ${item.failureCount} ${item.failureCount === 1 ? 'vez' : 'veces'}`}
+                          ? t("Resuelto")
+                          : (english ? `Missed ${item.failureCount} ${item.failureCount === 1 ? 'time' : 'times'}` : `Fallaste ${item.failureCount} ${item.failureCount === 1 ? 'vez' : 'veces'}`)}
                       </span>
                     </button>
                   ))}
@@ -503,14 +521,14 @@ export function StudyErrorsClient({
                 {!visible.length && (
                   <p className="!text-muted-foreground mt-4 !text-xs">
                     {query
-                      ? 'No encontramos ese tema.'
+                      ? t("No encontramos ese tema.")
                       : tab === 'pending'
-                        ? 'No quedan errores pendientes.'
-                        : 'Todavía no hay errores resueltos.'}
+                        ? t("No quedan errores pendientes.")
+                        : t("Todavía no hay errores resueltos.")}
                   </p>
                 )}
               </aside>
-              <section className="min-w-0 py-4" aria-label="Repaso del error">
+              <section className="min-w-0 py-4" aria-label={t("Repaso del error")}>
                 {selected ? (
                   <StudyErrorDetail
                     key={conversationKey}
@@ -570,20 +588,20 @@ export function StudyErrorsClient({
                     <CheckCircle2 className="text-primary h-7 w-7" />
                     <h3 className="mt-3 text-xl font-bold">
                       {tab === 'resolved'
-                        ? 'Todavía no hay errores resueltos'
-                        : 'Todo al día en este PDF'}
+                        ? t("Todavía no hay errores resueltos")
+                        : t("Todo al día en este PDF")}
                     </h3>
                     <p className="!text-muted-foreground mt-2 !text-sm">
                       {tab === 'resolved'
-                        ? 'Los errores que compruebes después del repaso van a aparecer acá.'
-                        : 'Podés seguir estudiando tu material o revisar tus conceptos resueltos.'}
+                        ? t("Los errores que compruebes después del repaso van a aparecer acá.")
+                        : t("Podés seguir estudiando tu material o revisar tus conceptos resueltos.")}
                     </p>
                     {selectedPdf && (
                       <Link
                         href={`/materiales/${selectedPdf.id}`}
                         className={reviewPrimaryButton + ' mt-4'}
                       >
-                        Seguir estudiando mi PDF
+                        {t("Seguir estudiando mi PDF")}
                       </Link>
                     )}
                   </div>
