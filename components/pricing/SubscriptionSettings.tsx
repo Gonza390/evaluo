@@ -32,6 +32,7 @@ type SubscriptionPayload = {
   planName: string;
   status: string;
   amountArs: number | null;
+  amountUsdCents?: number | null;
   nextPaymentDate: string | null;
   promotion: string | null;
   provider: string | null;
@@ -116,7 +117,7 @@ export function SubscriptionSettings() {
   const paymentProblem = ['past_due', 'paused'].includes(data?.status ?? '');
   const canceledWithAccess = premium && data?.status === 'canceled';
   const canCancel =
-    data?.provider === 'mercadopago' && (paymentProblem || (premium && !canceledWithAccess));
+    ['mercadopago', 'creem'].includes(data?.provider ?? '') && (paymentProblem || (premium && !canceledWithAccess));
 
   return (
     <section className="surface-panel overflow-hidden p-6 sm:p-8">
@@ -212,7 +213,7 @@ export function SubscriptionSettings() {
               <div>
                 <p className="text-sm font-bold text-foreground">¿Querés activar Premium?</p>
                 <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
-                  Entrá directo al plan Premium y continuá con el checkout seguro de Mercado Pago.
+                  Entrá directo al plan Premium y continuá con el checkout seguro según tu país.
                 </p>
               </div>
             </div>
@@ -261,7 +262,7 @@ export function SubscriptionSettings() {
                 <div>
                   <p className="text-sm font-bold text-foreground">Desbloqueá Evaluo Premium</p>
                   <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
-                    <ShieldCheck className="h-4 w-4" /> Cobro seguro con Mercado Pago · Cancelá cuando quieras
+                    <ShieldCheck className="h-4 w-4" /> Pago seguro según tu país · Cancelá futuras renovaciones
                   </p>
                 </div>
               </div>
@@ -297,7 +298,7 @@ export function SubscriptionSettings() {
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Cancelar Evaluo Premium?</AlertDialogTitle>
                 <AlertDialogDescription className="leading-6">
-                  Mercado Pago dejará de realizar futuras renovaciones. Conservás Premium hasta
+                  El proveedor de pago dejará de realizar futuras renovaciones. Conservás Premium hasta
                   finalizar el período que ya pagaste. Esta acción no reembolsa cobros ya
                   realizados.
                 </AlertDialogDescription>
