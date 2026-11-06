@@ -1,5 +1,6 @@
 import 'server-only';
 import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
+import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { getDashboardNextStudyAction, type DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
@@ -37,10 +38,10 @@ type ProfileRow = {
   role: string | null;
 };
 
-function firstName(value: string | null | undefined) {
+function firstName(value: string | null | undefined, locale: AppLocale = 'es') {
   const normalized = value?.trim();
-  if (!normalized) return 'estudiante';
-  return normalized.split(/\s+/)[0] || 'estudiante';
+  if (!normalized) return locale === 'en' ? 'student' : 'estudiante';
+  return normalized.split(/\s+/)[0] || (locale === 'en' ? 'student' : 'estudiante');
 }
 
 function truncate(value: string, max = 76) {
@@ -113,15 +114,19 @@ export function buildStudyReturnD1Message(input: {
   action: Pick<DashboardNextStudyAction, 'kind' | 'title' | 'description' | 'cta'>;
   returnUrl: string;
   pendingTopics?: string[];
+  locale?: AppLocale;
 }) {
+  const english = input.locale === 'en';
   const title = truncate(input.materialTitle);
   const safeFirstName = escapeHtml(input.firstname);
   const safeTitle = escapeHtml(title);
   const safeUrl = escapeHtml(input.returnUrl);
-  const safeCta = escapeHtml(input.action.cta);
-  const safeNextStep = escapeHtml(input.action.description);
+  const englishCtas: Record<DashboardNextStudyAction['kind'], string> = { reinforce: 'Review now', resume_practice: 'Resume practice', start_practice: 'Start practice', saved_objective: 'Continue my review', continue_summary: 'Continue reading' };
+  const englishNextSteps: Record<DashboardNextStudyAction['kind'], string> = { reinforce: 'Review your challenging topics and try again.', resume_practice: 'Finish your practice and check your answers.', start_practice: 'Practice the concepts you just read.', saved_objective: 'Your next study objective is ready.', continue_summary: 'Pick up your study material where you left off.' };
+  const safeCta = escapeHtml(english ? englishCtas[input.action.kind] : input.action.cta);
+  const safeNextStep = escapeHtml(english ? englishNextSteps[input.action.kind] : input.action.description);
   const topics = [...new Set((input.pendingTopics ?? []).map((topic) => topic.trim()).filter(Boolean))].slice(0, 2);
-  const topicsHtml = topics.length ? `<p style="margin:0 0 10px;font-weight:700;font-size:14px;color:#0F1B3D;">Temas para reforzar</p><ul style="padding-left:20px;margin:0 0 12px;color:#334155;">${topics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join('')}</ul>` : '';
+  const topicsHtml = topics.length ? `<p style="margin:0 0 10px;font-weight:700;font-size:14px;color:#0F1B3D;">${english ? 'Topics to review' : 'Temas para reforzar'}</p><ul style="padding-left:20px;margin:0 0 12px;color:#334155;">${topics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join('')}</ul>` : '';
 
   const copyByKind: Record<
     DashboardNextStudyAction['kind'],
@@ -154,12 +159,39 @@ export function buildStudyReturnD1Message(input: {
     },
   };
 
-  const copy = copyByKind[input.action.kind];
+  const englishCopyByKind: Record<DashboardNextStudyAction['kind'], {subject:string;heading:string;paragraph:string}> = {
+    reinforce: {
+      subject: `Review difficult concepts from ${title}`,
+      heading: 'Your next review is ready',
+      paragraph: `You made progress in ${title}. Revisit difficult concepts and see how much you remember.`,
+    },
+    resume_practice: {
+      subject: `You have unfinished practice for ${title}`,
+      heading: 'Pick up your practice',
+      paragraph: `You started practicing with ${title}. Continue and check your understanding.`,
+    },
+    start_practice: {
+      subject: `Ready to practice ${title}?`,
+      heading: 'Check what you have learned',
+      paragraph: `You have read the summary of ${title}. Practice to find out which topics need more work.`,
+    },
+    saved_objective: {
+      subject: `Your next review for ${title} is ready`,
+      heading: 'Your study goal is ready',
+      paragraph: `You planned your next steps for ${title}. Continue with your saved objective in Evaluo.`,
+    },
+    continue_summary: {
+      subject: `Continue studying ${title}`,
+      heading: `Continue with ${title}`,
+      paragraph: `It has been more than a day since you studied this material. Resume your summary and take the next step.`,
+    },
+  };
+  const copy = english ? englishCopyByKind[input.action.kind] : copyByKind[input.action.kind];
   const safeHeading = escapeHtml(copy.heading);
   const safeParagraph = escapeHtml(copy.paragraph);
 
   const html = `<!doctype html>
-<html lang="es">
+<html lang="${english ? 'en' : 'es'}">
   <body style="margin:0;padding:0;background:#F5F7FB;font-family:Inter,Arial,sans-serif;color:#0F1B3D;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;padding:32px 16px;">
       <tr>
@@ -168,15 +200,15 @@ export function buildStudyReturnD1Message(input: {
             <tr>
               <td style="padding:32px;">
                 <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
-                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${english ? 'Hi' : 'Hola'} ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeTitle}</p>
                 <p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
                 <div style="padding:14px 18px;border:1px solid #DCE6F9;border-radius:12px;background:#F4F7FF;margin:0 0 22px;">${topicsHtml}<p style="margin:0;font-size:14px;line-height:1.5;color:#334155;">${safeNextStep}</p></div>
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.</p>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${english ? 'You received this message because you recently studied this material in Evaluo and have another step ready.' : 'Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.'}</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">${english ? 'Evaluo Team' : 'Equipo Evaluo'}</p>
                   <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
@@ -188,7 +220,7 @@ export function buildStudyReturnD1Message(input: {
   </body>
 </html>`;
 
-  const text = `Hola ${input.firstname}. ${copy.heading}. ${copy.paragraph} ${input.action.cta}: ${input.returnUrl}`;
+  const text = `${english ? 'Hi' : 'Hola'} ${input.firstname}. ${copy.heading}. ${copy.paragraph} ${english ? englishCtas[input.action.kind] : input.action.cta}: ${input.returnUrl}`;
 
   return { subject: copy.subject, html, text };
 }
@@ -443,7 +475,8 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     if (pendingTopics.error) logError('studyReturnD1.pendingTopics', pendingTopics.error, { userId: candidate.userId });
     const returnUrl = buildTrackedReturnUrl(action);
     const message = buildStudyReturnD1Message({
-      firstname: firstName(displayName),
+      firstname: firstName(displayName, accountAppLocale(user.user_metadata) ?? 'es'),
+      locale: accountAppLocale(user.user_metadata) ?? 'es',
       materialTitle: materialTitle(material),
       action,
       returnUrl,
