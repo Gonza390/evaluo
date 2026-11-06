@@ -414,5 +414,9 @@
   {
     "file": "tests/international-market-and-english-checkout.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/regional-premium-experience.smoke.ts",
+    "alias": false
   }
 ]
