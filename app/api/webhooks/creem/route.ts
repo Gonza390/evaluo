@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { verifyCreemWebhookSignature } from '@/lib/payments/creem';
 import { canReclaimCreemPreviewEvent, parseCreemPreviewEvent } from '@/lib/payments/creem-events';
+import { reconcileCreemBillingEvent } from '@/lib/payments/creem-reconcile';
 
 export const runtime = 'nodejs';
 
@@ -113,7 +114,10 @@ export async function POST(request: Request) {
   try {
     // An accepted event means its test-mode signature and structure are valid;
     // it is NOT evidence of production payment. Do not unlock Premium here.
-    const finalStatus = event.accepted ? 'processed' : 'ignored';
+    let finalStatus = event.accepted ? 'processed' : 'ignored';
+    if (event.accepted) {
+      finalStatus = await reconcileCreemBillingEvent(admin, 'test', payload);
+    }
     const { error } = await admin
       .from('payment_webhook_events')
       .update({ status: finalStatus, processed_at: new Date().toISOString() })
