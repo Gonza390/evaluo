@@ -38,18 +38,25 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   const [savingStudyLocale, setSavingStudyLocale] = useState(false);
   const accountLocale = accountAppLocale(user?.user_metadata);
   const savedStudyLocale = accountStudyLocale(user?.user_metadata);
-  const timeZoneCaptureAttempted = useRef<string | null>(null);
-  // Persist the device IANA time zone once for authenticated students, so global
-  // exam reminders work even if they never open Settings. This is a preference,
-  // not an authorization claim. Users can change it manually in Settings.
+  const preferenceCaptureAttempted = useRef<string | null>(null);
+  // Older accounts did not save the UI locale. Capture the language actually shown
+  // at their next authenticated visit, rather than retroactively guessing Spanish.
+  // Combine this with time-zone capture to avoid racing auth.updateUser calls.
+  // These are display preferences, never authorization claims.
   useEffect(() => {
-    if (!user?.id || parseAccountTimeZone(user.user_metadata?.time_zone) ||
-        timeZoneCaptureAttempted.current === user.id) return;
-    timeZoneCaptureAttempted.current = user.id;
-    const detected = parseAccountTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-    if (!detected) return;
-    void supabase.auth.updateUser({ data: { time_zone: detected } }).catch(() => undefined);
-  }, [user?.id, user?.user_metadata?.time_zone]);
+    if (loading || !initialized || !user?.id ||
+        preferenceCaptureAttempted.current === user.id) return;
+    const savedZone = parseAccountTimeZone(user.user_metadata?.time_zone);
+    const detectedZone = savedZone ? null :
+      parseAccountTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const missingLocale = accountLocale === null;
+    if (!missingLocale && !detectedZone) return;
+    preferenceCaptureAttempted.current = user.id;
+    const data: { ui_locale?: AppLocale; time_zone?: string } = {};
+    if (missingLocale) data.ui_locale = storedLocale() ?? locale;
+    if (detectedZone) data.time_zone = detectedZone;
+    void supabase.auth.updateUser({ data }).catch(() => undefined);
+  }, [loading, initialized, user?.id, user?.user_metadata?.time_zone, accountLocale, locale]);
 
   const studyLocale = studyOverride ?? savedStudyLocale ?? locale;
 
