@@ -1002,7 +1002,7 @@ export function StudentMaterialExam({
           ? `${tr('Reforzar','Review')} ${nextObjective.topicTitle || tr('mis errores','my mistakes')}`
           : nextObjective?.kind === 'practice'
             ? `${tr('Practicar','Practice')} ${nextObjective.topicTitle || tr('el próximo tema','the next topic')}`
-            : tr('Consolidar lo aprendido','Consolidate what you learned');
+            : tr(tr('Consolidar lo aprendido','Consolidate what you learned'),'Consolidate what you learned');
 
       // Acertar toda una tanda no significa haber recorrido todas las preguntas del tema.
       // Los totales del banco se calculan SOLO sobre preguntas elegibles y verificables.
@@ -1362,7 +1362,7 @@ export function StudentMaterialExam({
       <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
         <header className="border-border border-b pb-6">
           <p className="text-primary text-[11px] font-medium tracking-[0.15em] uppercase">
-            Práctica completada{topicTitle ? ` · ${topicTitle}` : ''}
+            {tr('Práctica completada','Practice completed')}{topicTitle ? ` · ${topicTitle}` : ''}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
             <h2 className="text-foreground text-[24px] font-semibold tracking-[-0.04em] sm:text-[28px]">
@@ -1372,8 +1372,8 @@ export function StudentMaterialExam({
             </h2>
             <p className="text-muted-foreground pb-1 text-sm">
               {topicSectionIndex === undefined
-                ? `${result.correct} de ${result.total} respuestas consolidadas`
-                : 'Respuestas correctas en esta tanda'}
+                ? `${result.correct} ${tr('de','of')} ${result.total} ${tr('respuestas consolidadas','consolidated answers')}`
+                : tr('Respuestas correctas en esta tanda','Correct answers in this session')}
             </p>
           </div>
         </header>
@@ -1398,20 +1398,20 @@ export function StudentMaterialExam({
             <div>
               <h3 className="text-foreground font-semibold">
                 {result.wrong.length > 0
-                  ? `${result.wrong.length} ${result.wrong.length === 1 ? 'pregunta para revisar' : 'preguntas para revisar'}`
-                  : 'Respondiste toda la tanda correctamente'}
+                  ? `${result.wrong.length} ${result.wrong.length === 1 ? tr('pregunta para revisar','question to review') : tr('preguntas para revisar','questions to review')}`
+                  : tr('Respondiste toda la tanda correctamente','All answers in this session were correct')}
               </h3>
               <p className="text-muted-foreground mt-2 text-sm">
                 {result.wrong.length > 0
-                  ? 'Antes de continuar, te recomendamos revisar estas dificultades con el contenido del tema.'
-                  : 'Podés volver al tema y continuar estudiando. Más adelante conviene comprobarlo otra vez.'}
+                  ? tr('Antes de continuar, te recomendamos revisar estas dificultades con el contenido del tema.','Before continuing, review these difficulties with the topic content.')
+                  : tr('Podés volver al tema y continuar estudiando. Más adelante conviene comprobarlo otra vez.','You can return to the topic and keep studying. Check your understanding again later.')}
               </p>
             </div>
           ) : reviewTopics.length > 0 ? (
             <div className="flex items-start gap-3">
               <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div>
-                <h3 className="text-foreground font-semibold">Temas para repasar</h3>
+                <h3 className="text-foreground font-semibold">{tr('Temas para repasar','Topics to review')}</h3>
                 <ul className="text-foreground mt-2 space-y-1.5 text-[13px] leading-5">
                   {reviewTopics.map((topic) => (
                     <li key={topic}>• {topic}</li>
@@ -1421,21 +1421,20 @@ export function StudentMaterialExam({
             </div>
           ) : (
             <p className="text-sm font-medium text-emerald-700">
-              No quedaron temas marcados para repasar en este intento.
+              {tr('No quedaron temas marcados para repasar en este intento.','No topics were marked for review in this session.')}
             </p>
           )}
         </section>
 
         {topicSectionIndex !== undefined && (
           <p className="text-muted-foreground mt-4 text-sm!">
-            Resultado de esta tanda de {topicTitle}. Incluye {result.total}{' '}
-            {result.total === 1 ? 'pregunta' : 'preguntas'}; no representa el dominio de todo el
-            tema.
+            {tr('Resultado de esta tanda de','Results for this session on')} {topicTitle}. {tr('Incluye','Includes')} {result.total}{' '}
+            {result.total === 1 ? tr('pregunta','question') : tr('preguntas','questions')}; {tr('no representa el dominio de todo el tema.','this does not mean you have mastered the whole topic.')}
           </p>
         )}
         {topicSectionIndex === undefined && sections.length > 0 && (
           <p className="text-muted-foreground mt-4 text-[13px]!">
-            Esta práctica incluyó preguntas corregidas de{' '}
+            {tr('Esta práctica incluyó preguntas corregidas de','This practice included graded questions from')}{' '}
             {
               new Set(
                 questions
@@ -1444,8 +1443,7 @@ export function StudentMaterialExam({
                   .filter((index) => index >= 0)
               ).size
             }{' '}
-            de {sections.length} temas. Los temas que no aparecieron siguen sin evaluar en este
-            intento; no cuentan como errores.
+            {tr('de','of')} {sections.length} {tr('temas. Los temas que no aparecieron siguen sin evaluar en este intento; no cuentan como errores.','topics. Topics not covered remain unassessed and do not count as mistakes.')}
           </p>
         )}
         {!isSimulation && (
@@ -1456,17 +1454,17 @@ export function StudentMaterialExam({
             ) : objectiveStatus === 'saved' && nextObjective ? (
               <>
                 <h3 className="text-foreground mt-2 text-lg font-semibold">
-                  {nextObjective.kind === 'reinforce' ? `Reforzar: ${nextObjective.topicTitle || 'tus errores'}`
-                    : nextObjective.kind === 'practice' ? `Practicar: ${nextObjective.topicTitle || 'el próximo tema'}`
-                    : 'Consolidar lo aprendido'}
+                  {nextObjective.kind === 'reinforce' ? `${tr('Reforzar:','Review:')} ${nextObjective.topicTitle || tr('tus errores','your mistakes')}`
+                    : nextObjective.kind === 'practice' ? `${tr('Practicar:','Practice:')} ${nextObjective.topicTitle || tr('el próximo tema','the next topic')}`
+                    : tr('Consolidar lo aprendido','Consolidate what you learned')}
                 </h3>
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  {nextObjective.kind === 'reinforce' ? 'Volvé a comprobar los conceptos que te costaron en esta práctica.'
-                    : nextObjective.kind === 'practice' ? 'Seguí con un tema que todavía necesita una comprobación.'
-                    : 'Comprobá lo aprendido con otra tanda de preguntas.'}
+                  {nextObjective.kind === 'reinforce' ? tr('Volvé a comprobar los conceptos que te costaron en esta práctica.','Check the concepts that were difficult in this practice again.')
+                    : nextObjective.kind === 'practice' ? tr('Seguí con un tema que todavía necesita una comprobación.','Continue with a topic that still needs practice.')
+                    : tr('Comprobá lo aprendido con otra tanda de preguntas.','Check what you learned with another session of questions.')}
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs font-medium">
-                  Repaso sugerido: {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+                  {tr('Repaso sugerido:','Suggested review:')} {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR', { day: 'numeric', month: 'long' })}
                 </p>
                 <p className="text-primary mt-3 text-xs font-semibold">{t("✓ Guardado en Mi espacio para tu próxima visita")}</p>
               </>
@@ -1651,11 +1649,11 @@ export function StudentMaterialExam({
       setSaveError(
         serverActionMismatch
           ? protectedLocally
-            ? 'Evaluo se actualizó mientras estudiabas. Tu respuesta está guardada en este navegador. Actualizá para retomarla y volver a enviarla.'
-            : 'Evaluo se actualizó. No pudimos guardar una copia local: mantené esta pestaña abierta e intentá de nuevo antes de actualizar.'
+            ? tr('Evaluo se actualizó mientras estudiabas. Tu respuesta está guardada en este navegador. Actualizá para retomarla y volver a enviarla.','Evaluo updated while you were studying. Your answer is saved in this browser. Refresh to restore and submit it.')
+            : tr('Evaluo se actualizó. No pudimos guardar una copia local: mantené esta pestaña abierta e intentá de nuevo antes de actualizar.','Evaluo updated. We could not save a local copy. Keep this tab open and try again before refreshing.')
           : protectedLocally
-            ? 'No se pudo guardar la respuesta en tu progreso. Sigue disponible en este navegador: reintentá o actualizá la página para retomarla.'
-            : 'No se pudo guardar la respuesta ni crear una copia local. Mantené esta pestaña abierta y reintentá.'
+            ? tr('No se pudo guardar la respuesta en tu progreso. Sigue disponible en este navegador: reintentá o actualizá la página para retomarla.','Your answer was not saved to your progress, but is still available in this browser. Retry or refresh to recover it.')
+            : tr('No se pudo guardar la respuesta ni crear una copia local. Mantené esta pestaña abierta y reintentá.','We could not save your answer or a local copy. Keep this tab open and retry.')
       );
       return;
     }
@@ -1676,28 +1674,27 @@ export function StudentMaterialExam({
         {topicSectionIndex !== undefined &&
           verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
             <p role="status" className="text-muted-foreground text-xs leading-5">
-              Cobertura de este tema: {verifiedTopicCount} de {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} preguntas verificadas.
-              Esta tanda utiliza las disponibles.
+              {tr('Cobertura de este tema:','Topic coverage:')} {verifiedTopicCount} {tr('de','of')} {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} {tr('preguntas verificadas. Esta tanda utiliza las disponibles.','verified questions. This session uses the available questions.')}
             </p>
           )}
         {contextUnavailable && (
           <p role="status" className="text-muted-foreground text-xs!">
             {topicSectionIndex === undefined
-              ? 'No pudimos cargar tu historial. Esta tanda reparte preguntas entre los temas disponibles.'
-              : 'No pudimos cargar tu historial. Esta tanda usa las preguntas disponibles de este tema.'}
+              ? tr('No pudimos cargar tu historial. Esta tanda reparte preguntas entre los temas disponibles.','Could not load your history. This session uses questions across available topics.')
+              : tr('No pudimos cargar tu historial. Esta tanda usa las preguntas disponibles de este tema.','Could not load your history. This session uses available questions from this topic.')}
           </p>
         )}
         {topicSectionIndex === undefined && unavailableTopics > 0 && (
           <p className="text-muted-foreground text-xs!">
             {unavailableTopics}{' '}
-            {unavailableTopics === 1 ? 'tema todavía no tiene' : 'temas todavía no tienen'}{' '}
-            preguntas corregibles asociadas. No se cuentan como errores.
+            {unavailableTopics === 1 ? tr('tema todavía no tiene','topic does not have') : tr('temas todavía no tienen','topics do not have')}{' '}
+            {tr('preguntas corregibles asociadas. No se cuentan como errores.','linked gradable questions yet. They do not count as mistakes.')}
           </p>
         )}
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-muted-foreground text-[12px] font-semibold tracking-[0.14em] uppercase">
-              Pregunta {currentIndex + 1} de {questions.length}
+              {tr('Pregunta','Question')} {currentIndex + 1} {tr('de','of')} {questions.length}
             </p>
           </div>
           <span className="text-primary text-[11px] font-medium tracking-[0.12em] uppercase md:hidden">
@@ -1707,8 +1704,7 @@ export function StudentMaterialExam({
 
         {!isSimulation && questions.length >= 20 && (
           <p className="text-muted-foreground text-[11px]">
-            Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y
-            continuar.
+            {tr('Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y continuar.','Your progress is saved automatically in this browser. You can return to this PDF and continue.')}
           </p>
         )}
 
@@ -1804,9 +1800,9 @@ export function StudentMaterialExam({
                 <p className="text-foreground text-sm font-medium">
                   {current.type === 'multiple_choice'
                     ? isCorrect
-                      ? 'Correcto'
-                      : 'Revisá este punto'
-                    : 'Respuesta esperada'}
+                      ? tr('Correcto','Correct')
+                      : tr('Revisá este punto','Review this point')
+                    : tr('Respuesta esperada','Expected answer')}
                 </p>
                 <p className="text-foreground mt-2 text-[13.5px] leading-6">
                   <span className="font-semibold">{t("Respuesta:")}</span> {current.answer}
@@ -1912,12 +1908,12 @@ export function StudentMaterialExam({
                         if (response.ok && reply && typeof reply === 'object' && 'allowed' in reply && reply.allowed === false)
                           setFreeQuotaReached(true);
                         setFreeQuotaMessage(response.status === 503
-                          ? 'No pudimos comprobar tu cupo. Reintentá.'
-                          : 'Ya resolviste tus 12 preguntas gratuitas. Podés repetir las anteriores.');
+                          ? tr('No pudimos comprobar tu cupo. Reintentá.','Could not verify your Free quota. Please retry.')
+                          : tr('Ya resolviste tus 12 preguntas gratuitas. Podés repetir las anteriores.','You used your 12 Free questions. You can repeat previously unlocked ones.'));
                         return;
                       }
                     } catch {
-                      setFreeQuotaMessage('No pudimos comprobar tu cupo. Reintentá.');
+                      setFreeQuotaMessage(tr('No pudimos comprobar tu cupo. Reintentá.','Could not verify your Free quota. Please retry.'));
                       return;
                     } finally { setFreeClaimPending(false); }
                   }
