@@ -35,7 +35,7 @@ assert.match(materials, /studentEntryText/);
 assert.match(processing, /PROCESSING_ENGLISH/);
 assert.match(read('components/dashboard/maeve-study-hero.tsx'), /What are we studying today/);
 assert.match(read('components/dashboard/study-reading-cards.tsx'), /english \? 'Study'/);
-assert.match(read('app\/\(es\)\/completar-perfil\/page.tsx'.replaceAll('\\', '')), /Preparing your academic details/);
+assert.match(read('app/(es)/completar-perfil/page.tsx'), /Preparing your academic details/);
 
 assert.equal(HOME_ENGLISH_TEXT['Sabé qué tan preparado estás para tu examen.'], 'Know how ready you are for your exam.');
 assert.equal(studentEntryText('en', 'Subir mi PDF'), 'Upload my PDF');

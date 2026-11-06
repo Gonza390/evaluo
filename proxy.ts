@@ -158,7 +158,7 @@ export async function proxy(request: NextRequest) {
     isProtectedSimulatorRoute ||
     pathname.startsWith('/administrador');
 
-  const isLoginRoute = pathname.startsWith('/login');
+  const isLoginRoute = pathname.startsWith('/login') || pathname === '/en/login';
   const isHomeRoute = pathname === '/';
 
   if (isLoginRoute) {

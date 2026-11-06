@@ -214,8 +214,17 @@ try {
   );
   assert.equal(new URL(alreadyLoggedIn.headers.get('location')!).pathname, '/dashboard');
   assert.equal(alreadyLoggedIn.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
+  const authenticatedEnglishLogin = await proxy(new NextRequest('https://evaluo.com.ar/en/login', {
+    headers: { cookie: 'sb-test-auth-token=valid-session' },
+  }));
+  assert.equal(new URL(authenticatedEnglishLogin.headers.get('location')!).pathname, '/dashboard');
+  assert.equal(authenticatedEnglishLogin.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
+
   authState.user = null;
   authState.cookies = [];
+
+  const englishLoginGuest = await proxy(new NextRequest('https://evaluo.com.ar/en/login'));
+  assert.equal(englishLoginGuest.headers.get('location'), null);
 
   const callsBeforeLogin = authState.calls;
   const loginGuest = await proxy(new NextRequest('https://evaluo.com.ar/login'));

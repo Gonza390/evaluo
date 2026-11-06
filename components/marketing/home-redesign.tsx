@@ -78,7 +78,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
               <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} unoptimized />
               Evaluo
             </a>
-            <nav className="pill" aria-label="Navegación principal">
+            <nav className="pill" aria-label={english ? "Main navigation" : "Navegación principal"}>
               <a href="#como-funciona">{t("Cómo funciona")}</a>
               <a href="#plan-estudio">{t("Plan de estudio")}</a>
               <a href="#planes">{t("Planes")}</a>
