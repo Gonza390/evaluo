@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import {
   PREMIUM_MONTHLY_PRICE_ARS,
   PREMIUM_MONTHLY_REFERENCE_PRICE_ARS,
@@ -29,6 +30,7 @@ const currency = new Intl.NumberFormat('es-AR', {
 });
 
 type PaymentCheckoutCardProps = {
+  locale?: 'es' | 'en';
   features: string[];
   source?: string;
   materiaId?: string;
@@ -104,7 +106,11 @@ export function PaymentCheckoutCard({
   returnTo,
   offerCode = 'monthly',
   featured = false,
+  locale: forcedLocale,
 }: PaymentCheckoutCardProps) {
+  const currentLocale = useOptionalAppLocale();
+  const english = (forcedLocale ?? currentLocale) === 'en';
+  const tr = (es: string, en: string) => english ? en : es;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
@@ -164,7 +170,7 @@ export function PaymentCheckoutCard({
   const isSemester = offerCode === 'semester';
   const isRecovery = offerCode === 'recovery';
   const semesterSoldOut = isSemester && offer ? !offer.semesterAvailable : false;
-  const billingLabel = isSemester ? 'pago único' : '/mes';
+  const billingLabel = isSemester ? tr("pago único","one-time") : tr("/mes","/month");
 
   async function startCheckout() {
     trackMarketingEvent('premium_checkout_clicked', {
@@ -206,13 +212,13 @@ export function PaymentCheckoutCard({
         checkoutWindow?.close();
         const nextPath = `${window.location.pathname}${window.location.search}`;
         window.location.assign(
-          `/login?mode=login&intent=premium&next=${encodeURIComponent(nextPath)}`
+          `${english ? '/en/login' : '/login'}?mode=login&intent=premium&next=${encodeURIComponent(nextPath)}`
         );
         return;
       }
       if (response.status === 403) {
         checkoutWindow?.close();
-        setError('Esta oferta ya no está disponible para esta cuenta.');
+        setError(tr("Esta oferta ya no está disponible para esta cuenta.","This offer is no longer available for this account."));
         setLoading(false);
         return;
       }
@@ -220,12 +226,12 @@ export function PaymentCheckoutCard({
         checkoutWindow?.close();
         setError(
           payload.error === 'price_changed'
-            ? 'El precio se actualizó. Recargá la página para ver el importe antes de continuar.'
+            ? tr("El precio se actualizó. Recargá la página para ver el importe antes de continuar.","The price changed. Reload to see the amount before continuing.")
             : payload.error === 'checkout_in_progress'
-              ? 'Ya tenés un pago en curso. Completalo desde Mercado Pago o esperá unos minutos.'
+              ? tr("Ya tenés un pago en curso. Completalo desde Mercado Pago o esperá unos minutos.","You have a payment in progress. Complete it in Mercado Pago or wait a few minutes.")
               : payload.error === 'semester_sold_out'
-                ? 'Los 50 cupos de esta oferta ya están ocupados.'
-                : 'Ya existe un acceso Premium para esta cuenta. Revisalo desde Configuración.'
+                ? tr("Los 50 cupos de esta oferta ya están ocupados.","All 50 places in this offer are taken.")
+                : tr("Ya existe un acceso Premium para esta cuenta. Revisalo desde Configuración.","This account already has Premium access. Check Settings.")
         );
         setLoading(false);
         return;
@@ -258,7 +264,7 @@ export function PaymentCheckoutCard({
       }
     } catch {
       checkoutWindow?.close();
-      setError('No pudimos abrir Mercado Pago. Intentá nuevamente en unos minutos.');
+      setError(tr("No pudimos abrir Mercado Pago. Intentá nuevamente en unos minutos.","We could not open Mercado Pago. Please try again in a few minutes."));
       setLoading(false);
     }
   }
@@ -273,22 +279,22 @@ export function PaymentCheckoutCard({
     >
       {featured && isSemester ? (
         <div className="absolute right-5 top-5 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-          Recomendado
+          {tr("Recomendado","Recommended")}
         </div>
       ) : null}
 
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
           <Sparkles className="h-3.5 w-3.5" />
-          {isSemester ? 'Premium · 6 meses' : isRecovery ? 'Retomá Premium' : 'Premium mensual'}
+          {isSemester ? tr("Premium · 6 meses","Premium · 6 months") : isRecovery ? tr("Retomá Premium","Resume Premium") : tr("Premium mensual","Monthly Premium")}
         </span>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">
-          {isSemester ? 'Sostené tu progreso' : isRecovery ? 'Retomá Premium' : 'Reforzá y seguí avanzando'}
+          {isSemester ? tr("Sostené tu progreso","Keep making progress") : isRecovery ? tr("Retomá Premium","Resume Premium") : tr("Reforzá y seguí avanzando","Review and keep progressing")}
         </h2>
 
         <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
           <span className="text-4xl font-bold tracking-tight text-slate-950">
-            {displayedPrice ? currency.format(displayedPrice) : 'Consultando…'}
+            {displayedPrice ? currency.format(displayedPrice) : tr("Consultando…","Checking…")}
           </span>
           {displayedPrice ? <span className="pb-1 text-sm text-slate-600">{billingLabel}</span> : null}
         </div>
@@ -301,7 +307,7 @@ export function PaymentCheckoutCard({
                   {currency.format(offer.monthlyPriceArs * 6)}
                 </span>
                 <span className="font-bold text-emerald-700">
-                  Ahorrás {offer.semesterSavingsPercent}%
+                  {tr('Ahorrás','Save')} {offer.semesterSavingsPercent}%
                 </span>
               </>
             ) : offer.monthlyReferencePriceArs > (displayedPrice ?? 0) ? (
@@ -309,7 +315,7 @@ export function PaymentCheckoutCard({
                 <span className="text-slate-500 line-through">
                   {currency.format(offer.monthlyReferencePriceArs)}
                 </span>
-                <span className="font-bold text-emerald-700">Precio promocional</span>
+                <span className="font-bold text-emerald-700">{tr("Precio promocional","Promotional price")}</span>
               </>
             ) : null}
           </div>
@@ -317,25 +323,25 @@ export function PaymentCheckoutCard({
 
         <p className="mt-4 text-sm leading-6 text-slate-600">
           {!offer
-            ? 'Verificando precio y disponibilidad.'
+            ? tr("Verificando precio y disponibilidad.","Checking price and availability.")
             : isSemester
-              ? `Equivale a ${currency.format(offer.semesterEquivalentMonthlyArs)} por mes. Pagás una sola vez por los 6 meses, sin renovación automática.`
+              ? english ? `Equivalent to ${currency.format(offer.semesterEquivalentMonthlyArs)} per month. One-time payment for 6 months; no automatic renewal.` : `Equivale a ${currency.format(offer.semesterEquivalentMonthlyArs)} por mes. Pagás una sola vez por los 6 meses, sin renovación automática.`
               : isRecovery
-                ? 'Retomá tu compra al precio promocional vigente. Renovación mensual automática.'
-                : 'Precio promocional. Renovación mensual automática; podés cancelar futuras renovaciones cuando quieras.'}
+                ? tr("Retomá tu compra al precio promocional vigente. Renovación mensual automática.","Resume your purchase at the current promotional price. Renews monthly.")
+                : tr("Precio promocional. Renovación mensual automática; podés cancelar futuras renovaciones cuando quieras.","Promotional price. Renews monthly; cancel future renewals anytime.")}
         </p>
 
         {isSemester ? (
           <div className="mt-3 text-[11px] leading-4 text-blue-800">
             <p className="font-bold">
               {offer?.semesterRemaining == null
-                ? 'Verificando los 50 cupos…'
+                ? tr("Verificando los 50 cupos…","Checking 50 available places…")
                 : offer.semesterRemaining > 0
-                  ? `${offer.semesterRemaining} de ${offer.semesterLimit} cupos disponibles ahora`
-                  : 'Los 50 cupos están ocupados'}
+                  ? english ? `${offer.semesterRemaining} of ${offer.semesterLimit} places currently available` : `${offer.semesterRemaining} de ${offer.semesterLimit} cupos disponibles ahora`
+                  : tr("Los 50 cupos están ocupados","All 50 places are taken")}
             </p>
             <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
-              Los cupos disponibles pueden cambiar mientras otras personas completan su compra.
+              {tr("Los cupos disponibles pueden cambiar mientras otras personas completan su compra.","Availability may change as other people complete their purchases.")}
             </p>
           </div>
         ) : null}
@@ -346,9 +352,9 @@ export function PaymentCheckoutCard({
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
             <div>
-              <p className="text-sm font-bold text-slate-950">Tu Premium está activo</p>
+              <p className="text-sm font-bold text-slate-950">{tr("Tu Premium está activo","Your Premium is active")}</p>
               <p className="mt-1 text-xs leading-5 text-slate-600">
-                Ya tenés acceso a todas las funciones incluidas en este plan.
+                {tr("Ya tenés acceso a todas las funciones incluidas en este plan.","You now have access to all features in this plan.")}
               </p>
             </div>
           </div>
@@ -357,17 +363,17 @@ export function PaymentCheckoutCard({
 
       {subscriptionStatus === 'attention' ? (
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-bold text-amber-800">Tu suscripción necesita atención</p>
+          <p className="text-sm font-bold text-amber-800">{tr("Tu suscripción necesita atención","Your subscription needs attention")}</p>
           <p className="mt-1 text-xs leading-5 text-amber-700">
-            Revisá el pago pendiente antes de intentar una nueva compra.
+            {tr("Revisá el pago pendiente antes de intentar una nueva compra.","Check the pending payment before attempting another purchase.")}
           </p>
         </div>
       ) : null}
 
       <p className="mt-5 text-sm leading-6 text-slate-600">
         {isSemester
-          ? 'Prepará más materiales y reforzá tus errores con IA durante 6 meses.'
-          : 'Practicá con más apuntes y pedí explicaciones cuando necesitás reforzar un tema.'}
+          ? tr("Prepará más materiales y reforzá tus errores con IA durante 6 meses.","Study more materials and review mistakes with AI for six months.")
+          : tr("Practicá con más apuntes y pedí explicaciones cuando necesitás reforzar un tema.","Practice using more notes and request explanations when a topic needs review.")}
       </p>
 
       <ul className="mt-7 flex-1 space-y-4">
@@ -386,13 +392,13 @@ export function PaymentCheckoutCard({
           <Button asChild className="h-12 w-full rounded-xl text-sm font-semibold">
             <Link href="/dashboard">
               <Crown className="mr-2 h-4 w-4" />
-              Usar mi Premium
+              {tr("Usar mi Premium","Use my Premium")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         ) : subscriptionStatus === 'attention' ? (
           <Button asChild variant="outline" className="h-12 w-full rounded-xl text-sm font-semibold">
-            <Link href="/configuracion">Revisar mi suscripción</Link>
+            <Link href="/configuracion">{tr("Revisar mi suscripción","Review my subscription")}</Link>
           </Button>
         ) : (
           <Button
@@ -410,18 +416,18 @@ export function PaymentCheckoutCard({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
             {loading
-              ? 'Abriendo Mercado Pago…'
+              ? tr("Abriendo Mercado Pago…","Opening Mercado Pago…")
               : subscriptionStatus === 'loading' || !offer
-                ? 'Verificando tu plan…'
+                ? tr("Verificando tu plan…","Checking your plan…")
                 : subscriptionStatus === 'unavailable'
-                  ? 'No pudimos verificar tu plan'
+                  ? tr("No pudimos verificar tu plan","Could not verify your plan")
                   : semesterSoldOut
-                  ? 'Cupos agotados'
+                  ? tr("Cupos agotados","Sold out")
                   : isSemester
-                    ? 'Elegir 6 meses'
+                    ? tr("Elegir 6 meses","Choose 6 months")
                     : isRecovery
-                      ? 'Retomar Premium por $9.990'
-                      : 'Elegir Premium mensual'}
+                      ? tr("Retomar Premium por $9.990","Resume Premium for ARS 9,990")
+                      : tr("Elegir Premium mensual","Choose monthly Premium")}
             {!loading && subscriptionStatus === 'inactive' && offer && !semesterSoldOut ? (
               <ArrowRight className="ml-2 h-4 w-4" />
             ) : null}
@@ -435,16 +441,16 @@ export function PaymentCheckoutCard({
         ) : null}
         {checkoutUrl && !error ? (
           <div role="status" className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-3 text-center">
-            <p className="text-xs font-semibold text-slate-950">Mercado Pago está abierto</p>
+            <p className="text-xs font-semibold text-slate-950">{tr("Mercado Pago está abierto","Mercado Pago is open")}</p>
             <p className="mt-1 text-[11px] leading-5 text-slate-600">
-              Si cerraste esa pestaña, podés retomar el pago desde acá.
+              {tr("Si cerraste esa pestaña, podés retomar el pago desde acá.","If you closed that tab, you can resume payment here.")}
             </p>
             <button
               type="button"
               onClick={() => window.open(checkoutUrl, 'evaluo-mercadopago')}
               className="mt-2 text-xs font-semibold text-blue-700 underline-offset-4 hover:underline"
             >
-              Volver a abrir Mercado Pago
+              {tr("Volver a abrir Mercado Pago","Reopen Mercado Pago")}
             </button>
           </div>
         ) : null}
@@ -452,8 +458,8 @@ export function PaymentCheckoutCard({
         <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
           <ShieldCheck className="h-4 w-4 shrink-0 text-blue-700" />
           {isSemester
-            ? 'Pago seguro con Mercado Pago · Sin renovación automática'
-            : 'Pago seguro con Mercado Pago · Renovación mensual'}
+            ? tr("Pago seguro con Mercado Pago · Sin renovación automática","Secure payment with Mercado Pago · No automatic renewal")
+            : tr("Pago seguro con Mercado Pago · Renovación mensual","Secure payment with Mercado Pago · Monthly renewal")}
         </p>
       </div>
     </article>
