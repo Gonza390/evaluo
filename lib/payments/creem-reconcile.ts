@@ -52,7 +52,7 @@ function validProduct(object: Json, product: string): boolean {
   return providerId(object.product) === product;
 }
 function eventModeMatches(object: Json, mode: CreemMode): boolean {
-  return object.mode == null || object.mode === mode;
+  return object.mode == null || (mode === 'test' ? object.mode === 'test' : (object.mode === 'live' || object.mode === 'prod'));
 }
 async function updateSession(
   admin: SupabaseClient, session: BillingSession, values: Json,
@@ -170,7 +170,7 @@ export async function reconcileCreemBillingEvent(
       !checkoutId?.startsWith('ch_') || !subscriptionId?.startsWith('sub_') ||
       !validProduct(object, expectedProduct) ||
       providerId(order?.product) !== expectedProduct ||
-      object.mode !== mode ||
+      !eventModeMatches(object,mode) ||
       object.status !== 'completed' || order?.status !== 'paid' ||
       order?.currency !== 'USD' || order?.amount !== CREEM_USD_MONTHLY_CENTS
     ) return 'ignored';
