@@ -793,7 +793,7 @@ export default function CalendarioPage() {
           eyebrow={t("Calendario")}
           title={english ? "Preparing your calendar" : "Estamos preparando tu calendario"}
           description={english ? "Loading dates, courses and reminders." : "Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar."}
-          secondaryText="Si tarda demasiado, probá recargando la página."
+          secondaryText={english ? "If it takes too long, try refreshing the page." : "Si tarda demasiado, probá recargando la página."}
           className="w-full"
         />
       </div>
@@ -807,8 +807,8 @@ export default function CalendarioPage() {
           icon={CalendarPlus}
           className="w-full"
           title={english ? "Your academic calendar" : "Tu calendario académico"}
-          description="Iniciá sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."
-          secondaryText="Cuando entres, podrás organizar tus fechas clave y seguirlas desde un solo lugar."
+          description={english ? "Sign in to add exams, assignments and reminders to your calendar." : "Iniciá sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."}
+          secondaryText={english ? "Keep important dates and track them all in one place." : "Cuando entres, podrás organizar tus fechas clave y seguirlas desde un solo lugar."}
           primaryActionLabel={english ? "Sign in" : "Iniciar sesión"}
           onPrimaryAction={() => router.push('/login?next=%2Fcalendario')}
         />
@@ -825,7 +825,7 @@ export default function CalendarioPage() {
           tone="loading"
           eyebrow={t("Calendario")}
           title={english ? "Loading this month’s dates" : "Estamos trayendo tus fechas del mes"}
-          description="Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante."
+          description={english ? "You can add exams and assignments as soon as your calendar loads." : "Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante."}
           className="w-full"
         />
       </div>
@@ -879,7 +879,7 @@ export default function CalendarioPage() {
                     }}
                     className="h-8 rounded-xl border border-slate-200 bg-white px-2 text-[12px] text-slate-700 shadow-sm hover:bg-white hover:text-slate-900 sm:px-3 sm:text-sm"
                   >
-                    Hoy
+                    {t("Hoy")}
                   </Button>
                   <Button
                     type="button"
@@ -1051,14 +1051,14 @@ export default function CalendarioPage() {
                 ))}
                 {selectedStudyPlanDay.topics.length > 2 ? (
                   <span className="px-1 py-1 text-[11px] font-medium text-[#66758D]">
-                    +{selectedStudyPlanDay.topics.length - 2} temas más
+                    +{selectedStudyPlanDay.topics.length - 2} {english ? "more topics" : "temas más"}
                   </span>
                 ) : null}
               </div>
             ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[#66758D]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> Día de estudio
+                <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> {english ? "Study day" : "Día de estudio"}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> Examen del plan
@@ -1079,7 +1079,7 @@ export default function CalendarioPage() {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
                 <DialogTitle className="text-[18px] font-medium tracking-[-0.035em] text-heading">
-                  Agregar fecha
+                  {english ? "Add a date" : "Agregar fecha"}
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
                   {displayLongDate(selectedDate)}
@@ -1105,7 +1105,7 @@ export default function CalendarioPage() {
                     }
                   >
                     <GraduationCap className="h-4 w-4" />
-                    Parcial
+                    {t("Parcial")}
                   </Button>
                   <Button
                     type="button"
@@ -1158,7 +1158,7 @@ export default function CalendarioPage() {
 
                         <div className="space-y-2">
                           <label className="text-[13px] font-medium text-slate-700">
-                            Instancia
+                            {english ? "Exam session" : "Instancia"}
                           </label>
                           <div className="grid grid-cols-3 gap-2">
                             {(['1', '2', 'integrador'] as ExamInstance[]).map((examInstance) => (
@@ -1253,7 +1253,7 @@ export default function CalendarioPage() {
                         />
                       </div>
                       <div className="space-y-2 opacity-45">
-                        <label className="text-[13px] font-medium text-slate-700">Instancia</label>
+                        <label className="text-[13px] font-medium text-slate-700">{english ? "Exam session" : "Instancia"}</label>
                         <div className="pointer-events-none grid grid-cols-3 gap-2">
                           {(['1', '2', 'integrador'] as ExamInstance[]).map((examInstance) => (
                             <Button
@@ -1293,7 +1293,7 @@ export default function CalendarioPage() {
               <div className="space-y-3">
                 <div className="rounded-2xl bg-slate-50/40 p-3">
                   <p className="text-[12px] font-medium tracking-[0.18em] text-slate-500 uppercase">
-                    Vista previa
+                    {english ? "Preview" : "Vista previa"}
                   </p>
                   <div className="mt-2 min-h-[84px] rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
                     {formState.type === 'exam' ? (
@@ -1324,7 +1324,7 @@ export default function CalendarioPage() {
                       <p className="text-[12px] font-medium text-slate-800">{english ? "Reminders" : "Recordatorios"}</p>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
-                      Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen.
+                      {english ? "We will email you reminders 7, 3 and 1 day before the exam." : "Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen."}
                     </p>
                   </div>
                 ) : null}
@@ -1351,14 +1351,14 @@ export default function CalendarioPage() {
                       </div>
                     ) : null}
                     <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-brand">
-                      Ver mi plan <ArrowRight className="size-3" aria-hidden="true" />
+                      {t("Ver mi plan")} <ArrowRight className="size-3" aria-hidden="true" />
                     </Link>
                   </div>
                 ) : null}
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
                     <p className="text-[13px] font-medium text-slate-900">
-                      Fechas de este día
+                      {english ? "Dates on this day" : "Fechas de este día"}
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
@@ -1395,7 +1395,7 @@ export default function CalendarioPage() {
                   </div>
                 ) : (
                   <div className="min-h-[74px] rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-500">
-                    No hay fechas para este día.
+                    {english ? "No dates scheduled for this day." : "No hay fechas para este día."}
                   </div>
                 )}
 
@@ -1406,7 +1406,7 @@ export default function CalendarioPage() {
                     className="h-9 rounded-xl border-slate-200 bg-white px-3.5 text-[13px] text-slate-700 hover:bg-white"
                     onClick={() => setIsComposerOpen(false)}
                   >
-                    Cancelar
+                    {t("Cancelar")}
                   </Button>
                   <Button
                     className="h-9 rounded-xl bg-blue-600 px-3.5 text-[13px] font-medium text-white transition hover:bg-blue-700"
@@ -1427,8 +1427,8 @@ export default function CalendarioPage() {
         <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_18px_56px_rgba(15,23,42,0.12)]">
           <div className="px-4 py-4 sm:px-5 sm:py-5">
             <PremiumUpsell
-              title="Armá el plan para tu próximo parcial"
-              description="Ya usaste los 3 exámenes del plan gratuito. Con Premium organizá toda la cursada y recibí recordatorios antes de cada fecha."
+              title={english ? "Plan your next exam" : "Armá el plan para tu próximo parcial"}
+              description={english ? "You have used the three exam dates included in Free. Premium lets you organize more exams and receive reminders." : "Ya usaste los 3 exámenes del plan gratuito. Con Premium organizá toda la cursada y recibí recordatorios antes de cada fecha."}
               source="calendario_exam_limit"
               features={[
                 'Parciales ilimitados',
