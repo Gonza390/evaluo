@@ -287,6 +287,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     if (!viewerUrl || signedUrlResult.error) notFound();
 
     const isOwner = user?.id === material.user_id;
+    const isEnglishStudyEntry = accountAppLocale(user?.user_metadata) === 'en';
     let shouldAutoResume = false;
     if (
       isOwner &&
@@ -319,6 +320,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       const failed = material.processing_status === 'failed';
       return (
         <MaterialStudyStatusWorkspace
+          locale={isEnglishStudyEntry ? 'en' : 'es'}
           backHref={backHref}
           title={material.title}
           fileName={material.file_name}
@@ -345,7 +347,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                   href={backHref}
                   className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Continuar luego
+                  {isEnglishStudyEntry ? 'Continue later' : 'Continuar luego'}
                 </Link>
               ) : null}
             </>
@@ -368,6 +370,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     if (studySummary.status !== 'ready') {
       return (
         <MaterialStudyStatusWorkspace
+          locale={isEnglishStudyEntry ? 'en' : 'es'}
           backHref={backHref}
           title={material.title}
           fileName={material.file_name}
@@ -380,7 +383,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
               href={backHref}
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Continuar luego
+              {isEnglishStudyEntry ? 'Continue later' : '{isEnglishStudyEntry ? 'Continue later' : 'Continuar luego'}'}
             </Link>
           }
         />
@@ -506,7 +509,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     // An English student's first action should be reading or practicing,
     // not completing a forced four-step tutorial. The guide remains available
     // on demand from the study workspace.
-    const isEnglishStudyEntry = accountAppLocale(user?.user_metadata) === 'en';
     const shouldShowFirstPdfGuide = !isEnglishStudyEntry && eligibleByAccount && !previouslyCompleted;
 
     const shareAvailable = isOwner && Boolean(
