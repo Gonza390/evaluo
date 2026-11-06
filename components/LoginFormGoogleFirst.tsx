@@ -403,11 +403,6 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
             : isSignUp ? (reason === 'preguntero' ? 'Guardá tu progreso' : 'Creá tu cuenta') : 'Bienvenido'}
         </h1>
         <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
-        {english ? (
-          <p className="mx-auto mt-4 max-w-[360px] rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950" role="note">
-            The English dashboard and first upload flow are available. Some advanced study tools, account emails and payment screens are still being translated.
-          </p>
-        ) : null}
 
         {notice ? (
           <div
