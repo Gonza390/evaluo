@@ -39,6 +39,8 @@ Evaluo generates learning activities based on uploaded material. AI-generated an
 
 ## Educational resources and international pages
 
+- [Original guide: how to verify AI-generated study questions](https://evaluoapp.com/recursos/verificar-preguntas-ia)
+- [Original guide: turn PDF reading into active practice](https://evaluoapp.com/recursos/metodo-estudio-pdf-practica-activa)
 - [Spanish study guides](https://evaluoapp.com/es/guias)
 - [Spanish study blog](https://evaluoapp.com/blog)
 - [English study blog](https://evaluoapp.com/en/blog)

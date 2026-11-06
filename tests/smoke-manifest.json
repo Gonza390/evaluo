@@ -366,5 +366,9 @@
   {
     "file": "tests/geo-public-contract.smoke.mjs",
     "alias": false
+  },
+  {
+    "file": "tests/geo-citation-measurement.smoke.mjs",
+    "alias": false
   }
 ]
