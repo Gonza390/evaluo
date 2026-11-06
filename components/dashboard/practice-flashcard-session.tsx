@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { localizeAcademicPrompt } from '@/lib/student-materials/academic-prompt-locale';
 import './practice-motion.css';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-quality';
@@ -11,6 +13,8 @@ import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo', planTopicIndex, freeV2 = false }: {
   materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo'; planTopicIndex?: number; freeV2?: boolean;
 }) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
   const [supplement, setSupplement] = useState<StudyFlashcard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -66,7 +70,7 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
       if (!response.ok || !body || typeof body !== 'object' ||
           !('pairs' in body) || !Array.isArray(body.pairs)) throw new Error('unavailable');
       const newCards: StudyFlashcard[] = (body.pairs as PracticePair[]).map(pair => ({
-        front:'¿Qué significa “'+pair.term+'”?', back:pair.definition,level:'recordar',
+        front:localizeAcademicPrompt('¿Qué significa “'+pair.term+'”?', locale), back:pair.definition,level:'recordar',
         kind:'concept',reference:{
           pageStart:pair.pageStart ?? null,pageEnd:pair.pageStart ?? null,
           sectionTitle:pair.chapterTitle ?? null,
