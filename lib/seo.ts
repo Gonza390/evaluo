@@ -12,7 +12,18 @@ export function buildOrganizationJsonLd() {
       '@type': 'PostalAddress',
       addressCountry: 'AR',
     },
-    areaServed: 'AR',
+    description:
+      'Plataforma educativa para estudiar PDF y Word con IA: resúmenes por temas, actividades de práctica, revisión de errores y planes de estudio.',
+    areaServed: [
+      { '@type': 'Country', name: 'Argentina' },
+      { '@type': 'Country', name: 'México' },
+      { '@type': 'Country', name: 'Colombia' },
+      { '@type': 'Country', name: 'España' },
+    ],
+    sameAs: [
+      'https://www.instagram.com/evaluo.app/',
+      'https://www.linkedin.com/company/evaluo-ar/',
+    ],
   };
 }
 

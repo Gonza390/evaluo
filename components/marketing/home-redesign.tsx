@@ -326,7 +326,7 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
             {[
               { href: '/funciones/resumir-pdf-con-ia', title: 'Resumir PDF con IA', detail: 'Identificá las ideas y los conceptos importantes.' },
-              { href: '/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', detail: 'Uní resumen, flashcards, mapas y ejercicios.' },
+              { href: '/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', detail: 'Uní resumen, flashcards y ejercicios; mapas mentales en Premium.' },
               { href: '/funciones/crear-mapa-mental-desde-pdf', title: 'Crear mapa mental desde PDF', detail: 'Visualizá las relaciones entre temas y subtemas.' },
               { href: '/ia-para-estudiantes', title: 'IA para estudiantes', detail: 'Elegí cómo usar IA para preparar parciales y finales.' },
             ].map((item) => (
@@ -481,8 +481,8 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
                 )}
               </ol>
               <p style={{ fontSize: '14px', margin: '20px 0 0' }}>
-                Para reforzar, Evaluo genera desde tu material resúmenes, glosario, mapas mentales y
-                flashcards.
+                Para reforzar, Evaluo genera desde tu material resúmenes, glosario y flashcards;
+                también ofrece mapas mentales en Premium.
               </p>
             </div>
             <div

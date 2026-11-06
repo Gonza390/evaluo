@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     template: '%s | Evaluo',
   },
   description:
-    'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
+    'Subí tus apuntes en PDF o Word y estudiá con IA: resúmenes, flashcards, práctica por tema y seguimiento de errores para preparar tus exámenes.',
   applicationName: 'Evaluo',
   authors: [{ name: 'Evaluo' }],
   creator: 'Evaluo',

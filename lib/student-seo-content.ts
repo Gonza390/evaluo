@@ -122,7 +122,10 @@ export const SEO_HUBS:Record<string,SeoHub>={
   description:'Plantilla de registro de errores y enlaces a guías y planes de estudio gratuitos.',
   intro:'Las mejores plantillas no requieren completar veinte campos: deben ayudarte a descubrir qué falló y cuál será la próxima acción. Empezá con un registro de errores breve y reutilizable.',
   benefitTitle:'Usá el material con criterio',benefit:'Una plantilla sirve para organizar, pero la comprensión se comprueba resolviendo preguntas y aplicando las ideas, no solamente llenando casilleros.',
-  cards:[{title:'Registro de errores para estudiar',description:'Modelo imprimible con las preguntas clave para mejorar después de un examen.',href:'/recursos/registro-de-errores'},
+  cards:[
+  {title:'Verificar preguntas generadas por IA',description:'Protocolo original de siete criterios, ejemplo corregido y fuentes verificables.',href:'/recursos/verificar-preguntas-ia'},
+  {title:'Método de estudio activo con PDF',description:'Sesión práctica completa con recuperación, corrección y repaso distribuido.',href:'/recursos/metodo-estudio-pdf-practica-activa'},
+  {title:'Registro de errores para estudiar',description:'Modelo imprimible con las preguntas clave para mejorar después de un examen.',href:'/recursos/registro-de-errores'},
   {title:'Plan semanal de repaso',description:'Una propuesta de siete días para alternar temas y prácticas.',href:'/planes-de-estudio/estudiar-en-7-dias'},
   {title:'Guías de estudio',description:'Métodos por materia con ejercicios y recomendaciones.',href:'/es/guias'}],
   steps:[{title:'Anotá el error',detail:'Qué preguntaba el ejercicio y por qué fallaste.'},{title:'Escribí la corrección',detail:'Anotá el concepto con tus propias palabras.'},{title:'Reintentá',detail:'Respondé una variación sin consultar la solución.'}]
@@ -137,7 +140,7 @@ export const SEO_HUBS:Record<string,SeoHub>={
  },
  funciones:{
   path:'/funciones',kicker:'Funciones de Evaluo',title:'Una manera de estudiar tus apuntes, varias formas de practicar',
-  description:'Resumí PDFs, creá flashcards, mapas mentales y simulacros para repasar por temas.',
+  description:'Resumí PDFs, creá flashcards y simulacros; los mapas mentales están en Premium.',
   intro:'No necesitás elegir una herramienta para toda la materia. Empezá por entender un tema y usá preguntas, tarjetas o un simulacro según lo que necesites comprobar.',
   benefitTitle:'Herramientas conectadas con el estudio',benefit:'El contenido generado por IA puede contener errores: contrastá explicaciones, fórmulas y datos técnicos con el material original.',
   cards:[

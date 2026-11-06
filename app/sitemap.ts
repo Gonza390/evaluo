@@ -24,6 +24,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/`,
     },
     {
+      url: `${baseUrl}/sobre-evaluo`,
+    },
+    {
       url: `${baseUrl}/politica-de-uso-aceptable`,
     },
     {
@@ -155,6 +158,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   routes.push({ url: `${baseUrl}/herramientas/calculadora-de-estudio` });
   routes.push({ url: `${baseUrl}/recursos/registro-de-errores` });
+  routes.push({ url: `${baseUrl}/recursos/verificar-preguntas-ia`, lastModified: new Date('2026-11-06') });
+  routes.push({ url: `${baseUrl}/recursos/metodo-estudio-pdf-practica-activa`, lastModified: new Date('2026-11-06') });
 
   // Previews are not public/indexable. Their Supabase anon role can lack access
   // to production-only catalog views. Keep all dynamic sitemap validation on

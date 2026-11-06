@@ -46,7 +46,7 @@ const comparisons: Record<ComparisonId, Comparison> = {
     fact: 'NotebookLM también tiene cuestionarios, flashcards, mapas mentales, explicaciones y seguimiento en sus recursos de estudio. No es solo un chat con documentos.',
     rows: [
       { label: 'Material de partida', other: 'Notebooks con documentos, enlaces, audio y otras fuentes compatibles.', evaluo: 'PDF de apuntes como referencia del recorrido de estudio.' },
-      { label: 'Comprender', other: 'Chat con fuentes, resúmenes, guías e informes, mapas mentales y vistas de audio.', evaluo: 'Resumen, glosario y mapa mental conectados al PDF.' },
+      { label: 'Comprender', other: 'Chat con fuentes, resúmenes, guías e informes, mapas mentales y vistas de audio.', evaluo: 'Resumen y glosario conectados al PDF; mapa mental en Premium.' },
       { label: 'Practicar', other: 'Cuestionarios personalizables, flashcards, explicaciones y revisión de resultados.', evaluo: 'Preguntas por tema, resultados, explicaciones y refuerzo de errores.' },
       { label: 'Seguimiento', other: 'Progreso en cuestionarios y tarjetas; permite retomar y repasar fallos.', evaluo: 'Progreso y continuidad de estudio organizados por tema del material.' },
       { label: 'Acceso', other: 'Opciones gratuitas y de pago; los límites dependen del plan.', evaluo: 'Plan gratuito y Premium con límites y funciones diferentes.' },

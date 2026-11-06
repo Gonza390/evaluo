@@ -1,5 +1,7 @@
 'use client';
 
+import { aiSourceFromReferrer } from '@/lib/geo-attribution';
+
 export type AttributionSnapshot = {
   source?: string;
   utm_source?: string;
@@ -51,6 +53,16 @@ function normalizeSource(value: string | null) {
     linkedin: 'linkedin',
     'linked-in': 'linkedin',
     google: 'google',
+    chatgpt: 'chatgpt.com',
+    openai: 'chatgpt.com',
+    'chat.openai.com': 'chatgpt.com',
+    'chatgpt.com': 'chatgpt.com',
+    perplexity: 'perplexity.ai',
+    'perplexity.ai': 'perplexity.ai',
+    claude: 'claude.ai',
+    'claude.ai': 'claude.ai',
+    'gemini.google.com': 'gemini',
+    'copilot.microsoft.com': 'copilot',
   };
 
   return aliases[normalized] ?? normalized;
@@ -64,7 +76,10 @@ function sourceFromReferrer(referrer: string | null) {
     const host = new URL(normalized).hostname.toLowerCase().replace(/^www\./, '');
 
     if (host === 'evaluo.com.ar' || host.endsWith('.evaluo.com.ar')) return undefined;
+    if (host === 'evaluoapp.com' || host.endsWith('.evaluoapp.com')) return undefined;
     if (host === 'accounts.google.com') return undefined;
+    const aiSource = aiSourceFromReferrer(normalized);
+    if (aiSource) return aiSource;
     if (host === 'google.com' || /^google\.[a-z.]+$/.test(host)) return 'google';
     if (host === 'instagram.com' || host.endsWith('.instagram.com')) return 'instagram';
     if (host === 'linkedin.com' || host.endsWith('.linkedin.com')) return 'linkedin';

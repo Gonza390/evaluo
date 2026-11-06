@@ -154,6 +154,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               <Link href="/docs" className="text-xs text-white/80 transition hover:text-white">
                 Cómo usar Evaluo
               </Link>
+              <Link href="/sobre-evaluo" className="text-xs text-white/80 transition hover:text-white">
+                Sobre Evaluo
+              </Link>
               <Link href="/blog" className="text-xs text-white/80 transition hover:text-white">
                 Blog de estudio
               </Link>
