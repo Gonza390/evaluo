@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { previewLoginCanonicalUrl } from '@/lib/auth/preview-login-origin';
 import LoginFormGoogleFirst from '@/components/LoginFormGoogleFirst';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { EnglishLoginLocale } from '@/components/i18n/english-login-locale';
@@ -10,7 +13,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function EnglishLoginPage() {
+export default async function EnglishLoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const destination = previewLoginCanonicalUrl({
+    host: (await headers()).get('host'),
+    vercelEnvironment: process.env.VERCEL_ENV,
+    branch: process.env.VERCEL_GIT_COMMIT_REF,
+    pathname: '/en/login',
+    searchParams: (await searchParams) ?? {},
+  });
+  if (destination) redirect(destination);
   return (
     <main lang="en" className="login-editorial min-h-screen bg-white px-4 py-6 sm:px-6 sm:py-10">
       <InternationalDocumentLanguage lang="en" />
