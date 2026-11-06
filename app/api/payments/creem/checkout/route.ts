@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
+import { resolveCheckoutMarket } from '@/lib/payments/checkout-market';
 import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/rate-limit';
 import {
   createCreemCheckout, creemProductId, CREEM_USD_MONTHLY_CENTS,
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
   }
   if (mode === 'live') {
     const country = request.headers.get('x-vercel-ip-country')?.trim().toUpperCase();
-    if (!country || country === 'AR' || !/^[A-Z]{2}$/.test(country)) {
+    if (resolveCheckoutMarket(country, process.env.VERCEL_ENV) !== 'international') {
       return NextResponse.json({ error: 'international_checkout_only' }, { status: 403 });
     }
   }

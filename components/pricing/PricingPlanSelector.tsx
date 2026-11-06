@@ -36,13 +36,13 @@ export function PricingPlanSelector({
   // Las tres alternativas están visibles. El único selector pendiente es para
   // validar a qué modalidad Premium corresponde un código de referido.
   const [referralPlan, setReferralPlan] = useState<BillingMode>('monthly');
-  const [market, setMarket] = useState<{market: 'argentina' | 'international';creemAvailable:boolean;previewTestAvailable:boolean} | null>(null);
+  const [market, setMarket] = useState<{market: 'argentina' | 'international' | 'unknown';creemAvailable:boolean;previewTestAvailable:boolean} | null>(null);
   useEffect(() => {
     let active = true;
     void fetch('/api/payments/creem/availability', { cache: 'no-store' })
       .then(async r => r.ok ? await r.json() : null)
-      .then(payload => { if (active) setMarket(payload && (payload.market === 'argentina' || payload.market === 'international') ? payload : { market:'argentina', creemAvailable:false, previewTestAvailable:false }); })
-      .catch(() => { if (active) setMarket({market:'argentina',creemAvailable:false,previewTestAvailable:false}); });
+      .then(payload => { if (active) setMarket(payload && (payload.market === 'argentina' || payload.market === 'international' || payload.market === 'unknown') ? payload : { market:'unknown', creemAvailable:false, previewTestAvailable:false }); })
+      .catch(() => { if (active) setMarket({market:'unknown',creemAvailable:false,previewTestAvailable:false}); });
     return () => { active = false; };
   }, []);
 
@@ -91,6 +91,10 @@ export function PricingPlanSelector({
 
         {market === null ? (
           <div className="flex min-h-[380px] items-center justify-center text-sm text-slate-600">{tr("Consultando precios para tu región…","Checking prices for your region…")}</div>
+        ) : market.market === 'unknown' ? (
+          <div role="alert" className="col-span-full rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm leading-6 text-amber-900">
+            {tr('No pudimos confirmar tu país. Por seguridad no se mostrará una opción de pago hasta que podamos verificar tu región.', 'We could not confirm your country. Payment options remain unavailable until your region can be verified.')}
+          </div>
         ) : market.market === 'international' ? (
           <CreemCheckoutCard locale={english ? "en" : "es"} features={premiumFeatures} mode="live" available={market.creemAvailable} />
         ) : (
@@ -129,7 +133,7 @@ export function PricingPlanSelector({
         </div>
       ) : null}
 
-      {market?.market !== 'international' ? <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
+      {market?.market === 'argentina' ? <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
         <summary className="cursor-pointer text-center text-sm font-semibold text-slate-700">
           {tr("¿Tenés un código de descuento?","Have a discount code?")}
         </summary>

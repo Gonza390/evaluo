@@ -152,13 +152,13 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const [loading,setLoading] = useState<Plan|null>(null);
   const [error,setError] = useState<string|null>(null);
   const [checkoutUrl,setCheckoutUrl] = useState<string|null>(null);
-  const [market,setMarket] = useState<{market:'argentina'|'international';creemAvailable:boolean}|null>(null);
+  const [market,setMarket] = useState<{market:'argentina'|'international'|'unknown';creemAvailable:boolean}|null>(null);
   useEffect(()=>{
     let active=true;
     void fetch('/api/payments/creem/availability',{cache:'no-store'})
       .then(async r=>r.ok?await r.json():null)
-      .then(d=>{if(active)setMarket(d&&['argentina','international'].includes(d.market)?d:{market:'argentina',creemAvailable:false})})
-      .catch(()=>{if(active)setMarket({market:'argentina',creemAvailable:false})});
+      .then(d=>{if(active)setMarket(d&&['argentina','international','unknown'].includes(d.market)?d:{market:'unknown',creemAvailable:false})})
+      .catch(()=>{if(active)setMarket({market:'unknown',creemAvailable:false})});
     return ()=>{active=false};
   },[]);
 
@@ -258,6 +258,11 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
     mainAction?<Link href={mainAction} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff]">{monthlyCta}</Link>
     :<button type="button" disabled={monthlyDisabled} onClick={()=>void checkout('monthly')} data-premium-purchase={position} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff] disabled:cursor-not-allowed disabled:opacity-60">{loading==='monthly'?<Loader2 className="size-4 animate-spin"/>:null}{loading==='monthly'?t("Abriendo Mercado Pago…"):monthlyCta}</button>;
   if (market===null) return <main className="mx-auto max-w-xl px-5 py-24 text-center text-sm text-slate-600"><Loader2 className="mx-auto mb-4 size-6 animate-spin"/> Consultando Premium para tu región…</main>;
+  if (market.market==='unknown') return (
+    <main role="alert" className="mx-auto max-w-xl px-5 py-16 text-center text-sm leading-7 text-amber-900">
+      {english ? 'We could not confirm your country. Payment is unavailable until your region can be verified.' : 'No pudimos confirmar tu país. El pago no está disponible hasta verificar tu región.'}
+    </main>
+  );
   if (market.market==='international') return (
     <main className="mx-auto max-w-[840px] px-4 py-10 sm:py-16">
       <header className="mb-8 text-center">
