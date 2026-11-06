@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import './practice-motion.css';
 import { ArrowLeft, LockKeyhole, X } from 'lucide-react';
 import type { PremiumGateReason } from '@/lib/premium-flow';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 export type FreePracticeLimitKind = Extract<PremiumGateReason,
   'multiple_choice' | 'true_false' | 'matching_round' | 'case' | 'flashcard' | 'simulator' | 'complete' | 'mixed'>;
@@ -21,6 +22,17 @@ const modes: Record<FreePracticeLimitKind, { label: string; noun: string; previe
   simulator: { label: 'Simulacro', noun: 'simulacros de examen', preview: 'SIMULACRO' },
   complete: { label: 'Completar', noun: 'ejercicios para completar', preview: 'EJERCICIO 1' },
   mixed: { label: 'Mixto', noun: 'prácticas mixtas', preview: 'PRÁCTICA 1' },
+};
+
+const modesEnglish: typeof modes = {
+  multiple_choice: { label: 'Multiple choice', noun: 'multiple-choice questions', preview: 'QUESTION 1' },
+  true_false: { label: 'True or false', noun: 'true-or-false exercises', preview: 'QUESTION 1' },
+  matching_round: { label: 'Match concepts', noun: 'concept-matching rounds', preview: 'ROUND 1' },
+  case: { label: 'Case studies', noun: 'practical cases', preview: 'CASE 1' },
+  flashcard: { label: 'Flashcards', noun: 'flashcards', preview: 'CARD 1' },
+  simulator: { label: 'Mock exam', noun: 'mock exams', preview: 'MOCK EXAM' },
+  complete: { label: 'Fill in the blanks', noun: 'fill-in-the-blank exercises', preview: 'EXERCISE 1' },
+  mixed: { label: 'Mixed', noun: 'mixed practice sessions', preview: 'PRACTICE 1' },
 };
 
 type Props = {
@@ -42,6 +54,9 @@ export function FreePracticeLimitScreen({
   kind, premiumHref, backHref, backLabel = 'Volver', materialTitle, topicLabel, onBack,
 }: Props) {
   const router = useRouter();
+  const english = useOptionalAppLocale() === 'en';
+  const t = (es: string, en: string) => english ? en : es;
+  const localizedBackLabel = english && backLabel === 'Volver' ? 'Back' : backLabel;
   const [mounted, setMounted] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const transitionTimer = useRef<number | null>(null);
@@ -86,9 +101,9 @@ export function FreePracticeLimitScreen({
     return () => observer.disconnect();
   }, [mounted, kind, materialTitle, topicLabel, backLabel]);
 
-  const mode = modes[kind];
+  const mode = (english ? modesEnglish : modes)[kind];
   const premiumOnly = kind === 'complete' || kind === 'mixed';
-  const place = topicLabel || materialTitle || 'Tu material';
+  const place = topicLabel || materialTitle || t('Tu material', 'Your material');
 
   // Reuse the 280ms entrance / 200ms departure from the practice flow.
   const transitionOut = (navigate: () => void) => {
@@ -126,11 +141,11 @@ export function FreePracticeLimitScreen({
           <span className="text-[16px] font-bold tracking-[-.01em] sm:text-[18px]">Evaluo</span>
         </div>
         <span className="min-w-0 flex-1 truncate text-center text-[11px] font-semibold text-[#344054] sm:max-w-[42vw] sm:text-[15px]">
-          Práctica · {place}
+          {t('Práctica', 'Practice')} · {place}
         </span>
         {backControl(
           'flex size-11 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]',
-          <X className="size-[18px] text-[#344054]" aria-hidden="true"/>, 'Cerrar y ' + backLabel.toLowerCase(),
+          <X className="size-[18px] text-[#344054]" aria-hidden="true"/>, t('Cerrar y ', 'Close and ') + localizedBackLabel.toLowerCase(),
         )}
       </header>
 
@@ -140,9 +155,9 @@ export function FreePracticeLimitScreen({
             className="absolute left-1/2 top-1/2 flex w-full max-w-[460px] flex-col items-center text-center"
             style={{ transform: `translate(-50%, -50%) scale(${fitScale})`, transformOrigin: 'center center' }}>
         <section className="flex w-full flex-col items-center text-center">
-          <Image src="/evi-practica-limite.svg" width={104} height={104} alt="Evi con un candado" className="size-[72px] shrink-0"/>
+          <Image src="/evi-practica-limite.svg" width={104} height={104} alt={t('Evi con un candado', 'Evi with a padlock')} className="size-[72px] shrink-0"/>
           <h1 id="free-practice-limit-title" className="mt-1.5 text-[23px] font-bold leading-[1.16] tracking-[-.03em] sm:text-[27px]">
-            {premiumOnly ? 'Esta práctica es parte de Premium' : 'Ya agotaste tu límite gratuito'}
+            {premiumOnly ? t('Esta práctica es parte de Premium', 'This practice mode is part of Premium') : t('Ya agotaste tu límite gratuito', 'You have reached your Free limit')}
           </h1>
 
           <div className="mt-2.5 flex max-w-full flex-wrap justify-center gap-2">
@@ -151,19 +166,19 @@ export function FreePracticeLimitScreen({
             )}
           </div>
 
-          <div className="relative mt-3.5 w-full pb-[12px]" aria-label="Vista previa bloqueada de la práctica">
+          <div className="relative mt-3.5 w-full pb-[12px]" aria-label={t('Vista previa bloqueada de la práctica','Locked practice preview')}>
             <div aria-hidden="true" className="absolute inset-x-7 bottom-0 top-5 rounded-[20px] border border-[#cfdcf5] bg-[#e3ecfb]"/>
             <div aria-hidden="true" className="absolute bottom-[6px] left-[14px] right-[14px] top-3 rounded-[20px] border border-[#cfdcf5] bg-[#eef4ff]"/>
             <div className="relative overflow-hidden rounded-[20px] border border-[#cfdcf5] bg-gradient-to-b from-[#f3f7ff] via-white to-white px-4 pb-3 pt-3 text-left shadow-[0_8px_24px_rgba(20,60,140,0.10)] sm:px-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] font-bold tracking-[.16em] text-[#344054]">{mode.preview}</span>
                 <span className="max-w-[140px] truncate rounded-full bg-[#eaf0fb] px-2.5 py-1 text-[11px] font-semibold text-[#084bb0]">
-                  {topicLabel ?? 'Tu material'}
+                  {topicLabel ?? t('Tu material','Your material')}
                 </span>
               </div>
               <div aria-hidden="true" className="mt-2.5 flex select-none flex-col gap-2 blur-[5px]">
-                <p className="text-[13px] font-bold leading-[1.3] tracking-[-.02em]">¿Qué concepto del material corresponde a este ejercicio?</p>
-                {['Primera respuesta', 'Segunda respuesta'].map((answer,index) =>
+                <p className="text-[13px] font-bold leading-[1.3] tracking-[-.02em]">{t('¿Qué concepto del material corresponde a este ejercicio?', 'Which concept from your material matches this exercise?')}</p>
+                {(english ? ['First answer','Second answer'] : ['Primera respuesta', 'Segunda respuesta']).map((answer,index) =>
                   <div key={answer} className="flex items-center gap-2.5 rounded-xl border-[1.5px] border-[#d0d5dd] bg-white px-3 py-1.5 text-[12px]">
                     <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#f2f4f7] text-[11px] font-bold">{index===0?'A':'B'}</span>
                     {answer}
@@ -173,30 +188,30 @@ export function FreePracticeLimitScreen({
               <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-11 bg-gradient-to-b from-white/15 to-white/70"/>
               <span className="absolute left-1/2 top-[62%] inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#cfdcf5] bg-white py-1.5 pl-2 pr-3.5 text-[12px] font-semibold shadow-[0_10px_26px_rgba(20,60,140,0.18)] sm:text-[14px]">
                 <span className="flex size-6 items-center justify-center rounded-full bg-[#0b63e5] text-white"><LockKeyhole className="size-[15px]"/></span>
-                Se desbloquea con Premium
+                {t('Se desbloquea con Premium','Unlock with Premium')}
               </span>
             </div>
           </div>
 
           <p className="mt-3 max-w-[440px] text-[12px] leading-[1.5] text-[#4b5565] sm:text-[13px]">
             {premiumOnly
-              ? `Con Premium desbloqueás ${mode.noun} para seguir estudiando con tu material.`
-              : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`}
+              ? (english ? `With Premium you unlock ${mode.noun} to keep studying your material.` : `Con Premium desbloqueás ${mode.noun} para seguir estudiando con tu material.`)
+              : (english ? `You have used all your Free ${mode.noun}. You can repeat previously unlocked activities or keep practicing with Premium.` : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`)}
           </p>
 
           <div className="mt-3 flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
             <Link href={premiumHref} onClick={event => onLinkClick(event, premiumHref)} aria-disabled={leaving}
               className="inline-flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-full bg-[#0b63e5] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] sm:w-auto hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
-              Practicar con <span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
+              {t('Practicar con ', 'Practice with ')}<span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
             </Link>
             {backControl(
               'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-[13px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5] sm:w-auto sm:text-[14px]',
-              <><ArrowLeft className="size-[18px]" aria-hidden="true"/>{backLabel}</>,
+              <><ArrowLeft className="size-[18px]" aria-hidden="true"/>{localizedBackLabel}</>,
             )}
           </div>
         </section>
         <p data-free-practice-secondary-note className="mt-3 max-w-[440px] text-center text-[11px] leading-[1.45] text-[#667085]">
-          Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.
+          {t('Tus resúmenes, glosario y ejercicios desbloqueados siguen disponibles.','Your summaries, glossary and previously unlocked exercises remain available.')}
         </p>
           </div>
         </div>
