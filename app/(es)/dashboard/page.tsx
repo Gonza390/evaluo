@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { isQaAccount } from '@/lib/qa-account';
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react';
@@ -12,6 +13,8 @@ import { getDashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { createClientServer } from '@/lib/supabase-server';
 import { isUuid } from '@/lib/uuid';
 import { logError } from '@/lib/observability';
+import { accountAppLocale, parseAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
+import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -24,11 +27,11 @@ function isMissingStudentMaterialsTableError(error: unknown) {
   return code === '42P01' || message.toLowerCase().includes('student_materials');
 }
 
-function formatExamDate(value: string) {
+function formatExamDate(value: string, locale: AppLocale = 'es') {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const date = new Date(`${value}T12:00:00`);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat('es-AR', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'es-AR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -80,6 +83,11 @@ export default async function DashboardPage({
     redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
 
+  // Server copy follows the account preference, then the first-visit cookie.
+  const locale = accountAppLocale(user.user_metadata) ??
+    parseAppLocale((await cookies()).get('evaluo_ui_locale')?.value) ?? 'es';
+  const t = (value: string) => studentEntryText(locale, value);
+
   try {
     // PDF-first: la pantalla no requiere descargar el catálogo académico.
     // Los datos de universidad/carrera se cargan solamente si se abre el formulario opcional.
@@ -118,7 +126,7 @@ export default async function DashboardPage({
     const requestedMateriaId = materiaId && isUuid(materiaId) ? materiaId : '';
 
     const isSucesorioPlan = source === 'preguntero-derecho-sucesorio-p2';
-    const formattedExamDate = formatExamDate(examDate);
+    const formattedExamDate = formatExamDate(examDate, locale);
     const parsedDailyMinutes = Number.parseInt(dailyMinutes, 10);
     const safeDailyMinutes = [30, 45, 60, 90].includes(parsedDailyMinutes)
       ? parsedDailyMinutes
@@ -134,9 +142,9 @@ export default async function DashboardPage({
           : 'mx-auto w-full max-w-[1240px]'}>
           {isQaAccount(user) ? (
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[12.5px]">
-              <span className="font-semibold text-indigo-900">Cuenta de pruebas de Evaluo</span>
+              <span className="font-semibold text-indigo-900">{t("Cuenta de pruebas de Evaluo")}</span>
               <Link href="/qa" className="font-bold text-indigo-700 underline underline-offset-2">
-                Reiniciar onboarding
+                {t("Reiniciar onboarding")}
               </Link>
             </div>
           ) : null}
@@ -148,25 +156,25 @@ export default async function DashboardPage({
                 </span>
                 <div className="min-w-0">
                   <p className="text-[10px] font-black tracking-[0.13em] text-blue-700 uppercase">
-                    Plan de estudio · Derecho Sucesorio · Parcial 2
+                    {t("Plan de estudio · Derecho Sucesorio · Parcial 2")}
                   </p>
                   <h1 className="mt-1 text-[16px] font-bold tracking-[-0.035em] text-slate-950">
-                    Subí tus apuntes para empezar con el plan que armaste
+                    {t("Subí tus apuntes para empezar con el plan que armaste")}
                   </h1>
                   <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                    La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, tarjetas y práctica.
+                    {t("La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, tarjetas y práctica.")}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
                     {formattedExamDate ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-blue-100">
                         <CalendarDays className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-                        Rendís {formattedExamDate}
+                        {t('Rendís')} {formattedExamDate}
                       </span>
                     ) : null}
                     {safeDailyMinutes ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-blue-100">
                         <Clock3 className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
-                        {safeDailyMinutes} min por día
+                        {safeDailyMinutes} {t('min por día')}
                       </span>
                     ) : null}
                   </div>
@@ -211,9 +219,9 @@ export default async function DashboardPage({
         <StudyStatePanel
           iconName="alert-triangle"
           tone="warning"
-          eyebrow="Mi espacio"
-          title="Falta activar el espacio de materiales"
-          description="El almacenamiento de materiales todavía no está disponible, así que este espacio no puede cargar ni guardar PDFs por el momento."
+          eyebrow={t("Mi espacio")}
+          title={t("Falta activar el espacio de materiales")}
+          description={t("El almacenamiento de materiales todavía no está disponible, así que este espacio no puede cargar ni guardar PDFs por el momento.")}
           className="w-full"
         />
       </div>
