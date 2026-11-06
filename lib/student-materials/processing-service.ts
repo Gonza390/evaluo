@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { resolveStudyLocale } from '@/lib/i18n/study-language';
 import { extractDocxContent } from '@/lib/student-materials/docx-extract';
 import { buildDocxTraceableSummaryChunks } from '@/lib/student-materials/docx-chunks';
 import {
@@ -115,6 +116,10 @@ export async function processStudentMaterial(input: {
 
   if (!material) throw new Error('No encontramos el material que queres procesar.');
 
+  // Read the owner account, not client input, to determine output language.
+  // Only the generated study guide changes; extraction and citations stay original.
+  const { data: ownerAuth } = await admin.auth.admin.getUserById(material.user_id);
+  const studyLocale = resolveStudyLocale(ownerAuth.user?.user_metadata);
   const isDocx = material.file_name.toLowerCase().endsWith('.docx');
   const geminiPdfKeySlot = isDocx ? undefined : await getOrAssignGeminiPdfKeySlot(admin, material.id);
   logInfo('processStudentMaterial.geminiPdfKeySlot', {
@@ -381,6 +386,7 @@ export async function processStudentMaterial(input: {
   });
 
   const generationInput = {
+    studyLocale,
     title: material.title,
     universidadName: context.universidadName,
     carreraName: context.carreraName,
