@@ -326,10 +326,12 @@ function EnglishHomeFooter() {
           </div>
           <div className="flex flex-col gap-2 text-xs text-white/80">
             <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white/60">Legal</p>
-            <Link href="/terminos">Terms of service (Spanish)</Link>
-            <Link href="/privacidad">Privacy policy (Spanish)</Link>
-            <Link href="/reembolsos">Refund policy (Spanish)</Link>
-            <Link href="/politica-de-uso-aceptable">Acceptable use (Spanish)</Link>
+            <Link href="/en/terms">Terms of service</Link>
+            <Link href="/en/privacy">Privacy policy</Link>
+            <Link href="/en/refunds">Refund policy</Link>
+            <Link href="/en/billing">Billing terms</Link>
+            <Link href="/en/copyright">Copyright policy</Link>
+            <Link href="/en/acceptable-use">Acceptable use</Link>
             <p className="mt-3 text-xs text-white/65">Support and billing inquiries</p>
             <a className="break-all underline underline-offset-2" href="mailto:facturacion@evaluo.com.ar">facturacion@evaluo.com.ar</a>
           </div>

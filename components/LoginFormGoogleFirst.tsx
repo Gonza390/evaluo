@@ -441,11 +441,11 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
             />
             <span>
               {english ? 'I agree to the ' : 'Acepto los '}
-              <Link href="/terminos" className="font-semibold text-blue-600 hover:underline">
-                {english ? 'Terms (Spanish)' : 'Términos'}
+              <Link href={english ? "/en/terms" : "/terminos"} className="font-semibold text-blue-600 hover:underline">
+                {english ? 'Terms' : 'Términos'}
               </Link>{english ? ' and the ' : ' y la '}
-              <Link href="/privacidad" className="font-semibold text-blue-600 hover:underline">
-                {english ? 'Privacy Policy (Spanish)' : 'Política de privacidad'}
+              <Link href={english ? "/en/privacy" : "/privacidad"} className="font-semibold text-blue-600 hover:underline">
+                {english ? 'Privacy Policy' : 'Política de privacidad'}
               </Link>
               .
             </span>
