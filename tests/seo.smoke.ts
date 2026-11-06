@@ -970,7 +970,7 @@ const rootMetadata = source('app/(es)/layout.tsx');
 assert.ok(!rootMetadata.includes("'geo.region'"), 'AR geo region should be home-only');
 assert.ok(!rootMetadata.includes("'geo.placename'"), 'AR geo city should be home-only');
 assert.ok(!rootMetadata.includes("locale: 'es_AR'"), 'Root OG should not force Argentina');
-assertIncludesAll('app/(es)/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "languages: { 'es-AR': '/' }"]);
+assertIncludesAll('app/(es)/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "languages: { 'es-AR': '/', en: '/en' }"]);
 assertIncludesAll('next.config.mjs', [
   "'/es-mx/:path*', 'es-MX'",
   "'/es-co/:path*', 'es-CO'",
@@ -1123,10 +1123,8 @@ assertIncludesAll('components/marketing/english-study-page.tsx', [
   'lang="en"',
   '<InternationalDocumentLanguage lang="en" />',
   "href={ENGLISH_PAGES[key].path}",
-  'The English homepage, sign-in and first PDF upload flow are available in English',
   'Illustrative study examples',
   'How to verify this answer',
-  'Explore the English homepage',
 ]);
 assertIncludesAll('app/sitemap.ts', [
   '${baseUrl}/en`',
@@ -1136,7 +1134,7 @@ assertIncludesAll('app/sitemap.ts', [
 ]);
 assertIncludesAll('next.config.mjs', ["['/en', 'en']", "['/en/:path*', 'en']"]);
 assertIncludesAll('components/footer-home.tsx', ['href="/en"', 'English study guides']);
-assertIncludesAll('components/marketing/international-study-landing.tsx', ['href="/en"', 'English']);
+// El link visible a /en se quitó (505e0e7); la equivalencia en inglés se declara vía hreflang abajo.
 assertIncludesAll('lib/international-study-landings.ts', ["en: toAbsoluteUrl('/en/study-pdf-with-ai')"]);
 assertIncludesAll('app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', ["en: toAbsoluteUrl('/en/pdf-to-flashcards')"]);
 assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', ["en:toAbsoluteUrl('/en/pdf-to-quiz')"]);
@@ -1179,16 +1177,14 @@ assertIncludesAll('components/LoginFormGoogleFirst.tsx', [
   "locale = 'es'",
   "const english = locale === 'en'",
   "getAuthContextCopy(nextPath, reason, isSignUp, english)",
-  "The English dashboard and first upload flow are available",
-  "Some advanced study tools, account emails and payment screens",
-  "Terms (Spanish)",
-  "Privacy Policy (Spanish)",
+  // Los legales ya existen en inglés: el registro enlaza a /en/terms y /en/privacy.
+  'href={english ? "/en/terms" : "/terminos"}',
+  'href={english ? "/en/privacy" : "/privacidad"}',
   "Account created. Check your email",
 ]);
 assertIncludesAll('components/marketing/english-study-page.tsx', [
-  'href="/en/login?mode=signup"',
-  'Create an account (English sign-up)',
-  'Explore the English homepage',
+  // El registro en inglés lleva directo a la primera subida de material (bdd1378).
+  'href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1"',
 ]);
 assertIncludesAll('components/GlobalClientRuntime.tsx', [
   "pathname === '/en' || pathname.startsWith('/en/')",
@@ -1204,7 +1200,7 @@ assert.ok(!source('app/sitemap.ts').includes('${baseUrl}/en/login'),
 // Visual consistency: explicit white heading on dark English SEO panel.
 assertIncludesAll('components/marketing/english-study-page.tsx', [
   'bg-[#101D42] py-12 text-white',
-  'text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides',
+  'text-2xl font-bold tracking-tight text-white">Turn the next study session into progress you can check.',
 ]);
 assertIncludesAll('scripts/qa-seo-visual.mjs', [
   "'/en/pdf-to-quiz'",

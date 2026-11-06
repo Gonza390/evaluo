@@ -156,7 +156,7 @@ assert.match(materiaStudyHomeSource, /La práctica de esta materia está en prep
 assert.match(materiaStudyHomeSource, /Crear ejercicios con mi PDF/);
 assert.doesNotMatch(materiaStudyHomeSource, />Sin preguntas</);
 assert.match(dashboardPageSource, /LazyMaeveStudySpace/);
-assert.match(dashboardWorkspaceSource, /title="Tus PDFs"/);
+assert.match(dashboardWorkspaceSource, /title=(?:"Tus PDFs"|\{t\("Tus PDFs"\)\})/);
 assert.match(dashboardWorkspaceSource, /Subí tu primer material/);
 assert.doesNotMatch(dashboardWorkspaceSource, /GuidedTour/);
 assert.doesNotMatch(dashboardWorkspaceSource, /prepareStudentMaterialUploadAction/);
@@ -227,14 +227,14 @@ assert.match(rootLayoutSource, /@vercel\/speed-insights\/next/);
 assert.match(rootLayoutSource, /<SpeedInsights\s*\/>/);
 assert.match(seoLandingSource, /generateStaticParams\(\)[\s\S]*return \[\]/);
 assert.match(seoLandingSource, /loadStudyLandingData/);
-assert.match(clientLayoutUiSource, /\{ label: messages.navigation.home, href: '\/', icon: Home \}/);
+assert.match(clientLayoutUiSource, /\{ label: messages.navigation.home, href: (?:'\/'|locale === 'en' \? '\/en' : '\/'), icon: Home \}/);
 assert.match(
   clientLayoutUiSource,
-  /\{ label: messages.navigation.questionBanks, href: '\/pregunteros', icon: GraduationCap \}/
+  /\{ label: messages.navigation.questionBanks, href: (?:'\/pregunteros'|locale === 'en' \? '\/en\/pdf-to-quiz' : '\/pregunteros'), icon: GraduationCap \}/
 );
 assert.match(
   clientLayoutUiSource,
-  /\{\s*label: messages.navigation.signIn,\s*href: '\/login\?mode=login',\s*icon: LogIn,\s*variant: 'cta' as const,?\s*\}/
+  /\{\s*label: messages.navigation.signIn,\s*href: (?:'\/login\?mode=login'|locale === 'en' \? '\/en\/login\?mode=login' : '\/login\?mode=login'),\s*icon: LogIn,\s*variant: 'cta' as const,?\s*\}/
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);

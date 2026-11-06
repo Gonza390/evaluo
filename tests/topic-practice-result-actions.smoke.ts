@@ -20,7 +20,7 @@ assert.match(topicResult, /Reforzar mis errores/);
 assert.match(topicResult, /Seguir al siguiente tema/);
 assert.match(topicResult, /Ver todos mis temas/);
 assert.match(topicResult, /Practicar de nuevo/);
-assert.match(topicResult, /aria-label=\{\`Resultado:/);
+assert.match(topicResult, /aria-label=\{(?:english \? `Result: [^`]*` : )?\`Resultado:/);
 assert.doesNotMatch(topicResult, /[Rr]espuestas correctas/);
 assert.doesNotMatch(topicResult, /Tu próximo objetivo|Terminar por hoy|Volver al tema|pregunta para revisar/);
 assert.doesNotMatch(topicResult, /\['recordar', 'comprender', 'aplicar'\]/);

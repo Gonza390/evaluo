@@ -21,7 +21,7 @@ assert.match(selector, /prefetch=\{false\}/);
 assert.match(selector, /locale: 'es', label: 'Español',[^\n]+href: '\/'/);
 assert.match(selector, /locale: 'en', label: 'English',[^\n]+href: '\/en'/);
 assert.ok(selector.indexOf("locale: 'es'") < selector.indexOf("locale: 'en'"), 'Spanish should be first in menu');
-assert.match(home, /<LandingLanguageSelector locale="es" \/>/);
+assert.match(home, /<LandingLanguageSelector locale=(?:"es"|\{locale\}) \/>/);
 assert.match(english, /<EnglishSeoHeader \/>/);
 assert.match(englishHeader, /<LandingLanguageSelector locale="en" alternateHref=\{alternateHref\} \/>/);
 assert.match(publicHeader, /<LandingLanguageSelector locale="es" alternateHref=\{alternateHref\} \/>/);

@@ -160,7 +160,7 @@ assert.ok(firstGuideSource.includes("label: 'Entender'") &&
           'El tutorial debe enseñar los cuatro momentos de Evaluo.');
 assert.match(firstGuideSource, /'summary', 'practice', 'progress', 'reinforce'/,
   'Los cuatro pasos deben mantener este orden.');
-assert.match(firstGuideSource, /\{number\} de 4/,
+assert.match(firstGuideSource, /\{number\} de 4|' de 4'/,
   'El indicador debe comunicar cuatro pasos, no tres.');
 assert.match(firstGuideSource, /data-first-pdf-guide/,
   'La guía debe enseñar la interfaz real.');
@@ -357,7 +357,7 @@ assert.match(materialWorkspaceSource, /studyGuideArrivalHandledRef\.current = ma
   'Cada PDF debe mostrar su guía una sola vez por llegada.');
 assert.match(materialWorkspaceSource, /initialStudyStartGuideRequested/,
   'Las cargas posteriores deben poder abrir la guía sin repetir el onboarding.');
-assert.match(materialPageSource, /initialStudyStartGuideRequested=\{isOwner/,
+assert.match(materialPageSource, /initialStudyStartGuideRequested=\{(?:!isEnglishStudyEntry && )?isOwner/,
   'La ruta debe activar directamente la guía de un nuevo PDF.');
 assert.match(materialPageSource, /query\.inicio === '1'/,
   'Solo el enlace posterior a la carga debe solicitar la guía inicial.');

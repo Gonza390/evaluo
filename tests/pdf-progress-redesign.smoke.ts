@@ -7,7 +7,7 @@ const data = readFileSync('lib/student-materials/progress.ts', 'utf8');
 assert.match(screen, /data-progress-overview/, 'La vista general mantiene la tarjeta de resumen visual.');
 assert.match(screen, /data-progress-topic-row/, 'Cada tema tiene una fila compacta con acción.');
 assert.match(screen, /data-recommended-topics/, 'El listado de temas sigue dentro de su panel.');
-assert.match(screen, /aria-label="Actividad recomendada"/, 'Se conserva la recomendación de estudio.');
+assert.match(screen, /aria-label=(?:"Actividad recomendada"|\{tr\("Actividad recomendada","Recommended activity"\)\})/, 'Se conserva la recomendación de estudio.');
 assert.match(screen, /onClick=\{\(\) => openTopic\(recommendedTopic\.id\)\}/, 'La recomendación abre el tema.');
 assert.match(screen, /onPracticeTopic\?\.\(questionIndex\)/, 'Comprobar y evaluar pueden ir directo a la práctica.');
 assert.match(screen, /else openTopic\(topic\.id\)/, 'La acción vuelve al detalle si la práctica no está disponible.');

@@ -80,7 +80,7 @@ assert.match(dashboardHeroSource, /nextStudyAction\?\.href \?\? primaryMaterialH
 assert.match(dashboardHeroSource, /onClick=\{onUploadClick\}/);
 assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
 assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
-assert.match(dashboardMaterialsSource, /title="Tus PDFs"\s+visuallyHiddenTitle/,
+assert.match(dashboardMaterialsSource, /title=(?:"Tus PDFs"|\{t\("Tus PDFs"\)\})\s+visuallyHiddenTitle/,
   'Keep an accessible section label without repeating Tus PDFs visually.');
 const appPageHeaderSource = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
 assert.match(appPageHeaderSource, /visuallyHiddenTitle && 'sr-only'/,
@@ -93,7 +93,7 @@ assert.doesNotMatch(dashboardMaterialsSource, />Privado<|: 'Privado'/,
   'Private PDFs are the default and should not display a redundant visibility tag.');
 assert.match(dashboardMaterialsSource, /\{isShared \? \(/,
   'Shared PDFs should still show their meaningful visibility state.');
-assert.match(dashboardMaterialsSource, /\{formatDate\(material\.created_at\)\}/,
+assert.match(dashboardMaterialsSource, /\{formatDate\(material\.created_at(?:, locale)?\)\}/,
   'PDF cards must retain their upload date.');
 assert.match(dashboardMaterialsSource, /data-desktop-material-search/,
   'The PDF library should offer desktop search when enough materials exist.');
@@ -112,7 +112,7 @@ assert.match(navbarSource, /pathname\.startsWith\('\/materiales\/'\)/,
 
 assert.doesNotMatch(dashboardMaterialsSource, /dashboard_materials_header/,
   'Tus PDFs must not display a redundant upload CTA in the section header.');
-assert.match(dashboardMaterialsSource, /primaryActionLabel="Subí tu PDF"/,
+assert.match(dashboardMaterialsSource, /primaryActionLabel=(?:"Subí tu PDF"|\{t\("Subí tu PDF"\)\})/,
   'The empty materials state must keep the PDF upload CTA.');
 assert.match(dashboardMaterialsSource, /onPrimaryAction=\{\(\) => openUploadPicker\('dashboard_empty_materials'\)\}/,
   'The empty-state upload CTA must still explicitly open the picker.');

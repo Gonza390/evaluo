@@ -50,7 +50,7 @@ assert.match(feedback, /} catch \{\s*\/\/ El cierre funciona aun si el almacenam
 assert.match(feedback, /finally \{\s*setSaving\(false\);/);
 
 const cards = source('components/dashboard/student-materials-workspace.tsx');
-assert.match(cards, /aria-label=\{`Abrir material \$\{material\.title\}`\}/);
+assert.match(cards, /aria-label=\{`(?:Abrir material|\$\{locale === 'en' \? 'Open material' : 'Abrir material'\}) \$\{material\.title\}`\}/);
 assert.match(cards, /material\.processing_status === 'ready' \? getStudentMaterialRoute\(material\.id\) : `\/dashboard\/procesando\/\$\{material\.id\}`/);
 assert.match(cards, /before:absolute before:inset-0/);
 assert.doesNotMatch(cards, /aria-pressed=\{selected\}/);
