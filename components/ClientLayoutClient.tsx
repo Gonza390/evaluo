@@ -200,7 +200,7 @@ function BottomNav() {
                 item.href === '/dashboard/estudiar' ? 'true' : undefined
               }
               className={
-                item.variant === 'cta'
+                ('variant' in item && item.variant === 'cta')
                   ? 'from-brand to-brand-2 mx-0.5 flex min-h-[50px] flex-col items-center justify-center rounded-2xl bg-gradient-to-r px-2 py-1.5 text-white shadow-[0_8px_20px_rgba(37,99,235,0.26)]'
                   : `flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 transition-[min-height] duration-200 motion-reduce:transition-none ${
                       isActive ? 'text-brand' : 'text-muted-foreground'
