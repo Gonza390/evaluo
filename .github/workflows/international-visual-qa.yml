@@ -5,7 +5,19 @@ on:
     paths:
       - 'scripts/qa-international-visual.mjs'
       - '.github/workflows/international-visual-qa.yml'
+      - 'components/study/pdf-mobile-navigation.tsx'
+      - 'components/study/recommended-study-guide.tsx'
+      - 'components/dashboard/practice-mode-picker.tsx'
+      - 'components/FeedbackDialog.tsx'
+      - 'components/marketing/english-seo-header.tsx'
+      - 'components/marketing/home-redesign.tsx'
+      - 'app/(en)/en/**'
+      - 'app/(en)/layout.tsx'
+      - 'proxy.ts'
   workflow_dispatch:
+concurrency:
+  group: international-visual-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
