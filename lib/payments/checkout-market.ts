@@ -11,5 +11,7 @@ export function resolveCheckoutMarket(
 ): CheckoutMarket {
   const normalized = country?.trim().toUpperCase() ?? '';
   if (!/^[A-Z]{2}$/.test(normalized)) return 'unknown';
+  // Country placeholders are not verifiable geographic locations.
+  if (['XX', 'ZZ', 'EU', 'UN'].includes(normalized)) return 'unknown';
   return normalized === 'AR' ? 'argentina' : 'international';
 }
