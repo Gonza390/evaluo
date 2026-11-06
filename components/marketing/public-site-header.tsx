@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { TrackedLink } from '@/components/marketing/tracked-link';
+import { LandingLanguageSelector } from '@/components/marketing/landing-language-selector';
 
 type PublicHeaderVariant = 'marketing' | 'discovery' | 'landing';
 
@@ -66,11 +67,13 @@ export function PublicSiteHeader({
   trackingLocation = 'public_header',
   variant = 'marketing',
   actions,
+  alternateHref,
 }: {
   primaryHref?: string;
   trackingLocation?: string;
   variant?: PublicHeaderVariant;
   actions?: ReactNode;
+  alternateHref?: string;
 }) {
   return (
     <header className="relative z-20 flex min-h-18 items-center justify-between gap-2 border-b border-slate-200/80 py-3 sm:min-h-20 sm:gap-3">
@@ -108,9 +111,12 @@ export function PublicSiteHeader({
         </nav>
       ) : null}
 
-      {actions ?? (
-        <PublicGuestActions primaryHref={primaryHref} trackingLocation={trackingLocation} />
-      )}
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <LandingLanguageSelector locale="es" alternateHref={alternateHref} />
+        {actions ?? (
+          <PublicGuestActions primaryHref={primaryHref} trackingLocation={trackingLocation} />
+        )}
+      </div>
     </header>
   );
 }
