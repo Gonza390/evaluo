@@ -1,6 +1,7 @@
 import 'server-only';
 import { SITE_URL } from '@/lib/site';
 import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
+import { accountTimeZone } from '@/lib/i18n/account-time-zone';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -217,10 +218,15 @@ function isUniqueViolation(error: unknown) {
 
 export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
   const dryRun = Boolean(options?.dryRun);
-  const today = getDateKeyInTimeZone(new Date(), ARGENTINA_TIME_ZONE);
-  const targetDates = new Map<string, ReminderDays>(
-    REMINDER_DAYS.map((days) => [addDays(today, days), days])
-  );
+  const now = new Date();
+  const today = getDateKeyInTimeZone(now, ARGENTINA_TIME_ZONE);
+  // A user's local calendar day can be yesterday, today, or tomorrow relative to Argentina.
+  // Query that bounded date range, then filter candidates against their own IANA time zone.
+  const targetDates = new Map<string, ReminderDays>();
+  for (const offset of [-1, 0, 1]) {
+    const localToday = addDays(today, offset);
+    for (const days of REMINDER_DAYS) targetDates.set(addDays(localToday, days), days);
+  }
 
   const admin = createAdminClient();
   // Estas tablas todavía no forman parte del tipo generado de Supabase.
@@ -361,15 +367,25 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     duplicates: 0,
     missingEmail: 0,
     skippedFrequency: 0,
+    notDueInTimeZone: 0,
     failed: 0,
   };
 
-  for (const candidate of candidates) {
-    const user = userById.get(candidate.userId);
+  for (const rawCandidate of candidates) {
+    const user = userById.get(rawCandidate.userId);
     if (!user?.email || !user.email_confirmed_at) {
       summary.missingEmail += 1;
       continue;
     }
+
+    // Never use Argentina's date to decide whether an overseas student is due.
+    const userToday = getDateKeyInTimeZone(now, accountTimeZone(user.user_metadata));
+    const dueDays = REMINDER_DAYS.find(days => addDays(userToday, days) === rawCandidate.examDate);
+    if (!dueDays) {
+      summary.notDueInTimeZone += 1;
+      continue;
+    }
+    const candidate: ReminderCandidate = { ...rawCandidate, days: dueDays };
 
     if (dryRun) continue;
     // One-day exam alerts are critical and never silently suppressed.
