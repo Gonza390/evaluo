@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 export type PdfMobileSection =
   | 'resumen'
@@ -36,12 +37,13 @@ export function PdfMobileNavigation({
   showProgress?: boolean;
   hasPendingErrors?: boolean;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const items: Array<{ id: PdfMobileSection; label: string; icon: typeof BookOpenText }> = [
-    { id: 'resumen', label: 'Resumen', icon: BookOpenText },
+    { id: 'resumen', label: english ? 'Summary' : 'Resumen', icon: BookOpenText },
     { id: 'tarjetas', label: 'Flashcards', icon: Sparkles },
-    { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit },
+    { id: 'ejercicios', label: english ? 'Practice' : 'Práctica', icon: BrainCircuit },
     ...(showProgress
-      ? [{ id: 'progreso' as const, label: 'Progreso', icon: ChartNoAxesColumnIncreasing }]
+      ? [{ id: 'progreso' as const, label: english ? 'Progress' : 'Progreso', icon: ChartNoAxesColumnIncreasing }]
       : []),
   ];
   const itemClass = (selected: boolean) =>
@@ -54,7 +56,7 @@ export function PdfMobileNavigation({
   return (
     <nav
       data-pdf-mobile-navigation
-      aria-label="Herramientas de este PDF"
+      aria-label={english ? 'Study tools for this document' : 'Herramientas de este PDF'}
       className="border-border bg-card fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] md:hidden"
     >
       <div className={cn('grid gap-1', showProgress ? 'grid-cols-5' : 'grid-cols-4')}>
@@ -78,7 +80,7 @@ export function PdfMobileNavigation({
             </span>
             {label}
             {id === 'progreso' && hasPendingErrors && (
-              <span className="sr-only">: errores por resolver</span>
+              <span className="sr-only">{english ? ': mistakes to review' : ': errores por resolver'}</span>
             )}
           </button>
         ))}
@@ -88,12 +90,12 @@ export function PdfMobileNavigation({
               type="button"
               aria-label={
                 moreActive
-                  ? `Más herramientas: ${active === 'mapa' ? 'Mapa mental' : 'Glosario'} seleccionado`
-                  : 'Más herramientas'
+                  ? (english ? `More tools: ${active === 'mapa' ? 'Mind map' : 'Glossary'} selected` : `Más herramientas: ${active === 'mapa' ? 'Mapa mental' : 'Glosario'} seleccionado`)
+                  : (english ? 'More tools' : 'Más herramientas')
               }
               className={itemClass(moreActive)}
             >
-              <Ellipsis aria-hidden="true" className="size-5" /> Más
+              <Ellipsis aria-hidden="true" className="size-5" /> {english ? 'More' : 'Más'}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -109,7 +111,7 @@ export function PdfMobileNavigation({
                 active === 'glosario' && 'bg-primary/10 text-blue-800 dark:text-blue-200'
               )}
             >
-              <SquareLibrary aria-hidden="true" className="size-4" /> Glosario
+              <SquareLibrary aria-hidden="true" className="size-4" /> {english ? 'Glossary' : 'Glosario'}
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => onSelect('mapa')}
@@ -118,7 +120,7 @@ export function PdfMobileNavigation({
                 active === 'mapa' && 'bg-primary/10 text-blue-800 dark:text-blue-200'
               )}
             >
-              <Map aria-hidden="true" className="size-4" /> Mapa mental
+              <Map aria-hidden="true" className="size-4" /> {english ? 'Mind map' : 'Mapa mental'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
