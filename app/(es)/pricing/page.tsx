@@ -121,7 +121,7 @@ export default async function PricingPage({
             <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Premium internacional</p>
             <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">US$ 9,99 <span className="text-base font-medium text-slate-500">/ mes</span></p>
             <p className="mt-2 text-sm leading-6 text-slate-600">Renovación automática mensual y cancelación antes del siguiente cobro. Salvo devolución o anulación del pago, conservás Premium hasta el final del período abonado.</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Paddle será el vendedor registrado (Merchant of Record) y mostrará el importe final, impuestos y moneda aplicables antes de cobrar. Sujeto a aprobación: todavía no disponible para comprar.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Creem actuará como vendedor registrado (Merchant of Record) cuando el checkout esté aprobado y habilitado. Se informarán importe final, impuestos y moneda antes del cobro. Todavía no disponible para comprar.</p>
             <p className="mt-2 text-xs text-slate-500">En Argentina se mantienen los planes en pesos y los pagos con Mercado Pago.</p>
             <p className="mt-3 text-xs text-slate-600">Renovación automática mensual y cancelación antes del siguiente cobro. Consultá los <Link href="/terminos" className="font-semibold text-blue-700 underline">términos</Link>, la <Link href="/privacidad" className="font-semibold text-blue-700 underline">política de privacidad</Link>, la <Link href="/reembolsos" className="font-semibold text-blue-700 underline">política de reembolsos</Link> y los <Link href="/facturacion" className="font-semibold text-blue-700 underline">términos de facturación</Link>.</p>
           </div>
@@ -192,7 +192,7 @@ export default async function PricingPage({
             </p>
 
             <div className="mt-12 text-center text-sm text-slate-600">
-              <p>Los pagos disponibles en Argentina se procesan con Mercado Pago. Los cobros internacionales con Paddle están en preparación y se habilitarán con precios propios cuando estén aprobados.</p>
+              <p>Los pagos disponibles en Argentina se procesan con Mercado Pago. Los cobros internacionales con Creem están en preparación y se habilitarán después de la aprobación de la tienda y la activación del checkout.</p>
               <p className="mt-2">
                 Al comprar aceptás los{' '}
                 <Link href="/facturacion" className="font-semibold text-blue-700 hover:underline">
