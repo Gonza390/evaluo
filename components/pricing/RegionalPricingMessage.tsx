@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 import { useCheckoutMarket, type CheckoutMarket } from '@/hooks/use-checkout-market';
 import { PREMIUM_MONTHLY_PRICE_ARS } from '@/lib/payments/offers';
@@ -54,6 +55,20 @@ function localizedMarketText(market: CheckoutMarket, placement: Placement, engli
   }
 }
 
+const legalLinkClass = 'font-semibold text-blue-700 underline';
+
+/** Links legales junto al precio: requisito de compliance del checkout (Creem MoR / Mercado Pago). */
+function LegalPolicyLinks({ english }: { english: boolean }) {
+  if (english) {
+    return <p className="mt-3 text-xs text-slate-600">
+      Monthly renewal; cancel before the next charge. Read our <Link href="/en/terms" className={legalLinkClass}>terms</Link>, <Link href="/en/privacy" className={legalLinkClass}>privacy policy</Link> and <Link href="/en/refunds" className={legalLinkClass}>refund policy</Link>.
+    </p>;
+  }
+  return <p className="mt-3 text-xs text-slate-600">
+    Renovación automática mensual y cancelación antes del siguiente cobro. Consultá los <Link href="/terminos" className={legalLinkClass}>términos</Link>, la <Link href="/privacidad" className={legalLinkClass}>política de privacidad</Link>, la <Link href="/reembolsos" className={legalLinkClass}>política de reembolsos</Link> y los <Link href="/facturacion" className={legalLinkClass}>términos de facturación</Link>.
+  </p>;
+}
+
 /**
  * One region = one currency/provider on every surface.
  * Language follows the page; geography follows the Vercel API, independently.
@@ -97,6 +112,7 @@ export function RegionalPricingMessage({ placement, locale = 'es' }: Props) {
           </p>
         ) : null}
         <p className="mt-3 text-sm leading-6 text-slate-600" aria-live="polite">{content}</p>
+        <LegalPolicyLinks english={english} />
       </div>
     </section>;
   }
