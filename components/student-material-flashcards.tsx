@@ -580,11 +580,11 @@ export function StudentMaterialFlashcards({
 
   const topicMode = allowedCardIndices !== undefined;
   const recallControls = (
-    <div className="flex w-full items-center justify-between gap-3">
-      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('unknown')} className="min-h-11 min-w-[112px] shrink-0 rounded-lg border-red-200 px-3 text-[13px] text-red-700 hover:bg-red-50 sm:min-w-[128px]">
+    <div className="mx-auto grid w-full max-w-[400px] grid-cols-2 gap-3">
+      <Button type="button" variant="outline" data-flashcard-grade="bad" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('unknown')} className="min-h-11 min-w-0 w-full rounded-lg border-red-200 px-3 text-[13px] text-red-700 hover:bg-red-50">
         {topicMode ? 'Mal' : 'No lo sabía'}
       </Button>
-      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('known')} className="min-h-11 min-w-[112px] shrink-0 rounded-lg border-emerald-200 px-3 text-[13px] text-emerald-700 hover:bg-emerald-50 sm:min-w-[128px]">
+      <Button type="button" variant="outline" data-flashcard-grade="good" disabled={!flipped || isFlipping || advancePhase !== 'idle'} onClick={() => markRecall('known')} className="min-h-11 min-w-0 w-full rounded-lg border-emerald-200 px-3 text-[13px] text-emerald-700 hover:bg-emerald-50">
         {topicMode ? 'Bien' : 'Lo sabía'}
       </Button>
     </div>
@@ -595,7 +595,7 @@ export function StudentMaterialFlashcards({
       <div
         className={cn(
           'mx-auto w-full',
-          topicMode ? 'max-w-[640px] space-y-2.5' : 'max-w-[720px] space-y-3',
+          'max-w-[640px] space-y-2.5',
           isFullscreen && 'flex min-h-full flex-col justify-center'
         )}
       >
@@ -661,7 +661,7 @@ export function StudentMaterialFlashcards({
           />
         </div>
 
-        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[720px]')}>
+        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[640px]')}>
           {/* Un solo panel animado: sin caras superpuestas que puedan tapar el texto. */}
           <button
             type="button"
@@ -675,8 +675,8 @@ export function StudentMaterialFlashcards({
             disabled={!flipReady}
             onClick={flipCard}
             className={cn(
-              'relative isolate block w-full cursor-pointer rounded-2xl text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-              topicMode ? 'h-[190px] sm:h-[205px]' : 'h-[188px] sm:h-[210px]',
+              'relative isolate block w-full cursor-pointer overflow-hidden rounded-xl bg-white text-center outline-none disabled:cursor-progress focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+              topicMode ? 'h-[178px] sm:h-[190px]' : 'h-[168px] sm:h-[182px]',
               isFlipping && 'animate-flashcard-turn',
               advancePhase === 'leaving' && advanceStyles.cardLeaving,
               advancePhase === 'entering' && advanceStyles.cardEntering
@@ -686,7 +686,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="back"
                 data-flashcard-content
-                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-7 pb-3" : "py-3")}
+                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-5 pb-3" : "py-3")}
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
@@ -699,7 +699,7 @@ export function StudentMaterialFlashcards({
               <span
                 data-flashcard-face="front"
                 data-flashcard-content
-                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-7 pb-3" : "py-3")}
+                className={cn("relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 text-center text-slate-950 sm:px-5", topicMode ? "pt-5 pb-3" : "py-3")}
               >
                 {topicMode && topicTitle ? (
                   <span data-flashcard-topic className="text-muted-foreground mb-2 max-w-full truncate rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium">{topicTitle}</span>
@@ -712,7 +712,7 @@ export function StudentMaterialFlashcards({
           </button>
         </div>
 
-        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[720px]')}>{recallControls}</div>
+        <div className={cn('mx-auto w-full', topicMode ? 'max-w-[610px]' : 'max-w-[640px]')}>{recallControls}</div>
 
         <div className={cn('items-center justify-center gap-3 md:hidden', topicMode ? 'hidden' : 'flex')}>
           <Button
