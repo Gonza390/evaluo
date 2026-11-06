@@ -1,15 +1,14 @@
 /**
- * Production checkouts require a verifiable Vercel country.
- * Never treat missing geo headers or request failures as "Argentina".
- * Preview keeps the existing Mercado Pago layout and separately exposes Creem test mode.
+ * Every checkout and pricing screen uses the request country provided by Vercel.
+ * Never derive currency from language, or default an unknown location to Argentina.
+ * Production and Preview must show the same regional currency for the same country.
  */
 export type CheckoutMarket = 'argentina' | 'international' | 'unknown';
 
 export function resolveCheckoutMarket(
   country: string | null | undefined,
-  vercelEnvironment: string | null | undefined
+  _vercelEnvironment: string | null | undefined
 ): CheckoutMarket {
-  if (vercelEnvironment !== 'production') return 'argentina';
   const normalized = country?.trim().toUpperCase() ?? '';
   if (!/^[A-Z]{2}$/.test(normalized)) return 'unknown';
   return normalized === 'AR' ? 'argentina' : 'international';
