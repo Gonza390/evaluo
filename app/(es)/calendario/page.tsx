@@ -1023,7 +1023,7 @@ export default function CalendarioPage() {
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold leading-4 text-heading sm:text-[13px]">
                     {selectionInVisibleMonth && selectedStudyPlanDay
-                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} min previstos`
+                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} ${english ? 'min planned' : 'min previstos'}`
                       : selectionInVisibleMonth && selectedPlanExam
                         ? (english ? 'Exam in your study plan' : 'Examen de tu plan de estudio')
                         : (english ? 'Your study plan' : 'Tu plan de estudio')}
@@ -1061,13 +1061,13 @@ export default function CalendarioPage() {
                 <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> {english ? "Study day" : "Día de estudio"}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> Examen del plan
+                <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> {english ? "Study plan exam" : "Examen del plan"}
               </span>
             </div>
           </section>
         ) : studyPlanLoadError && user ? (
           <p role="status" className="px-1 text-[11px] text-[#66758D]">
-            No pudimos mostrar tu plan en el calendario. Podés consultarlo desde{' '}
+            {english ? 'We could not display your plan in the calendar. You can view it under' : 'No pudimos mostrar tu plan en el calendario. Podés consultarlo desde'}{' '}
             <Link className="font-semibold text-brand underline underline-offset-2" href="/dashboard/plan-de-estudio">{t("Plan de estudio")}</Link>.
           </p>
         ) : null}
@@ -1124,7 +1124,7 @@ export default function CalendarioPage() {
                     }
                   >
                     <FileText className="h-4 w-4" />
-                    Trabajo práctico
+                    {english ? 'Assignment' : 'Trabajo práctico'}
                   </Button>
                 </div>
               </div>
@@ -1140,7 +1140,7 @@ export default function CalendarioPage() {
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <label className="text-[13px] font-medium text-slate-700">
-                            Seleccionar materia
+                            {english ? 'Select subject' : 'Seleccionar materia'}
                           </label>
                           <Input
                             value={formState.subjectName}
@@ -1189,19 +1189,19 @@ export default function CalendarioPage() {
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-[12px] text-slate-500">
                             {careerName
-                              ? `Materias de ${careerName}`
-                              : 'Buscaremos materias de la carrera que tenés cargada.'}
+                              ? (english ? `Subjects in ${careerName}` : `Materias de ${careerName}`)
+                              : (english ? 'We will look for subjects in your registered degree program.' : 'Buscaremos materias de la carrera que tenés cargada.')}
                           </p>
                           {careerMateriaLoading ? (
                             <span className="text-[12px] font-medium text-slate-500">
-                              Cargando...
+                              {english ? 'Loading...' : 'Cargando...'}
                             </span>
                           ) : null}
                         </div>
 
                         {careerMateriaLoading ? (
                           <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                            Cargando materias de tu carrera...
+                            {english ? 'Loading subjects for your degree program...' : 'Cargando materias de tu carrera...'}
                           </div>
                         ) : filteredCareerMateriaOptions.length > 0 ? (
                           <div className="max-h-[112px] min-h-[112px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -1224,12 +1224,11 @@ export default function CalendarioPage() {
                           </div>
                         ) : formState.subjectName.trim().length > 0 ? (
                           <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                            No encontramos una materia de tu carrera con ese nombre.
+                            {english ? 'No subject with that name was found in your degree program.' : 'No encontramos una materia de tu carrera con ese nombre.'}
                           </div>
                         ) : careerMateriaOptions.length === 0 ? (
                           <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                            Cuando tu carrera tenga materias asociadas, aparecerán aquí para
-                            elegirlas.
+                            {english ? 'Subjects linked to your degree program will appear here.' : 'Cuando tu carrera tenga materias asociadas, aparecerán aquí para elegirlas.'}
                           </div>
                         ) : null}
                       </div>
@@ -1238,7 +1237,7 @@ export default function CalendarioPage() {
                     <div className="grid h-full grid-rows-[auto_auto_minmax(112px,1fr)] gap-3">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">
-                          Trabajo práctico
+                          {english ? 'Assignment' : 'Trabajo práctico'}
                         </label>
                         <Input
                           value={formState.assignmentTitle}
@@ -1270,19 +1269,17 @@ export default function CalendarioPage() {
                       </div>
                       <div className="flex min-h-[112px] flex-col justify-between rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                         <p className="text-[12px] font-medium tracking-[0.14em] text-slate-500 uppercase">
-                          Organizacion
+                          {english ? 'Organization' : 'Organización'}
                         </p>
                         <p>
-                          Guardá la entrega con un nombre claro para ubicarla rápido en
-                          recordatorios, calendario y seguimiento semanal.
+                          {english ? 'Give your assignment a clear name so you can find it in reminders, the calendar and weekly progress.' : 'Guardá la entrega con un nombre claro para ubicarla rápido en recordatorios, calendario y seguimiento semanal.'}
                         </p>
                         <p className="text-[12px] text-slate-500">
-                          Ejemplo: TP final de Derecho Privado.
+                          {english ? 'Example: Final law assignment.' : 'Ejemplo: TP final de Derecho Privado.'}
                         </p>
                       </div>
                       <div className="hidden rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                        Guardá la entrega con un nombre claro para poder usar esta información
-                        después en recordatorios, analíticas o planificación.
+                        {english ? 'Give your assignment a clear name for future reminders, analytics and planning.' : 'Guardá la entrega con un nombre claro para poder usar esta información después en recordatorios, analíticas o planificación.'}
                       </div>
                     </div>
                   )}
@@ -1298,18 +1295,18 @@ export default function CalendarioPage() {
                   <div className="mt-2 min-h-[84px] rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
                     {formState.type === 'exam' ? (
                       <span>
-                        Se guardará como{' '}
+                        {english ? 'Will be saved as' : 'Se guardará como'}{' '}
                         <strong className="text-slate-900">
-                          {formState.subjectName.trim() || 'tu materia'} -{' '}
-                          {examInstanceLabel(formState.examInstance)}
+                          {formState.subjectName.trim() || (english ? 'your subject' : 'tu materia')} -{' '}
+                          {english ? (formState.examInstance === 'integrador' ? 'Final exam' : `Exam ${formState.examInstance}`) : examInstanceLabel(formState.examInstance)}
                         </strong>
                         .
                       </span>
                     ) : (
                       <span>
-                        Se guardará como{' '}
+                        {english ? 'Will be saved as' : 'Se guardará como'}{' '}
                         <strong className="text-slate-900">
-                          {formState.assignmentTitle.trim() || 'tu trabajo práctico'}
+                          {formState.assignmentTitle.trim() || (english ? 'your assignment' : 'tu trabajo práctico')}
                         </strong>
                         .
                       </span>
@@ -1333,7 +1330,7 @@ export default function CalendarioPage() {
                   <div className="rounded-xl border border-[#D9E6FF] bg-[#F4F8FF] p-3">
                     <p className="text-[12px] font-semibold text-heading">
                       {selectedStudyPlanDay
-                        ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} min`
+                        ? `${english ? 'Your plan' : 'Tu plan'}: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} min`
                         : (english ? 'Exam in the study plan' : 'Examen del plan de estudio')}
                     </p>
                     {selectedStudyPlanDay ? (
@@ -1345,7 +1342,7 @@ export default function CalendarioPage() {
                         ))}
                         {selectedStudyPlanDay.topics.length > 2 ? (
                           <span className="px-1 py-1 text-[11px] text-[#66758D]">
-                            +{selectedStudyPlanDay.topics.length - 2} más
+                            +{selectedStudyPlanDay.topics.length - 2} {english ? 'more' : 'más'}
                           </span>
                         ) : null}
                       </div>
@@ -1430,12 +1427,8 @@ export default function CalendarioPage() {
               title={english ? "Plan your next exam" : "Armá el plan para tu próximo parcial"}
               description={english ? "You have used the three exam dates included in Free. Premium lets you organize more exams and receive reminders." : "Ya usaste los 3 exámenes del plan gratuito. Con Premium organizá toda la cursada y recibí recordatorios antes de cada fecha."}
               source="calendario_exam_limit"
-              features={[
-                'Parciales ilimitados',
-                'Organización completa de tus parciales',
-                'Calendario completo para toda la cursada',
-              ]}
-              ctaLabel="Organizar mis parciales con Premium"
+              features={english ? ['Unlimited exams', 'Organize all your exams', 'Full academic calendar'] : ['Parciales ilimitados', 'Organización completa de tus parciales', 'Calendario completo para toda la cursada']}
+              ctaLabel={english ? 'Organize my exams with Premium' : 'Organizar mis parciales con Premium'}
             />
           </div>
         </DialogContent>
