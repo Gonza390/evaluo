@@ -1,5 +1,9 @@
 'use client';
 
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
+
+
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -118,6 +122,8 @@ export function PdfProgressPanel({
   | { simulation?: undefined; reviewActions?: never }
   | { simulation: { pdfHref: string }; reviewActions: StudyErrorReviewActions }
 )) {
+  const locale = useOptionalAppLocale();
+  const t = (v: string) => studyUiText(locale, v);
   const panelId = useId();
   const [viewOverrides, setViewOverrides] = useState<Record<string, Partial<StudyErrorView>>>({});
   const views = [...data.pending, ...data.resolved].map((item) => ({
@@ -315,7 +321,7 @@ export function PdfProgressPanel({
               className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
               aria-label="Tu próxima actividad"
             >
-              <h3 className="text-[16px] font-medium">Tu próxima actividad</h3>
+              <h3 className="text-[16px] font-medium">{t("Tu próxima actividad")}</h3>
               {lastOutcome && (
                 <p className="text-foreground mt-2 text-sm!">
                   Última tanda: {lastOutcome.total}{' '}
@@ -448,13 +454,13 @@ export function PdfProgressPanel({
             className="border-border mt-6 scroll-mt-4 border-t pt-5"
             aria-label="Contenido de este tema"
           >
-            <h3 className="text-[16px] font-medium">1 · Leé el resumen del tema</h3>
+            <h3 className="text-[16px] font-medium">{t("1 · Leé el resumen del tema")}</h3>
             {summaryBody && focusConcepts.length > 0 && (
               <div
                 className="border-border bg-muted/30 mt-4 rounded-xl border p-4"
                 aria-label="Guía de lectura del tema"
               >
-                <h4 className="text-sm font-medium">Antes de leer: en qué enfocarte</h4>
+                <h4 className="text-sm font-medium">{t("Antes de leer: en qué enfocarte")}</h4>
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
                   Buscá cómo se explican estos conceptos en tu material. Después, intentá
                   explicarlos con tus palabras y sin mirar.
@@ -505,7 +511,7 @@ export function PdfProgressPanel({
               className="border-border border-t py-5"
               aria-label="Cómo continuar con tu estudio"
             >
-              <h3 className="text-[16px] font-medium">3 · Tu próximo paso</h3>
+              <h3 className="text-[16px] font-medium">{t("3 · Tu próximo paso")}</h3>
               <p className="text-muted-foreground mt-2 text-sm!">
                 {topicPending.length > 0
                   ? 'Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.'
@@ -713,7 +719,7 @@ export function PdfProgressPanel({
   if (data.loadError)
     return (
       <div className="mx-auto max-w-5xl p-6">
-        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Tu progreso</h1>
+        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">{t("Tu progreso")}</h1>
         <p role="alert" className="mt-4">
           No pudimos cargar tus errores. Tus resultados siguen guardados.
         </p>
@@ -778,7 +784,7 @@ export function PdfProgressPanel({
         tabIndex={-1}
         className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-semibold tracking-[-0.035em] ${reviewOpen ? 'sr-only' : ''}`}
       >
-        Tu progreso
+        {t("Tu progreso")}
       </h2>
       {!reviewOpen && (
         <p className="text-muted-foreground mt-1 text-[13px]!">
@@ -816,7 +822,7 @@ export function PdfProgressPanel({
             aria-current="page"
             className="border-primary text-primary border-b-2 pb-4 font-medium"
           >
-            Progreso
+            {t("Progreso")}
           </span>
         </nav>
       )}
@@ -856,7 +862,7 @@ export function PdfProgressPanel({
                 </div>
                 {!reviewOpen && lastOutcome && (
                   <div className="border-border border-b pb-3">
-                    <p className="text-muted-foreground text-xs">Última práctica</p>
+                    <p className="text-muted-foreground text-xs">{t("Última práctica")}</p>
                     <p className="mt-1 text-[20px] font-semibold tabular-nums">
                       {lastOutcome.correct}/{lastOutcome.total}
                     </p>
@@ -868,7 +874,7 @@ export function PdfProgressPanel({
                 )}
                 {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
                   <div className="border-border border-b pb-3">
-                    <p className="text-muted-foreground text-xs">Respuestas registradas</p>
+                    <p className="text-muted-foreground text-xs">{t("Respuestas registradas")}</p>
                     <p className="mt-1 text-[20px] font-semibold tabular-nums">
                       {currentCorrect}/{currentAnswered}
                     </p>
@@ -894,7 +900,7 @@ export function PdfProgressPanel({
                   </p>
                 ) : (
                 <div className="border-border border-t pt-3">
-                  <h4 className="text-[13px] font-medium">Tu próxima actividad</h4>
+                  <h4 className="text-[13px] font-medium">{t("Tu próxima actividad")}</h4>
                   <p className="text-muted-foreground mt-2 text-[13px] leading-5">
                     {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
                   </p>
@@ -927,7 +933,7 @@ export function PdfProgressPanel({
                       onClick={() => onPracticeTopic?.(currentSectionIndex)}
                       className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
                     >
-                      Practicar este tema <ArrowRight size={16} />
+                      {t("Practicar este tema")} <ArrowRight size={16} />
                     </button>
                   ) : (
                     <p className="text-muted-foreground mt-3 text-xs">
@@ -956,7 +962,7 @@ export function PdfProgressPanel({
                   </text>
                 </svg>
                 <div className="w-full min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-[#66758D]">Temas con actividad</p>
+                  <p className="text-[11px] font-medium text-[#66758D]">{t("Temas con actividad")}</p>
                   <p className="mt-1 text-[13px] font-semibold text-[#0F1B3D] sm:text-[14px]">
                     {assessmentData?.loadError
                       ? 'Comprobación con preguntas no disponible'
@@ -1025,7 +1031,7 @@ export function PdfProgressPanel({
                 )}
                 {!showOnboardingExample && topics.length >= 8 && (
                   <label className="mt-3 block max-w-[420px] text-[12px] text-[#42506A]">
-                    <span>Buscar tema</span>
+                    <span>{t("Buscar tema")}</span>
                     <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
                       placeholder="Nombre del tema o capítulo"
                       className="mt-1.5 min-h-10 w-full rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] text-[#0F1B3D] outline-none focus-visible:border-[#2563EB] focus-visible:ring-1 focus-visible:ring-[#2563EB]" />
@@ -1154,7 +1160,7 @@ export function PdfProgressPanel({
             {unmatched.length > 0 && !showOnboardingExample && (
               <section className="flex flex-col items-start gap-3 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-[14px] font-semibold text-[#0F1B3D]">Otros conceptos con errores</h2>
+                  <h2 className="text-[14px] font-semibold text-[#0F1B3D]">{t("Otros conceptos con errores")}</h2>
                   <p className="mt-1 text-[12px] leading-[1.6] text-[#42506A]">
                     {unmatched.length} {unmatched.length === 1 ? 'registro de este PDF no coincide' : 'registros de este PDF no coinciden'} con un tema del resumen.
                     Por eso no se incluyen en el avance por tema.
