@@ -436,10 +436,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
 
   const aiCaseButton = mode === 'casos' && aiAvailable && !ready && !freeV2 ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
+      <p className="text-sm font-medium text-slate-800">{english ? "Want to try new real-world scenarios?" : "¿Querés resolver situaciones nuevas?"}</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
-        La IA puede proponer casos nuevos usando tu material. Solo mostramos los que pasan una
-        comprobación de conceptos y citas; no reemplaza la revisión docente.
+        {english
+          ? 'AI can suggest new scenarios based on your material. We show only those that pass checks for concepts and source citations. Always compare the answers with your course notes.'
+          : 'La IA puede proponer casos nuevos usando tu material. Solo mostramos los que pasan una comprobación de conceptos y citas; no reemplaza la revisión docente.'}
       </p>
       <button type="button" disabled={generating} onClick={() => { attempts.current=0;void generateNewCases(); }}
         className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-blue-700 disabled:opacity-50">
@@ -725,15 +726,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / total * 100) + '%' }} />
       </div>
       {mode === 'unir' ? <>
-        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Primero elegí un concepto</p>
+        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">{english ? "First, choose a concept" : "Primero elegí un concepto"}</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{exercisePairs.map((pair, i) => (
           <button type="button" key={pair.term} aria-pressed={selectedTerm === i} onClick={() => setSelectedTerm(i)}
             className={'min-h-14 rounded-xl border p-3 text-left text-sm transition ' +
               (selectedTerm === i ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white')}>
-            {pair.term}{matches[i] !== undefined ? ' · Vinculado' : ''}
+            {pair.term}{matches[i] !== undefined ? (english ? ' · Matched' : ' · Vinculado') : ''}
           </button>
         ))}</div>
-        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Después, tocá su definición</p>
+        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">{english ? "Then, select its definition" : "Después, tocá su definición"}</p>
         <div className="space-y-2">{definitions.map(({ pair, pairIndex }) => {
           const matchedIndex = Object.keys(matches).find(key => matches[Number(key)] === pairIndex);
           return <button key={pairIndex} type="button" disabled={selectedTerm === null} onClick={() => {
