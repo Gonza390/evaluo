@@ -132,7 +132,7 @@ function NavItem({
 export function Navbar({ collapsed, onToggleCollapsed, compact = false }: NavbarProps) {
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
-  const { messages } = useAppLocale();
+  const { messages, locale } = useAppLocale();
   const localizedNavItems = navItems.map((item) => ({
     ...item,
     label: ({
@@ -344,7 +344,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                         if (error) {
                           logError('navbar.signOut', error, { userId: user.id });
                         }
-                        window.location.assign('/login');
+                        window.location.assign(locale === 'en' ? '/en/login' : '/login');
                       }}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
@@ -355,8 +355,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               </div>
             ) : (
               <Link
-                href="/login"
-                title={collapsed ? 'Iniciar sesión' : undefined}
+                href={locale === 'en' ? '/en/login' : '/login'}
+                title={collapsed ? (locale === 'en' ? 'Sign in' : 'Iniciar sesión') : undefined}
                 className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                   collapsed
                     ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
@@ -366,8 +366,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 <LogIn className="h-4 w-4 shrink-0" />
                 {!collapsed ? (
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">Iniciar sesión</p>
-                    <p className="text-[12px] text-slate-500">Guardá tu progreso y tus materias</p>
+                    <p className="text-sm font-medium">{locale === 'en' ? 'Sign in' : 'Iniciar sesión'}</p>
+                    <p className="text-[12px] text-slate-500">{locale === 'en' ? 'Save your progress and study materials' : 'Guardá tu progreso y tus materias'}</p>
                   </div>
                 ) : null}
               </Link>
