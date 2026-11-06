@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { updateStudentMaterialVisibilityAction } from '@/app/dashboard/materiales/actions';
 import { useToast } from '@/components/ui/use-toast';
 import { toAbsoluteUrl } from '@/lib/site';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import {
   buildStudentMaterialShareImagePath,
   prepareStudentMaterialShareImage,
@@ -32,6 +33,8 @@ export function StudentMaterialShareControl({
   mobileMenuOnly = false,
 }: Props) {
   const router = useRouter();
+  const english = useOptionalAppLocale() === 'en';
+  const tr = (es:string,en:string) => english ? en : es;
   const { toast } = useToast();
   const [visibility, setVisibility] = useState<MaterialVisibility>(initialVisibility);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -61,14 +64,14 @@ export function StudentMaterialShareControl({
 
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
-    toast({ description: 'Copiamos el enlace del material.' });
+    toast({ description: tr('Copiamos el enlace del material.','Material link copied.') });
   };
 
   const shareCurrentLink = async () => {
     const url = shareUrl();
     const result = await shareStudentMaterial({
       title,
-      text: `${title} — material de estudio compartido en Evaluo.`,
+      text: english ? `${title} — study material shared on Evaluo.` : `${title} — material de estudio compartido en Evaluo.`,
       url,
       imagePath: shareImagePath,
     });
@@ -87,7 +90,7 @@ export function StudentMaterialShareControl({
         visibility: 'shared',
       });
       if (!result.success) {
-        toast({ description: result.message, variant: 'destructive' });
+        toast({ description: english ? 'We could not enable sharing for this material.' : result.message, variant: 'destructive' });
         return;
       }
 
@@ -137,22 +140,20 @@ export function StudentMaterialShareControl({
                 <Link2 className="h-4.5 w-4.5" />
               </div>
               <h3 className="mt-3 text-base font-bold tracking-[-0.03em] text-slate-950">
-                Compartir este PDF
+                {tr("Compartir este PDF","Share this PDF")}
               </h3>
             </div>
             <button
               type="button"
               onClick={() => setConfirmOpen(false)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Cerrar"
+              aria-label={tr("Cerrar","Close")}
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Al activar el enlace, cualquier persona con una cuenta de Evaluo podrá abrir y
-            compartir este PDF, junto con su resumen, glosario y material de estudio.
-            Quienes no hayan iniciado sesión deberán ingresar o registrarse primero.
+            {tr("Al activar el enlace, cualquier persona con una cuenta de Evaluo podrá abrir y compartir este PDF, junto con su resumen, glosario y material de estudio. Quienes no hayan iniciado sesión deberán ingresar o registrarse primero.","When you enable this link, anyone with an Evaluo account can open and share this PDF and its study resources. People who are not signed in will first need to log in or create an account.")}
           </p>
           <div className="mt-4 flex gap-2">
             <button
@@ -161,7 +162,7 @@ export function StudentMaterialShareControl({
               disabled={loading}
               className="h-10 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
             >
-              Cancelar
+              {tr("Cancelar","Cancel")}
             </button>
             <button
               type="button"
@@ -174,7 +175,7 @@ export function StudentMaterialShareControl({
               ) : (
                 <Share2 className="h-4 w-4" />
               )}
-              Activar y compartir
+              {tr("Activar y compartir","Enable and share")}
             </button>
           </div>
         </div>
@@ -186,9 +187,9 @@ export function StudentMaterialShareControl({
         onClick={handleShare}
         disabled={loading || (!isOwner && visibility !== 'shared')}
         aria-label={
-          loading ? 'Preparando enlace' : copied ? 'Enlace copiado' : 'Compartir este PDF'
+          loading ? tr("Preparando enlace","Preparing link") : copied ? tr("Enlace copiado","Link copied") : tr("Compartir este PDF","Share this PDF")
         }
-        title={copied ? 'Enlace copiado' : 'Compartir este PDF'}
+        title={copied ? tr("Enlace copiado","Link copied") : tr("Compartir este PDF","Share this PDF")}
         className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring hidden md:inline-flex size-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60"
       >
         {loading ? (
@@ -199,7 +200,7 @@ export function StudentMaterialShareControl({
           <Share2 aria-hidden="true" className="h-4 w-4" />
         )}
         <span role="status" className="sr-only">
-          {copied ? 'Enlace copiado' : ''}
+          {copied ? tr("Enlace copiado","Link copied") : ''}
         </span>
       </button>
       ) : null}
