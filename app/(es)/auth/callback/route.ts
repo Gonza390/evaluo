@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
 import { isQaAccount } from '@/lib/qa-account';
+import { accountAppLocale, parseAppLocale } from '@/lib/i18n/app-locale';
 
 type SessionCookie = { name: string; value: string; options?: CookieOptions };
 function redirectWithSessionCookies(url: string, sessionCookies: SessionCookie[]) {
@@ -83,6 +84,17 @@ export async function GET(request: Request) {
         'google';
       const qaAccount = isQaAccount(user);
       const deviceType = detectDeviceType(request.headers.get('user-agent') ?? '');
+
+      // First English OAuth signup/login inherits the public locale only if
+      // the account has never saved its own language preference.
+      const entryLocale = parseAppLocale(cookieStore.get('evaluo_ui_locale')?.value);
+      if (entryLocale === 'en' && !accountAppLocale(user.user_metadata)) {
+        try {
+          await supabase.auth.updateUser({ data: { ui_locale: 'en' } });
+        } catch {
+          // Localization preference is best effort and must not block authentication.
+        }
+      }
 
       // QA no inserta eventos de autenticación. Tampoco borra sesiones: la clave
       // analytics_session proviene de una URL y no acredita propiedad sobre registros.
