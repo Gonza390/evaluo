@@ -1,4 +1,8 @@
-import { parseAppLocale, type AppLocale } from './app-locale';
+import type { AppLocale } from './app-locale';
+
+function parseAppLocale(value: unknown): AppLocale | null {
+  return value === 'es' || value === 'en' ? value : null;
+}
 
 /** Only a first-visit homepage hint; not a billing or authorization decision. */
 const SPANISH_SPEAKING_COUNTRIES = new Set([
