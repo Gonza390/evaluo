@@ -29,6 +29,27 @@ export function isCreemCheckoutUrl(value: unknown): value is string {
   } catch { return false; }
 }
 
+export async function validateCreemProduct(mode: CreemMode): Promise<void> {
+  if (!isCreemModeEnabled(mode)) throw new Error('creem_not_enabled');
+  const key = mode === 'test' ? process.env.CREEM_API_KEY!.trim() : process.env.CREEM_LIVE_API_KEY!.trim();
+  const productId = creemProductId(mode);
+  const api = mode === 'test' ? 'https://test-api.creem.io' : 'https://api.creem.io';
+  const response = await fetch(api + '/v1/products?product_id=' + encodeURIComponent(productId), {
+    headers: { 'x-api-key': key }, cache:'no-store', signal:AbortSignal.timeout(12000),
+  });
+  if (!response.ok) throw new Error('creem_product_http_' + response.status);
+  const value: unknown = await response.json().catch(() => null);
+  if (!value || typeof value !== 'object') throw new Error('creem_product_invalid');
+  const p = value as Record<string, unknown>;
+  // Don't create a checkout with a different price, currency or billing period.
+  // The buyer must never be charged for a misconfigured product without Premium.
+  if (p.id !== productId || p.price !== CREEM_USD_MONTHLY_CENTS ||
+      p.currency !== 'USD' || p.billing_type !== 'recurring' ||
+      p.billing_period !== 'every-month' || p.status !== 'active') {
+    throw new Error('creem_product_price_or_period_mismatch');
+  }
+}
+
 export async function createCreemCheckout(mode: CreemMode, input: {
   attemptId: string;
   userId: string;
@@ -36,6 +57,7 @@ export async function createCreemCheckout(mode: CreemMode, input: {
   successUrl: string;
 }): Promise<{ checkoutId: string; checkoutUrl: string }> {
   if (!isCreemModeEnabled(mode)) throw new Error('creem_not_enabled');
+  await validateCreemProduct(mode);
   if (mode === 'test') return createCreemTestCheckout(input);
   const key = process.env.CREEM_LIVE_API_KEY!.trim();
   const product = creemProductId('live');
