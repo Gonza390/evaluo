@@ -8,6 +8,7 @@ import { useUser } from '@/hooks/useUser';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { LanguagePicker } from '@/components/i18n/language-picker';
 import { StudyLanguagePicker } from '@/components/i18n/study-language-picker';
+import { TimeZonePreference } from '@/components/i18n/time-zone-preference';
 import { settingsMessages } from '@/lib/i18n/settings-messages';
 import { Spinner } from '@/components/ui/spinner';
 import { ProfileSettingsForm } from '@/components/settings/profile-settings-form';
@@ -59,9 +60,9 @@ export default function ConfiguracionPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login?next=%2Fconfiguracion');
+      router.replace(english ? '/en/login?next=%2Fconfiguracion' : '/login?next=%2Fconfiguracion');
     }
-  }, [loading, router, user]);
+  }, [loading, router, user, english]);
 
   useEffect(() => {
     let active = true;
@@ -372,6 +373,7 @@ export default function ConfiguracionPage() {
         <h2 id="settings-general" className="text-xs font-normal text-slate-500">{settingsCopy.general}</h2>
         <LanguagePicker />
         <StudyLanguagePicker />
+        <TimeZonePreference />
         {settingRow(settingsCopy.appearance, settingsCopy.light)}
         <p className="pt-1 text-xs text-slate-400">{settingsCopy.themeUnavailable}</p>
         <p className="pt-1 text-xs text-slate-400">{settingsCopy.languageHelp}</p>
