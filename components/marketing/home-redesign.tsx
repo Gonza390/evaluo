@@ -7,6 +7,7 @@ import { HomeUniversityCarousel } from './home-university-carousel';
 import { LandingLanguageSelector } from './landing-language-selector';
 import type { AppLocale } from '@/lib/i18n/app-locale';
 import { HOME_ENGLISH_TEXT } from '@/lib/i18n/home-copy';
+import { RegionalPricingMessage } from '@/components/pricing/RegionalPricingMessage';
 
 const universityLogos = [
   {
@@ -577,7 +578,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
               <p style={{ fontSize: '14px' }}>
                 {t("Más material y herramientas para trabajar lo que te cuesta.")}
               </p>
-              <p style={{ color: 'var(--t)', fontWeight: '700' }}>{t("Mensual o por 6 meses")}</p>
+              <RegionalPricingMessage placement="home-plan" locale={locale} />
               <ul className="home-plan-features">
                 <li>{t("Hasta 3 materiales PDF o Word por día")}</li>
                 <li>{t("Simuladores completos y más explicaciones")}</li>
@@ -612,7 +613,9 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
                 <span>{item.question}</span>
                 <span aria-hidden="true">⌄</span>
               </summary>
-              <p>{item.answer}</p>
+              <p>{(item.question === '¿Cómo se paga Premium? ¿Puedo cancelar?' || item.question === 'How do I pay for Premium? Can I cancel?')
+                  ? <RegionalPricingMessage placement="home-faq" locale={locale} />
+                  : item.answer}</p>
             </details>
           ))}
         </div>
@@ -651,9 +654,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
           >
             {t("Subir mis apuntes")} <span aria-hidden="true">→</span>
           </HomePdfPickerButton>
-          <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '14px' }}>
-            {t("Empezá gratis · Sin tarjeta · Pagás en pesos con Mercado Pago")}
-          </div>
+          <RegionalPricingMessage placement="home-footer" locale={locale} />
           <div style={{ fontSize: '13px', color: '#A5B4FC', marginTop: '18px' }}>
             {t("Nuestra meta: ayudar a aprobar 10.000 exámenes.")}
           </div>
