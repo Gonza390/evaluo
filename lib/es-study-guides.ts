@@ -330,68 +330,6 @@ export const STUDY_GUIDES: StudyGuide[] = [
     ]
   },
   {
-    "slug": "como-estudiar-examen-tipo-test",
-    "category": "Preparar exámenes",
-    "title": "Cómo estudiar para un examen tipo test sin memorizar opciones",
-    "seoTitle": "Cómo estudiar para un examen tipo test: técnica y práctica",
-    "description": "Consejos para preparar un examen tipo test con preguntas nuevas, justificación de respuestas, análisis de distractores y repaso de errores.",
-    "audience": "Estudiantes que rinden exámenes con preguntas de opción múltiple",
-    "question": "¿Cómo saber si entiendes una respuesta o solo reconoces la opción?",
-    "opening": "Las preguntas de opción múltiple pueden evaluar recuerdo, comprensión o aplicación. Si memorizas la letra correcta de un modelo, puedes fallar ante otro enunciado. La preparación mejora cuando intentas responder antes de mirar opciones y explicas por qué descartas las alternativas.",
-    "focus": "Estudia primero el concepto y después practica respuestas bajo distintas formulaciones. Revisa las instrucciones de evaluación de tu asignatura, especialmente si hay penalización por error.",
-    "steps": [
-      {
-        "title": "Cubre el temario por conceptos",
-        "detail": "Selecciona una unidad y construye una lista breve de distinciones importantes, excepciones y ejemplos. Confirma cuáles son evaluables según el programa."
-      },
-      {
-        "title": "Recuerda antes de ver alternativas",
-        "detail": "Lee la pregunta e intenta anticipar la respuesta. Cuando aparezcan las opciones, compara tu razonamiento con ellas."
-      },
-      {
-        "title": "Explica los distractores",
-        "detail": "Para cada respuesta no elegida, identifica qué parte la vuelve incorrecta según el contenido. Si no puedes explicarlo, revisa el concepto."
-      },
-      {
-        "title": "Cambia el contexto de la pregunta",
-        "detail": "Vuelve a practicar el mismo tema con un caso o enunciado nuevo. Comprueba que la comprensión se mantenga aunque cambien las palabras."
-      }
-    ],
-    "exampleTitle": "Ejemplo: una pregunta de psicología",
-    "exampleContext": "Un ejercicio pregunta qué proceso permite mantener y manipular temporalmente información para resolver una operación mental. En el material se explican distintos tipos de memoria.",
-    "exampleTasks": [
-      "Responde por tu cuenta qué proceso describe el enunciado antes de ver opciones.",
-      "Compara por qué otros procesos de memoria no explican igualmente bien la situación.",
-      "Redacta otra pregunta en la que cambie la tarea cotidiana y vuelve a justificar la respuesta."
-    ],
-    "exampleOutcome": "El ejercicio comprueba si puedes reconocer el mecanismo y no solo una frase conocida.",
-    "pitfalls": [
-      {
-        "title": "Confiar en patrones de letras",
-        "detail": "Responder siempre la misma letra o aprender el orden de las alternativas no demuestra dominio del contenido."
-      },
-      {
-        "title": "Memorizar bancos antiguos sin contexto",
-        "detail": "Un banco de preguntas puede servir para practicar, pero el temario, las opciones y los criterios de corrección pueden variar."
-      },
-      {
-        "title": "Descuidar las instrucciones del examen",
-        "detail": "Comprueba si hay preguntas con varias respuestas, límites de tiempo o penalización: esas reglas pueden cambiar tu estrategia."
-      }
-    ],
-    "review": "Registra el concepto detrás de cada error y reintenta preguntas diferentes después de otro bloque de estudio. En el repaso final combina unidades en lugar de repetir solo las que ya dominas.",
-    "faq": [
-      {
-        "q": "¿Es útil practicar con preguntas creadas por IA?",
-        "a": "Puede ser una forma de obtener variaciones de ejercicios sobre tus apuntes. Es importante revisar explicaciones y exactitud; esas preguntas no reproducen necesariamente las oficiales."
-      },
-      {
-        "q": "¿Debo hacer un simulacro cronometrado?",
-        "a": "Si el examen tiene límite de tiempo, puede ayudarte a familiarizarte con el ritmo. Hazlo después de estudiar los conceptos; de poco sirve acelerar respuestas que no entiendes."
-      }
-    ]
-  },
-  {
     "slug": "como-hacer-preguntas-de-estudio-desde-pdf",
     "category": "Practicar y reforzar",
     "title": "Cómo crear preguntas de estudio útiles a partir de un PDF",

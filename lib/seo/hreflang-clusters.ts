@@ -35,6 +35,10 @@ export const HREFLANG_CLUSTERS = {
   'pdf-to-flashcards': { es: '/funciones/crear-flashcards-desde-pdf', en: '/en/pdf-to-flashcards' },
   'true-false': { es: '/funciones/verdadero-falso-con-ia', en: '/en/ai-true-false-questions' },
   'match-concepts': { es: '/funciones/unir-conceptos-con-ia', en: '/en/match-concepts-with-ai' },
+  'mock-exam': { es: '/funciones/simulacro-examen-con-ia', en: '/en/ai-test-prep' },
+  'compare-notebooklm': { es: '/comparar/evaluo-vs-notebooklm', en: '/en/compare/evaluo-vs-notebooklm' },
+  'compare-chatgpt': { es: '/comparar/evaluo-vs-chatgpt', en: '/en/compare/evaluo-vs-chatgpt' },
+  'compare-quizlet': { es: '/comparar/evaluo-vs-quizlet', en: '/en/compare/evaluo-vs-quizlet' },
 } as const satisfies Record<string, ClusterPaths>;
 
 export type HreflangClusterId = keyof typeof HREFLANG_CLUSTERS;
@@ -72,4 +76,18 @@ export function hreflangSitemapEntries(): Array<{
     }
   }
   return entries;
+}
+
+/** Cluster al que pertenece una ruta (p. ej. `/en/pdf-to-quiz` → `pdf-to-quiz`). */
+export function hreflangClusterForPath(path: string): HreflangClusterId | undefined {
+  for (const id of Object.keys(HREFLANG_CLUSTERS) as HreflangClusterId[]) {
+    if (Object.values(HREFLANG_CLUSTERS[id] as ClusterPaths).includes(path)) return id;
+  }
+  return undefined;
+}
+
+/** Ruta equivalente en otro idioma, para el selector de idioma (relativa, no absoluta). */
+export function hreflangAlternatePath(path: string, locale: HreflangLocale): string | undefined {
+  const id = hreflangClusterForPath(path);
+  return id ? (HREFLANG_CLUSTERS[id] as ClusterPaths)[locale] : undefined;
 }

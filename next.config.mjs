@@ -23,6 +23,16 @@ const nextConfig = {
       './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
     ],
   },
+  // Consolidación SEO: URLs que canibalizaban la misma keyword con una página más completa.
+  async redirects() {
+    return [
+      {
+        source: '/es/guias/como-estudiar-examen-tipo-test',
+        destination: '/blog/como-estudiar-examen-tipo-test',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
     const scriptSrc = [

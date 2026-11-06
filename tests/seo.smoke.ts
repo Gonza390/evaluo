@@ -842,8 +842,9 @@ const guideRows = JSON.parse(guideJson![1]) as Array<{
   category: string;
   review: string;
 }>;
-assert.equal(guideRows.length, 8, 'Publish exactly eight original guides');
-assert.equal(new Set(guideRows.map((guide) => guide.slug)).size, 8, 'SEO slugs must be unique');
+// 'como-estudiar-examen-tipo-test' se consolidó en /blog con un 301 (next.config.mjs).
+assert.equal(guideRows.length, 7, 'Publish exactly seven original guides');
+assert.equal(new Set(guideRows.map((guide) => guide.slug)).size, guideRows.length, 'SEO slugs must be unique');
 for (const guide of guideRows) {
   const prose = [
     guide.opening, guide.focus, guide.review,
@@ -1115,9 +1116,8 @@ assertIncludesAll('lib/english-seo-metadata.ts', [
   "alternates: { canonical: url",
   'robots: { index: true, follow: true }',
   "locale: 'en_US'",
-  "hreflangLanguages('study-pdf')",
-  "hreflangLanguages('pdf-to-quiz')",
-  "hreflangLanguages('pdf-to-flashcards')",
+  "hreflangClusterForPath(page.path)",
+  "hreflangLanguages(cluster)",
 ]);
 assertIncludesAll('lib/english-seo-content.ts', [
   "path: '/en/resources'",

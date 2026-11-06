@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { ENGLISH_PAGES, type EnglishPageKey } from '@/lib/english-seo-content';
-import { hreflangLanguages } from '@/lib/seo/hreflang-clusters';
+import { hreflangClusterForPath, hreflangLanguages } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
 // hreflang only pairs genuinely comparable topics; do not map the English
@@ -8,14 +8,8 @@ import { toAbsoluteUrl } from '@/lib/site';
 export function getEnglishSeoMetadata(key: EnglishPageKey): Metadata {
   const page = ENGLISH_PAGES[key];
   const url = toAbsoluteUrl(page.path);
-  const languages: Record<string, string> | undefined =
-    key === 'study-pdf-with-ai'
-      ? hreflangLanguages('study-pdf')
-      : key === 'pdf-to-quiz'
-        ? hreflangLanguages('pdf-to-quiz')
-        : key === 'pdf-to-flashcards'
-          ? hreflangLanguages('pdf-to-flashcards')
-          : undefined;
+  const cluster = hreflangClusterForPath(page.path);
+  const languages = cluster ? hreflangLanguages(cluster) : undefined;
 
   return {
     title: page.title,

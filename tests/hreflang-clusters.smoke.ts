@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import {
   HREFLANG_CLUSTERS,
+  hreflangAlternatePath,
   hreflangAlternates,
+  hreflangClusterForPath,
   hreflangLanguages,
   hreflangSitemapEntries,
   type HreflangClusterId,
@@ -56,5 +59,33 @@ for (const entry of entries) {
 assert.equal(HREFLANG_CLUSTERS.home.en, '/en');
 assert.equal(HREFLANG_CLUSTERS.pricing.en, '/en/pricing');
 assert.equal(HREFLANG_CLUSTERS['pdf-to-flashcards'].en, '/en/pdf-to-flashcards');
+
+assert.equal(HREFLANG_CLUSTERS['mock-exam'].en, '/en/ai-test-prep');
+for (const tool of ['notebooklm', 'chatgpt', 'quizlet'] as const) {
+  assert.equal(hreflangAlternatePath(`/comparar/evaluo-vs-${tool}`, 'en'), `/en/compare/evaluo-vs-${tool}`);
+  assert.equal(hreflangAlternatePath(`/en/compare/evaluo-vs-${tool}`, 'es'), `/comparar/evaluo-vs-${tool}`);
+}
+assert.equal(hreflangClusterForPath('/no-existe'), undefined);
+
+// Toda URL registrada tiene su página en app/: un alternate hacia un 404 invalida el cluster.
+const routeFile = (path: string) => {
+  if (path === '/') return 'app/(es)/page.tsx';
+  if (path.startsWith('/en')) return `app/(en)${path}/page.tsx`;
+  return `app/(es)${path}/page.tsx`;
+};
+for (const path of seenUrls.keys()) {
+  assert.ok(existsSync(new URL(`../${routeFile(path)}`, import.meta.url)), `Falta la página de ${path}`);
+}
+
+// Consolidación de canibalización: la guía duplicada redirige (301) al artículo del blog.
+const nextConfig = (await import('../next.config.mjs')).default;
+const redirects = await nextConfig.redirects();
+assert.ok(
+  redirects.some((r: { source: string; destination: string; permanent: boolean }) =>
+    r.source === '/es/guias/como-estudiar-examen-tipo-test' &&
+    r.destination === '/blog/como-estudiar-examen-tipo-test' &&
+    r.permanent),
+  'La guía de examen tipo test debe redirigir con 301 al blog',
+);
 
 console.log('hreflang-clusters smoke ok');

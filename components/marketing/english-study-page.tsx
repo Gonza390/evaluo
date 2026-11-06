@@ -6,12 +6,14 @@ import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { ENGLISH_PAGES, ENGLISH_PAGE_ORDER, type EnglishPageKey } from '@/lib/english-seo-content';
+import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 
 const slugs: Record<EnglishPageKey, string> = {
   home: 'English study resources',
   'pdf-to-quiz': 'PDF to Quiz',
   'pdf-to-flashcards': 'PDF to Flashcards',
   'study-pdf-with-ai': 'Study a PDF with AI',
+  'ai-test-prep': 'AI Test Prep',
 };
 
 export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
@@ -26,7 +28,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
       <InternationalDocumentLanguage lang="en" />
       <JsonLd data={breadcrumbData} />
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <EnglishSeoHeader />
+        <EnglishSeoHeader alternateHref={hreflangAlternatePath(page.path, 'es')} />
       </div>
 
       <main>

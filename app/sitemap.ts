@@ -93,6 +93,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/funciones/verdadero-falso-con-ia` },
     { url: `${baseUrl}/funciones/unir-conceptos-con-ia` },
     { url: `${baseUrl}/en/study-pdf-with-ai` },
+    { url: `${baseUrl}/en/ai-test-prep`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/compare/evaluo-vs-notebooklm`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/compare/evaluo-vs-chatgpt`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/en/compare/evaluo-vs-quizlet`, lastModified: new Date('2026-11-06') },
     {
       url: `${baseUrl}/funciones/resumir-pdf-con-ia`,
     },

@@ -1,4 +1,4 @@
-export type EnglishPageKey = 'home' | 'pdf-to-quiz' | 'pdf-to-flashcards' | 'study-pdf-with-ai';
+export type EnglishPageKey = 'home' | 'pdf-to-quiz' | 'pdf-to-flashcards' | 'study-pdf-with-ai' | 'ai-test-prep';
 
 export type EnglishPage = {
   path: string;
@@ -49,7 +49,7 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
     faq: [
       { question: 'Can I prepare a quiz from my own course PDF?', answer: 'Yes. A useful method is to identify the learning goals, write questions that require recall or application, and check the answers against the PDF. Read the quiz guide for an example.' },
       { question: 'Should I choose flashcards or quizzes?', answer: 'Use flashcards to retrieve concise terms and relationships. Use quizzes to test explanations, scenarios and reasoning. Both can be part of one study session.' },
-      { question: 'Can I use Evaluo in English?', answer: 'You can read these study guides and start from the English homepage or sign-in page. Check the live app for current account features as localization evolves. The worked examples in this guide are available without an account.' },
+      { question: 'Can I use Evaluo in English?', answer: 'Yes. The Evaluo study platform is available in English: create an account from the English sign-up page, upload your PDF or Word notes and study them by topic. The worked examples in these guides are available without an account.' },
     ],
   },
   'pdf-to-quiz': {
@@ -87,10 +87,10 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
   },
   'pdf-to-flashcards': {
     path: '/en/pdf-to-flashcards',
-    title: 'PDF to Flashcards: Make Study Cards from Your Notes',
-    description: 'Create stronger flashcards from PDFs with a worked economics example, one-idea-per-card rules, active recall and spaced-review advice.',
-    eyebrow: 'PDF to flashcards • Active recall',
-    headline: 'Make flashcards from a PDF that are worth reviewing.',
+    title: 'AI Flashcard Generator from PDF: Make Study Cards from Notes',
+    description: 'Turn PDF notes into flashcards with AI, then make them worth reviewing: a worked economics example, one-idea-per-card rules and active recall tips.',
+    eyebrow: 'AI flashcard generator • PDF to flashcards',
+    headline: 'Generate flashcards from a PDF with AI, and make them worth reviewing.',
     intro: 'A flashcard is more than a sentence cut into two halves. Good cards prompt a specific retrieval, show a precise answer and help you notice a mistaken idea. Start with one concept per card and use the original document to verify the back.',
     audience: 'Students who want to memorize and understand definitions, contrasts, formulas and key relationships from a PDF.',
     outcome: 'Short, unambiguous question-and-answer cards that are easy to test and correct.',
@@ -116,6 +116,40 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
       { question: 'Can I make flashcards from a PDF with AI?', answer: 'AI can draft prompts and concise answers from extracted notes, but the useful part is checking each card against your source and testing recall before flipping it.' },
       { question: 'Should I make one card for every sentence?', answer: 'No. Prioritize learning objectives and important relationships. Some sentences are context and should not become separate cards.' },
       { question: 'What if a flashcard is always difficult?', answer: 'Check whether it asks multiple things, lacks context or contains an uncertain answer. Rewrite it or review the underlying concept before practicing again.' },
+    ],
+  },
+  'ai-test-prep': {
+    path: '/en/ai-test-prep',
+    title: 'AI Test Prep from Your Notes: Mock Exams and Practice Tests',
+    description: 'Prepare for exams with AI using your own PDF notes: build a mock exam, practice by topic, read the results and decide what to review next.',
+    eyebrow: 'AI test prep • Mock exams from your notes',
+    headline: 'AI test prep that starts from your own notes, not a generic question bank.',
+    intro: 'A useful practice test should look like your course, not like a random quiz. Start from the PDF your exam is based on, practice topic by topic, take a timed mock exam, and use the results to choose what to study next. Evaluo turns your notes into that loop; this guide shows the method so you can use it with or without an account.',
+    audience: 'High school, university and professional students preparing midterms, finals, admission tests or certification exams from their own course material.',
+    outcome: 'A mock exam that covers the syllabus, a score broken down by topic, and a short list of concepts to review before the next attempt.',
+    exampleTitle: 'Worked mock-exam example: supply and demand',
+    exampleSource: 'When the price of a good rises and other conditions stay the same, the quantity demanded usually falls. A change in income or in the price of a related good shifts the whole demand curve instead of moving along it.',
+    exampleQuestion: 'Consumers’ incomes rise and they buy more of a normal good at every price. Is this a movement along the demand curve or a shift of the curve?',
+    exampleAnswer: 'A shift of the demand curve to the right: income changed, not the good’s own price.',
+    exampleExplanation: 'A strong practice question makes you separate two ideas students often mix up (a movement versus a shift) instead of asking you to repeat a definition. If you miss it, review the topic, not just the question.',
+    verification: 'Check how your course defines normal and inferior goods and which graph conventions it uses. Follow your syllabus when it differs from this simplified example.',
+    steps: [
+      { title: 'Map the exam to topics', detail: 'List the units your exam covers and how much each one weighs. A mock exam that over-samples the first chapter gives a misleading score.' },
+      { title: 'Practice topic by topic first', detail: 'Answer short sets per topic before a full mock exam. Topic-level practice shows where you are weak while there is still time to fix it.' },
+      { title: 'Take a timed mock exam', detail: 'Mix topics, use the real time limit and do not check notes. The goal is to rehearse retrieval under exam conditions, not to get a perfect score.' },
+      { title: 'Read the results by topic', detail: 'A 70% overall score can hide a topic where you got almost everything wrong. Sort mistakes by concept and by cause: misunderstanding, confusion between terms or careless error.' },
+      { title: 'Plan the next study session', detail: 'Review the weakest topic in your notes, then retry with new questions a day or two later. Repeat the mock exam closer to the exam date.' },
+    ],
+    mistakes: [
+      { title: 'Repeating the same practice test', detail: 'Retaking identical questions measures memory of the answers, not understanding. Use new questions on the same topics.' },
+      { title: 'Treating AI questions as the real exam', detail: 'AI-generated practice questions are study exercises. They are not official, leaked or institution-approved exam content, and they can contain mistakes you should check against your notes.' },
+      { title: 'Only looking at the final score', detail: 'The score tells you how you did; the breakdown by topic tells you what to do next.' },
+    ],
+    faq: [
+      { question: 'Can AI create a practice test from my PDF?', answer: 'Yes. AI can draft multiple-choice, true/false and short-answer questions from readable PDF or Word notes. Check answers that depend on formulas, tables or scanned pages against the original document.' },
+      { question: 'How is a mock exam different from a quiz?', answer: 'A quiz checks one topic. A mock exam mixes the whole syllabus under exam conditions, such as a time limit and no notes, so you can see how you perform when topics are combined.' },
+      { question: 'Is Evaluo free for test prep?', answer: 'You can start free, which includes a mock exam and practice questions from one document. Premium adds more uploads, more practice and additional mock exam modes. See the pricing page for the current details.' },
+      { question: 'Will an AI practice test predict my grade?', answer: 'No. A practice score is a signal about what to review, not a prediction of your final grade. Exams vary by instructor, format and marking criteria.' },
     ],
   },
   'study-pdf-with-ai': {
@@ -152,4 +186,4 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
   },
 };
 
-export const ENGLISH_PAGE_ORDER: EnglishPageKey[] = ['home', 'pdf-to-quiz', 'pdf-to-flashcards', 'study-pdf-with-ai'];
+export const ENGLISH_PAGE_ORDER: EnglishPageKey[] = ['home', 'ai-test-prep', 'pdf-to-quiz', 'pdf-to-flashcards', 'study-pdf-with-ai'];
