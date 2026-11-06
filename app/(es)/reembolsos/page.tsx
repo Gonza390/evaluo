@@ -17,13 +17,13 @@ const sections = [
   { title: 'Compras en Argentina: Mercado Pago', paragraphs: [
     'Los pagos disponibles en Argentina se procesan actualmente mediante Mercado Pago. Evaluo puede ayudarte a revisar errores de cobro, cancelaciones y solicitudes de devolución, conforme a las reglas del proveedor y las leyes aplicables.',
   ] },
-  { title: 'Compras internacionales: Paddle', paragraphs: [
-    'Evaluo está preparando Paddle para ventas fuera de Argentina. Esta modalidad estará disponible únicamente cuando Paddle apruebe la cuenta y el checkout internacional esté habilitado con sus precios públicos.',
-    'Cuando Paddle figure en el comprobante como vendedor registrado (Merchant of Record), se aplicarán también sus condiciones y política de devoluciones. El soporte de Evaluo puede orientarte hacia los canales correspondientes.',
+  { title: 'Compras internacionales: Creem', paragraphs: [
+    'Cuando el checkout internacional esté habilitado, las compras fuera de Argentina se procesarán mediante Creem (Armitage Labs OÜ), que actúa como vendedor registrado (Merchant of Record). El importe final, incluidos los impuestos aplicables, se mostrará antes del pago.',
+    'Cuando Creem figure en el comprobante como vendedor registrado, se aplicarán también sus términos para compradores y su procedimiento para procesar devoluciones. El soporte de Evaluo puede orientarte hacia los canales correspondientes.',
   ] },
-  { title: 'Cómo solicitar una devolución con Paddle', paragraphs: [
-    'Cuando el comprobante de la compra indique que Paddle es el vendedor registrado (Merchant of Record), podés solicitar atención por la compra, gestionar la suscripción y pedir una devolución directamente en https://paddle.net. Para problemas con el funcionamiento de Evaluo, escribí a facturacion@evaluo.com.ar.',
-    'Las compras hechas con Paddle están sujetas a su política de reembolsos y a los derechos irrenunciables del consumidor. La política puede consultarse en https://www.paddle.com/legal/refund-policy y las condiciones para compradores en https://www.paddle.com/legal/buyer-terms.',
+  { title: 'Cómo solicitar una devolución con Creem', paragraphs: [
+    'Si compraste a través de Creem, contactá primero a facturacion@evaluo.com.ar indicando la fecha, el producto y una referencia del recibo. Evaluo evaluará la solicitud y, cuando corresponda, gestionará la devolución a través de Creem. Para asuntos no resueltos también podés usar el portal de clientes o soporte de Creem.',
+    'Las compras efectuadas con Creem están sujetas a los términos para compradores de https://www.creem.io/buyer-terms y a los derechos irrenunciables del consumidor. Creem procesa las devoluciones aprobadas.',
     'En la Unión Europea, el Espacio Económico Europeo y el Reino Unido pueden corresponder derechos de desistimiento, generalmente durante los primeros 14 días, con excepciones aplicables a productos y servicios digitales cuando el usuario haya consentido su uso inmediato. El alcance concreto se determina por las condiciones informadas al comprar y la legislación aplicable.',
     'Cancelar una renovación no genera automáticamente un reembolso del período pagado; la solicitud de devolución se tramita por el canal del vendedor indicado en el comprobante.',
   ] },

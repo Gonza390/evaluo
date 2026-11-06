@@ -26,7 +26,7 @@ const sections = [
     title: '2. Modalidades de pago',
     body: [
       'Evaluo puede ofrecer suscripciones con renovación automática, como el plan Premium mensual, y también accesos por un período fijo abonados mediante un pago único, como una oferta de seis meses. El precio, la duración y las características aplicables son los publicados en el momento de la contratación.',
-      'Las suscripciones recurrentes se renuevan automáticamente al finalizar cada período, salvo que el Usuario las cancele antes de la fecha de renovación. Para Argentina, el cobro se procesa mediante Mercado Pago. Para compras internacionales se prevé habilitar Paddle como vendedor registrado (Merchant of Record), sujeto a aprobación y a la activación del checkout. Hasta entonces no se ofrecen cobros internacionales por Paddle.',
+      'Las suscripciones recurrentes se renuevan automáticamente al finalizar cada período, salvo que el Usuario las cancele antes de la fecha de renovación. Para Argentina, el cobro se procesa mediante Mercado Pago. Para compras internacionales, cuando el checkout esté habilitado, Creem (Armitage Labs OÜ) actúa como vendedor registrado (Merchant of Record) para el cobro mensual en USD.',
       'Los accesos por período fijo no se renuevan automáticamente. Una vez aprobado el pago, el acceso permanece habilitado hasta la fecha de vencimiento informada al Usuario, salvo que el pago sea posteriormente anulado, reembolsado o desconocido conforme a la normativa y a las reglas de la pasarela de pagos.',
     ],
   },
@@ -43,16 +43,16 @@ const sections = [
     body: [
       'Las solicitudes de devolución se examinan según las condiciones mostradas antes de la compra, los derechos obligatorios del consumidor y las reglas del proveedor identificado en el recibo. No se garantizan resultados académicos, sin limitar las devoluciones o derechos legalmente exigibles.',
       'La cancelación de una suscripción recurrente no genera por sí sola un reembolso proporcional del período ya abonado. En las compras por período fijo, el acceso se mantiene hasta la fecha de vencimiento correspondiente mientras el pago permanezca válido.',
-      'Para compras con Mercado Pago podés solicitar asistencia a facturacion@evaluo.com.ar. Cuando Paddle esté habilitado y figure como vendedor registrado, sus condiciones y canales de reembolso también regirán la compra. Evaluo brindará soporte al estudiante. Consultá /reembolsos para más información.',
+      'Para compras con Mercado Pago podés solicitar asistencia a facturacion@evaluo.com.ar. Cuando Creem figure como vendedor registrado en el comprobante, se aplican sus términos para compradores y sus canales de devolución. Evaluo brindará soporte al estudiante. Consultá /reembolsos para más información.',
     ],
   },
   {
-    title: '4 bis. Compras internacionales con Paddle',
+    title: '4 bis. Compras internacionales con Creem',
     body: [
-      'El plan internacional previsto de Evaluo Premium cuesta US$ 9,99 por mes, con renovación mensual automática. Está sujeto a la aprobación de Paddle; por ahora no se pueden completar compras internacionales mediante ese proveedor.',
-      'Paddle será el vendedor registrado (Merchant of Record) de las compras efectuadas mediante su checkout. Mostrará el importe total, la moneda, los impuestos y la renovación antes de confirmar el pedido. Paddle gestiona pagos, comprobantes, cancelaciones y devoluciones, mientras Evaluo presta el servicio digital.',
-      'Para consultar pedidos, gestionar suscripciones o pedir una devolución por una compra realizada con Paddle, ingresá a https://paddle.net. La cancelación detiene futuras renovaciones y no genera automáticamente la devolución del período ya pagado. Se respetan siempre los derechos legales del consumidor.',
-      'Consultá la política de Paddle en https://www.paddle.com/legal/refund-policy y sus términos del comprador en https://www.paddle.com/legal/buyer-terms. También se aplica nuestra Política de Reembolsos dentro de las condiciones legalmente permitidas.',
+      'El plan internacional de Evaluo Premium tiene un precio de referencia de US$ 9,99 por mes, con renovación mensual automática e impuestos aplicables según el comprador. La compra solo puede completarse si el checkout internacional se encuentra habilitado.',
+      'Creem (Armitage Labs OÜ) es el vendedor registrado (Merchant of Record) de las compras efectuadas mediante su checkout. Muestra el importe final, la moneda, los impuestos que correspondan y la renovación antes de confirmar el pedido. Creem procesa el cobro, emite comprobantes y gestiona las devoluciones y contracargos; Evaluo presta el servicio digital.',
+      'Para consultar tu suscripción utilizá Configuración de Evaluo o, si tu compra fue procesada por Creem, sus medios de soporte y portal de clientes. Para solicitar devoluciones escribí primero a facturacion@evaluo.com.ar. Cancelar detiene renovaciones futuras y no genera automáticamente la devolución del período ya pagado. Se respetan los derechos legales del consumidor.',
+      'Consultá los términos del comprador de Creem en https://www.creem.io/buyer-terms. También se aplica nuestra Política de Reembolsos dentro de las condiciones legalmente permitidas.',
     ],
   },
   {
@@ -73,7 +73,7 @@ const sections = [
   {
     title: '7. Impuestos y medios de pago',
     body: [
-      'Antes de pagar se mostrará el importe total, moneda, impuestos aplicables, periodicidad y vendedor o procesador. Los pagos actualmente disponibles en Argentina se procesan con Mercado Pago. El checkout internacional con Paddle se ofrecerá sólo cuando esté aprobado y habilitado, con precios internacionales públicos que coincidan con su catálogo. Los precios argentinos publicados no constituyen una oferta internacional mediante Paddle.',
+      'Antes de pagar se mostrará el importe total, moneda, impuestos aplicables, periodicidad y vendedor o procesador. Los pagos actualmente disponibles en Argentina se procesan con Mercado Pago. El checkout internacional de Creem solo se ofrecerá cuando esté habilitado, con los precios internacionales publicados y el importe final informado antes de pagar. Los precios argentinos no constituyen una oferta internacional en USD.',
       'En las suscripciones recurrentes, si un cobro no puede procesarse, Evaluo podrá informar la situación por los canales del servicio y suspender el acceso hasta que el pago se regularice.',
     ],
   },
