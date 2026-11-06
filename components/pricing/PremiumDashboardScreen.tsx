@@ -264,7 +264,7 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
         <h1 className="text-3xl font-extrabold text-slate-950">{t("Evaluo Premium internacional")}</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">{t("Estudiá más, practicá tus temas y reforzá errores con un pago mensual en USD.")}</p>
       </header>
-      <div className="mx-auto max-w-xl"><CreemCheckoutCard features={benefits.map(t)} mode="live" available={market.creemAvailable}/></div>
+      <div className="mx-auto max-w-xl"><CreemCheckoutCard locale={english ? "en" : "es"} features={benefits.map(t)} mode="live" available={market.creemAvailable}/></div>
       <Link href={returnTo??'/dashboard'} className="mx-auto mt-6 block text-center text-sm font-semibold text-blue-700">{t("Volver al estudio sin comprar")}</Link>
     </main>
   );
