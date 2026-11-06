@@ -1,6 +1,9 @@
 import { isolateUntrustedContent, PROMPT_INJECTION_GUARD } from '@/lib/ai/safety';
+import { studyGenerationInstruction } from '@/lib/i18n/study-language';
+import type { AppLocale } from '@/lib/i18n/app-locale';
 
 export function buildStudyErrorReviewPrompt(input: {
+  locale?: AppLocale;
   question: string;
   topic: string;
   correctAnswer: string;
@@ -10,12 +13,13 @@ export function buildStudyErrorReviewPrompt(input: {
   previousQuestion?: string;
 }) {
   return [
+    studyGenerationInstruction(input.locale ?? 'es'),
     'Creá una comprobación breve de comprensión universitaria basada EXCLUSIVAMENTE en el fragmento recibido.',
     'Evaluá el mismo concepto de la actividad original en una situación diferente. No copies el enunciado ni cambies solamente sinónimos.',
     'Usá la respuesta equivocada para identificar la confusión que hay que comprobar. No supongas otras dificultades del alumno.',
     'Si hay una explicación repasada, evaluá la distinción que enseña con un caso nuevo: no copies su ejemplo ni permitas responder sólo por repetir una frase. La explicación orienta el objetivo; el fragmento del PDF es la única fuente de verdad.',
     'Cambiá el escenario o la tarea cognitiva, pero no inventes hechos académicos. En contenidos conceptuales podés plantear un caso breve de interpretación o contrastar dos definiciones presentes en el PDF, sin exigir una situación externa que el fragmento no explica.',
-    'Usá español sencillo y voseo argentino. Evitá "según el texto" cuando no aporte al problema.',
+    input.locale === 'en' ? 'Write the student-facing question, options and feedback in English. Keep evidenceQuote verbatim in the source document language.' : 'Usá español sencillo y voseo argentino. Evitá "según el texto" cuando no aporte al problema.',
     'Pedí aplicar o distinguir el concepto, no reconocer su nombre. El título del tema no debe revelar la respuesta.',
     'Ofrecé exactamente tres opciones plausibles y mutuamente excluyentes, de longitud semejante, con una sola correcta.',
     'Incluí en el caso todas las condiciones necesarias para distinguir la respuesta correcta. Cada distractor debe representar una confusión diferente; no ofrezcas dos paráfrasis de la misma idea equivocada.',
