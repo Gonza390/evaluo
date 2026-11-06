@@ -73,7 +73,7 @@ function parseGlossaryItems(value: unknown) {
   if (!Array.isArray(value)) return [];
 
   const items: StudyGlossaryItem[] = value
-    .map((item) => {
+    .map((item): StudyGlossaryItem | null => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
 
       return {
@@ -90,7 +90,7 @@ function parseGlossaryItems(value: unknown) {
             : ('media' as const),
       } satisfies StudyGlossaryItem;
     })
-    .filter((item): item is StudyGlossaryItem => Boolean(item));
+    .filter((item): item is StudyGlossaryItem => item !== null);
 
   return sanitizeGlossaryItems(items);
 }
