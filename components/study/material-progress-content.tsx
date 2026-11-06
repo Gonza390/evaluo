@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
@@ -41,6 +42,7 @@ export function MaterialProgressContent({
   showOnboardingExample?: boolean;
   showOnboardingTopic?: boolean;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<MaterialProgressDataResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export function MaterialProgressContent({
   if (loading) {
     return (
       <p role="status" className="text-muted-foreground p-4 text-sm">
-        Cargando tu progreso…
+        {english ? 'Loading your progress…' : 'Cargando tu progreso…'}
       </p>
     );
   }
@@ -75,14 +77,14 @@ export function MaterialProgressContent({
     return (
       <div className="p-4">
         <p role="alert" className="text-sm">
-          No pudimos cargar tu progreso. Tus resultados siguen guardados.
+          {english ? 'We could not load your progress. Your results are still saved.' : 'No pudimos cargar tu progreso. Tus resultados siguen guardados.'}
         </p>
         <button
           type="button"
           onClick={() => setAttempt((value) => value + 1)}
           className="bg-primary text-primary-foreground mt-3 inline-flex min-h-10 items-center justify-center rounded-lg px-4 text-sm font-semibold"
         >
-          Volver a intentar
+          {english ? 'Try again' : 'Volver a intentar'}
         </button>
       </div>
     );
