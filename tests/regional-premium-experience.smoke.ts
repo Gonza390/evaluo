@@ -44,7 +44,8 @@ assert.match(premium, /market\?\.market !== 'argentina'/);
 assert.match(premium, /market\.market==='international'/);
 // /pricing (rediseño nov-2026): la oferta regional vive en PricingPlans y es fail-closed.
 const spanishPlans = read('components/pricing/PricingPlans.tsx');
-assert.match(spanish, /<PricingPlans\s+source=\{source\}/);
+assert.match(spanish, /<PricingContent\s+source=\{source\}/);
+assert.match(read('components/pricing/PricingContent.tsx'), /<PricingPlans source=\{source\}/);
 assert.match(spanishPlans, /useCheckoutMarket\(\)/);
 assert.match(spanishPlans, /market\.market === 'unknown'/);
 assert.match(spanishPlans, /market\.market === 'argentina'/);

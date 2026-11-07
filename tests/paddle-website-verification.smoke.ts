@@ -33,7 +33,8 @@ assert.match(billing, /Compras internacionales con Creem/);
 assert.match(billing, /Merchant of Record/);
 // /pricing (rediseño nov-2026): precio, mención a Creem y links legales junto al precio en PricingPlans.
 const pricingPlans = read('components/pricing/PricingPlans.tsx');
-assert.match(pricing, /<PricingPlans\s/);
+assert.match(pricing, /<PricingContent\s/);
+assert.match(read('components/pricing/PricingContent.tsx'), /<PricingPlans\s/);
 assert.doesNotMatch(pricingPlans, /Paddle|paddle\.net/i);
 assert.match(pricingPlans, /Pago seguro con Creem/);
 assert.match(pricingPlans, /Renovación mensual automática/);
