@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Keep development controls away from the mobile study navigation.
-  // Runtime and build errors remain visible in the Next.js error overlay.
-  devIndicators: { position: 'top-right' },
   distDir: process.env.NEXT_DIST_DIR?.trim() || '.next',
   outputFileTracingIncludes: {
     // PDF.js resolves its fake worker at runtime in Node, so Next.js tracing
