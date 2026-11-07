@@ -12,6 +12,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, FileText, BookOpen,
 
 type Material = { id: string; title: string; topicCount: number; topics: Array<{title:string;estimatedMinutes:number}> };
 type SavedPlan = { exam_date:string; daily_minutes:number; material_ids:string[]; preferences:string[]; schedule:PlanDay[]; updated_at:string };
+type InitialPlanData = { plan: SavedPlan; completedKeys: string[]; planCompletedKeys: string[]; preparationProgress: {percent:number} };
 const methods = [
   { id:'entender', title:'Entenderla bien', subtitle:'Resúmenes y conceptos', icon:BookOpen, tone:'bg-[#EEF2FF]', iconTone:'bg-[#DCE7FF] text-[#456DBD]' },
   { id:'memorizar', title:'Memorizarla', subtitle:'Flashcards y repasos', icon:Layers3, tone:'bg-[#E7F5EC]', iconTone:'bg-[#D3EEDD] text-[#338458]' },
@@ -21,7 +22,7 @@ const methods = [
 const week = ['L','M','X','J','V','S','D'];
 const pad = (n:number) => String(n).padStart(2,'0');
 const localDate = (date:Date) => `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
-export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, initialExamDate }: { materials:Material[]; mode?: 'setup' | 'view'; initialMaterialId?: string; initialExamDate?: string }) {
+export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, initialExamDate, initialPlanData }: { materials:Material[]; mode?: 'setup' | 'view'; initialMaterialId?: string; initialExamDate?: string; initialPlanData?: InitialPlanData }) {
   const router = useRouter();
   const locale = useOptionalAppLocale();
   const english = locale === 'en';
@@ -29,20 +30,21 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
   const today = useMemo(()=>new Date(),[]);
   const [step,setStep] = useState(0);
   const [month,setMonth] = useState(new Date(today.getFullYear(),today.getMonth(),1));
-  const [exam,setExam] = useState(initialExamDate ?? '');
-  const [selected,setSelected] = useState<string[]>(() => initialMaterialId && materials.some(m => m.id === initialMaterialId) ? [initialMaterialId] : []);
-  const [minutes,setMinutes] = useState<number|null>(null);
-  const [preferences,setPreferences] = useState<string[]>(['entender','practicar']);
-  const [preview,setPreview] = useState(false);
-  const [savedPlan,setSavedPlan] = useState<SavedPlan|null>(null);
-  const [completedKeys,setCompletedKeys] = useState<string[]>([]);
-  const [planCompletedKeys,setPlanCompletedKeys] = useState<string[]>([]);
-  const [preparationPercent,setPreparationPercent] = useState(0);
-  const [loading,setLoading] = useState(true);
+  const [exam,setExam] = useState(initialPlanData?.plan.exam_date ?? initialExamDate ?? '');
+  const [selected,setSelected] = useState<string[]>(() => initialPlanData?.plan.material_ids ?? (initialMaterialId && materials.some(m => m.id === initialMaterialId) ? [initialMaterialId] : []));
+  const [minutes,setMinutes] = useState<number|null>(initialPlanData?.plan.daily_minutes ?? null);
+  const [preferences,setPreferences] = useState<string[]>(initialPlanData?.plan.preferences ?? ['entender','practicar']);
+  const [preview,setPreview] = useState(initialPlanData !== undefined && mode === 'view');
+  const [savedPlan,setSavedPlan] = useState<SavedPlan|null>(initialPlanData?.plan ?? null);
+  const [completedKeys,setCompletedKeys] = useState<string[]>(initialPlanData?.completedKeys ?? []);
+  const [planCompletedKeys,setPlanCompletedKeys] = useState<string[]>(initialPlanData?.planCompletedKeys ?? []);
+  const [preparationPercent,setPreparationPercent] = useState(initialPlanData?.preparationProgress.percent ?? 0);
+  const [loading,setLoading] = useState(!initialPlanData);
   const [saving,setSaving] = useState(false);
   const [marking,setMarking] = useState<string|null>(null);
   const [error,setError] = useState('');
   useEffect(()=>{
+    if (initialPlanData) return;
     let mounted=true;
     void fetch('/api/study-plans',{cache:'no-store'}).then(async response=>{
       if(!response.ok)throw new Error('No pudimos recuperar tu planificación.');
