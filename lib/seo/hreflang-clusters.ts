@@ -51,6 +51,7 @@ export const HREFLANG_CLUSTERS = {
   'pdf-summary': { es: '/funciones/resumir-pdf-con-ia', en: '/en/ai-pdf-summarizer' },
   'mind-map': { es: '/funciones/crear-mapa-mental-desde-pdf', en: '/en/pdf-to-mind-map' },
   'practice-by-topic': { es: '/funciones/practicar-por-tema', en: '/en/practice-by-topic' },
+  'how-it-works': { es: '/es/como-funciona', en: '/en/how-it-works' },
   'features-hub': { es: '/funciones', en: '/en/features' },
   'compare-hub': { es: '/comparar', en: '/en/compare' },
 } as const satisfies Record<string, ClusterPaths>;

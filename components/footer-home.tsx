@@ -325,6 +325,7 @@ function EnglishHomeFooter() {
           <div className="flex flex-col gap-2 text-xs text-white/80">
             <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white/60">Explore</p>
             <Link href="/en">Home</Link>
+            <Link href="/en/how-it-works">How it works</Link>
             <Link href="/en/features">Features</Link>
             <Link href="/en/ai-test-prep">AI test prep</Link>
             <Link href="/en/pdf-to-flashcards">AI flashcard generator</Link>

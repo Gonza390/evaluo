@@ -10,7 +10,8 @@ import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/l
 import '../../(es)/home-redesign.css';
 
 export const metadata: Metadata = {
-  title: { absolute: 'Evaluo | Study with your PDF and prepare for exams using AI' },
+  // Keyword principal del mercado EN: "AI study assistant".
+  title: { absolute: 'AI Study Assistant: Study Your Notes and Prep for Exams | Evaluo' },
   description:
     'Upload your PDF or Word notes and study with AI: topic summaries, flashcards, practice questions and progress tracking to prepare for your exams.',
   alternates: hreflangAlternates('home', 'en'),
