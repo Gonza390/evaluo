@@ -311,7 +311,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     }`}
                   >
                     <span className="flex size-8 shrink-0 items-center justify-center">
-                    <Avatar className="size-[30px] shrink-0">
+                    <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
