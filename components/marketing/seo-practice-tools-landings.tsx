@@ -203,6 +203,111 @@ const GENERATOR_NEUTRAL: PageContent = {
   ctaLabel: 'Generar examen con mi PDF',
 };
 
+const SUMMARIES_NEUTRAL: PageContent = {
+  register: 'neutral',
+  path: '/es/resumenes-con-ia',
+  tracking: 'seo_resumenes_ia_es',
+  source: 'resumenes-con-ia',
+  eyebrow: 'Resúmenes de estudio con IA',
+  titlePrefix: 'Resúmenes con IA:',
+  titleAccent: 'resume tus apuntes por temas sin perder lo importante',
+  intro:
+    'Sube tu PDF o documento de Word y obtén un resumen por cada tema, con un glosario de los conceptos clave y enlaces al documento original. Después puedes comprobar lo que entendiste con preguntas y flashcards del mismo material, en lugar de releer el resumen una y otra vez.',
+  heroFacts: ['Un resumen por tema, no uno solo', 'Glosario con los conceptos clave', 'Conectado al documento original', 'Preguntas y flashcards del mismo tema'],
+  exampleLabel: 'Ejemplo ilustrativo · Biología',
+  exampleContext: 'Resumen de un tema · Fotosíntesis',
+  exampleQuestion:
+    'Un resumen dice: «La fotosíntesis es cuando las plantas hacen glucosa con luz». ¿Qué información importante perdió?',
+  exampleAnswer:
+    'Perdió las dos fases y cómo se conectan: en la fase luminosa (tilacoides) se produce ATP y NADPH, y en el ciclo de Calvin (estroma) esos compuestos se usan para fijar CO₂ y formar glucosa. Un buen resumen de estudio conserva justo lo que suele preguntarse en el examen.',
+  stepsTitle: 'Cómo hacer resúmenes de estudio con IA que sirvan para el examen',
+  stepsDescription:
+    'Un resumen útil es corto, pero no a costa de perder definiciones, condiciones o relaciones entre conceptos. Estos pasos ayudan a que la IA te ahorre tiempo sin dejarte huecos.',
+  steps: [
+    { title: 'Resume por temas', description: 'Trabaja con los apartados del documento. Un resumen por tema es más fácil de revisar y de repasar que una sola síntesis de todo el PDF.' },
+    { title: 'Revisa contra el original', description: 'Busca condiciones que desaparecieron, conceptos mezclados o cifras distintas. Presta especial atención a tablas, fórmulas y páginas escaneadas.' },
+    { title: 'Ponte a prueba', description: 'Después de leer el resumen, responde preguntas del tema sin mirarlo. Lo que no puedes recordar es lo que conviene volver a estudiar.' },
+  ],
+  whenTitle: '¿Cuándo conviene resumir con IA?',
+  whenIntro: 'El resumen es un punto de partida. Rinde más en algunos momentos del estudio que en otros.',
+  useCases: [
+    { title: 'Antes de la clase o de leer a fondo', description: 'Para tener un mapa del tema y saber qué ideas buscar en la lectura completa.' },
+    { title: 'Con lecturas largas', description: 'Para ubicar rápido los conceptos centrales de un capítulo extenso y no perderte en los detalles.' },
+    { title: 'Para repasar antes del examen', description: 'Como guía de repaso, siempre combinada con preguntas que comprueben si recuerdas cada tema.' },
+  ],
+  qualityTitle: 'Cómo saber si un resumen generado con IA es bueno',
+  qualityDescription: 'Revisa estos puntos antes de estudiar con un resumen.',
+  quality: [
+    { title: 'Conserva las definiciones', description: 'Las definiciones, fórmulas y nombres de teorías deben quedar casi textuales. Es lo que piden las preguntas de examen.' },
+    { title: 'Mantiene las relaciones', description: 'Causas, consecuencias, fases y comparaciones son más importantes que los ejemplos. Si desaparecen, el resumen engaña.' },
+    { title: 'Se puede rastrear', description: 'Cada idea debería poder encontrarse en tu documento. Si algo no aparece en el original, descártalo.' },
+    { title: 'Va acompañado de práctica', description: 'Releer un resumen da sensación de dominio. Las preguntas muestran si de verdad lo recuerdas.' },
+  ],
+  faqTitle: 'Preguntas frecuentes sobre resúmenes con IA',
+  faqs: [
+    { question: '¿La IA puede resumir un PDF sin errores?', answer: 'Con texto legible suele ser un buen punto de partida, pero puede omitir condiciones, mezclar conceptos parecidos o leer mal tablas y páginas escaneadas. Comprueba las definiciones y los datos clave con el original.' },
+    { question: '¿Puedo resumir documentos de Word?', answer: 'Sí. Evaluo acepta PDF y documentos de Word (.docx) de hasta 20 MB, incluidos PDF escaneados.' },
+    { question: '¿Los resúmenes están incluidos en el plan gratuito?', answer: 'Sí. El plan Free incluye el resumen y el glosario por tema de un documento. Premium suma más documentos, mapas mentales y más explicaciones.' },
+    { question: '¿Alcanza con estudiar del resumen?', answer: 'No. El resumen organiza el material; las preguntas de práctica muestran si puedes recordarlo y aplicarlo. Lo recomendable es combinar ambos.' },
+  ],
+  uploaderTitle: 'Resume tus apuntes por temas',
+  uploaderDescription:
+    'Elige tu PDF o documento de Word antes de crear la cuenta. Después verás el resumen y el glosario de cada tema, y podrás seguir con preguntas y flashcards.',
+  ctaLabel: 'Resumir mi PDF',
+};
+
+const FLASHCARDS_NEUTRAL: PageContent = {
+  register: 'neutral',
+  path: '/es/flashcards-con-ia',
+  tracking: 'seo_flashcards_ia_es',
+  source: 'flashcards-con-ia',
+  eyebrow: 'Flashcards con IA',
+  titlePrefix: 'Flashcards con IA:',
+  titleAccent: 'tarjetas de estudio a partir de tus apuntes',
+  intro:
+    'Convierte tu PDF o documento de Word en flashcards con IA: tarjetas con una pregunta de un lado y la respuesta del otro, generadas a partir de cada tema de tu material. Repásalas intentando responder antes de girarlas, que es lo que de verdad ayuda a recordar.',
+  heroFacts: ['Tarjetas por tema de tu material', 'Una idea por tarjeta', 'Conectadas a preguntas de práctica', 'Empieza gratis con 25 flashcards'],
+  exampleLabel: 'Ejemplo ilustrativo · Biología celular',
+  exampleContext: 'Flashcard · Orgánulos',
+  exampleQuestion: '¿Qué orgánulo produce la mayor parte del ATP de una célula eucariota?',
+  exampleAnswer:
+    'La mitocondria, mediante la respiración celular. Es una buena tarjeta porque pregunta una sola idea y obliga a recordarla. Una tarjeta como «explica todos los orgánulos» se puede leer, pero no repasar.',
+  stepsTitle: 'Cómo estudiar con flashcards generadas con IA',
+  stepsDescription:
+    'Las flashcards funcionan cuando obligan a recuperar la respuesta de memoria y cuando las repasas varias veces, espaciadas en el tiempo.',
+  steps: [
+    { title: 'Genera tarjetas por tema', description: 'Trabaja tema por tema para que cada mazo sea corto y se pueda repasar en una sesión.' },
+    { title: 'Responde antes de girar', description: 'Di o escribe la respuesta antes de ver el reverso. Si solo lees las dos caras, el repaso pierde casi todo su efecto.' },
+    { title: 'Repasa con espacios', description: 'Vuelve a las tarjetas que fallaste al día siguiente y luego unos días después. Las que ya dominas pueden esperar más.' },
+  ],
+  whenTitle: '¿Para qué sirven mejor las flashcards?',
+  whenIntro: 'No todo el contenido se aprende igual. Las tarjetas rinden más con información puntual.',
+  useCases: [
+    { title: 'Definiciones y vocabulario', description: 'Términos técnicos, conceptos clave e idiomas.' },
+    { title: 'Datos que hay que recordar', description: 'Fórmulas, fechas, clasificaciones o partes de una estructura.' },
+    { title: 'Antes de practicar preguntas', description: 'Para fijar lo básico de un tema antes de pasar a preguntas de aplicación o a un simulacro.' },
+  ],
+  qualityTitle: 'Cómo reconocer una buena flashcard',
+  qualityDescription: 'La IA puede generar muchas tarjetas en segundos. Estos criterios ayudan a quedarte con las que sirven.',
+  quality: [
+    { title: 'Una sola idea', description: 'Si la respuesta tiene varias partes, conviene dividir la tarjeta en dos o tres más simples.' },
+    { title: 'Pregunta clara', description: 'El frente debe tener una única respuesta correcta. Las preguntas vagas no permiten saber si acertaste.' },
+    { title: 'Respuesta corta', description: 'El reverso se tiene que poder comprobar de un vistazo. Si hace falta un párrafo, es una pregunta de desarrollo, no una flashcard.' },
+    { title: 'Fiel a tu material', description: 'Comprueba que la respuesta coincida con tus apuntes, sobre todo en definiciones y datos.' },
+  ],
+  faqTitle: 'Preguntas frecuentes sobre flashcards con IA',
+  faqs: [
+    { question: '¿Puedo crear flashcards a partir de un PDF?', answer: 'Sí. Evaluo lee tu PDF o documento de Word, lo organiza por temas y genera flashcards de cada uno, junto con preguntas de práctica del mismo material.' },
+    { question: '¿Cuántas flashcards incluye el plan gratuito?', answer: 'El plan Free incluye 25 flashcards de un documento, además de preguntas de práctica, casos prácticos y un simulacro. Consulta los detalles de Premium en la página de planes.' },
+    { question: '¿Las flashcards con IA pueden tener errores?', answer: 'Sí. Revisa las tarjetas con definiciones, fórmulas o datos importantes contra tu material antes de memorizarlas.' },
+    { question: '¿Flashcards o preguntas de práctica?', answer: 'Las flashcards fijan conceptos puntuales; las preguntas comprueban si sabes aplicarlos. Para un examen conviene usar las dos.' },
+  ],
+  uploaderTitle: 'Crea flashcards con tus apuntes',
+  uploaderDescription:
+    'Elige tu PDF o documento de Word antes de crear la cuenta. Después verás las flashcards de cada tema y podrás seguir con preguntas de práctica.',
+  ctaLabel: 'Crear flashcards con mi PDF',
+};
+
 const related = [
   { href: '/convertir-pdf-en-preguntas', title: 'Generar preguntas desde PDF', description: 'Transformá el material en preguntas que te ayuden a recuperar y aplicar conceptos.' },
   { href: '/funciones/simulacro-examen-con-ia', title: 'Simulacro de examen con IA', description: 'Ensayá cómo respondés y decidí qué temas conviene volver a estudiar.' },
@@ -211,6 +316,9 @@ const related = [
 ];
 
 const relatedNeutral = [
+  { href: '/es/generador-de-examenes-con-ia', title: 'Generador de exámenes con IA', description: 'Preguntas de práctica y simulacros a partir de tus apuntes.' },
+  { href: '/es/resumenes-con-ia', title: 'Resúmenes con IA', description: 'Un resumen y un glosario por cada tema de tu material.' },
+  { href: '/es/flashcards-con-ia', title: 'Flashcards con IA', description: 'Tarjetas de estudio por tema para repasar con espacios.' },
   { href: '/es/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', description: 'Convierte tus apuntes en temas, preguntas y repasos.' },
   { href: '/es/guias/como-estudiar-con-ia', title: 'Cómo estudiar con IA', description: 'Método para aprender con IA sin que piense por ti.' },
   { href: '/es/guias/como-preparar-un-parcial', title: 'Cómo preparar un parcial', description: 'Plan de estudio por temas hasta el día del examen.' },
@@ -350,7 +458,7 @@ function Landing({ page }: { page: PageContent }) {
           <div className="mx-auto max-w-[1120px] px-4 sm:px-8">
             <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Otras formas de estudiar con el mismo PDF</h2>
             <div className="mt-7 grid gap-4 md:grid-cols-2">
-              {relatedLinks.filter((item) => item.href !== page.path).map((item) => <Link key={item.href} href={item.href} className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-blue-200"><h3 className="text-base font-bold text-slate-950 group-hover:text-blue-700">{item.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{item.description}</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">{t.relatedCta} <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></Link>)}
+              {relatedLinks.filter((item) => item.href !== page.path).slice(0, 4).map((item) => <Link key={item.href} href={item.href} className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-blue-200"><h3 className="text-base font-bold text-slate-950 group-hover:text-blue-700">{item.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{item.description}</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">{t.relatedCta} <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></Link>)}
             </div>
           </div>
         </section>
@@ -370,4 +478,12 @@ export function PracticarPorTemaLanding() {
 
 export function GeneradorExamenesNeutralLanding() {
   return <Landing page={GENERATOR_NEUTRAL} />;
+}
+
+export function ResumenesNeutralLanding() {
+  return <Landing page={SUMMARIES_NEUTRAL} />;
+}
+
+export function FlashcardsNeutralLanding() {
+  return <Landing page={FLASHCARDS_NEUTRAL} />;
 }
