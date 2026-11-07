@@ -1,9 +1,13 @@
+'use client';
+
 import { Skeleton } from '@/components/ui/skeleton';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 export default function StudyPlanLoading() {
+  const english = useOptionalAppLocale() === 'en';
   return (
-    <main role="status" aria-label="Cargando plan de estudio" aria-busy="true" className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
-      <span className="sr-only">Cargando materiales y actividades</span>
+    <main role="status" aria-label={english ? 'Loading study plan' : 'Cargando plan de estudio'} aria-busy="true" className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+      <span className="sr-only">{english ? 'Loading materials and activities' : 'Cargando materiales y actividades'}</span>
       <div className="mb-4 flex items-center justify-between">
         <Skeleton className="h-7 w-40 rounded-lg bg-slate-100" />
         <Skeleton className="h-9 w-32 rounded-lg bg-slate-100" />
