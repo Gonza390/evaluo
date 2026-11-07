@@ -69,9 +69,9 @@ function Header({ en, exam }: { en: boolean; exam: UpgradeNextExam | null }) {
   return (
     <div className="flex flex-col items-center text-center">
       <div className="flex h-[68px] items-end justify-center gap-1.5 sm:h-[76px]">
-        <div className="mb-1.5"><BookIcon size={44} /></div>
-        <Image src="/evi/evi-estudiando.svg" alt={en ? 'Evi studying' : 'Evi estudiando'} width={84} height={84} className="size-[64px] sm:size-[72px]" priority />
-        <div className="mb-2"><CapIcon size={44} /></div>
+        <div className="pv-float-late mb-1.5"><BookIcon size={44} /></div>
+        <Image src="/evi/evi-estudiando.svg" alt={en ? 'Evi studying' : 'Evi estudiando'} width={84} height={84} className="pv-float size-[64px] sm:size-[72px]" priority />
+        <div className="pv-float-later mb-2"><CapIcon size={44} /></div>
       </div>
       <h1 className="mt-2.5 text-[30px] leading-[1.1] font-extrabold tracking-[-0.035em] text-slate-950 sm:text-[38px]">
         {en ? 'Get to your exam' : 'Llegá a tu parcial'}
@@ -104,7 +104,7 @@ function Comparison({ en }: { en: boolean }) {
         <div className="relative h-2 rounded-full bg-slate-100"><div className="absolute inset-y-0 left-0 w-2 rounded-full bg-slate-400" /></div>
         <span className="text-slate-500">{en ? '1 material/mo' : '1 apunte/mes'}</span>
         <span className="font-bold text-slate-950">Premium</span>
-        <div className="h-2 rounded-full bg-[var(--pv-accent)]" />
+        <div className="pv-bar-fill h-2 rounded-full bg-[var(--pv-accent)]" />
         <span className="font-bold text-slate-950">{en ? 'up to 90/mo' : 'hasta 90/mes'}</span>
       </div>
       <div className="mt-6 grid w-full grid-cols-4">

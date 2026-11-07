@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   corregirPreguntaDemo,
   finalizarSimuladorAction,
@@ -435,6 +435,7 @@ export default function SimuladorExamen({
   acquisitionVariant,
 }: SimuladorExamenProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const landingEntry =
     mode === 'regular' && !premiumOnly ? parseSimulatorLandingEntry(searchParams) : null;
@@ -2790,7 +2791,7 @@ export default function SimuladorExamen({
                               source: 'simulator_explanations',
                               materia_id: materiaId,
                             });
-                            window.location.assign(premiumDashboardHref({
+                            router.push(premiumDashboardHref({
                               source:'simulator_explanations',
                               materiaId, parcial,
                               returnTo:'/dashboard/explicaciones',
