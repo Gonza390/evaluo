@@ -1,0 +1,57 @@
+/* ── Pricing (rediseño nov-2026) ─────────────────────────────────────────
+   Se usa en /pricing y en /dashboard/premium ("Mejorar mi plan").
+   Acento índigo aprobado en el diseño (#4A63E7) con tintes derivados.
+   Excepción deliberada a la tonalidad general (claude/tonalidad-colores):
+   el usuario pidió conservar el color que aprobó para esta pantalla. */
+.pricing-v2 {
+  --pv-accent: #4a63e7;
+  --pv-tint: color-mix(in srgb, var(--pv-accent) 8%, white);
+  --pv-card: color-mix(in srgb, var(--pv-accent) 4%, white);
+  --pv-border: color-mix(in srgb, var(--pv-accent) 35%, white);
+}
+
+.pricing-v2 .pv-premium-shadow {
+  box-shadow: 0 24px 48px color-mix(in srgb, var(--pv-accent) 12%, transparent);
+}
+
+/* Sin entrada propia al cargar: la transición entre pantallas la hace el contenedor de la app.
+   El cambio de precio y las preguntas usan el efecto único (app/globals.css). */
+.pricing-v2 .pv-swap,
+.pricing-v2 .pv-faq[open] p {
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
+}
+.pricing-v2 .pv-pill {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pricing-v2 .pv-sticky {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pricing-v2 .pv-btn {
+  transition:
+    transform 0.15s ease,
+    filter 0.2s ease,
+    background-color 0.2s ease;
+}
+.pricing-v2 .pv-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .pricing-v2 .pv-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-v2 .pv-swap,
+  .pricing-v2 .pv-faq[open] p {
+    animation: none;
+  }
+  .pricing-v2 .pv-pill,
+  .pricing-v2 .pv-sticky,
+  .pricing-v2 .pv-btn {
+    transition: none;
+  }
+}

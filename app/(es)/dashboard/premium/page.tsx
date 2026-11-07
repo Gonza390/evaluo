@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { createClientServer } from '@/lib/supabase-server';
 import { premiumDashboardHref, safePremiumReturnTo } from '@/lib/premium-flow';
 import { PremiumDashboardScreen } from '@/components/pricing/PremiumDashboardScreen';
+import { PricingContent } from '@/components/pricing/PricingContent';
 
 export const metadata: Metadata = {
   title: 'Premium',
@@ -32,6 +33,17 @@ export default async function DashboardPremiumPage({
     const nextPath = premiumDashboardHref({source, materiaId, parcial, returnTo});
     const entryLocale = (await cookies()).get('evaluo_ui_locale')?.value;
     redirect((entryLocale === 'en' ? '/en/login' : '/login') + '?mode=login&intent=premium&next=' + encodeURIComponent(nextPath));
+  }
+
+  // "Mejorar mi plan" y los upsells de la app muestran la misma pantalla que /pricing.
+  // En inglés se mantiene la pantalla Premium traducida.
+  const uiLocale = (await cookies()).get('evaluo_ui_locale')?.value;
+  if (uiLocale !== 'en') {
+    return (
+      <main className="w-full min-w-0 bg-white">
+        <PricingContent source={source} materiaId={materiaId} parcial={parcial} returnTo={returnTo} />
+      </main>
+    );
   }
 
   return <PremiumDashboardScreen source={source} materiaId={materiaId}

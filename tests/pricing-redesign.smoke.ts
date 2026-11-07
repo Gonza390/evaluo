@@ -6,7 +6,9 @@ import { resolve } from 'node:path';
 const read = (path: string) => readFileSync(resolve(path), 'utf8');
 const page = read('app/(es)/pricing/page.tsx');
 const plans = read('components/pricing/PricingPlans.tsx');
-const css = read('app/(es)/pricing/pricing-clean.css');
+const css = read('app/(es)/pricing/pricing-clean.css') + read('components/pricing/pricing-v2.css');
+const content = read('components/pricing/PricingContent.tsx');
+const premiumPage = read('app/(es)/dashboard/premium/page.tsx');
 
 // Mensual preseleccionado; 6 meses como alternativa con ahorro.
 assert.match(plans, /useState<Plan>\('monthly'\)/);
@@ -40,6 +42,11 @@ assert.match(plans, /market\.market === 'unknown'[\s\S]{0,400}No pudimos confirm
 assert.match(css, /prefers-reduced-motion: reduce/);
 assert.match(css, /\.pricing-editorial:not\(:has\(\.pricing-v2\)\)/);
 assert.match(page, /className="pricing-v2 /);
+
+// Color aprobado en el diseño y misma pantalla en "Mejorar mi plan" (/dashboard/premium).
+assert.match(css, /--pv-accent: #4a63e7;/);
+assert.match(content, /import '\.\/pricing-v2\.css'/);
+assert.match(premiumPage, /<PricingContent source=\{source\}/);
 
 console.log(
   'Pricing redesign: monthly default, no dead buttons, fail-closed region and motion checks passed.'

@@ -94,10 +94,10 @@ const INTERNATIONAL_UNIVERSITIES = [
 function CheckItem({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
   return (
     <li
-      className={`flex gap-2.5 text-[15px] leading-6 ${muted ? 'text-slate-600' : 'text-slate-800'}`}
+      className={`flex gap-2 text-[14px] leading-[1.45] ${muted ? 'text-slate-600' : 'text-slate-800'}`}
     >
       <Check
-        className={`mt-0.5 h-[18px] w-[18px] shrink-0 ${muted ? 'text-slate-400' : 'text-[var(--pv-accent)]'}`}
+        className={`mt-0.5 h-4 w-4 shrink-0 ${muted ? 'text-slate-400' : 'text-[var(--pv-accent)]'}`}
         strokeWidth={2.4}
         aria-hidden="true"
       />
@@ -130,17 +130,17 @@ function LegalLine({ children }: { children: ReactNode }) {
 }
 
 const primaryButton =
-  'pv-btn inline-flex h-[54px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--pv-accent)] px-5 text-base font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pv-accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+  'pv-btn inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--pv-accent)] px-5 text-[15px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pv-accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
 const notifyButton =
-  'pv-btn inline-flex h-[54px] w-full items-center justify-center rounded-[14px] bg-slate-900 px-5 text-base font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2';
+  'pv-btn inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-900 px-5 text-[15px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2';
 const secondaryButton =
-  'pv-btn inline-flex h-[54px] w-full items-center justify-center rounded-[14px] border border-slate-300 bg-white px-5 text-[15px] font-bold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pv-accent)] focus-visible:ring-offset-2';
+  'pv-btn inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-[14px] font-bold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pv-accent)] focus-visible:ring-offset-2';
 
 function PremiumShell({ children }: { children: ReactNode }) {
   return (
-    <div className="pv-premium-shadow flex w-full max-w-[460px] min-w-0 flex-col gap-[22px] rounded-[22px] border-[1.5px] border-[var(--pv-border)] bg-[var(--pv-card)] p-6 text-slate-950 sm:rounded-[24px] sm:p-8">
+    <div className="pv-premium-shadow flex w-full max-w-[400px] min-w-0 flex-col gap-4 rounded-[20px] border-[1.5px] border-[var(--pv-border)] bg-[var(--pv-card)] p-5 text-slate-950 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-extrabold">Premium</h2>
+        <h2 className="text-lg font-extrabold">Premium</h2>
         <span className="rounded-full bg-[var(--pv-tint)] px-2.5 py-1 text-xs font-bold whitespace-nowrap text-[var(--pv-accent)]">
           Recomendado
         </span>
@@ -152,14 +152,14 @@ function PremiumShell({ children }: { children: ReactNode }) {
 
 function FreeCard({ market }: { market: Market | 'unknown' }) {
   return (
-    <div className="flex w-full max-w-[460px] min-w-0 flex-col gap-4 rounded-[22px] border border-slate-200 bg-white p-6 sm:max-w-[340px] sm:gap-[22px] sm:rounded-[24px] sm:p-8">
-      <div className="flex items-baseline justify-between sm:flex-col sm:gap-[22px]">
-        <h2 className="text-lg font-extrabold sm:text-xl">Gratis</h2>
-        <p className="text-[28px] font-extrabold tracking-tight sm:text-5xl">
+    <div className="flex w-full max-w-[400px] min-w-0 flex-col gap-3.5 rounded-[20px] border border-slate-200 bg-white p-5 sm:max-w-[300px] sm:gap-4 sm:p-6">
+      <div className="flex items-baseline justify-between sm:flex-col sm:gap-3">
+        <h2 className="text-lg font-extrabold">Gratis</h2>
+        <p className="text-[24px] font-extrabold tracking-tight sm:text-[32px]">
           {market === 'international' ? 'US$ 0' : '$0'}
         </p>
       </div>
-      <ul className="flex flex-col gap-2.5 sm:gap-3">
+      <ul className="flex flex-col gap-2">
         {FREE_FEATURES.map((feature) => (
           <CheckItem key={feature} muted>
             {feature}
@@ -176,12 +176,12 @@ function FreeCard({ market }: { market: Market | 'unknown' }) {
 function PlanToggle({ plan, onChange }: { plan: Plan; onChange: (plan: Plan) => void }) {
   const semester = plan === 'semester';
   const tab =
-    'relative z-10 inline-flex h-11 items-center justify-center gap-2 rounded-full text-sm font-bold transition-colors duration-200';
+    'relative z-10 inline-flex h-10 items-center justify-center gap-2 rounded-full text-[13px] font-bold transition-colors duration-200';
   return (
     <div
       role="radiogroup"
       aria-label="Período de pago"
-      className="relative mx-auto grid w-full max-w-[340px] grid-cols-2 rounded-full bg-slate-100 p-1"
+      className="relative mx-auto grid w-full max-w-[300px] grid-cols-2 rounded-full bg-slate-100 p-1"
     >
       <span
         aria-hidden="true"
@@ -316,28 +316,28 @@ function ArgentinaPlans(props: PricingPlansProps) {
   return (
     <>
       <PlanToggle plan={plan} onChange={choose} />
-      <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:items-stretch sm:justify-center sm:gap-6">
+      <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center sm:gap-4">
         <PremiumShell>
-          <div className="min-h-[86px]" aria-live="polite">
+          <div className="min-h-[68px]" aria-live="polite">
             {!offer ? (
               <div
-                className="h-[86px] animate-pulse rounded-xl bg-white/70"
+                className="h-[68px] animate-pulse rounded-xl bg-white/70"
                 aria-label="Consultando precio"
               />
             ) : (
               <div key={plan} className="pv-swap">
                 <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                   {plan === 'semester' && monthlyPrice ? (
-                    <span className="text-lg font-semibold text-slate-500 line-through sm:text-xl">
+                    <span className="text-base font-semibold text-slate-500 line-through">
                       {ars(monthlyPrice)}
                     </span>
                   ) : null}
-                  <span className="text-[42px] leading-none font-extrabold tracking-[-1.4px] sm:text-5xl">
+                  <span className="text-[32px] leading-none font-extrabold tracking-[-1px] sm:text-[36px]">
                     {perMonth ? ars(perMonth) : ''}
                   </span>
-                  <span className="text-[15px] text-slate-600 sm:text-base">/mes</span>
+                  <span className="text-[14px] text-slate-600">/mes</span>
                 </div>
-                <p className="mt-2 text-[13px] leading-5 text-slate-600 sm:text-sm">
+                <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
                   {plan === 'semester'
                     ? `${ars(offer.semesterPriceArs)} en un solo pago · cubre el cuatrimestre · sin renovación`
                     : 'Se renueva cada mes · cancelás cuando quieras'}
@@ -353,7 +353,7 @@ function ArgentinaPlans(props: PricingPlansProps) {
             )}
           </div>
 
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2">
             {PREMIUM_FEATURES.map((feature) => (
               <CheckItem key={feature}>{feature}</CheckItem>
             ))}
@@ -361,7 +361,7 @@ function ArgentinaPlans(props: PricingPlansProps) {
 
           <div ref={ctaRef} className="mt-auto flex flex-col gap-2.5">
             {subscriptionStatus === 'active' ? (
-              <Link href="/dashboard" className={primaryButton}>
+              <Link href={props.returnTo ?? '/dashboard'} className={primaryButton}>
                 Usar mi Premium
               </Link>
             ) : subscriptionStatus === 'attention' ? (
@@ -455,9 +455,11 @@ function ArgentinaPlans(props: PricingPlansProps) {
 function InternationalPlans({
   creemAvailable,
   source,
+  returnTo,
 }: {
   creemAvailable: boolean;
   source: string;
+  returnTo?: string;
 }) {
   const ctaRef = useRef<HTMLDivElement>(null);
   const { loading, checking, premium, error, start } = useCreemCheckout({
@@ -528,21 +530,21 @@ function InternationalPlans({
 
   return (
     <>
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-stretch sm:justify-center sm:gap-6">
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center sm:gap-4">
         <PremiumShell>
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-[42px] leading-none font-extrabold tracking-[-1.4px] sm:text-5xl">
+              <span className="text-[32px] leading-none font-extrabold tracking-[-1px] sm:text-[36px]">
                 US$ 9,99
               </span>
-              <span className="text-[15px] text-slate-600 sm:text-base">/mes</span>
+              <span className="text-[14px] text-slate-600">/mes</span>
             </div>
-            <p className="mt-2 text-[13px] leading-5 text-slate-600 sm:text-sm">
+            <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
               Menos de US$ 2,50 por semana · cancelás cuando quieras
             </p>
           </div>
 
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-2">
             {PREMIUM_FEATURES.map((feature) => (
               <CheckItem key={feature}>{feature}</CheckItem>
             ))}
@@ -550,7 +552,7 @@ function InternationalPlans({
 
           <div ref={ctaRef} className="mt-auto flex flex-col gap-2.5">
             {premium ? (
-              <Link href="/dashboard" className={primaryButton}>
+              <Link href={returnTo ?? '/dashboard'} className={primaryButton}>
                 Usar mi Premium
               </Link>
             ) : notified ? (
@@ -604,10 +606,10 @@ function Universities({ market }: { market: Market | 'unknown' }) {
         : [...ARGENTINA_UNIVERSITIES, ...INTERNATIONAL_UNIVERSITIES];
   return (
     <section
-      className="mx-auto mt-12 max-w-[920px] text-center sm:mt-14"
+      className="mx-auto mt-8 max-w-[860px] text-center sm:mt-10"
       aria-label="Universidades"
     >
-      <p className="text-[13px] font-semibold text-slate-600">
+      <p className="text-[12px] font-semibold text-slate-600">
         Estudiantes de estas universidades ya usan Evaluo
       </p>
       <ul className="mt-4 flex flex-wrap items-center justify-center gap-x-9 gap-y-4">
@@ -619,7 +621,7 @@ function Universities({ market }: { market: Market | 'unknown' }) {
               width={logo.width}
               height={logo.height}
               unoptimized
-              className="h-8 w-auto max-w-[140px] object-contain opacity-60 grayscale"
+              className="h-6 w-auto max-w-[110px] object-contain opacity-60 grayscale"
             />
           </li>
         ))}
@@ -657,19 +659,19 @@ function Faq({ market }: { market: Market }) {
           ],
         ];
   return (
-    <section className="mx-auto mt-16 max-w-[680px] sm:mt-20" aria-labelledby="pricing-faq">
+    <section className="mx-auto mt-10 max-w-[620px] sm:mt-12" aria-labelledby="pricing-faq">
       <h2
         id="pricing-faq"
-        className="mb-1.5 text-[22px] font-extrabold tracking-tight sm:mb-3 sm:text-center sm:text-[26px]"
+        className="mb-1 text-[18px] font-extrabold tracking-tight sm:mb-2 sm:text-center sm:text-[20px]"
       >
         Preguntas frecuentes
       </h2>
       {items.map(([question, answer]) => (
-        <details key={question} className="pv-faq border-b border-slate-200 px-1 py-[18px] sm:py-5">
-          <summary className="cursor-pointer list-none text-[15px] font-bold sm:text-base [&::-webkit-details-marker]:hidden">
+        <details key={question} className="pv-faq border-b border-slate-200 px-1 py-3.5">
+          <summary className="cursor-pointer list-none text-[14px] font-bold [&::-webkit-details-marker]:hidden">
             {question}
           </summary>
-          <p className="mt-2.5 text-sm leading-6 text-slate-600 sm:text-[15px]">{answer}</p>
+          <p className="mt-2 text-[13px] leading-6 text-slate-600">{answer}</p>
         </details>
       ))}
     </section>
@@ -685,8 +687,8 @@ export function PricingPlans(props: PricingPlansProps) {
         className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center sm:gap-6"
         aria-busy="true"
       >
-        <div className="h-[520px] w-full max-w-[460px] animate-pulse rounded-[24px] bg-slate-100" />
-        <div className="h-[420px] w-full max-w-[460px] animate-pulse rounded-[24px] bg-slate-50 sm:max-w-[340px]" />
+        <div className="h-[420px] w-full max-w-[400px] animate-pulse rounded-[20px] bg-slate-100" />
+        <div className="h-[340px] w-full max-w-[400px] animate-pulse rounded-[20px] bg-slate-50 sm:max-w-[300px]" />
         <span className="sr-only">Consultando precios para tu país…</span>
       </div>
     );
@@ -715,7 +717,11 @@ export function PricingPlans(props: PricingPlansProps) {
       {market.market === 'argentina' ? (
         <ArgentinaPlans {...props} />
       ) : (
-        <InternationalPlans creemAvailable={market.creemAvailable} source={props.source} />
+        <InternationalPlans
+          creemAvailable={market.creemAvailable}
+          source={props.source}
+          returnTo={props.returnTo}
+        />
       )}
       <Universities market={market.market} />
       <Faq market={market.market} />
