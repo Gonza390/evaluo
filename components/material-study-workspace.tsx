@@ -2079,7 +2079,7 @@ export function MaterialStudyWorkspace({
               <nav
                 data-pdf-auto-scrollbar
                 onScroll={showScrollbarWhileScrolling}
-                className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+                className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1"
                 aria-label="Índice del resumen"
               >
                 <ol className="space-y-1">
@@ -2122,7 +2122,7 @@ export function MaterialStudyWorkspace({
                   <nav
                     data-pdf-auto-scrollbar
                     onScroll={showScrollbarWhileScrolling}
-                    className="min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+                    className="min-h-0 overflow-y-auto overscroll-contain pr-2"
                     aria-label="Índice del resumen"
                   >
                     <ol className="space-y-1.5">
