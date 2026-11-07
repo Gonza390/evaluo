@@ -26,25 +26,25 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
   const actions = [
     ...(canShare ? [{
       id: 'share', label: english ? 'Share' : 'Compartir', Icon: Share2,
-      x: -120, y: 18,
+      x: -152, y: 2,
       run: () => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } })),
       enabled: true,
     }] : []),
     {
       id: 'original', label: english ? `Open original ${fileType} file` : `Abrir ${fileType} original`, Icon: ExternalLink,
-      x: -58, y: 82,
+      x: -137, y: 72,
       run: () => window.open(viewerUrl, '_blank', 'noopener,noreferrer'),
       enabled: true,
     },
     {
       id: 'pomodoro', label: english ? 'Study timer' : 'Pomodoro', Icon: Timer,
-      x: -120, y: 146,
+      x: -86, y: 128,
       run: () => window.dispatchEvent(new Event('evaluo:open-pomodoro')),
       enabled: true,
     },
     {
       id: 'evi', label: english ? 'Ask Evi (coming soon)' : 'Preguntar a Evi (próximamente)', Icon: MessageCircle,
-      x: -196, y: 82,
+      x: -8, y: 146,
       run: () => {},
       enabled: false,
     },
@@ -58,7 +58,7 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
           tabIndex={-1}
           aria-label={english ? 'Close study tools' : 'Cerrar herramientas'}
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[-1] bg-slate-900/10 backdrop-blur-[1px] motion-reduce:backdrop-blur-none"
+          className="fixed inset-0 z-[-1] bg-transparent"
         />
       ) : null}
       <div className="pointer-events-none absolute right-0 top-0 size-10">
@@ -71,7 +71,7 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
             tabIndex={open && enabled ? 0 : -1}
             disabled={!enabled}
             onClick={() => { setOpen(false); run(); }}
-            className={`pointer-events-auto absolute right-[-4px] top-[-4px] flex size-12 items-center justify-center rounded-full border border-[#E7EBF4] bg-white text-[#42506A] shadow-[0_8px_24px_rgba(15,27,61,0.12)] transition-[opacity,transform] ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] motion-reduce:transition-none ${enabled ? 'hover:text-[#4F5DFF] active:scale-95' : 'cursor-not-allowed opacity-60'}`}
+            className={`pointer-events-auto absolute right-[-4px] top-[-4px] flex size-12 items-center justify-center rounded-full border border-[#E7EBF4] bg-white text-[#42506A] shadow-[0_7px_22px_rgba(15,27,61,0.10)] transition-[opacity,transform] ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] motion-reduce:transition-none ${enabled ? 'hover:text-[#4F5DFF] active:scale-95' : 'cursor-not-allowed opacity-60'}`}
             style={{
               opacity: open ? (enabled ? 1 : 0.55) : 0,
               transform: open ? `translate(${x}px,${y}px) scale(1)` : 'translate(0px,0px) scale(0.65)',
