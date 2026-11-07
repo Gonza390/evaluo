@@ -27,10 +27,11 @@ check('app/(es)/dashboard/progreso/page.tsx', ['accountAppLocale', 'Your progres
 check('components/referrals/ReferralPortalNavLink.tsx', ['useOptionalAppLocale', 'Referrals']);
 check('components/referrals/PartnerReferralActions.tsx', ['useOptionalAppLocale', 'Code copied', 'Copy link']);
 check('app/(es)/referidos/page.tsx', ['accountAppLocale', 'Referral program', 'Attributed revenue', 'Performance by code']);
-check('components/ClientLayoutClient.tsx', ["locale !== 'en' ? <EstimatedStudyActivity", 'Settings', 'Close study streak summary']);
+// La actividad estimada se muestra en ambos idiomas y se traduce sola (43bc483).
+check('components/ClientLayoutClient.tsx', ['<EstimatedStudyActivity', 'Settings', 'Close study streak summary']);
+check('components/estimated-study-activity.tsx', ['useOptionalAppLocale', 'Studying', 'estimated students studying']);
+// /dashboard y /dashboard/plan-de-estudio ya no tienen loading.tsx (conservan la vista al navegar).
 for (const path of [
-  'app/(es)/dashboard/loading.tsx',
-  'app/(es)/dashboard/plan-de-estudio/loading.tsx',
   'app/(es)/dashboard/explicaciones/loading.tsx',
 ]) {
   check(path, ['useOptionalAppLocale', "=== 'en'", 'Loading']);
