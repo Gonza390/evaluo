@@ -139,8 +139,8 @@ assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]:focus-visible/,
   'Navegación por teclado mantiene visible la barra al enfocar el lector.');
 assert.match(globalStyles, /@supports selector\(::-webkit-scrollbar\)/,
   'Chrome y Safari necesitan reglas separadas de las propiedades estándar.');
-assert.match(globalStyles, /scrollbar-width: auto;\s*scrollbar-color: auto;/,
-  'Restaurar los valores auto en Chromium permite dibujar el thumb personalizado.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\],\s*\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\],\s*\[data-pdf-auto-scrollbar\]:focus-visible\s*\{\s*scrollbar-width: auto;\s*scrollbar-color: auto;/,
+  'Chromium utiliza los thumb personalizados tanto en reposo como al desplazarse y recibir foco.');
 assert.match(globalStyles, /::-webkit-scrollbar-thumb\s*\{\s*border-radius: 999px;\s*background-color: transparent;/,
   'El thumb de Chrome debe permanecer completamente transparente cuando no hay scroll.');
 assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\]::-webkit-scrollbar-thumb/,
