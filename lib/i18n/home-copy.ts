@@ -86,7 +86,7 @@ export const HOME_ENGLISH_TEXT: Record<string, string> = {
   "Gratis": "Free",
   "Empezá a estudiar con tus propios apuntes, sin tarjeta.": "Start studying with your own notes, no card needed.",
   "$0 · sin tarjeta": "$0 · no card required",
-  "1 material PDF o Word gratis de por vida": "1 free PDF or Word material per account",
+  "1 material PDF o Word gratis por mes": "1 free PDF or Word material per month",
   "Hasta 100 páginas y 20 MB por archivo": "Up to 100 pages and 20 MB per file",
   "Resumen, glosario, flashcards y práctica básica": "Summary, glossary, flashcards and basic practice",
   "Empezá gratis": "Start for free",

@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '../lib/free-study-v2.ts';
 
 const read=(p:string)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-assert.equal(FREE_STUDY_V2.materialsLifetime,1);
+assert.equal(FREE_STUDY_V2.materialsPerMonth,1);
 assert.equal(FREE_STUDY_V2.multipleChoice,12);
 assert.equal(FREE_STUDY_V2.trueFalse,10);
 assert.equal(FREE_STUDY_V2.matchingRounds,1);
@@ -74,8 +74,8 @@ assert.match(schema,/free_study_v2_upload_claims/);
 assert.match(schema,/remember_free_study_v2_upload/);
 assert.match(schema,/claim_free_study_v2_unlock/);
 assert.match(read('app/api/study-plans/route.ts'),/save_free_study_v2_plan/);
-assert.match(read('app\/(es)\/dashboard\/materiales\/upload-actions.ts'),/historicalFreeStudyMaterialIds/);
-assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts'),/historicalFreeStudyMaterialIds/);
+assert.match(read('app\/(es)\/dashboard\/materiales\/upload-actions.ts'),/freeStudyMaterialIdsThisMonth/);
+assert.match(read('app\/(es)\/dashboard\/materiales\/pdf-first-upload-actions.ts'),/freeStudyMaterialIdsThisMonth/);
 
 // Nuevo lanzamiento: jamás consumir cupos por PDFs/planes anteriores.
 assert.doesNotMatch(schema, /select distinct on \(m\.user_id\)/,
@@ -88,7 +88,7 @@ for (const path of [
   'app/(es)/dashboard/materiales/pdf-first-upload-actions.ts',
 ]) {
   const upload=read(path);
-  assert.match(upload, /\? historicalIds\.length/,
+  assert.match(upload, /\? monthIds\.length/,
     'Legacy PDFs must not consume the new Free slot in either upload flow.');
   assert.doesNotMatch(upload, /new Set\(\[\.\.\.(?:activeIds|countedMaterials)/,
     'Old uploads cannot be merged into Free V2 claim count.');
@@ -136,3 +136,20 @@ assert.match(schema,/topic:\[0-9\]\{1,3\}:round:\[0-4\]/);
 const modes=read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
 assert.match(modes,/if \(mode === 'flashcards'\) \{/);
 console.log('Free v2 quotas, database protections and unrestricted corrections smoke passed.');
+
+// Free: 1 apunte por mes calendario en hora de Argentina (UTC-3).
+{
+  const { freeUploadPeriod, nextFreeUploadAt } = await import('../lib/free-study-v2.ts');
+  assert.equal(freeUploadPeriod(new Date('2026-11-30T23:30:00-03:00')), '2026-11-01');
+  assert.equal(freeUploadPeriod(new Date('2026-12-01T00:30:00-03:00')), '2026-12-01');
+  assert.equal(nextFreeUploadAt(new Date('2026-11-07T16:00:00-03:00')).toISOString(), '2026-12-01T03:00:00.000Z');
+  assert.equal(nextFreeUploadAt(new Date('2026-12-15T10:00:00-03:00')).toISOString(), '2027-01-01T03:00:00.000Z');
+  const monthly = read('supabase/migrations/20261107200000_free_study_v2_monthly_upload.sql');
+  assert.match(monthly, /primary key \(user_id, period\)/);
+  assert.match(monthly, /c\.period = public\.free_study_v2_upload_period\(\)/);
+  assert.match(monthly, /'America\/Argentina\/Buenos_Aires'/);
+  const shell = read('components/dashboard/pdf-first-upload-shell.tsx');
+  assert.match(shell, /upgrade\?\.reason !== 'material_upload'/,
+    'El límite de apuntes muestra la pantalla Premium, no un error genérico.');
+  assert.match(shell, /<FreeUploadLimitScreen/);
+}

@@ -38,7 +38,7 @@ const PREMIUM_FEATURES = [
 ];
 
 const FREE_FEATURES = [
-  '1 apunte para probar',
+  '1 apunte por mes',
   'Resumen, flashcards y práctica de prueba',
   'Tu nivel de preparación por tema',
 ];

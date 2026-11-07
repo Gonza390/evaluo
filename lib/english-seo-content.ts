@@ -223,7 +223,7 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
         { title: 'Practice in several formats', detail: 'Multiple-choice and true/false questions, flashcards, matching rounds, practical cases and a mock exam, all generated from the same document.' },
         { title: 'Progress by topic and a study plan', detail: 'Results are grouped by topic, so you know what to review, and a study plan spreads the work until your exam date.' },
       ],
-      plan: 'The Free plan includes one lifetime upload with 12 multiple-choice and 10 true/false questions, 25 flashcards, 2 practical cases, 1 matching round, 1 mock exam and 1 study plan. Premium adds up to 3 new uploads per day, mind maps, more explanations and extra mock exam modes.',
+      plan: 'The Free plan includes one upload per month with 12 multiple-choice and 10 true/false questions, 25 flashcards, 2 practical cases, 1 matching round, 1 mock exam and 1 study plan. Premium adds up to 3 new uploads per day, mind maps, more explanations and extra mock exam modes.',
     },
   },
   'ai-pdf-summarizer': {
@@ -268,7 +268,7 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
         { title: 'From summary to practice', detail: 'Continue from a topic summary to flashcards and practice questions about the same section.' },
         { title: 'Review what you missed', detail: 'Results are grouped by topic, so you know which summaries and sections to revisit.' },
       ],
-      plan: 'Topic summaries and the glossary are included in the Free plan (one lifetime upload). Premium adds up to 3 new uploads per day, mind maps and more explanations.',
+      plan: 'Topic summaries and the glossary are included in the Free plan (one upload per month). Premium adds up to 3 new uploads per day, mind maps and more explanations.',
     },
   },
   'pdf-to-mind-map': {

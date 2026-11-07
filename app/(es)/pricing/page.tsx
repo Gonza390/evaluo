@@ -8,9 +8,9 @@ import { FooterHome } from '@/components/footer-home';
 import { PricingContent } from '@/components/pricing/PricingContent';
 
 // Datos factuales para buscadores y asistentes (contrato GEO): Gratis incluye
-// 1 material PDF o Word gratis de por vida; Premium, hasta 3 materiales PDF o Word por día.
+// 1 material PDF o Word gratis por mes; Premium, hasta 3 materiales PDF o Word por día.
 const pricingDescription =
-  'Planes Gratis y Premium de Evaluo: 1 material PDF o Word gratis de por vida, y con Premium hasta 3 materiales PDF o Word por día, práctica según tus errores y simulacros sin cupo.';
+  'Planes Gratis y Premium de Evaluo: 1 material PDF o Word gratis por mes, y con Premium hasta 3 materiales PDF o Word por día, práctica según tus errores y simulacros sin cupo.';
 
 export const metadata: Metadata = {
   title: 'Planes y precios',
