@@ -102,7 +102,6 @@ export function FreePracticeLimitScreen({
   }, [mounted, kind, materialTitle, topicLabel, backLabel]);
 
   const mode = (english ? modesEnglish : modes)[kind];
-  const premiumOnly = kind === 'complete' || kind === 'mixed';
   const place = topicLabel || materialTitle || t('Tu material', 'Your material');
 
   // Reuse the 280ms entrance / 200ms departure from the practice flow.
@@ -157,7 +156,7 @@ export function FreePracticeLimitScreen({
         <section className="flex w-full flex-col items-center text-center">
           <Image src="/evi-practica-limite.svg" width={104} height={104} alt={t('Evi con un candado', 'Evi with a padlock')} className="size-[72px] shrink-0"/>
           <h1 id="free-practice-limit-title" className="mt-1.5 text-[23px] font-bold leading-[1.16] tracking-[-.03em] sm:text-[27px]">
-            {premiumOnly ? t('Esta práctica es parte de Premium', 'This practice mode is part of Premium') : t('Ya agotaste tu límite gratuito', 'You have reached your Free limit')}
+            {t('Ya agotaste tu límite gratuito', 'You have reached your Free limit')}
           </h1>
 
           <div className="mt-2.5 flex max-w-full flex-wrap justify-center gap-2">
@@ -194,9 +193,9 @@ export function FreePracticeLimitScreen({
           </div>
 
           <p className="mt-3 max-w-[440px] text-[12px] leading-[1.5] text-[#4b5565] sm:text-[13px]">
-            {premiumOnly
-              ? (english ? `With Premium you unlock ${mode.noun} to keep studying your material.` : `Con Premium desbloqueás ${mode.noun} para seguir estudiando con tu material.`)
-              : (english ? `You have used all your Free ${mode.noun}. You can repeat previously unlocked activities or keep practicing with Premium.` : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`)}
+            {english
+              ? `You have used all your Free ${mode.noun}. You can repeat previously unlocked activities or keep practicing with Premium.`
+              : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`}
           </p>
 
           <div className="mt-3 flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">

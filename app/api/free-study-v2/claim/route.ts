@@ -11,7 +11,7 @@ const noStore = { 'Cache-Control': 'private, no-store' };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const kinds = new Set<FreeStudyUnlockKind>([
   'multiple_choice', 'true_false', 'matching_round',
-  'case', 'flashcard', 'simulator',
+  'case', 'flashcard', 'simulator', 'complete_round', 'mixed_round',
 ]);
 const fail = (code: string, status = 400) =>
   NextResponse.json({ allowed: false, error: code }, { status, headers: noStore });
@@ -91,6 +91,10 @@ export async function POST(request: Request) {
       valid = itemKey === 'matching:first';
     } else if (type === 'simulator') {
       valid = itemKey === 'simulator:first';
+    } else if (type === 'complete_round') {
+      valid = itemKey === 'complete:first';
+    } else if (type === 'mixed_round') {
+      valid = itemKey === 'mixed:first';
     } else if (type === 'true_false' || type === 'case') {
       const mode = type === 'true_false' ? 'true_false' as const : 'cases' as const;
       const bank = await getFreeStudyBank<{id:string}>({userId:user.id,materialId,mode});
@@ -106,6 +110,7 @@ export async function POST(request: Request) {
     const reasons: Record<FreeStudyUnlockKind, PremiumGateReason> = {
       multiple_choice:'multiple_choice', true_false:'true_false',
       matching_round:'matching_round', case:'case', flashcard:'flashcard', simulator:'simulator',
+      complete_round:'complete', mixed_round:'mixed',
     };
     const upgrade = result.allowed ? undefined
       : premiumUpgradeForLimit(reasons[type], {materialId});

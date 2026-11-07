@@ -54,6 +54,7 @@ export async function GET(request: Request) {
     const counts = {} as Record<FreeStudyUnlockKind,number>;
     const kinds:FreeStudyUnlockKind[] = [
       'multiple_choice','true_false','matching_round','case','flashcard','simulator',
+      'complete_round','mixed_round',
     ];
     for (const kind of kinds) counts[kind] = 0;
     for (const row of unlocks.data ?? []) {
@@ -75,6 +76,8 @@ export async function GET(request: Request) {
       case: makeQuota(counts.case,FREE_STUDY_KIND_LIMIT.case,'case'),
       flashcard: makeQuota(counts.flashcard,FREE_STUDY_KIND_LIMIT.flashcard,'flashcard'),
       simulator: makeQuota(counts.simulator,FREE_STUDY_KIND_LIMIT.simulator,'simulator'),
+      complete_round: makeQuota(counts.complete_round,FREE_STUDY_KIND_LIMIT.complete_round,'complete'),
+      mixed_round: makeQuota(counts.mixed_round,FREE_STUDY_KIND_LIMIT.mixed_round,'mixed'),
       study_plan: makeQuota(plan.data ? 1:0,FREE_STUDY_V2.studyPlans,'study_plan'),
     };
     return NextResponse.json({active:true,plan:'free',quotas},
