@@ -656,7 +656,9 @@
    ::-webkit-scrollbar styling when non-auto. Explicitly reset both before
    styling the thumb, otherwise Windows Chrome draws its native grey bar. */
 @supports selector(::-webkit-scrollbar) {
-  [data-pdf-auto-scrollbar] {
+  [data-pdf-auto-scrollbar],
+  [data-pdf-auto-scrollbar][data-pdf-scrollbar-scrolling='true'],
+  [data-pdf-auto-scrollbar]:focus-visible {
     scrollbar-width: auto;
     scrollbar-color: auto;
   }
