@@ -26,8 +26,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Ellipsis,
-  X,
   Share2,
   ExternalLink,
   FileText,
@@ -85,6 +83,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
+import { PdfMobileToolsMenu } from '@/components/study/pdf-mobile-tools-menu';
 import { PdfPracticeModes } from '@/components/study/pdf-practice-modes';
 import {
   pdfStudyTabClassName,
@@ -381,7 +380,6 @@ export function MaterialStudyWorkspace({
   const isDocx = !demo && fileName.toLowerCase().endsWith('.docx');
   const { toast } = useToast();
   const router = useRouter();
-  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const guideRunIdRef = useRef<string | null>(null);
   const guideStartedTrackedRef = useRef(false);
   const guideCompletedRef = useRef(false);
@@ -2838,36 +2836,12 @@ export function MaterialStudyWorkspace({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu open={mobileMoreOpen} onOpenChange={setMobileMoreOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                data-pdf-mobile-more-trigger
-                aria-label={mobileMoreOpen ? (english ? 'Close material options' : 'Cerrar opciones del material') : t("Más opciones del material")}
-                aria-expanded={mobileMoreOpen}
-                className="group inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-[background-color,box-shadow,transform] duration-200 ease-out hover:bg-slate-50 active:scale-95 data-[state=open]:bg-slate-100 data-[state=open]:shadow-[0_4px_16px_rgba(15,23,42,0.10)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none"
-              >
-                <span className="relative flex size-[18px] items-center justify-center" aria-hidden="true">
-                  <Ellipsis className={`absolute size-[18px] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${mobileMoreOpen ? 'scale-75 rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'}`} />
-                  <X className={`absolute size-[18px] transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${mobileMoreOpen ? 'scale-100 rotate-0 opacity-100' : 'scale-75 -rotate-90 opacity-0'}`} />
-                </span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="min-w-[200px] origin-top-right rounded-xl p-2 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 motion-reduce:animate-none">
-              {shareAvailable && isOwner && !demo ? (
-                <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}>
-                  <Share2 className="size-4" aria-hidden="true" />
-                  {t("Compartir")}
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem asChild>
-                <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4" aria-hidden="true" />
-                  {english ? "Open original" : "Abrir"} {isDocx ? "Word" : "PDF"} {english ? "file" : "original"}
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <PdfMobileToolsMenu
+            materialId={materialId}
+            viewerUrl={viewerUrl}
+            fileType={isDocx ? 'Word' : 'PDF'}
+            canShare={shareAvailable && isOwner && !demo}
+          />
         </div>
 
         {/* Desktop keeps the current reader heading and Guide action. */}
