@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BarChart3 } from 'lucide-react';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 export function ReferralPortalNavLink({
   collapsed,
@@ -13,6 +14,7 @@ export function ReferralPortalNavLink({
   pathname: string;
   compact?: boolean;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export function ReferralPortalNavLink({
   return (
     <Link
       href="/referidos"
-      title={collapsed ? 'Referidos' : undefined}
+      title={collapsed ? (english ? 'Referrals' : 'Referidos') : undefined}
       className={`group flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
         active
           ? 'bg-blue-50/80 text-blue-700'
@@ -50,7 +52,7 @@ export function ReferralPortalNavLink({
       } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : compact ? 'min-h-10 gap-2 px-2.5 py-2' : 'gap-2.5 px-3 py-2.5'}`}
     >
       <BarChart3 className="h-4 w-4 shrink-0" />
-      {!collapsed ? <span>Referidos</span> : null}
+      {!collapsed ? <span>{english ? 'Referrals' : 'Referidos'}</span> : null}
     </Link>
   );
 }
