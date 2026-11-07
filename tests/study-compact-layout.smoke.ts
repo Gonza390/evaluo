@@ -36,15 +36,29 @@ assert.doesNotMatch(globalStyles, /data-student-material-share-control/,
   'The retired share action must not rely on CSS visibility overrides.');
 const shareControl = readFileSync('components/student-material-share-control.tsx', 'utf8');
 assert.match(materialPage, /<StudentMaterialShareControl[\s\S]*?mobileMenuOnly[\s\S]*?\/>/,
-  'The PDF keeps its share handler mounted for mobile only.');
+  'The PDF keeps one share controller for both the mobile overflow and desktop header.');
 assert.match(materialPage, /shareAvailable=\{shareAvailable\}/,
   'The mobile reader gets the same sharing eligibility as the share handler.');
 assert.match(mobileOverflow, /shareAvailable && isOwner && !demo[\s\S]*?evaluo:share-material[\s\S]*?Compartir/,
   'The three-dot menu preserves the Share action for the material owner.');
+assert.match(materialPage, /const shareAvailable = isOwner;/,
+  'The owner can share their PDF even when academic metadata is incomplete.');
+const desktopShare = workspace.indexOf('data-pdf-desktop-share-trigger');
+const desktopGuide = workspace.indexOf('data-reopen-first-pdf-guide', desktopShare);
+assert.ok(desktopShare > 0 && desktopGuide > desktopShare,
+  'Share stays immediately beside the Guide action on the desktop PDF header.');
+assert.match(workspace, /shareAvailable && isOwner && !demo \? \(\s*<button[\s\S]*?data-pdf-desktop-share-trigger/,
+  'The desktop Share action is only available to the material owner.');
+assert.match(workspace, /data-pdf-desktop-share-trigger[\s\S]*?onClick=\{\(\) => window\.dispatchEvent\(new CustomEvent\('evaluo:share-material'/,
+  'Desktop Share reuses the existing verified privacy and link-sharing flow.');
+assert.match(workspace, /data-pdf-desktop-share-trigger[\s\S]*?rounded-full px-2 text-\[12px\] font-medium text-slate-500/,
+  'Desktop Share has the same quiet rounded styling as the Pomodoro header control.');
+assert.match(workspace, /<Share2 className="size-4" strokeWidth=\{1\.9\} aria-hidden="true" \/>/,
+  'The deskop action uses the subtle outline Share icon.');
 assert.match(shareControl, /window\.addEventListener\('evaluo:share-material'/,
   'The mobile menu still has a real sharing event handler.');
-assert.match(shareControl, /mobileMenuOnly \? 'md:hidden'/,
-  'The share handler is not visible on desktop.');
+assert.match(shareControl, /mobileMenuOnly && !confirmOpen \? 'hidden' : 'flex'/,
+  'The share controller stays hidden until a privacy confirmation is needed on either viewport.');
 assert.match(shareControl, /\{!mobileMenuOnly \? \(/,
   'The floating share button is absent on this reader, including mobile.');
 assert.match(workspace, /DropdownMenuItem asChild/,
