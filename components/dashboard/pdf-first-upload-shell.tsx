@@ -41,7 +41,7 @@ import {
   inspectPdfForClientVision,
   renderPdfPagesForClientVision,
 } from '@/lib/student-materials/client-pdf-vision-render';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/file-rules';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 import { PdfProcessingPanel } from '@/components/pdf-processing/pdf-processing-panel';

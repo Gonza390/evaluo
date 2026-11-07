@@ -3,7 +3,7 @@
     {
       "label": "/",
       "appPath": "(es)/page",
-      "maxGzipKb": 360
+      "maxGzipKb": 345
     },
     {
       "label": "/login",
@@ -78,7 +78,7 @@
     {
       "label": "/simulador",
       "appPath": "(es)/simulador/page",
-      "maxGzipKb": 335
+      "maxGzipKb": 340
     },
     {
       "label": "/recursos/[id]",

@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/file-rules';
 
 type HomePdfPickerButtonProps = {
   className: string;
