@@ -55,6 +55,13 @@ export function useCreemCheckout({ english, mode }: { english: boolean; mode: 't
         );
         return;
       }
+      if (r.status === 403 && data.error === 'creem_country_unsupported')
+        throw new Error(
+          tr(
+            'Todavía no podemos cobrar Premium en tu país.',
+            'We cannot charge for Premium in your country yet.'
+          )
+        );
       if (r.status === 409)
         throw new Error(
           data.error === 'already_subscribed'
