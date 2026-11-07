@@ -2438,11 +2438,11 @@ export function MaterialStudyWorkspace({
         {isPremium ? (
           <StudyDocumentShell
             compact
-            title="Mapa mental"
+            title={english ? "Mind map" : "Mapa mental"}
             description={
               demo
                 ? undefined
-                : 'Vista de los temas y conceptos principales detectados en este PDF.'
+                : english ? 'Overview of the main topics and concepts identified in this PDF.' : 'Vista de los temas y conceptos principales detectados en este PDF.'
             }
           >
             <div
@@ -2493,7 +2493,7 @@ export function MaterialStudyWorkspace({
                     demo && 'text-xs! leading-4!'
                   )}
                 >
-                  Nodo central
+                  {english ? 'Central node' : 'Nodo central'}
                 </p>
                 <p
                   className={cn(
@@ -2519,7 +2519,7 @@ export function MaterialStudyWorkspace({
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
-                  {demo ? 'Conceptos' : 'Conceptos clave'}
+                  {english ? (demo ? 'Concepts' : 'Key concepts') : (demo ? 'Conceptos' : 'Conceptos clave')}
                 </p>
                 {usefulGlossary.slice(0, 4).map((item, index) => (
                   <div key={item.term} className={'space-y-2'}>
@@ -2542,16 +2542,16 @@ export function MaterialStudyWorkspace({
         ) : (
           <div className="border-border bg-card rounded-2xl border p-4 sm:p-5">
             <PremiumUpsell
-              title="El mapa mental es exclusivo Premium"
-              description="Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."
+              title={english ? "Mind maps are a Premium feature" : "El mapa mental es exclusivo Premium"}
+              description={english ? "See the key topics and concepts in your PDF at a glance to study faster and connect ideas." : "Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."}
               source="material_mapa_mental"
               materiaId={materiaId}
               features={[
-                'Mapa mental de cada PDF que subas',
-                'Temas y conceptos clave conectados',
-                'Todo tu espacio de estudio en un solo lugar',
+                english ? 'A mind map for every PDF you upload' : 'Mapa mental de cada PDF que subas',
+                english ? 'Connected topics and key concepts' : 'Temas y conceptos clave conectados',
+                english ? 'Your study resources in one place' : 'Todo tu espacio de estudio en un solo lugar',
               ]}
-              ctaLabel="Desbloquear mapa mental con Premium"
+              ctaLabel={english ? "Unlock mind maps with Premium" : "Desbloquear mapa mental con Premium"}
             />
           </div>
         )}
