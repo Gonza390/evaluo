@@ -135,39 +135,11 @@
   box-shadow: 0 24px 48px color-mix(in srgb, var(--pv-accent) 12%, transparent);
 }
 
-@keyframes pv-rise {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes pv-swap {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.pricing-v2 .pv-rise {
-  animation: pv-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.pricing-v2 .pv-rise-2 {
-  animation: pv-rise 0.6s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.pricing-v2 .pv-swap {
-  animation: pv-swap 0.3s ease both;
-}
+/* Sin entrada propia al cargar: la transición entre pantallas la hace el contenedor de la app.
+   El cambio de precio y las preguntas usan el efecto único (app/globals.css). */
+.pricing-v2 .pv-swap,
 .pricing-v2 .pv-faq[open] p {
-  animation: pv-swap 0.25s ease both;
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
 }
 .pricing-v2 .pv-pill {
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -194,8 +166,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pricing-v2 .pv-rise,
-  .pricing-v2 .pv-rise-2,
   .pricing-v2 .pv-swap,
   .pricing-v2 .pv-faq[open] p {
     animation: none;

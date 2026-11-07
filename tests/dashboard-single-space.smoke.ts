@@ -260,10 +260,12 @@ assert.match(appChromeSource, /data-evaluo-mobile-nav-item="true"/);
 assert.match(appChromeSource, /setPendingDestination\(\{ href: item.href, fromPath: pathname \}\)/);
 assert.match(appChromeSource, /aria-current=\{isActive \? 'page' : undefined\}/);
 assert.match(appChromeSource, /key=\{pathname\} data-evaluo-route-enter/);
-assert.match(appChromeSource, /hasPrivateRouteTransition = isCompactAppRoute \|\| \(Boolean\(user\) && !isLegalRoute\)/,
-  'The existing screen transition must cover every authenticated app route, not only compact dashboards.');
-assert.match(appChromeSource, /\{hasPrivateRouteTransition \? \(/,
-  'Page entering uses the shared route wrapper for all authenticated screens.');
+assert.match(appChromeSource, /hasRouteTransition = !isAdministradorRoute;/,
+  'The single screen transition must cover the whole platform (except /administrador).');
+assert.match(appChromeSource, /\{hasRouteTransition \? \(/,
+  'Page entering uses the shared route wrapper for every screen.');
+assert.match(appChromeSource, /data-evaluo-route-enter=\{animateRouteEnter \? '' : undefined\}/,
+  'The route transition only runs on navigation, never on the first paint (LCP).');
 assert.doesNotMatch(appChromeSource, /\{isCompactAppRoute \? \(\s*<div key=\{pathname\} data-evaluo-route-enter/,
   'Do not restrict global page transitions to the compact route subset.');
 assert.match(navbarSource, /data-evaluo-sidebar-indicator/);
@@ -272,6 +274,12 @@ assert.match(dashboardHeroSource, /data-evaluo-motion-card/);
 assert.match(dashboardMaterialsSource, /data-evaluo-motion-card/);
 assert.match(motionStyles, /prefers-reduced-motion: reduce/);
 assert.match(motionStyles, /\[data-evaluo-route-enter\]/);
+assert.match(motionStyles, /@keyframes evaluo-enter/, 'One shared enter effect for the whole platform.');
+assert.match(motionStyles, /@keyframes evaluo-exit/, 'One shared exit effect for the whole platform.');
+assert.match(motionStyles, /--evaluo-motion-enter: 200ms;/);
+assert.match(motionStyles, /--evaluo-motion-exit: 150ms;/);
+assert.doesNotMatch(motionStyles, /saasLiftIn|studyReveal|evaluo-route-enter \d/,
+  'No parallel page-entrance effects: screens use the shared transition.');
 assert.match(motionStyles, /\[data-evaluo-motion-card\]/);
 assert.match(dialogSource, /backdrop-blur-\[2px\]/);
 assert.match(drawerSource, /backdrop-blur-\[2px\]/);

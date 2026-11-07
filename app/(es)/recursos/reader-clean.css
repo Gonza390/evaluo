@@ -38,10 +38,6 @@
   box-shadow: none !important;
 }
 
-.resource-reader-clean .animate-saas-lift-in {
-  animation: none !important;
-}
-
 .resource-reader-clean button,
 .resource-reader-clean a {
   max-width: 100%;

@@ -31,19 +31,16 @@
 [data-processing-scene-motion],
 [data-processing-final-motion] {
   opacity: 1;
-  animation: pdf-processing-arrive 270ms var(--pdf-processing-ease) both;
+  /* Efecto único de la plataforma (app/globals.css). */
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
 }
 
 [data-processing-scene-motion][data-phase='exit'] {
   animation: none;
   opacity: 0;
-  transform: translate3d(0, 5px, 0);
-  transition: opacity 160ms ease, transform 160ms ease;
-}
-
-@keyframes pdf-processing-arrive {
-  from { opacity: 0; transform: translate3d(0, 6px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  transform: translate3d(0, -4px, 0);
+  transition: opacity var(--evaluo-motion-exit) var(--evaluo-motion-ease-exit),
+              transform var(--evaluo-motion-exit) var(--evaluo-motion-ease-exit);
 }
 
 /* This is the full-width scene, with no sidebar. Keep the supplied two-column

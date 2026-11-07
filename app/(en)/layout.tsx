@@ -38,26 +38,6 @@ const ROOT_INLINE_CSS = `
   background: rgb(248 250 252);
 }
 
-@keyframes evaluoSurfaceRevealSafe {
-  from {
-    transform: translateY(10px) scale(0.992);
-  }
-  to {
-    transform: translateY(0) scale(1);
-  }
-}
-
-.animate-surface-reveal {
-  opacity: 1 !important;
-  animation: evaluoSurfaceRevealSafe 0.42s cubic-bezier(0.22, 1, 0.36, 1) both !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-surface-reveal {
-    animation: none !important;
-    transform: none !important;
-  }
-}
 `;
 
 const inter = Inter({

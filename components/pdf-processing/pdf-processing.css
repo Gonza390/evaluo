@@ -462,11 +462,11 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   color: var(--muted-foreground);
 }
 .journey-scene-copy {
-  animation: journey-enter 0.25s ease-out;
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
 }
 .journey-visual-result {
   margin-top: 14px;
-  animation: journey-enter 0.25s ease-out;
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
 }
 .journey-example {
   border-top: 1px solid var(--border);
@@ -659,16 +659,6 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   }
   100% {
     transform: translateX(520%);
-  }
-}
-@keyframes journey-enter {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 @keyframes journey-spin {
@@ -950,7 +940,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
 /* Suaviza el cambio entre procesamiento y material listo, sin demorar acciones. */
 .pdf-processing-journey[data-complete='true'] .journey-complete,
 .pdf-processing-journey[data-complete='true'] .journey-processing-status {
-  animation: journey-enter 260ms cubic-bezier(.22, 1, .36, 1) both;
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .pdf-processing-journey[data-complete='true'] .journey-complete,

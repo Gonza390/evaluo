@@ -240,6 +240,9 @@ export default function ClientLayoutClient({
 
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [firstPathname] = useState(pathname);
+  const [hasNavigated, setHasNavigated] = useState(false);
+  if (!hasNavigated && pathname !== firstPathname) setHasNavigated(true);
   const { user, loading: userLoading, getUserInitials, getUserName } = useUser();
   const { messages, locale } = useAppLocale();
   const { profileSummary, streak } = useShellData();
@@ -275,10 +278,11 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       pathname === '/referidos' ||
       pathname.startsWith('/referidos/') ||
       pathname.startsWith('/materiales/'));
-  // Un solo efecto breve de entrada para todas las rutas de la aplicación autenticada.
-  // Conservamos la escala compacta exclusivamente donde ya existía; el fade no
-  // modifica medidas ni sustituye animaciones específicas dentro de las pantallas.
-  const hasPrivateRouteTransition = isCompactAppRoute || (Boolean(user) && !isLegalRoute);
+  // Transición única entre pantallas (app/globals.css → evaluo-enter) para toda la plataforma,
+  // salvo /administrador. Solo corre al navegar: la primera carga se pinta sin animación
+  // para no retrasar el LCP. Las pantallas no agregan su propia entrada.
+  const hasRouteTransition = !isAdministradorRoute;
+  const animateRouteEnter = hasNavigated || pathname !== firstPathname;
   const isExploreExperienceRoute =
     pathname === '/explorar' ||
     pathname.startsWith('/universidad/') ||
@@ -628,8 +632,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
-            {hasPrivateRouteTransition ? (
-              <div key={pathname} data-evaluo-route-enter className={`${isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : isDesktopStudyPlanRoute ? 'min-h-full w-full xl:h-full xl:min-h-0' : isDesktopPracticeHomeRoute ? 'min-h-full w-full lg:h-full lg:min-h-0' : 'min-h-full w-full'} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:overflow-hidden' : ''}`}>
+            {hasRouteTransition ? (
+              <div key={pathname} data-evaluo-route-enter={animateRouteEnter ? '' : undefined} className={`${isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : isDesktopStudyPlanRoute ? 'min-h-full w-full xl:h-full xl:min-h-0' : isDesktopPracticeHomeRoute ? 'min-h-full w-full lg:h-full lg:min-h-0' : 'min-h-full w-full'} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:overflow-hidden' : ''}`}>
                 {children}
               </div>
             ) : children}
