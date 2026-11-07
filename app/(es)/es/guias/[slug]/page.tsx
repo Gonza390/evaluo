@@ -8,6 +8,7 @@ import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { EditorialMethodology } from '@/components/seo/editorial-methodology';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { hreflangAlternatePath, hreflangAlternates, hreflangClusterForPath } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 import { STUDY_GUIDES, getStudyGuide } from '@/lib/es-study-guides';
 
@@ -18,6 +19,10 @@ export function generateStaticParams() {
   return STUDY_GUIDES.map(({ slug }) => ({ slug }));
 }
 
+function formatGuideDate(iso: string) {
+  return new Date(iso + 'T12:00:00Z').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const guide = getStudyGuide(slug);
@@ -26,7 +31,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: guide.seoTitle,
     description: guide.description,
-    alternates: { canonical: toAbsoluteUrl(path) },
+    alternates: (() => {
+      // Guías con pareja en otros idiomas: canonical propio + hreflang desde el registro.
+      const cluster = hreflangClusterForPath(path);
+      return cluster ? hreflangAlternates(cluster, 'es') : { canonical: toAbsoluteUrl(path) };
+    })(),
     robots: { index: true, follow: true },
     openGraph: {
       type: 'article',
@@ -65,15 +74,15 @@ export default async function GuiaDeEstudio({ params }: Props) {
           headline: guide.title,
           description: guide.description,
           inLanguage: 'es',
-          datePublished: '2026-10-29',
-          dateModified: '2026-10-29',
+          datePublished: guide.published ?? '2026-10-29',
+          dateModified: guide.updated ?? '2026-10-29',
           author: { '@type': 'Organization', name: 'Evaluo' },
           publisher: { '@type': 'Organization', name: 'Evaluo' },
           mainEntityOfPage: toAbsoluteUrl(path),
         },
       ]} />
       <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader variant="landing" trackingLocation="es_study_guide_header" />
+        <PublicSiteHeader variant="landing" trackingLocation="es_study_guide_header" alternateHref={hreflangAlternatePath(path, 'en')} />
       </div>
       <main>
         <header className="border-b border-slate-100 bg-[linear-gradient(160deg,#F8FAFF_0%,#FFFFFF_100%)]">
@@ -197,7 +206,7 @@ export default async function GuiaDeEstudio({ params }: Props) {
             </section>
             <EditorialMethodology kind="study" />
             <p className="mt-8 text-xs leading-6 text-slate-500">
-              Recurso educativo de Evaluo · Actualizado el 29 de octubre de 2026.
+              Recurso educativo de Evaluo · Actualizado el {formatGuideDate(guide.updated ?? '2026-10-29')}.
               La práctica de recuperación y el repaso distribuido tienen apoyo en investigación educativa.
               Puedes consultar <a href="https://www.aft.org/ae/fall2013/dunlosky" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline">esta revisión divulgativa de la evidencia</a>.
               Contrasta siempre los contenidos técnicos con tu programa y material original.

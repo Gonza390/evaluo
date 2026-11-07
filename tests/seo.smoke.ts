@@ -806,7 +806,9 @@ assertIncludesAll('app/(es)/es/guias/[slug]/page.tsx', [
   'generateStaticParams()',
   'generateMetadata',
   "getStudyGuide(slug)",
-  'alternates: { canonical: toAbsoluteUrl(path) }',
+  // Canonical propio para todas; las guías con pareja de idioma suman hreflang del registro.
+  '{ canonical: toAbsoluteUrl(path) }',
+  'hreflangAlternates(cluster, \'es\')',
   'buildBreadcrumbJsonLd',
   "'@type': 'Article'",
   'guide.steps.map',
@@ -843,7 +845,8 @@ const guideRows = JSON.parse(guideJson![1]) as Array<{
   review: string;
 }>;
 // 'como-estudiar-examen-tipo-test' se consolidó en /blog con un 301 (next.config.mjs).
-assert.equal(guideRows.length, 7, 'Publish exactly seven original guides');
+// + 'como-estudiar-con-ia' (2026-11-07), pareja ES neutra de /en/ai-for-students.
+assert.equal(guideRows.length, 8, 'Publish exactly eight original guides');
 assert.equal(new Set(guideRows.map((guide) => guide.slug)).size, guideRows.length, 'SEO slugs must be unique');
 for (const guide of guideRows) {
   const prose = [

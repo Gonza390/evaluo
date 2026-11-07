@@ -150,7 +150,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const guide of STUDY_GUIDES) {
     routes.push({
       url: `${baseUrl}/es/guias/${guide.slug}`,
-      lastModified: new Date('2026-10-29'),
+      lastModified: new Date(guide.updated ?? '2026-10-29'),
     });
   }
 
