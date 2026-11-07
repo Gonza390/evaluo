@@ -54,3 +54,35 @@ export const ENGLISH_HUBS = {
     note: 'Third-party features, limits and prices change. Each comparison links to the official documentation it was based on and shows its review date. Evaluo is not affiliated with OpenAI, Google or Quizlet.',
   },
 } satisfies Record<string, EnglishHub>;
+
+// Página principal en español neutro (/es): punto de entrada para el mundo hispano fuera
+// de Argentina. Pareja de /funciones (es-AR) y /en/features (en) en el cluster features-hub.
+export const ES_NEUTRAL_HUB: EnglishHub = {
+  locale: 'es',
+  path: '/es',
+  breadcrumb: 'Plataforma de estudio con IA',
+  eyebrow: 'Plataforma de estudio con inteligencia artificial',
+  headline: 'Estudia con inteligencia artificial a partir de tus propios apuntes.',
+  intro:
+    'Evaluo convierte el PDF o el documento de Word con el que estudias en temas, resúmenes, flashcards, preguntas de práctica y simulacros, y te muestra qué repasar antes del examen. No necesitas aprender a escribir instrucciones para la IA: eliges tu material y empiezas a estudiar.',
+  decisionTitle: 'Qué herramienta usar según tu objetivo',
+  decisionIntro: 'Empieza por lo que necesitas hoy. Todas trabajan sobre el mismo documento y se conectan entre sí.',
+  decisions: [
+    { need: 'Entender un tema largo antes de la clase o de leerlo a fondo', pick: 'Resúmenes con IA', href: '/es/resumenes-con-ia' },
+    { need: 'Memorizar definiciones, fórmulas o vocabulario', pick: 'Flashcards con IA', href: '/es/flashcards-con-ia' },
+    { need: 'Comprobar qué sabes y qué no antes del examen', pick: 'Generador de exámenes con IA', href: '/es/generador-de-examenes-con-ia' },
+    { need: 'Estudiar un PDF completo, tema por tema', pick: 'Estudiar un PDF con IA', href: '/es/estudiar-pdf-con-ia' },
+    { need: 'Usar la IA para aprender sin que piense por ti', pick: 'Cómo estudiar con IA', href: '/es/guias/como-estudiar-con-ia' },
+    { need: 'Ver el recorrido completo y lo que incluye cada plan', pick: 'Cómo funciona Evaluo', href: '/es/como-funciona' },
+  ],
+  cardsTitle: 'Todas las herramientas y guías',
+  cards: [
+    { href: '/es/generador-de-examenes-con-ia', title: 'Generador de exámenes con IA', text: 'Preguntas de práctica por tema y un simulacro con todo el temario.' },
+    { href: '/es/resumenes-con-ia', title: 'Resúmenes con IA', text: 'Un resumen y un glosario por tema, conectados al documento original.' },
+    { href: '/es/flashcards-con-ia', title: 'Flashcards con IA', text: 'Tarjetas de estudio por tema para repasar con espacios.' },
+    { href: '/es/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', text: 'De un documento largo a temas, preguntas y repasos.' },
+    { href: '/es/como-funciona', title: 'Cómo funciona', text: 'Los cinco pasos, los formatos admitidos y los planes.' },
+    { href: '/es/guias', title: 'Guías de estudio', text: 'Métodos para estudiar materias, preparar parciales y repasar errores.' },
+  ],
+  note: 'Las preguntas, resúmenes y tarjetas generados con IA pueden contener errores: compruébalos con tu material. Puedes empezar gratis con un documento; el mapa mental y más documentos están en Premium.',
+};

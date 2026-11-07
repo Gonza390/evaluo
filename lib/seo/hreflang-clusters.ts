@@ -32,7 +32,11 @@ export const HREFLANG_CLUSTERS = {
     en: '/en/study-pdf-with-ai',
   },
   'pdf-to-quiz': { es: '/convertir-pdf-en-preguntas', en: '/en/pdf-to-quiz' },
-  'pdf-to-flashcards': { es: '/funciones/crear-flashcards-desde-pdf', en: '/en/pdf-to-flashcards' },
+  'pdf-to-flashcards': {
+    es: '/es/flashcards-con-ia',
+    'es-AR': '/funciones/crear-flashcards-desde-pdf',
+    en: '/en/pdf-to-flashcards',
+  },
   'true-false': { es: '/funciones/verdadero-falso-con-ia', en: '/en/ai-true-false-questions' },
   'match-concepts': { es: '/funciones/unir-conceptos-con-ia', en: '/en/match-concepts-with-ai' },
   'mock-exam': {
@@ -48,11 +52,15 @@ export const HREFLANG_CLUSTERS = {
     'es-AR': '/ia-para-estudiantes',
     en: '/en/ai-for-students',
   },
-  'pdf-summary': { es: '/funciones/resumir-pdf-con-ia', en: '/en/ai-pdf-summarizer' },
+  'pdf-summary': {
+    es: '/es/resumenes-con-ia',
+    'es-AR': '/funciones/resumir-pdf-con-ia',
+    en: '/en/ai-pdf-summarizer',
+  },
   'mind-map': { es: '/funciones/crear-mapa-mental-desde-pdf', en: '/en/pdf-to-mind-map' },
   'practice-by-topic': { es: '/funciones/practicar-por-tema', en: '/en/practice-by-topic' },
   'how-it-works': { es: '/es/como-funciona', en: '/en/how-it-works' },
-  'features-hub': { es: '/funciones', en: '/en/features' },
+  'features-hub': { es: '/es', 'es-AR': '/funciones', en: '/en/features' },
   'compare-hub': { es: '/comparar', en: '/en/compare' },
 } as const satisfies Record<string, ClusterPaths>;
 

@@ -8,7 +8,7 @@ const path = '/funciones/resumir-pdf-con-ia';
 export const metadata: Metadata = {
   title: "Resumir PDF con IA: ejemplo de resumen y práctica",
   description: "Resumí tus apuntes PDF con IA: mirá un ejemplo resuelto, revisá conceptos importantes y continuá con flashcards y preguntas del mismo documento.",
-  alternates: hreflangAlternates('pdf-summary', 'es'),
+  alternates: hreflangAlternates('pdf-summary', 'es-AR'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

@@ -1151,7 +1151,7 @@ assertIncludesAll('lib/seo/hreflang-clusters.ts', [
   "en: '/en/pdf-to-flashcards'",
   "en: '/en/pdf-to-quiz'",
 ]);
-assertIncludesAll('app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', ["hreflangAlternates('pdf-to-flashcards', 'es')"]);
+assertIncludesAll('app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', ["hreflangAlternates('pdf-to-flashcards', 'es-AR')"]);
 assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', ["hreflangAlternates('pdf-to-quiz', 'es')"]);
 
 assertIncludesAll('lighthouserc.seo.cjs', [
