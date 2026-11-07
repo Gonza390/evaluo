@@ -10,8 +10,8 @@ export function PracticeHomeContent({ requestedMaterialId, advancedPracticeEnabl
   requestedMaterialId: string | null;
   advancedPracticeEnabled: boolean;
 }) {
-  const english = useOptionalAppLocale() === 'en';
   const { materials, loading, error, refresh } = useMaterialCatalog();
+  const english = useOptionalAppLocale() === 'en';
   const english = useOptionalAppLocale() === 'en';
   useEffect(() => {
     if (materials === null && !loading && !error) void refresh();
