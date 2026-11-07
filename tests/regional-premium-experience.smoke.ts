@@ -18,7 +18,7 @@ for (const [country, expected] of countries) {
 }
 const availability = read('app/api/payments/creem/availability/route.ts');
 const selector = read('components/pricing/PricingPlanSelector.tsx');
-const premium = read('components/pricing/PremiumDashboardScreen.tsx');
+const premium = read('components/pricing/UpgradeScreen.tsx');
 const spanish = read('app/(es)/pricing/page.tsx');
 const english = read('app/(en)/en/pricing/page.tsx');
 const home = read('components/marketing/home-redesign.tsx');
@@ -40,8 +40,8 @@ assert.match(selector, /market\?\.market === 'argentina' \? <details/);
 assert.doesNotMatch(selector, /<CreemCheckoutCard[^>]*mode="test"/,
   'Preview must not mix a USD test card with Argentina ARS plans');
 assert.match(premium, /useCheckoutMarket\(\)/);
-assert.match(premium, /market\?\.market !== 'argentina'/);
-assert.match(premium, /market\.market==='international'/);
+assert.match(premium, /market\.market === 'argentina' \? \(\s*<ArgentinaOffer/);
+assert.match(premium, /<InternationalOffer[^>]*creemAvailable=\{market\.creemAvailable\}/);
 // /pricing (rediseño nov-2026): la oferta regional vive en PricingPlans y es fail-closed.
 const spanishPlans = read('components/pricing/PricingPlans.tsx');
 assert.match(spanish, /<PricingContent\s+source=\{source\}/);
@@ -81,11 +81,7 @@ assert.match(creem, /international_checkout_only/);
 const offerApi = read('app/api/payments/offer/route.ts');
 assert.match(offerApi, /resolveCheckoutMarket\(/);
 assert.match(offerApi, /if \(market !== 'argentina'\)[\s\S]{0,200}offer_unavailable_for_region/);
+// El menú móvil del avatar ya no muestra precios (menú circular, 5ab9af2): no puede mostrar ARS.
 const mobileMenu = read('components/mobile-profile-menu.tsx');
-assert.match(mobileMenu, /loadCheckoutMarket\(\)/);
-assert.match(mobileMenu, /availability\.market !== 'argentina'[\s\S]{0,120}setWeeklyPrice\(null\)/);
-assert.ok(
-  mobileMenu.indexOf("availability.market !== 'argentina'") < mobileMenu.indexOf("fetch('/api/payments/offer'"),
-  'El menú móvil sólo puede pedir la oferta en ARS después de confirmar Argentina.'
-);
+assert.doesNotMatch(mobileMenu, /fetch\('\/api\/payments\/offer'/);
 console.log('[regional-premium] ARS in Argentina, USD abroad, no mixed public pricing, country-specific checkout passed.');

@@ -21,7 +21,7 @@ assert.match(prompt, /checkInFlightRef\.current/,
   'An in-flight guard should stop concurrent eligibility requests.');
 assert.match(prompt, /finally\s*\{\s*checkInFlightRef\.current = false;/,
   'Restore check state after rejected eligibility promises.');
-assert.match(prompt, /catch\s*\{\s*setError\('No pudimos guardar la fecha/,
+assert.match(prompt, /catch\s*\{\s*setError\(english \? '[^']*' : 'No pudimos guardar la fecha/,
   'Rejected save actions must display a recoverable error.');
 assert.match(prompt, /finally\s*\{\s*setSaving\(false\);/,
   'Rejected save actions must re-enable the submit button.');

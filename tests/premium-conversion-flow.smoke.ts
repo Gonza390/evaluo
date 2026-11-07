@@ -107,8 +107,8 @@ for(const name of ['premium','ultimo-intento']) {
 const dashboardPremium=read('app/(es)/dashboard/premium/page.tsx');
 assert.match(dashboardPremium,/nextPath = premiumDashboardHref\(\{source, materiaId, parcial, returnTo\}\)/,
   'After logging in, keep the original study action in the checkout context');
-assert.match(read('components/pricing/PremiumDashboardScreen.tsx'),
-  /status==='active'\?\(returnTo\?\?'\/dashboard'\)/,
+assert.match(read('components/pricing/UpgradeScreen.tsx'),
+  /subscriptionStatus === 'active' \? \(\s*<Link href=\{returnTo \?\? '\/dashboard'\}/,
   'Existing subscribers must resume their requested action instead of landing on the dashboard');
 
 assert.equal(new FreeStudyV2UploadLimitError('used').code,'free_v2_material_limit');

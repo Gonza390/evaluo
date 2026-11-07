@@ -76,7 +76,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       return { id: material.id, title: material.title, topicCount: topics.length, topics };
     });
     // Render Mi plan with actual server data, avoiding a second client-side loading screen.
-    const plan = planResult.data as {
+    const plan = planResult.data as unknown as {
       exam_date: string;
       daily_minutes: number;
       material_ids: string[];

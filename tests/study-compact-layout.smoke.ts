@@ -22,14 +22,17 @@ assert.match(workspace, /data-pdf-mobile-document-header[^\n]+md:hidden/,
   'The mobile PDF header must use the compact three-part design.');
 assert.match(workspace, /data-pdf-mobile-title-trigger/,
   'The center pill must allow reading the complete document title.');
-assert.match(workspace, /data-pdf-mobile-more-trigger/,
+// Menú de tres puntos en el teléfono → botones radiales (1461348): PdfMobileToolsMenu.
+const mobileTools = readFileSync('components/study/pdf-mobile-tools-menu.tsx', 'utf8');
+assert.match(workspace, /<PdfMobileToolsMenu[\s\S]*?canShare=\{shareAvailable && isOwner && !demo\}/,
+  'The mobile tools menu receives the same sharing eligibility.');
+assert.match(mobileTools, /data-pdf-mobile-more-trigger/,
   'The three-dot control must open a functional menu.');
 assert.match(workspace, /data-mobile-summary-active=\{activeTab === 'resumen' && !progressOpen \? 'true' : undefined\}/,
   'The mobile summary state remains scoped to the active tab.');
-const mobileOverflow = workspace.split('data-pdf-mobile-more-trigger')[1]?.split('</DropdownMenuContent>')[0] ?? '';
-assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
+assert.doesNotMatch(mobileTools, /\bVolver\b/,
   'The three-dot menu must not duplicate the visible Back button.');
-assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original|\{english \? "Open original" : "Abrir"\} \{isDocx \? "Word" : "PDF"\}/, 
+assert.match(mobileTools, /Abrir \$\{fileType\} original/,
   'Keep the original PDF action in the overflow menu.');
 const globalStyles = readFileSync('app/globals.css', 'utf8');
 assert.doesNotMatch(globalStyles, /data-student-material-share-control/,
@@ -39,7 +42,7 @@ assert.match(materialPage, /<StudentMaterialShareControl[\s\S]*?mobileMenuOnly[\
   'The PDF keeps one share controller for both the mobile overflow and desktop header.');
 assert.match(materialPage, /shareAvailable=\{shareAvailable\}/,
   'The mobile reader gets the same sharing eligibility as the share handler.');
-assert.match(mobileOverflow, /shareAvailable && isOwner && !demo[\s\S]*?evaluo:share-material[\s\S]*?Compartir/,
+assert.match(mobileTools, /canShare \? \[\{[\s\S]*?evaluo:share-material/,
   'The three-dot menu preserves the Share action for the material owner.');
 assert.match(materialPage, /const shareAvailable = isOwner;/,
   'The owner can share their PDF even when academic metadata is incomplete.');
@@ -61,11 +64,11 @@ assert.match(shareControl, /mobileMenuOnly && !confirmOpen \? 'hidden' : 'flex'/
   'The share controller stays hidden until a privacy confirmation is needed on either viewport.');
 assert.match(shareControl, /\{!mobileMenuOnly \? \(/,
   'The floating share button is absent on this reader, including mobile.');
-assert.match(workspace, /DropdownMenuItem asChild/,
+assert.match(workspace, /<DropdownMenuItem key=\{pdf\.id\} asChild>/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
   'The old header and Guide remain desktop-only.');
-assert.match(workspace, /Abrir \{isDocx \? 'Word' : 'PDF'\} original|\{english \? "Open original" : "Abrir"\} \{isDocx \? "Word" : "PDF"\}/,
+assert.match(workspace, /fileType=\{isDocx \? 'Word' : 'PDF'\}/,
   'The menu must provide access to the original document.');
 assert.match(materialStatus, /\{title\}/,
   'Keep the material title during processing and error states.');
@@ -124,7 +127,7 @@ assert.match(exam, /data-onboarding-practice-options className="grid w-full max-
   'Los tres tamaños de práctica se muestran en una misma fila desde móvil.');
 assert.doesNotMatch(exam, /index === 2 && sizeOptions\.length === 3 && 'col-span-2'/,
   'La última tarjeta no debe ocupar dos columnas ni producir una segunda fila.');
-assert.match(exam, /onClick=\{\(\) => setSelectedSize\(option\.count\)\}/,
+assert.match(exam, /onClick=\{\(\) => \{ setSelectedSize\(option\.count\); void startExam\(option\.count\); \}\}/,
   'Seleccionar cualquier tarjeta conserva la interacción real.');
 assert.match(exam, /hidden text-\[11px\] leading-\[1\.4\] opacity-80 sm:block/,
   'Las descripciones largas se ocultan solo en móvil para mantener las tres tarjetas legibles.');
