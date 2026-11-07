@@ -391,7 +391,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               </div>
             ) : (
               <>
-                <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
+                <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5 lg:gap-1.5">
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
@@ -410,7 +410,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   >
                     <CalendarDays className="h-[19px] w-[19px]" aria-hidden="true" />
                   </Link>
-                  <div className="order-4 md:order-none">
+                  <div className="order-4 md:hidden">
                   <MobileProfileMenu
                     initials={getUserInitials()}
                     avatarUrl={user.user_metadata?.avatar_url}
@@ -430,7 +430,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     type="button"
                     aria-label={locale === 'en' ? `View study streak: ${streakDays} days` : `Ver racha de estudio: ${streakDays} días`}
                     onClick={() => setShowStreakDialog(true)}
-                    className="hidden min-h-10 items-center gap-1 rounded-lg px-2 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:inline-flex"
+                    className="hidden min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:inline-flex"
                   >
                     <Flame className="h-4 w-4" aria-hidden="true" />
                     <span className="text-xs font-semibold">{streakDays}</span>
