@@ -446,5 +446,9 @@
   {
     "file": "tests/crawler-locale-redirect.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/creem-unsupported-countries.smoke.ts",
+    "alias": false
   }
 ]
