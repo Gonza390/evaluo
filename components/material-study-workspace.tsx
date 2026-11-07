@@ -2897,6 +2897,20 @@ export function MaterialStudyWorkspace({
             )}
           </div>
 
+          {shareAvailable && isOwner && !demo ? (
+            <button
+              type="button"
+              data-pdf-desktop-share-trigger
+              onClick={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}
+              aria-label={t("Compartir este PDF")}
+              title={t("Compartir este PDF")}
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-2 text-[12px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
+            >
+              <Share2 className="size-4" strokeWidth={1.9} aria-hidden="true" />
+              <span>{t("Compartir")}</span>
+            </button>
+          ) : null}
+
           {isOwner && !demo && !recommendedActive ? (
             <button
               type="button"
