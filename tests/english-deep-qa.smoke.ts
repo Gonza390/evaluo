@@ -46,4 +46,14 @@ const homeKeys = [...homepage.matchAll(/\\bt\\(\\s*(["'])(.*?)\\1\\s*\\)/g)].map
 const untranslatedHomeKeys = [...new Set(homeKeys.filter(key => !translatedHomeKeys.has(key)))];
 assert.deepEqual(untranslatedHomeKeys, [], 'English homepage has unlocalized t(...) strings');
 
+// Practice mode cards use dynamic t(displayTitle)/t(description), which the
+// literal t("...") dictionary smoke test cannot detect.
+const practiceModeSource = read('components/dashboard/practice-mode-picker.tsx');
+const studyDictionary = read('lib/i18n/study-ui-copy.ts');
+const studyKeys = new Set([...studyDictionary.matchAll(/^\\s*"([^"]+)":/gm)].map(m => m[1]));
+const practiceModeCopy = [...practiceModeSource.matchAll(/\\b(?:displayTitle|description): '([^']+)'/g)].map(m => m[1]);
+const missingPracticeTranslations = [...new Set(practiceModeCopy.filter(key => !studyKeys.has(key)))];
+assert.deepEqual(missingPracticeTranslations, [], 'New practice mode cards have Spanish fallback copy');
+check('components/dashboard/practice-home-content.tsx', ['useOptionalAppLocale', 'Loading your study materials', 'Could not load your study materials.', 'Try again']);
+
 console.log('[english-deep-qa] English PDF/DOCX reader, exam date, summary, feedback, referral, loading, auth-recovery and screen-reader paths checked (static coverage).');
