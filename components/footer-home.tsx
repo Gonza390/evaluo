@@ -7,7 +7,16 @@ const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/company/evaluo-ar/',
 } as const;
 
-export function FooterHome({ variant = 'full', locale = 'es' }: { variant?: 'full' | 'compact'; locale?: 'es' | 'en' }) {
+export function FooterHome({
+  variant = 'full',
+  locale = 'es',
+  register,
+}: {
+  variant?: 'full' | 'compact';
+  locale?: 'es' | 'en';
+  /** 'neutral' = tuteo para las páginas /es/ (fuera de Argentina). */
+  register?: 'neutral';
+}) {
   if (locale === 'en') return <EnglishHomeFooter />;
   if (variant === 'compact') {
     return (
@@ -67,7 +76,7 @@ export function FooterHome({ variant = 'full', locale = 'es' }: { variant?: 'ful
               Te ayudamos a aprobar, te impulsamos a crecer.
             </p>
             <p className="mt-2 max-w-sm text-[11px] leading-5 text-white/55">
-              Desde tus apuntes o PDFs podés crear resúmenes, mapas mentales, glosarios, flashcards
+              Desde tus apuntes o PDFs {register === 'neutral' ? 'puedes' : 'podés'} crear resúmenes, mapas mentales, glosarios, flashcards
               y práctica para estudiar el mismo material de distintas formas.
             </p>
             <div className="mt-4 flex gap-3">
