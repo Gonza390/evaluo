@@ -100,5 +100,6 @@ for (const legal of ['terms','privacy','billing','refunds','acceptable-use','cop
 }
 const enPricing=read('app/(en)/en/pricing/page.tsx');
 assert.match(enPricing, /PricingPlanSelector locale="en"/);
-assert.match(read('components/pricing/CreemCheckoutCard.tsx'), /creem\.io/);
+assert.match(read('components/pricing/CreemCheckoutCard.tsx'), /useCreemCheckout/);
+assert.match(read('components/pricing/CreemCheckoutCard.tsx'), /onClick=\{\(\) => void start\(\)\}/);
 console.log('[english-global] Four bilingual lifecycle emails, locale metadata, per-account exam dates, legal and study recovery verified.');
