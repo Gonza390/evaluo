@@ -15,6 +15,7 @@ import {
   useState,
   type ReactNode,
   type MouseEvent,
+  type UIEvent,
   type SetStateAction,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -454,6 +455,29 @@ export function MaterialStudyWorkspace({
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const [activeSummaryChapterIndex, setActiveSummaryChapterIndex] = useState(0);
+  // Las barras del índice y del lector se muestran sólo mientras se desplazan.
+  // El temporizador vive en una ref: no vuelve a renderizar los capítulos al hacer scroll.
+  const autoScrollbarTimersRef = useRef(new Map<HTMLElement, number>());
+  const showScrollbarWhileScrolling = useCallback((event: UIEvent<HTMLElement>) => {
+    const element = event.currentTarget;
+    element.dataset.pdfScrollbarScrolling = 'true';
+    const previous = autoScrollbarTimersRef.current.get(element);
+    if (previous !== undefined) window.clearTimeout(previous);
+    autoScrollbarTimersRef.current.set(element, window.setTimeout(() => {
+      delete element.dataset.pdfScrollbarScrolling;
+      autoScrollbarTimersRef.current.delete(element);
+    }, 900));
+  }, []);
+  useEffect(() => {
+    const timers = autoScrollbarTimersRef.current;
+    return () => {
+      for (const [element, timer] of timers) {
+        window.clearTimeout(timer);
+        delete element.dataset.pdfScrollbarScrolling;
+      }
+      timers.clear();
+    };
+  }, []);
   const scrollFirstChapterSmoothlyRef = useRef(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
@@ -1992,6 +2016,8 @@ export function MaterialStudyWorkspace({
       data-onboarding-panel={recommendedActive || undefined}
       data-onboarding-transitioning={(recommendedActive && onboardingFading) || undefined}
       tabIndex={0}
+      data-pdf-auto-scrollbar
+      onScroll={showScrollbarWhileScrolling}
       className={cn(
         'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-3 sm:pb-3',
         demo && 'h-full min-h-0 overflow-y-auto',
@@ -2051,6 +2077,8 @@ export function MaterialStudyWorkspace({
                 </span>
               </summary>
               <nav
+                data-pdf-auto-scrollbar
+                onScroll={showScrollbarWhileScrolling}
                 className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
                 aria-label="Índice del resumen"
               >
@@ -2092,6 +2120,8 @@ export function MaterialStudyWorkspace({
                     Contenido
                   </p>
                   <nav
+                    data-pdf-auto-scrollbar
+                    onScroll={showScrollbarWhileScrolling}
                     className="min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable] [scrollbar-width:thin]"
                     aria-label="Índice del resumen"
                   >
