@@ -370,5 +370,73 @@
   {
     "file": "tests/geo-citation-measurement.smoke.mjs",
     "alias": false
+  },
+  {
+    "file": "tests/ui-locale.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/landing-language-selector.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/landing-locale-detection.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/creem-checkout.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/creem-webhook.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/english-entry-funnel.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/study-language.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/study-i18n-release.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/creem-live-billing.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/preview-oauth-origin.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/international-market-and-english-checkout.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/regional-premium-experience.smoke.ts",
+    "alias": false
+  },
+  {
+    "file": "tests/seo-english-acquisition.smoke.mjs",
+    "alias": false
+  },
+  {
+    "file": "tests/seo-single-language-selector.smoke.mjs",
+    "alias": false
+  },
+  {
+    "file": "tests/hreflang-clusters.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/english-seo-content.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/client-bundle-hygiene.smoke.mjs",
+    "alias": false
   }
 ]

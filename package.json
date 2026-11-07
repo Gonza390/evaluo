@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "npm run verify:admin-legacy && next build && node scripts/verify-ai-keys.mjs",
+    "build": "npm run verify:admin-legacy && npm run test:i18n && node --experimental-strip-types tests/preview-oauth-origin.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/creem-live-billing.smoke.ts && next build && node scripts/verify-ai-keys.mjs",
     "performance:budget": "node scripts/check-performance-budget.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test:docx": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/docx-upload.smoke.ts",
     "test": "node scripts/run-smoke-tests.mjs",
+    "test:i18n": "node --experimental-strip-types tests/study-language.smoke.ts && node --experimental-strip-types tests/study-i18n-release.smoke.ts && node --experimental-strip-types tests/landing-locale-detection.smoke.ts && node --experimental-strip-types tests/english-entry-funnel.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/english-global-readiness.smoke.ts && node --experimental-strip-types tests/regional-premium-experience.smoke.ts && node --experimental-strip-types tests/english-ui-dictionary-coverage.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/international-student-journey.smoke.ts && node --experimental-strip-types tests/international-first-session.smoke.ts && node --experimental-strip-types tests/english-visual-p0.smoke.ts",
     "prepare": "husky",
-    "verify:admin-legacy": "node --experimental-strip-types tests/admin-legacy-cleanup.smoke.ts"
+    "verify:admin-legacy": "node --experimental-strip-types tests/admin-legacy-cleanup.smoke.ts && node --experimental-strip-types tests/admin-language-metrics.smoke.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

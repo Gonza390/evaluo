@@ -16,6 +16,7 @@ import {
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
+import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -54,7 +55,7 @@ function Shell({ currentPath, breadcrumbLabel, trackingPrefix, children }: Shell
         ])}
       />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader primaryHref={uploadHref} trackingLocation={`${trackingPrefix}_header`} />
+        <PublicSiteHeader primaryHref={uploadHref} trackingLocation={`${trackingPrefix}_header`} alternateHref={hreflangAlternatePath(currentPath, 'en')} />
       </div>
       {children}
       <FooterHome />

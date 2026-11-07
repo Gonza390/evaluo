@@ -20,6 +20,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { UserProvider, useUser } from '@/hooks/useUser';
+import { AppLocaleProvider, useAppLocale } from '@/components/i18n/app-locale-provider';
 import { supabase } from '@/lib/supabase-client';
 import { shiftDayKey } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
@@ -97,6 +98,7 @@ function getNextStreakMilestone(streakDays: number) {
 
 function BottomNav() {
   const pathname = usePathname();
+  const { messages, locale } = useAppLocale();
   const { user } = useUser();
   // Private pages must keep the same nav on the first paint, even before
   // Supabase finishes restoring the session after a hard reload.
@@ -153,18 +155,18 @@ function BottomNav() {
 
   const bottomNavItems = studentNav
     ? [
-        { label: 'Mi espacio', href: '/dashboard', icon: Home },
-        { label: 'Estudiar', href: '/dashboard/estudiar', icon: BookOpen },
-        { label: 'Practicar', href: '/dashboard/practicar', icon: ListChecks },
-        { label: 'Mi plan', href: '/dashboard/plan-de-estudio', icon: ClipboardList },
+        { label: messages.navigation.mySpace, href: '/dashboard', icon: Home },
+        { label: messages.navigation.study, href: '/dashboard/estudiar', icon: BookOpen },
+        { label: messages.navigation.practice, href: '/dashboard/practicar', icon: ListChecks },
+        { label: messages.navigation.shortStudyPlan, href: '/dashboard/plan-de-estudio', icon: ClipboardList },
       ]
     : [
-        { label: 'Inicio', href: '/', icon: Home },
-        { label: 'Explorar', href: '/explorar', icon: Search },
-        { label: 'Pregunteros', href: '/pregunteros', icon: GraduationCap },
+        { label: messages.navigation.home, href: locale === 'en' ? '/en' : '/', icon: Home },
+        { label: messages.navigation.explore, href: locale === 'en' ? '/en/resources' : '/explorar', icon: Search },
+        { label: messages.navigation.questionBanks, href: locale === 'en' ? '/en/pdf-to-quiz' : '/pregunteros', icon: GraduationCap },
         {
-          label: 'Iniciar sesión',
-          href: '/login?mode=login',
+          label: messages.navigation.signIn,
+          href: locale === 'en' ? '/en/login?mode=login' : '/login?mode=login',
           icon: LogIn,
           variant: 'cta' as const,
         },
@@ -198,7 +200,7 @@ function BottomNav() {
                 item.href === '/dashboard/estudiar' ? 'true' : undefined
               }
               className={
-                item.variant === 'cta'
+                ('variant' in item && item.variant === 'cta')
                   ? 'from-brand to-brand-2 mx-0.5 flex min-h-[50px] flex-col items-center justify-center rounded-2xl bg-gradient-to-r px-2 py-1.5 text-white shadow-[0_8px_20px_rgba(37,99,235,0.26)]'
                   : `flex min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1 transition-[min-height] duration-200 motion-reduce:transition-none ${
                       isActive ? 'text-brand' : 'text-muted-foreground'
@@ -226,10 +228,12 @@ export default function ClientLayoutClient({
 }) {
   return (
     <UserProvider initialUser={initialUser}>
-      <ShellDataProvider initialProfileSummary={initialProfileSummary}>
-        <ClientLayoutInner>{children}</ClientLayoutInner>
-      </ShellDataProvider>
-      <Toaster />
+      <AppLocaleProvider>
+        <ShellDataProvider initialProfileSummary={initialProfileSummary}>
+          <ClientLayoutInner>{children}</ClientLayoutInner>
+        </ShellDataProvider>
+        <Toaster />
+      </AppLocaleProvider>
     </UserProvider>
   );
 }
@@ -237,6 +241,7 @@ export default function ClientLayoutClient({
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading: userLoading, getUserInitials, getUserName } = useUser();
+  const { messages, locale } = useAppLocale();
   const { profileSummary, streak } = useShellData();
   const streakDays = streak?.streakDays ?? 0;
   const streakDayKeys = streak?.streakDayKeys ?? [];
@@ -286,7 +291,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const todayKey = streak?.todayKey ?? '';
   const weekDayEntries = getWeekDayEntries(streakDayKeys, todayKey, shiftDayKey, streakDays);
   const streakMilestone = getNextStreakMilestone(streakDays);
-  const streakLabel = streakDays === 1 ? 'día de racha' : 'días de racha';
+  const streakLabel = locale === 'en' ? 'day streak' : (streakDays === 1 ? 'día de racha' : 'días de racha');
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -348,7 +353,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/dashboard"
-                aria-label="Ir a Mi espacio"
+                aria-label={messages.navigation.mySpace}
                 className={`group flex min-w-0 items-center transition hover:opacity-90 ${isCompactAppRoute ? 'gap-1.5' : 'gap-2.5'}`}
               >
                 <Image
@@ -386,7 +391,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <Link
                     href="/calendario"
                     data-mobile-calendar-link
-                    aria-label="Abrir calendario"
+                    aria-label={messages.navigation.calendar}
                     aria-current={pathname === '/calendario' || pathname.startsWith('/calendario/') ? 'page' : undefined}
                     className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
                       pathname === '/calendario' || pathname.startsWith('/calendario/')
@@ -403,7 +408,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   />
                   <button
                     type="button"
-                    aria-label={`Ver racha de estudio: ${streakDays} días`}
+                    aria-label={locale === 'en' ? `View study streak: ${streakDays} days` : `Ver racha de estudio: ${streakDays} días` }
                     onClick={() => setShowStreakDialog(true)}
                     className="inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
                   >
@@ -433,7 +438,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           ? `${profileSummary.carreraNombre} | ${profileSummary.universidadNombre}`
                           : profileSummary.carreraNombre ||
                             profileSummary.universidadNombre ||
-                            'Tu perfil'}
+                            (locale === 'en' ? 'Your profile' : 'Tu perfil')}
                       </p>
                     </div>
 
@@ -456,7 +461,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           type="button"
                           onClick={() => setShowStreakDialog(false)}
                           className="border-border bg-card/90 text-muted-foreground hover:border-input hover:text-foreground absolute top-2 right-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border p-2 shadow-sm transition"
-                          aria-label="Cerrar resumen de racha"
+                          aria-label={locale === 'en' ? 'Close study streak summary' : 'Cerrar resumen de racha'}
                         >
                           <span className="text-lg leading-none">×</span>
                         </button>
@@ -474,18 +479,19 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                             {streakLabel}
                           </DialogDescription>
                           <p className="text-muted-foreground mt-2 max-w-[250px] text-xs leading-5">
-                            Seguí entrando cada día para mantener tu impulso y volver más rápido a
-                            estudiar.
+                            {locale === 'en'
+                              ? 'Keep building momentum. You can return to your study materials whenever you are ready.'
+                              : 'Seguí entrando cada día para mantener tu impulso y volver más rápido a estudiar.'}
                           </p>
                         </DialogHeader>
 
                         <div className="border-border bg-card/90 mt-5 rounded-[22px] border p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                           <div className="flex items-center justify-between">
                             <p className="text-foreground text-xs font-semibold tracking-[-0.02em]">
-                              Esta semana
+                              {locale === 'en' ? 'This week' : 'Esta semana'}
                             </p>
                             <p className="text-brand text-xs font-semibold">
-                              {Math.min(streakDays, 7)} de 7
+                              {Math.min(streakDays, 7)} {locale === 'en' ? 'of' : 'de'} 7
                             </p>
                           </div>
 
@@ -498,7 +504,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                                       day.isToday ? 'text-brand' : 'text-muted-foreground'
                                     }`}
                                   >
-                                    {day.label}
+                                    {locale === 'en' ? ({LUN:'MON',MAR:'TUE',MIE:'WED',JUE:'THU',VIE:'FRI',SAB:'SAT',DOM:'SUN'} as Record<string,string>)[day.label] ?? day.label : day.label}
                                   </span>
                                 </div>
                               ))}
@@ -527,16 +533,18 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           <div className="flex items-center justify-between gap-3">
                             <div>
                               <p className="text-foreground text-xs font-semibold tracking-[-0.02em]">
-                                Próximo hito {streakMilestone.nextMilestone}
+                                {locale === 'en' ? 'Next milestone' : 'Próximo hito'} {streakMilestone.nextMilestone}
                               </p>
                               <p className="text-muted-foreground mt-1 text-[12px]">
                                 {streakMilestone.remainingDays === 0
-                                  ? 'Ya alcanzaste este objetivo.'
-                                  : `Te faltan ${streakMilestone.remainingDays} ${streakMilestone.remainingDays === 1 ? 'día' : 'días'}.`}
+                                  ? (locale === 'en' ? 'You have reached this milestone.' : 'Ya alcanzaste este objetivo.')
+                                  : locale === 'en'
+                                    ? `${streakMilestone.remainingDays} ${streakMilestone.remainingDays === 1 ? 'day' : 'days'} to go.`
+                                    : `Te faltan ${streakMilestone.remainingDays} ${streakMilestone.remainingDays === 1 ? 'día' : 'días'}.`}
                               </p>
                             </div>
                             <span className="bg-brand/10 text-brand rounded-full px-2.5 py-1 text-[12px] font-semibold">
-                              Racha activa
+                              {locale === 'en' ? 'Active streak' : 'Racha activa'}
                             </span>
                           </div>
                           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white">
@@ -552,7 +560,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           onClick={() => setShowStreakDialog(false)}
                           className="from-brand to-brand-2 mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-gradient-to-br text-sm font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.24)] transition hover:opacity-95"
                         >
-                          Seguí estudiando
+                          {locale === 'en' ? 'Keep studying' : 'Seguí estudiando'}
                         </button>
 
                         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
@@ -562,7 +570,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                             className="border-border bg-card text-foreground hover:border-input inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition hover:bg-white"
                           >
                             <Settings className="h-3.5 w-3.5" />
-                            Configuración
+                            {locale === 'en' ? 'Settings' : 'Configuración'}
                           </Link>
                           <button
                             type="button"
@@ -572,11 +580,11 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                               if (error) {
                                 logError('shell.signOut', error, { userId: user.id });
                               }
-                              window.location.assign('/login');
+                              window.location.assign(locale === 'en' ? '/en/login' : '/login');
                             }}
                           >
                             <LogOut className="h-3.5 w-3.5" />
-                            Cerrar sesión
+                            {messages.navigation.signOut}
                           </button>
                         </div>
                       </div>

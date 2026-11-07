@@ -6,7 +6,7 @@ import { PracticeModePicker } from '@/components/dashboard/practice-mode-picker'
 import { getPracticeHistory } from '@/lib/student-materials/practice-history';
 
 export const metadata: Metadata = {
-  title: 'Practicar | Evaluo',
+  title: 'Practicar',
   robots: { index: false, follow: false },
 };
 

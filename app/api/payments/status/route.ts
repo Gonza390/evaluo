@@ -22,6 +22,15 @@ export async function GET(request: Request) {
       headers:{'Cache-Control':'private, no-store'}});
   }
 
+  // Los intentos USD de Creem se guardan separados de los campos ARS de Mercado Pago.
+  const creemAttemptQuery = paymentsDb
+    .from('creem_checkout_sessions')
+    .select('id,status,expected_amount_cents,currency,mode,created_at,updated_at,subscription_id')
+    .eq('user_id',user.id);
+  const {data: creemAttempt, error: creemError} = attemptId
+    ? await creemAttemptQuery.eq('id',attemptId).maybeSingle()
+    : await creemAttemptQuery.order('created_at',{ascending:false}).limit(1).maybeSingle();
+
   const checkoutAttemptQuery = paymentsDb
     .from('payment_checkout_attempts')
     .select('id, status, offer_code, amount_ars, created_at, updated_at')
@@ -41,11 +50,11 @@ export async function GET(request: Request) {
       : checkoutAttemptQuery.order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
 
-  if (subscriptionsError || checkoutError) {
+  if (subscriptionsError || checkoutError || creemError) {
     return NextResponse.json({error:'subscription_status_unavailable'}, {status:503,
       headers:{'Cache-Control':'private, no-store'}});
   }
-  if (attemptId && !latestCheckoutAttempt) {
+  if (attemptId && !latestCheckoutAttempt && !creemAttempt) {
     return NextResponse.json({error:'checkout_attempt_not_found'}, {status:404,
       headers:{'Cache-Control':'private, no-store'}});
   }
@@ -96,11 +105,18 @@ export async function GET(request: Request) {
   // suscripción vigente confirmada por el proveedor.
   const safeTransaction = transactionError ? null : transaction;
 
+  const usesCreemAttempt = Boolean(creemAttempt && (
+    attemptId || !latestCheckoutAttempt ||
+    Date.parse(creemAttempt.created_at) > Date.parse(latestCheckoutAttempt.created_at)
+  ));
+  const checkout = usesCreemAttempt ? creemAttempt : latestCheckoutAttempt;
+
   return NextResponse.json({
     plan: premiumIsActive ? 'premium' : 'free',
     planName: premiumIsActive && premium ? (planFor(premium)?.name ?? 'Plan Premium') : 'Plan Free',
     status: premium?.status ?? 'free',
     amountArs: premium?.amount_ars ?? null,
+    amountUsdCents: premium?.payment_provider === 'creem' ? 999 : null,
     nextPaymentDate: premium?.next_payment_date ?? null,
     promotion: premium?.promotion_code ?? null,
     provider:
@@ -108,15 +124,17 @@ export async function GET(request: Request) {
         ? 'mercadopago_fixed_term'
         : (premium?.payment_provider ?? null),
     billingMode,
-    canCancel: billingMode === 'recurring' && premiumIsActive,
+    canCancel: billingMode === 'recurring' && premiumIsActive && premium?.status !== 'canceled',
     canceledAt: premium?.canceled_at ?? null,
     accessUntil: premium?.expires_at ?? null,
-    checkoutAttemptId: latestCheckoutAttempt?.id ?? null,
-    checkoutStatus: latestCheckoutAttempt?.status ?? null,
-    checkoutOfferCode: latestCheckoutAttempt?.offer_code ?? null,
-    checkoutAmountArs: latestCheckoutAttempt?.amount_ars ?? null,
-    checkoutUpdatedAt:
-      latestCheckoutAttempt?.updated_at ?? latestCheckoutAttempt?.created_at ?? null,
+    checkoutAttemptId: checkout?.id ?? null,
+    checkoutStatus: checkout?.status ?? null,
+    checkoutProvider: usesCreemAttempt ? 'creem' : 'mercadopago',
+    checkoutMode: usesCreemAttempt ? creemAttempt?.mode ?? null : null,
+    checkoutOfferCode: usesCreemAttempt ? 'monthly' : latestCheckoutAttempt?.offer_code ?? null,
+    checkoutAmountArs: usesCreemAttempt ? null : latestCheckoutAttempt?.amount_ars ?? null,
+    checkoutAmountUsdCents: usesCreemAttempt ? creemAttempt?.expected_amount_cents ?? null : null,
+    checkoutUpdatedAt: checkout?.updated_at ?? checkout?.created_at ?? null,
     paymentHistoryUnavailable: Boolean(transactionError),
     lastPayment: safeTransaction
       ? {

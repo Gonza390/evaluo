@@ -5,6 +5,8 @@ import type { GeminiPdfKeySlot } from '@/lib/ai/providers';
 export type AdminClient = Pick<SupabaseClient<Database>, 'from' | 'storage' | 'rpc'>;
 
 export type GenerateSummaryInput = {
+  /** Language of new derived study explanations, distinct from the uploaded document. */
+  studyLocale?: 'es' | 'en';
   title: string;
   universidadName?: string;
   carreraName?: string;

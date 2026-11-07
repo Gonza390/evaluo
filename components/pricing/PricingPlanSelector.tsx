@@ -5,11 +5,15 @@ import Link from 'next/link';
 import { Check, ShieldCheck } from 'lucide-react';
 import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
+import { CreemCheckoutCard } from '@/components/pricing/CreemCheckoutCard';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { useCheckoutMarket } from '@/hooks/use-checkout-market';
 
 
 type BillingMode = 'monthly' | 'semester';
 
 type PricingPlanSelectorProps = {
+  locale?: 'es' | 'en';
   freeFeatures: string[];
   premiumFeatures: string[];
   source: string;
@@ -25,26 +29,31 @@ export function PricingPlanSelector({
   materiaId,
   parcial,
   returnTo,
+  locale: forcedLocale,
 }: PricingPlanSelectorProps) {
-  // Las tres alternativas están visibles. El único selector pendiente es para
-  // validar a qué modalidad Premium corresponde un código de referido.
+  const currentLocale = useOptionalAppLocale();
+  const english = (forcedLocale ?? currentLocale) === 'en';
+  const tr = (es: string, en: string) => english ? en : es;
+  // Cada usuario ve únicamente los planes de su país. El selector local
+  // se usa para aplicar el código de referido a mensual o semestral ARS.
   const [referralPlan, setReferralPlan] = useState<BillingMode>('monthly');
+  const market = useCheckoutMarket();
 
   return (
     <>
-      <div className="mx-auto grid max-w-6xl items-stretch gap-5 lg:auto-rows-fr lg:grid-cols-3 lg:gap-6">
+      <div className={`mx-auto grid items-stretch gap-5 lg:auto-rows-fr lg:gap-6 ${market?.market === 'international' ? 'max-w-4xl lg:grid-cols-2' : 'max-w-6xl lg:grid-cols-3'}`}>
         <article className="flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-5 min-[360px]:p-6 sm:p-8">
           <div>
             <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
-              Gratis
+              {tr("Gratis","Free")}
             </span>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">Descubrí tu progreso</h2>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">{tr("Descubrí tu progreso","Discover your progress")}</h2>
             <div className="mt-3 flex items-end gap-2">
               <span className="text-4xl font-bold tracking-tight text-slate-950">$0</span>
-              <span className="pb-1 text-sm text-slate-600">para siempre</span>
+              <span className="pb-1 text-sm text-slate-600">{tr("para siempre","forever")}</span>
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Empezá con tus apuntes, descubrí qué sabés y reconocé los temas que necesitás reforzar.
+              {tr("Empezá con tus apuntes, descubrí qué sabés y reconocé los temas que necesitás reforzar.","Start with your notes, find out what you know and identify topics to review.")}
             </p>
           </div>
 
@@ -61,18 +70,28 @@ export function PricingPlanSelector({
 
           <div className="mt-8">
             <Link
-              href="/estudiar-pdf-con-ia"
+              href={english ? "/en/login?mode=signup" : "/estudiar-pdf-con-ia"}
               className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              Empezá gratis con tu PDF
+              {tr("Empezá gratis con tu PDF","Start free with your PDF")}
             </Link>
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
               <ShieldCheck className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-              Sin tarjeta · Empezá gratis
+              {tr("Sin tarjeta · Empezá gratis","No card required · Start free")}
             </p>
           </div>
         </article>
 
+        {market === null ? (
+          <div className="flex min-h-[380px] items-center justify-center text-sm text-slate-600">{tr("Consultando precios para tu región…","Checking prices for your region…")}</div>
+        ) : market.market === 'unknown' ? (
+          <div role="alert" className="col-span-full rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm leading-6 text-amber-900">
+            {tr('No pudimos confirmar tu país. Por seguridad no se mostrará una opción de pago hasta que podamos verificar tu región.', 'We could not confirm your country. Payment options remain unavailable until your region can be verified.')}
+          </div>
+        ) : market.market === 'international' ? (
+          <CreemCheckoutCard locale={english ? "en" : "es"} features={premiumFeatures} mode="live" available={market.creemAvailable} />
+        ) : (
+          <>
         <div className="h-full min-w-0 [&>article]:h-full">
           <PaymentCheckoutCard
             features={premiumFeatures}
@@ -82,6 +101,7 @@ export function PricingPlanSelector({
             returnTo={returnTo}
             offerCode="monthly"
             featured
+            locale={english ? "en" : "es"}
           />
         </div>
 
@@ -93,23 +113,26 @@ export function PricingPlanSelector({
             parcial={parcial}
             returnTo={returnTo}
             offerCode="semester"
+            locale={english ? "en" : "es"}
           />
         </div>
+          </>
+        )}
       </div>
 
-      <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
+      {market?.market === 'argentina' ? <details className="mx-auto mt-8 max-w-lg rounded-2xl border border-slate-200 bg-white px-4 py-3">
         <summary className="cursor-pointer text-center text-sm font-semibold text-slate-700">
-          ¿Tenés un código de descuento?
+          {tr("¿Tenés un código de descuento?","Have a discount code?")}
         </summary>
         <div className="mt-4">
-          <div className="mb-3 flex justify-center gap-2" aria-label="Plan para aplicar el código">
+          <div className="mb-3 flex justify-center gap-2" aria-label={tr("Plan para aplicar el código","Plan to apply discount code")}>
             <button
               type="button"
               aria-pressed={referralPlan === 'monthly'}
               onClick={() => setReferralPlan('monthly')}
               className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${referralPlan === 'monthly' ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
             >
-              Mensual
+              {tr("Mensual","Monthly")}
             </button>
             <button
               type="button"
@@ -117,12 +140,12 @@ export function PricingPlanSelector({
               onClick={() => setReferralPlan('semester')}
               className={`rounded-lg px-4 py-2 text-xs font-semibold transition ${referralPlan === 'semester' ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
             >
-              6 meses
+              {tr("6 meses","6 months")}
             </button>
           </div>
           <ManualReferralCode offerCode={referralPlan} variant="compact" />
         </div>
-      </details>
+      </details> : null}
     </>
   );
 }

@@ -43,7 +43,7 @@ assert.match(caseScreen, /max-w-\[1120px\]/, 'Casos usa un ancho mayor para la c
 assert.match(caseScreen, /data-case-explanation/, 'La explicación ocupa una fila completa bajo ambas columnas.');
 assert.match(caseScreen, /!correct && <p className="mt-2 whitespace-pre-line/,
   'Casos no muestra explicaciones cuando la respuesta es correcta.');
-assert.match(caseScreen, /!correct && <p className="mt-2 font-medium[^\n]*Respuesta correcta:/,
+assert.match(caseScreen, /!correct && <p className="mt-2 font-medium[^\n]*Respuesta correcta'?\}?:/,
   'Casos mantiene la respuesta correcta cuando hay un error.');
 assert.match(practiceResults, /entries\.filter\(\(entry\) => !entry\.correct\)/,
   'Las respuestas incorrectas se muestran primero, con su explicación.');
@@ -66,7 +66,7 @@ assert.match(practiceSession, /min-w-0 flex-1 truncate text-\[12px\]/,
   'Nombre de PDF truncado en pantallas pequeñas');
 assert.match(practiceSession, /mt-5 flex w-full items-center justify-between gap-2/,
   'Anterior y Comprobar quedan uno en cada extremo en Opciones');
-assert.match(practiceSession, /mb-2 text-center text-xs font-medium text-slate-500">¿Verdadero o falso\?/, 
+assert.match(practiceSession, /mb-2 text-center text-xs font-medium text-slate-500">(?:\{english \? 'True or false\?' : ')?¿Verdadero o falso\?/, 
   'El rótulo ¿Verdadero o falso? está centrado dentro de la tarjeta');
 assert.match(practiceSession, /mode === 'opciones' \? 'text-center ' : 'text-left '/,
   'Verdadero y Falso centrados, sin cambiar las otras modalidades');
@@ -101,7 +101,7 @@ assert.match(panel, /selectedSession && selectedSession\.materialId === material
 assert.match(responsiveCss, /dashboard-responsive:has\(> \[data-practice-dual-pane\]\)/, 'La vista de historial conserva el layout de dos columnas');
 
 
-assert.match(picker, /aria-label="Modalidades de práctica: desplazate para ver todas"/, 'La zona desplazable es accesible');
+assert.match(picker, /aria-label=(?:"Modalidades de práctica: desplazate para ver todas"|\{english \? "Practice modes: scroll to see all" : "Modalidades de práctica: desplazate para ver todas"\})/, 'La zona desplazable es accesible');
 assert.match(picker, /scrollbarStyles\.scrollArea/, 'La barra de las modalidades queda oculta sin desactivar scroll');
 assert.match(panel, /lg:h-full lg:min-h-0/, 'El historial queda fijo dentro de la columna');
 assert.doesNotMatch(panel, /lg:sticky/, 'No depende del scroll general de página');

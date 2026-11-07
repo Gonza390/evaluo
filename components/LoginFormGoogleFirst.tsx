@@ -10,6 +10,7 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { getPdfFirstDraftMeta } from '@/lib/pdf-first-draft';
 import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
+import { accountAppLocale } from '@/lib/i18n/app-locale';
 
 type AuthMode = 'login' | 'signup';
 
@@ -45,8 +46,8 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean,
         : 'Sign in to resume your previous practice.';
     }
     return isSignUp
-      ? 'Create an account to save your study materials and progress. The current study dashboard is in Spanish.'
-      : 'Welcome back. Sign in to continue studying in the current Spanish-language dashboard.';
+      ? 'Create an account to upload materials, organize your studies and track your progress.'
+      : 'Welcome back. Sign in to continue studying with your materials.';
   }
   if (reason === 'pdf-first') {
     return isSignUp
@@ -227,6 +228,7 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
     try {
       const callback = new URL('/auth/callback', window.location.origin);
       callback.searchParams.set('next', nextPath);
+    callback.searchParams.set('ui_locale', locale);
       if (reason) callback.searchParams.set('reason', reason);
       callback.searchParams.set('analytics_session', getAnalyticsSessionKey());
       const { error } = await supabase.auth.signInWithOAuth({
@@ -271,7 +273,10 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          ...(emailRedirectTo ? { options: { emailRedirectTo } } : {}),
+          options: {
+            ...(emailRedirectTo ? { emailRedirectTo } : {}),
+            ...(english ? { data: { ui_locale: 'en' } } : {}),
+          },
         });
         if (error) return setMessage(error.message);
         trackMarketingEvent(
@@ -311,8 +316,12 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: loginData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
+      if (english && accountAppLocale(loginData.user?.user_metadata) !== 'en') {
+        // Explicit English login also changes the preference for returning accounts.
+        await supabase.auth.updateUser({ data: { ui_locale: 'en' } });
+      }
       // El perfil académico es opcional y se solicita después del primer PDF,
       // igual que en el callback de Google. No desviar a /completar-perfil.
       const redirectPath = nextPath;
@@ -394,11 +403,6 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
             : isSignUp ? (reason === 'preguntero' ? 'Guardá tu progreso' : 'Creá tu cuenta') : 'Bienvenido'}
         </h1>
         <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
-        {english ? (
-          <p className="mx-auto mt-4 max-w-[360px] rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950" role="note">
-            Sign-in is available in English. After signing in, the current dashboard, study tools, support and account emails remain primarily in Spanish.
-          </p>
-        ) : null}
 
         {notice ? (
           <div
@@ -433,11 +437,11 @@ export default function LoginFormGoogleFirst({ locale = 'es' }: { locale?: 'es' 
             />
             <span>
               {english ? 'I agree to the ' : 'Acepto los '}
-              <Link href="/terminos" className="font-semibold text-blue-600 hover:underline">
-                {english ? 'Terms (Spanish)' : 'Términos'}
+              <Link href={english ? "/en/terms" : "/terminos"} className="font-semibold text-blue-600 hover:underline">
+                {english ? 'Terms' : 'Términos'}
               </Link>{english ? ' and the ' : ' y la '}
-              <Link href="/privacidad" className="font-semibold text-blue-600 hover:underline">
-                {english ? 'Privacy Policy (Spanish)' : 'Política de privacidad'}
+              <Link href={english ? "/en/privacy" : "/privacidad"} className="font-semibold text-blue-600 hover:underline">
+                {english ? 'Privacy Policy' : 'Política de privacidad'}
               </Link>
               .
             </span>

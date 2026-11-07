@@ -1,4 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { accountAppLocale } from '@/lib/i18n/app-locale';
 import Link from 'next/link';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -60,7 +62,11 @@ export default async function PracticeModePage({ params, searchParams }: { param
   if (!supported.includes(mode) || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClientServer();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login?next=' + encodeURIComponent('/dashboard/practicar/' + id + '/' + mode));
+  if (!user) {
+    const entryLocale = (await cookies()).get('evaluo_ui_locale')?.value;
+    redirect((entryLocale === 'en' ? '/en/login' : '/login') + '?next=' + encodeURIComponent('/dashboard/practicar/' + id + '/' + mode));
+  }
+  const english = accountAppLocale(user.user_metadata) === 'en';
   const { data: material } = await supabase.from('student_materials')
     .select('id,title,file_name,file_path,processing_status,content_fingerprint,pedagogical_artifacts_version')
     .eq('id', id).eq('user_id', user.id).maybeSingle();
@@ -72,7 +78,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
     title: material.title, allowOnDemandRegeneration: false,
   });
   if (studySummary.status !== 'ready') {
-    return <main className="mx-auto max-w-3xl p-6"><p>El material todavía se está preparando.</p><Link className="text-blue-600 underline" href="/dashboard/practicar">Volver a Practicar</Link></main>;
+    return <main className="mx-auto max-w-3xl p-6"><p>{english ? 'Your study material is still being prepared.' : 'El material todavía se está preparando.'}</p><Link className="text-blue-600 underline" href="/dashboard/practicar">{english ? 'Back to practice' : 'Volver a Practicar'}</Link></main>;
   }
   const glossary = tagGlossaryChapters(studyGlossary, studySummary.sections);
   const requestedBack = safePremiumReturnTo(returnTo);
@@ -83,13 +89,19 @@ export default async function PracticeModePage({ params, searchParams }: { param
     : planTopicIndex !== undefined
       ? '/materiales/' + id + '?tab=resumen&studyTopic=' + planTopicIndex
       : '/dashboard/practicar?materialId=' + id;
-  const backLabel = backHref.startsWith('/dashboard/plan-de-estudio')
-    ? 'Volver al plan'
-    : backHref.includes('tab=tarjetas') ? 'Volver a flashcards'
-    : backHref.includes('tab=ejercicios') ? 'Volver a la práctica'
-    : backHref.startsWith('/materiales/') ? 'Volver al tema'
-    : backHref.startsWith('/dashboard') && !backHref.startsWith('/dashboard/practicar')
-      ? 'Volver a Mi espacio' : 'Volver a Practicar';
+  const backLabel = english
+    ? backHref.startsWith('/dashboard/plan-de-estudio') ? 'Back to study plan'
+      : backHref.includes('tab=tarjetas') ? 'Back to flashcards'
+      : backHref.includes('tab=ejercicios') ? 'Back to exercises'
+      : backHref.startsWith('/materiales/') ? 'Back to topic'
+      : backHref.startsWith('/dashboard') && !backHref.startsWith('/dashboard/practicar')
+        ? 'Back to my study space' : 'Back to practice'
+    : backHref.startsWith('/dashboard/plan-de-estudio') ? 'Volver al plan'
+      : backHref.includes('tab=tarjetas') ? 'Volver a flashcards'
+      : backHref.includes('tab=ejercicios') ? 'Volver a la práctica'
+      : backHref.startsWith('/materiales/') ? 'Volver al tema'
+      : backHref.startsWith('/dashboard') && !backHref.startsWith('/dashboard/practicar')
+        ? 'Volver a Mi espacio' : 'Volver a Practicar';
   // Premium must take the student BACK TO THE INTENDED ACTIVITY after checkout.
   // The secondary button returns to the source screen instead.
   const practiceHref = '/dashboard/practicar/' + id + '/' + mode +

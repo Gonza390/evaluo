@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangLanguages } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
 export type StudyMarket = 'es' | 'es-mx' | 'es-co' | 'es-es';
@@ -121,15 +122,7 @@ export const STUDY_MARKETS: Record<StudyMarket, StudyCopy> = {
 
 export const STUDY_MARKET_ORDER: StudyMarket[] = ['es', 'es-mx', 'es-co', 'es-es'];
 
-export const STUDY_HREFLANG: Record<string, string> = {
-  es: toAbsoluteUrl(STUDY_MARKETS.es.path),
-  'es-MX': toAbsoluteUrl(STUDY_MARKETS['es-mx'].path),
-  'es-CO': toAbsoluteUrl(STUDY_MARKETS['es-co'].path),
-  'es-ES': toAbsoluteUrl(STUDY_MARKETS['es-es'].path),
-  'es-AR': toAbsoluteUrl('/estudiar-pdf-con-ia'),
-  en: toAbsoluteUrl('/en/study-pdf-with-ai'),
-  'x-default': toAbsoluteUrl(STUDY_MARKETS.es.path),
-};
+export const STUDY_HREFLANG: Record<string, string> = hreflangLanguages('study-pdf');
 
 export function getStudyLandingMetadata(market: StudyMarket): Metadata {
   const content = STUDY_MARKETS[market];

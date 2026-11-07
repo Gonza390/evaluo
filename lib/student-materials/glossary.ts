@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase-admin';
+import { studyGenerationInstruction } from '@/lib/i18n/study-language';
 import { logError } from '@/lib/observability';
 import {
   requestGeminiImagesJson,
@@ -451,6 +452,7 @@ function buildGlossaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     .join('\n');
 
   return [
+    studyGenerationInstruction(input.studyLocale ?? 'es'),
     'Actúa como un profesor experto y un especialista en técnicas de estudio.',
     'He subido un archivo PDF que contiene material que debo estudiar.',
     'Analiza el documento por completo y crea un glosario exhaustivo, claro y estructurado con los términos clave.',

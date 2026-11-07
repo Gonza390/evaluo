@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase-admin';
+import { studyGenerationInstruction } from '@/lib/i18n/study-language';
 import { logError } from '@/lib/observability';
 import {
   requestGeminiImagesJson,
@@ -142,6 +143,7 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     .join('\n');
 
   return [
+    studyGenerationInstruction(input.studyLocale ?? 'es'),
     'Actúa como un tutor académico y experto en síntesis de contenido.',
     'Analiza el documento PDF adjunto y genera un documento de estudio estructurado con el formato solicitado.',
     'Debes responder únicamente con JSON válido.',
@@ -217,6 +219,7 @@ function buildSummaryChunkPrompt(
     .join('\n');
 
   return [
+    studyGenerationInstruction(input.studyLocale ?? 'es'),
     'Sos parte de un proceso de resumen por partes de un PDF universitario.',
     `Estás analizando la parte ${chunkIndex} de ${totalChunks} del documento.`,
     'Debes responder únicamente con JSON válido.',

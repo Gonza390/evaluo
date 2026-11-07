@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import {
   Select,
   SelectContent,
@@ -41,8 +42,8 @@ type Props = {
   handleSave: () => void | Promise<void>;
 };
 const ANIOS_CARRERA = ['1', '2', '3', '4', '5', '6'] as const;
-function anioCarreraLabel(value: string) {
-  return value === '6' ? '6to o más' : `${value}° año`;
+function anioCarreraLabel(value: string, english: boolean) {
+  return english ? (value === '6' ? '6th year or later' : `Year ${value}`) : (value === '6' ? '6to o más' : `${value}° año`);
 }
 export function ProfileSettingsForm({
   nombre,
@@ -72,6 +73,8 @@ export function ProfileSettingsForm({
   saving,
   handleSave,
 }: Props) {
+  const english = useOptionalAppLocale() === 'en';
+  const tr = (es: string,en: string) => english ? en : es;
   return (
     <form
       onSubmit={(event) => {
@@ -79,26 +82,26 @@ export function ProfileSettingsForm({
         void handleSave();
       }}
       className="border-border bg-card space-y-4 rounded-xl border p-3.5 sm:p-4"
-      aria-label="Datos de tu perfil"
+      aria-label={tr("Datos de tu perfil","Your profile information")}
     >
-      <h2 className="text-foreground text-[15px] font-semibold">Datos personales</h2>
+      <h2 className="text-foreground text-[15px] font-semibold">{tr("Datos personales","Personal information")}</h2>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="nombre" className="text-foreground text-[13px] font-medium">
-            Nombre
+            {tr("Nombre","Name")}
           </Label>
           <Input
             id="nombre"
             value={nombre}
             onChange={(event) => setNombre(event.target.value)}
-            placeholder="Tu nombre completo"
+            placeholder={tr("Tu nombre completo","Your full name")}
             className="border-input bg-card h-11 rounded-lg text-base md:text-[13px]"
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="email" className="text-foreground text-[13px] font-medium">
-            Correo electrónico
+            {tr("Correo electrónico","Email address")}
           </Label>
           <Input
             id="email"
@@ -113,13 +116,13 @@ export function ProfileSettingsForm({
       <div>
         <div className="flex items-center gap-2">
           <Globe2 className="text-brand h-4 w-4" />
-          <h2 className="text-foreground text-sm font-bold">Contacto</h2>
+          <h2 className="text-foreground text-sm font-bold">{tr("Contacto","Contact details")}</h2>
         </div>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="pais" className="text-foreground text-[13px] font-medium">
-              País
+              {tr("País","Country")}
             </Label>
             <div className="relative">
               <MapPin className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -127,7 +130,7 @@ export function ProfileSettingsForm({
                 id="pais"
                 value={pais}
                 onChange={(event) => setPais(event.target.value)}
-                placeholder="Ej: Argentina"
+                placeholder={tr("Ej: Argentina","e.g. Argentina")}
                 className="border-input bg-card h-11 rounded-lg pl-10 text-base md:text-[13px]"
               />
             </div>
@@ -135,7 +138,7 @@ export function ProfileSettingsForm({
 
           <div className="space-y-1.5">
             <Label htmlFor="telefono" className="text-foreground text-[13px] font-medium">
-              Teléfono <span className="text-muted-foreground font-normal">(opcional)</span>
+              {tr("Teléfono","Phone")} <span className="text-muted-foreground font-normal">{tr("(opcional)","(optional)")}</span>
             </Label>
             <div className="relative">
               <Phone className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -144,7 +147,7 @@ export function ProfileSettingsForm({
                 type="tel"
                 value={telefono}
                 onChange={(event) => setTelefono(event.target.value)}
-                placeholder="Ej: +54 9 11 1234 5678"
+                placeholder={english ? 'e.g. +1 555 0100' : 'Ej: +54 9 11 1234 5678'}
                 className="border-input bg-card h-11 rounded-lg pl-10 text-base md:text-[13px]"
               />
             </div>
@@ -157,12 +160,12 @@ export function ProfileSettingsForm({
         aria-labelledby="academic-settings-title"
       >
         <h2 id="academic-settings-title" className="text-foreground text-[15px] font-semibold">
-          Tu formación
+          {tr("Tu formación","Your education")}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="universidad-search" className="text-foreground text-[13px] font-medium">
-              Universidad
+              {tr("Universidad","University")}
             </Label>
             <div className="relative">
               <School className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -175,7 +178,7 @@ export function ProfileSettingsForm({
                   setCarreraId('');
                   setCarreraSearch('');
                 }}
-                placeholder="Buscá tu universidad"
+                placeholder={tr("Buscá tu universidad","Search for your university")}
                 className="border-input bg-card h-11 rounded-lg pl-10 text-base md:text-[13px]"
               />
             </div>
@@ -188,8 +191,8 @@ export function ProfileSettingsForm({
                 ) : universidades.length === 0 ? (
                   <div className="text-muted-foreground px-4 py-4 text-sm">
                     {hasLoadedUniversidades
-                      ? 'No encontramos esa universidad.'
-                      : 'Escribí al menos 2 letras para buscar tu universidad.'}
+                      ? tr("No encontramos esa universidad.","University not found.")
+                      : tr("Escribí al menos 2 letras para buscar tu universidad.","Enter at least two letters to search.")}
                   </div>
                 ) : (
                   universidades.map((universidad) => (
@@ -212,7 +215,7 @@ export function ProfileSettingsForm({
                       {universidadId === universidad.id ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold">
                           <CheckCircle2 className="h-3.5 w-3.5" />
-                          Seleccionada
+                          {tr("Seleccionada","Selected")}
                         </span>
                       ) : null}
                     </button>
@@ -224,7 +227,7 @@ export function ProfileSettingsForm({
 
           <div className="space-y-1.5">
             <Label htmlFor="carrera-search" className="text-foreground text-[13px] font-medium">
-              Carrera
+              {tr("Carrera","Degree program")}
             </Label>
             <div className="relative">
               <GraduationCap className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
@@ -238,8 +241,8 @@ export function ProfileSettingsForm({
                 disabled={!universidadId}
                 placeholder={
                   universidadSeleccionada
-                    ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
-                    : 'Primero seleccioná una universidad'
+                    ? (english ? `Search for your degree program at ${universidadSeleccionada.nombre}` : `Buscá tu carrera en ${universidadSeleccionada.nombre}`)
+                    : tr("Primero seleccioná una universidad","Select a university first")
                 }
                 className="border-input bg-card h-11 rounded-lg pl-10 text-base disabled:opacity-60 md:text-[13px]"
               />
@@ -252,11 +255,11 @@ export function ProfileSettingsForm({
                   </div>
                 ) : !universidadId ? (
                   <div className="text-muted-foreground px-4 py-4 text-sm">
-                    Primero seleccioná una universidad.
+                    {tr("Primero seleccioná una universidad.","Select a university first.")}
                   </div>
                 ) : carrerasFiltradas.length === 0 ? (
                   <div className="text-muted-foreground px-4 py-4 text-sm">
-                    No encontramos carreras para esa búsqueda.
+                    {tr("No encontramos carreras para esa búsqueda.","No degree programs match that search.")}
                   </div>
                 ) : (
                   carrerasFiltradas.map((carrera) => (
@@ -275,7 +278,7 @@ export function ProfileSettingsForm({
                       {carreraId === carrera.id ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold">
                           <CheckCircle2 className="h-3.5 w-3.5" />
-                          Seleccionada
+                          {tr("Seleccionada","Selected")}
                         </span>
                       ) : null}
                     </button>
@@ -288,20 +291,20 @@ export function ProfileSettingsForm({
       </section>
       <div className="space-y-1.5 sm:max-w-xs">
         <Label htmlFor="anio-carrera" className="text-foreground text-[13px] font-medium">
-          Año de carrera que cursás{' '}
-          <span className="text-muted-foreground font-normal">(opcional)</span>
+          {tr("Año de carrera que cursás","Current year of your degree program")}{" "}
+          <span className="text-muted-foreground font-normal">{tr("(opcional)","(optional)")}</span>
         </Label>
         <Select value={anioCarrera || undefined} onValueChange={setAnioCarrera}>
           <SelectTrigger
             id="anio-carrera"
             className="border-input bg-card h-11 w-full rounded-lg text-base md:text-[13px]"
           >
-            <SelectValue placeholder="Seleccioná tu año" />
+            <SelectValue placeholder={tr("Seleccioná tu año","Select your year")} />
           </SelectTrigger>
           <SelectContent>
             {ANIOS_CARRERA.map((value) => (
               <SelectItem key={value} value={value}>
-                {anioCarreraLabel(value)}
+                {anioCarreraLabel(value,english)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -316,17 +319,17 @@ export function ProfileSettingsForm({
           {saving ? (
             <>
               <Spinner size="sm" className="mr-2" />
-              Guardando cambios
+              {tr("Guardando cambios","Saving changes")}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Guardar cambios
+              {tr("Guardar cambios","Save changes")}
             </>
           )}
         </Button>
         <p className="text-muted-foreground text-xs leading-5">
-          Podés guardar un solo cambio sin completar el resto del perfil.
+          {tr("Podés guardar un solo cambio sin completar el resto del perfil.","You can save a single change without filling out the rest of the profile.")}
         </p>
       </div>
     </form>

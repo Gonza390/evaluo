@@ -1,5 +1,6 @@
 import 'server-only';
 import { SITE_URL } from '@/lib/site';
+import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -21,10 +22,10 @@ type StudyErrorRow = {
   topic: string | null;
 };
 
-function firstName(value: string | null | undefined) {
+function firstName(value: string | null | undefined, locale: AppLocale = 'es') {
   const normalized = value?.trim();
-  if (!normalized) return 'estudiante';
-  return normalized.split(/\s+/)[0] || 'estudiante';
+  if (!normalized) return locale === 'en' ? 'student' : 'estudiante';
+  return normalized.split(/\s+/)[0] || (locale === 'en' ? 'student' : 'estudiante');
 }
 
 function buildReviewUrl(materialId: string) {
@@ -38,25 +39,29 @@ function buildReviewUrl(materialId: string) {
   return url.toString();
 }
 
-function buildExtraTopicsText(topicCount: number) {
+function buildExtraTopicsText(topicCount: number, locale: AppLocale) {
   const extra = Math.max(0, topicCount - 3);
   if (extra === 0) return '';
-  return `+${extra} tema${extra === 1 ? '' : 's'} más`;
+  return locale === 'en' ? `+${extra} more topic${extra === 1 ? '' : 's'}` : `+${extra} tema${extra === 1 ? '' : 's'} más`;
 }
 
-function buildFlashcardReviewMessage(input: {
+export function buildFlashcardReviewMessage(input: {
   firstname: string;
   materialTitle: string;
   pendingCount: number;
   topics: string[];
   reviewUrl: string;
+  locale?: AppLocale;
 }) {
-  const subject =
-    input.pendingCount === 1
+  const english = input.locale === 'en';
+  const subject = english
+    ? `You have ${input.pendingCount} concept${input.pendingCount === 1 ? '' : 's'} to review in ${input.materialTitle}`
+    : input.pendingCount === 1
       ? `Tenés 1 concepto para reforzar en ${input.materialTitle}`
       : `Tenés ${input.pendingCount} conceptos para reforzar en ${input.materialTitle}`;
-  const heading =
-    input.pendingCount === 1
+  const heading = english
+    ? `You have ${input.pendingCount} concept${input.pendingCount === 1 ? '' : 's'} to review`
+    : input.pendingCount === 1
       ? 'Tenés un concepto para reforzar'
       : `Tenés ${input.pendingCount} conceptos para reforzar`;
 
@@ -66,27 +71,31 @@ function buildFlashcardReviewMessage(input: {
         .map((topic) => `<li style="margin:0 0 6px;">${escapeEmailHtml(topic)}</li>`)
         .join('')}</ul>`
     : '';
-  const extraTopicsText = buildExtraTopicsText(input.topics.length);
+  const extraTopicsText = buildExtraTopicsText(input.topics.length, input.locale ?? 'es');
   const extraTopics = extraTopicsText
     ? `<p style="margin:8px 0 0;font-size:13px;color:#7F8AA3;">${escapeEmailHtml(extraTopicsText)}</p>`
     : '';
 
-  const bodyHtml = `<p style="margin:0;">En tus flashcards de <strong>${escapeEmailHtml(
-    input.materialTitle
-  )}</strong> quedaron conceptos que todavía conviene repasar.</p>${topicList}${extraTopics}`;
+  const bodyHtml = english
+    ? `<p style="margin:0;">Your flashcards for <strong>${escapeEmailHtml(input.materialTitle)}</strong> include concepts worth reviewing.</p>${topicList}${extraTopics}`
+    : `<p style="margin:0;">En tus flashcards de <strong>${escapeEmailHtml(input.materialTitle)}</strong> quedaron conceptos que todavía conviene repasar.</p>${topicList}${extraTopics}`;
 
   const html = buildEvaluoEmailHtml({
     firstname: input.firstname,
+    locale: input.locale,
     heading,
     eyebrow: input.materialTitle,
     bodyHtml,
-    ctaLabel: 'Repasar ahora',
+    ctaLabel: english ? 'Review now' : 'Repasar ahora',
     ctaUrl: input.reviewUrl,
-    reason:
-      'Te enviamos este mensaje porque marcaste conceptos como desconocidos mientras estudiabas tus flashcards en Evaluo.',
+    reason: english
+      ? 'You received this message because you marked concepts as unfamiliar while studying flashcards in Evaluo.'
+      : 'Te enviamos este mensaje porque marcaste conceptos como desconocidos mientras estudiabas tus flashcards en Evaluo.',
   });
 
-  const text = `Hola ${input.firstname}. Tenés ${input.pendingCount} concepto${input.pendingCount === 1 ? '' : 's'} para reforzar en ${input.materialTitle}. Repasá ahora: ${input.reviewUrl}`;
+  const text = english
+    ? `Hi ${input.firstname}. You have ${input.pendingCount} concept${input.pendingCount === 1 ? '' : 's'} to review in ${input.materialTitle}. Review now: ${input.reviewUrl}`
+    : `Hola ${input.firstname}. Tenés ${input.pendingCount} concepto${input.pendingCount === 1 ? '' : 's'} para reforzar en ${input.materialTitle}. Repasá ahora: ${input.reviewUrl}`;
 
   return { subject, html, text };
 }
@@ -225,7 +234,8 @@ export async function runFlashcardReviewReminderDispatch(options?: { dryRun?: bo
             : null;
       const displayName =
         (profileResult.data as { nombre?: string | null } | null)?.nombre || fallbackName;
-      const displayFirstName = firstName(displayName);
+      const locale = accountAppLocale(user.user_metadata) ?? 'es';
+      const displayFirstName = firstName(displayName, locale);
       const reviewUrl = buildReviewUrl(reminder.material_id);
 
       const message = buildFlashcardReviewMessage({
@@ -234,6 +244,7 @@ export async function runFlashcardReviewReminderDispatch(options?: { dryRun?: bo
         pendingCount: pendingErrors.length,
         topics,
         reviewUrl,
+        locale,
       });
 
       const senderResult = await sendSenderTransactional({

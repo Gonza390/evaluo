@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const selector = readFileSync('components/marketing/landing-language-selector.tsx', 'utf8');
+const home = readFileSync('components/marketing/home-redesign.tsx', 'utf8');
+const english = readFileSync('components/marketing/english-study-page.tsx', 'utf8');
+const englishHeader = readFileSync('components/marketing/english-seo-header.tsx', 'utf8');
+const publicHeader = readFileSync('components/marketing/public-site-header.tsx', 'utf8');
+const blog = readFileSync('components/marketing/study-blog-view.tsx', 'utf8');
+const practice = readFileSync('components/marketing/bilingual-practice-landings.tsx', 'utf8');
+const appLocale = readFileSync('lib/i18n/app-locale.ts', 'utf8');
+
+assert.match(selector, /data-landing-language-selector/);
+assert.match(selector, /<details/);
+assert.match(selector, /<summary/);
+assert.match(selector, /Globe2/);
+assert.match(selector, /aria-current=\{locale === option\.locale \? 'page'/);
+assert.match(selector, /window\.localStorage\.setItem\(APP_LOCALE_STORAGE_KEY, next\)/);
+assert.match(selector, /document\.cookie =/);
+assert.match(selector, /prefetch=\{false\}/);
+assert.match(selector, /locale: 'es', label: 'Español',[^\n]+href: '\/'/);
+assert.match(selector, /locale: 'en', label: 'English',[^\n]+href: '\/en'/);
+assert.ok(selector.indexOf("locale: 'es'") < selector.indexOf("locale: 'en'"), 'Spanish should be first in menu');
+assert.match(home, /<LandingLanguageSelector locale=(?:"es"|\{locale\}) \/>/);
+assert.match(english, /<EnglishSeoHeader(?: alternateHref=\{hreflangAlternatePath\(page\.path, 'es'\)\})? \/>/);
+assert.match(englishHeader, /<LandingLanguageSelector locale="en" alternateHref=\{alternateHref\} \/>/);
+assert.match(publicHeader, /<LandingLanguageSelector locale="es" alternateHref=\{alternateHref\} \/>/);
+assert.match(blog, /<EnglishSeoHeader alternateHref=\{alternateHref\} \/>/);
+assert.match(practice, /<EnglishSeoHeader alternateHref=\{paths\.es\[kind\]\} \/>/);
+assert.match(selector, /usePathname/);
+assert.match(selector, /SEO_EQUIVALENT_PAGES/);
+assert.match(appLocale, /APP_LOCALE_STORAGE_KEY/);
+console.log('[landing-i18n] ES/EN selector, order, routes, persistence and both headers verified.');

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
 import { isQaAccount } from '@/lib/qa-account';
+import { accountAppLocale, parseAppLocale } from '@/lib/i18n/app-locale';
 
 type SessionCookie = { name: string; value: string; options?: CookieOptions };
 function redirectWithSessionCookies(url: string, sessionCookies: SessionCookie[]) {
@@ -31,6 +32,8 @@ export async function GET(request: Request) {
   const analyticsSessionKey = normalizeAnalyticsSessionKey(
     requestUrl.searchParams.get('analytics_session')
   );
+  const requestedUiLocale = parseAppLocale(requestUrl.searchParams.get('ui_locale'));
+  const authEntryLocale = requestedUiLocale ?? parseAppLocale((await cookies()).get('evaluo_ui_locale')?.value);
   const nextPathRaw = requestUrl.searchParams.get('next');
   // Solo redirigir a rutas internas: rechaza URLs absolutas (https://), scheme
   // relativo (//host) y rutas que no empiecen con '/'.
@@ -43,7 +46,7 @@ export async function GET(request: Request) {
       : '/dashboard';
 
   if (!code) {
-    const loginUrl = new URL('/login', requestUrl.origin);
+    const loginUrl = new URL(authEntryLocale === 'en' ? '/en/login' : '/login', requestUrl.origin);
     loginUrl.searchParams.set('next', nextPath);
     loginUrl.searchParams.set('reason', 'auth-expired');
     return NextResponse.redirect(loginUrl);
@@ -83,6 +86,17 @@ export async function GET(request: Request) {
         'google';
       const qaAccount = isQaAccount(user);
       const deviceType = detectDeviceType(request.headers.get('user-agent') ?? '');
+
+      // First English OAuth signup/login inherits the public locale only if
+      // the account has never saved its own language preference.
+      const entryLocale = requestedUiLocale ?? parseAppLocale(cookieStore.get('evaluo_ui_locale')?.value);
+      if (entryLocale && accountAppLocale(user.user_metadata) !== entryLocale) {
+        try {
+          await supabase.auth.updateUser({ data: { ui_locale: entryLocale } });
+        } catch {
+          // Localization preference is best effort and must not block authentication.
+        }
+      }
 
       // QA no inserta eventos de autenticación. Tampoco borra sesiones: la clave
       // analytics_session proviene de una URL y no acredita propiedad sobre registros.
@@ -128,8 +142,8 @@ export async function GET(request: Request) {
       return redirectWithSessionCookies(`${requestUrl.origin}${nextPath}`, sessionCookies);
     }
 
-    // Código OAuth expirado, reutilizado o inválido: solicitar nuevo inicio de sesión.
-    const loginUrl = new URL('/login', requestUrl.origin);
+    // Preserve the chosen language on an expired or invalid OAuth callback.
+    const loginUrl = new URL(authEntryLocale === 'en' ? '/en/login' : '/login', requestUrl.origin);
     loginUrl.searchParams.set('next', nextPath);
     loginUrl.searchParams.set('reason', 'auth-expired');
     return redirectWithSessionCookies(loginUrl.toString(), sessionCookies);

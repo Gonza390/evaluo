@@ -7,6 +7,12 @@ on:
       - '.github/workflows/seo-domain-live-audit.yml'
       - 'scripts/audit-live-domain-migration.mjs'
 
+# Un push o PR nuevo cancela la corrida anterior de la misma rama/PR.
+# En main nunca se cancela: cada release de producción se verifica completo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   public-migration:
     name: Public redirects, canonicals, sitemap and hreflang

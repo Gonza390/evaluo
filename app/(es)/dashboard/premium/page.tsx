@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClientServer } from '@/lib/supabase-server';
 import { premiumDashboardHref, safePremiumReturnTo } from '@/lib/premium-flow';
 import { PremiumDashboardScreen } from '@/components/pricing/PremiumDashboardScreen';
 
 export const metadata: Metadata = {
-  title: 'Premium | Evaluo',
+  title: 'Premium',
   robots: { index: false, follow: false },
 };
 
@@ -29,7 +30,8 @@ export default async function DashboardPremiumPage({
   if (!user) {
     // El login no debe borrar la modalidad, materia y tema del upsell.
     const nextPath = premiumDashboardHref({source, materiaId, parcial, returnTo});
-    redirect('/login?mode=login&intent=premium&next=' + encodeURIComponent(nextPath));
+    const entryLocale = (await cookies()).get('evaluo_ui_locale')?.value;
+    redirect((entryLocale === 'en' ? '/en/login' : '/login') + '?mode=login&intent=premium&next=' + encodeURIComponent(nextPath));
   }
 
   return <PremiumDashboardScreen source={source} materiaId={materiaId}

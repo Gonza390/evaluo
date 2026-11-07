@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Política de reembolsos | Evaluo',
+  title: 'Política de reembolsos',
   description: 'Información sobre reembolsos en Evaluo para compras en Argentina e internacionales.',
   alternates: { canonical: '/reembolsos' },
   robots: { index: false, follow: true },
@@ -18,12 +18,12 @@ const sections = [
     'Los pagos disponibles en Argentina se procesan actualmente mediante Mercado Pago. Evaluo puede ayudarte a revisar errores de cobro, cancelaciones y solicitudes de devolución, conforme a las reglas del proveedor y las leyes aplicables.',
   ] },
   { title: 'Compras internacionales: Creem', paragraphs: [
-    'Evaluo está preparando Creem para ventas fuera de Argentina. Esta modalidad estará disponible únicamente cuando Creem apruebe la tienda y el checkout internacional esté habilitado con sus precios públicos.',
-    'Cuando Creem figure en el comprobante como vendedor registrado (Merchant of Record), se aplicarán las condiciones de la transacción y las reglas de devolución informadas durante la compra. El soporte de Evaluo puede orientarte hacia los canales correspondientes.',
+    'Cuando el checkout internacional esté habilitado, las compras fuera de Argentina se procesarán mediante Creem (Armitage Labs OÜ), que actúa como vendedor registrado (Merchant of Record). El importe final, incluidos los impuestos aplicables, se mostrará antes del pago.',
+    'Cuando Creem figure en el comprobante como vendedor registrado, se aplicarán también sus términos para compradores y su procedimiento para procesar devoluciones. El soporte de Evaluo puede orientarte hacia los canales correspondientes.',
   ] },
-  { title: 'Cómo solicitar una devolución de una compra internacional', paragraphs: [
-    'Cuando el comprobante indique que Creem es el vendedor registrado (Merchant of Record), utilizá los canales de soporte, suscripciones y devoluciones indicados en el checkout o comprobante. Para problemas con el funcionamiento de Evaluo, escribí a facturacion@evaluo.com.ar.',
-    'Las compras realizadas mediante Creem estarán sujetas a las condiciones de reembolso informadas en la compra y a los derechos irrenunciables del consumidor. Podés contactar a facturacion@evaluo.com.ar para solicitar asistencia.',
+  { title: 'Cómo solicitar una devolución con Creem', paragraphs: [
+    'Si compraste a través de Creem, contactá primero a facturacion@evaluo.com.ar indicando la fecha, el producto y una referencia del recibo. Evaluo evaluará la solicitud y, cuando corresponda, gestionará la devolución a través de Creem. Para asuntos no resueltos también podés usar el portal de clientes o soporte de Creem.',
+    'Las compras efectuadas con Creem están sujetas a los términos para compradores de https://www.creem.io/buyer-terms y a los derechos irrenunciables del consumidor. Creem procesa las devoluciones aprobadas.',
     'En la Unión Europea, el Espacio Económico Europeo y el Reino Unido pueden corresponder derechos de desistimiento, generalmente durante los primeros 14 días, con excepciones aplicables a productos y servicios digitales cuando el usuario haya consentido su uso inmediato. El alcance concreto se determina por las condiciones informadas al comprar y la legislación aplicable.',
     'Cancelar una renovación no genera automáticamente un reembolso del período pagado; la solicitud de devolución se tramita por el canal del vendedor indicado en el comprobante.',
   ] },

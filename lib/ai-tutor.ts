@@ -1,4 +1,6 @@
 import { buildStudyErrorReviewPrompt } from '@/lib/study-error-review-prompt';
+import { studyGenerationInstruction } from '@/lib/i18n/study-language';
+import type { AppLocale } from '@/lib/i18n/app-locale';
 import { logError } from '@/lib/observability';
 import {
   requestGeminiText,
@@ -20,6 +22,7 @@ import {
 } from '@/lib/ai/safety';
 
 type ExplainInput = {
+  locale?: AppLocale;
   question: string;
   options: string[];
   correctAnswer: string;
@@ -29,6 +32,7 @@ type ExplainInput = {
 export type TutorQuickHelpKind = 'why_wrong' | 'simpler' | 'example';
 
 type QuickHelpInput = {
+  locale?: AppLocale;
   kind: TutorQuickHelpKind;
   question: string;
   selectedAnswer?: string | null;
@@ -49,6 +53,7 @@ function buildPrompt(input: ExplainInput) {
     : 'Sin fuente interna disponible.';
 
   return [
+    studyGenerationInstruction(input.locale ?? 'es'),
     'Sos un tutor universitario claro, preciso y amable.',
     'Explicá por qué la respuesta correcta es correcta y por qué suelen confundirse las opciones incorrectas.',
     'Si hay fuentes, basate primero en ellas. Si no hay fuentes, da una explicación académica general y acláralo brevemente.',
@@ -79,8 +84,9 @@ function buildQuickHelpPrompt(input: QuickHelpInput) {
     : 'Sin fragmento de fuente adicional.';
 
   return [
+    studyGenerationInstruction(input.locale ?? 'es'),
     'Sos un tutor universitario claro y preciso.',
-    'Hablale directamente al estudiante con voseo argentino: "Elegiste", "podés", "pensá". No lo llames "el alumno" ni juzgues su capacidad.',
+    input.locale === 'en' ? 'Address the student directly in English without judgment; preserve original source quotations.' : 'Hablale directamente al estudiante con voseo argentino: "Elegiste", "podés", "pensá". No lo llames "el alumno" ni juzgues su capacidad.',
     instruction,
     'Ordená la ayuda en párrafos cortos. Primero aclarás la confusión, después mostrás cómo pensar el concepto. No repitas literalmente las dos respuestas sin explicarlas.',
     'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
@@ -154,7 +160,7 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
         ? await tryProvider('groq', () =>
             requestGroqText({
               ...common,
-              system: 'Sos un tutor académico que explica de forma clara y accionable.',
+              system: input.locale === 'en' ? 'You are an accurate tutor. Explain in English, citing original source language verbatim.' : 'Sos un tutor académico que explica de forma clara y accionable.',
               maxTokens: 420,
             })
           )
@@ -197,7 +203,7 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
         ? await tryProvider('groq', () =>
             requestGroqText({
               ...common,
-              system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
+              system: input.locale === 'en' ? 'You are an accurate tutor. Explain in English, citing original source language verbatim.' : 'Sos un tutor académico que responde de forma breve, clara y accionable.',
               maxTokens: outputBudget,
             })
           )

@@ -42,6 +42,44 @@ try {
   const { NextRequest } = await import('next/server.js');
   const { proxy } = await import('../proxy.ts');
 
+  // First-visit language: manual cookie > browser > geolocation. No Auth calls.
+  const englishBrowser = await proxy(new NextRequest('https://evaluo.com.ar/?ref=TEST123&utm_source=welcome', {
+    headers: { 'accept-language': 'en-US,en;q=0.9', 'x-vercel-ip-country': 'AR' },
+  }));
+  assert.equal(englishBrowser.status, 307);
+  assert.equal(englishBrowser.headers.get('location'), 'https://evaluo.com.ar/en?ref=TEST123&utm_source=welcome');
+  assert.equal(englishBrowser.cookies.get('evaluo_ref')?.value, 'TEST123');
+  assert.equal(englishBrowser.headers.get('cache-control'), 'private, no-store');
+  const englishCountry = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { 'x-vercel-ip-country': 'US' },
+  }));
+  assert.equal(englishCountry.headers.get('location'), 'https://evaluo.com.ar/en');
+  const spanishCountry = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { 'x-vercel-ip-country': 'MX' },
+  }));
+  assert.equal(spanishCountry.headers.get('location'), null);
+  const spanishBrowser = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { 'accept-language': 'es-AR,es;q=0.9', 'x-vercel-ip-country': 'US' },
+  }));
+  assert.equal(spanishBrowser.headers.get('location'), null);
+  const manualSpanish = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { cookie: 'evaluo_ui_locale=es', 'accept-language': 'en-US', 'x-vercel-ip-country': 'US' },
+  }));
+  assert.equal(manualSpanish.headers.get('location'), null);
+  const manualEnglish = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { cookie: 'evaluo_ui_locale=en', 'accept-language': 'es-AR', 'x-vercel-ip-country': 'AR' },
+  }));
+  assert.equal(manualEnglish.headers.get('location'), 'https://evaluo.com.ar/en');
+  const crawler = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { 'user-agent': 'Googlebot', 'accept-language': 'en-US', 'x-vercel-ip-country': 'US' },
+  }));
+  assert.equal(crawler.headers.get('location'), null);
+  const prefetch = await proxy(new NextRequest('https://evaluo.com.ar/', {
+    headers: { 'next-router-prefetch': '1', 'accept-language': 'en-US' },
+  }));
+  assert.equal(prefetch.headers.get('location'), null);
+  assert.equal(authState.calls, 0, 'Locale detection must never call Auth.');
+
   const guest = await proxy(new NextRequest('https://evaluo.com.ar/'));
   assert.equal(guest.status, 200);
   assert.equal(guest.headers.get('location'), null);
@@ -176,8 +214,17 @@ try {
   );
   assert.equal(new URL(alreadyLoggedIn.headers.get('location')!).pathname, '/dashboard');
   assert.equal(alreadyLoggedIn.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
+  const authenticatedEnglishLogin = await proxy(new NextRequest('https://evaluo.com.ar/en/login', {
+    headers: { cookie: 'sb-test-auth-token=valid-session' },
+  }));
+  assert.equal(new URL(authenticatedEnglishLogin.headers.get('location')!).pathname, '/dashboard');
+  assert.equal(authenticatedEnglishLogin.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
+
   authState.user = null;
   authState.cookies = [];
+
+  const englishLoginGuest = await proxy(new NextRequest('https://evaluo.com.ar/en/login'));
+  assert.equal(englishLoginGuest.headers.get('location'), null);
 
   const callsBeforeLogin = authState.calls;
   const loginGuest = await proxy(new NextRequest('https://evaluo.com.ar/login'));

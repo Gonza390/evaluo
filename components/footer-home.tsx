@@ -7,7 +7,8 @@ const SOCIAL_LINKS = {
   linkedin: 'https://www.linkedin.com/company/evaluo-ar/',
 } as const;
 
-export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' }) {
+export function FooterHome({ variant = 'full', locale = 'es' }: { variant?: 'full' | 'compact'; locale?: 'es' | 'en' }) {
+  if (locale === 'en') return <EnglishHomeFooter />;
   if (variant === 'compact') {
     return (
       <footer className="mt-8 border-t border-slate-200 bg-white">
@@ -281,6 +282,65 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
             los derechos reservados.
           </p>
         </div>
+      </div>
+    </footer>
+  );
+}
+
+/** Same dark brand footer; English navigation only links to English content. */
+function EnglishHomeFooter() {
+  return (
+    <footer className="bg-[#050B2C] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <Link href="/en" className="inline-flex items-center gap-2 text-xl font-bold tracking-tight">
+              <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} />
+              <span>Evaluo</span>
+            </Link>
+            <p className="mt-2 max-w-xs text-xs text-white/70">Study smarter with your own notes.</p>
+            <p className="mt-2 max-w-sm text-[11px] leading-5 text-white/55">
+              Turn PDF or Word documents into topic summaries, flashcards, glossaries and practice questions.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Evaluo on Instagram"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20">
+                <Instagram className="h-4 w-4" aria-hidden="true" />
+              </a>
+              <a href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="Evaluo on LinkedIn"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition hover:bg-white/20">
+                <Linkedin className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 text-xs text-white/80">
+            <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white/60">Explore</p>
+            <Link href="/en">Home</Link>
+            <Link href="/en/features">Features</Link>
+            <Link href="/en/ai-test-prep">AI test prep</Link>
+            <Link href="/en/pdf-to-flashcards">AI flashcard generator</Link>
+            <Link href="/en/ai-pdf-summarizer">AI PDF summarizer</Link>
+            <Link href="/en/compare">Compare study tools</Link>
+            <Link href="/en/resources">English study guides</Link>
+            <Link href="/en/blog">Study blog</Link>
+            <Link href="/en/login?mode=signup">Create a free account</Link>
+            <Link href="/">Español</Link>
+          </div>
+          <div className="flex flex-col gap-2 text-xs text-white/80">
+            <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white/60">Legal</p>
+            <Link href="/en/terms">Terms of service</Link>
+            <Link href="/en/privacy">Privacy policy</Link>
+            <Link href="/en/refunds">Refund policy</Link>
+            <Link href="/en/billing">Billing terms</Link>
+            <Link href="/en/copyright">Copyright policy</Link>
+            <Link href="/en/acceptable-use">Acceptable use</Link>
+            <p className="mt-3 text-xs text-white/65">Support and billing inquiries</p>
+            <a className="break-all underline underline-offset-2" href="mailto:facturacion@evaluo.com.ar">facturacion@evaluo.com.ar</a>
+          </div>
+        </div>
+        <p className="mt-6 border-t border-white/10 pt-4 text-center text-xs text-white/55 md:text-left">
+          © Evaluo. All rights reserved.
+        </p>
       </div>
     </footer>
   );

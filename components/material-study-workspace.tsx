@@ -3,6 +3,8 @@
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 
 import Link from 'next/link';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import dynamic from 'next/dynamic';
 import {
   Activity,
@@ -371,6 +373,9 @@ export function MaterialStudyWorkspace({
   children,
   demo,
 }: MaterialStudyWorkspaceProps) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => studyUiText(locale, value);
   const isDocx = !demo && fileName.toLowerCase().endsWith('.docx');
   const { toast } = useToast();
   const router = useRouter();
@@ -1736,7 +1741,7 @@ export function MaterialStudyWorkspace({
       <div data-topic-resource-context={tab} className="border-primary/20 bg-primary/5 mb-3 flex flex-col gap-2.5 rounded-xl border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
           <p className="text-primary text-[11px] font-medium uppercase tracking-[0.12em]">
-            {tab === 'tarjetas' ? 'Flashcards' : 'Glosario'} · Tema {index + 1}
+            {t(tab === 'tarjetas' ? 'Flashcards' : 'Glosario')} · {t('Tema')} {index + 1}
           </p>
           <p className="text-foreground mt-1 text-[16px] leading-[1.4] font-semibold tracking-[-0.03em] break-words">
             {summaryChapters[index]?.displayTitle}
@@ -1745,7 +1750,7 @@ export function MaterialStudyWorkspace({
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" className="min-h-10 rounded-lg text-[13px]"
             onClick={() => returnToSummaryTopic(index)}>
-            <ChevronLeft aria-hidden className="h-4 w-4" /> Volver al tema
+            <ChevronLeft aria-hidden className="h-4 w-4" /> {t('Volver al tema')}
           </Button>
           <Button type="button" size="sm" className="min-h-10 rounded-lg text-[13px]"
             disabled={!topicQuestionCounts[index]} onClick={() => startChapterEvaluation(index)}>
@@ -1831,7 +1836,7 @@ export function MaterialStudyWorkspace({
               className={pdfStudyTabClassName}
             >
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {tab.label}
+              {t(tab.label)}
               {tab.premium ? (
                 <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase sm:text-[11px]">
                   Premium
@@ -1849,7 +1854,7 @@ export function MaterialStudyWorkspace({
             className={pdfStudyTabClassName}
           >
             <CircleAlert className="h-4 w-4" />
-            Progreso
+            {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
             )}
@@ -1880,7 +1885,7 @@ export function MaterialStudyWorkspace({
             )}
           >
             <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            Progreso
+            {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
             )}
@@ -1895,8 +1900,8 @@ export function MaterialStudyWorkspace({
           size="icon"
           onClick={handleRegenerate}
           disabled={isRegenerating}
-          title="Regenerar material"
-          aria-label="Regenerar material"
+          title={t('Regenerar material')}
+          aria-label={t('Regenerar material')}
           className="text-muted-foreground hover:text-foreground h-8 w-8 shrink-0 rounded-lg"
         >
           <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -1915,7 +1920,7 @@ export function MaterialStudyWorkspace({
             </div>
             <div className="min-w-0">
               <h3 className="text-foreground text-[1.2rem] font-normal tracking-[-0.05em]">
-                Estamos regenerando tu material
+                {t('Estamos regenerando tu material')}
               </h3>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">{fileName}</p>
             </div>
@@ -1925,7 +1930,7 @@ export function MaterialStudyWorkspace({
         <div className="space-y-5 px-5 py-5 sm:px-6">
           <div className="space-y-2">
             <div className="text-muted-foreground flex items-center justify-between text-[12px] font-medium tracking-[0.16em] uppercase">
-              <span>Progreso</span>
+              <span>{t('Progreso')}</span>
               <span>{Math.min(100, regenerationProgress)}%</span>
             </div>
             <div className="bg-card h-3 overflow-hidden rounded-full">
@@ -1954,7 +1959,7 @@ export function MaterialStudyWorkspace({
                         isActive ? 'text-foreground font-medium' : 'text-muted-foreground'
                       }
                     >
-                      {label}
+                      {t(label)}
                     </span>
                   </div>
                   {isActive ? (
@@ -1968,7 +1973,7 @@ export function MaterialStudyWorkspace({
           <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-[13px]">
             <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-3 py-1">
               <Clock3 className="h-3.5 w-3.5" />
-              Tiempo estimado restante: {estimatedTimeLabel}
+              {t('Tiempo estimado restante:')} {t(estimatedTimeLabel)}
             </span>
           </div>
 
@@ -2029,7 +2034,7 @@ export function MaterialStudyWorkspace({
                 onClick={() => setSummaryIntroExpanded((value) => !value)}
                 className="text-primary mt-1 text-[12px] font-medium hover:underline sm:hidden"
               >
-                {summaryIntroExpanded ? 'Ver menos' : 'Leer introducción completa'}
+                {t(summaryIntroExpanded ? "Ver menos" : "Leer introducción completa")}
               </button>
             ) : null}
 
@@ -2189,7 +2194,7 @@ export function MaterialStudyWorkspace({
                 Glosario
               </h2>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-                Conceptos clave para repasar tu material.
+                {english ? 'Key concepts to review your material.' : 'Conceptos clave para repasar tu material.'}
               </p>
             </header>
           ) : renderTopicResourceHeader('glosario')}
@@ -2197,10 +2202,10 @@ export function MaterialStudyWorkspace({
             <div className="w-full max-w-[1040px]">
               <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-4 border-b px-2 py-2.5 md:grid">
                 <p className="text-muted-foreground text-[11px] font-medium tracking-[0.13em] uppercase">
-                  Término
+                  {english ? 'Term' : 'Término'}
                 </p>
                 <p className="text-muted-foreground text-[11px] font-medium tracking-[0.13em] uppercase">
-                  Definición
+                  {english ? 'Definition' : 'Definición'}
                 </p>
               </div>
               <div className="space-y-2 md:space-y-0 md:divide-y md:divide-slate-200/80">
@@ -2217,11 +2222,11 @@ export function MaterialStudyWorkspace({
                     >
                       <div className="min-w-0 space-y-1">
                         <h3 className="text-foreground text-[14px] leading-5 font-normal tracking-[-0.025em] [overflow-wrap:anywhere]">
-                          {item.term}
+                          {english && englishTerm ? englishTerm : item.term}
                         </h3>
                         {englishTerm ? (
                           <p className="text-muted-foreground text-[12px] leading-5 font-medium italic [overflow-wrap:anywhere]">
-                            {englishTerm}
+                            {english ? item.term : englishTerm}
                           </p>
                         ) : null}
                       </div>
@@ -2238,7 +2243,7 @@ export function MaterialStudyWorkspace({
               {!demo && isOwner && glossaryTopicIndex !== null ? (
                 <button type="button" onClick={() => markActivity(materialId, glossaryTopicIndex, 'glossary')}
                   className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-medium text-blue-700 hover:bg-blue-100">
-                  Terminé de revisar los conceptos
+                  {english ? 'I finished reviewing these concepts' : 'Terminé de revisar los conceptos'}
                 </button>
               ) : null}
               {showLongTopicGlossaryPracticeCta && glossaryTopicIndex !== null ? (
@@ -2247,7 +2252,7 @@ export function MaterialStudyWorkspace({
                   className="border-border mt-4 flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="text-foreground text-[13px] font-medium">¿Seguimos con la práctica?</p>
+                    <p className="text-foreground text-[13px] font-medium">{english ? 'Ready to keep practicing?' : '¿Seguimos con la práctica?'}</p>
                     <p className="text-muted-foreground mt-1 text-[12px] leading-5">
                       Comprobá cuánto aprendiste de este tema.
                     </p>
@@ -2434,7 +2439,7 @@ export function MaterialStudyWorkspace({
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
-                  {demo ? 'Temas' : 'Temas principales'}
+                  {t(demo ? "Temas" : "Temas principales")}
                 </p>
                 {fullSummarySections.slice(0, 4).map((section, index) => (
                   <div key={section.title} className={'space-y-2'}>
@@ -2771,7 +2776,7 @@ export function MaterialStudyWorkspace({
         <div data-pdf-mobile-document-header className="mx-auto flex w-full min-w-0 items-center gap-2 px-3 py-2 md:hidden">
           <Link
             href={backHref}
-            aria-label="Volver"
+            aria-label={t("Volver")}
             className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
@@ -2783,7 +2788,7 @@ export function MaterialStudyWorkspace({
                 <button
                   type="button"
                   data-pdf-mobile-title-trigger
-                  aria-label={`Seleccionar material: ${title}`}
+                  aria-label={`${english ? "Select material" : "Seleccionar material"}: ${title}`}
                   className="flex h-10 w-full min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   <FileText className="size-3.5 shrink-0 text-slate-500" aria-hidden="true" />
@@ -2813,7 +2818,7 @@ export function MaterialStudyWorkspace({
               <button
                 type="button"
                 data-pdf-mobile-more-trigger
-                aria-label="Más opciones del material"
+                aria-label={t("Más opciones del material")}
                 className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <Ellipsis className="size-[18px]" aria-hidden="true" />
@@ -2823,13 +2828,13 @@ export function MaterialStudyWorkspace({
               {shareAvailable && isOwner && !demo ? (
                 <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}>
                   <Share2 className="size-4" aria-hidden="true" />
-                  Compartir
+                  {t("Compartir")}
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuItem asChild>
                 <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="size-4" aria-hidden="true" />
-                  Abrir {isDocx ? 'Word' : 'PDF'} original
+                  {english ? "Open original" : "Abrir"} {isDocx ? "Word" : "PDF"} {english ? "file" : "original"}
                 </a>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -2844,7 +2849,7 @@ export function MaterialStudyWorkspace({
               className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-medium transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
-              Volver
+              {t("Volver")}
             </Link>
             <span aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200" />
             {isOwner && !demo ? (
@@ -2857,7 +2862,7 @@ export function MaterialStudyWorkspace({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="max-h-[320px] w-[min(360px,calc(100vw-32px))] overflow-y-auto rounded-xl p-2">
-                  <DropdownMenuItem disabled><FileText className="size-4" />{title} (actual)</DropdownMenuItem>
+                  <DropdownMenuItem disabled><FileText className="size-4" />{title} ({t("actual")})</DropdownMenuItem>
                   {otherPdfOptions.map((pdf) => (
                     <DropdownMenuItem key={pdf.id} asChild>
                       <Link href={`/materiales/${pdf.id}?tab=resumen`} className="min-w-0">
@@ -2888,9 +2893,9 @@ export function MaterialStudyWorkspace({
                 setRecommendedActive(true);
               }}
               className="text-primary hover:bg-muted inline-flex min-h-9 shrink-0 items-center rounded-lg px-2 text-[11.5px] font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              aria-label="Volver a ver la guía de cuatro pasos"
+              aria-label={t("Volver a ver la guía de cuatro pasos")}
             >
-              Ver guía
+              {t("Ver guía")}
             </button>
           ) : null}
         </div>
@@ -3077,11 +3082,10 @@ export function MaterialStudyWorkspace({
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-muted-foreground text-[12px] font-medium tracking-[0.16em] uppercase">
-                      {isDocx ? "Word oculto" : "PDF oculto"}
+                      {t(isDocx ? "Word oculto" : "PDF oculto")}
                     </p>
                     <p className="text-muted-foreground mt-1 text-[13px] leading-5">
-                      Mostrá el documento cuando quieras contrastar el resumen con el archivo
-                      original.
+                      {english ? 'Show the document whenever you want to compare the summary with the original file.' : 'Mostrá el documento cuando quieras contrastar el resumen con el archivo original.'}
                     </p>
                   </div>
                   <button

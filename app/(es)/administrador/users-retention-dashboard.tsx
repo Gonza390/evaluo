@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { RetentionFilters, UserDetail, UserListResult, UsersRetentionSnapshot, UsersSegment } from './users-retention-types';
+import type { LanguageMetrics } from './admin-language-actions';
+import { AdminLanguageMetrics } from './admin-language-metrics';
 import './admin-home.css';
 import './users-retention.css';
 
@@ -16,7 +18,7 @@ const nav = [
  ['Sistema e IA','ia'],['Gestión','gestion'],
 ] as const;
 type Props = {
- stats:UsersRetentionSnapshot;segments:UsersSegment[];list:UserListResult;detail:UserDetail|null;
+ stats:UsersRetentionSnapshot;segments:UsersSegment[];language:LanguageMetrics;list:UserListResult;detail:UserDetail|null;
  filters:Omit<RetentionFilters,'selectedUserId'>;today:string;minDay:string;
 };
 function Heading({index,title,subtitle,priority}:{index:string;title:string;subtitle?:string;priority?:boolean}) {
@@ -71,7 +73,7 @@ function Detail({person,back}:{person:UserDetail;back:string}) {
       <p className="eh-note">No tiene un plan personal guardado.</p>}</section>
   </div></section></div>;
 }
-export function UsersRetentionDashboard({stats,segments,list,detail,filters,today,minDay}:Props) {
+export function UsersRetentionDashboard({stats,segments,language,list,detail,filters,today,minDay}:Props) {
  const [dimension,setDimension]=useState<'university'|'country'|'plan'|'materials'>('university');
  const [showCustom,setShowCustom]=useState(Boolean(filters.from&&filters.to));
  const q=(values:Record<string,string|number|null|undefined>={})=>{
@@ -133,6 +135,7 @@ export function UsersRetentionDashboard({stats,segments,list,detail,filters,toda
          <div className="ur-plan-split"><div><strong>{nf(stats.plan_distribution.free_users)}</strong><span>Free</span></div><div><strong>{nf(stats.plan_distribution.premium_users)}</strong><span>Premium</span></div></div>
          <span className="eh-note">Estados actuales en suscripciones</span></div>
      </div></section>
+   <AdminLanguageMetrics data={language}/>
    <section className="eh-panel"><Heading index="02" title="Retención de usuarios" subtitle="Por día desde el registro"/>
      <div className="ur-retention-cards">{(['d1','d7','d30'] as const).map((key,i)=>{
        const item=stats.retention[key]??{returned:0,eligible:0};

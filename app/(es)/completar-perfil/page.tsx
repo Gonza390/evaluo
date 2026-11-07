@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AcademicProfileSimpleForm } from '@/components/profile-academic-simple';
 import { useUser } from '@/hooks/useUser';
 import { supabase } from '@/lib/supabase-client';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
 
 function sanitizeNextPath(value: string | null) {
   if (!value || !value.startsWith('/') || value.startsWith('//') ||
@@ -16,6 +17,7 @@ function sanitizeNextPath(value: string | null) {
 
 function AcademicProfilePageContent() {
   const { user, loading } = useUser();
+  const { locale } = useAppLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = sanitizeNextPath(searchParams.get('next'));
@@ -52,7 +54,7 @@ function AcademicProfilePageContent() {
   if (loading || !user || checking) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-white px-4">
-        <p className="text-sm text-slate-500">Preparando tus datos académicos…</p>
+        <p className="text-sm text-slate-500">{locale === 'en' ? 'Preparing your academic details…' : 'Preparando tus datos académicos…'}</p>
       </main>
     );
   }

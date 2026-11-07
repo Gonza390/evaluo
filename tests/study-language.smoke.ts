@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { accountStudyLocale, resolveStudyLocale, detectDocumentLanguage, studyGenerationInstruction } from '../lib/i18n/study-language.ts';
+assert.equal(resolveStudyLocale({ ui_locale: 'en' }), 'en');
+assert.equal(resolveStudyLocale({ ui_locale: 'en', study_locale: 'es' }), 'es');
+assert.equal(resolveStudyLocale({ ui_locale: 'es', study_locale: 'en' }), 'en');
+assert.equal(resolveStudyLocale({}), 'es');
+assert.equal(accountStudyLocale({ study_locale: 'fr' }), null);
+assert.equal(detectDocumentLanguage('El contenido de las teorías de los alumnos para una materia con sus ejemplos de las clases que tienen'), 'es');
+assert.equal(detectDocumentLanguage('The students of the class and the concepts that are used for the course with examples of how they work'), 'en');
+assert.equal(detectDocumentLanguage('12345 2222 ??'), 'und');
+assert.match(studyGenerationInstruction('en'), /English/);
+assert.match(studyGenerationInstruction('en'), /ORIGINAL document language/);
+console.log('[study-language] source language, independent preference and citation rules verified.');

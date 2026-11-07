@@ -9,6 +9,12 @@ on:
       - 'perf/**'
   pull_request:
 
+# Un push o PR nuevo cancela la corrida anterior de la misma rama/PR.
+# En main nunca se cancela: cada release de producción se verifica completo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   security:
     runs-on: ubuntu-latest
@@ -182,7 +188,10 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-schema-fixture.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104180000_free_study_v2_unlocks.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261104183000_free_study_v2_plan_claim.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106180000_bilingual_verified_practice_banks.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261106200000_free_study_v2_i18n_cache_modes.sql
           psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-migration-regression.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/db/free-study-v2-bilingual-bank-regression.sql
           # Concurrent requests for a new account must never exceed the Free ceiling.
           psql -X -v ON_ERROR_STOP=1 -c "INSERT INTO public.student_materials(id,user_id,processing_status) VALUES ('50000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000005','ready')"
           seq 1 30 | xargs -P 10 -I '{}' psql -X -qAt -v ON_ERROR_STOP=1 -c "SET ROLE service_role; SELECT allowed FROM public.claim_free_study_v2_unlock('00000000-0000-4000-8000-000000000005','50000000-0000-4000-8000-000000000001','multiple_choice','50000000-0000-4000-8000-000000000001:parallel:{}')"

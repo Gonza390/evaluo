@@ -61,6 +61,10 @@ function sanitizeGlossaryItems(items: StudyGlossaryItem[]): StudyGlossaryItem[] 
       definition: cleanLine(item.definition),
       context: cleanLine(item.context),
       importance: item.importance === 'alta' ? ('alta' as const) : ('media' as const),
+      englishTerm: typeof item.englishTerm === 'string' && item.englishTerm.trim()
+        ? cleanLine(item.englishTerm) : null,
+      chapterTitle: typeof item.chapterTitle === 'string' && item.chapterTitle.trim()
+        ? cleanLine(item.chapterTitle) : null,
     }))
     .filter((item) => item.term.length >= 3 && item.definition.length >= 12);
 }
@@ -69,20 +73,24 @@ function parseGlossaryItems(value: unknown) {
   if (!Array.isArray(value)) return [];
 
   const items: StudyGlossaryItem[] = value
-    .map((item) => {
+    .map((item): StudyGlossaryItem | null => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
 
       return {
         term: 'term' in item ? String(item.term ?? '') : '',
         definition: 'definition' in item ? String(item.definition ?? '') : '',
         context: 'context' in item ? String(item.context ?? '') : '',
+        englishTerm: 'englishTerm' in item && typeof item.englishTerm === 'string'
+          ? item.englishTerm : null,
+        chapterTitle: 'chapterTitle' in item && typeof item.chapterTitle === 'string'
+          ? item.chapterTitle : null,
         importance:
           'importance' in item && item.importance === 'alta'
             ? ('alta' as const)
             : ('media' as const),
       } satisfies StudyGlossaryItem;
     })
-    .filter((item): item is StudyGlossaryItem => Boolean(item));
+    .filter((item): item is StudyGlossaryItem => item !== null);
 
   return sanitizeGlossaryItems(items);
 }

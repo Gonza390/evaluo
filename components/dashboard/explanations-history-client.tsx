@@ -7,10 +7,11 @@ import type { ExplanationHistoryItem } from '@/lib/explanations-history';
 import { StudyRichText } from '@/components/study-rich-text';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { Input } from '@/components/ui/input';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
-function formatDate(value: string) {
+function formatDate(value: string, english = false) {
   const date = new Date(value);
-  return new Intl.DateTimeFormat('es-AR', {
+  return new Intl.DateTimeFormat(english ? 'en-US' : 'es-AR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -26,6 +27,8 @@ export function ExplanationsHistoryClient({
 }: {
   initialHistory: ExplanationHistoryItem[];
 }) {
+  const english = useOptionalAppLocale() === 'en';
+  const tr = (es:string,en:string)=>english?en:es;
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -48,13 +51,13 @@ export function ExplanationsHistoryClient({
 
     const map = new Map<string, ExplanationHistoryItem[]>();
     for (const item of filtered) {
-      const key = item.materiaNombre ?? 'Otras materias';
+      const key = item.materiaNombre ?? tr('Otras materias','Other subjects');
       const list = map.get(key) ?? [];
       list.push(item);
       map.set(key, list);
     }
     return Array.from(map.entries());
-  }, [initialHistory, search]);
+  }, [initialHistory, search, english]);
 
   const toggle = (id: string) => {
     setExpanded((current) => {
@@ -77,10 +80,10 @@ export function ExplanationsHistoryClient({
             Premium
           </div>
           <h1 className="mt-2 text-[20px] leading-[1.3] font-bold tracking-[-0.04em] text-slate-950 sm:text-[22px]">
-            Historial de explicaciones
+            {tr("Historial de explicaciones","Explanation history")}
           </h1>
           <p className="mt-1 text-[13px] leading-5 text-slate-500">
-            Volvé a revisar las explicaciones de tus errores para fijar cada concepto.
+            {tr("Volvé a revisar las explicaciones de tus errores para fijar cada concepto.","Review explanations for your mistakes to strengthen your understanding.")}
           </p>
         </div>
 
@@ -90,7 +93,7 @@ export function ExplanationsHistoryClient({
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por materia o contenido..."
+              placeholder={tr("Buscar por materia o contenido...","Search by subject or content...")}
               className="h-10 rounded-lg border-slate-200 bg-white pl-10 text-[13px]"
             />
           </div>
@@ -101,13 +104,13 @@ export function ExplanationsHistoryClient({
             <Sparkles className="h-10 w-10 text-slate-300" />
             <h3 className="text-lg font-semibold text-slate-900">
               {initialHistory.length === 0
-                ? 'Todavía no tenés explicaciones guardadas'
-                : 'No encontramos explicaciones con ese criterio'}
+                ? tr("Todavía no tenés explicaciones guardadas","No saved explanations yet")
+                : tr("No encontramos explicaciones con ese criterio","No explanations match your search")}
             </h3>
             <p className="max-w-md text-sm text-slate-500">
               {initialHistory.length === 0
-                ? 'Completá un simulador y corregí tus respuestas incorrectas: acá vas a poder repasarlas todas juntas.'
-                : 'Probá con otra palabra o materia.'}
+                ? tr("Completá un simulador y corregí tus respuestas incorrectas: acá vas a poder repasarlas todas juntas.","Complete a mock exam and review incorrect answers. Your explanations will appear here.")
+                : tr("Probá con otra palabra o materia.","Try a different word or subject.")}
             </p>
           </div>
         ) : (
@@ -123,7 +126,7 @@ export function ExplanationsHistoryClient({
                     <h2 className="text-sm font-bold text-slate-900">{materiaNombre}</h2>
                   </div>
                   <span className="text-xs font-medium text-slate-500">
-                    {items.length} {items.length === 1 ? 'explicación' : 'explicaciones'}
+                    {items.length} {items.length === 1 ? tr('explicación','explanation') : tr('explicaciones','explanations')}
                   </span>
                 </div>
                 <div className="divide-y divide-slate-100">
@@ -141,9 +144,9 @@ export function ExplanationsHistoryClient({
                               {item.enunciado}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
-                              {formatDate(item.createdAt)}
-                              {item.parcial ? ` · Parcial ${item.parcial}` : ''}
-                              {item.vecesFallada > 1 ? ` · fallada ${item.vecesFallada} veces` : ''}
+                              {formatDate(item.createdAt, english)}
+                              {item.parcial ? (english ? ` · Exam ${item.parcial}` : ` · Parcial ${item.parcial}`) : ''}
+                              {item.vecesFallada > 1 ? (english ? ` · missed ${item.vecesFallada} times` : ` · fallada ${item.vecesFallada} veces`) : ''}
                             </p>
                           </div>
                           {isExpanded ? (
@@ -184,7 +187,7 @@ export function ExplanationsHistoryClient({
                               </div>
                             ) : item.respuestaCorrecta ? (
                               <p className="text-[13px] text-slate-600">
-                                <span className="font-semibold text-emerald-700">Respuesta correcta:</span>{' '}
+                                <span className="font-semibold text-emerald-700">{tr("Respuesta correcta:","Correct answer:")}</span>{' '}
                                 {item.respuestaCorrecta}
                               </p>
                             ) : null}
@@ -207,7 +210,7 @@ export function ExplanationsHistoryClient({
             href="/dashboard"
             className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
           >
-            Volver a Mi espacio
+            {tr("Volver a Mi espacio","Back to My space")}
           </Link>
         </div>
       </div>

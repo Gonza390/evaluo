@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { IaParaEstudiantesExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
 
@@ -7,7 +8,7 @@ const path = '/ia-para-estudiantes';
 export const metadata: Metadata = {
   title: "IA para estudiantes: resumí PDFs y prepará exámenes",
   description: "IA para estudiantes universitarios: resumí tus PDFs, creá flashcards y practicá preguntas de examen desde tus apuntes. Empezá con Evaluo.",
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: hreflangAlternates('ai-for-students', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

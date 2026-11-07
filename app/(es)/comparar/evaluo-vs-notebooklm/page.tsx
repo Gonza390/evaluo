@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SeoComparisonLanding } from '@/components/marketing/seo-comparison-landings';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/comparar/evaluo-vs-notebooklm';
@@ -7,7 +8,7 @@ const path = '/comparar/evaluo-vs-notebooklm';
 export const metadata: Metadata = {
   title: "Alternativa a NotebookLM para estudiar PDF",
   description: "¿Buscás una alternativa a NotebookLM para estudiar? Compará fuentes, flashcards, cuestionarios y práctica por tema con PDFs en Evaluo.",
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: hreflangAlternates('compare-notebooklm', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

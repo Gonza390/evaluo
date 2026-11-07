@@ -10,7 +10,8 @@ import {
   ListChecks,
   CircleAlert,
   CircleHelp,
-  Crown,
+  TrendingUp,
+  ChevronRight,
   Home,
   LogIn,
   LogOut,
@@ -29,7 +30,11 @@ import { FeedbackDialog } from '@/components/FeedbackDialog';
 import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavLink';
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase-client';
+
+const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
 
 type NavbarProps = {
   collapsed: boolean;
@@ -127,6 +132,17 @@ function NavItem({
 export function Navbar({ collapsed, onToggleCollapsed, compact = false }: NavbarProps) {
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
+  const { messages, locale } = useAppLocale();
+  const localizedNavItems = navItems.map((item) => ({
+    ...item,
+    label: ({
+      '/dashboard': messages.navigation.mySpace,
+      '/dashboard/estudiar': messages.navigation.study,
+      '/dashboard/practicar': messages.navigation.practice,
+      '/dashboard/plan-de-estudio': messages.navigation.studyPlan,
+      '/calendario': messages.navigation.calendar,
+    } as Record<string, string>)[item.href] ?? item.label,
+  }));
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const navRef = useRef<HTMLElement | null>(null);
   const [activeIndicator, setActiveIndicator] = useState<{
@@ -185,28 +201,28 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
     >
       <div className="flex h-full min-h-0 flex-col">
         <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
-          <nav ref={navRef} aria-label="Navegación principal" className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
+          <nav ref={navRef} aria-label={messages.navigation.mainNavigation} className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
               }`}
             >
               <NavItem
-                href={navItems[0].href}
-                label={navItems[0].label}
-                icon={navItems[0].icon}
-                iconTone={navItems[0].iconTone}
-                disabled={navItems[0].disabled}
+                href={localizedNavItems[0].href}
+                label={localizedNavItems[0].label}
+                icon={localizedNavItems[0].icon}
+                iconTone={localizedNavItems[0].iconTone}
+                disabled={localizedNavItems[0].disabled}
                 collapsed={collapsed}
                 compact={compact}
-                active={isNavItemActive(pathname, navItems[0].href)}
+                active={isNavItemActive(pathname, localizedNavItems[0].href)}
               />
               {!collapsed ? (
                 <button
                   type="button"
                   onClick={onToggleCollapsed}
-                  aria-label="Ocultar barra lateral"
-                  title="Ocultar barra lateral"
+                  aria-label={messages.navigation.hideSidebar}
+                  title={messages.navigation.hideSidebar}
                   className={`flex h-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800 ${compact ? 'w-8' : 'w-10'}`}
                 >
                   <ToggleIcon className="h-4 w-4" />
@@ -214,7 +230,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               ) : null}
             </div>
 
-            {navItems.slice(1).map((item) => (
+            {localizedNavItems.slice(1).map((item) => (
               <NavItem
                 key={item.label}
                 href={item.href}
@@ -251,22 +267,30 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
               <div className="space-y-1">
                 <Link
                   href="/dashboard/premium"
-                  title={collapsed ? 'Planes' : undefined}
-                  className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
+                  data-sidebar-plan-upgrade
+                  title={collapsed ? messages.navigation.improvePlan : undefined}
+                  aria-label={collapsed ? messages.navigation.improvePlan : undefined}
+                  aria-current={isNavItemActive(pathname, '/dashboard/premium') ? 'page' : undefined}
+                  className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] ${
                     collapsed
-                      ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
+                      ? 'mx-auto h-10 w-10 justify-center p-0'
+                      : compact ? 'min-h-10 w-full gap-2 px-1.5 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
-                  <Crown className="h-4 w-4 shrink-0" />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4F5DFF] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
+                    <TrendingUp className="h-4 w-4" aria-hidden="true" />
+                  </span>
                   {!collapsed ? (
-                    <p className={compact ? "whitespace-nowrap text-[12px] font-semibold" : "text-sm font-semibold"}>Planes</p>
+                    <>
+                      <span className="min-w-0 flex-1 whitespace-nowrap font-semibold">{messages.navigation.improvePlan}</span>
+                      {!compact ? <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#7F8AA3]" aria-hidden="true" /> : null}
+                    </>
                   ) : null}
                 </Link>
 
                 <button
                   type="button"
-                  title={collapsed ? 'Sugerencias' : undefined}
+                  title={collapsed ? messages.navigation.feedback : undefined}
                   onClick={(event) => {
                     event.stopPropagation();
                     setFeedbackOpen(true);
@@ -278,7 +302,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   }`}
                 >
                   <CircleHelp className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>Sugerencias</p> : null}
+                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>{messages.navigation.feedback}</p> : null}
                 </button>
 
                 <DropdownMenu>
@@ -306,10 +330,11 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     ) : null}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <LanguageMenuItem />
                     <DropdownMenuItem asChild>
                       <Link href="/configuracion" className="w-full text-sm">
                         <Settings className="mr-2 h-4 w-4" />
-                        Configuración
+                        {messages.navigation.settings}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -319,19 +344,19 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                         if (error) {
                           logError('navbar.signOut', error, { userId: user.id });
                         }
-                        window.location.assign('/login');
+                        window.location.assign(locale === 'en' ? '/en/login' : '/login');
                       }}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      Cerrar sesión
+                      {messages.navigation.signOut}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             ) : (
               <Link
-                href="/login"
-                title={collapsed ? 'Iniciar sesión' : undefined}
+                href={locale === 'en' ? '/en/login' : '/login'}
+                title={collapsed ? (locale === 'en' ? 'Sign in' : 'Iniciar sesión') : undefined}
                 className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                   collapsed
                     ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
@@ -341,8 +366,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 <LogIn className="h-4 w-4 shrink-0" />
                 {!collapsed ? (
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">Iniciar sesión</p>
-                    <p className="text-[12px] text-slate-500">Guardá tu progreso y tus materias</p>
+                    <p className="text-sm font-medium">{locale === 'en' ? 'Sign in' : 'Iniciar sesión'}</p>
+                    <p className="text-[12px] text-slate-500">{locale === 'en' ? 'Save your progress and study materials' : 'Guardá tu progreso y tus materias'}</p>
                   </div>
                 ) : null}
               </Link>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { HomeFunnelTracker } from '@/components/marketing/home-funnel-tracker';
@@ -12,10 +13,7 @@ export const metadata: Metadata = {
   title: { absolute: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen' },
   description:
     'Subí tus apuntes en PDF o Word y estudiá con IA: resúmenes, flashcards, práctica por tema y seguimiento de errores para preparar tus exámenes.',
-  alternates: {
-    canonical: '/',
-    languages: { 'es-AR': '/' },
-  },
+  alternates: hreflangAlternates('home', 'es'),
   other: {
     'geo.region': 'AR',
     'geo.placename': 'Argentina',

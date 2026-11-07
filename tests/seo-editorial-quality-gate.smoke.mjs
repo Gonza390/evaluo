@@ -43,6 +43,24 @@ assert.equal(evaluateTopic(wrongBrand,{now}).state,'BLOCKED');
 const wrongCountry = structuredClone(cornell);
 wrongCountry.signals.bing.country = 'MX';
 assert.equal(evaluateTopic(wrongCountry,{now}).state,'BLOCKED');
+// English-first US research is permitted only with US-specific evidence. The examples are synthetic.
+const usTopic = make('open book exam preparation', 'how-to-prepare-for-open-book-exams', 'one');
+usTopic.country='US';
+usTopic.signals.google.country='US';
+usTopic.signals.bing.country='US';
+usTopic.signals.autocomplete.country='US';
+usTopic.signals.autocomplete.suggestions=['open book exam preparation tips'];
+usTopic.signals.serp.country='US';
+assert.equal(evaluateTopic(usTopic,{now}).tier,'T1_GOOGLE');
+const wrongUsEvidence = structuredClone(usTopic);
+wrongUsEvidence.signals.google.country='ES'; // cannot transfer a foreign-country volume
+wrongUsEvidence.signals.bing.country='ES';
+wrongUsEvidence.signals.autocomplete.country='ES';
+wrongUsEvidence.signals.serp.country='ES';
+assert.equal(evaluateTopic(wrongUsEvidence,{now}).state,'BLOCKED');
+const unsupportedCountry = structuredClone(usTopic);
+unsupportedCountry.country='AU'; // additional markets require an explicit policy change
+assert.equal(evaluateTopic(unsupportedCountry,{now}).state,'BLOCKED');
 const stale = structuredClone(cornell);
 stale.signals.bing.observedAt = '2025-08-20';
 assert.equal(evaluateTopic(stale,{now}).state,'BLOCKED');

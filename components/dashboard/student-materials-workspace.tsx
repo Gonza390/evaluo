@@ -27,13 +27,15 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
+import { useAppLocale } from '@/components/i18n/app-locale-provider';
+import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 
 interface StudentMaterialsWorkspaceProps {
   initialMaterials: StudentMaterial[];
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('es-AR', {
+function formatDate(value: string, locale: 'es' | 'en' = 'es') {
+  return new Date(value).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-AR', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -50,6 +52,8 @@ export function StudentMaterialsWorkspace({
 }: StudentMaterialsWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const { locale } = useAppLocale();
+  const t = (value: string) => studentEntryText(locale, value);
   const openUploadPicker = usePdfUploadTrigger();
   const [isPending, startTransition] = useTransition();
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
@@ -79,7 +83,7 @@ export function StudentMaterialsWorkspace({
       const result = await deleteStudentMaterialAction(materialId);
 
       toast({
-        description: result.message,
+        description: t(result.message),
         variant: result.success ? 'default' : 'destructive',
       });
 
@@ -97,13 +101,13 @@ export function StudentMaterialsWorkspace({
           as="h2"
           size="compact"
           className="gap-3 pb-3 sm:pb-3 [&_h2]:text-[19px] sm:[&_h2]:text-[20px] [&_h2]:tracking-[-0.04em]"
-          eyebrow="Tu estudio"
-          title="Tus PDFs"
+          eyebrow={t("Tu estudio")}
+          title={t("Tus PDFs")}
           visuallyHiddenTitle
           description={
             initialMaterials.length === 0
-              ? 'Subí tu primer material y empezá a estudiar desde la misma fuente.'
-              : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
+              ? t('Subí tu primer material y empezá a estudiar desde la misma fuente.')
+              : locale === 'en' ? `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material' : 'materials'} available whenever you want to continue.` : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
           }
         />
 
@@ -113,16 +117,16 @@ export function StudentMaterialsWorkspace({
               <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="search"
-                aria-label="Buscar entre tus PDFs"
+                aria-label={t("Buscar entre tus PDFs")}
                 value={materialQuery}
                 onChange={(event) => setMaterialQuery(event.target.value)}
-                placeholder="Buscar un PDF..."
+                placeholder={t("Buscar un PDF...")}
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pr-10 pl-10 text-[13px] text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/15"
               />
               {materialQuery ? (
                 <button
                   type="button"
-                  aria-label="Limpiar búsqueda"
+                  aria-label={t("Limpiar búsqueda")}
                   onClick={() => setMaterialQuery('')}
                   className="absolute top-1/2 right-2 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
@@ -131,7 +135,7 @@ export function StudentMaterialsWorkspace({
               ) : null}
             </div>
             <span className="shrink-0 text-[12px] font-medium text-slate-500" aria-live="polite">
-              {visibleMaterials.length} de {initialMaterials.length} PDFs
+              {visibleMaterials.length} {locale === 'en' ? 'of' : 'de'} {initialMaterials.length} PDFs
             </span>
           </div>
         ) : null}
@@ -140,25 +144,25 @@ export function StudentMaterialsWorkspace({
           {initialMaterials.length === 0 ? (
             <StudyStatePanel
               icon={FileText}
-              eyebrow="Primer material"
-              title="Todavía no subiste un PDF"
-              description="Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá."
-              primaryActionLabel="Subí tu PDF"
+              eyebrow={t("Primer material")}
+              title={t("Todavía no subiste un PDF")}
+              description={t("Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá.")}
+              primaryActionLabel={t("Subí tu PDF")}
               onPrimaryAction={() => openUploadPicker('dashboard_empty_materials')}
-              secondaryActionLabel="Ver cómo funciona con un PDF de ejemplo"
+              secondaryActionLabel={t("Ver cómo funciona con un PDF de ejemplo")}
               secondaryActionHref="/preview/primer-pdf?source=dashboard_empty"
               className="border-dashed"
             />
           ) : visibleMaterials.length === 0 ? (
             <div className="col-span-full flex flex-col items-start gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6">
-              <p className="text-[13px] font-semibold text-slate-900">No encontramos PDFs con ese nombre.</p>
-              <p className="text-[12px] text-slate-600">Probá con otra palabra o volvé a mostrar todos tus materiales.</p>
+              <p className="text-[13px] font-semibold text-slate-900">{t("No encontramos PDFs con ese nombre.")}</p>
+              <p className="text-[12px] text-slate-600">{t("Probá con otra palabra o volvé a mostrar todos tus materiales.")}</p>
               <button
                 type="button"
                 onClick={() => setMaterialQuery('')}
                 className="text-brand mt-1 min-h-9 rounded-lg px-1 text-[12.5px] font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                Mostrar todos
+                {t("Mostrar todos")}
               </button>
             </div>
           ) : (
@@ -183,7 +187,7 @@ export function StudentMaterialsWorkspace({
                           <Link
                             href={material.processing_status === 'ready' ? getStudentMaterialRoute(material.id) : `/dashboard/procesando/${material.id}`}
                             className="rounded-sm before:absolute before:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                            aria-label={`Abrir material ${material.title}`}
+                            aria-label={`${locale === 'en' ? 'Open material' : 'Abrir material'} ${material.title}`}
                           >
                             {material.title}
                           </Link>
@@ -191,24 +195,24 @@ export function StudentMaterialsWorkspace({
                         {isShared ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                             <Globe className="h-3.5 w-3.5" />
-                            Compartido
+                            {t("Compartido")}
                           </span>
                         ) : null}
                         {isFailed ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
                             <CircleAlert className="h-3.5 w-3.5" />
-                            Necesita revisión
+                            {t("Necesita revisión")}
                           </span>
                         ) : material.processing_status !== 'ready' ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            Procesando
+                            {t("Procesando")}
                           </span>
                         ) : null}
                       </div>
                       <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
-                        <span>{formatDate(material.created_at)}</span>
-                        {material.page_count ? <span>{material.page_count} páginas</span> : null}
+                        <span>{formatDate(material.created_at, locale)}</span>
+                        {material.page_count ? <span>{material.page_count} {t('páginas')}</span> : null}
                       </div>
                       </div>
                     </div>
@@ -216,8 +220,8 @@ export function StudentMaterialsWorkspace({
                       type="button"
                       onClick={() => setMaterialToDelete(material)}
                       disabled={isPending}
-                      aria-label={`Eliminar material ${material.title}`}
-                      title="Eliminar PDF"
+                      aria-label={`${locale === 'en' ? 'Delete material' : 'Eliminar material'} ${material.title}`}
+                      title={t("Eliminar PDF")}
                       className="relative z-10 inline-flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 sm:self-center xl:self-end"
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -242,11 +246,10 @@ export function StudentMaterialsWorkspace({
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-slate-950">
-                  ¿Eliminar este material?
+                  {t("¿Eliminar este material?")}
                 </DialogTitle>
                 <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
-                  Se borrará el PDF y todo su espacio de estudio (resumen, glosario, flashcards y
-                  práctica). Esta acción no se puede deshacer.
+                  {t("Se borrará el PDF y todo su espacio de estudio (resumen, glosario, flashcards y práctica). Esta acción no se puede deshacer.")}
                 </DialogDescription>
               </div>
             </div>
@@ -270,7 +273,7 @@ export function StudentMaterialsWorkspace({
                 onClick={() => setMaterialToDelete(null)}
                 disabled={isPending}
               >
-                Cancelar
+                {t("Cancelar")}
               </Button>
               <Button
                 type="button"

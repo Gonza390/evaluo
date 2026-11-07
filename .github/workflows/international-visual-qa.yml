@@ -1,0 +1,67 @@
+name: International English visual audit
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/qa-international-visual.mjs'
+      - '.github/workflows/international-visual-qa.yml'
+      - 'components/study/pdf-mobile-navigation.tsx'
+      - 'components/study/recommended-study-guide.tsx'
+      - 'components/dashboard/practice-mode-picker.tsx'
+      - 'components/FeedbackDialog.tsx'
+      - 'components/marketing/english-seo-header.tsx'
+      - 'components/marketing/home-redesign.tsx'
+      - 'app/(en)/en/**'
+      - 'app/(en)/layout.tsx'
+      - 'proxy.ts'
+  workflow_dispatch:
+concurrency:
+  group: international-visual-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  visual:
+    name: Chromium mobile and desktop /en audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_TELEMETRY_DISABLED: '1'
+      QA_BASE_URL: http://127.0.0.1:3100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start Evaluo from master
+        run: |
+          npm run dev -- --hostname 127.0.0.1 --port 3100 > /tmp/evaluo-international-visual.log 2>&1 &
+          echo $! > /tmp/evaluo-international-visual.pid
+          for i in $(seq 1 90); do
+            if curl --silent --fail http://127.0.0.1:3100/en -o /dev/null; then exit 0; fi
+            sleep 2
+          done
+          tail -120 /tmp/evaluo-international-visual.log
+          exit 1
+      - name: Capture English public pages and anonymous study previews
+        run: node scripts/qa-international-visual.mjs
+      - name: Upload audit report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: international-visual-audit
+          path: qa-artifacts/international-visual/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Diagnostics
+        if: failure()
+        run: tail -160 /tmp/evaluo-international-visual.log || true

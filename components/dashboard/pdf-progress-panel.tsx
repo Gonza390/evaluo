@@ -1,5 +1,9 @@
 'use client';
 
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
+
+
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -48,23 +52,24 @@ const StudyErrorDetail = dynamic(
 const actionClass =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-medium transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring';
 
-function topicStatus(topic: PdfProgressTopic) {
+function topicStatus(topic: PdfProgressTopic, english = false) {
+  const tr = (es:string,en:string) => english ? en : es;
   if (topic.errors.some((error) => error.status === 'pending'))
-    return { label: 'Por reforzar', Icon: Flag, style: 'bg-destructive/10 text-destructive' };
+    return { label: tr("Por reforzar","Needs review"), Icon: Flag, style: 'bg-destructive/10 text-destructive' };
   if (topic.errors.some((error) => error.status === 'resolved'))
     return {
       label: topic.evidence.some((item) => item.correct > 0)
         ? 'Repaso comprobado'
-        : 'Repasado',
+        : tr("Repasado","Reviewed"),
       Icon: CheckCircle2,
       style: 'bg-primary/10 text-primary',
     };
   if (topicAssessmentCount(topic) > 0)
-    return { label: 'Con preguntas', Icon: CheckCircle2, style: 'bg-primary/10 text-primary' };
+    return { label: tr("Con preguntas","With questions"), Icon: CheckCircle2, style: 'bg-primary/10 text-primary' };
   if (topic.evidence.some((item) => item.selfReported > 0))
-    return { label: 'Autoevaluado', Icon: Circle, style: 'bg-muted text-muted-foreground' };
+    return { label: tr("Autoevaluado","Self-assessed"), Icon: Circle, style: 'bg-muted text-muted-foreground' };
   return {
-    label: 'Sin evaluar',
+    label: tr("Sin evaluar","Not assessed"),
     Icon: Circle,
     style: 'bg-muted text-muted-foreground',
   };
@@ -118,6 +123,10 @@ export function PdfProgressPanel({
   | { simulation?: undefined; reviewActions?: never }
   | { simulation: { pdfHref: string }; reviewActions: StudyErrorReviewActions }
 )) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const tr = (es:string,en:string) => english ? en : es;
+  const t = (v: string) => studyUiText(locale, v);
   const panelId = useId();
   const [viewOverrides, setViewOverrides] = useState<Record<string, Partial<StudyErrorView>>>({});
   const views = [...data.pending, ...data.resolved].map((item) => ({
@@ -296,7 +305,7 @@ export function PdfProgressPanel({
     >
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 id={`real-detail-title-${panelId}`} className="text-[16px] leading-[1.4] font-semibold break-words">
-          {currentTopic?.title ?? 'Otros conceptos'}
+          {currentTopic?.title ?? tr("Otros conceptos","Other concepts")}
         </h2>
         {!reviewOpen ? (
           <button
@@ -304,7 +313,7 @@ export function PdfProgressPanel({
             onClick={closeTopic}
             className="text-muted-foreground hover:bg-muted min-h-10 rounded-lg px-3 text-xs"
           >
-            Volver a los temas
+            {tr("Volver a los temas","Back to topics")}
           </button>
         ) : null}
       </div>
@@ -313,26 +322,26 @@ export function PdfProgressPanel({
           {(lastOutcome || topicPending.length > 0 || hasReinforced) && (
             <section
               className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
-              aria-label="Tu próxima actividad"
+              aria-label={tr("Tu próxima actividad","Your next activity")}
             >
-              <h3 className="text-[16px] font-medium">Tu próxima actividad</h3>
+              <h3 className="text-[16px] font-medium">{t("Tu próxima actividad")}</h3>
               {lastOutcome && (
                 <p className="text-foreground mt-2 text-sm!">
-                  Última tanda: {lastOutcome.total}{' '}
-                  {lastOutcome.total === 1 ? 'pregunta' : 'preguntas'} · {lastOutcome.correct}{' '}
-                  {lastOutcome.correct === 1 ? 'correcta' : 'correctas'} · {lastOutcome.incorrect}{' '}
-                  {lastOutcome.incorrect === 1 ? 'incorrecta' : 'incorrectas'}.
+                  {tr('Última tanda:','Latest session:')} {lastOutcome.total}{' '}
+                  {lastOutcome.total === 1 ? tr('pregunta','question') : tr('preguntas','questions')} · {lastOutcome.correct}{' '}
+                  {lastOutcome.correct === 1 ? tr('correcta','correct') : tr('correctas','correct')} · {lastOutcome.incorrect}{' '}
+                  {lastOutcome.incorrect === 1 ? tr('incorrecta','incorrect') : tr('incorrectas','incorrect')}.
                 </p>
               )}
               <p className="text-muted-foreground mt-2 text-sm!">
-                {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
+                {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced, locale)}
               </p>
               {topicPending.length > 0 && (
                 <>
                   <p className="text-muted-foreground mt-2 text-xs!">
-                    Pendientes del tema: {topicPending.length}{' '}
-                    {topicPending.length === 1 ? 'pregunta' : 'preguntas'} de tus prácticas. Pueden
-                    incluir intentos anteriores.
+                    {tr('Pendientes del tema:','Pending in this topic:')} {topicPending.length}{' '}
+                    {topicPending.length === 1 ? tr('pregunta','question') : tr('preguntas','questions')}{' '}
+                    {tr('de tus prácticas. Pueden incluir intentos anteriores.','from your practice sessions, including previous attempts.')}
                   </p>
                   <button
                     type="button"
@@ -346,7 +355,7 @@ export function PdfProgressPanel({
                     }}
                     className={actionClass + ' bg-primary text-primary-foreground mt-4'}
                   >
-                    Reforzar las dificultades <ArrowRight size={16} />
+                    {tr("Reforzar las dificultades","Review difficult questions")} <ArrowRight size={16} />
                   </button>
                 </>
               )}
@@ -355,12 +364,12 @@ export function PdfProgressPanel({
           {!lastOutcome && topicPending.length === 0 && !hasReinforced && (
             <p className="text-muted-foreground text-sm!">
               {currentTopic?.errors.some((error) => error.status === 'pending')
-                ? 'Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.'
+                ? tr("Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.","Your answers show something to review. Use your PDF to reinforce it or return to the topic.")
                 : currentTopic && topicAssessmentCount(currentTopic) > 0
-                  ? 'Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.'
+                  ? tr("Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.","You have practiced this topic. Return to the content or check your understanding again.")
                   : currentQuestionCount === 0
-                    ? 'Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.'
-                    : 'Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.'}
+                    ? tr("Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.","Start with the content and use concepts and cards as study aids.")
+                    : tr("Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.","Start with the key concepts. Then test yourself with questions from your PDF.")}
             </p>
           )}
           {!lastOutcome && topicPending.length === 0 && !hasReinforced && currentAnswered > 0 && (
@@ -371,7 +380,7 @@ export function PdfProgressPanel({
                   onClick={() => setReviewOpen(true)}
                   className={actionClass + ' bg-primary text-primary-foreground'}
                 >
-                  Reforzar dificultades <ArrowRight size={16} />
+                  {tr("Reforzar dificultades","Review difficulties")} <ArrowRight size={16} />
                 </button>
               ) : summaryBody ? (
                 <a
@@ -383,7 +392,7 @@ export function PdfProgressPanel({
                       : ' bg-primary text-primary-foreground')
                   }
                 >
-                  Estudiar este tema <ArrowRight size={16} />
+                  {tr('Estudiar este tema','Study this topic')} <ArrowRight size={16} />
                 </a>
               ) : null}
               {canPracticeTopic ? (
@@ -418,7 +427,7 @@ export function PdfProgressPanel({
                       : ' border-border border')
                   }
                 >
-                  Practicar el PDF
+                  {tr("Practicar el PDF","Practice the PDF")}
                 </button>
               ) : (
                 <Link
@@ -432,36 +441,34 @@ export function PdfProgressPanel({
                       : ' border-border border')
                   }
                 >
-                  Practicar el PDF
+                  {tr("Practicar el PDF","Practice the PDF")}
                 </Link>
               )}
             </div>
           )}
           {currentQuestionCount === 0 && (
             <p role="status" className="border-border mt-4 rounded-lg border p-3 text-sm!">
-              Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su
-              comprensión.
+              {tr('Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su comprensión.','You can study this topic. There are no linked questions yet to check your understanding.')}
             </p>
           )}
           <section
             id={panelId + '-topic-summary'}
             className="border-border mt-6 scroll-mt-4 border-t pt-5"
-            aria-label="Contenido de este tema"
+            aria-label={tr("Contenido de este tema","Topic content")}
           >
-            <h3 className="text-[16px] font-medium">1 · Leé el resumen del tema</h3>
+            <h3 className="text-[16px] font-medium">{t("1 · Leé el resumen del tema")}</h3>
             {summaryBody && focusConcepts.length > 0 && (
               <div
                 className="border-border bg-muted/30 mt-4 rounded-xl border p-4"
-                aria-label="Guía de lectura del tema"
+                aria-label={tr("Guía de lectura del tema","Topic reading guide")}
               >
-                <h4 className="text-sm font-medium">Antes de leer: en qué enfocarte</h4>
+                <h4 className="text-sm font-medium">{t("Antes de leer: en qué enfocarte")}</h4>
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  Buscá cómo se explican estos conceptos en tu material. Después, intentá
-                  explicarlos con tus palabras y sin mirar.
+                  {tr('Buscá cómo se explican estos conceptos en tu material. Después, intentá explicarlos con tus palabras y sin mirar.','Find how these concepts are explained in your material. Then try to explain them in your own words without looking.')}
                 </p>
                 <ul
                   className="mt-3 flex flex-wrap gap-2"
-                  aria-label="Conceptos para orientar la lectura"
+                  aria-label={tr("Conceptos para orientar la lectura","Concepts to guide your reading")}
                 >
                   {focusConcepts.map((concept, index) => (
                     <li
@@ -480,7 +487,7 @@ export function PdfProgressPanel({
               </div>
             ) : (
               <p className="text-muted-foreground mt-3">
-                El contenido de este tema todavía no está disponible.
+                {tr("El contenido de este tema todavía no está disponible.","The content for this topic is not available yet.")}
               </p>
             )}
           </section>
@@ -491,7 +498,7 @@ export function PdfProgressPanel({
               rel="noopener noreferrer"
               className="text-primary inline-flex min-h-11 items-center gap-2 text-sm underline underline-offset-4"
             >
-              <FileText size={16} /> Consultar el PDF original
+              <FileText size={16} /> {tr("Consultar el PDF original","View original PDF")}
             </a>
           )}
           <TopicStudySupport
@@ -503,19 +510,19 @@ export function PdfProgressPanel({
           {currentTopic && (
             <section
               className="border-border border-t py-5"
-              aria-label="Cómo continuar con tu estudio"
+              aria-label={tr("Cómo continuar con tu estudio","How to continue studying")}
             >
-              <h3 className="text-[16px] font-medium">3 · Tu próximo paso</h3>
+              <h3 className="text-[16px] font-medium">{t("3 · Tu próximo paso")}</h3>
               <p className="text-muted-foreground mt-2 text-sm!">
                 {topicPending.length > 0
-                  ? 'Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.'
+                  ? tr("Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.","Review incorrect answers first. Then you can practice again.")
                   : currentAnswered > 0 && nextStudyTopic
-                    ? 'Ya practicaste este tema: seguí con el siguiente o elegí practicar de nuevo.'
+                    ? tr("Ya practicaste este tema: seguí con el siguiente o elegí practicar de nuevo.","You have practiced this topic: move to the next one or practice again.")
                     : canPracticeTopic
-                      ? 'Comprobá lo que entendiste con preguntas de este tema.'
+                      ? tr("Comprobá lo que entendiste con preguntas de este tema.","Check what you learned with questions from this topic.")
                       : nextStudyTopic
-                        ? 'Podés continuar con el siguiente tema, aunque este todavía no tenga preguntas.'
-                        : 'Volvé a la lista de temas para seguir estudiando.'}
+                        ? tr("Podés continuar con el siguiente tema, aunque este todavía no tenga preguntas.","You can move to the next topic even though it does not have questions yet.")
+                        : tr("Volvé a la lista de temas para seguir estudiando.","Return to the topic list to continue studying.")}
               </p>
               <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 {topicPending.length > 0 && (
@@ -531,7 +538,7 @@ export function PdfProgressPanel({
                     }}
                     className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
                   >
-                    Entender mis errores <ArrowRight size={16} />
+                    {tr('Entender mis errores','Understand my mistakes')} <ArrowRight size={16} />
                   </button>
                 )}
                 {topicPending.length === 0 && nextStudyTopic && currentAnswered > 0 && (
@@ -540,7 +547,7 @@ export function PdfProgressPanel({
                     onClick={() => openTopic(nextStudyTopic.id)}
                     className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
                   >
-                    Seguir con el tema {topics.indexOf(nextStudyTopic) + 1}
+                    {tr('Seguir con el tema','Continue with topic')} {topics.indexOf(nextStudyTopic) + 1}
                     <ArrowRight size={16} />
                   </button>
                 )}
@@ -556,7 +563,7 @@ export function PdfProgressPanel({
                       ' xl:hidden'
                     }
                   >
-                    {currentAnswered > 0 ? 'Practicar de nuevo' : 'Practicar este tema'}
+                    {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : 'Practicar este tema'}
                     <ArrowRight size={16} />
                   </button>
                 )}
@@ -573,48 +580,44 @@ export function PdfProgressPanel({
                           : ' bg-primary text-primary-foreground')
                       }
                     >
-                      Seguir con el tema {topics.indexOf(nextStudyTopic) + 1}
+                      {tr('Seguir con el tema','Continue with topic')} {topics.indexOf(nextStudyTopic) + 1}
                       <ArrowRight size={16} />
                     </button>
                   )}
               </div>
               {nextStudyTopic ? (
                 <p className="text-muted-foreground mt-3 text-sm! break-words">
-                  Siguiente: {nextStudyTopic.title}
+                  {tr('Siguiente:','Next:')} {nextStudyTopic.title}
                 </p>
               ) : (
                 <p className="text-muted-foreground mt-3 text-sm!">
-                  Llegaste al último tema del PDF. Podés volver a cualquiera para estudiar o
-                  practicar.
+                  {tr('Llegaste al último tema del PDF. Podés volver a cualquiera para estudiar o practicar.','You have reached the final topic. You can revisit any topic to study or practice.')}
                 </p>
               )}
             </section>
           )}
           <details className="border-border border-t py-3 xl:hidden">
             <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
-              Tu aprendizaje
+              {tr("Tu aprendizaje","Your learning")}
             </summary>
             {assessmentData?.loadError && (
               <p role="status" className="text-muted-foreground py-2 text-sm">
-                No pudimos cargar todas tus respuestas. Esto no significa que no hayas practicado.
+                {tr("No pudimos cargar todas tus respuestas. Esto no significa que no hayas practicado.","We could not load all your answers. Your practice sessions have not been deleted.")}
               </p>
             )}
             {currentAnswered > 0 && !assessmentData?.loadError && (
               <p className="text-foreground py-2 text-sm">
-                {currentCorrect} de {currentAnswered} respuestas correctas registradas en prácticas
-                y refuerzos.
+                {currentCorrect} {tr('de','of')} {currentAnswered} {tr('respuestas correctas registradas en prácticas y refuerzos.','correct answers recorded in practice and review.')}
               </p>
             )}
             {currentErrors.length > 0 ? (
               <div className="space-y-3 py-2">
                 <p className="text-muted-foreground text-sm">
-                  {currentErrors.filter((item) => item.status === 'pending').length} preguntas para
-                  repasar · {currentErrors.filter((item) => item.status === 'resolved').length}{' '}
-                  refuerzos comprobados.
+                  {currentErrors.filter((item) => item.status === 'pending').length} {tr('preguntas para repasar','questions to review')} · {currentErrors.filter((item) => item.status === 'resolved').length}{' '}
+                  {tr('refuerzos comprobados.','confirmed reviews.')}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Una comprobación después de una explicación no demuestra por sí sola el dominio de
-                  todo el tema.
+                  {tr('Una comprobación después de una explicación no demuestra por sí sola el dominio de todo el tema.','One correct answer after an explanation does not demonstrate mastery of the topic.')}
                 </p>
                 {currentErrors
                   .filter((item) => item.status === 'pending')
@@ -635,8 +638,7 @@ export function PdfProgressPanel({
               </div>
             ) : currentAnswered === 0 && !assessmentData?.loadError ? (
               <p className="text-muted-foreground py-2 text-sm">
-                Acá aparecerán tus resultados cuando practiques. Podés empezar por el contenido sin
-                tener historial.
+                {tr('Acá aparecerán tus resultados cuando practiques. Podés empezar por el contenido sin tener historial.','Your results will appear here once you practice. You can start with the content without previous sessions.')}
               </p>
             ) : null}
           </details>
@@ -713,15 +715,15 @@ export function PdfProgressPanel({
   if (data.loadError)
     return (
       <div className="mx-auto max-w-5xl p-6">
-        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">Tu progreso</h1>
+        <h1 className="text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">{t("Tu progreso")}</h1>
         <p role="alert" className="mt-4">
-          No pudimos cargar tus errores. Tus resultados siguen guardados.
+          {tr("No pudimos cargar tus errores. Tus resultados siguen guardados.","We could not load your mistakes. Your results are still saved.")}
         </p>
         <a
           href={`/dashboard/progreso?material=${material.id}`}
           className={`${actionClass} bg-primary text-primary-foreground mt-5`}
         >
-          Volver a intentar
+          {tr("Volver a intentar","Try again")}
         </a>
       </div>
     );
@@ -745,7 +747,7 @@ export function PdfProgressPanel({
           className="text-muted-foreground hover:text-primary mb-1 inline-flex min-h-10 items-center gap-2 text-sm"
         >
           <ArrowLeft size={16} />
-          Volver a Progreso
+          {tr("Volver a Progreso","Back to Progress")}
         </Link>
       ) : null}
       {!embedded && (
@@ -761,10 +763,10 @@ export function PdfProgressPanel({
         >
           <ArrowLeft size={16} />
           {simulation
-            ? 'Ver PDF real · 15 páginas'
+            ? tr("Ver PDF real · 15 páginas","View real PDF · 15 pages")
             : returnToErrors
-              ? 'Progreso'
-              : 'Mis materiales'}
+              ? tr("Progreso","Progress")
+              : tr("Mis materiales","My materials")}
         </Link>
       )}
       {!embedded && (
@@ -778,31 +780,31 @@ export function PdfProgressPanel({
         tabIndex={-1}
         className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-semibold tracking-[-0.035em] ${reviewOpen ? 'sr-only' : ''}`}
       >
-        Tu progreso
+        {t("Tu progreso")}
       </h2>
       {!reviewOpen && (
         <p className="text-muted-foreground mt-1 text-[13px]!">
           {simulation
-            ? 'Elegí qué estudiar y avanzá tema por tema. Resultados de ejemplo.'
-            : 'Elegí qué estudiar y avanzá tema por tema.'}
+            ? tr("Elegí qué estudiar y avanzá tema por tema. Resultados de ejemplo.","Choose what to study and progress topic by topic. Sample results.")
+            : tr("Elegí qué estudiar y avanzá tema por tema.","Choose what to study and progress topic by topic.")}
         </p>
       )}
       {summaryUnavailable && (
         <p role="status" className="text-muted-foreground mt-3 text-sm!">
-          El resumen todavía no está disponible. Podés repasar las preguntas guardadas.
+          {tr("El resumen todavía no está disponible. Podés repasar las preguntas guardadas.","The summary is not available yet. You can review saved questions.")}
         </p>
       )}
       {!embedded && (
         <nav
-          aria-label="Herramientas del PDF"
+          aria-label={tr("Herramientas del PDF","PDF tools")}
           className="border-border my-4 hidden gap-4 overflow-x-auto border-b text-xs sm:gap-6 sm:text-sm md:flex"
         >
           {!simulation &&
             [
-              ['Resumen', 'resumen'],
+              [tr("Resumen","Summary"), 'resumen'],
               ['Flashcards', 'tarjetas'],
-              ['Práctica', 'ejercicios'],
-              ['Mapa', 'mapa'],
+              [tr("Práctica","Practice"), 'ejercicios'],
+              [tr("Mapa","Mind map"), 'mapa'],
             ].map(([label, tab]) => (
               <Link
                 key={tab}
@@ -816,20 +818,18 @@ export function PdfProgressPanel({
             aria-current="page"
             className="border-primary text-primary border-b-2 pb-4 font-medium"
           >
-            Progreso
+            {t("Progreso")}
           </span>
         </nav>
       )}
       {assessmentData?.loadError && (
         <p role="alert" className="border-border bg-muted mt-3 rounded-xl border p-3 text-[13px]!">
-          No pudimos cargar las respuestas. La cobertura no está disponible; no significa que no
-          hayas practicado.
+          {tr('No pudimos cargar las respuestas. La cobertura no está disponible; no significa que no hayas practicado.','We could not load your answers. Coverage information is unavailable, but your practice history is saved.')}
         </p>
       )}
       {data.truncated && (
         <p role="status" className="border-border bg-muted mb-5 rounded-xl border p-4 text-sm">
-          Mostramos los últimos 300 registros de este PDF. Los contadores corresponden a esos
-          registros y pueden ser parciales.
+          {tr('Mostramos los últimos 300 registros de este PDF. Los contadores corresponden a esos registros y pueden ser parciales.','We show the most recent 300 records for this PDF. Counts may be partial.')}
         </p>
       )}
       {topicId ? (
@@ -845,41 +845,41 @@ export function PdfProgressPanel({
           {!reviewOpen && (
             <aside
               className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
-              aria-label="Aprendizaje y próxima actividad del tema"
+              aria-label={tr("Aprendizaje y próxima actividad del tema","Learning and next topic activity")}
             >
               <div className="border-border bg-card space-y-3 rounded-xl border p-3.5">
                 <div>
-                  <h3 className="text-[13px] font-medium">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
+                  <h3 className="text-[13px] font-medium">{reviewOpen ? tr("Refuerzo en curso","Review in progress") : tr("Tu aprendizaje","Your learning")}</h3>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {currentTopic?.title ?? 'Conceptos pendientes'}
+                    {currentTopic?.title ?? tr("Conceptos pendientes","Pending concepts")}
                   </p>
                 </div>
                 {!reviewOpen && lastOutcome && (
                   <div className="border-border border-b pb-3">
-                    <p className="text-muted-foreground text-xs">Última práctica</p>
+                    <p className="text-muted-foreground text-xs">{t("Última práctica")}</p>
                     <p className="mt-1 text-[20px] font-semibold tabular-nums">
                       {lastOutcome.correct}/{lastOutcome.total}
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
                       {lastOutcome.incorrect}{' '}
-                      {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
+                      {lastOutcome.incorrect === 1 ? tr('respuesta incorrecta','incorrect answer') : tr('respuestas incorrectas','incorrect answers')}
                     </p>
                   </div>
                 )}
                 {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
                   <div className="border-border border-b pb-3">
-                    <p className="text-muted-foreground text-xs">Respuestas registradas</p>
+                    <p className="text-muted-foreground text-xs">{t("Respuestas registradas")}</p>
                     <p className="mt-1 text-[20px] font-semibold tabular-nums">
                       {currentCorrect}/{currentAnswered}
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      Acumuladas, no una medición de dominio.
+                      {tr("Acumuladas, no una medición de dominio.","Cumulative totals, not a mastery measure.")}
                     </p>
                   </div>
                 )}
                 {!reviewOpen && assessmentData?.loadError && (
                   <p role="status" className="text-muted-foreground text-xs">
-                    No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.
+                    {tr("No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.","We could not load your answers. Your practice history is still saved.")}
                   </p>
                 )}
                 {topicPending.length > 0 && (
@@ -890,11 +890,11 @@ export function PdfProgressPanel({
                 )}
                 {reviewOpen ? (
                   <p className="border-border text-muted-foreground border-t pt-3 text-xs leading-5">
-                    Revisá la explicación y comprobá lo aprendido con una pregunta diferente.
+                    {tr("Revisá la explicación y comprobá lo aprendido con una pregunta diferente.","Review the explanation, then test yourself with a different question.")}
                   </p>
                 ) : (
                 <div className="border-border border-t pt-3">
-                  <h4 className="text-[13px] font-medium">Tu próxima actividad</h4>
+                  <h4 className="text-[13px] font-medium">{t("Tu próxima actividad")}</h4>
                   <p className="text-muted-foreground mt-2 text-[13px] leading-5">
                     {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
                   </p>
@@ -911,7 +911,7 @@ export function PdfProgressPanel({
                       }}
                       className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
                     >
-                      Reforzar dificultades <ArrowRight size={16} />
+                      {tr("Reforzar dificultades","Review difficulties")} <ArrowRight size={16} />
                     </button>
                   ) : nextStudyTopic && currentAnswered > 0 ? (
                     <button
@@ -919,7 +919,7 @@ export function PdfProgressPanel({
                       onClick={() => openTopic(nextStudyTopic.id)}
                       className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
                     >
-                      Seguir con el siguiente tema <ArrowRight size={16} />
+                      {tr("Seguir con el siguiente tema","Continue with next topic")} <ArrowRight size={16} />
                     </button>
                   ) : canPracticeTopic ? (
                     <button
@@ -927,11 +927,11 @@ export function PdfProgressPanel({
                       onClick={() => onPracticeTopic?.(currentSectionIndex)}
                       className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
                     >
-                      Practicar este tema <ArrowRight size={16} />
+                      {t("Practicar este tema")} <ArrowRight size={16} />
                     </button>
                   ) : (
                     <p className="text-muted-foreground mt-3 text-xs">
-                      Podés continuar leyendo aunque no haya preguntas de este tema.
+                      {tr("Podés continuar leyendo aunque no haya preguntas de este tema.","You can keep reading even if there are no questions for this topic.")}
                     </p>
                   )}
                 </div>
@@ -944,7 +944,7 @@ export function PdfProgressPanel({
         <div className="mt-4 space-y-4">
           {!showOnboardingExample && (
             <div data-progress-overview className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,300px)]">
-              <section aria-label="Resumen de tu progreso" className="flex min-w-0 flex-col items-start gap-4 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+              <section aria-label={tr("Resumen de tu progreso","Your progress summary")} className="flex min-w-0 flex-col items-start gap-4 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
                 <svg className="size-[82px] shrink-0 sm:size-[90px]" viewBox="0 0 100 100" role="img"
                   aria-label={touchedTopics + ' de ' + topics.length + ' temas con actividad registrada'}>
                   <circle cx="50" cy="50" r="40" stroke="#E7EBF4" strokeWidth="9" fill="none" />
@@ -956,14 +956,14 @@ export function PdfProgressPanel({
                   </text>
                 </svg>
                 <div className="w-full min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-[#66758D]">Temas con actividad</p>
+                  <p className="text-[11px] font-medium text-[#66758D]">{t("Temas con actividad")}</p>
                   <p className="mt-1 text-[13px] font-semibold text-[#0F1B3D] sm:text-[14px]">
                     {assessmentData?.loadError
-                      ? 'Comprobación con preguntas no disponible'
+                      ? tr("Comprobación con preguntas no disponible","Question-based assessment unavailable")
                       : assessedTopics + ' de ' + topics.length + ' comprobados con preguntas'}
                   </p>
                   {topics.length > 0 && (
-                    <div className="mt-3 flex gap-1" role="img" aria-label="Estado de actividad de cada tema">
+                    <div className="mt-3 flex gap-1" role="img" aria-label={tr("Estado de actividad de cada tema","Activity state for each topic")}>
                       {topicStates.map((state, index) => (
                         <span key={topics[index].id} title={topics[index].title}
                           className={'h-1.5 min-w-0 flex-1 rounded-full ' +
@@ -974,11 +974,11 @@ export function PdfProgressPanel({
                   )}
                   <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-medium text-[#66758D] sm:text-[11px]">
                     {[
-                      { label: 'Con preguntas', color: 'bg-[#2563EB]' },
-                      { label: 'Autoevaluado', color: 'bg-[#A6C5FA]' },
-                      { label: 'Repasado', color: 'bg-[#8CCBA9]' },
-                      { label: 'Por reforzar', color: 'bg-[#D92D20]' },
-                      { label: 'Sin evaluar', color: 'bg-[#E7EBF4]' },
+                      { label: tr("Con preguntas","With questions"), color: 'bg-[#2563EB]' },
+                      { label: tr("Autoevaluado","Self-assessed"), color: 'bg-[#A6C5FA]' },
+                      { label: tr("Repasado","Reviewed"), color: 'bg-[#8CCBA9]' },
+                      { label: tr("Por reforzar","Needs review"), color: 'bg-[#D92D20]' },
+                      { label: tr("Sin evaluar","Not assessed"), color: 'bg-[#E7EBF4]' },
                     ].map((item) => (
                       <span key={item.label} className="inline-flex items-center gap-1.5">
                         <span className={'size-2 rounded-full ' + item.color} />{item.label}
@@ -988,21 +988,21 @@ export function PdfProgressPanel({
                 </div>
               </section>
               {recommendedTopic && (
-                <section aria-label="Actividad recomendada" className="rounded-2xl border border-[#D9E6FF] bg-[#F4F8FF] p-4 sm:p-5">
+                <section aria-label={tr("Actividad recomendada","Recommended activity")} className="rounded-2xl border border-[#D9E6FF] bg-[#F4F8FF] p-4 sm:p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2563EB]">
-                    {recommendedNeedsReview ? 'Para seguir avanzando' : evaluated === 0 ? 'Empezá por este tema' : 'Tu próxima actividad'}
+                    {recommendedNeedsReview ? tr("Para seguir avanzando","To keep making progress") : evaluated === 0 ? tr("Empezá por este tema","Start with this topic") : tr("Tu próxima actividad","Your next activity")}
                   </p>
                   <h2 className="mt-2 break-words text-[15px] font-semibold leading-[1.4] text-[#0F1B3D] sm:text-[16px]">
                     {recommendedTopic.title}
                   </h2>
                   <p className="mt-2 text-[12px] leading-[1.6] text-[#42506A]">
                     {recommendedNeedsReview
-                      ? 'Retomá la dificultad que registraste y comprobá lo aprendido.'
-                      : 'Leé el tema y comprobá lo aprendido con una práctica.'}
+                      ? tr("Retomá la dificultad que registraste y comprobá lo aprendido.","Return to your saved difficulty and check what you learned.")
+                      : tr("Leé el tema y comprobá lo aprendido con una práctica.","Read the topic and check your understanding with practice.")}
                   </p>
                   <button type="button" onClick={() => openTopic(recommendedTopic.id)}
                     className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
-                    {recommendedNeedsReview ? 'Continuar estudiando' : 'Comenzar a estudiar'} <ArrowRight className="size-4" aria-hidden="true" />
+                    {recommendedNeedsReview ? tr("Continuar estudiando","Continue studying") : tr("Comenzar a estudiar","Start studying")} <ArrowRight className="size-4" aria-hidden="true" />
                   </button>
                 </section>
               )}
@@ -1016,18 +1016,18 @@ export function PdfProgressPanel({
             >
               <div className="px-4 pb-3 pt-4 sm:px-5">
                 <h2 id={String(panelId) + '-topics-heading'} className="text-[15px] font-semibold text-[#0F1B3D] sm:text-[16px]">
-                  {showOnboardingExample ? 'Así vas a ver tu progreso' : 'Contenido de tu PDF'}
+                  {showOnboardingExample ? tr("Así vas a ver tu progreso","How your progress will look") : tr("Contenido de tu PDF","Your PDF content")}
                 </h2>
                 {showOnboardingExample && (
                   <p data-tour-progress-disclaimer role="status" className="mt-2 rounded-lg bg-[#EEF2FF] px-3 py-2 text-[12px] leading-5 text-[#254C98]">
-                    Los estados de los tres temas siguientes son ejemplos ilustrativos, no resultados reales.
+                    {tr("Los estados de los tres temas siguientes son ejemplos ilustrativos, no resultados reales.","The statuses of the three topics below are examples, not real study results.")}
                   </p>
                 )}
                 {!showOnboardingExample && topics.length >= 8 && (
                   <label className="mt-3 block max-w-[420px] text-[12px] text-[#42506A]">
-                    <span>Buscar tema</span>
+                    <span>{t("Buscar tema")}</span>
                     <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Nombre del tema o capítulo"
+                      placeholder={tr("Nombre del tema o capítulo","Topic or chapter name")}
                       className="mt-1.5 min-h-10 w-full rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] text-[#0F1B3D] outline-none focus-visible:border-[#2563EB] focus-visible:ring-1 focus-visible:ring-[#2563EB]" />
                   </label>
                 )}
@@ -1054,14 +1054,14 @@ export function PdfProgressPanel({
                         <span className="text-foreground block text-[13px] font-medium break-words">{topic.title}</span>
                         <span className="text-muted-foreground mt-0.5 block text-xs">
                           {mastered
-                            ? 'Ejemplo: concepto comprendido'
+                            ? tr("Ejemplo: concepto comprendido","Example: concept understood")
                             : needsReview
-                              ? 'Ejemplo: conviene repasar'
-                              : 'Ejemplo: todavía sin evaluar'}
+                              ? tr("Ejemplo: conviene repasar","Example: needs review")
+                              : tr("Ejemplo: todavía sin evaluar","Example: not yet assessed")}
                         </span>
                       </span>
                       <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${stateStyle}`}>
-                        {mastered ? 'Dominado' : needsReview ? 'Reforzar' : 'Sin evaluar'}
+                        {mastered ? tr("Dominado","Mastered") : needsReview ? tr("Reforzar","Review") : tr("Sin evaluar","Not assessed")}
                       </span>
                     </li>
                   );
@@ -1073,12 +1073,12 @@ export function PdfProgressPanel({
                   const correctCount = topic.evidence.reduce((total, item) => total + item.correct, 0);
                   const incorrectCount = topic.evidence.reduce((total, item) => total + item.incorrect, 0);
                   const selfReportedCount = topic.evidence.reduce((total, item) => total + item.selfReported, 0);
-                  const { Icon, style } = topicStatus(topic);
+                  const { Icon, style } = topicStatus(topic, english);
                   const statusLabel = assessmentData?.loadError && !topic.errors.length && assessedCount === 0 && selfReportedCount === 0
-                    ? 'Evaluación no disponible'
-                    : topicStatus(topic).label;
-                  const actionLabel = pendingCount > 0 ? 'Reforzar' : assessedCount > 0 ? 'Practicar de nuevo'
-                    : selfReportedCount > 0 ? 'Comprobar' : 'Evaluar';
+                    ? tr("Evaluación no disponible","Assessment unavailable")
+                    : topicStatus(topic, english).label;
+                  const actionLabel = pendingCount > 0 ? tr("Reforzar","Review") : assessedCount > 0 ? tr("Practicar de nuevo","Practice again")
+                    : selfReportedCount > 0 ? tr("Comprobar","Check") : tr("Evaluar","Assess");
                   const shouldPracticeDirectly = pendingCount === 0 && Boolean(
                     onPracticeTopic && (questionCounts?.[questionIndex] ?? 0) > 0
                   );
@@ -1089,12 +1089,12 @@ export function PdfProgressPanel({
                   const activityText = pendingCount > 0
                     ? pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
                     : assessmentData?.loadError
-                      ? 'Resultados de preguntas temporalmente no disponibles'
+                      ? tr("Resultados de preguntas temporalmente no disponibles","Question results temporarily unavailable")
                       : assessedCount > 0
-                      ? correctCount + ' de ' + (correctCount + incorrectCount) + ' respuestas correctas registradas'
+                      ? correctCount + tr(' de ',' of ') + (correctCount + incorrectCount) + tr(' respuestas correctas registradas',' correct answers recorded')
                       : selfReportedCount > 0
                         ? selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
-                        : 'Todavía sin preguntas corregidas';
+                        : tr("Todavía sin preguntas corregidas","No graded questions yet");
                   return (
                     <li key={topic.id} data-progress-topic-row>
                       <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 px-3 py-3 sm:grid-cols-[30px_minmax(0,1fr)_auto_auto] sm:gap-x-3 sm:px-4">
@@ -1141,23 +1141,22 @@ export function PdfProgressPanel({
               {!showOnboardingExample && !visibleTopics.length && (
                 <p className="text-muted-foreground px-6 pb-6 text-sm">
                   {topics.length
-                    ? 'No encontramos temas con ese nombre.'
-                    : 'Todavía no hay temas disponibles para mostrar.'}
+                    ? tr("No encontramos temas con ese nombre.","No topics match that search.")
+                    : tr("Todavía no hay temas disponibles para mostrar.","No topics available yet.")}
                 </p>
               )}
               {showOnboardingExample && topics.length === 0 && (
                 <p className="text-muted-foreground px-4 py-3 text-sm">
-                  Todavía no hay capítulos disponibles para armar un ejemplo.
+                  {tr("Todavía no hay capítulos disponibles para armar un ejemplo.","No chapters available to build an example.")}
                 </p>
               )}
             </section>
             {unmatched.length > 0 && !showOnboardingExample && (
               <section className="flex flex-col items-start gap-3 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-[14px] font-semibold text-[#0F1B3D]">Otros conceptos con errores</h2>
+                  <h2 className="text-[14px] font-semibold text-[#0F1B3D]">{t("Otros conceptos con errores")}</h2>
                   <p className="mt-1 text-[12px] leading-[1.6] text-[#42506A]">
-                    {unmatched.length} {unmatched.length === 1 ? 'registro de este PDF no coincide' : 'registros de este PDF no coinciden'} con un tema del resumen.
-                    Por eso no se incluyen en el avance por tema.
+                    {unmatched.length} {unmatched.length === 1 ? tr('registro de este PDF no coincide','record from this PDF does not match') : tr('registros de este PDF no coinciden','records from this PDF do not match')} {tr('con un tema del resumen. Por eso no se incluyen en el avance por tema.','a topic in the summary, so they are not included in topic progress.')}
                   </p>
                 </div>
                 <button
@@ -1165,7 +1164,7 @@ export function PdfProgressPanel({
                   onClick={() => openTopic('unmatched')}
                   className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-[#D9E6FF] bg-white px-4 text-[12px] font-semibold text-[#2563EB] hover:bg-[#EEF2FF]"
                 >
-                  Ver estos conceptos
+                  {tr('Ver estos conceptos','View these concepts')}
                   <ArrowRight size={16} />
                 </button>
                 {topicId === 'unmatched' ? topicDetail : null}

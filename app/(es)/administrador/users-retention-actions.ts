@@ -4,6 +4,7 @@ import { unstable_cache as nextCache } from 'next/cache';
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { RetentionFilters, UserDetail, UserListResult, UsersRetentionSnapshot, UsersSegment } from './users-retention-types';
+import { obtenerMetricasIdiomas } from './admin-language-actions';
 
 const getAggregatesCached = nextCache(async (days: number, from: string | null, to: string | null) => {
   const { data, error } = await createAdminClient().rpc('admin_users_retention_v4', {
@@ -64,10 +65,16 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
     country: f.country.slice(0,100) || 'all',
     university: f.university.slice(0,100) || 'all',
   };
-  const [stats, segments, list] = await Promise.all([
+  const languageStart=from ?? (() => {
+    const d=new Date(todayStr+'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate()-effectiveDays+1);
+    return d.toISOString().slice(0,10);
+  })();
+  const [stats, segments, list, language] = await Promise.all([
     getAggregatesCached(effectiveDays,from,to),
     getSegmentsCached(),
     getListCached(normalized),
+    obtenerMetricasIdiomas(languageStart,to??todayStr),
   ]);
   let detail: UserDetail | null = null;
   if (f.selectedUserId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(f.selectedUserId)) {
@@ -75,5 +82,5 @@ export async function obtenerUsuariosRetencion(f: RetentionFilters) {
     if (error) throw error;
     detail = data as UserDetail | null;
   }
-  return { stats, segments, list, detail, filters: { ...normalized, period:effectiveDays, from, to },today:todayStr,minDay };
+  return { stats, segments, list, language, detail, filters: { ...normalized, period:effectiveDays, from, to },today:todayStr,minDay };
 }

@@ -1,6 +1,16 @@
 import type { Database } from '@/types/supabase';
 
 type AdminRetentionFunctions = {
+  admin_user_languages_v1: {
+    Args: { p_from: string; p_to: string };
+    Returns: {
+      from: string; to: string; source: 'current_account_ui_locale';
+      categories: Array<{
+        language: 'es' | 'en' | 'unknown';
+        registered: number; new_users: number; active_users: number; studied_users: number;
+      }>;
+    };
+  };
   admin_users_retention_v2: {
     Args: { p_days?: number; p_from?: string | null; p_to?: string | null };
     Returns: import('@/app/(es)/administrador/users-retention-types').UsersRetentionSnapshot;

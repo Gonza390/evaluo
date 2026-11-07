@@ -84,7 +84,7 @@ assert.match(savedSchedule,/onClick=\{\(\)=>setExpandedTopic\(\{date:day.date,ke
 assert.match(savedSchedule,/onClick=\{\(\)=>setSelectedDate\(day.date\)\}/, 'Al elegir un día aparecen sus actividades.');
 assert.match(savedSchedule,/scheduled\.slice\(0,3\)/, 'Se muestran inicialmente tres fechas.');
 assert.match(savedSchedule,/recommendTopicActivities\(topic,preferences,dailyMinutes,bonusActivities\.get\(topicKey\)\?\?0\)/, 'Cada día muestra actividades acordes al tiempo disponible.');
-assert.match(savedSchedule,/examDateLabel\(examDate\)/, 'El examen es el hito final de la lista.');
+assert.match(savedSchedule,/examDateLabel\(examDate(?:, locale)?\)/, 'El examen es el hito final de la lista.');
 assert.doesNotMatch(setup,/Los días que quedan|TU PRÓXIMA SESIÓN/, 'No duplicar bloques diarios anteriores.');
 const sameOuterPlanSizing=['max-w-[1240px]','px-3 py-3','sm:px-4 sm:py-4 lg:px-6 lg:py-5'];
 for(const token of sameOuterPlanSizing) {
@@ -94,14 +94,14 @@ const sameDesktopSizing=['xl:h-[calc(100dvh-52px)] xl:overflow-hidden','xl:grid-
 for(const token of sameDesktopSizing) {
   assert.ok(filled.includes(token) && setup.includes(token), 'Ambas pantallas comparten las mismas dimensiones de escritorio: '+token);
 }
-assert.match(setup,/lg:text-\[24px\]">Plan de estudio/, 'El título del plan guardado respeta la escala original.');
+assert.match(setup,/lg:text-\[24px\]">(?:\{t\(")?Plan de estudio/, 'El título del plan guardado respeta la escala original.');
 assert.match(normalRoadmap,/text-\[14px\] font-normal/, 'La tarjeta original define el tamaño de título.');
 assert.match(savedRoadmap,/text-\[14px\] font-normal/, 'El recorrido guardado respeta el tamaño original.');
 assert.match(savedRoadmap,/border-slate-200\/90 bg-white px-3 py-2\.5 sm:px-4 sm:py-3\.5/, 'Ambos recorridos comparten borde y padding.');
 assert.match(setup,/h-\[210px\] overflow-hidden rounded-\[18px\] bg-\[#EAF1FF\]/, 'La tarjeta del examen guardado utiliza el tamaño de referencia.');
 assert.match(savedRoadmap,/data-saved-roadmap-scroll/, 'Solo la fila central de temas tiene scroll horizontal.');
 assert.match(savedRoadmap,/topics\.map\(\(topic, index\)/, 'Todos los temas se recorren horizontalmente sin paginación.');
-assert.match(savedRoadmap,/examLabel\(examDate\)/, 'El examen permanece como hito final.');
+assert.match(savedRoadmap,/examLabel\(examDate(?:, locale)?\)/, 'El examen permanece como hito final.');
 assert.match(savedRoadmap,/completed\.has\(topic\.key\)/, 'Se respeta el avance real de lectura.');
 assert.doesNotMatch(savedRoadmap,/setWindowStart|Anterior|Siguiente/, 'El recorrido no muestra controles de paginación.');
 assert.match(savedRoadmap,/overflow-x-auto/, 'Se conserva el desplazamiento horizontal interno.');

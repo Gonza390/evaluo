@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { Send } from 'lucide-react';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -36,6 +37,7 @@ type FeedbackDialogProps = {
 };
 
 export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialogProps) {
+  const english = useOptionalAppLocale() === 'en';
   const [category, setCategory] = useState<FeedbackCategory>('sugerencia');
   const [message, setMessage] = useState('');
   const [phone, setPhone] = useState('');
@@ -79,7 +81,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
       setPhone('');
       onOpenChange(false);
     } catch {
-      setError('No pudimos enviar tu comentario. Probá de nuevo.');
+      setError(english ? 'We could not send your feedback. Please try again.' : 'No pudimos enviar tu comentario. Probá de nuevo.');
     } finally {
       setSending(false);
     }
@@ -91,14 +93,14 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pb-4 pt-6 pr-12">
             <DialogTitle className="text-xl font-bold tracking-tight text-slate-950">
-              Enviar comentarios
+              {english ? 'Send feedback' : 'Enviar comentarios'}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 px-6">
             <div>
               <label htmlFor="feedback-category" className="text-sm font-semibold text-slate-900">
-                Categoría
+                {english ? 'Category' : 'Categoría'}
               </label>
               <select
                 id="feedback-category"
@@ -108,7 +110,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
               >
                 {feedbackCategories.map((item) => (
                   <option key={item.value} value={item.value}>
-                    {item.label}
+                    {english ? ({ problema: 'Problem', sugerencia: 'Suggestion', contenido: 'Content', otro: 'Other' } as Record<FeedbackCategory, string>)[item.value] : item.label}
                   </option>
                 ))}
               </select>
@@ -116,7 +118,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
 
             <div>
               <label htmlFor="feedback-message" className="text-sm font-semibold text-slate-900">
-                Tus comentarios
+                {english ? 'Your feedback' : 'Tus comentarios'}
               </label>
               <textarea
                 id="feedback-message"
@@ -124,14 +126,14 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 onChange={(event) => setMessage(event.target.value.slice(0, 1200))}
                 rows={6}
                 autoFocus
-                placeholder="Contanos qué pensás..."
+                placeholder={english ? "Tell us what you think..." : "Contanos qué pensás..."}
                 className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               />
             </div>
 
             <div>
               <label htmlFor="feedback-phone" className="text-sm font-semibold text-slate-900">
-                Número de teléfono <span className="font-normal text-slate-500">(opcional)</span>
+                {english ? 'Phone number' : 'Número de teléfono'} <span className="font-normal text-slate-500">{english ? '(optional)' : '(opcional)'}</span>
               </label>
               <input
                 id="feedback-phone"
@@ -140,11 +142,11 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 autoComplete="tel"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value.slice(0, 40))}
-                placeholder="Ej. +54 9 11 1234 5678"
+                placeholder={english ? "e.g., +1 415 555 0123" : "Ej. +54 9 11 1234 5678"}
                 className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               />
               <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                Dejá tu número si querés que podamos responderte más rápido.
+                {english ? 'Leave your number if you would like us to contact you sooner.' : 'Dejá tu número si querés que podamos responderte más rápido.'}
               </p>
             </div>
 
@@ -158,7 +160,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
               onClick={() => onOpenChange(false)}
               className="h-11 rounded-xl border-slate-200 font-semibold"
             >
-              Cancelar
+              {english ? 'Cancel' : 'Cancelar'}
             </Button>
             <Button
               type="submit"
@@ -166,7 +168,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
               className="from-brand to-brand-2 h-11 rounded-xl bg-gradient-to-r font-semibold text-white"
             >
               <Send className="mr-2 h-4 w-4" />
-              {sending ? 'Enviando...' : 'Enviar comentarios'}
+              {sending ? (english ? 'Sending...' : 'Enviando...') : (english ? 'Send feedback' : 'Enviar comentarios')}
             </Button>
           </DialogFooter>
         </form>

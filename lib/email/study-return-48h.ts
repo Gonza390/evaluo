@@ -1,5 +1,6 @@
 import 'server-only';
 import { SITE_URL, toAbsoluteUrl } from '@/lib/site';
+import { accountAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
@@ -23,10 +24,10 @@ type Candidate = {
   pending_count: number;
 };
 
-function firstName(value: string | null | undefined) {
+function firstName(value: string | null | undefined, locale: AppLocale = 'es') {
   const normalized = value?.trim();
-  if (!normalized) return 'estudiante';
-  return normalized.split(/\s+/)[0] || 'estudiante';
+  if (!normalized) return locale === 'en' ? 'student' : 'estudiante';
+  return normalized.split(/\s+/)[0] || (locale === 'en' ? 'student' : 'estudiante');
 }
 
 function truncate(value: string, max = 88) {
@@ -60,25 +61,27 @@ export function buildStudyReturn48hMessage(input: {
   pendingCount: number;
   pendingTopics: string[];
   returnUrl: string;
+  locale?: AppLocale;
 }) {
+  const english = input.locale === 'en';
   const title = truncate(input.materialTitle);
   const hasPending = input.pendingCount > 0;
 
-  const subject = hasPending
+  const subject = english ? (hasPending ? `${input.pendingCount} concepts to review` : `Ready to continue with ${title}?`) : hasPending
     ? `Te quedaron ${input.pendingCount} conceptos para reforzar`
     : `¿Seguís con ${title}?`;
 
-  const heading = hasPending
+  const heading = english ? (hasPending ? `You have ${input.pendingCount} concept${input.pendingCount === 1 ? '' : 's'} to review` : 'Your material is ready when you are') : hasPending
     ? `Tenés ${input.pendingCount} concepto${input.pendingCount === 1 ? '' : 's'} para reforzar`
     : 'Tu material sigue listo para continuar';
 
-  const paragraph = hasPending
+  const paragraph = english ? (hasPending ? `Your last session with ${title} left a few concepts to revisit. Review them and check what you have learned.` : `You studied ${title} a couple of days ago. Pick up your notes where you left off.`) : hasPending
     ? `En tu última sesión con ${title} quedaron algunos conceptos pendientes. Podés retomarlos y comprobar si ahora los entendés mejor.`
     : `Hace un par de días estuviste trabajando con ${title}. Podés volver al material y seguir estudiando desde donde lo dejaste.`;
 
-  const cta = hasPending ? 'Reforzar mis temas' : 'Practicar con mi PDF';
+  const cta = english ? (hasPending ? 'Review my topics' : 'Practice with my PDF') : hasPending ? 'Reforzar mis temas' : 'Practicar con mi PDF';
   const topicNames = [...new Set(input.pendingTopics.map((t) => t.trim()).filter(Boolean))].slice(0, 3);
-  const topicHtml = hasPending && topicNames.length ? `<div style="background:#F4F7FF;border:1px solid #DCE6F9;border-radius:12px;padding:14px 18px;margin:0 0 22px;"><p style="margin:0 0 10px;font-weight:700;font-size:14px;">Temas que te conviene repasar</p><ul style="padding-left:18px;margin:0;">${topicNames.map((name) => `<li style="margin-bottom:5px;">${escapeHtml(name)}</li>`).join('')}</ul></div>` : '';
+  const topicHtml = hasPending && topicNames.length ? `<div style="background:#F4F7FF;border:1px solid #DCE6F9;border-radius:12px;padding:14px 18px;margin:0 0 22px;"><p style="margin:0 0 10px;font-weight:700;font-size:14px;"}>${english ? 'Topics to review' : 'Temas que te conviene repasar'}</p><ul style="padding-left:18px;margin:0;">${topicNames.map((name) => `<li style="margin-bottom:5px;">${escapeHtml(name)}</li>`).join('')}</ul></div>` : '';
 
   const safeFirstName = escapeHtml(input.firstname);
   const safeHeading = escapeHtml(heading);
@@ -87,7 +90,7 @@ export function buildStudyReturn48hMessage(input: {
   const safeUrl = escapeHtml(input.returnUrl);
 
   const html = `<!doctype html>
-<html lang="es">
+<html lang="${english ? 'en' : 'es'}">
   <body style="margin:0;padding:0;background:#F5F7FB;font-family:Inter,Arial,sans-serif;color:#0F1B3D;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;padding:32px 16px;">
       <tr>
@@ -96,14 +99,14 @@ export function buildStudyReturn48hMessage(input: {
             <tr>
               <td style="padding:32px;">
                 <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
-                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${english ? 'Hi' : 'Hola'} ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
                 ${topicHtml}
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
-                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material en Evaluo.</p>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${english ? 'You received this message because you previously studied this material in Evaluo.' : 'Te enviamos este mensaje porque estudiaste este material en Evaluo.'}</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">${english ? 'Evaluo Team' : 'Equipo Evaluo'}</p>
                   <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
@@ -115,7 +118,7 @@ export function buildStudyReturn48hMessage(input: {
   </body>
 </html>`;
 
-  const text = hasPending
+  const text = english ? `Hi ${input.firstname}. ${subject}. ${paragraph} ${cta}: ${input.returnUrl}` : hasPending
     ? `Hola ${input.firstname}. Te quedaron ${input.pendingCount} conceptos para reforzar de ${title}. Volvé a estudiarlos: ${input.returnUrl}`
     : `Hola ${input.firstname}. Hace un par de días estuviste trabajando con ${title}. Continuá estudiando: ${input.returnUrl}`;
 
@@ -278,7 +281,8 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
       );
       const pendingCount = pendingTopics.size;
       const displayName = candidate.display_name;
-      const displayFirstName = firstName(displayName);
+      const locale = accountAppLocale(user.user_metadata) ?? 'es';
+      const displayFirstName = firstName(displayName, locale);
       const returnUrl = buildReturnUrl(candidate.material_id, pendingCount > 0);
       const message = buildStudyReturn48hMessage({
         firstname: displayFirstName,
@@ -286,6 +290,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
         pendingCount,
         pendingTopics: ((errorsResult.data ?? []) as Array<{ topic: string | null }>).map((x) => x.topic ?? ''),
         returnUrl,
+        locale,
       });
 
       const senderResult = await sendSenderTransactional({

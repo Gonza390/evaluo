@@ -2,6 +2,8 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { examUiText } from '@/lib/i18n/exam-ui-copy';
 import '@/components/dashboard/practice-motion.css';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, CircleAlert, RotateCcw, Sparkles, Layers3, BookOpenCheck } from 'lucide-react';
@@ -103,6 +105,10 @@ export function StudentMaterialExam({
   simulation,
   topicSectionIndex,
 }: StudentMaterialExamProps) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const tr = (es:string,en:string)=>english?en:es;
+  const t = (value: string) => examUiText(locale, value);
   const router = useRouter();
   const [tomorrowStatus, setTomorrowStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const topicTitle =
@@ -509,7 +515,7 @@ export function StudentMaterialExam({
           return;
         }
       } catch {
-        setFreeQuotaMessage('No pudimos verificar las preguntas disponibles. Reintentá para continuar.');
+        setFreeQuotaMessage(tr('No pudimos verificar las preguntas disponibles. Reintentá para continuar.','We could not verify available questions. Please retry to continue.'));
         setPreparing(false);
         return;
       }
@@ -586,7 +592,7 @@ export function StudentMaterialExam({
         materialId, returnTo:practicePath,
       }).href}
       backHref={backPath}
-      backLabel={topicSectionIndex !== undefined ? 'Volver al tema' : 'Volver a la práctica'}
+      backLabel={t(topicSectionIndex !== undefined ? 'Volver al tema' : 'Volver a la práctica')}
       onBack={() => {
         setFreeQuotaReached(false);
         if (topicSectionIndex !== undefined) {
@@ -601,21 +607,21 @@ export function StudentMaterialExam({
     return (
       <div className="border-border border-y py-10 text-center">
         <p className="text-foreground text-sm font-medium">
-          {topicSectionIndex !== undefined ? 'Preparación de práctica' : 'Todavía no hay preguntas suficientes'}
+          {t(topicSectionIndex !== undefined ? 'Preparación de práctica' : 'Todavía no hay preguntas suficientes')}
         </p>
         <p className="text-muted-foreground mt-1 text-[13px] leading-5">
           {topicSectionIndex === undefined
-            ? 'El PDF necesita más contenido estructurado para armar una práctica útil.'
-            : 'Estamos intentando crear ejercicios desde las fuentes del tema. Si no se pudieron verificar, podés estudiar el resumen y volver a intentar.'}
+            ? t('El PDF necesita más contenido estructurado para armar una práctica útil.')
+            : t('Estamos intentando crear ejercicios desde las fuentes del tema. Si no se pudieron verificar, podés estudiar el resumen y volver a intentar.')}
         </p>
         {topicSectionIndex !== undefined && (
           <div className="mt-4 flex items-center justify-center gap-3">
             <Button type="button" onClick={() => void startExam()}>
-              Generar práctica con IA
+              {t("Generar práctica con IA")}
             </Button>
             {onReturnToTopic && (
               <button type="button" onClick={() => onReturnToTopic(false)}
-                className="text-primary text-sm underline">Volver al tema</button>
+                className="text-primary text-sm underline">{t("Volver al tema")}</button>
             )}
           </div>
         )}
@@ -626,7 +632,7 @@ export function StudentMaterialExam({
   if (preparing && topicSectionIndex !== undefined && !started) {
     return (
       <div className="mx-auto max-w-[940px] space-y-2 px-2 py-8" role="status">
-        <p className="text-foreground text-sm font-medium">Preparando la práctica de este tema…</p>
+        <p className="text-foreground text-sm font-medium">{t("Preparando la práctica de este tema…")}</p>
         <p className="text-muted-foreground text-xs">
           Estamos seleccionando y verificando preguntas a partir del material.
         </p>
@@ -643,12 +649,12 @@ export function StudentMaterialExam({
             onClick={() => onReturnToTopic(false)}
             className="text-primary min-h-11 text-sm font-medium"
           >
-            Volver al tema
+            {t("Volver al tema")}
           </button>
         )}
         <div className="border-border border-b pb-4">
           <p className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">
-            Práctica de este tema
+            {t("Práctica de este tema")}
           </p>
           <h2 className="text-foreground mt-2 text-xl font-semibold">
             {topicTitle}
@@ -656,25 +662,24 @@ export function StudentMaterialExam({
         </div>
         {topicGenerationUnavailable && topicSectionIndex !== undefined && (
           <p role="status" className="text-muted-foreground text-xs leading-5">
-            No pudimos verificar más ejercicios de este tema ahora. Seguís practicando con las preguntas disponibles.
+            {t("No pudimos verificar más ejercicios de este tema ahora. Seguís practicando con las preguntas disponibles.")}
           </p>
         )}
         {verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
           <p role="status" className="text-muted-foreground text-xs leading-5">
-            Este tema tiene {verifiedTopicCount} de {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} preguntas verificadas.
-            Podés practicar con las disponibles; no agregamos respuestas sin respaldo.
+            {tr('Este tema tiene','This topic has')} {verifiedTopicCount} {tr('de','of')} {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} {tr('preguntas verificadas. Podés practicar con las disponibles; no agregamos respuestas sin respaldo.','verified questions. You can practice with the available ones; we do not add unsupported answers.')}
           </p>
         )}
         {savedDraft && !isSimulation ? (
           <div className="border-primary/30 bg-primary/5 rounded-xl border p-4">
-            <p className="text-sm font-medium">Tenés una práctica sin terminar</p>
+            <p className="text-sm font-medium">{t("Tenés una práctica sin terminar")}</p>
             <p className="text-muted-foreground mt-1 text-sm">
-              Retomá desde la pregunta {savedDraft.currentIndex + 1} de {savedDraft.questionIds.length}.
+              {tr('Retomá desde la pregunta','Resume from question')} {savedDraft.currentIndex + 1} {tr('de','of')} {savedDraft.questionIds.length}.
             </p>
             <div className="mt-3 flex flex-wrap gap-3">
-              <Button type="button" onClick={resumeExam}>Continuar donde quedé <ArrowRight className="h-4 w-4" /></Button>
+              <Button type="button" onClick={resumeExam}>{t("Continuar donde quedé")} <ArrowRight className="h-4 w-4" /></Button>
               <button type="button" onClick={discardSavedDraft} className="text-muted-foreground min-h-11 text-xs font-medium underline">
-                Empezar una práctica nueva
+                {t("Empezar una práctica nueva")}
               </button>
             </div>
           </div>
@@ -682,12 +687,12 @@ export function StudentMaterialExam({
           <div role="alert" className="border-border rounded-xl border p-4">
             <p className="text-sm text-slate-700">{freeQuotaMessage}</p>
             <Button type="button" className="mt-3" onClick={() => void startExam()}>
-              Reintentar práctica
+              {t("Reintentar práctica")}
             </Button>
           </div>
         ) : (
           <p role="status" className="text-muted-foreground text-sm">
-            {preparing ? 'Preparando tus preguntas…' : 'Abriendo la práctica…'}
+            {t(preparing ? 'Preparando tus preguntas…' : 'Abriendo la práctica…')}
           </p>
         )}
       </div>
@@ -703,17 +708,17 @@ export function StudentMaterialExam({
             onClick={() => onReturnToTopic(false)}
             className="text-primary mb-3 min-h-11 text-sm font-medium"
           >
-            Volver al contenido del tema
+            {tr('Volver al contenido del tema','Back to topic content')}
           </button>
         )}
         <header className="border-border border-b pb-4">
           {topicSectionIndex !== undefined && (
             <p className="text-primary text-[11px] font-medium tracking-[0.15em] uppercase">
-              Práctica de este tema
+              {t("Práctica de este tema")}
             </p>
           )}
           <h2 className={cn('text-foreground text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]', topicSectionIndex !== undefined && 'mt-2')}>
-            {topicTitle ?? 'Elegí cuánto querés practicar'}
+            {topicTitle ?? t('Elegí cuánto querés practicar')}
           </h2>
         </header>
 
@@ -721,30 +726,28 @@ export function StudentMaterialExam({
           sections.length > 0 &&
           assessedSections < sections.length && (
             <p className="text-muted-foreground mt-4 text-xs leading-5" role="status">
-              El banco tiene preguntas autocorregibles asociadas a {assessedSections} de{' '}
-              {sections.length} capítulos del resumen. Los demás no se consideran evaluados, incluso
-              en el modo Completo.
+              {tr('El banco tiene preguntas autocorregibles asociadas a','The question bank has auto-gradable questions for')} {assessedSections} {tr('de','of')}{' '}
+              {sections.length} {tr('capítulos del resumen. Los demás no se consideran evaluados, incluso en el modo Completo.','summary chapters. Other chapters are not considered assessed, even in Complete mode.')}
             </p>
           )}
 
         {savedDraft && !isSimulation && (
           <div className="border-primary/30 bg-primary/5 mt-5 rounded-xl border px-4 py-4">
-            <p className="text-foreground text-sm font-medium">Tenés una práctica sin terminar</p>
+            <p className="text-foreground text-sm font-medium">{t("Tenés una práctica sin terminar")}</p>
             <p className="text-muted-foreground mt-1 text-[13px]">
-              Retomá desde la pregunta {savedDraft.currentIndex + 1} de{' '}
-              {savedDraft.questionIds.length}. Tus respuestas anteriores siguen guardadas en este
-              navegador.
+              {tr('Retomá desde la pregunta','Resume from question')} {savedDraft.currentIndex + 1} {tr('de','of')}{' '}
+              {savedDraft.questionIds.length}. {tr('Tus respuestas anteriores siguen guardadas en este navegador.','Your previous answers remain saved in this browser.')}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <Button type="button" onClick={resumeExam} className="h-10 rounded-lg">
-                Continuar donde quedé <ArrowRight className="h-4 w-4" />
+                {t("Continuar donde quedé")} <ArrowRight className="h-4 w-4" />
               </Button>
               <button
                 type="button"
                 onClick={discardSavedDraft}
                 className="text-muted-foreground hover:text-foreground text-xs font-medium underline"
               >
-                Descartar práctica guardada
+                {t("Descartar práctica guardada")}
               </button>
             </div>
           </div>
@@ -780,14 +783,14 @@ export function StudentMaterialExam({
                     {option.label}
                   </p>
                   <p className="mt-1 text-[11px] font-medium opacity-90 sm:text-[12px]">
-                    {option.count} {option.count === 1 ? 'pregunta' : 'preguntas'}
+                    {option.count} {option.count === 1 ? tr('pregunta','question') : tr('preguntas','questions')}
                   </p>
                   <p className="mt-1 hidden text-[11px] leading-[1.4] opacity-80 sm:block">
                     {topicSectionIndex === undefined
                       ? option.description
                       : option.mode === 'complete'
-                        ? 'Respondé todas las preguntas disponibles de este tema.'
-                        : 'Respondé una selección de preguntas de este tema.'}
+                        ? tr('Respondé todas las preguntas disponibles de este tema.','Answer all available questions for this topic.')
+                        : tr('Respondé una selección de preguntas de este tema.','Answer a selection of questions for this topic.')}
                   </p>
                 </div>
               </button>
@@ -800,7 +803,7 @@ export function StudentMaterialExam({
       ) : null}
       {freeQuotaReached && freeStudyV2 ? (
         <p role="status" className="mb-3 text-sm text-slate-600">
-          Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las que ya desbloqueaste.
+          {t("Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las que ya desbloqueaste.")}
         </p>
       ) : null}
       <div className="border-border flex justify-end border-t pt-5">
@@ -810,7 +813,7 @@ export function StudentMaterialExam({
             onClick={() => void startExam()}
             className="h-11 rounded-lg px-5"
           >
-            {preparing ? 'Preparando práctica…' : 'Empezar práctica'}
+            {t(preparing ? 'Preparando práctica…' : 'Empezar práctica')}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -944,26 +947,26 @@ export function StudentMaterialExam({
           <div className="border-border bg-card rounded-xl border px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-col items-center text-center">
               <p className="text-primary text-[11px] font-medium tracking-[0.13em] uppercase">
-                Práctica finalizada{topicTitle ? ` · ${topicTitle}` : ''}
+                {tr('Práctica finalizada','Practice finished')}{topicTitle ? ` · ${topicTitle}` : ''}
               </p>
               <h2
                 className="text-foreground mt-3 text-[24px] font-semibold tracking-[-0.04em] sm:text-[28px]"
-                aria-label={`Resultado: ${result.correct} de ${result.total}`}
+                aria-label={english ? `Result: ${result.correct} of ${result.total}` : `Resultado: ${result.correct} de ${result.total}`}
               >
-                {result.correct} de {result.total}
+                {result.correct} {tr('de','of')} {result.total}
               </h2>
             </div>
 
             <div className="border-border mt-4 border-t pt-4 text-center">
               <h3 className="text-foreground text-[19px] leading-[1.3] font-semibold tracking-tight sm:text-[20px]">
-                {hasErrors ? 'Detectamos qué necesitás reforzar' : '¡Excelente! Respondiste todo correctamente'}
+                {t(hasErrors ? 'Detectamos qué necesitás reforzar' : '¡Excelente! Respondiste todo correctamente')}
               </h3>
               <p className="text-muted-foreground mx-auto mt-2 max-w-md text-[13px] leading-5">
                 {hasErrors
                   ? result.wrong.length === 1
-                    ? 'Encontramos una dificultad en tus respuestas. Vamos a trabajarla para comprobar si la superaste.'
-                    : 'Identificamos dificultades en tus respuestas. Vamos a reforzarlas y comprobar si las superaste.'
-                  : 'No detectamos dificultades en esta práctica. Podés seguir avanzando.'}
+                    ? tr('Encontramos una dificultad en tus respuestas. Vamos a trabajarla para comprobar si la superaste.','We found one difficulty in your answers. Review it and check your understanding.')
+                    : tr('Identificamos dificultades en tus respuestas. Vamos a reforzarlas y comprobar si las superaste.','We found difficulties in your answers. Review them and check your understanding.')
+                  : tr('No detectamos dificultades en esta práctica. Podés seguir avanzando.','No difficulties detected in this practice session. You can continue studying.')}
               </p>
             </div>
 
@@ -996,10 +999,10 @@ export function StudentMaterialExam({
     if (!isSimulation && topicSectionIndex === undefined) {
       const nextStepTitle =
         nextObjective?.kind === 'reinforce'
-          ? `Reforzar ${nextObjective.topicTitle || 'mis errores'}`
+          ? `${tr('Reforzar','Review')} ${nextObjective.topicTitle || tr('mis errores','my mistakes')}`
           : nextObjective?.kind === 'practice'
-            ? `Practicar ${nextObjective.topicTitle || 'el próximo tema'}`
-            : 'Consolidar lo aprendido';
+            ? `${tr('Practicar','Practice')} ${nextObjective.topicTitle || tr('el próximo tema','the next topic')}`
+            : tr(tr('Consolidar lo aprendido','Consolidate what you learned'),'Consolidate what you learned');
 
       // Acertar toda una tanda no significa haber recorrido todas las preguntas del tema.
       // Los totales del banco se calculan SOLO sobre preguntas elegibles y verificables.
@@ -1010,7 +1013,7 @@ export function StudentMaterialExam({
           question.chapterTitle ||
           question.topic ||
           question.reference.sectionTitle ||
-          'Tema sin capítulo identificado'
+          tr('Tema sin capítulo identificado','Topic without a chapter')
         ).trim();
       };
       const bankCounts = new Map<string, number>();
@@ -1044,7 +1047,7 @@ export function StudentMaterialExam({
           <div className="grid min-w-0 grid-cols-1 gap-3 @min-[660px]/practice-result:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] @min-[1040px]/practice-result:grid-cols-[minmax(165px,0.7fr)_minmax(0,1.2fr)_minmax(290px,1fr)] @min-[1040px]/practice-result:gap-4">
           <header className="border-border bg-card flex min-w-0 flex-col items-center justify-center rounded-xl border px-3 py-4 text-center @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto @min-[1040px]/practice-result:min-h-[210px]">
             <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
-              Práctica terminada
+              {t("Práctica terminada")}
             </p>
             <h2 className="text-foreground mt-3 text-[24px] font-semibold tracking-[-0.04em] sm:text-[28px]">
               {result.correct} <span className="text-muted-foreground/45">/ {result.total}</span>
@@ -1056,7 +1059,7 @@ export function StudentMaterialExam({
 
           <section className="border-border bg-card min-w-0 rounded-xl border p-3.5 sm:p-4 @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto">
             <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-foreground text-sm font-medium">Así te fue por tema</h3>
+              <h3 className="text-foreground text-sm font-medium">{t("Así te fue por tema")}</h3>
               <span className="text-muted-foreground text-xs">
                 {topicResults.length} {topicResults.length === 1 ? 'tema evaluado' : 'temas evaluados'}
               </span>
@@ -1077,7 +1080,7 @@ export function StudentMaterialExam({
                       <div
                         className={`${performance.trackClass} relative h-2.5 overflow-hidden rounded-full`}
                         role="progressbar"
-                        aria-label={`Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
+                        aria-label={english ? `Correct answers in ${topic.title}: ${performance.percentage}%, ${performance.label}` : `Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={performance.percentage}
@@ -1093,17 +1096,17 @@ export function StudentMaterialExam({
               </div>
             ) : (
               <p className="text-muted-foreground text-sm">
-                Esta tanda no incluyó preguntas de opción múltiple asociadas a temas.
+                {t("Esta tanda no incluyó preguntas de opción múltiple asociadas a temas.")}
               </p>
             )}
             {topicResults.length > visibleTopics.length && (
               <p className="text-muted-foreground mt-3 text-xs">
-                {topicResults.length - visibleTopics.length} temas más en «Ver todos los detalles».
+                {topicResults.length - visibleTopics.length} {tr('temas más en «Ver todos los detalles».','more topics in “View all details”.')}
               </p>
             )}
             <p className="text-muted-foreground mt-4 text-xs">
-              Aciertos en esta tanda, no dominio definitivo de los temas.
-              {hasOpenQuestions ? ' Las respuestas abiertas fueron autoevaluadas.' : ''}
+              {tr('Aciertos en esta tanda, no dominio definitivo de los temas.','This session reflects correct answers, not definitive mastery of topics.')}
+              {hasOpenQuestions ? tr(' Las respuestas abiertas fueron autoevaluadas.',' Written answers were self-assessed.') : ''}
             </p>
             <Link
               href={`/materiales/${materialId}?tab=progreso`}
@@ -1119,18 +1122,18 @@ export function StudentMaterialExam({
               }}
               className="text-primary mt-3 inline-flex min-h-10 items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
             >
-              Ver mi progreso <ArrowRight className="h-4 w-4" />
+              {tr('Ver mi progreso','View my progress')} <ArrowRight className="h-4 w-4" />
             </Link>
           </section>
 
           <div className="border-border bg-card flex min-w-0 flex-col rounded-xl border p-3.5 sm:p-4 @min-[660px]/practice-result:col-start-2 @min-[660px]/practice-result:row-span-2 @min-[660px]/practice-result:row-start-1 @min-[1040px]/practice-result:col-start-3 @min-[1040px]/practice-result:row-span-1">
           <section aria-live="polite">
             <p className="text-primary text-[11px] font-medium tracking-[0.12em] uppercase">
-              Tu próximo paso
+              {t("Tu próximo paso")}
             </p>
             {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
               <p className="text-muted-foreground mt-3 text-sm">
-                Preparando tu próximo repaso…
+                {t("Preparando tu próximo repaso…")}
               </p>
             ) : objectiveStatus === 'saved' && nextObjective ? (
               <>
@@ -1139,19 +1142,19 @@ export function StudentMaterialExam({
                 </h3>
                 <p className="text-muted-foreground mt-2 text-sm">
                   {nextObjective.kind === 'reinforce'
-                    ? 'Retomá este tema con una práctica breve y comprobá qué aprendiste.'
+                    ? tr('Retomá este tema con una práctica breve y comprobá qué aprendiste.','Review this topic with a short practice and check what you learned.')
                     : nextObjective.kind === 'practice'
-                      ? 'Ya tenés un tema preparado para seguir estudiando.'
-                      : 'Podés continuar con otra práctica cuando quieras.'}
+                      ? tr('Ya tenés un tema preparado para seguir estudiando.','Your next topic is ready for study.')
+                      : tr('Podés continuar con otra práctica cuando quieras.','You can continue with another practice session whenever you like.')}
                 </p>
               </>
             ) : (
               <div className="mt-3">
                 <p className="text-muted-foreground text-sm">
-                  No pudimos guardar tu próximo repaso. Tu práctica sí quedó guardada.
+                  {tr('No pudimos guardar tu próximo repaso. Tu práctica sí quedó guardada.','We could not save your next review. Your practice was saved.')}
                 </p>
                 <Button type="button" variant="outline" onClick={persistNextObjective} className="mt-3">
-                  Reintentar
+                  {t("Reintentar")}
                 </Button>
               </div>
             )}
@@ -1171,7 +1174,7 @@ export function StudentMaterialExam({
                 }}
                 className="bg-primary text-primary-foreground inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-medium transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
               >
-                Continuar ahora <ArrowRight className="h-4 w-4" />
+                {t("Continuar ahora")} <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
               <Button
@@ -1195,7 +1198,7 @@ export function StudentMaterialExam({
                 }}
                 className="min-h-11 w-full rounded-lg text-[13px] font-medium"
               >
-                Continuar ahora <ArrowRight className="h-4 w-4" />
+                {t("Continuar ahora")} <ArrowRight className="h-4 w-4" />
               </Button>
             )}
             <Button
@@ -1205,15 +1208,15 @@ export function StudentMaterialExam({
               onClick={() => void continueTomorrow()}
               className="min-h-11 w-full rounded-lg text-[13px] font-medium"
             >
-              {tomorrowStatus === 'saving' ? 'Guardando para mañana…' : 'Continuar mañana'}
+              {tomorrowStatus === 'saving' ? tr('Guardando para mañana…','Saving for tomorrow…') : tr('Continuar mañana','Continue tomorrow')}
             </Button>
             {tomorrowStatus === 'error' ? (
               <p role="alert" className="text-destructive text-center text-xs">
-                No pudimos guardar el repaso para mañana. Volvé a intentarlo.
+                {tr('No pudimos guardar el repaso para mañana. Volvé a intentarlo.','Could not save the review for tomorrow. Try again.')}
               </p>
             ) : null}
             <p className="text-muted-foreground text-center text-xs">
-              Si elegís mañana, el repaso queda guardado en Mi espacio.
+              {tr('Si elegís mañana, el repaso queda guardado en Mi espacio.','If you choose tomorrow, your review is saved in My space.')}
             </p>
           </div>
 
@@ -1221,7 +1224,7 @@ export function StudentMaterialExam({
           </div>
           <details className="group border-border bg-card mt-3 rounded-xl border px-3 py-1 sm:px-4">
             <summary className="text-muted-foreground hover:text-foreground flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium">
-              Ver todos los detalles
+              {t("Ver todos los detalles")}
               <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
             </summary>
             <div className="grid gap-6 border-t py-4 @min-[800px]/practice-result:grid-cols-2 @min-[800px]/practice-result:gap-7">
@@ -1242,7 +1245,7 @@ export function StudentMaterialExam({
                         <div
                           className={`${performance.trackClass} relative h-2 overflow-hidden rounded-full`}
                           role="progressbar"
-                          aria-label={`Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
+                          aria-label={english ? `Correct answers in ${topic.title}: ${performance.percentage}%, ${performance.label}` : `Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
                           aria-valuemin={0}
                           aria-valuemax={100}
                           aria-valuenow={performance.percentage}
@@ -1254,9 +1257,9 @@ export function StudentMaterialExam({
                         </div>
                         {topic.bankSize > 0 ? (
                           <p className="text-muted-foreground text-xs">
-                            En esta tanda aparecieron {topic.total} de {topic.bankSize} preguntas válidas disponibles de este tema.
+                            {tr('En esta tanda aparecieron','This session included')} {topic.total} {tr('de','of')} {topic.bankSize} {tr('preguntas válidas disponibles de este tema.','valid available questions for this topic.')}
                             {topic.total < topic.bankSize && topic.correct === topic.total
-                              ? ' Todavía quedan preguntas distintas por comprobar.' : ''}
+                              ? tr(' Todavía quedan preguntas distintas por comprobar.',' There are more distinct questions to practice.') : ''}
                           </p>
                         ) : null}
                       </div>
@@ -1264,17 +1267,17 @@ export function StudentMaterialExam({
                   })
                 ) : (
                   <p className="text-muted-foreground text-sm">
-                    No hubo preguntas vinculadas a un tema en esta tanda.
+                    {tr('No hubo preguntas vinculadas a un tema en esta tanda.','No topic-linked questions appeared in this session.')}
                   </p>
                 )}
                 <p className="text-muted-foreground text-xs">
-                  El banco puede cambiar cuando se actualiza el PDF. Estas cantidades describen esta práctica, no todo tu historial.
+                  {tr('El banco puede cambiar cuando se actualiza el PDF. Estas cantidades describen esta práctica, no todo tu historial.','The question bank can change when the PDF is updated. These counts describe this session, not your entire history.')}
                 </p>
               </section>
 
               <section className="space-y-3">
                 <h3 className="text-foreground text-sm font-medium">
-                  Preguntas para revisar · {wrongAnswers.length}
+                  {tr('Preguntas para revisar','Questions to review')} · {wrongAnswers.length}
                 </h3>
                 {wrongAnswers.length ? (
                   <div className="space-y-2">
@@ -1285,7 +1288,7 @@ export function StudentMaterialExam({
                         </summary>
                         <div className="text-muted-foreground space-y-3 pt-4 text-sm leading-6">
                           <p>
-                            <span className="text-foreground font-semibold">Tu respuesta: </span>
+                            <span className="text-foreground font-semibold">{t("Tu respuesta:")} </span>
                             {question.type === 'multiple_choice'
                               ? selectedAnswers[question.id] || 'Sin respuesta'
                               : openDrafts[question.id] || 'Sin respuesta escrita'}
@@ -1297,11 +1300,11 @@ export function StudentMaterialExam({
                             {question.answer}
                           </p>
                           {question.explanation && (
-                            <p><span className="text-foreground font-semibold">¿Por qué? </span>{question.explanation}</p>
+                            <p><span className="text-foreground font-semibold">{t("¿Por qué?")} </span>{question.explanation}</p>
                           )}
                           <p className="text-xs">Fuente: {sourceLabel(question)}</p>
                           {question.type === 'open' && (
-                            <p className="text-xs">La respuesta abierta fue autoevaluada, no corregida automáticamente.</p>
+                            <p className="text-xs">{t("La respuesta abierta fue autoevaluada, no corregida automáticamente.")}</p>
                           )}
                         </div>
                       </details>
@@ -1328,7 +1331,7 @@ export function StudentMaterialExam({
                         {' '}Pregunta {index + 1}: {question.prompt}
                       </summary>
                       <div className="text-muted-foreground space-y-2 pt-3 text-sm">
-                        <p><span className="text-foreground font-semibold">Tu respuesta: </span>
+                        <p><span className="text-foreground font-semibold">{t("Tu respuesta:")} </span>
                           {question.type === 'multiple_choice'
                             ? selectedAnswers[question.id] || 'Sin respuesta'
                             : openDrafts[question.id] || 'Sin respuesta escrita'}
@@ -1346,7 +1349,7 @@ export function StudentMaterialExam({
               </details>
               <div className="flex flex-wrap gap-3 @min-[800px]/practice-result:col-span-2">
                 <Button type="button" variant="outline" onClick={resetExam}>
-                  <RotateCcw className="h-4 w-4" /> Nueva práctica
+                  <RotateCcw className="h-4 w-4" /> {t("Nueva práctica")}
                 </Button>
               </div>
             </div>
@@ -1359,7 +1362,7 @@ export function StudentMaterialExam({
       <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
         <header className="border-border border-b pb-6">
           <p className="text-primary text-[11px] font-medium tracking-[0.15em] uppercase">
-            Práctica completada{topicTitle ? ` · ${topicTitle}` : ''}
+            {tr('Práctica completada','Practice completed')}{topicTitle ? ` · ${topicTitle}` : ''}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
             <h2 className="text-foreground text-[24px] font-semibold tracking-[-0.04em] sm:text-[28px]">
@@ -1369,8 +1372,8 @@ export function StudentMaterialExam({
             </h2>
             <p className="text-muted-foreground pb-1 text-sm">
               {topicSectionIndex === undefined
-                ? `${result.correct} de ${result.total} respuestas consolidadas`
-                : 'Respuestas correctas en esta tanda'}
+                ? `${result.correct} ${tr('de','of')} ${result.total} ${tr('respuestas consolidadas','consolidated answers')}`
+                : tr('Respuestas correctas en esta tanda','Correct answers in this session')}
             </p>
           </div>
         </header>
@@ -1395,20 +1398,20 @@ export function StudentMaterialExam({
             <div>
               <h3 className="text-foreground font-semibold">
                 {result.wrong.length > 0
-                  ? `${result.wrong.length} ${result.wrong.length === 1 ? 'pregunta para revisar' : 'preguntas para revisar'}`
-                  : 'Respondiste toda la tanda correctamente'}
+                  ? `${result.wrong.length} ${result.wrong.length === 1 ? tr('pregunta para revisar','question to review') : tr('preguntas para revisar','questions to review')}`
+                  : tr('Respondiste toda la tanda correctamente','All answers in this session were correct')}
               </h3>
               <p className="text-muted-foreground mt-2 text-sm">
                 {result.wrong.length > 0
-                  ? 'Antes de continuar, te recomendamos revisar estas dificultades con el contenido del tema.'
-                  : 'Podés volver al tema y continuar estudiando. Más adelante conviene comprobarlo otra vez.'}
+                  ? tr('Antes de continuar, te recomendamos revisar estas dificultades con el contenido del tema.','Before continuing, review these difficulties with the topic content.')
+                  : tr('Podés volver al tema y continuar estudiando. Más adelante conviene comprobarlo otra vez.','You can return to the topic and keep studying. Check your understanding again later.')}
               </p>
             </div>
           ) : reviewTopics.length > 0 ? (
             <div className="flex items-start gap-3">
               <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div>
-                <h3 className="text-foreground font-semibold">Temas para repasar</h3>
+                <h3 className="text-foreground font-semibold">{tr('Temas para repasar','Topics to review')}</h3>
                 <ul className="text-foreground mt-2 space-y-1.5 text-[13px] leading-5">
                   {reviewTopics.map((topic) => (
                     <li key={topic}>• {topic}</li>
@@ -1418,21 +1421,20 @@ export function StudentMaterialExam({
             </div>
           ) : (
             <p className="text-sm font-medium text-emerald-700">
-              No quedaron temas marcados para repasar en este intento.
+              {tr('No quedaron temas marcados para repasar en este intento.','No topics were marked for review in this session.')}
             </p>
           )}
         </section>
 
         {topicSectionIndex !== undefined && (
           <p className="text-muted-foreground mt-4 text-sm!">
-            Resultado de esta tanda de {topicTitle}. Incluye {result.total}{' '}
-            {result.total === 1 ? 'pregunta' : 'preguntas'}; no representa el dominio de todo el
-            tema.
+            {tr('Resultado de esta tanda de','Results for this session on')} {topicTitle}. {tr('Incluye','Includes')} {result.total}{' '}
+            {result.total === 1 ? tr('pregunta','question') : tr('preguntas','questions')}; {tr('no representa el dominio de todo el tema.','this does not mean you have mastered the whole topic.')}
           </p>
         )}
         {topicSectionIndex === undefined && sections.length > 0 && (
           <p className="text-muted-foreground mt-4 text-[13px]!">
-            Esta práctica incluyó preguntas corregidas de{' '}
+            {tr('Esta práctica incluyó preguntas corregidas de','This practice included graded questions from')}{' '}
             {
               new Set(
                 questions
@@ -1441,36 +1443,35 @@ export function StudentMaterialExam({
                   .filter((index) => index >= 0)
               ).size
             }{' '}
-            de {sections.length} temas. Los temas que no aparecieron siguen sin evaluar en este
-            intento; no cuentan como errores.
+            {tr('de','of')} {sections.length} {tr('temas. Los temas que no aparecieron siguen sin evaluar en este intento; no cuentan como errores.','topics. Topics not covered remain unassessed and do not count as mistakes.')}
           </p>
         )}
         {!isSimulation && (
           <section className="border-primary/20 bg-primary/5 mt-5 rounded-xl border p-4 sm:p-5" aria-live="polite">
-            <p className="text-primary text-[11px] font-medium tracking-[0.13em] uppercase">Tu próximo objetivo</p>
+            <p className="text-primary text-[11px] font-medium tracking-[0.13em] uppercase">{t("Tu próximo objetivo")}</p>
             {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
-              <p className="text-muted-foreground mt-2 text-sm">Preparando tu próximo repaso con tus respuestas guardadas…</p>
+              <p className="text-muted-foreground mt-2 text-sm">{t("Preparando tu próximo repaso con tus respuestas guardadas…")}</p>
             ) : objectiveStatus === 'saved' && nextObjective ? (
               <>
                 <h3 className="text-foreground mt-2 text-lg font-semibold">
-                  {nextObjective.kind === 'reinforce' ? `Reforzar: ${nextObjective.topicTitle || 'tus errores'}`
-                    : nextObjective.kind === 'practice' ? `Practicar: ${nextObjective.topicTitle || 'el próximo tema'}`
-                    : 'Consolidar lo aprendido'}
+                  {nextObjective.kind === 'reinforce' ? `${tr('Reforzar:','Review:')} ${nextObjective.topicTitle || tr('tus errores','your mistakes')}`
+                    : nextObjective.kind === 'practice' ? `${tr('Practicar:','Practice:')} ${nextObjective.topicTitle || tr('el próximo tema','the next topic')}`
+                    : tr('Consolidar lo aprendido','Consolidate what you learned')}
                 </h3>
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  {nextObjective.kind === 'reinforce' ? 'Volvé a comprobar los conceptos que te costaron en esta práctica.'
-                    : nextObjective.kind === 'practice' ? 'Seguí con un tema que todavía necesita una comprobación.'
-                    : 'Comprobá lo aprendido con otra tanda de preguntas.'}
+                  {nextObjective.kind === 'reinforce' ? tr('Volvé a comprobar los conceptos que te costaron en esta práctica.','Check the concepts that were difficult in this practice again.')
+                    : nextObjective.kind === 'practice' ? tr('Seguí con un tema que todavía necesita una comprobación.','Continue with a topic that still needs practice.')
+                    : tr('Comprobá lo aprendido con otra tanda de preguntas.','Check what you learned with another session of questions.')}
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs font-medium">
-                  Repaso sugerido: {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+                  {tr('Repaso sugerido:','Suggested review:')} {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR', { day: 'numeric', month: 'long' })}
                 </p>
-                <p className="text-primary mt-3 text-xs font-semibold">✓ Guardado en Mi espacio para tu próxima visita</p>
+                <p className="text-primary mt-3 text-xs font-semibold">{t("✓ Guardado en Mi espacio para tu próxima visita")}</p>
               </>
             ) : (
               <>
-                <p className="text-muted-foreground mt-2 text-sm">Tu práctica está guardada, pero no pudimos guardar tu próximo objetivo.</p>
-                <Button type="button" variant="outline" className="mt-3" onClick={persistNextObjective}>Reintentar guardar objetivo</Button>
+                <p className="text-muted-foreground mt-2 text-sm">{t("Tu práctica está guardada, pero no pudimos guardar tu próximo objetivo.")}</p>
+                <Button type="button" variant="outline" className="mt-3" onClick={persistNextObjective}>{t("Reintentar guardar objetivo")}</Button>
               </>
             )}
           </section>
@@ -1518,7 +1519,7 @@ export function StudentMaterialExam({
             className="h-11 w-full rounded-lg sm:w-auto"
           >
             <RotateCcw className="h-4 w-4" />
-            {topicSectionIndex !== undefined ? 'Practicar de nuevo' : 'Nueva práctica'}
+            {t(topicSectionIndex !== undefined ? 'Practicar de nuevo' : 'Nueva práctica')}
           </Button>
         </div>
       </div>
@@ -1648,11 +1649,11 @@ export function StudentMaterialExam({
       setSaveError(
         serverActionMismatch
           ? protectedLocally
-            ? 'Evaluo se actualizó mientras estudiabas. Tu respuesta está guardada en este navegador. Actualizá para retomarla y volver a enviarla.'
-            : 'Evaluo se actualizó. No pudimos guardar una copia local: mantené esta pestaña abierta e intentá de nuevo antes de actualizar.'
+            ? tr('Evaluo se actualizó mientras estudiabas. Tu respuesta está guardada en este navegador. Actualizá para retomarla y volver a enviarla.','Evaluo updated while you were studying. Your answer is saved in this browser. Refresh to restore and submit it.')
+            : tr('Evaluo se actualizó. No pudimos guardar una copia local: mantené esta pestaña abierta e intentá de nuevo antes de actualizar.','Evaluo updated. We could not save a local copy. Keep this tab open and try again before refreshing.')
           : protectedLocally
-            ? 'No se pudo guardar la respuesta en tu progreso. Sigue disponible en este navegador: reintentá o actualizá la página para retomarla.'
-            : 'No se pudo guardar la respuesta ni crear una copia local. Mantené esta pestaña abierta y reintentá.'
+            ? tr('No se pudo guardar la respuesta en tu progreso. Sigue disponible en este navegador: reintentá o actualizá la página para retomarla.','Your answer was not saved to your progress, but is still available in this browser. Retry or refresh to recover it.')
+            : tr('No se pudo guardar la respuesta ni crear una copia local. Mantené esta pestaña abierta y reintentá.','We could not save your answer or a local copy. Keep this tab open and retry.')
       );
       return;
     }
@@ -1673,28 +1674,27 @@ export function StudentMaterialExam({
         {topicSectionIndex !== undefined &&
           verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
             <p role="status" className="text-muted-foreground text-xs leading-5">
-              Cobertura de este tema: {verifiedTopicCount} de {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} preguntas verificadas.
-              Esta tanda utiliza las disponibles.
+              {tr('Cobertura de este tema:','Topic coverage:')} {verifiedTopicCount} {tr('de','of')} {MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS} {tr('preguntas verificadas. Esta tanda utiliza las disponibles.','verified questions. This session uses the available questions.')}
             </p>
           )}
         {contextUnavailable && (
           <p role="status" className="text-muted-foreground text-xs!">
             {topicSectionIndex === undefined
-              ? 'No pudimos cargar tu historial. Esta tanda reparte preguntas entre los temas disponibles.'
-              : 'No pudimos cargar tu historial. Esta tanda usa las preguntas disponibles de este tema.'}
+              ? tr('No pudimos cargar tu historial. Esta tanda reparte preguntas entre los temas disponibles.','Could not load your history. This session uses questions across available topics.')
+              : tr('No pudimos cargar tu historial. Esta tanda usa las preguntas disponibles de este tema.','Could not load your history. This session uses available questions from this topic.')}
           </p>
         )}
         {topicSectionIndex === undefined && unavailableTopics > 0 && (
           <p className="text-muted-foreground text-xs!">
             {unavailableTopics}{' '}
-            {unavailableTopics === 1 ? 'tema todavía no tiene' : 'temas todavía no tienen'}{' '}
-            preguntas corregibles asociadas. No se cuentan como errores.
+            {unavailableTopics === 1 ? tr('tema todavía no tiene','topic does not have') : tr('temas todavía no tienen','topics do not have')}{' '}
+            {tr('preguntas corregibles asociadas. No se cuentan como errores.','linked gradable questions yet. They do not count as mistakes.')}
           </p>
         )}
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-muted-foreground text-[12px] font-semibold tracking-[0.14em] uppercase">
-              Pregunta {currentIndex + 1} de {questions.length}
+              {tr('Pregunta','Question')} {currentIndex + 1} {tr('de','of')} {questions.length}
             </p>
           </div>
           <span className="text-primary text-[11px] font-medium tracking-[0.12em] uppercase md:hidden">
@@ -1704,8 +1704,7 @@ export function StudentMaterialExam({
 
         {!isSimulation && questions.length >= 20 && (
           <p className="text-muted-foreground text-[11px]">
-            Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y
-            continuar.
+            {tr('Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y continuar.','Your progress is saved automatically in this browser. You can return to this PDF and continue.')}
           </p>
         )}
 
@@ -1780,7 +1779,7 @@ export function StudentMaterialExam({
               onChange={(event) =>
                 setOpenDrafts((drafts) => ({ ...drafts, [current.id]: event.target.value }))
               }
-              placeholder="Escribí tu respuesta con tus palabras..."
+              placeholder={t("Escribí tu respuesta con tus palabras...")}
               className="border-border bg-card text-foreground focus:border-primary focus:ring-ring/20 disabled:bg-muted mt-3 min-h-28 w-full resize-y rounded-lg border px-4 py-3 text-sm leading-6 transition outline-none focus:ring-2"
             />
           )}
@@ -1801,16 +1800,16 @@ export function StudentMaterialExam({
                 <p className="text-foreground text-sm font-medium">
                   {current.type === 'multiple_choice'
                     ? isCorrect
-                      ? 'Correcto'
-                      : 'Revisá este punto'
-                    : 'Respuesta esperada'}
+                      ? tr('Correcto','Correct')
+                      : tr('Revisá este punto','Review this point')
+                    : tr('Respuesta esperada','Expected answer')}
                 </p>
                 <p className="text-foreground mt-2 text-[13.5px] leading-6">
-                  <span className="font-semibold">Respuesta:</span> {current.answer}
+                  <span className="font-semibold">{t("Respuesta:")}</span> {current.answer}
                 </p>
                 {groundedMistakeContrast ? (
                   <div className="border-primary/15 bg-primary/5 mt-3 rounded-lg border px-3 py-3">
-                    <p className="text-foreground text-[12px] font-semibold">Por qué esa opción no era la correcta</p>
+                    <p className="text-foreground text-[12px] font-semibold">{t("Por qué esa opción no era la correcta")}</p>
                     <p className="text-foreground mt-1.5 text-[13px] leading-5">{groundedMistakeContrast}</p>
                   </div>
                 ) : null}
@@ -1825,7 +1824,7 @@ export function StudentMaterialExam({
               {current.type === 'open' ? (
                 <div className="border-t border-slate-100 pt-4">
                   <p className="text-foreground text-[13px] font-medium">
-                    Compará tu respuesta con la esperada. ¿Cómo te fue?
+                    {t("Compará tu respuesta con la esperada. ¿Cómo te fue?")}
                   </p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     <button
@@ -1840,7 +1839,7 @@ export function StudentMaterialExam({
                           : 'border-border bg-card text-foreground hover:border-emerald-300'
                       )}
                     >
-                      La tenía
+                      {t("La tenía")}
                     </button>
                     <button
                       type="button"
@@ -1909,12 +1908,12 @@ export function StudentMaterialExam({
                         if (response.ok && reply && typeof reply === 'object' && 'allowed' in reply && reply.allowed === false)
                           setFreeQuotaReached(true);
                         setFreeQuotaMessage(response.status === 503
-                          ? 'No pudimos comprobar tu cupo. Reintentá.'
-                          : 'Ya resolviste tus 12 preguntas gratuitas. Podés repetir las anteriores.');
+                          ? tr('No pudimos comprobar tu cupo. Reintentá.','Could not verify your Free quota. Please retry.')
+                          : tr('Ya resolviste tus 12 preguntas gratuitas. Podés repetir las anteriores.','You used your 12 Free questions. You can repeat previously unlocked ones.'));
                         return;
                       }
                     } catch {
-                      setFreeQuotaMessage('No pudimos comprobar tu cupo. Reintentá.');
+                      setFreeQuotaMessage(tr('No pudimos comprobar tu cupo. Reintentá.','Could not verify your Free quota. Please retry.'));
                       return;
                     } finally { setFreeClaimPending(false); }
                   }

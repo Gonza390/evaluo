@@ -71,11 +71,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+    default: 'Evaluo | Study your PDF with AI and prepare for exams',
     template: '%s | Evaluo',
   },
   description:
-    'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
+    'Upload a PDF or Word document and study using AI summaries, flashcards, practice questions and progress tracking.',
   applicationName: 'Evaluo',
   authors: [{ name: 'Evaluo' }],
   creator: 'Evaluo',
@@ -84,24 +84,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Evaluo',
-    title: 'No estudies todo por igual | Evaluo',
+    title: 'Study smarter with your own notes | Evaluo',
     description:
-      'Descubrí qué sabés, qué reforzar y cómo avanzás. Practicá con tus apuntes y seguí tu progreso por tema.',
+      'See what you know, what to review and how you are progressing. Practice with your own notes, topic by topic.',
     images: [
       {
         url: '/evaluo-whatsapp-progreso.png',
         width: 1200,
         height: 630,
         type: 'image/png',
-        alt: 'Evaluo: no estudies todo por igual. Descubrí qué sabés, qué reforzar y cómo avanzás.',
+        alt: 'Evaluo: study your notes with AI, practice by topic and track your progress.',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'No estudies todo por igual | Evaluo',
+    title: 'Study smarter with your own notes | Evaluo',
     description:
-      'Descubrí qué sabés, qué reforzar y cómo avanzás. Practicá con tus apuntes y seguí tu progreso por tema.',
+      'See what you know, what to review and how you are progressing. Practice with your own notes, topic by topic.',
     images: ['/evaluo-whatsapp-progreso.png'],
   },
   manifest: '/manifest.webmanifest',

@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Términos y condiciones | Evaluo',
+  title: 'Términos y condiciones',
   description:
     'Términos y condiciones de uso de Evaluo: condiciones del servicio, contenido de usuarios, uso responsable de la IA, propiedad intelectual y limitación de responsabilidad.',
   alternates: {
@@ -129,23 +129,23 @@ const sections: LegalSection[] = [
     title: '10. Cobros y planes internacionales',
     body: [
       'La página de precios y el checkout informan el importe, moneda, duración y renovación del plan antes de contratar.',
-      'Actualmente los pagos en Argentina se procesan mediante Mercado Pago. Evaluo prevé utilizar Creem como vendedor registrado (Merchant of Record) para compras internacionales, únicamente después de su aprobación y habilitación efectiva. Mientras tanto no se ofrecen pagos internacionales por Creem.',
-      'Cuando Creem actúe como vendedor de la transacción, se aplicarán además los términos y reglas de facturación y devolución informados durante la compra, sin perjuicio de los derechos obligatorios del consumidor. Consultá las páginas de Facturación y Reembolsos de Evaluo.',
+      'Los pagos en Argentina se procesan mediante Mercado Pago. Para compras fuera de Argentina, cuando el checkout internacional esté habilitado, Creem (Armitage Labs OÜ) actúa como vendedor registrado (Merchant of Record), procesa los pagos en USD y emite el comprobante correspondiente. La disponibilidad se informa en la página de precios y antes de confirmar la compra.',
+      'En compras realizadas a través de Creem se aplican los términos para compradores de Creem (https://www.creem.io/buyer-terms) y las condiciones del producto comunicadas antes del pago, sin limitar los derechos irrenunciables del consumidor. Consultá las páginas de Facturación y Reembolsos de Evaluo.',
     ],
   },
   {
     title: '10 bis. Ventas internacionales a través de Creem',
     body: [
-      'Evaluo es la marca comercial de esta plataforma de estudio. Para las compras internacionales que se realicen mediante Creem, el proceso de pedido se gestionará a través de Creem, que actuará como Merchant of Record (vendedor registrado) una vez habilitado el checkout. Creem gestionará las transacciones conforme a las condiciones informadas en la compra, mientras Evaluo presta el servicio digital y brinda soporte de producto.',
-      'Antes de confirmar una compra internacional, el checkout mostrará el precio total, moneda, impuestos aplicables, duración y renovación. El plan Premium internacional previsto cuesta US$ 9,99 al mes y se renovará automáticamente cada mes hasta su cancelación. La compra internacional aún no está disponible, sujeta a la aprobación de Creem y activación del checkout.',
-      'La cancelación impide renovaciones futuras y, salvo reembolso o anulación, el acceso continúa hasta el final del período pagado. La cancelación no equivale automáticamente a un reembolso. Para soporte de pagos y solicitudes de devolución de compras realizadas mediante Creem, utilizá los canales indicados en el checkout y comprobante o escribí a facturacion@evaluo.com.ar.',
+      'Evaluo es la marca comercial de esta plataforma de estudio. En las compras internacionales efectuadas mediante Creem, Armitage Labs OÜ (Creem) es el vendedor registrado (Merchant of Record): procesa el pago, gestiona los impuestos aplicables y emite el comprobante. Evaluo presta el servicio digital y ofrece soporte del producto.',
+      'Antes de confirmar una compra internacional, el checkout mostrará el precio total, moneda, impuestos aplicables, duración y renovación. El precio de referencia de Premium internacional es de US$ 9,99 por mes, más los impuestos aplicables cuando corresponda, con renovación mensual automática. Solo se podrán concretar compras cuando el checkout internacional figure habilitado.',
+      'La cancelación impide renovaciones futuras y, salvo reembolso o anulación, el acceso continúa hasta el final del período pagado. La cancelación no equivale automáticamente a un reembolso. Para solicitar una devolución, contactá primero a facturacion@evaluo.com.ar; si tu compra fue efectuada mediante Creem, también podés acudir a su portal de clientes o soporte según las condiciones para compradores: https://www.creem.io/buyer-terms.',
       'Para consultas sobre el uso de Evaluo y soporte comercial escribí a facturacion@evaluo.com.ar. Para consultas legales o de privacidad: legal@evaluo.com.ar y privacidad@evaluo.com.ar.',
     ],
   },
   {
     title: '10 ter. Identificación comercial',
     body: [
-      'El servicio se presenta comercialmente bajo la marca Evaluo, en https://evaluoapp.com. La identidad legal y fiscal del titular de la cuenta de vendedor se verifica directamente ante el proveedor de pagos correspondiente; esta referencia a la marca comercial no sustituye la identificación legal que corresponda al titular del negocio.',
+      'El servicio se presenta comercialmente bajo la marca Evaluo, en https://evaluoapp.com. La identificación legal del vendedor registrado de compras procesadas con Creem se muestra en su comprobante. La referencia comercial a Evaluo no sustituye la identificación legal que corresponda al titular del negocio.',
     ],
   },
   {
@@ -189,7 +189,7 @@ export default function TermsPage() {
                 Términos y condiciones
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
-                Última actualización: octubre de 2026. Estos términos regulan el uso de la plataforma
+                Última actualización: noviembre de 2026. Estos términos regulan el uso de la plataforma
                 Evaluo, las responsabilidades del contenido cargado por los usuarios, el alcance de
                 las herramientas de inteligencia artificial y las condiciones generales del servicio.
               </p>

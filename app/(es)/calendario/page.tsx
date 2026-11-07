@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
+import { localizeExamEventTitle } from '@/lib/i18n/calendar-event-title';
 import Link from 'next/link';
 import {
   BellRing,
@@ -130,7 +133,9 @@ function buildEventPayload({
   careerId,
   careerName,
   selectedMateria,
+  locale,
 }: {
+  locale: 'es' | 'en';
   formState: typeof DEFAULT_FORM_STATE;
   careerId: string | null;
   careerName: string | null;
@@ -144,7 +149,7 @@ function buildEventPayload({
 
     return {
       type: formState.type,
-      title: `${subjectName} - ${examInstanceLabel(formState.examInstance)}`,
+      title: `${subjectName} - ${locale === 'en' ? (formState.examInstance === 'integrador' ? 'Final exam' : `Exam ${formState.examInstance}`) : examInstanceLabel(formState.examInstance)}`,
       notes: '',
       materialId: null,
       materiaId: selectedMateria?.id ?? null,
@@ -190,6 +195,15 @@ function buildEventPayload({
 
 export default function CalendarioPage() {
   const { user, loading } = useUser();
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => studyUiText(locale, value);
+  const displayLongDate = (date: Date) => english
+    ? new Intl.DateTimeFormat('en-US', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)
+    : formatLongDate(date);
+  const displayMonth = (date: Date) => english
+    ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date)
+    : formatMonthLabel(date);
   const router = useRouter();
   const { toast } = useToast();
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -274,7 +288,7 @@ export default function CalendarioPage() {
         setEvents([]);
         setHasLoadedEvents(true);
         toast({
-          description: 'No pudimos cargar tu calendario. Volvé a intentarlo en unos segundos.',
+          description: t('No pudimos cargar tu calendario. Volvé a intentarlo en unos segundos.'),
           variant: 'destructive',
         });
         return;
@@ -555,14 +569,15 @@ export default function CalendarioPage() {
       careerId,
       careerName,
       selectedMateria: selectedCareerMateria,
+      locale,
     });
 
     if (!payload) {
       toast({
         description:
           formState.type === 'exam'
-            ? 'Escribí el nombre de la materia para guardar ese parcial.'
-            : 'Escribí el nombre del trabajo práctico para guardarlo.',
+            ? (english ? 'Enter a subject name to save this exam.' : 'Escribí el nombre de la materia para guardar ese parcial.')
+            : (english ? 'Enter an assignment name to save it.' : 'Escribí el nombre del trabajo práctico para guardarlo.'),
         variant: 'destructive',
       });
       return;
@@ -570,7 +585,7 @@ export default function CalendarioPage() {
 
     if (!user) {
       toast({
-        description: 'Iniciá sesión para guardar fechas en tu calendario.',
+        description: t('Iniciá sesión para guardar fechas en tu calendario.'),
         variant: 'destructive',
       });
       return;
@@ -674,7 +689,7 @@ export default function CalendarioPage() {
         writeLocalCalendarEvents(user.id, nextEvents);
         resetForm();
         setIsComposerOpen(false);
-        toast({ description: 'Fecha guardada en tu calendario.' });
+        toast({ description: t('Fecha guardada en tu calendario.') });
         return;
       }
 
@@ -746,7 +761,7 @@ export default function CalendarioPage() {
 
     if (storageMode === 'local') {
       writeLocalCalendarEvents(user.id, nextEvents);
-      toast({ description: 'Fecha eliminada del calendario.' });
+      toast({ description: t('Fecha eliminada del calendario.') });
       return;
     }
 
@@ -756,20 +771,20 @@ export default function CalendarioPage() {
       if (isMissingCalendarTableError(error)) {
         setStorageMode('local');
         writeLocalCalendarEvents(user.id, nextEvents);
-        toast({ description: 'Fecha eliminada del calendario.' });
+        toast({ description: t('Fecha eliminada del calendario.') });
         return;
       }
 
       logError('calendario.deleteEvent', error, { userId: user.id, eventId });
       setEvents(previousEvents);
       toast({
-        description: 'No pudimos eliminar ese evento. Inténtalo nuevamente.',
+        description: t('No pudimos eliminar ese evento. Inténtalo nuevamente.'),
         variant: 'destructive',
       });
       return;
     }
 
-    toast({ description: 'Fecha eliminada del calendario.' });
+    toast({ description: t('Fecha eliminada del calendario.') });
   };
 
   if (loading || isCheckingProfile) {
@@ -779,10 +794,10 @@ export default function CalendarioPage() {
           icon={Loader2}
           iconSpin
           tone="loading"
-          eyebrow="Calendario"
-          title="Estamos preparando tu calendario"
-          description="Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar."
-          secondaryText="Si tarda demasiado, probá recargando la página."
+          eyebrow={t("Calendario")}
+          title={english ? "Preparing your calendar" : "Estamos preparando tu calendario"}
+          description={english ? "Loading dates, courses and reminders." : "Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar."}
+          secondaryText={english ? "If it takes too long, try refreshing the page." : "Si tarda demasiado, probá recargando la página."}
           className="w-full"
         />
       </div>
@@ -795,10 +810,10 @@ export default function CalendarioPage() {
         <StudyStatePanel
           icon={CalendarPlus}
           className="w-full"
-          title="Tu calendario académico"
-          description="Iniciá sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."
-          secondaryText="Cuando entres, podrás organizar tus fechas clave y seguirlas desde un solo lugar."
-          primaryActionLabel="Iniciar sesión"
+          title={english ? "Your academic calendar" : "Tu calendario académico"}
+          description={english ? "Sign in to add exams, assignments and reminders to your calendar." : "Iniciá sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."}
+          secondaryText={english ? "Keep important dates and track them all in one place." : "Cuando entres, podrás organizar tus fechas clave y seguirlas desde un solo lugar."}
+          primaryActionLabel={english ? "Sign in" : "Iniciar sesión"}
           onPrimaryAction={() => router.push('/login?next=%2Fcalendario')}
         />
       </div>
@@ -812,9 +827,9 @@ export default function CalendarioPage() {
           icon={Loader2}
           iconSpin
           tone="loading"
-          eyebrow="Calendario"
-          title="Estamos trayendo tus fechas del mes"
-          description="Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante."
+          eyebrow={t("Calendario")}
+          title={english ? "Loading this month’s dates" : "Estamos trayendo tus fechas del mes"}
+          description={english ? "You can add exams and assignments as soon as your calendar loads." : "Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante."}
           className="w-full"
         />
       </div>
@@ -826,8 +841,8 @@ export default function CalendarioPage() {
       <div className="mx-auto w-full max-w-[1240px] min-w-0 space-y-2.5 overflow-x-clip px-3 py-2 sm:space-y-3 sm:px-4 sm:py-3 lg:px-6 lg:py-3">
         <AppPageHeader
           size="compact"
-          title="Calendario"
-          description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
+          title={t('Calendario')}
+          description={english ? 'Organize your exams, assignments and reminders in one place.' : 'Organizá parciales, trabajos prácticos y recordatorios en un solo lugar.'}
         />
         <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
           <div className="relative p-1 min-[380px]:p-1.5 sm:p-2">
@@ -840,18 +855,18 @@ export default function CalendarioPage() {
                     type="button"
                     onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
                     className="inline-flex h-8 w-6 shrink-0 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900 sm:h-9 sm:w-9"
-                    aria-label="Mes anterior"
+                    aria-label={english ? 'Previous month' : 'Mes anterior'}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <h2 className="text-foreground min-w-0 whitespace-nowrap text-[13px] font-medium tracking-[-0.04em] min-[380px]:text-[15px] sm:text-[20px]">
-                    {formatMonthLabel(visibleMonth)}
+                    {displayMonth(visibleMonth)}
                   </h2>
                   <button
                     type="button"
                     onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900"
-                    aria-label="Mes siguiente"
+                    aria-label={english ? 'Next month' : 'Mes siguiente'}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -868,16 +883,16 @@ export default function CalendarioPage() {
                     }}
                     className="h-8 rounded-xl border border-slate-200 bg-white px-2 text-[12px] text-slate-700 shadow-sm hover:bg-white hover:text-slate-900 sm:px-3 sm:text-sm"
                   >
-                    Hoy
+                    {t("Hoy")}
                   </Button>
                   <Button
                     type="button"
                     onClick={() => openComposerForDate(selectedDate)}
-                    aria-label="Agregar evento"
+                    aria-label={t('Agregar evento')}
                     className="h-8 min-w-8 rounded-xl bg-primary px-2 text-white shadow-sm hover:opacity-95 sm:px-4"
                   >
                     <CalendarPlus className="h-4 w-4" />
-                    <span className="hidden whitespace-nowrap sm:inline">Agregar evento</span>
+                    <span className="hidden whitespace-nowrap sm:inline">{t("Agregar evento")}</span>
                   </Button>
                 </div>
               </div>
@@ -886,7 +901,7 @@ export default function CalendarioPage() {
                 className="border-b border-slate-200/80 bg-slate-50/60"
                 style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
               >
-                {WEEKDAY_LABELS.map((label) => (
+                {(english ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] : WEEKDAY_LABELS).map((label) => (
                   <div
                     key={label}
                     className="min-w-0 border-r border-slate-200/80 px-0.5 py-1 text-center text-[11px] font-medium text-slate-600 last:border-r-0 sm:px-3 sm:py-1.5 sm:text-[12px]"
@@ -925,7 +940,7 @@ export default function CalendarioPage() {
                           setVisibleMonth(getMonthStart(date));
                         }
                       }}
-                      aria-label={`${formatLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? 'evento' : 'eventos'}` : ''}${planDay ? `, ${planDay.topics.length} temas del plan` : ''}${isPlanExamDay ? ', examen del plan' : ''}`}
+                      aria-label={`${displayLongDate(date)}${cellEvents.length ? `, ${cellEvents.length} ${cellEvents.length === 1 ? (english ? 'event' : 'evento') : (english ? 'events' : 'eventos')}` : ''}${planDay ? `, ${planDay.topics.length} ${english ? 'topics in the study plan' : 'temas del plan'}` : ''}${isPlanExamDay ? (english ? ', study plan exam' : ', examen del plan') : ''}`}
                       className={`group relative flex h-[48px] min-w-0 flex-col gap-0.5 overflow-hidden border-r border-b px-1 py-1 text-left transition last:border-r-0 hover:bg-white min-[380px]:h-[52px] min-[380px]:px-1.5 sm:h-[56px] sm:gap-1 sm:px-2 sm:py-1.5 ${
                         !isCurrentMonth ? 'text-slate-500' : 'text-slate-900'
                       }`}
@@ -1012,15 +1027,15 @@ export default function CalendarioPage() {
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold leading-4 text-heading sm:text-[13px]">
                     {selectionInVisibleMonth && selectedStudyPlanDay
-                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min previstos`
+                      ? `${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} ${english ? 'min planned' : 'min previstos'}`
                       : selectionInVisibleMonth && selectedPlanExam
-                        ? 'Examen de tu plan de estudio'
-                        : 'Tu plan de estudio'}
+                        ? (english ? 'Exam in your study plan' : 'Examen de tu plan de estudio')
+                        : (english ? 'Your study plan' : 'Tu plan de estudio')}
                   </p>
                   <p className="mt-0.5 text-[11px] leading-4 text-[#66758D]">
                     {selectionInVisibleMonth && (selectedStudyPlanDay || selectedPlanExam)
-                      ? formatLongDate(selectedDate)
-                      : `${studyPlanDaysByDate.size} días programados · Examen ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`}
+                      ? displayLongDate(selectedDate)
+                      : `${studyPlanDaysByDate.size} ${english ? 'scheduled days' : 'días programados'} · ${english ? 'Exam' : 'Examen'} ${new Date(`${activeStudyPlan.exam_date}T12:00:00`).toLocaleDateString(english ? 'en-US' : 'es-AR', { day: 'numeric', month: 'short' })}`}
                   </p>
                 </div>
               </div>
@@ -1028,7 +1043,7 @@ export default function CalendarioPage() {
                 href="/dashboard/plan-de-estudio"
                 className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-brand transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
-                Ver mi plan <ArrowRight className="size-3.5" aria-hidden="true" />
+                {t('Ver mi plan')} <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
             {selectionInVisibleMonth && selectedStudyPlanDay ? (
@@ -1040,24 +1055,24 @@ export default function CalendarioPage() {
                 ))}
                 {selectedStudyPlanDay.topics.length > 2 ? (
                   <span className="px-1 py-1 text-[11px] font-medium text-[#66758D]">
-                    +{selectedStudyPlanDay.topics.length - 2} temas más
+                    +{selectedStudyPlanDay.topics.length - 2} {english ? "more topics" : "temas más"}
                   </span>
                 ) : null}
               </div>
             ) : null}
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-[#66758D]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> Día de estudio
+                <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> {english ? "Study day" : "Día de estudio"}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> Examen del plan
+                <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> {english ? "Study plan exam" : "Examen del plan"}
               </span>
             </div>
           </section>
         ) : studyPlanLoadError && user ? (
           <p role="status" className="px-1 text-[11px] text-[#66758D]">
-            No pudimos mostrar tu plan en el calendario. Podés consultarlo desde{' '}
-            <Link className="font-semibold text-brand underline underline-offset-2" href="/dashboard/plan-de-estudio">Plan de estudio</Link>.
+            {english ? 'We could not display your plan in the calendar. You can view it under' : 'No pudimos mostrar tu plan en el calendario. Podés consultarlo desde'}{' '}
+            <Link className="font-semibold text-brand underline underline-offset-2" href="/dashboard/plan-de-estudio">{t("Plan de estudio")}</Link>.
           </p>
         ) : null}
       </div>
@@ -1068,10 +1083,10 @@ export default function CalendarioPage() {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
                 <DialogTitle className="text-[18px] font-medium tracking-[-0.035em] text-heading">
-                  Agregar fecha
+                  {english ? "Add a date" : "Agregar fecha"}
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
-                  {formatLongDate(selectedDate)}
+                  {displayLongDate(selectedDate)}
                 </DialogDescription>
               </DialogHeader>
 
@@ -1094,7 +1109,7 @@ export default function CalendarioPage() {
                     }
                   >
                     <GraduationCap className="h-4 w-4" />
-                    Parcial
+                    {t("Parcial")}
                   </Button>
                   <Button
                     type="button"
@@ -1113,7 +1128,7 @@ export default function CalendarioPage() {
                     }
                   >
                     <FileText className="h-4 w-4" />
-                    Trabajo práctico
+                    {english ? 'Assignment' : 'Trabajo práctico'}
                   </Button>
                 </div>
               </div>
@@ -1129,7 +1144,7 @@ export default function CalendarioPage() {
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <label className="text-[13px] font-medium text-slate-700">
-                            Seleccionar materia
+                            {english ? 'Select subject' : 'Seleccionar materia'}
                           </label>
                           <Input
                             value={formState.subjectName}
@@ -1140,14 +1155,14 @@ export default function CalendarioPage() {
                                 selectedMateriaId: null,
                               }))
                             }
-                            placeholder="Ej: Derecho Constitucional"
+                            placeholder={english ? "e.g., Constitutional Law" : "Ej: Derecho Constitucional"}
                             className="h-10 rounded-xl border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                           />
                         </div>
 
                         <div className="space-y-2">
                           <label className="text-[13px] font-medium text-slate-700">
-                            Instancia
+                            {english ? "Exam session" : "Instancia"}
                           </label>
                           <div className="grid grid-cols-3 gap-2">
                             {(['1', '2', 'integrador'] as ExamInstance[]).map((examInstance) => (
@@ -1167,7 +1182,7 @@ export default function CalendarioPage() {
                                   }))
                                 }
                               >
-                                {examInstanceLabel(examInstance)}
+                                {english ? (examInstance === 'integrador' ? 'Final exam' : `Exam ${examInstance}`) : examInstanceLabel(examInstance)}
                               </Button>
                             ))}
                           </div>
@@ -1178,19 +1193,19 @@ export default function CalendarioPage() {
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-[12px] text-slate-500">
                             {careerName
-                              ? `Materias de ${careerName}`
-                              : 'Buscaremos materias de la carrera que tenés cargada.'}
+                              ? (english ? `Subjects in ${careerName}` : `Materias de ${careerName}`)
+                              : (english ? 'We will look for subjects in your registered degree program.' : 'Buscaremos materias de la carrera que tenés cargada.')}
                           </p>
                           {careerMateriaLoading ? (
                             <span className="text-[12px] font-medium text-slate-500">
-                              Cargando...
+                              {english ? 'Loading...' : 'Cargando...'}
                             </span>
                           ) : null}
                         </div>
 
                         {careerMateriaLoading ? (
                           <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                            Cargando materias de tu carrera...
+                            {english ? 'Loading subjects for your degree program...' : 'Cargando materias de tu carrera...'}
                           </div>
                         ) : filteredCareerMateriaOptions.length > 0 ? (
                           <div className="max-h-[112px] min-h-[112px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -1213,12 +1228,11 @@ export default function CalendarioPage() {
                           </div>
                         ) : formState.subjectName.trim().length > 0 ? (
                           <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                            No encontramos una materia de tu carrera con ese nombre.
+                            {english ? 'No subject with that name was found in your degree program.' : 'No encontramos una materia de tu carrera con ese nombre.'}
                           </div>
                         ) : careerMateriaOptions.length === 0 ? (
                           <div className="flex min-h-[112px] items-center rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                            Cuando tu carrera tenga materias asociadas, aparecerán aquí para
-                            elegirlas.
+                            {english ? 'Subjects linked to your degree program will appear here.' : 'Cuando tu carrera tenga materias asociadas, aparecerán aquí para elegirlas.'}
                           </div>
                         ) : null}
                       </div>
@@ -1227,7 +1241,7 @@ export default function CalendarioPage() {
                     <div className="grid h-full grid-rows-[auto_auto_minmax(112px,1fr)] gap-3">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-700">
-                          Trabajo práctico
+                          {english ? 'Assignment' : 'Trabajo práctico'}
                         </label>
                         <Input
                           value={formState.assignmentTitle}
@@ -1237,12 +1251,12 @@ export default function CalendarioPage() {
                               assignmentTitle: event.target.value,
                             }))
                           }
-                          placeholder="Ej: TP final de Derecho Privado"
+                          placeholder={english ? "e.g., Final coursework assignment" : "Ej: TP final de Derecho Privado"}
                           className="h-10 rounded-xl border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2 opacity-45">
-                        <label className="text-[13px] font-medium text-slate-700">Instancia</label>
+                        <label className="text-[13px] font-medium text-slate-700">{english ? "Exam session" : "Instancia"}</label>
                         <div className="pointer-events-none grid grid-cols-3 gap-2">
                           {(['1', '2', 'integrador'] as ExamInstance[]).map((examInstance) => (
                             <Button
@@ -1252,26 +1266,24 @@ export default function CalendarioPage() {
                               className="h-9 rounded-xl border-slate-200 bg-white px-2 text-[13px] text-slate-500"
                               disabled
                             >
-                              {examInstanceLabel(examInstance)}
+                              {english ? (examInstance === 'integrador' ? 'Final exam' : `Exam ${examInstance}`) : examInstanceLabel(examInstance)}
                             </Button>
                           ))}
                         </div>
                       </div>
                       <div className="flex min-h-[112px] flex-col justify-between rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
                         <p className="text-[12px] font-medium tracking-[0.14em] text-slate-500 uppercase">
-                          Organizacion
+                          {english ? 'Organization' : 'Organización'}
                         </p>
                         <p>
-                          Guardá la entrega con un nombre claro para ubicarla rápido en
-                          recordatorios, calendario y seguimiento semanal.
+                          {english ? 'Give your assignment a clear name so you can find it in reminders, the calendar and weekly progress.' : 'Guardá la entrega con un nombre claro para ubicarla rápido en recordatorios, calendario y seguimiento semanal.'}
                         </p>
                         <p className="text-[12px] text-slate-500">
-                          Ejemplo: TP final de Derecho Privado.
+                          {english ? 'Example: Final law assignment.' : 'Ejemplo: TP final de Derecho Privado.'}
                         </p>
                       </div>
                       <div className="hidden rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] text-slate-500">
-                        Guardá la entrega con un nombre claro para poder usar esta información
-                        después en recordatorios, analíticas o planificación.
+                        {english ? 'Give your assignment a clear name for future reminders, analytics and planning.' : 'Guardá la entrega con un nombre claro para poder usar esta información después en recordatorios, analíticas o planificación.'}
                       </div>
                     </div>
                   )}
@@ -1282,23 +1294,23 @@ export default function CalendarioPage() {
               <div className="space-y-3">
                 <div className="rounded-2xl bg-slate-50/40 p-3">
                   <p className="text-[12px] font-medium tracking-[0.18em] text-slate-500 uppercase">
-                    Vista previa
+                    {english ? "Preview" : "Vista previa"}
                   </p>
                   <div className="mt-2 min-h-[84px] rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
                     {formState.type === 'exam' ? (
                       <span>
-                        Se guardará como{' '}
+                        {english ? 'Will be saved as' : 'Se guardará como'}{' '}
                         <strong className="text-slate-900">
-                          {formState.subjectName.trim() || 'tu materia'} -{' '}
-                          {examInstanceLabel(formState.examInstance)}
+                          {formState.subjectName.trim() || (english ? 'your subject' : 'tu materia')} -{' '}
+                          {english ? (formState.examInstance === 'integrador' ? 'Final exam' : `Exam ${formState.examInstance}`) : examInstanceLabel(formState.examInstance)}
                         </strong>
                         .
                       </span>
                     ) : (
                       <span>
-                        Se guardará como{' '}
+                        {english ? 'Will be saved as' : 'Se guardará como'}{' '}
                         <strong className="text-slate-900">
-                          {formState.assignmentTitle.trim() || 'tu trabajo práctico'}
+                          {formState.assignmentTitle.trim() || (english ? 'your assignment' : 'tu trabajo práctico')}
                         </strong>
                         .
                       </span>
@@ -1310,10 +1322,10 @@ export default function CalendarioPage() {
                   <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_5px_24px_rgba(15,23,42,0.03)]">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-blue-500" />
-                      <p className="text-[12px] font-medium text-slate-800">Recordatorios</p>
+                      <p className="text-[12px] font-medium text-slate-800">{english ? "Reminders" : "Recordatorios"}</p>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
-                      Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen.
+                      {english ? "We will email you reminders 7, 3 and 1 day before the exam." : "Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen."}
                     </p>
                   </div>
                 ) : null}
@@ -1322,8 +1334,8 @@ export default function CalendarioPage() {
                   <div className="rounded-xl border border-[#D9E6FF] bg-[#F4F8FF] p-3">
                     <p className="text-[12px] font-semibold text-heading">
                       {selectedStudyPlanDay
-                        ? `Tu plan: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? 'tema' : 'temas'} · ${selectedStudyPlanDay.estimatedMinutes} min`
-                        : 'Examen del plan de estudio'}
+                        ? `${english ? 'Your plan' : 'Tu plan'}: ${selectedStudyPlanDay.topics.length} ${selectedStudyPlanDay.topics.length === 1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · ${selectedStudyPlanDay.estimatedMinutes} min`
+                        : (english ? 'Exam in the study plan' : 'Examen del plan de estudio')}
                     </p>
                     {selectedStudyPlanDay ? (
                       <div className="mt-1.5 flex min-w-0 flex-wrap gap-1">
@@ -1334,20 +1346,20 @@ export default function CalendarioPage() {
                         ))}
                         {selectedStudyPlanDay.topics.length > 2 ? (
                           <span className="px-1 py-1 text-[11px] text-[#66758D]">
-                            +{selectedStudyPlanDay.topics.length - 2} más
+                            +{selectedStudyPlanDay.topics.length - 2} {english ? 'more' : 'más'}
                           </span>
                         ) : null}
                       </div>
                     ) : null}
                     <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center gap-1 text-[11px] font-semibold text-brand">
-                      Ver mi plan <ArrowRight className="size-3" aria-hidden="true" />
+                      {t("Ver mi plan")} <ArrowRight className="size-3" aria-hidden="true" />
                     </Link>
                   </div>
                 ) : null}
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
                     <p className="text-[13px] font-medium text-slate-900">
-                      Fechas de este día
+                      {english ? "Dates on this day" : "Fechas de este día"}
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
@@ -1364,18 +1376,18 @@ export default function CalendarioPage() {
                               }
                               variant="outline"
                             >
-                              {eventTypeLabel(event.type)}
+                              {t(eventTypeLabel(event.type))}
                             </Badge>
                           </div>
                           <p className="mt-1.5 text-[13px] font-medium text-slate-900">
-                            {event.title}
+                            {localizeExamEventTitle(event.title, locale)}
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => void handleDeleteEvent(event.id)}
                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-white hover:text-rose-500"
-                          aria-label="Eliminar fecha"
+                          aria-label={english ? 'Delete date' : 'Eliminar fecha'}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1384,7 +1396,7 @@ export default function CalendarioPage() {
                   </div>
                 ) : (
                   <div className="min-h-[74px] rounded-xl border border-dashed border-slate-200 bg-white px-3 py-3 text-[13px] leading-5 text-slate-500">
-                    No hay fechas para este día.
+                    {english ? "No dates scheduled for this day." : "No hay fechas para este día."}
                   </div>
                 )}
 
@@ -1395,7 +1407,7 @@ export default function CalendarioPage() {
                     className="h-9 rounded-xl border-slate-200 bg-white px-3.5 text-[13px] text-slate-700 hover:bg-white"
                     onClick={() => setIsComposerOpen(false)}
                   >
-                    Cancelar
+                    {t("Cancelar")}
                   </Button>
                   <Button
                     className="h-9 rounded-xl bg-blue-600 px-3.5 text-[13px] font-medium text-white transition hover:bg-blue-700"
@@ -1403,7 +1415,7 @@ export default function CalendarioPage() {
                     disabled={isSavingEvent}
                   >
                     <Plus className="h-4 w-4" />
-                    {isSavingEvent ? 'Guardando...' : 'Guardar'}
+                    {t(isSavingEvent ? 'Guardando...' : 'Guardar')}
                   </Button>
                 </div>
               </div>
@@ -1416,15 +1428,11 @@ export default function CalendarioPage() {
         <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_18px_56px_rgba(15,23,42,0.12)]">
           <div className="px-4 py-4 sm:px-5 sm:py-5">
             <PremiumUpsell
-              title="Armá el plan para tu próximo parcial"
-              description="Ya usaste los 3 exámenes del plan gratuito. Con Premium organizá toda la cursada y recibí recordatorios antes de cada fecha."
+              title={english ? "Plan your next exam" : "Armá el plan para tu próximo parcial"}
+              description={english ? "You have used the three exam dates included in Free. Premium lets you organize more exams and receive reminders." : "Ya usaste los 3 exámenes del plan gratuito. Con Premium organizá toda la cursada y recibí recordatorios antes de cada fecha."}
               source="calendario_exam_limit"
-              features={[
-                'Parciales ilimitados',
-                'Organización completa de tus parciales',
-                'Calendario completo para toda la cursada',
-              ]}
-              ctaLabel="Organizar mis parciales con Premium"
+              features={english ? ['Unlimited exams', 'Organize all your exams', 'Full academic calendar'] : ['Parciales ilimitados', 'Organización completa de tus parciales', 'Calendario completo para toda la cursada']}
+              ctaLabel={english ? 'Organize my exams with Premium' : 'Organizar mis parciales con Premium'}
             />
           </div>
         </DialogContent>

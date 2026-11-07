@@ -11,8 +11,11 @@ import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/pro
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import './fullscreen-processing.css';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { EnglishProcessingScene } from './english-processing-scene';
 
 const STEPS = ['Organizar', 'Entender', 'Memorizar', 'Practicar'] as const;
+const ENGLISH_STEPS = ['Organize', 'Understand', 'Remember', 'Practice'] as const;
 const SCENE_MS = 6500;
 
 const titles = [
@@ -20,6 +23,13 @@ const titles = [
   'Primero, entendé lo importante',
   'Recordá lo que aprendiste',
   'Practicá y descubrí qué reforzar',
+];
+const englishTitles = ['Organizing your material', 'Understanding the essentials', 'Preparing active recall', 'Building meaningful practice'];
+const englishDescriptions = [
+  'Identifying the main concepts and sections of your document.',
+  'Preparing focused explanations grounded in your source.',
+  'Creating flashcards and important terms to review.',
+  'Preparing questions and feedback to check your understanding.',
 ];
 const descriptions = [
   'Transformamos tus apuntes en un recorrido de estudio organizado por temas.',
@@ -181,6 +191,7 @@ function ProcessingFit({children,sceneKey}:{children:React.ReactNode;sceneKey:nu
 
 export function FullscreenProcessing({ initialState, preview = false }: {initialState: StudentMaterialProcessingState; preview?: boolean}) {
   const router=useRouter();
+  const english = useOptionalAppLocale() === 'en';
   const [state,setState]=useState(initialState);
   const [elapsed,setElapsed]=useState(0);
   const [previewScene,setPreviewScene]=useState(0);
@@ -246,11 +257,11 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   const retry=useCallback(async()=>{
     if(preview||retrying)return;
     setRetrying(true);
-    setState(current=>({...current,status:'processing',stage:'extracting',error:null,message:'Reintentando procesamiento…'}));
+    setState(current=>({...current,status:'processing',stage:'extracting',error:null,message:english?'Retrying processing…':'Reintentando procesamiento…'}));
     try{await processStudentMaterialAction(materialId)}catch{setConnectionIssues(true)}
     finally{setRetrying(false)}
-  },[materialId,retrying,preview]);
-  const readHref=`${getStudentMaterialRoute(materialId)}?inicio=1${state.isFirstReadyMaterial?'&recorrido=1':'&tab=resumen'}`;
+  },[materialId,retrying,preview,english]);
+  const readHref=`${getStudentMaterialRoute(materialId)}?inicio=1${state.isFirstReadyMaterial && !english?'&recorrido=1':'&tab=resumen'}`;
   return <main data-pdf-processing-screen className="flex h-dvh min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white font-sans text-[#0f1623]">
     <header className="grid shrink-0 grid-cols-2 items-center gap-x-3 gap-y-1.5 border-b border-[#e8ecf2] px-3.5 py-2 sm:grid-cols-3 sm:gap-x-4 sm:px-6 sm:py-2.5 lg:px-8">
       <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2.5" aria-label="Evaluo">
@@ -262,7 +273,7 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
         <span title={state.fileName} className="max-w-[min(72vw,280px)] truncate text-[11px] font-medium text-[#42506A] sm:max-w-[190px] sm:text-[12px] lg:max-w-[250px]">{state.fileName}</span>
       </div>:null}
       <div className="col-start-2 row-start-1 flex w-full max-w-[280px] min-w-0 items-center justify-self-end gap-2.5 sm:col-start-3 sm:gap-3">
-        <div role="progressbar" aria-label={state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
+        <div role="progressbar" aria-label={english ? 'Document processing progress' : state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
           <div className={`h-full rounded-full transition-[width] duration-500 ${ready?'bg-[#067647]':'bg-[#0b63e5]'}`} style={{width:`${progress}%`}}/>
         </div>
         <span className={`min-w-12 text-right text-[12px] font-bold tabular-nums ${ready?'text-[#067647]':''}`}>{progress} %</span>
@@ -271,37 +282,37 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
     <div data-processing-content className="flex min-h-0 min-w-0 flex-1 flex-col px-3 py-2 sm:px-5 sm:py-3 lg:px-8">
       <ProcessingFit sceneKey={ready?'ready':failed?'failed':visibleScene}>
       {failed? <section data-processing-final-motion role="alert" className="mx-auto w-full max-w-[600px] space-y-5 rounded-[22px] border border-[#e3eaf5] bg-[#f8faff] p-5 text-center">
-        <h1 className="text-[22px] font-bold">No pudimos procesar tu material</h1>
-        <p className="text-[13px] text-[#4b5565]">{state.error||state.message}</p>
-        <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> Reintentar</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-5 text-sm font-semibold">Volver a Mi espacio</Link></div>
+        <h1 className="text-[22px] font-bold">{english ? "We couldn't process your document" : 'No pudimos procesar tu material'}</h1>
+        <p className="text-[13px] text-[#4b5565]">{english ? 'Processing was interrupted. Try again or return later.' : state.error||state.message}</p>
+        <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> {english ? 'Try again' : 'Reintentar'}</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-5 text-sm font-semibold">{english ? 'Back to my study space' : 'Volver a Mi espacio'}</Link></div>
       </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[660px] flex-col items-center rounded-[20px] border border-[#e3eaf5] bg-gradient-to-b from-[#f3f7ff] to-white px-4 py-5 text-center sm:px-6 sm:py-6">
         <Image src="/evi-procesamiento-listo.svg" alt="" width={96} height={96} className="mx-auto size-20 object-contain sm:size-24"/>
-        <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#abefc6] bg-[#ecfdf3] px-3.5 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> Procesamiento completo</span>
-        <h1 className="mt-4 text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[27px]">Tu material está listo para estudiar</h1>
-        <p className="mt-3 max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">Ya podés comenzar por el primer tema y avanzar a tu ritmo.</p>
+        <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#abefc6] bg-[#ecfdf3] px-3.5 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> {english ? 'Processing complete' : 'Procesamiento completo'}</span>
+        <h1 className="mt-4 text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[27px]">{english ? 'Your document is ready to study' : 'Tu material está listo para estudiar'}</h1>
+        <p className="mt-3 max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">{english ? 'Start with your first topic, then learn at your own pace.' : 'Ya podés comenzar por el primer tema y avanzar a tu ritmo.'}</p>
         <div className="mt-5 flex w-full max-w-[520px] flex-wrap items-center gap-3 rounded-[17px] border border-[#dbe6f8] bg-white p-3.5 text-left">
           <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-[#d92d3a] text-[12px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
-          <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">Resúmenes por tema · Tarjetas y glosario · Práctica</p></div>
+          <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">{english ? 'Topic summaries · Flashcards and glossary · Practice' : 'Resúmenes por tema · Tarjetas y glosario · Práctica'}</p></div>
         </div>
         <div className="mt-5 flex w-full max-w-[290px] flex-col gap-3">
-          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[14px] font-semibold text-white hover:bg-[#084bb0]">Empezar a estudiar <ArrowRight size={17}/></Link>
-          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-4 text-[13px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]">Preparar mi plan de estudios</Link>
+          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[14px] font-semibold text-white hover:bg-[#084bb0]" >{english ? 'Start studying' : 'Empezar a estudiar'} <ArrowRight size={17}/></Link>
+          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-4 text-[13px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]" >{english ? 'Create my study plan' : 'Preparar mi plan de estudios'}</Link>
         </div>
       </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[850px] flex-1 flex-col items-center justify-center gap-4 sm:gap-5">
         <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-4 sm:gap-5">
         <div className="w-full space-y-2 text-center">
-          <h1 className="text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[25px] lg:text-[27px]">{titles[visibleScene]}</h1>
-          <p className="mx-auto max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">{descriptions[visibleScene]}</p>
+          <h1 className="text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[25px] lg:text-[27px]">{english ? englishTitles[visibleScene] : titles[visibleScene]}</h1>
+          <p className="mx-auto max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">{english ? englishDescriptions[visibleScene] : descriptions[visibleScene]}</p>
         </div>
-        <ProcessingScene scene={visibleScene} fileName={state.fileName}/>
+        {english ? <EnglishProcessingScene scene={visibleScene} fileName={state.fileName}/> : <ProcessingScene scene={visibleScene} fileName={state.fileName}/>}
         </div>
-        <span className="sr-only" role="status">{connectionIssues?'Seguimos preparando tu material. Estamos restableciendo la conexión.':state.message}</span>
+        <span className="sr-only" role="status">{english ? (connectionIssues ? 'Still preparing your study materials. Reconnecting…' : 'Preparing your study materials…') : connectionIssues?'Seguimos preparando tu material. Estamos restableciendo la conexión.':state.message}</span>
       </div>}
       </ProcessingFit>
     </div>
     <footer className="flex min-w-0 shrink-0 flex-col items-start justify-between gap-1.5 border-t border-[#e8ecf2] px-3.5 py-2.5 sm:px-6 sm:py-3 lg:flex-row lg:items-center lg:px-8">
-      <ol className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3" aria-label="Recorrido de estudio">
-        {STEPS.map((step,index)=><li key={step} className="flex items-center gap-2">
+      <ol className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3" aria-label={english ? 'Study workflow' : 'Recorrido de estudio'}>
+        {(english ? ENGLISH_STEPS : STEPS).map((step,index)=><li key={step} className="flex items-center gap-2">
           {index>0?<span aria-hidden="true" className="mr-1 h-0.5 w-3 bg-[#e8ecf2] sm:w-6"/>:null}
           <span className={`flex size-3 items-center justify-center rounded-full ${ready?'bg-[#067647]':index===visibleScene?'bg-[#0b63e5] ring-4 ring-[#dbe6f8]':index<visibleScene?'bg-[#0b63e5]':'bg-[#d0d5dd]'}`}>{ready||index<visibleScene?<Check className="size-2.5 text-white"/>:null}</span>
           <span className={`text-[12px] sm:text-[12px] ${!ready&&index===visibleScene?'font-semibold text-[#0f1623]':'text-[#667085]'}`}>{step}</span>
@@ -309,7 +320,7 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
       </ol>
       <div className="flex min-w-0 items-start gap-3 text-[12px] leading-5 text-[#4b5565] sm:text-[12px]">
         {!ready&&!failed?<Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-[#0b63e5]"/>:<CheckCircle2 size={16} className="text-[#067647]"/>}
-        <span>{failed?'Podés reintentar sin volver a subir el archivo.':ready?'Todo preparado. Podés empezar cuando quieras.':connectionIssues?'Seguimos procesando. Restableciendo la conexión…':visibleScene===0?'Leyendo tu documento y detectando los temas principales…':visibleScene===1?'Armando resúmenes claros para cada tema…':visibleScene===2?'Preparando tarjetas y glosario para que repases…':'Revisando y guardando todo tu material…'}</span>
+        <span>{english ? (failed ? 'Try again without uploading your file a second time.' : ready ? 'Everything is ready. Start whenever you like.' : connectionIssues ? 'Still processing. Reconnecting…' : visibleScene === 0 ? 'Reading your document and finding its main topics…' : visibleScene === 1 ? 'Preparing clear summaries for each topic…' : visibleScene === 2 ? 'Creating flashcards and a glossary to review…' : 'Checking and saving your study materials…') : failed?'Podés reintentar sin volver a subir el archivo.':ready?'Todo preparado. Podés empezar cuando quieras.':connectionIssues?'Seguimos procesando. Restableciendo la conexión…':visibleScene===0?'Leyendo tu documento y detectando los temas principales…':visibleScene===1?'Armando resúmenes claros para cada tema…':visibleScene===2?'Preparando tarjetas y glosario para que repases…':'Revisando y guardando todo tu material…'}</span>
       </div>
 
     </footer>

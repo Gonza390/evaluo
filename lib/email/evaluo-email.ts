@@ -13,6 +13,7 @@ export function escapeEmailHtml(value: string) {
 export function buildEvaluoEmailHtml(input: {
   firstname: string;
   heading: string;
+  locale?: 'es' | 'en';
   bodyHtml: string;
   ctaLabel: string;
   ctaUrl: string;
@@ -20,6 +21,7 @@ export function buildEvaluoEmailHtml(input: {
   eyebrow?: string | null;
   detailHtml?: string | null;
 }) {
+  const locale = input.locale === 'en' ? 'en' : 'es';
   const safeFirstName = escapeEmailHtml(input.firstname);
   const safeHeading = escapeEmailHtml(input.heading);
   const safeCtaLabel = escapeEmailHtml(input.ctaLabel);
@@ -28,7 +30,7 @@ export function buildEvaluoEmailHtml(input: {
   const safeEyebrow = input.eyebrow ? escapeEmailHtml(input.eyebrow) : null;
 
   return `<!doctype html>
-<html lang="es">
+<html lang="${locale}">
   <body style="margin:0;padding:0;background:#F5F7FB;font-family:Inter,Arial,sans-serif;color:#0F1B3D;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;padding:32px 16px;">
       <tr>
@@ -37,7 +39,7 @@ export function buildEvaluoEmailHtml(input: {
             <tr>
               <td style="padding:32px;">
                 <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
-                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${locale === 'en' ? 'Hi' : 'Hola'} ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 ${safeEyebrow ? `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeEyebrow}</p>` : ''}
                 <div style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${input.bodyHtml}</div>
@@ -45,7 +47,7 @@ export function buildEvaluoEmailHtml(input: {
                 <a href="${safeCtaUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCtaLabel}</a>
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${safeReason}</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">${locale === 'en' ? 'Evaluo Team' : 'Equipo Evaluo'}</p>
                   <img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>

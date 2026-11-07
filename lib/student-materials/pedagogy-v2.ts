@@ -1,4 +1,5 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
+import { localizeAcademicPrompt } from '@/lib/student-materials/academic-prompt-locale';
 import { sanitizePedagogicalArtifacts } from '@/lib/student-materials/pedagogical-integrity';
 import type {
   CanonicalPedagogicalModel,
@@ -36,6 +37,7 @@ type BuildPedagogicalArtifactsInput = {
   chunks?: PedagogicalChunk[];
   canonicalModel?: CanonicalPedagogicalModel | null;
   pageCount?: number | null;
+  studyLocale?: 'es' | 'en';
 };
 
 
@@ -45,7 +47,7 @@ export function buildPedagogicalArtifacts(
   const base = buildLegacyPedagogicalArtifacts(input);
   const model = input.canonicalModel;
 
-  if (!model) return sanitizePedagogicalArtifacts(base, input.summary.sections);
+  if (!model) return localizeGeneratedArtifactPrompts(sanitizePedagogicalArtifacts(base, input.summary.sections), input.studyLocale);
 
   const canonicalFlashcards = buildCanonicalFlashcards(
     model,
@@ -56,13 +58,16 @@ export function buildPedagogicalArtifacts(
     })
   );
 
-  if (canonicalFlashcards.length < 6) return sanitizePedagogicalArtifacts(base, input.summary.sections);
+  if (canonicalFlashcards.length < 6) return localizeGeneratedArtifactPrompts(sanitizePedagogicalArtifacts(base, input.summary.sections), input.studyLocale);
 
   const allItems = [...canonicalFlashcards, ...base.questions];
 
-  return sanitizePedagogicalArtifacts({
+  const selectedFlashcards = input.studyLocale === 'en' && base.flashcards.length >= 6
+    ? base.flashcards
+    : canonicalFlashcards;
+  return localizeGeneratedArtifactPrompts(sanitizePedagogicalArtifacts({
     ...base,
-    flashcards: canonicalFlashcards,
+    flashcards: selectedFlashcards,
     coverage: {
       ...base.coverage,
       referencedItems: allItems.filter(
@@ -73,7 +78,18 @@ export function buildPedagogicalArtifacts(
       ).length,
       totalItems: allItems.length,
     },
-  }, input.summary.sections);
+  }, input.summary.sections), input.studyLocale);
+}
+
+/** Convert only app-authored templates after verification. Preserve the original
+ * answers, options, evidence and IDs so the grading and progress remain stable. */
+function localizeGeneratedArtifactPrompts(artifacts: PedagogicalArtifacts, locale?: 'es' | 'en'): PedagogicalArtifacts {
+  if (locale !== 'en') return artifacts;
+  return {
+    ...artifacts,
+    flashcards: artifacts.flashcards.map(card => ({ ...card, front: localizeAcademicPrompt(card.front, 'en') })),
+    questions: artifacts.questions.map(question => ({ ...question, prompt: localizeAcademicPrompt(question.prompt, 'en') })),
+  };
 }
 
 function buildCanonicalFlashcards(

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { FreePracticeLimitScreen, type FreePracticeLimitKind } from '@/components/dashboard/free-practice-limit-screen';
 
 export const metadata: Metadata = {
-  title: 'Demo · Límite de práctica Free | Evaluo',
+  title: 'Demo · Límite de práctica Free',
   robots: { index: false, follow: false },
 };
 export const dynamic = 'force-dynamic';

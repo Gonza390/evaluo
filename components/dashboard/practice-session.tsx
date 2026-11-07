@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import './practice-motion.css';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
@@ -34,6 +36,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   /** Vista local sin lectura/escritura de intentos, IA ni cuotas. */
   previewResult?: { correct: number };
 }) {
+  const locale = useOptionalAppLocale();
+  const english = locale === 'en';
+  const t = (value: string) => studyUiText(locale, value);
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
   const [generatedTrueFalse, setGeneratedTrueFalse] = useState<PracticeQuestion[]>([]);
@@ -272,12 +277,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             attempts.current < 3) return;
         setGenerationDiagnostic('HTTP ' + response.status + ' · ' + code);
         setGenerationError(response.status === 429
-          ? 'Se alcanzó el límite de generación por hoy. Este material todavía no tiene seis casos verificables.'
+          ? (english ? 'Today\'s generation limit was reached. This material does not yet have six verified cases.' : 'Se alcanzó el límite de generación por hoy. Este material todavía no tiene seis casos verificables.')
           : response.status === 401
-            ? 'Tu sesión venció. Iniciá sesión nuevamente.'
+            ? (english ? 'Your session expired. Please sign in again.' : 'Tu sesión venció. Iniciá sesión nuevamente.')
           : response.status === 503 || response.status >= 500
-            ? 'El servicio de IA no pudo completar la generación o verificación. Podés reintentar.'
-          : 'No encontramos más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.');
+            ? (english ? 'The AI service could not finish generating or verifying cases. Please retry.' : 'El servicio de IA no pudo completar la generación o verificación. Podés reintentar.')
+          : (english ? 'We could not find enough source-backed cases. We will not invent cases to reach six.' : 'No encontramos más situaciones con respaldo suficiente en este material. No vamos a completar los seis con casos inventados.'));
         return;
       }
       const incoming = body.cases as PracticeQuestion[];
@@ -290,7 +295,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       }
     } catch (error) {
       setGenerationDiagnostic(error instanceof Error ? error.name : 'network_error');
-      setGenerationError('No pudimos conectarnos para generar los casos. Podés reintentar.');
+      setGenerationError((english ? 'The connection failed while generating cases. Please try again.' : 'No pudimos conectarnos para generar los casos. Podés reintentar.'));
     } finally {
       generatingRequest.current = false;
       setGenerating(false);
@@ -354,22 +359,22 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           if (retryableSourceFailure && retry<2 && trueFalseAttempts.current<6) continue;
           setTrueFalseError(
             response.status === 401
-              ? 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.'
+              ? (english ? 'Your Evaluo session expired. Sign in and try again.' : 'Tu sesión de Evaluo venció. Volvé a iniciar sesión y reintentá.')
             : response.status === 403
-              ? 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.'
+              ? (english ? 'The server blocked this practice request. Please check your account access.' : 'El servidor bloqueó la solicitud de práctica. Revisá la protección de acceso.')
             : response.status === 404 && errorCode === 'material_not_found'
-              ? 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.'
+              ? (english ? 'This material was not found in your account. Open it again from Your materials.' : 'No se encontró este material en tu cuenta. Volvé a abrirlo desde Tus materiales.')
             : response.status === 404
-              ? 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá la página y reintentá.'
+              ? (english ? 'The true-or-false service is unavailable. Refresh the page and try again.' : 'No encontramos el servicio de Verdadero o Falso en este servidor. Actualizá la página y reintentá.')
             : response.status === 429
-              ? 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.'
+              ? (english ? 'Today\'s generation limit was reached. We will not show unverified statements.' : 'Se alcanzó el límite de generación de hoy. No vamos a mostrar afirmaciones sin verificar.')
             : response.status === 422
-              ? 'No conseguimos suficientes afirmaciones verificadas. Probamos distintos apartados; podés reintentar con otras páginas.'
+              ? (english ? 'We could not verify enough statements from the selected sections. Try other pages.' : 'No conseguimos suficientes afirmaciones verificadas. Probamos distintos apartados; podés reintentar con otras páginas.')
             : response.status === 503
-              ? 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.'
+              ? (english ? 'The AI service could not complete or verify the statements. Please try again later.' : 'El servidor no pudo completar la generación con IA o su validación. Revisá las claves de Gemini y reintentá.')
             : response.status === 500
-              ? 'Se produjo un error interno al preparar Verdadero o Falso.'
-            : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.'
+              ? (english ? 'An internal error occurred while preparing true-or-false practice.' : 'Se produjo un error interno al preparar Verdadero o Falso.')
+            : (english ? 'We could not prepare the practice. The server returned an unexpected response.' : 'No pudimos preparar la práctica. El servidor devolvió una respuesta inesperada.')
           );
           break;
         }
@@ -380,11 +385,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       if (accumulated.length> trueFalsePool.length) setGeneratedTrueFalse(accumulated);
       if (!sufficientTrueFalse(accumulated,freeV2 ? 1 : MIN_CASES_PER_PRACTICE) &&
           trueFalseAttempts.current>=6) {
-        setTrueFalseError('No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.');
+        setTrueFalseError((english ? 'We could not verify six statements across the material. Please try again later.' : 'No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.'));
       }
     } catch (error) {
       setTrueFalseDiagnostic(error instanceof Error ? error.name : 'network_error');
-      setTrueFalseError('La conexión se interrumpió mientras preparábamos Verdadero o Falso. Revisá tu conexión y reintentá.');
+      setTrueFalseError((english ? 'The connection dropped while preparing true-or-false questions. Please retry.' : 'La conexión se interrumpió mientras preparábamos Verdadero o Falso. Revisá tu conexión y reintentá.'));
     } finally {
       trueFalseBusy.current=false;
       setTrueFalseLoading(false);
@@ -417,9 +422,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           !('pairs' in body) || !Array.isArray(body.pairs)) throw new Error('invalid');
       const fresh = selectPracticePairs([...(body.pairs as PracticePair[])]).filter(
         next=>!pairs.some(existing=>existing.term.toLowerCase()===next.term.toLowerCase()));
-      if (!fresh.length) setPairError('No encontramos otros conceptos independientes y verificables en este material.');
+      if (!fresh.length) setPairError((english ? 'No additional distinct, verifiable concepts were found in this material.' : 'No encontramos otros conceptos independientes y verificables en este material.'));
       else setAddedPairs(previous=>[...previous,...fresh]);
-    } catch {setPairError('No pudimos completar seis conceptos confiables. Podés reintentar.');}
+    } catch {setPairError((english ? 'We could not prepare six reliable concepts. Please try again.' : 'No pudimos completar seis conceptos confiables. Podés reintentar.'));}
     finally {pairBusy.current=false;setPairLoading(false);}
   },[materialId,mode,pairs]);
   useEffect(()=>{
@@ -431,14 +436,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
 
   const aiCaseButton = mode === 'casos' && aiAvailable && !ready && !freeV2 ? (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-medium text-slate-800">¿Querés resolver situaciones nuevas?</p>
+      <p className="text-sm font-medium text-slate-800">{english ? "Want to try new real-world scenarios?" : "¿Querés resolver situaciones nuevas?"}</p>
       <p className="mt-1 text-xs leading-5 text-slate-600">
-        La IA puede proponer casos nuevos usando tu material. Solo mostramos los que pasan una
-        comprobación de conceptos y citas; no reemplaza la revisión docente.
+        {english
+          ? 'AI can suggest new scenarios based on your material. We show only those that pass checks for concepts and source citations. Always compare the answers with your course notes.'
+          : 'La IA puede proponer casos nuevos usando tu material. Solo mostramos los que pasan una comprobación de conceptos y citas; no reemplaza la revisión docente.'}
       </p>
       <button type="button" disabled={generating} onClick={() => { attempts.current=0;void generateNewCases(); }}
         className="mt-3 min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-blue-700 disabled:opacity-50">
-        {generating ? 'Generando situaciones…' : ready ? 'Generar más casos con IA' : 'Reintentar generar casos'}
+        {t(generating ? 'Generando situaciones…' : ready ? 'Generar más casos con IA' : 'Reintentar generar casos')}
       </button>
       {generationError && <p role="status" className="mt-2 text-xs text-amber-800">{generationError}</p>}
       {generationDiagnostic && generationError &&
@@ -477,7 +483,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const resultEntries: PracticeResultEntry[] = mode === 'unir'
     ? exercisePairs.map((pair, i) => ({
         index: i,
-        prompt: 'Unir «' + pair.term + '» con su definición',
+        prompt: t('Unir «') + pair.term + t('» con su definición'),
         selectedAnswer: previewResult && i >= previewResult.correct
           ? exercisePairs[(i + 1) % exercisePairs.length]?.definition ?? 'Otra definición'
           : exercisePairs[matches[i]]?.definition ?? 'Sin responder',
@@ -517,26 +523,24 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       materialTitle={materialTitle}
       materialId={materialId}
       documentLabel={isWord ? 'DOC' : 'PDF'}
-      modeLabel={mode === 'opciones' ? 'Verdadero o falso' : title[mode]}
+      modeLabel={t(mode === 'opciones' ? 'Verdadero o falso' : title[mode])}
       entries={resultEntries}
       preview={Boolean(previewResult)}
       closeHref={previewResult ? undefined : '/dashboard/practicar'}
       primaryAction={{
-        label: mode === 'simulacro'
-          ? freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro'
-          : 'Practicar otra vez',
+        label: english ? (mode === 'simulacro' ? (freeV2 ? 'Repeat mock exam' : 'New mock exam') : 'Practice again') : (mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'),
         onClick: anotherRound,
         disabled: Boolean(previewResult),
       }}
       secondaryAction={previewResult ? undefined : {
-        label: mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen',
+        label: t(mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'),
         href: mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen',
       }}
       extraAction={historySaveFailed && !previewResult
-        ? { label: 'Reintentar guardado', onClick: saveCompletedSession }
+        ? { label: t('Reintentar guardado'), onClick: saveCompletedSession }
         : undefined}
       note={historySaveFailed && !previewResult
-        ? 'No pudimos guardar esta práctica en el historial.'
+        ? (english ? 'We could not save this practice to your history.' : 'No pudimos guardar esta práctica en el historial.')
         : undefined}
     />
   ) : null;
@@ -559,12 +563,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }
   if (freeV2 && freeSessionGate === 'error' && (mode === 'unir' || mode === 'simulacro')) {
     return <main className="mx-auto max-w-[780px] px-4 py-8">
-      <p role="alert" className="text-sm text-slate-700">No pudimos confirmar tu cupo. Reintentá: si el uso anterior se registró, no se descontará otra vez.</p>
+      <p role="alert" className="text-sm text-slate-700">{english ? 'We could not confirm your quota. Trying again will not deduct an already recorded session twice.' : 'No pudimos confirmar tu cupo. Reintentá: si el uso anterior se registró, no se descontará otra vez.'}</p>
       <button type="button" className="mt-4 min-h-11 rounded-xl border px-4 text-sm"
         onClick={() => { setFreeSessionGate('new'); if(mode==='simulacro') void claimSessionQuota(); }}>
-        Reintentar verificación
+        {english ? 'Try checking again' : 'Reintentar verificación'}
       </button>
-      <Link href={quotaBackHref ?? '/dashboard/practicar'} className="ml-4 text-sm text-blue-600 underline">Volver a Practicar</Link>
+      <Link href={quotaBackHref ?? '/dashboard/practicar'} className="ml-4 text-sm text-blue-600 underline">{english ? 'Back to practice' : 'Volver a Practicar'}</Link>
     </main>;
   }
   if (freeV2 && mode === 'unir' && ready && freeSessionGate !== 'allowed')
@@ -606,7 +610,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.pair.term}
-    explanation={checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.'}
+    explanation={t(checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.')}
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
@@ -620,43 +624,42 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     /></div>;
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
-    <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← Volver a Practicar</Link>
+    <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← {t('Volver a Practicar')}</Link>
     {mode === 'opciones' ? (
       <div className="mt-3 flex min-w-0 items-center gap-2.5">
-        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+        <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900">{t(title[mode])}</h1>
         <span aria-hidden="true" className="shrink-0 text-slate-300">·</span>
         <span className="min-w-0 flex-1 truncate text-[12px] text-slate-500 sm:text-sm" title={materialTitle}>{materialTitle}</span>
       </div>
     ) : (
       <>
-        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{title[mode]}</h1>
+        <h1 className="mt-3 text-[20px] font-semibold tracking-tight text-slate-900">{t(title[mode])}</h1>
         <p className="mt-1 truncate text-sm text-slate-500" title={materialTitle}>{materialTitle}</p>
       </>
     )}
     {!ready ? <section className="mt-7 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
       <h2 className="font-medium text-slate-800">{mode === 'opciones' && trueFalseLoading
-        ? 'Preparando afirmaciones de Verdadero o Falso…'
+        ? (english ? 'Preparing true-or-false statements…' : 'Preparando afirmaciones de Verdadero o Falso…')
         : mode === 'opciones' && trueFalseError
-          ? 'No pudimos iniciar Verdadero o Falso'
+          ? (english ? 'Could not start true-or-false practice' : 'No pudimos iniciar Verdadero o Falso')
           : mode === 'casos' && generating
-            ? 'Preparando tus casos prácticos…'
-            : 'No hay suficientes ejercicios confiables'}</h2>
-      {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.</p> : null}
+            ? (english ? 'Preparing your practice cases…' : 'Preparando tus casos prácticos…')
+            : (english ? 'Not enough reliable exercises' : 'No hay suficientes ejercicios confiables')}</h2>
+      {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">{english ? 'At least one applied case is needed alongside the questions and concepts. We are trying to create one from your document.' : 'Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.'}</p> : null}
       {mode === 'opciones' ? <p className="mt-2">
-        {trueFalsePool.length} de {MIN_CASES_PER_PRACTICE} afirmaciones verificadas.
-        {trueFalseLoading ? ' Estamos comprobando afirmaciones y sus correcciones contra el documento.' :
-          ' Para comenzar necesitamos al menos seis afirmaciones, con respuestas verdaderas y falsas.'}
+        {trueFalsePool.length} {english ? 'of' : 'de'} {MIN_CASES_PER_PRACTICE} {english ? 'verified statements.' : 'afirmaciones verificadas.'}
+        {trueFalseLoading ? (english ? ' We are checking statements and explanations against your document.' : ' Estamos comprobando afirmaciones y sus correcciones contra el documento.') :
+          (english ? ' We need at least six statements, including true and false answers.' : ' Para comenzar necesitamos al menos seis afirmaciones, con respuestas verdaderas y falsas.')}
       </p> : mode === 'casos' ? <p className="mt-2">
-        {contexts.length} de {MIN_CASES_PER_PRACTICE} casos de aplicación verificados.
-        {generating ? ' Estamos creando situaciones nuevas a partir de tu material.' :
-          ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.'}
-      </p> : <p className="mt-2">Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}.
-        No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</p>}
+        {contexts.length} {english ? 'of' : 'de'} {MIN_CASES_PER_PRACTICE} {english ? 'verified practice cases.' : 'casos de aplicación verificados.'}
+        {generating ? (english ? ' We are creating new cases from your material.' : ' Estamos creando situaciones nuevas a partir de tu material.') :
+          (english ? ' We need six distinct cases with verifiable answers to begin.' : ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.')}
+      </p> : <p className="mt-2">{english ? 'This material does not yet contain enough verified content for this activity. We will not invent questions or assess you using ambiguous answers.' : <>Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}. No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</>}</p>}
       {aiCaseButton}
       {trueFalseError && <p role="status" className="mt-3 text-sm text-amber-800">{trueFalseError}</p>}
       {mode === 'opciones' && trueFalseError && process.env.NODE_ENV !== 'production' && trueFalseDiagnostic &&
         <p className="mt-1 text-xs text-slate-500" data-practice-diagnostic>{trueFalseDiagnostic}</p>}
-      {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">Preparando conceptos del material…</p>}
+      {pairLoading && <p role="status" className="mt-3 text-sm text-slate-500">{english ? 'Preparing concepts from your material…' : 'Preparando conceptos del material…'}</p>}
       {pairError && <p role="status" className="mt-3 text-sm text-amber-800">{pairError}</p>}
       <div className="mt-4 flex flex-wrap items-center gap-3">
       {mode !== 'casos' && <button type="button" disabled={pairLoading || generating || trueFalseLoading}
@@ -671,28 +674,28 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           }
         }}
         className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-4 text-sm text-blue-700">
-        {pairLoading || generating || trueFalseLoading ? 'Preparando práctica…' : 'Reintentar completar seis ejercicios'}
+        {pairLoading || generating || trueFalseLoading ? (english ? 'Preparing practice…' : 'Preparando práctica…') : (english ? 'Retry generating six exercises' : 'Reintentar completar seis ejercicios')}
       </button>}
       <Link href={'/materiales/' + materialId + '?tab=ejercicios'} className="inline-flex min-h-11 items-center text-blue-600 underline">
-        Volver a la práctica general
+        {english ? 'Back to general practice' : 'Volver a la práctica general'}
       </Link>
       </div>
     </section> : finished ? fullReport : mode === 'simulacro' && !examStarted ? (
       <section className={`${leavingActivity?'practice-screen-leave':'practice-screen-enter'} mx-auto mt-4 w-full max-w-[920px] rounded-[22px] bg-white px-4 py-5 sm:border sm:border-[#E7EBF4] sm:px-10 sm:py-9 sm:shadow-[0_8px_28px_rgba(15,23,42,0.04)] lg:px-14`}>
         <div className="mx-auto max-w-[650px] text-center">
           <img src="/evi-pensando.svg" alt="" className="mx-auto mb-4 size-[92px] object-contain sm:size-[112px]" />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F7EF] px-3 py-1 text-[12px] font-bold text-[#16774F]"><span aria-hidden="true">✓</span> Listo</span>
-          <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">Tu simulacro está listo</h1>
-          <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.</p>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E7F7EF] px-3 py-1 text-[12px] font-bold text-[#16774F]"><span aria-hidden="true">✓</span> {english ? 'Ready' : 'Listo'}</span>
+          <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">{english ? 'Your mock exam is ready' : 'Tu simulacro está listo'}</h1>
+          <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">{english ? 'The questions are based on your uploaded material. Start whenever you are ready.' : 'Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.'}</p>
           <div className="mx-auto mt-5 flex min-w-0 max-w-full items-center gap-3 rounded-[14px] border border-[#E7EBF4] px-4 py-3 text-left sm:max-w-[440px]">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><span aria-hidden="true">▤</span></span>
             <div className="min-w-0"><p className="text-[10px] font-bold tracking-[.08em] text-slate-500">MATERIAL</p><p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{materialTitle}</p></div>
           </div>
           <div className="mx-auto mt-5 divide-y divide-[#EEF1F6] rounded-[18px] border border-[#E7EBF4] px-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:max-w-[560px] sm:px-6">
             {[
-              [`${total} preguntas`, verifiedChapterCount >= 2 ? 'De distintos temas de tu material.' : 'Preparadas a partir de tu material.', '❔'],
-              ['15 minutos', 'Podés entregar antes si terminás.', '◷'],
-              ['Sin soluciones hasta el final', 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
+              [`${total} ${english ? 'questions' : 'preguntas'}`, verifiedChapterCount >= 2 ? (english ? 'From different topics in your material.' : 'De distintos temas de tu material.') : (english ? 'Created from your material.' : 'Preparadas a partir de tu material.'), '❔'],
+              [english ? '15 minutes' : '15 minutos', english ? 'You can submit early if you finish.' : 'Podés entregar antes si terminás.', '◷'],
+              [english ? 'Answers shown at the end' : 'Sin soluciones hasta el final', english ? 'You can go back or leave questions unanswered.' : 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
             ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
           </div>
           <div className="mx-auto mt-6 flex max-w-[560px] flex-col gap-2">
@@ -703,35 +706,35 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               }
               void claimSessionQuota().then(allowed => { if (allowed) transitionTo(()=>setExamStarted(true)); });
             }} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
-              {freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro'}
+              {t(freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro')}
             </button>
-            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">Ahora no, volver a Practicar</Link>
+            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
           </div>
         </div>
       </section>
     ) : <section className="mt-6">
       {aiCaseButton}
       <div className="mb-3 flex items-center justify-between gap-3 text-xs text-slate-500">
-        <span>{mode === 'unir' ? 'Relacioná los conceptos con sus definiciones' :
-          'Pregunta ' + (step + 1) + ' de ' + total}</span>
+        <span>{mode === 'unir' ? (english ? 'Match concepts with their definitions' : 'Relacioná los conceptos con sus definiciones') :
+          (english ? 'Question ' : 'Pregunta ') + (step + 1) + (english ? ' of ' : ' de ') + total}</span>
         {mode === 'simulacro' ? <span role="timer" className="font-medium tabular-nums">
-          {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} restantes
-        </span> : <span>{answeredCount} de {total} respondidas</span>}
+          {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} {english ? 'remaining' : 'restantes'}
+        </span> : <span>{answeredCount} {english ? 'of' : 'de'} {total} {english ? 'answered' : 'respondidas'}</span>}
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
         <div className="h-full rounded-full bg-blue-600 transition-all"
           style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / total * 100) + '%' }} />
       </div>
       {mode === 'unir' ? <>
-        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Primero elegí un concepto</p>
+        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">{english ? "First, choose a concept" : "Primero elegí un concepto"}</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{exercisePairs.map((pair, i) => (
           <button type="button" key={pair.term} aria-pressed={selectedTerm === i} onClick={() => setSelectedTerm(i)}
             className={'min-h-14 rounded-xl border p-3 text-left text-sm transition ' +
               (selectedTerm === i ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white')}>
-            {pair.term}{matches[i] !== undefined ? ' · Vinculado' : ''}
+            {pair.term}{matches[i] !== undefined ? (english ? ' · Matched' : ' · Vinculado') : ''}
           </button>
         ))}</div>
-        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">Después, tocá su definición</p>
+        <p className="mb-2 mt-6 text-xs font-medium text-slate-600">{english ? "Then, select its definition" : "Después, tocá su definición"}</p>
         <div className="space-y-2">{definitions.map(({ pair, pairIndex }) => {
           const matchedIndex = Object.keys(matches).find(key => matches[Number(key)] === pairIndex);
           return <button key={pairIndex} type="button" disabled={selectedTerm === null} onClick={() => {
@@ -754,21 +757,21 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         })}</div>
         <button type="button" disabled={answeredCount !== total} onClick={completeWithTransition}
           className="mt-5 min-h-11 w-full rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
-          Corregir asociaciones
+          {english ? 'Check matches' : 'Corregir asociaciones'}
         </button>
       </> : current && <>
         <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
           {current.type === 'recall' ? <>
-            <p className="text-xs text-slate-500">Escribí el término específico que aparece en el material. Aceptamos tildes, variantes gramaticales y equivalencias documentadas.</p>
+            <p className="text-xs text-slate-500">{english ? 'Type the specific term from your material. Spelling variants and source-supported equivalents are accepted.' : 'Escribí el término específico que aparece en el material. Aceptamos tildes, variantes gramaticales y equivalencias documentadas.'}</p>
             <p className="mt-3 text-base leading-7 text-slate-900">________: {current.pair.definition}</p>
-            <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">Concepto</label>
+            <label htmlFor="practice-input" className="mt-5 block text-xs font-medium text-slate-600">{english ? 'Concept' : 'Concepto'}</label>
             <input id="practice-input" type="text" autoComplete="off" maxLength={120}
               disabled={checked || mode === 'simulacro'} value={responses[step] ?? ''}
               onChange={event => setResponse(event.target.value)}
               className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-blue-500"
-              placeholder="Escribí el término" />
+              placeholder={english ? 'Enter the term' : 'Escribí el término'} />
           </> : <>
-            {mode === 'opciones' && <p className="mb-2 text-center text-xs font-medium text-slate-500">¿Verdadero o falso?</p>}
+            {mode === 'opciones' && <p className="mb-2 text-center text-xs font-medium text-slate-500">{english ? 'True or false?' : '¿Verdadero o falso?'}</p>}
             <p className="text-base font-medium leading-7 text-slate-900">{current.question.prompt}</p>
             <div className={mode === 'opciones' ? 'mt-5 grid grid-cols-2 gap-3' : 'mt-5 space-y-2'}>{current.question.options.map(option =>
               <button key={option} type="button" disabled={checked} aria-pressed={responses[step] === option}
@@ -783,20 +786,20 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         </div>
         {checked && mode !== 'simulacro' && <div role="status" className="mt-3 rounded-xl bg-slate-50 p-4 text-sm">
           <p className={correctAt(step) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
-            {correctAt(step) ? 'Bien resuelto' : 'Para reforzar'}
+            {correctAt(step) ? (english ? 'Correct' : 'Bien resuelto') : (english ? 'Needs review' : 'Para reforzar')}
           </p>
           {!correctAt(step) && responses[step]?.trim() &&
             <p className="mt-1 text-slate-600">
               {current.type === 'recall'
-                ? 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: '
-                : 'Elegiste: '}{responses[step]}
+                ? (english ? 'Your answer does not match a term or an explicit equivalent in the material: ' : 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: ')
+                : (english ? 'You selected: ' : 'Elegiste: ')}{responses[step]}
             </p>}
-          <p className="mt-1 text-slate-700">{mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: '}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
+          <p className="mt-1 text-slate-700">{t(mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: ')}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
           {current.type === 'question' && <p className="mt-1 text-slate-600">{explanationFor(current.question)}</p>}
           {current.type === 'recall' && current.pair.pageStart && <Link
             href={'/materiales/' + materialId + '?tab=resumen&page=' + current.pair.pageStart}
-            className="mt-2 inline-block text-blue-600 underline">Revisar el concepto en el material · página {current.pair.pageStart}</Link>}
+            className="mt-2 inline-block text-blue-600 underline">{english ? "Review this concept in the source · page" : "Revisar el concepto en el material · página"} {current.pair.pageStart}</Link>}
 
         </div>}
         <div className={mode === 'opciones'
@@ -809,7 +812,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           {mode === 'simulacro' ? <>
             {step < total - 1 && <button type="button" onClick={() => setStep(value => value + 1)}
               className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white">
-              {responses[step] ? 'Siguiente' : 'Omitir'}
+              {t(responses[step] ? 'Siguiente' : 'Omitir')}
             </button>}
             <button type="button" onClick={completeWithTransition}
               className={'min-h-11 rounded-xl border px-4 text-sm ' +
@@ -818,7 +821,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             </button>
           </> : <button type="button" disabled={!checked && !responses[step]?.trim()} onClick={reviewOrNext}
             className="ml-auto min-h-11 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white disabled:opacity-40">
-            {!checked ? 'Comprobar respuesta' : step === total - 1 ? 'Ver resultados' : 'Siguiente'}
+            {t(!checked ? 'Comprobar respuesta' : step === total - 1 ? 'Ver resultados' : 'Siguiente')}
           </button>}
         </div>
       </>}

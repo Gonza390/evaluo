@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { resolveCheckoutMarket } from '@/lib/payments/checkout-market';
 import { safePremiumReturnTo } from '@/lib/premium-flow';
 import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
 import { cookies } from 'next/headers';
@@ -77,6 +78,11 @@ async function recoveryIsEligible(admin: SupabaseClient, userId: string) {
 }
 
 export async function POST(request: Request) {
+  // Enforce the AR-only Mercado Pago rule on the server, not just in pricing UI.
+  // Fail closed when Vercel cannot confirm the production country.
+  if (resolveCheckoutMarket(request.headers.get('x-vercel-ip-country'), process.env.VERCEL_ENV) !== 'argentina') {
+    return NextResponse.json({ error: 'argentina_checkout_only' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
+  }
   if (!process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim()) {
     return NextResponse.json({ error: 'payments_not_ready' }, { status: 503 });
   }

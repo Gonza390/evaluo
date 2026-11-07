@@ -4,13 +4,14 @@ import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/file-rules';
 
 type HomePdfPickerButtonProps = {
   className: string;
   location: string;
   ctaName: string;
   children: ReactNode;
+  locale?: 'es' | 'en';
 };
 
 export function HomePdfPickerButton({
@@ -18,6 +19,7 @@ export function HomePdfPickerButton({
   location,
   ctaName,
   children,
+  locale = 'es',
 }: HomePdfPickerButtonProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [saving, setSaving] = useState(false);
@@ -28,7 +30,7 @@ export function HomePdfPickerButton({
     .replace(/^-+|-+$/g, '')
     .slice(0, 64);
 
-  const choosePdf = () => {
+  const chooseFile = () => {
     if (saving) return;
 
     trackMarketingEvent('cta_click', {
@@ -44,20 +46,16 @@ export function HomePdfPickerButton({
     inputRef.current?.click();
   };
 
-  const continueWithPdf = async (file: File | null) => {
+  const continueWithFile = async (file: File | null) => {
     if (!file || saving) return;
 
-    const isPdf =
-      file.name.toLowerCase().endsWith('.pdf') &&
-      (!file.type || file.type === 'application/pdf');
-
-    if (!isPdf) {
-      window.alert('Por ahora solo aceptamos archivos PDF.');
+    if (!isSupportedStudentMaterialFile(file.name, file.type)) {
+      window.alert(locale === 'en' ? 'Please select a PDF or Word (.docx) file.' : 'Aceptamos archivos PDF y Word (.docx).');
       return;
     }
 
     if (file.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
-      window.alert('El PDF supera el tamaño máximo permitido de 20 MB.');
+      window.alert(locale === 'en' ? 'This file exceeds the 20 MB limit.' : 'El archivo supera el tamaño máximo permitido de 20 MB.');
       return;
     }
 
@@ -73,14 +71,14 @@ export function HomePdfPickerButton({
       await savePdfFirstDraft(file, source);
 
       const nextPath = `/dashboard?openUpload=1&source=${encodeURIComponent(source)}`;
-      const login = new URL('/login', window.location.origin);
+      const login = new URL(locale === 'en' ? '/en/login' : '/login', window.location.origin);
       login.searchParams.set('mode', 'signup');
       login.searchParams.set('reason', 'pdf-first');
       login.searchParams.set('next', nextPath);
       window.location.href = `${login.pathname}${login.search}`;
     } catch {
       setSaving(false);
-      window.alert('No pudimos conservar el PDF para continuar. Probá nuevamente.');
+      window.alert(locale === 'en' ? 'We could not save your file for the next step. Please try again.' : 'No pudimos conservar el archivo para continuar. Probá nuevamente.');
     }
   };
 
@@ -89,15 +87,15 @@ export function HomePdfPickerButton({
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,application/pdf"
+        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         className="hidden"
         onChange={(event) => {
           const file = event.currentTarget.files?.[0] ?? null;
           event.currentTarget.value = '';
-          void continueWithPdf(file);
+          void continueWithFile(file);
         }}
       />
-      <button type="button" onClick={choosePdf} disabled={saving} className={className}>
+      <button type="button" onClick={chooseFile} disabled={saving} className={className}>
         {children}
       </button>
     </>
