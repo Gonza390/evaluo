@@ -83,7 +83,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
-import { PomodoroHeader } from '@/components/dashboard/pomodoro-header';
 import {
   pdfStudyTabClassName,
   pdfStudyControlsClassName,
@@ -203,8 +202,6 @@ const MaterialProgressContent = dynamic(
 
 type MaterialStudyWorkspaceProps = {
   backHref: string;
-  /** Usuario con sesión: muestra el temporizador de 25 minutos en el encabezado del PDF. */
-  pomodoroUserId?: string;
   fileName: string;
   canRegenerate: boolean;
   isPremium: boolean;
@@ -341,7 +338,6 @@ function buildSummaryChapterAnchor(index: number, value: string) {
 
 export function MaterialStudyWorkspace({
   backHref,
-  pomodoroUserId,
   canRegenerate,
   fileName,
   isPremium,
@@ -526,15 +522,6 @@ export function MaterialStudyWorkspace({
   const summaryCheckConsecutiveSkipsRef = useRef(0);
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
-  // Un solo temporizador montado a la vez: en el encabezado de escritorio o en el móvil.
-  const [isDesktopHeader, setIsDesktopHeader] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia('(min-width: 768px)');
-    const sync = () => setIsDesktopHeader(query.matches);
-    sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
-  }, []);
   const activeTab = demo?.activeTab ?? localActiveTab;
   // Las pestañas inactivas usan forceMount para preservar intentos, pero su
   // contenido no debe montarse antes de la primera visita del estudiante.
@@ -2053,7 +2040,7 @@ export function MaterialStudyWorkspace({
           </header>
 
           {summaryChapters.length > 0 ? (
-            <details className="group border-border bg-muted/55 mt-3 rounded-xl border px-3 py-2.5 xl:hidden">
+            <details className="group mt-3 py-1 xl:hidden">
               <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-medium">
                 <span className="inline-flex items-center gap-2">
                   <ListTree className="text-primary h-4 w-4" />
@@ -2076,10 +2063,10 @@ export function MaterialStudyWorkspace({
                         data-active-chapter={activeSummaryChapterIndex === index || undefined}
                         aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                         className={cn(
-                          'flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[13px] leading-5 transition-colors',
+                          'flex items-start gap-2.5 px-0 py-2 text-[14px] leading-5 transition-colors',
                           activeSummaryChapterIndex === index
-                            ? 'border-primary bg-primary/10 text-primary font-medium'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
                         <span className={cn(
@@ -2100,7 +2087,7 @@ export function MaterialStudyWorkspace({
           <div className="mt-3 xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:items-start xl:gap-5 2xl:grid-cols-[220px_minmax(0,1fr)] 2xl:gap-6">
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
-                <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
+                <div className="flex max-h-[calc(100vh-14rem)] min-h-0 flex-col">
                   <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-medium tracking-[0.16em] uppercase">
                     Contenido
                   </p>
@@ -2119,10 +2106,10 @@ export function MaterialStudyWorkspace({
                             data-active-chapter={activeSummaryChapterIndex === index || undefined}
                             aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                             className={cn(
-                              'group flex items-start gap-2 rounded-lg border-l-[3px] px-2 py-1.5 text-[12px] leading-[1.45] transition-colors',
+                              'group flex items-start gap-2 px-0 py-1.5 text-[13px] leading-[1.45] transition-colors',
                               activeSummaryChapterIndex === index
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
+                                ? 'text-primary font-medium'
+                                : 'text-muted-foreground hover:text-foreground'
                             )}
                           >
                             <span className={cn(
@@ -2815,9 +2802,6 @@ export function MaterialStudyWorkspace({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {pomodoroUserId && !demo && !isDesktopHeader ? (
-            <PomodoroHeader userId={pomodoroUserId} alignEnd />
-          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -2903,9 +2887,6 @@ export function MaterialStudyWorkspace({
               {t("Ver guía")}
             </button>
           ) : null}
-          {pomodoroUserId && !demo && isDesktopHeader ? (
-            <PomodoroHeader userId={pomodoroUserId} alignEnd />
-          ) : null}
         </div>
       </section>
 
@@ -2962,7 +2943,7 @@ export function MaterialStudyWorkspace({
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-1.5 sm:px-3 xl:pb-2 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
-          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="bg-card relative h-full min-h-0 w-full overflow-hidden">
             <Tabs
               data-demo-focus="study"
               value={progressOpen ? 'progreso' : activeTab}
@@ -3045,7 +3026,7 @@ export function MaterialStudyWorkspace({
             demo && !demo.progress ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col'
           )}
         >
-          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="bg-card flex min-h-0 flex-1 flex-col overflow-hidden">
             {content}
           </div>
 

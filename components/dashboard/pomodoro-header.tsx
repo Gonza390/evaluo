@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { CheckCircle2, Clock3, Pause, Play, RotateCcw, X } from 'lucide-react';
+import { CheckCircle2, Pause, Play, RotateCcw, Timer, X } from 'lucide-react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import {
   INITIAL_POMODORO,
@@ -24,14 +24,7 @@ function readSavedTimer(key: string, now: number): PomodoroState {
 }
 
 /** Small non-modal 25-minute timer in Evaluo's persistent app header. */
-export function PomodoroHeader({
-  userId,
-  alignEnd = false,
-}: {
-  userId: string;
-  /** Alinea el panel al borde derecho del botón (p. ej. en el encabezado de un PDF). */
-  alignEnd?: boolean;
-}) {
+export function PomodoroHeader({ userId }: { userId: string }) {
   const english = useOptionalAppLocale() === 'en';
   const tr = (es: string, en: string) => english ? en : es;
   const key = `evaluo_pomodoro_25_${userId}`;
@@ -127,9 +120,9 @@ export function PomodoroHeader({
         aria-label={running || paused ? (english ? `Study timer: ${time} remaining` : `Temporizador de estudio: ${time} restantes`) : finished ? tr('Temporizador: sesión completada','Study timer: session complete') : tr('Abrir temporizador de estudio de 25 minutos','Open 25-minute study timer')}
         aria-expanded={open}
         aria-controls={popupId}
-        className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-[12px] font-semibold tabular-nums transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] ${running || paused || open ? 'bg-[#EEF2FF] text-[#2563EB]' : finished ? 'text-[#16774f]' : 'text-[#42506A]'}`}
+        className={`inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-semibold tabular-nums transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] ${open ? 'bg-slate-100' : ''} ${running || paused ? 'text-[#2563EB]' : finished ? 'text-[#16774f]' : 'text-slate-500 hover:text-slate-800'}`}
       >
-        {finished ? <CheckCircle2 className="size-[19px]" aria-hidden="true" /> : <Clock3 className="size-[19px]" aria-hidden="true" />}
+        {finished ? <CheckCircle2 className="size-5" aria-hidden="true" /> : <Timer className="size-5" strokeWidth={1.9} aria-hidden="true" />}
         {running || paused ? <span aria-hidden="true" className="min-w-[39px] text-right">{time}</span> : null}
         {finished ? <span className="hidden sm:inline">{tr('Listo','Done')}</span> : null}
       </button>
@@ -140,7 +133,7 @@ export function PomodoroHeader({
           role="dialog"
           aria-label={tr("Temporizador de estudio","Study timer")}
           data-pomodoro-panel
-          className={`absolute ${alignEnd ? 'right-0' : 'right-[-112px] md:right-0'} top-[calc(100%+8px)] z-50 w-[min(292px,calc(100vw-24px))] rounded-[18px] border border-[#E7EBF4] bg-white p-4 text-[#0F1B3D] shadow-[0_16px_48px_rgba(15,27,61,.14)]`}
+          className="absolute right-[-112px] top-[calc(100%+8px)] z-50 w-[min(292px,calc(100vw-24px))] rounded-[18px] border border-[#E7EBF4] bg-white p-4 text-[#0F1B3D] shadow-[0_16px_48px_rgba(15,27,61,.14)] md:right-0"
         >
           <div className="flex items-center justify-between gap-2">
             <p className="text-[14px] font-semibold">{tr('Tiempo de estudio','Study time')}</p>

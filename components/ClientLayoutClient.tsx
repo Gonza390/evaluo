@@ -386,8 +386,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  {/* En un PDF el temporizador vive en el encabezado del lector, junto al material. */}
-                  {!isMaterialStudyRoute ? <PomodoroHeader key={user.id} userId={user.id} /> : null}
+                  <PomodoroHeader key={user.id} userId={user.id} />
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
                     href="/calendario"
