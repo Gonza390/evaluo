@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, Check, Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useModalFocusTrap } from '@/hooks/use-modal-focus-trap';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { isNewExamDatePromptSignal, type ExamDatePromptSignal } from '@/lib/exam-date-prompt-trigger';
 import {
   dismissExamDatePromptAction,
@@ -18,9 +19,8 @@ type Props = {
   triggerNonce?: number;
 };
 
-function argentinaTodayKey() {
+function localTodayKey() {
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Argentina/Buenos_Aires',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -33,9 +33,9 @@ function addDays(value: string, days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatDate(value: string) {
+function formatDate(value: string, english: boolean) {
   const date = new Date(`${value}T12:00:00`);
-  return new Intl.DateTimeFormat('es-AR', {
+  return new Intl.DateTimeFormat(english ? 'en-US' : 'es-AR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -47,6 +47,7 @@ function sessionKey(materialId: string) {
 }
 
 export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: Props) {
+  const english = useOptionalAppLocale() === 'en';
   const [visible, setVisible] = useState(false);
   const [examDate, setExamDate] = useState('');
   const [saved, setSaved] = useState(false);
@@ -57,34 +58,34 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
   const checkInFlightRef = useRef(false);
   const lastCheckedTriggerRef = useRef<ExamDatePromptSignal | null>(null);
 
-  const minDate = useMemo(() => addDays(argentinaTodayKey(), 1), []);
+  const minDate = useMemo(() => addDays(localTodayKey(), 1), []);
 
   const plan = useMemo(() => {
     if (!examDate) return [];
 
-    const today = argentinaTodayKey();
+    const today = localTodayKey();
     const milestones = [
       {
         offset: 7,
-        label: '7 días antes',
-        text: 'Comprobá qué recordás y volvé sobre los temas más importantes.',
+        label: english ? '7 days before' : '7 días antes',
+        text: english ? 'Check what you remember and review the most important topics.' : 'Comprobá qué recordás y volvé sobre los temas más importantes.',
       },
       {
         offset: 3,
-        label: '3 días antes',
-        text: 'Reforzá errores y conceptos que todavía te cuestan.',
+        label: english ? '3 days before' : '3 días antes',
+        text: english ? 'Review mistakes and concepts that still need work.' : 'Reforzá errores y conceptos que todavía te cuestan.',
       },
       {
         offset: 1,
-        label: '1 día antes',
-        text: 'Hacé un repaso corto y enfocado antes del examen.',
+        label: english ? '1 day before' : '1 día antes',
+        text: english ? 'Do a short, focused review before the exam.' : 'Hacé un repaso corto y enfocado antes del examen.',
       },
     ];
 
     return [
       {
-        label: 'Hoy',
-        text: 'Seguí estudiando y detectá qué temas necesitás reforzar.',
+        label: english ? 'Today' : 'Hoy',
+        text: english ? 'Keep studying and identify topics that need more practice.' : 'Seguí estudiando y detectá qué temas necesitás reforzar.',
       },
       ...milestones
         .map((item) => ({
@@ -94,7 +95,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
         .filter((item) => item.date > today)
         .map(({ label, text }) => ({ label, text })),
     ];
-  }, [examDate]);
+  }, [examDate, english]);
 
   const canOpenInSession = useCallback(() => {
     try {
@@ -117,8 +118,8 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
 
         if (!result.success) {
           toast({
-            title: 'No pudimos comprobar la fecha del examen',
-            description: 'Revisá tu conexión e intentá de nuevo al terminar otra actividad.',
+            title: english ? 'We could not check your exam date' : 'No pudimos comprobar la fecha del examen',
+            description: english ? 'Check your connection and try again after your next activity.' : 'Revisá tu conexión e intentá de nuevo al terminar otra actividad.',
             variant: 'destructive',
           });
           return;
@@ -131,15 +132,15 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
         void trackExamDatePromptViewedAction(materialId).catch(() => undefined);
       } catch {
         toast({
-          title: 'No pudimos comprobar la fecha del examen',
-          description: 'Revisá tu conexión e intentá de nuevo al terminar otra actividad.',
+          title: english ? 'We could not check your exam date' : 'No pudimos comprobar la fecha del examen',
+          description: english ? 'Check your connection and try again after your next activity.' : 'Revisá tu conexión e intentá de nuevo al terminar otra actividad.',
           variant: 'destructive',
         });
       } finally {
         checkInFlightRef.current = false;
       }
     },
-    [canOpenInSession, materialId, saved, toast, visible]
+    [canOpenInSession, materialId, saved, toast, visible, english]
   );
 
   // Sólo mostrar este formulario cuando el estudiante termina una actividad
@@ -177,7 +178,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
       });
 
       if (!result.success) {
-        setError(result.message || 'No pudimos guardar la fecha. Intentá de nuevo.');
+        setError(english ? 'We could not save your exam date. Please try again.' : (result.message || 'No pudimos guardar la fecha. Intentá de nuevo.'));
         return;
       }
 
@@ -188,7 +189,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
       }
       setSaved(true);
     } catch {
-      setError('No pudimos guardar la fecha. Revisá tu conexión e intentá de nuevo.');
+      setError(english ? 'We could not save your exam date. Check your connection and try again.' : 'No pudimos guardar la fecha. Revisá tu conexión e intentá de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -212,7 +213,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
           <button
             type="button"
             onClick={close}
-            aria-label="Cerrar"
+            aria-label={english ? 'Close' : 'Cerrar'}
             className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
           >
             <X className="h-5 w-5" />
@@ -225,28 +226,28 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
               </div>
 
               <p className="pr-10 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
-                Organizá tu repaso
+                {english ? 'Plan your review' : 'Organizá tu repaso'}
               </p>
 
               <h2
                 id="exam-date-prompt-title"
                 className="mt-2 pr-8 text-[25px] font-bold leading-[1.14] tracking-[-0.035em] text-[#0F1B3D] sm:text-[29px]"
               >
-                ¿Cuándo rendís este examen?
+                {english ? 'When is your exam?' : '¿Cuándo rendís este examen?'}
               </h2>
               <p className="mt-2 line-clamp-2 min-w-0 break-all text-[12px] leading-5 text-slate-500" title={fileName}>
-                Material: {fileName}
+                {english ? 'Material:' : 'Material:'} {fileName}
               </p>
 
               <p id="exam-date-prompt-description" className="mt-4 text-[15px] leading-6 text-slate-600">
-                Cargá la fecha y Evaluo organiza tus repasos hasta el examen para ayudarte a llegar con los temas importantes reforzados.
+                {english ? 'Add your exam date and Evaluo will organize review sessions to help you prepare.' : 'Cargá la fecha y Evaluo organiza tus repasos hasta el examen para ayudarte a llegar con los temas importantes reforzados.'}
               </p>
 
               <label
                 className="mt-6 block text-xs font-bold text-slate-700"
                 htmlFor={`exam-date-${materialId}`}
               >
-                Fecha del examen
+                {english ? 'Exam date' : 'Fecha del examen'}
               </label>
               <div className="relative mt-2">
                 <input
@@ -266,7 +267,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 className="mt-4 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#456DBD] px-5 text-sm font-bold text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)] transition hover:bg-[#3A5CA8] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                {saving ? 'Guardando...' : 'Guardar fecha'}
+                {saving ? (english ? 'Saving...' : 'Guardando...') : (english ? 'Save exam date' : 'Guardar fecha')}
               </button>
 
               {error ? (
@@ -274,7 +275,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
               ) : null}
 
               <p className="mt-4 text-center text-[11px] leading-5 text-slate-400">
-                Podés cambiarla más adelante desde tu material.
+                {english ? 'You can change this later from your study material.' : 'Podés cambiarla más adelante desde tu material.'}
               </p>
             </div>
           ) : (
@@ -284,21 +285,21 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
               </div>
 
               <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
-                Plan de repaso
+                {english ? 'Review plan' : 'Plan de repaso'}
               </p>
 
               <h2
                 id="exam-date-prompt-title"
                 className="mt-2 pr-8 text-[25px] font-bold leading-[1.14] tracking-[-0.035em] text-[#0F1B3D] sm:text-[29px]"
               >
-                Listo. Rendís el {formatDate(examDate)}.
+                {english ? `All set. Your exam is on ${formatDate(examDate, true)}.` : `Listo. Rendís el ${formatDate(examDate, false)}.`}
               </h2>
 
               <p id="exam-date-prompt-description" className="mt-3 text-[15px] leading-6 text-slate-600">
-                Evaluo va a usar esta fecha para ayudarte a organizar tus repasos.
+                {english ? 'Evaluo will use this date to help organize your study sessions.' : 'Evaluo va a usar esta fecha para ayudarte a organizar tus repasos.'}
               </p>
               <p className="mt-2 line-clamp-2 min-w-0 break-all text-[12px] leading-5 text-slate-500" title={fileName}>
-                Material: {fileName}
+                {english ? 'Material:' : 'Material:'} {fileName}
               </p>
 
               <div className="mt-6 overflow-hidden rounded-2xl border border-[#E7EBF4]">
@@ -318,7 +319,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 onClick={() => setVisible(false)}
                 className="mt-5 flex h-12 w-full items-center justify-center rounded-2xl bg-[#456DBD] px-5 text-sm font-bold text-white transition hover:bg-[#3A5CA8]"
               >
-                Entendido
+                {english ? 'Got it' : 'Entendido'}
               </button>
             </div>
           )}
