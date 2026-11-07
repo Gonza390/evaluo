@@ -23,6 +23,60 @@ function normalizeSource(value: string | null) {
   return normalized ? `pdf-first-landing-${normalized}` : 'pdf-first-landing';
 }
 
+const COPY = {
+  ar: {
+    kicker: 'Empezá con tu archivo',
+    lead: 'Primero elegís tu material. Después creás tu cuenta.',
+    notUploaded: 'Todavía no se sube',
+    choose: 'Elegí tu material de estudio',
+    chooseHint: 'Tocá para seleccionar tu material · máximo 20 MB',
+    ready: 'listo para continuar',
+    remove: 'Quitar archivo',
+    saving: 'Guardando tu selección…',
+    create: 'Crear material de estudio',
+    change: 'Cambiar archivo',
+    noSignup: 'No necesitás registrarte para elegir el archivo.',
+    account: 'Tu cuenta se pide recién al crear el material.',
+    unsupported: 'Este tipo de material no es compatible.',
+    tooLarge: 'El material supera el tamaño máximo permitido de 20 MB.',
+    saveError: 'No pudimos conservar el material para continuar. Probá nuevamente.',
+  },
+  neutral: {
+    kicker: 'Empieza con tu archivo',
+    lead: 'Primero eliges tu material. Después creas tu cuenta.',
+    notUploaded: 'Todavía no se sube',
+    choose: 'Elige tu material de estudio',
+    chooseHint: 'Selecciona tu material · máximo 20 MB',
+    ready: 'listo para continuar',
+    remove: 'Quitar archivo',
+    saving: 'Guardando tu selección…',
+    create: 'Crear material de estudio',
+    change: 'Cambiar archivo',
+    noSignup: 'No necesitas registrarte para elegir el archivo.',
+    account: 'La cuenta se solicita al crear el material.',
+    unsupported: 'Este tipo de material no es compatible.',
+    tooLarge: 'El material supera el tamaño máximo permitido de 20 MB.',
+    saveError: 'No pudimos guardar el material. Inténtalo de nuevo.',
+  },
+  en: {
+    kicker: 'Start with your file',
+    lead: 'Pick your material first. Create your account after.',
+    notUploaded: 'Not uploaded yet',
+    choose: 'Choose your study material',
+    chooseHint: 'PDF or Word · up to 20 MB',
+    ready: 'ready to continue',
+    remove: 'Remove file',
+    saving: 'Saving your selection…',
+    create: 'Create study material',
+    change: 'Change file',
+    noSignup: 'No sign-up needed to choose your file.',
+    account: 'You create an account when you generate the material.',
+    unsupported: 'This file type is not supported. Use a PDF or Word file.',
+    tooLarge: 'The file is larger than the 20 MB limit.',
+    saveError: 'We could not save your file. Please try again.',
+  },
+} as const;
+
 export function PdfFirstLandingUploader({
   trackingLocation = 'estudiar_pdf_con_ia',
   sourceKey,
@@ -31,10 +85,10 @@ export function PdfFirstLandingUploader({
 }: {
   trackingLocation?: string;
   sourceKey?: string;
-  locale?: 'neutral';
+  locale?: 'neutral' | 'en';
   market?: string;
 } = {}) {
-  const isInternational = locale === 'neutral';
+  const t = COPY[locale ?? 'ar'];
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
@@ -67,13 +121,13 @@ export function PdfFirstLandingUploader({
 
     if (!isSupportedStudentMaterialFile(selected.name, selected.type)) {
       setFile(null);
-      setError('Este tipo de material no es compatible.');
+      setError(t.unsupported);
       return;
     }
 
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
       setFile(null);
-      setError('El material supera el tamaño máximo permitido de 20 MB.');
+      setError(t.tooLarge);
       return;
     }
 
@@ -109,13 +163,13 @@ export function PdfFirstLandingUploader({
       const requestedMateriaId = new URLSearchParams(window.location.search).get('materiaId');
       if (isUuid(requestedMateriaId)) nextParams.set('materiaId', requestedMateriaId!);
       const nextPath = `/dashboard?${nextParams.toString()}`;
-      const login = new URL('/login', window.location.origin);
+      const login = new URL(locale === 'en' ? '/en/login' : '/login', window.location.origin);
       login.searchParams.set('mode', 'signup');
       login.searchParams.set('reason', 'pdf-first');
       login.searchParams.set('next', nextPath);
       window.location.href = `${login.pathname}${login.search}`;
     } catch {
-      setError(isInternational ? 'No pudimos guardar el material. Inténtalo de nuevo.' : 'No pudimos conservar el material para continuar. Probá nuevamente.');
+      setError(t.saveError);
       setSaving(false);
     }
   };
@@ -126,12 +180,12 @@ export function PdfFirstLandingUploader({
       <div className="relative rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-6">
         <div className="flex items-center justify-between gap-3 px-1 pb-4">
           <div>
-            <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">{isInternational ? 'Empieza con tu archivo' : 'Empezá con tu archivo'}</p>
-            <p className="mt-1 text-sm font-bold text-slate-950">{isInternational ? 'Primero eliges tu material. Después creas tu cuenta.' : 'Primero elegís tu material. Después creás tu cuenta.'}</p>
+            <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">{t.kicker}</p>
+            <p className="mt-1 text-sm font-bold text-slate-950">{t.lead}</p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Todavía no se sube
+            {t.notUploaded}
           </span>
         </div>
 
@@ -155,8 +209,8 @@ export function PdfFirstLandingUploader({
             <span className="from-brand to-brand-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
               <UploadCloud className="h-6 w-6" aria-hidden="true" />
             </span>
-            <span className="mt-4 text-base font-bold text-slate-950">{isInternational ? 'Elige tu material de estudio' : 'Elegí tu material de estudio'}</span>
-            <span className="mt-1.5 text-xs leading-5 text-slate-500">{isInternational ? 'Selecciona tu material · máximo 20 MB' : 'Tocá para seleccionar tu material · máximo 20 MB'}</span>
+            <span className="mt-4 text-base font-bold text-slate-950">{t.choose}</span>
+            <span className="mt-1.5 text-xs leading-5 text-slate-500">{t.chooseHint}</span>
           </button>
         ) : (
           <div>
@@ -166,7 +220,7 @@ export function PdfFirstLandingUploader({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-slate-950">{file.name}</p>
-                <p className="mt-0.5 text-xs text-slate-500">{formatBytes(file.size)} · listo para continuar</p>
+                <p className="mt-0.5 text-xs text-slate-500">{formatBytes(file.size)} · {t.ready}</p>
               </div>
               <button
                 type="button"
@@ -175,7 +229,7 @@ export function PdfFirstLandingUploader({
                   setError('');
                 }}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-white hover:text-slate-700"
-                aria-label="Quitar archivo"
+                aria-label={t.remove}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -188,7 +242,7 @@ export function PdfFirstLandingUploader({
               className="from-brand to-brand-2 mt-4 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
             >
               {saving ? <Loader2 className="h-4.5 w-4.5 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="h-4.5 w-4.5" aria-hidden="true" />}
-              {saving ? 'Guardando tu selección…' : 'Crear material de estudio'}
+              {saving ? t.saving : t.create}
             </button>
 
             <button
@@ -197,7 +251,7 @@ export function PdfFirstLandingUploader({
               disabled={saving}
               className="mt-3 w-full text-center text-xs font-semibold text-slate-500 transition hover:text-blue-700 disabled:opacity-50"
             >
-              Cambiar archivo
+              {t.change}
             </button>
           </div>
         )}
@@ -211,11 +265,11 @@ export function PdfFirstLandingUploader({
         <div className="mt-4 grid gap-2 border-t border-slate-100 pt-4 text-[11px] leading-5 text-slate-500 sm:grid-cols-2">
           <span className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
-            {isInternational ? 'No necesitas registrarte para elegir el archivo.' : 'No necesitás registrarte para elegir el archivo.'}
+            {t.noSignup}
           </span>
           <span className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
-            {isInternational ? 'La cuenta se solicita al crear el material.' : 'Tu cuenta se pide recién al crear el material.'}
+            {t.account}
           </span>
         </div>
       </div>

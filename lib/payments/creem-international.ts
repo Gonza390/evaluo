@@ -3,6 +3,13 @@ import { createCreemTestCheckout, CREEM_TEST_PRODUCT_ID } from './creem';
 export const CREEM_USD_MONTHLY_CENTS = 999;
 export type CreemMode = 'test' | 'live';
 
+/** Creem Live API keys may start with `creem_` or `creem_live_`; never accept a sandbox key. */
+function isCreemLiveApiKey(value: string | undefined): boolean {
+  const key = value?.trim() ?? '';
+  return key.startsWith('creem_') && key.length > 'creem_'.length &&
+    !key.startsWith('creem_test_');
+}
+
 export function isCreemModeEnabled(mode: CreemMode): boolean {
   if (mode === 'test') {
     return process.env.VERCEL_ENV !== 'production' &&
@@ -10,7 +17,7 @@ export function isCreemModeEnabled(mode: CreemMode): boolean {
       Boolean(process.env.CREEM_WEBHOOK_SECRET?.trim());
   }
   return process.env.VERCEL_ENV === 'production' &&
-    Boolean(process.env.CREEM_LIVE_API_KEY?.trim().startsWith('creem_live_')) &&
+    isCreemLiveApiKey(process.env.CREEM_LIVE_API_KEY) &&
     Boolean(process.env.CREEM_LIVE_PRODUCT_ID?.trim().startsWith('prod_')) &&
     Boolean(process.env.CREEM_LIVE_WEBHOOK_SECRET?.trim()) &&
     process.env.CREEM_INTERNATIONAL_ENABLED === 'true';
@@ -29,7 +36,7 @@ export function canProcessCreemLiveWebhooks(): boolean {
 
 export function canManageExistingCreemSubscriptions(): boolean {
   return process.env.VERCEL_ENV === 'production' &&
-    Boolean(process.env.CREEM_LIVE_API_KEY?.trim().startsWith('creem_live_'));
+    isCreemLiveApiKey(process.env.CREEM_LIVE_API_KEY);
 }
 
 export function creemProductId(mode: CreemMode): string {

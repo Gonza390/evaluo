@@ -968,7 +968,13 @@ export function sanitizeAnalyticsMetadata(
   return sanitized;
 }
 
+// Agentes automáticos que no deben recibir la redirección de idioma de la home ni contar
+// como visitas. Además de los genéricos (bot, crawler…), incluye herramientas de Google
+// sin "bot" en el nombre (Search Console URL Inspection, GoogleOther) y los generadores de
+// vista previa de enlaces (WhatsApp, Facebook, Telegram, Discord, Slack, Embedly).
+const AUTOMATED_USER_AGENT =
+  /bot|crawler|spider|headless|preview|monitor|fetcher|slurp|curl|wget|google-inspectiontool|googleother|google-extended|facebookexternalhit|whatsapp|telegram|discord|slack|embedly/;
+
 export function isLikelyBotUserAgent(userAgent: string) {
-  const normalized = userAgent.toLowerCase();
-  return /bot|crawler|spider|headless|preview|monitor|fetcher|slurp|curl|wget/.test(normalized);
+  return AUTOMATED_USER_AGENT.test(userAgent.toLowerCase());
 }

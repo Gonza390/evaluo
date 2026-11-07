@@ -94,6 +94,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/funciones/unir-conceptos-con-ia` },
     { url: `${baseUrl}/en/study-pdf-with-ai` },
     { url: `${baseUrl}/en/ai-test-prep`, lastModified: new Date('2026-11-06') },
+    { url: `${baseUrl}/es/generador-de-examenes-con-ia`, lastModified: new Date('2026-11-07') },
+    { url: `${baseUrl}/es/como-funciona`, lastModified: new Date('2026-11-07') },
+    { url: `${baseUrl}/es`, lastModified: new Date('2026-11-07') },
+    { url: `${baseUrl}/es/resumenes-con-ia`, lastModified: new Date('2026-11-07') },
+    { url: `${baseUrl}/es/flashcards-con-ia`, lastModified: new Date('2026-11-07') },
+    { url: `${baseUrl}/en/how-it-works`, lastModified: new Date('2026-11-07') },
     { url: `${baseUrl}/en/compare/evaluo-vs-notebooklm`, lastModified: new Date('2026-11-06') },
     { url: `${baseUrl}/en/compare/evaluo-vs-chatgpt`, lastModified: new Date('2026-11-06') },
     { url: `${baseUrl}/en/compare/evaluo-vs-quizlet`, lastModified: new Date('2026-11-06') },
@@ -150,7 +156,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const guide of STUDY_GUIDES) {
     routes.push({
       url: `${baseUrl}/es/guias/${guide.slug}`,
-      lastModified: new Date('2026-10-29'),
+      lastModified: new Date(guide.updated ?? '2026-10-29'),
     });
   }
 

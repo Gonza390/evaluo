@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
+import { getStudyGuide } from '@/lib/es-study-guides';
 import {
   HREFLANG_CLUSTERS,
   hreflangAlternatePath,
@@ -61,6 +62,13 @@ assert.equal(HREFLANG_CLUSTERS.pricing.en, '/en/pricing');
 assert.equal(HREFLANG_CLUSTERS['pdf-to-flashcards'].en, '/en/pdf-to-flashcards');
 
 assert.equal(HREFLANG_CLUSTERS['mock-exam'].en, '/en/ai-test-prep');
+// "generador de exámenes IA": landing ES neutra como `es`/x-default y la versión AR (voseo) como `es-AR`.
+assert.equal(HREFLANG_CLUSTERS['mock-exam'].es, '/es/generador-de-examenes-con-ia');
+assert.equal(HREFLANG_CLUSTERS['mock-exam']['es-AR'], '/funciones/simulacro-examen-con-ia');
+// "estudiar con IA": guía ES neutra como `es`/x-default y la landing en voseo como `es-AR`.
+assert.equal(hreflangLanguages('ai-for-students')['x-default'], hreflangLanguages('ai-for-students').es);
+assert.match(hreflangLanguages('ai-for-students').es, /\/es\/guias\/como-estudiar-con-ia$/);
+assert.match(hreflangLanguages('ai-for-students')['es-AR'], /\/ia-para-estudiantes$/);
 for (const tool of ['notebooklm', 'chatgpt', 'quizlet'] as const) {
   assert.equal(hreflangAlternatePath(`/comparar/evaluo-vs-${tool}`, 'en'), `/en/compare/evaluo-vs-${tool}`);
   assert.equal(hreflangAlternatePath(`/en/compare/evaluo-vs-${tool}`, 'es'), `/comparar/evaluo-vs-${tool}`);
@@ -70,6 +78,11 @@ assert.equal(hreflangClusterForPath('/no-existe'), undefined);
 // Toda URL registrada tiene su página en app/: un alternate hacia un 404 invalida el cluster.
 const routeFile = (path: string) => {
   if (path === '/') return 'app/(es)/page.tsx';
+  // Guías ES: ruta dinámica; el slug tiene que existir en STUDY_GUIDES.
+  if (path.startsWith('/es/guias/')) {
+    assert.ok(getStudyGuide(path.slice('/es/guias/'.length)), `Guía inexistente: ${path}`);
+    return 'app/(es)/es/guias/[slug]/page.tsx';
+  }
   if (path.startsWith('/en')) return `app/(en)${path}/page.tsx`;
   return `app/(es)${path}/page.tsx`;
 };

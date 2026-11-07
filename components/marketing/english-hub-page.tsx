@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, Info } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -9,6 +10,8 @@ import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
 export type EnglishHub = {
+  /** 'es' = hub en español neutro (rutas /es/). Por defecto, inglés. */
+  locale?: 'es';
   path: string;
   breadcrumb: string;
   eyebrow: string;
@@ -24,7 +27,14 @@ export type EnglishHub = {
 };
 
 /** Hub público en inglés: decisión rápida + enlaces internos a cada guía del cluster. */
+const LABELS = {
+  en: { home: '/en', cta: 'Start free with my notes', signup: '/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1', need: 'If you need to…', use: 'Use', read: 'Read the guide' },
+  es: { home: '/', cta: 'Probar gratis con mis apuntes', signup: '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1', need: 'Si necesitas…', use: 'Usa', read: 'Ver la página' },
+} as const;
+
 export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
+  const spanish = hub.locale === 'es';
+  const l = LABELS[spanish ? 'es' : 'en'];
   const itemList = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -37,16 +47,29 @@ export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
     })),
   };
   const breadcrumbs = buildBreadcrumbJsonLd([
-    { name: 'Evaluo', path: '/en' },
+    { name: 'Evaluo', path: l.home },
     { name: hub.breadcrumb, path: hub.path },
   ]);
 
   return (
-    <div lang="en" className="min-h-screen bg-white text-slate-950">
-      <InternationalDocumentLanguage lang="en" />
+    <div lang={spanish ? 'es' : 'en'} className="min-h-screen bg-white text-slate-950">
+      {spanish ? null : <InternationalDocumentLanguage lang="en" />}
       <JsonLd data={[breadcrumbs, itemList]} />
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <EnglishSeoHeader alternateHref={hreflangAlternatePath(hub.path, 'es')} />
+        {spanish ? (
+          <PublicSiteHeader
+            variant="landing"
+            trackingLocation="hub_es_header"
+            alternateHref={hreflangAlternatePath(hub.path, 'en')}
+            actions={
+              <Link href={l.signup} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-800">
+                Probar gratis <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            }
+          />
+        ) : (
+          <EnglishSeoHeader alternateHref={hreflangAlternatePath(hub.path, 'es')} />
+        )}
       </div>
       <main>
         <section className="border-b border-slate-100 bg-[linear-gradient(118deg,#F0F5FF_0%,#FFFFFF_72%)]">
@@ -55,8 +78,8 @@ export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
             <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">{hub.headline}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{hub.intro}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800">
-                Start free with my notes <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <Link href={l.signup} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800">
+                {l.cta} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <a href="#decision" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-blue-200">
                 {hub.decisionTitle}
@@ -72,8 +95,8 @@ export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
             <table className="w-full min-w-[560px] border-collapse text-left text-sm leading-6">
               <thead className="bg-slate-50">
                 <tr>
-                  <th scope="col" className="w-1/2 p-4 font-bold">If you need to…</th>
-                  <th scope="col" className="p-4 font-bold">Use</th>
+                  <th scope="col" className="w-1/2 p-4 font-bold">{l.need}</th>
+                  <th scope="col" className="p-4 font-bold">{l.use}</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,7 +122,7 @@ export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
                     {card.badge ? <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">{card.badge}</span> : null}
                   </span>
                   <span className="mt-3 flex-1 text-sm leading-7 text-slate-600">{card.text}</span>
-                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">Read the guide <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">{l.read} <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
                 </Link>
               ))}
             </div>
@@ -110,7 +133,7 @@ export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
           </div>
         </section>
       </main>
-      <FooterHome locale="en" />
+      <FooterHome locale={spanish ? 'es' : 'en'} register={spanish ? 'neutral' : undefined} />
     </div>
   );
 }

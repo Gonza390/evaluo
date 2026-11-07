@@ -8,6 +8,7 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 import { ENGLISH_PAGES, ENGLISH_PAGE_ORDER, type EnglishPageKey } from '@/lib/english-seo-content';
 import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
+import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 
 const slugs: Record<EnglishPageKey, string> = {
   home: 'English study resources',
@@ -27,6 +28,8 @@ function formatReviewed(iso: string) {
 
 export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
   const page = ENGLISH_PAGES[pageKey];
+  // Las páginas de producto muestran la herramienta en la primera pantalla; el hub de recursos no.
+  const showUploader = pageKey !== 'home';
   const otherPages = ENGLISH_PAGE_ORDER.filter((key) => key !== pageKey);
   const breadcrumbs = [{ name: 'English study guides', path: '/en/resources' }];
   if (pageKey !== 'home') breadcrumbs.push({ name: slugs[pageKey], path: page.path });
@@ -56,14 +59,15 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
 
       <main>
         <section className="border-b border-slate-100 bg-[linear-gradient(118deg,#F0F5FF_0%,#FFFFFF_72%)]">
-          <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
+          <div className={'mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20' + (showUploader ? ' grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center' : '')}>
+            <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
               <BookOpen className="h-4 w-4" aria-hidden="true" /> {page.eyebrow}
             </div>
             <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.5rem]">{page.headline}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{page.intro}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800">
+              <Link href={showUploader ? '#choose-file' : '/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1'} className={'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800' + (showUploader ? ' lg:hidden' : '')}>
                 Study with my PDF or Word <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <a href="#worked-example" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-blue-200">
@@ -80,6 +84,12 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
               <p className="mt-2 text-xs text-slate-500">
                 Published by Evaluo · Updated <time dateTime={page.reviewed}>{formatReviewed(page.reviewed)}</time>
               </p>
+            ) : null}
+            </div>
+            {showUploader ? (
+              <div id="choose-file" className="scroll-mt-24">
+                <PdfFirstLandingUploader trackingLocation={'seo_en_' + pageKey.replace(/-/g, '_') + '_hero'} sourceKey={'en-' + pageKey} locale="en" market="en" />
+              </div>
             ) : null}
           </div>
         </section>
