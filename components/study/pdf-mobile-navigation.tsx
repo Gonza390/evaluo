@@ -57,7 +57,7 @@ export function PdfMobileNavigation({
     <nav
       data-pdf-mobile-navigation
       aria-label={english ? 'Study tools for this document' : 'Herramientas de este PDF'}
-      className="border-border bg-card fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] md:hidden"
+      className="border-border bg-card fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden"
     >
       <div className={cn('grid gap-1', showProgress ? 'grid-cols-5' : 'grid-cols-4')}>
         {items.map(({ id, label, icon: Icon }) => (
