@@ -638,3 +638,35 @@
     animation: none;
   }
 }
+
+/* PDF study: the chapter index and the summary reader reveal the scrollbar
+   while scrolling, then return to a transparent thumb without changing layout.
+   Native wheel, touchpad, touch and keyboard scrolling remain available. */
+[data-pdf-auto-scrollbar] {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+[data-pdf-auto-scrollbar][data-pdf-scrollbar-scrolling='true'],
+[data-pdf-auto-scrollbar]:focus-visible {
+  scrollbar-color: rgb(100 116 139 / 0.65) transparent;
+}
+[data-pdf-auto-scrollbar]::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+[data-pdf-auto-scrollbar]::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-pdf-auto-scrollbar]::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: transparent;
+}
+[data-pdf-auto-scrollbar][data-pdf-scrollbar-scrolling='true']::-webkit-scrollbar-thumb,
+[data-pdf-auto-scrollbar]:focus-visible::-webkit-scrollbar-thumb {
+  background: rgb(100 116 139 / 0.65);
+}
+@media (forced-colors: active) {
+  [data-pdf-auto-scrollbar] {
+    scrollbar-color: auto;
+  }
+}
