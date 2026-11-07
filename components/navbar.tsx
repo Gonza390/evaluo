@@ -334,9 +334,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     className={`${collapsed ? "w-[224px]" : compact ? "w-[160px]" : "w-[224px]"} max-w-[calc(100vw-24px)] rounded-2xl border border-[#E7EBF4] bg-white p-2 shadow-[0_12px_32px_rgba(15,27,61,0.12)]`}
                   >
                     <div className="px-2 pb-3 pt-1">
-                      <p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{getUserName()}</p>
                       {user.email ? (
-                        <p className="mt-1 truncate text-[12px] text-[#7F8AA3]">{user.email}</p>
+                        <p className="truncate text-[12px] text-[#7F8AA3]">{user.email}</p>
                       ) : null}
                     </div>
                     <DropdownMenuItem asChild className="min-h-11 rounded-xl px-3 text-[14px] font-medium text-[#42506A] focus:bg-[#F5F7FB] focus:text-[#0F1B3D]">
