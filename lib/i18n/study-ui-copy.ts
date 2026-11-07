@@ -1,5 +1,17 @@
 /** UI strings for the study reader, practice, results and planner. Source text is never translated here. */
 export const STUDY_UI_ENGLISH: Record<string, string> = {
+  "Verdadero o falso": "True or false",
+  "Relacionar conceptos": "Match concepts",
+  "Completar frases": "Fill in the blanks",
+  "Casos prácticos": "Practical cases",
+  "Explicá con tus palabras": "Explain in your own words",
+  "Recordá conceptos con tarjetas.": "Recall concepts with flashcards.",
+  "Evaluá si una afirmación es correcta.": "Decide whether a statement is true.",
+  "Uní términos con sus definiciones.": "Match terms with their definitions.",
+  "Aplicá lo aprendido a situaciones.": "Apply what you learned to scenarios.",
+  "Combiná diferentes ejercicios.": "Combine different exercise types.",
+  "Practicá con tiempo y resultados.": "Practice with a timer and results.",
+  "Explicá un tema como en un oral.": "Explain a topic as in an oral exam.",
   "Reintentar": "Try again",
   "Procesar este PDF": "Process this file",
   "Guardado ·": "Saved ·",
