@@ -8,6 +8,7 @@ import {
   trackMaterialFeedbackPromptViewedAction,
 } from '@/app/dashboard/materiales/feedback';
 import { useToast } from '@/components/ui/use-toast';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 
 function getSessionKey(kind: 'dismissed' | 'viewed', materialId: string) {
@@ -37,6 +38,7 @@ function getNearEndTarget(panel: HTMLElement) {
 }
 
 export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
+  const english = useOptionalAppLocale() === 'en';
   const { toast } = useToast();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const mutationObserverRef = useRef<MutationObserver | null>(null);
@@ -172,14 +174,14 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
         source: 'contextual_prompt',
       });
       if (!result.success) {
-        toast({ description: result.message, variant: 'destructive' });
+        toast({ description: english ? 'We could not save your feedback. Please try again.' : result.message, variant: 'destructive' });
         return;
       }
       setSavedRating(rating);
-      toast({ description: result.message });
+      toast({ description: english ? 'Thanks. Your feedback was saved.' : result.message });
       window.setTimeout(close, 900);
     } catch {
-      toast({ description: 'No pudimos enviar tu opinión. Intentá nuevamente.', variant: 'destructive' });
+      toast({ description: english ? 'We could not send your feedback. Please try again.' : 'No pudimos enviar tu opinión. Intentá nuevamente.', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -190,21 +192,21 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
   return (
     <div
       role="dialog"
-      aria-label="Calificar material"
+      aria-label={english ? 'Rate this study material' : 'Calificar material'}
       className="fixed right-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] left-3 z-[60] rounded-[18px] border border-slate-200 bg-white p-3.5 shadow-[0_18px_50px_rgba(15,23,42,0.16)] sm:right-5 sm:bottom-5 sm:left-auto sm:w-[350px]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13.5px] font-semibold text-slate-950">¿Te ayudó este PDF?</p>
+          <p className="text-[13.5px] font-semibold text-slate-950">{english ? 'Did this PDF help you?' : '¿Te ayudó este PDF?'}</p>
           <p className="mt-1 text-[12px] leading-5 text-slate-500">
-            Tu respuesta nos ayuda a mejorar los próximos resúmenes.
+            {english ? 'Your feedback helps us improve future summaries.' : 'Tu respuesta nos ayuda a mejorar los próximos resúmenes.'}
           </p>
         </div>
         <button
           type="button"
           onClick={close}
           className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          aria-label="Cerrar"
+          aria-label={english ? 'Close' : 'Cerrar'}
         >
           <X className="h-4 w-4" />
         </button>
@@ -212,7 +214,7 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
 
       {savedRating ? (
         <div className="mt-3 rounded-[13px] bg-emerald-50 px-3 py-2 text-[12.5px] font-medium text-emerald-700">
-          Gracias. Tu opinión quedó guardada.
+          {english ? 'Thanks. Your feedback was saved.' : 'Gracias. Tu opinión quedó guardada.'}
         </div>
       ) : (
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -227,7 +229,7 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
             ) : (
               <ThumbsUp className="h-3.5 w-3.5" />
             )}
-            Sí, me ayudó
+            {english ? 'Yes, it helped' : 'Sí, me ayudó'}
           </button>
           <button
             type="button"
@@ -240,7 +242,7 @@ export function MaterialFeedbackPrompt({ materialId }: { materialId: string }) {
             ) : (
               <ThumbsDown className="h-3.5 w-3.5" />
             )}
-            No mucho
+            {english ? 'Not really' : 'No mucho'}
           </button>
         </div>
       )}
