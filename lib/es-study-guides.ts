@@ -16,6 +16,9 @@ export type StudyGuide = {
   pitfalls: Array<{ title: string; detail: string }>;
   review: string;
   faq: Array<{ q: string; a: string }>;
+  /** Fechas ISO de publicación y última revisión. Si faltan, se usa la publicación inicial (2026-10-29). */
+  published?: string;
+  updated?: string;
 };
 
 export const STUDY_GUIDES: StudyGuide[] = [
@@ -390,6 +393,82 @@ export const STUDY_GUIDES: StudyGuide[] = [
         "a": "Revisa la fidelidad del texto, tablas y símbolos extraídos antes de confiar en las preguntas. Consulta el archivo original cuando algo no coincida."
       }
     ]
+  },
+  {
+    "slug": "como-estudiar-con-ia",
+    "category": "Practicar y reforzar",
+    "title": "Cómo estudiar con IA para aprender más (y sin hacer trampa)",
+    "seoTitle": "Cómo estudiar con IA: método para aprender sin hacer trampa",
+    "description": "Cómo estudiar con inteligencia artificial: qué hace bien, dónde se equivoca, reglas de honestidad académica y un ejemplo para verificar respuestas.",
+    "audience": "Estudiantes de secundaria, universidad y formación profesional que quieren usar IA para preparar exámenes respetando las normas de su institución",
+    "question": "¿Cómo usar la IA para entender y recordar mejor, en lugar de que piense por ti?",
+    "opening": "La inteligencia artificial puede explicarte un concepto de cinco maneras distintas, preguntarte a medianoche y convertir un PDF largo en un plan de estudio. También puede darte una respuesta equivocada con total seguridad o hacer justo el trabajo mental que necesitabas practicar. La diferencia no está en la herramienta, sino en cómo la usas: como tutor que te pregunta y te corrige, o como atajo que te entrega respuestas que después no sabrás reproducir en el examen.",
+    "focus": "Usa la IA para practicar la recuperación de lo que estudiaste: que te haga preguntas sobre tu propio material, que te explique tus errores y que te ayude a decidir qué repasar. Lo que escribas, resuelvas o entregues tiene que seguir siendo tuyo.",
+    "steps": [
+      {
+        "title": "Parte de tu material, no de preguntas abiertas",
+        "detail": "Trabaja con el programa, los apuntes o la lectura obligatoria de tu asignatura. Las respuestas basadas en tu material son más fáciles de verificar y se parecen más a lo que te van a evaluar que las explicaciones genéricas sobre el tema."
+      },
+      {
+        "title": "Pídele que te pregunte, no que responda por ti",
+        "detail": "Intentar responder de memoria, lo que se conoce como práctica de recuperación, es una de las técnicas de estudio con más respaldo en la investigación. Pide preguntas, respóndelas sin mirar y solo después solicita la corrección."
+      },
+      {
+        "title": "Haz que te explique cada error",
+        "detail": "Cuando falles, pregunta por qué la respuesta correcta es correcta y por qué la tuya parecía razonable. Después vuelve al párrafo de tus apuntes donde está esa idea: la explicación de la IA es un apoyo, no la fuente."
+      },
+      {
+        "title": "Verifica todo lo que vayas a usar",
+        "detail": "Comprueba fórmulas, fechas, cifras, citas y referencias con el documento original. La IA puede inventar fuentes y mezclar conceptos parecidos con mucha seguridad, sobre todo en tablas, páginas escaneadas o temas muy específicos de tu curso."
+      },
+      {
+        "title": "Planifica y vuelve sobre lo difícil",
+        "detail": "Usa los resultados para elegir el próximo tema y repásalo días después con preguntas nuevas. Espaciar los repasos funciona mejor que concentrar todo el estudio la noche anterior."
+      }
+    ],
+    "exampleTitle": "Ejemplo: verificar una explicación de la IA sobre mitosis y meiosis",
+    "exampleContext": "Tus apuntes de Biología dicen que la mitosis produce dos células hijas genéticamente idénticas a la célula madre, mientras que la meiosis produce cuatro células con la mitad de cromosomas y genéticamente distintas entre sí. Le pides a una IA un resumen y responde: «La meiosis es la división que produce dos células idénticas para el crecimiento de los tejidos».",
+    "exampleTasks": [
+      "Compara la frase de la IA con la definición de tus apuntes y marca qué datos no coinciden: número de células, cantidad de cromosomas y si son idénticas o distintas.",
+      "Identifica el error: la IA describió la mitosis, no la meiosis. Corrige la frase con tus palabras sin volver a pedir ayuda.",
+      "Pídele a la IA dos preguntas que obliguen a distinguir ambos procesos (por ejemplo, cuál ocurre en la formación de gametos) y respóndelas de memoria."
+    ],
+    "exampleOutcome": "El error sonaba convincente porque usaba el vocabulario correcto. Contrastarlo con tu material lleva un minuto y además te deja una pregunta de examen bien resuelta.",
+    "pitfalls": [
+      {
+        "title": "Entregar como propio un trabajo generado por IA",
+        "detail": "Muchas escuelas y universidades lo consideran una falta de honestidad académica. Revisa la política de tu institución y de cada docente antes de usar IA en cualquier actividad evaluada."
+      },
+      {
+        "title": "Confundir una explicación clara con haber aprendido",
+        "detail": "Leer una buena explicación da sensación de dominio. Antes de dar un tema por estudiado, ponte a prueba sin mirar tus apuntes ni la conversación."
+      },
+      {
+        "title": "Estudiar lo que propone la IA en lugar del programa",
+        "detail": "La IA no sabe qué temas enfatizó tu docente ni cómo evalúa. Usa el programa y las devoluciones de exámenes anteriores para decidir qué practicar."
+      }
+    ],
+    "review": "Al terminar cada sesión, anota los dos o tres conceptos donde dudaste o fallaste. En la siguiente, empieza por preguntas nuevas sobre esos conceptos antes de avanzar con temas nuevos.",
+    "faq": [
+      {
+        "q": "¿Es trampa estudiar con inteligencia artificial?",
+        "a": "Usar IA para que te explique conceptos, te haga preguntas o te ayude a organizar el estudio suele considerarse parte de estudiar. Entregar respuestas o trabajos escritos por IA en actividades evaluadas puede infringir las normas de tu institución. Las políticas cambian según el centro y el docente, así que conviene revisarlas."
+      },
+      {
+        "q": "¿Cuál es la mejor forma de estudiar con IA?",
+        "a": "Como tutor y compañero de práctica: que te pregunte sobre tus propios apuntes, te explique los errores y te ayude a planificar repasos. El razonamiento, la redacción y las respuestas finales deben seguir siendo tuyos."
+      },
+      {
+        "q": "¿La IA se puede equivocar al explicar un tema?",
+        "a": "Sí. Puede afirmar datos falsos con seguridad, confundir conceptos relacionados e inventar fuentes. Verifica lo importante con tu material y con tu docente."
+      },
+      {
+        "q": "¿Qué es una plataforma de estudio con inteligencia artificial?",
+        "a": "Es una herramienta que usa IA para ayudarte a estudiar: explicar conceptos, resumir material, generar preguntas de práctica y mostrar qué te falta repasar. Evaluo, por ejemplo, trabaja a partir de tus propios PDF o documentos de Word y organiza el material por temas."
+      }
+    ],
+    "published": "2026-11-07",
+    "updated": "2026-11-07"
   },
   {
     "slug": "como-repasar-errores-despues-de-un-examen",
