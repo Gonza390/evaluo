@@ -411,8 +411,9 @@ export function StudentMaterialExam({
     setFinished(false);
   };
 
-  const startExam = async () => {
+  const startExam = async (sizeOverride?: number) => {
     if (preparing) return;
+    const practiceSize = sizeOverride ?? selectedSize ?? defaultSize;
     setPreparing(true);
     setTopicGenerationUnavailable(false);
     setFreeQuotaMessage('');
@@ -469,11 +470,11 @@ export function StudentMaterialExam({
       questions: freeStudyV2 && !simulation
         ? pool.filter(question => question.type === 'multiple_choice') : pool,
       preferredQuestionIds,
-      targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize :
+      targetCount: topicSectionIndex === undefined ? practiceSize || defaultSize :
         topicPracticeQuestionCount(pool.length),
       complete:
         topicSectionIndex === undefined &&
-        sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode ===
+        sizeOptions.find((option) => option.count === (practiceSize || defaultSize))?.mode ===
           'complete',
       sections,
       context,
@@ -755,7 +756,6 @@ export function StudentMaterialExam({
 
         <div data-onboarding-practice-options className="grid w-full max-w-[720px] grid-cols-3 gap-2 py-3 sm:gap-3 sm:py-4">
           {sizeOptions.map((option, index) => {
-            const selected = selectedSize === option.count;
             const Icon = index === 0 ? Sparkles : index === 1 ? Layers3 : BookOpenCheck;
             const tones = [
               'bg-[#F3F0FF] text-[#6452A8] border-[#E8E0FA]',
@@ -766,17 +766,17 @@ export function StudentMaterialExam({
               <button
                 key={option.count}
                 type="button"
-                aria-pressed={selected}
-                onClick={() => setSelectedSize(option.count)}
+                disabled={preparing}
+                onClick={() => { setSelectedSize(option.count); void startExam(option.count); }}
                 className={cn(
                   'group relative flex min-h-[116px] min-w-0 flex-col items-start rounded-[14px] border p-2.5 text-left transition-[border-color,box-shadow,transform] duration-150 sm:min-h-[138px] sm:p-3 active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 motion-reduce:transition-none motion-reduce:active:scale-100',
                   tones[index % tones.length],
-                  selected && 'border-blue-500 ring-2 ring-blue-500/65 ring-offset-2'
+                  preparing && 'cursor-wait opacity-70'
                 )}
               >
                 <div className="flex w-full items-start justify-between gap-1">
                   <Icon className="size-[17px] shrink-0 opacity-85" aria-hidden="true" />
-                  {selected ? <Check className="size-4 shrink-0 text-blue-600" aria-hidden="true" /> : null}
+
                 </div>
                 <div className="mt-auto min-w-0 pt-3 sm:pt-4">
                   <p className="break-words text-[12px] font-semibold leading-[1.4] sm:text-[14px] sm:leading-5">
@@ -806,17 +806,7 @@ export function StudentMaterialExam({
           {t("Llegaste al límite de preguntas nuevas del plan gratuito. Podés repasar las que ya desbloqueaste.")}
         </p>
       ) : null}
-      <div className="border-border flex justify-end border-t pt-5">
-          <Button
-            type="button"
-            disabled={preparing}
-            onClick={() => void startExam()}
-            className="h-11 rounded-lg px-5"
-          >
-            {t(preparing ? 'Preparando práctica…' : 'Empezar práctica')}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+
       </div>
     );
   }
