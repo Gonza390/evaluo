@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  alternates: hreflangAlternates('pricing', 'en'),
 };
 const freeFeatures = [
- '1 lifetime PDF or Word upload',
+ '1 PDF or Word upload per month',
  'Topic summaries and glossary',
  '12 multiple-choice and 10 true-or-false questions',
  '25 flashcards, 2 practical cases and 1 matching round',

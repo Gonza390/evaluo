@@ -87,7 +87,7 @@ const questions = [
   },
   {
     question: '¿Evaluo tiene una versión gratuita?',
-    answer: 'Sí. El plan Gratis permite comenzar sin tarjeta con un material PDF o Word de por vida, sujeto a límites de actividades. Premium permite subir hasta tres materiales PDF o Word nuevos por día y amplía las herramientas de práctica. Los cupos, precios y medios de pago vigentes se detallan en la página de planes.',
+    answer: 'Sí. El plan Gratis permite comenzar sin tarjeta con un material PDF o Word nuevo por mes, sujeto a límites de actividades. Premium permite subir hasta tres materiales PDF o Word nuevos por día y amplía las herramientas de práctica. Los cupos, precios y medios de pago vigentes se detallan en la página de planes.',
   },
   {
     question: '¿Sirve si mi universidad no está en Evaluo?',
@@ -298,12 +298,12 @@ export default function SobreEvaluoPage() {
           <div className="mx-auto max-w-[1240px] px-4 py-16 sm:px-8 sm:py-20 lg:px-10">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Empezá a tu ritmo</p>
             <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-[-0.035em] sm:text-4xl">Probá Evaluo gratis y ampliá cuando lo necesites.</h2>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-slate-700">El plan Gratis te permite conocer el recorrido con un material PDF o Word de por vida y cupos de actividades. Premium amplía la capacidad de estudio para quienes preparan más materiales.</p>
+            <p className="mt-4 max-w-3xl text-base leading-8 text-slate-700">El plan Gratis te permite conocer el recorrido con un material PDF o Word nuevo por mes y cupos de actividades. Premium amplía la capacidad de estudio para quienes preparan más materiales.</p>
             <div className="mt-9 grid gap-4 md:grid-cols-2">
               <article className="rounded-3xl border border-slate-200 bg-white p-7">
                 <span className="text-xs font-bold uppercase tracking-[0.15em] text-slate-500">Gratis</span>
                 <h3 className="mt-3 text-2xl font-bold">Empezá con tus apuntes</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">Un material PDF o Word gratis de por vida, con resúmenes, práctica y seguimiento sujetos a los límites del plan.</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">Un material PDF o Word gratis por mes, con resúmenes, práctica y seguimiento sujetos a los límites del plan.</p>
               </article>
               <article className="rounded-3xl border border-blue-200 bg-white p-7">
                 <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">Premium</span>

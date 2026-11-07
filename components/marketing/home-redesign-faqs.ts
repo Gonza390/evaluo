@@ -27,7 +27,7 @@ export const HOME_REDESIGN_FAQS = [
   {
     question: '¿Qué puedo probar gratis?',
     answer:
-      'Podés empezar sin tarjeta con 1 archivo PDF o Word gratis de por vida. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo no se renueva. También podés probar la demo sin crear una cuenta.',
+      'Podés empezar sin tarjeta con 1 archivo PDF o Word gratis por mes. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo se renueva el día 1 de cada mes. También podés probar la demo sin crear una cuenta.',
   },
   {
     question: '¿Qué cambia con Premium?',
@@ -65,7 +65,7 @@ export const HOME_REDESIGN_FAQS_EN = [
   },
   {
     "question": "What can I do for free?",
-    "answer": "You can upload one PDF or Word document for free per account. PDFs support up to 100 pages, Word documents up to 150,000 extracted characters, and files up to 20 MB. The free allowance does not renew. You can also explore a demo without signing up."
+    "answer": "You can upload one PDF or Word document for free each month. PDFs support up to 100 pages, Word documents up to 150,000 extracted characters, and files up to 20 MB. The free allowance renews on the 1st of each month. You can also explore a demo without signing up."
   },
   {
     "question": "What does Premium include?",

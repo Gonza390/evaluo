@@ -16,6 +16,9 @@ import {
     type StudentMaterialProcessingState,
 } from '@/app/dashboard/materiales/actions';
 import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
+import { FreeUploadLimitScreen } from '@/components/dashboard/free-upload-limit-screen';
+import { nextFreeUploadAt } from '@/lib/free-study-v2';
+import type { PremiumUpgrade } from '@/lib/premium-flow';
 import { saveStudentMaterialExamContextAction } from '@/app/dashboard/materiales/context-actions';
 import { savePdfFirstAcademicContextAction } from '@/app/dashboard/materiales/pdf-first-context-actions';
 import { loadDashboardAcademicOptionsAction } from '@/app/dashboard/materiales/academic-options-actions';
@@ -147,6 +150,8 @@ export function PdfFirstUploadShell({
   const [title, setTitle] = useState('');
   const [examDate, setExamDate] = useState(initialExamDate);
   const [uploading, setUploading] = useState(false);
+  // Límite Free verificado por el servidor: se muestra tras elegir el archivo.
+  const [uploadLimit, setUploadLimit] = useState<{ fileName: string; fileSize: number; href: string } | null>(null);
   const [processing, setProcessing] = useState<StudentMaterialProcessingState | null>(null);
   const [displayProgress, setDisplayProgress] = useState(0);
   const [universityId, setUniversityId] = useState(initialUniversidadId);
@@ -437,6 +442,13 @@ export function PdfFirstUploadShell({
     if (selectFile(selected)) setOpen(true);
   };
 
+  const showUploadLimit = (upgrade: PremiumUpgrade | undefined, activeFile: File) => {
+    if (upgrade?.reason !== 'material_upload') return false;
+    setUploadLimit({ fileName: activeFile.name, fileSize: activeFile.size, href: upgrade.href });
+    setOpen(false);
+    return true;
+  };
+
   const startProcessing = async (selectedFile?: File | null, selectedTitle?: string) => {
     const activeFile = selectedFile ?? file;
     const activeTitle =
@@ -466,6 +478,7 @@ export function PdfFirstUploadShell({
         size: activeFile.size,
       };
       const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata });
+      if (!prepared.success && showUploadLimit(prepared.upgrade, activeFile)) return;
       if (!prepared.success || !prepared.filePath || !prepared.token) {
         throw new Error(prepared.message);
       }
@@ -556,6 +569,10 @@ export function PdfFirstUploadShell({
         filePath: preparedFilePath,
       });
       if (!result.success || !result.materialId) {
+        if (!result.success && showUploadLimit(result.upgrade, activeFile)) {
+          await cancelPdfFirstUploadAction(preparedFilePath).catch(() => undefined);
+          return;
+        }
         if (result.errorCode === 'page_limit' && result.maxPages) {
           throw new Error(`Este PDF supera el límite de ${result.maxPages} páginas de tu plan.`);
         }
@@ -829,6 +846,16 @@ export function PdfFirstUploadShell({
       >
         {children}
       </div>
+
+      {uploadLimit ? (
+        <FreeUploadLimitScreen
+          fileName={uploadLimit.fileName}
+          fileSizeBytes={uploadLimit.fileSize}
+          premiumHref={uploadLimit.href}
+          nextAvailableAt={nextFreeUploadAt()}
+          onBack={() => { setUploadLimit(null); reset(); }}
+        />
+      ) : null}
 
       {open ? (
         <Dialog

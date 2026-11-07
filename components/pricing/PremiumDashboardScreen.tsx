@@ -25,7 +25,7 @@ const PREMIUM_EN: Record<string,string> = {
   "Llegá preparado": "Be exam-ready",
   "Organizá tu tiempo con planes de estudio y seguí tu progreso por tema.": "Organize your time with study plans and track topic progress.",
   "Materiales": "Materials",
-  "1 de por vida": "1 lifetime upload",
+  "1 por mes": "1 per month",
   "Hasta 3 nuevos por día": "Up to 3 new per day",
   "Resumen y glosario": "Summary and glossary",
   "Sí": "Yes",
@@ -126,7 +126,7 @@ const reasons = [
   { title: 'Llegá preparado', description: 'Organizá tu tiempo con planes de estudio y seguí tu progreso por tema.', icon: Flag, color: '#b86a0f', bg: '#fbf2e6' },
 ] as const;
 const comparison = [
-  ['Materiales', '1 de por vida', 'Hasta 3 nuevos por día'],
+  ['Materiales', '1 por mes', 'Hasta 3 nuevos por día'],
   ['Resumen y glosario', 'Sí', 'Sí'],
   ['Opción múltiple', '12 preguntas', 'Más preguntas'],
   ['Verdadero o falso', '10', 'Más ejercicios'],

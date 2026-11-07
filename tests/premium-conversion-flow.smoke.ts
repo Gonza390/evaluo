@@ -186,7 +186,7 @@ assert.match(quotaApi,/eq\('user_id',user\.id\)/);
 assert.match(quotaApi,/premiumUpgradeForLimit\(reason,\{materialId\}\)/);
 assert.match(quotaApi,/free_study_v2_unlocks/);
 assert.match(quotaApi,/free_study_v2_plan_claims/);
-assert.match(quotaApi,/free_study_v2_upload_claims/);
+assert.match(quotaApi,/free_study_v2_monthly_upload_claims[\s\S]*freeUploadPeriod\(\)/);
 assert.match(quotaApi,/Cache-Control': 'private, no-store/);
 assert.match(quotaApi,/quotas:null/);
 assert.match(quotaApi,/status:503/);
