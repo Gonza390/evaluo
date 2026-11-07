@@ -59,7 +59,7 @@ function topicStatus(topic: PdfProgressTopic, english = false) {
   if (topic.errors.some((error) => error.status === 'resolved'))
     return {
       label: topic.evidence.some((item) => item.correct > 0)
-        ? 'Repaso comprobado'
+        ? tr('Repaso comprobado','Review verified')
         : tr("Repasado","Reviewed"),
       Icon: CheckCircle2,
       style: 'bg-primary/10 text-primary',
@@ -409,10 +409,10 @@ export function PdfProgressPanel({
                   }
                 >
                   {currentTopic?.errors.some((error) => error.status === 'resolved')
-                    ? 'Volver a comprobar'
+                    ? tr('Volver a comprobar','Check again')
                     : currentTopic && topicAssessmentCount(currentTopic) > 0
-                      ? 'Comprobar lo aprendido'
-                      : 'Practicar este tema'}
+                      ? tr('Comprobar lo aprendido','Check what you learned')
+                      : tr('Practicar este tema','Practice this topic')}
                 </button>
               ) : onPractice ? (
                 <button
@@ -563,7 +563,7 @@ export function PdfProgressPanel({
                       ' xl:hidden'
                     }
                   >
-                    {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : 'Practicar este tema'}
+                    {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : tr('Practicar este tema','Practice this topic')}
                     <ArrowRight size={16} />
                   </button>
                 )}
