@@ -16,6 +16,9 @@ export const FREE_STUDY_V2 = Object.freeze({
   flashcards: 25,
   simulatorSessions: 1,
   simulatorQuestions: 20,
+  /** 1 ronda de Completar y 1 de Mixto por cuenta (Mixto no descuenta otros cupos). */
+  completeRounds: 1,
+  mixedRounds: 1,
   studyPlans: 1,
 });
 

@@ -153,3 +153,19 @@ console.log('Free v2 quotas, database protections and unrestricted corrections s
     'El límite de apuntes muestra la pantalla Premium, no un error genérico.');
   assert.match(shell, /<FreeUploadLimitScreen/);
 }
+
+// Completar y Mixto: 1 ronda gratis cada uno; Mixto no descuenta opción múltiple.
+{
+  assert.equal(FREE_STUDY_V2.completeRounds, 1);
+  assert.equal(FREE_STUDY_V2.mixedRounds, 1);
+  const rounds = read('supabase/migrations/20261107210000_free_study_v2_complete_mixed_rounds.sql');
+  assert.match(rounds, /when 'complete_round' then 1/);
+  assert.match(rounds, /when 'mixed_round' then 1/);
+  assert.match(rounds, /'simulator','complete_round','mixed_round'/);
+  const claim = read('app/api/free-study-v2/claim/route.ts');
+  assert.match(claim, /valid = itemKey === 'complete:first'/);
+  assert.match(claim, /valid = itemKey === 'mixed:first'/);
+  const modePage = read('app/(es)/dashboard/practicar/[id]/[mode]/page.tsx');
+  assert.doesNotMatch(modePage, /kind:'multiple_choice',\s*items:sourceQuestions, limit:FREE_STUDY_V2\.multipleChoice/,
+    'La ronda gratis de Mixto no debe gastar el cupo de opción múltiple.');
+}

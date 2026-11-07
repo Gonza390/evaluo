@@ -8,7 +8,7 @@ import { normalizedAnswer } from '@/lib/student-materials/practice-modes';
 
 export type FreeStudyUnlockKind =
   | 'multiple_choice' | 'true_false' | 'matching_round' | 'case'
-  | 'flashcard' | 'simulator';
+  | 'flashcard' | 'simulator' | 'complete_round' | 'mixed_round';
 
 export const FREE_STUDY_KIND_LIMIT: Record<FreeStudyUnlockKind, number> = {
   multiple_choice: FREE_STUDY_V2.multipleChoice,
@@ -17,6 +17,8 @@ export const FREE_STUDY_KIND_LIMIT: Record<FreeStudyUnlockKind, number> = {
   case: FREE_STUDY_V2.cases,
   flashcard: FREE_STUDY_V2.flashcards,
   simulator: FREE_STUDY_V2.simulatorSessions,
+  complete_round: FREE_STUDY_V2.completeRounds,
+  mixed_round: FREE_STUDY_V2.mixedRounds,
 };
 
 export type FreeStudyUnlockResult = {
