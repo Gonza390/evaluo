@@ -27,7 +27,6 @@ import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
 import { PomodoroHeader } from '@/components/dashboard/pomodoro-header';
 
@@ -243,9 +242,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const [firstPathname] = useState(pathname);
   const [hasNavigated, setHasNavigated] = useState(false);
   if (!hasNavigated && pathname !== firstPathname) setHasNavigated(true);
-  const { user, loading: userLoading, getUserInitials, getUserName } = useUser();
+  const { user, loading: userLoading, getUserInitials } = useUser();
   const { messages, locale } = useAppLocale();
-  const { profileSummary, streak } = useShellData();
+  const { streak } = useShellData();
   const streakDays = streak?.streakDays ?? 0;
   const streakDayKeys = streak?.streakDayKeys ?? [];
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -421,35 +420,12 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   </button>
                   <button
                     type="button"
+                    aria-label={locale === 'en' ? `View study streak: ${streakDays} days` : `Ver racha de estudio: ${streakDays} días`}
                     onClick={() => setShowStreakDialog(true)}
-                    className="hidden min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5 md:inline-flex"
+                    className="hidden min-h-10 items-center gap-1 rounded-lg px-2 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:inline-flex"
                   >
-                    <Avatar className={`flex h-8 w-8 shrink-0 ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}>
-                      <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                      {user.user_metadata?.avatar_url ? (
-                        <AvatarImage src={user.user_metadata.avatar_url} />
-                      ) : null}
-                    </Avatar>
-
-                    <div className="hidden min-w-0 flex-1 sm:block">
-                      <p className={`truncate font-semibold tracking-[-0.01em] text-slate-900 ${isCompactAppRoute ? 'text-[12.5px]' : 'text-[0.88rem]'}`}>
-                        {getUserName()}
-                      </p>
-                      <p className="mt-0.5 max-w-[250px] truncate text-[11px] text-slate-400">
-                        {profileSummary.carreraNombre && profileSummary.universidadNombre
-                          ? `${profileSummary.carreraNombre} | ${profileSummary.universidadNombre}`
-                          : profileSummary.carreraNombre ||
-                            profileSummary.universidadNombre ||
-                            (locale === 'en' ? 'Your profile' : 'Tu perfil')}
-                      </p>
-                    </div>
-
-                    <span className="inline-flex shrink-0 items-center gap-1 text-blue-600">
-                      <Flame className="h-4 w-4" />
-                      <span className="text-xs font-semibold">{streakDays}</span>
-                    </span>
+                    <Flame className="h-4 w-4" aria-hidden="true" />
+                    <span className="text-xs font-semibold">{streakDays}</span>
                   </button>
                 </div>
 
