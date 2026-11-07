@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 type UniversityShare = {
   name: string;
@@ -143,6 +144,7 @@ function getNextCount(current: number, target: number, dailyPeak: number) {
 }
 
 export function EstimatedStudyActivity({ compact = false }: { compact?: boolean } = {}) {
+  const english = useOptionalAppLocale() === 'en';
   const [count, setCount] = useState<number | null>(null);
   const [universities, setUniversities] = useState<UniversityCount[]>([]);
   const timerRef = useRef<number | null>(null);
@@ -202,13 +204,13 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
         <button
           type="button"
           className={`inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 font-semibold text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:border-emerald-300 hover:bg-emerald-50 ${compact ? 'h-9 px-3 text-[12px]' : 'h-10 px-3.5 text-sm'}`}
-          aria-label={`${count} estudiantes estudiando`}
+          aria-label={english ? `Estimated: ${count} studying` : `Estimación: ${count} estudiando`}
         >
           <span className="relative flex h-2.5 w-2.5 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-35" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
           </span>
-          <span className="tabular-nums">{count} Estudiando</span>
+          <span className="tabular-nums">{count} {english ? 'Studying' : 'Estudiando'}</span>
         </button>
       </DropdownMenuTrigger>
 
@@ -224,10 +226,10 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
             </span>
             <div>
               <p className="text-sm font-bold tracking-[-0.02em] text-slate-950">
-                {count} estudiantes estudiando ahora
+                {english ? `${count} estimated students studying` : `${count} estudiantes estimados estudiando`}
               </p>
               <p className="mt-0.5 text-xs leading-5 text-slate-500">
-                en distintas universidades
+                {english ? 'across different universities' : 'en distintas universidades'}
               </p>
             </div>
           </div>
@@ -243,7 +245,7 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-[11px] font-bold text-slate-400">
                   {index + 1}
                 </span>
-                <span className="truncate font-medium text-slate-700">{university.name}</span>
+                <span className="truncate font-medium text-slate-700">{english && university.name === 'Otras universidades' ? 'Other universities' : university.name}</span>
               </div>
               <span className="shrink-0 font-semibold tabular-nums text-slate-500">
                 {university.count}
@@ -255,7 +257,7 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
         <div className="border-t border-slate-100 px-4 py-3">
           <p className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Actualizado en vivo
+            {english ? 'Estimated activity · not a live count' : 'Actividad estimada · no es un conteo en vivo'}
           </p>
         </div>
       </DropdownMenuContent>
