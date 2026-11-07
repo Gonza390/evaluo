@@ -721,9 +721,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} {english ? 'remaining' : 'restantes'}
         </span> : <span>{answeredCount} {english ? 'of' : 'de'} {total} {english ? 'answered' : 'respondidas'}</span>}
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-blue-600 transition-all"
-          style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / total * 100) + '%' }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-label={english ? 'Practice progress' : 'Progreso de la práctica'}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round((mode === 'unir' ? answeredCount : step + 1) / Math.max(total, 1) * 100)}>
+        <div className="h-full rounded-full bg-blue-600 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / Math.max(total, 1) * 100) + '%' }} />
       </div>
       {mode === 'unir' ? <>
         <p className="mb-2 mt-6 text-xs font-medium text-slate-600">{english ? "First, choose a concept" : "Primero elegí un concepto"}</p>
