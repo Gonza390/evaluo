@@ -339,11 +339,19 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
               { href: '/en/pdf-to-flashcards', title: 'PDF to flashcards', detail: 'Review concepts with active recall.' },
               { href: '/en/study-pdf-with-ai', title: 'Study a PDF with AI', detail: 'Create summaries and practice topic by topic.' },
               { href: '/en/ai-true-false-questions', title: 'AI true/false questions', detail: 'Test your understanding with focused questions.' },
+              { href: '/en/ai-test-prep', title: 'AI test prep', detail: 'Build a mock exam from your own notes.' },
+              { href: '/en/ai-pdf-summarizer', title: 'AI PDF summarizer', detail: 'Get a summary and glossary for each topic.' },
+              { href: '/en/practice-by-topic', title: 'Practice by topic', detail: 'Answer questions chapter by chapter.' },
+              { href: '/en/match-concepts-with-ai', title: 'Match concepts with AI', detail: 'Practice how key terms relate to each other.' },
             ] : [
               { href: '/funciones/resumir-pdf-con-ia', title: t('Resumir PDF con IA'), detail: t('Identificá las ideas y los conceptos importantes.') },
               { href: '/estudiar-pdf-con-ia', title: t('Estudiar un PDF con IA'), detail: t('Uní resumen, flashcards y ejercicios; mapas mentales en Premium.') },
               { href: '/funciones/crear-mapa-mental-desde-pdf', title: t('Crear mapa mental desde PDF'), detail: t('Visualizá las relaciones entre temas y subtemas.') },
               { href: '/ia-para-estudiantes', title: t('IA para estudiantes'), detail: t('Elegí cómo usar IA para preparar parciales y finales.') },
+              { href: '/funciones/crear-flashcards-desde-pdf', title: t('Crear flashcards desde PDF'), detail: t('Convertí tus apuntes en tarjetas de repaso por tema.') },
+              { href: '/convertir-pdf-en-preguntas', title: t('Generar preguntas desde PDF'), detail: t('Practicá con preguntas de tu propio material.') },
+              { href: '/funciones/simulacro-examen-con-ia', title: t('Simulacro de examen con IA'), detail: t('Probá cómo te iría antes del parcial o el final.') },
+              { href: '/funciones/practicar-por-tema', title: t('Practicar por tema'), detail: t('Reforzá el capítulo que más te cuesta.') },
             ]).map((item) => (
               <a key={item.href} href={item.href} className="card" style={{ display: 'block', padding: '22px', textDecoration: 'none' }}>
                 <h3 style={{ fontSize: '17px', margin: 0, color: 'var(--t)' }}>{item.title} →</h3>

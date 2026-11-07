@@ -1332,3 +1332,8 @@ for (const [path, marker] of [
 ] as const) {
   assert.ok(source(path).includes(marker), path + ' must render the file picker in the hero');
 }
+
+/* La home enlaza desde el contenido (no solo el footer) a las landings de producto con más búsquedas. */
+for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-preguntas', '/funciones/simulacro-examen-con-ia', '/funciones/resumir-pdf-con-ia', '/en/pdf-to-flashcards', '/en/ai-test-prep']) {
+  assert.ok(source('components/marketing/home-redesign.tsx').includes(`href: '${href}'`), 'Home must link to ' + href);
+}
