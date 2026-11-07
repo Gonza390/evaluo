@@ -31,10 +31,7 @@ import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavL
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
-import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase-client';
-
-const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
 
 type NavbarProps = {
   collapsed: boolean;
@@ -329,25 +326,38 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                       </div>
                     ) : null}
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <LanguageMenuItem />
-                    <DropdownMenuItem asChild>
-                      <Link href="/configuracion" className="w-full text-sm">
-                        <Settings className="mr-2 h-4 w-4" />
+                  <DropdownMenuContent
+                    align="start"
+                    side="top"
+                    sideOffset={10}
+                    collisionPadding={12}
+                    className="w-[min(320px,calc(100vw-24px))] rounded-[20px] border border-[#E7EBF4] bg-white p-3 shadow-[0_12px_36px_rgba(15,27,61,0.12)]"
+                  >
+                    <div className="px-2 pb-3 pt-1">
+                      <p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{getUserName()}</p>
+                      {user.email ? (
+                        <p className="mt-1 truncate text-[12px] text-[#7F8AA3]">{user.email}</p>
+                      ) : null}
+                    </div>
+                    <DropdownMenuItem asChild className="min-h-11 rounded-xl px-3 text-[14px] font-medium text-[#42506A] focus:bg-[#F5F7FB] focus:text-[#0F1B3D]">
+                      <Link href="/configuracion" className="flex w-full items-center gap-3">
+                        <Settings className="!size-[18px] text-[#66758D]" aria-hidden="true" />
                         {messages.navigation.settings}
                       </Link>
                     </DropdownMenuItem>
+                    <div role="separator" className="my-2 h-px bg-[#E7EBF4]" />
                     <DropdownMenuItem
-                      className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
+                      className="min-h-11 gap-3 rounded-xl px-3 text-[14px] font-medium text-[#C65353] focus:bg-[#FFF4F4] focus:text-[#B93838]"
                       onClick={async () => {
                         const { error } = await supabase.auth.signOut();
                         if (error) {
                           logError('navbar.signOut', error, { userId: user.id });
+                          return;
                         }
                         window.location.assign(locale === 'en' ? '/en/login' : '/login');
                       }}
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <LogOut className="!size-[18px] text-current" aria-hidden="true" />
                       {messages.navigation.signOut}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
