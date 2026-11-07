@@ -164,7 +164,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
             </p>
             <p className="mt-4 text-sm text-[#7F8AA3]">Información revisada: 5 de noviembre de 2026 · Recurso independiente, no oficial de la USAC</p>
             <a href="https://sun.usac.edu.gt/index.php/proceso-de-ingreso/" target="_blank" rel="noopener noreferrer"
-              className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#2563EB] px-5 text-sm font-bold text-white hover:bg-[#1d4ed8]">
+              className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#456DBD] px-5 text-sm font-bold text-white hover:bg-[#3a5ca8]">
               Consultar ingreso oficial de la USAC <ExternalLink className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
@@ -320,7 +320,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
               Empezá gratis con tu material; corroborá las respuestas generadas con las guías oficiales de la USAC.
               Evaluo es independiente y no está afiliado ni respaldado por la universidad.
             </p>
-            <Link href="/estudiar-pdf-con-ia?source=usac_pcb_guide" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#2563EB] px-5 text-sm font-bold text-white hover:bg-[#1d4ed8]">
+            <Link href="/estudiar-pdf-con-ia?source=usac_pcb_guide" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#456DBD] px-5 text-sm font-bold text-white hover:bg-[#3a5ca8]">
               Estudiar con mis apuntes <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </section>

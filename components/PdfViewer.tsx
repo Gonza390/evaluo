@@ -767,7 +767,7 @@ export default function PdfViewer({
                                 destination: '/login?mode=signup',
                               })
                             }
-                            className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F46E5] px-6 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)] transition hover:opacity-95"
+                            className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#555CB1] px-6 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)] transition hover:opacity-95"
                           >
                             Crear cuenta y seguir leyendo
                           </Link>

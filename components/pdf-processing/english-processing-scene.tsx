@@ -37,17 +37,17 @@ export function EnglishProcessingScene({ scene, fileName }: { scene: number; fil
   return (
     <div data-processing-layout="english" data-pdf-processing-scene-content className="mx-auto grid w-full max-w-[800px] gap-4 lg:grid-cols-[1.15fr_1fr]">
       <section className="min-w-0 rounded-[20px] border border-[#dbe6f8] bg-[#f8faff] p-4 sm:p-6">
-        <p className="text-[10px] font-bold uppercase tracking-[.13em] text-[#0b63e5]">{example.label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[.13em] text-[#3c6cba]">{example.label}</p>
         <h2 className="mt-3 text-[20px] font-bold tracking-tight text-[#0f1623]">{example.heading}</h2>
         <p className="mt-3 text-[13px] leading-6 text-[#42506A]">{example.description}</p>
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#0b63e5]">
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#3c6cba]">
           {scene === 0 ? <Layers3 className="size-4"/> : scene === 1 ? <BookOpen className="size-4"/> : <CheckCircle2 className="size-4"/>}
           {example.cue} <ArrowRight className="size-3.5"/>
         </div>
         <div className="mt-3 space-y-2">
           {example.entries.map((entry, index) => (
             <div key={entry} className="flex items-start gap-2 rounded-xl border border-[#e3eaf5] bg-white px-3 py-2.5 text-[12px] leading-5 text-[#344054]">
-              <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[#eef4ff] text-[10px] font-bold text-[#0b63e5]">{index + 1}</span>
+              <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-[#eef4ff] text-[10px] font-bold text-[#3c6cba]">{index + 1}</span>
               <span>{entry}</span>
             </div>
           ))}
@@ -55,7 +55,7 @@ export function EnglishProcessingScene({ scene, fileName }: { scene: number; fil
       </section>
       <section className="flex min-w-0 flex-col rounded-[20px] border border-[#e3eaf5] bg-white p-4 sm:p-6">
         <div className="flex min-w-0 items-center gap-2">
-          <FileText className="size-5 shrink-0 text-[#0b63e5]" />
+          <FileText className="size-5 shrink-0 text-[#3c6cba]" />
           <span className="truncate text-[12px] font-semibold text-[#344054]" title={fileName}>{fileName}</span>
         </div>
         <div className="mt-5 flex min-h-[130px] flex-1 flex-col justify-center gap-3 rounded-xl bg-[#f8faff] p-5" aria-hidden="true">

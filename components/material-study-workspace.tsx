@@ -1904,7 +1904,7 @@ export function MaterialStudyWorkspace({
       <div className="border-border bg-card w-full max-w-xl overflow-hidden rounded-[1.75rem] border shadow-[0_30px_90px_rgba(15,23,42,0.2)]">
         <div className="bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_40%,#EEF4FF_100%)] px-5 py-5 sm:px-6">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-none">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#D9AA74] text-white shadow-none">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
             <div className="min-w-0">
@@ -1940,7 +1940,7 @@ export function MaterialStudyWorkspace({
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${
-                        isDone ? 'bg-emerald-500' : isActive ? 'bg-[#F59E0B]' : 'bg-slate-300'
+                        isDone ? 'bg-emerald-500' : isActive ? 'bg-[#D9AA74]' : 'bg-slate-300'
                       }`}
                     />
                     <span
@@ -1952,7 +1952,7 @@ export function MaterialStudyWorkspace({
                     </span>
                   </div>
                   {isActive ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#D9AA74]" />
                   ) : null}
                 </div>
               );

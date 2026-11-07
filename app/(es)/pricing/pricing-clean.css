@@ -122,10 +122,10 @@
 }
 
 /* ── /pricing rediseño (nov-2026) ─────────────────────────────────────────
-   Paleta suave aprobada en el diseño: un único acento índigo (#4A63E7) con
+   Paleta suave aprobada en el diseño: un único acento índigo (#576DC1) con
    tintes derivados. Las reglas de arriba no aplican a esta página. */
 .pricing-v2 {
-  --pv-accent: #4a63e7;
+  --pv-accent: #576dc1;
   --pv-tint: color-mix(in srgb, var(--pv-accent) 8%, white);
   --pv-card: color-mix(in srgb, var(--pv-accent) 4%, white);
   --pv-border: color-mix(in srgb, var(--pv-accent) 35%, white);

@@ -15,7 +15,7 @@ export function EmptyStudyPlan({ locale = 'es' }: { locale?: 'es' | 'en' } = {})
             <div className="min-w-0 flex-1">
               <h2 className="text-[16px] font-semibold leading-snug tracking-[-0.025em] text-[#0F1B3D] sm:text-[17px]">{english ? 'Your study plan starts with your first material' : 'Tu plan arranca con tu primer material'}</h2>
               <p className="mt-1 text-[12px] leading-[1.5] text-[#42506A]">{english ? 'Upload your material and Evaluo will organize your topics so you know what to study each day.' : 'Subí tu material y Evaluo ordena los temas por vos, para que sepas qué estudiar cada día.'}</p>
-              <Link href="/dashboard/materiales/subir" className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"><Upload className="size-4" aria-hidden="true"/>{english ? "Upload my material" : "Subir mi material"}</Link>
+              <Link href="/dashboard/materiales/subir" className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-[12px] font-medium text-white hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"><Upload className="size-4" aria-hidden="true"/>{english ? "Upload my material" : "Subir mi material"}</Link>
             </div>
           </section>
           <section aria-labelledby="plan-preview-title" className="min-w-0">
@@ -23,11 +23,11 @@ export function EmptyStudyPlan({ locale = 'es' }: { locale?: 'es' | 'en' } = {})
             <p className="mt-1 text-[12px] text-[#66758D]">{english ? 'Your topics, organized by date until your exam.' : 'Tus temas, ordenados por fecha hasta el examen.'}</p>
             <ol className="mt-4 space-y-2.5">
               {[1,2,3].map((i)=><li key={i} className="flex items-start gap-3">
-                <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${i===1?'border-[#2563EB] bg-white text-[#2563EB]':'border-dashed border-[#C9D8F1] text-[#7F8AA3]'}`}>{i}</span>
+                <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${i===1?'border-[#456DBD] bg-white text-[#456DBD]':'border-dashed border-[#C9D8F1] text-[#7F8AA3]'}`}>{i}</span>
                 <div className={`min-w-0 flex-1 rounded-2xl border border-[#E7EBF4] px-4 py-3 ${i===1?'bg-white':'bg-[#F9FAFC]'}`}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[12px] font-medium text-[#42506A]">{english ? 'Topic' : 'Tema'} {i}</span>
-                    {i===1&&<span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] text-[#2563EB]">{english ? 'First topic' : 'Primer tema'}</span>}
+                    {i===1&&<span className="rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[10px] text-[#456DBD]">{english ? 'First topic' : 'Primer tema'}</span>}
                   </div>
                   <div aria-hidden="true" className="mt-2 h-1.5 w-4/5 rounded-full bg-[#E7EBF4]"/>
                   <div aria-hidden="true" className="mt-1.5 h-1.5 w-1/2 rounded-full bg-[#EFF2F7]"/>
@@ -45,7 +45,7 @@ export function EmptyStudyPlan({ locale = 'es' }: { locale?: 'es' | 'en' } = {})
           <section aria-labelledby="empty-plan-next-title" className="px-1">
             <h2 id="empty-plan-next-title" className="text-[15px] font-medium tracking-tight">{english ? 'Your next step' : 'Tu próximo paso'}</h2>
             <ol className="mt-3 space-y-3">
-              {(english ? ['Upload your first material','Choose your exam date','Follow your plan day by day'] : ['Subí tu primer material','Elegí la fecha de tu examen','Seguí tu plan día a día']).map((label,i)=><li key={label} className="flex items-center gap-2.5 text-[12px] text-[#42506A]"><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium ${i===0?'bg-[#2563EB] text-white':'bg-[#EEF2F7] text-[#42506A]'}`}>{i+1}</span><span className={i===0?'font-semibold text-[#0F1B3D]':''}>{label}</span></li>)}
+              {(english ? ['Upload your first material','Choose your exam date','Follow your plan day by day'] : ['Subí tu primer material','Elegí la fecha de tu examen','Seguí tu plan día a día']).map((label,i)=><li key={label} className="flex items-center gap-2.5 text-[12px] text-[#42506A]"><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium ${i===0?'bg-[#456DBD] text-white':'bg-[#EEF2F7] text-[#42506A]'}`}>{i+1}</span><span className={i===0?'font-semibold text-[#0F1B3D]':''}>{label}</span></li>)}
             </ol>
           </section>
         </aside>

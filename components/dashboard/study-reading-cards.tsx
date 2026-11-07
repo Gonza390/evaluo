@@ -44,7 +44,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
         className="flex min-h-[82px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-3 shadow-[0_3px_14px_rgba(15,23,42,0.025)] transition hover:border-blue-200 hover:shadow-[0_6px_20px_rgba(15,23,42,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         aria-label={english ? `Study ${material.title}, ${percent}% reading progress` : `Estudiar ${material.title}, ${percent}% de avance de lectura`}>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">
-          <FileText aria-hidden="true" className="size-5 text-[#2563EB]" />
+          <FileText aria-hidden="true" className="size-5 text-[#456DBD]" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block line-clamp-2 break-words text-[12px] font-medium leading-5 text-slate-900 sm:text-[13px]">{material.title}</span>

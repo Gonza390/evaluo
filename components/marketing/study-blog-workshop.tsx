@@ -87,7 +87,7 @@ export function StudyBlogWorkshopView({
             </li>
           ))}
         </ol>
-        <p className="mt-7 border-l-[3px] border-[#4F5DFF] bg-[#F8FAFF] px-4 py-4 text-[15px] font-medium leading-8 text-slate-800">{workshop.walkthrough.outcome}</p>
+        <p className="mt-7 border-l-[3px] border-[#5D70C4] bg-[#F8FAFF] px-4 py-4 text-[15px] font-medium leading-8 text-slate-800">{workshop.walkthrough.outcome}</p>
         <ResourceTable data={workshop.secondTable} />
       </section>
 

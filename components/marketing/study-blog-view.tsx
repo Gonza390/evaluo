@@ -247,7 +247,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
 
         <div className="mx-auto grid max-w-[1080px] gap-12 px-4 py-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-16 lg:py-16">
           <article className="min-w-0">
-            <section className="border-l-4 border-[#4F5DFF] bg-[#F8FAFF] px-5 py-5">
+            <section className="border-l-4 border-[#5D70C4] bg-[#F8FAFF] px-5 py-5">
               <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-blue-700">{copy.takeaway}</h2>
               <p className="mt-2 text-base font-medium leading-8 text-[#0F1B3D]">{article.takeaway}</p>
             </section>

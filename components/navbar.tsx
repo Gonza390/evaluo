@@ -271,13 +271,13 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   title={collapsed ? messages.navigation.improvePlan : undefined}
                   aria-label={collapsed ? messages.navigation.improvePlan : undefined}
                   aria-current={isNavItemActive(pathname, '/dashboard/premium') ? 'page' : undefined}
-                  className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] ${
+                  className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4] ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center p-0'
                       : compact ? 'min-h-10 w-full gap-2 px-1.5 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4F5DFF] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#5D70C4] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
                     <TrendingUp className="h-4 w-4" aria-hidden="true" />
                   </span>
                   {!collapsed ? (

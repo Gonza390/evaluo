@@ -552,7 +552,7 @@ export default function MateriaList({
               onClick={() => setActiveTab('plan')}
               className={`relative rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 ${
                 activeTab === 'plan'
-                  ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#2563EB] sm:after:content-[""]'
+                  ? 'bg-[#EEF2FF] text-[#456DBD] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#456DBD] sm:after:content-[""]'
                   : 'text-slate-500 hover:bg-white hover:text-slate-700 sm:hover:bg-transparent'
               }`}
             >
@@ -562,7 +562,7 @@ export default function MateriaList({
               onClick={() => setActiveTab('informacion')}
               className={`relative rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 ${
                 activeTab === 'informacion'
-                  ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#2563EB] sm:after:content-[""]'
+                  ? 'bg-[#EEF2FF] text-[#456DBD] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#456DBD] sm:after:content-[""]'
                   : 'text-slate-500 hover:bg-white hover:text-slate-700 sm:hover:bg-transparent'
               }`}
             >
@@ -621,7 +621,7 @@ export default function MateriaList({
                           </div>
                           <div className="min-w-0">
                             <h3
-                              className={`text-[#152A63] ${
+                              className={`text-[#1D2D53] ${
                                 isLongTitle
                                   ? 'line-clamp-3 text-[15px] leading-5 font-semibold tracking-[-0.02em]'
                                   : 'line-clamp-2 text-[17px] leading-6 font-semibold tracking-[-0.03em]'
@@ -683,7 +683,7 @@ export default function MateriaList({
                       </div>
                       <div className="mt-auto pt-4">
                         <Link href={getMateriaRoute(materia.id, carreraId)}>
-                          <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E8EDF5] bg-white px-4 py-2.5 text-sm font-semibold text-[#2563EB] transition-colors duration-200 hover:border-[#93C5FD] hover:bg-white">
+                          <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E8EDF5] bg-white px-4 py-2.5 text-sm font-semibold text-[#456DBD] transition-colors duration-200 hover:border-[#9DC5F2] hover:bg-white">
                             <Play className="h-3.5 w-3.5" />
                             Ver materia
                           </button>
@@ -710,7 +710,7 @@ export default function MateriaList({
                 <button
                   type="button"
                   onClick={() => setVisibleCount((current) => current + MATERIAS_PAGE_SIZE)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#2563EB] transition hover:border-[#93C5FD] hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#456DBD] transition hover:border-[#9DC5F2] hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   Ver más materias ({materiasFiltradas.length - visibleMaterias.length})
                 </button>
@@ -797,7 +797,7 @@ export default function MateriaList({
 
                 <Link
                   href="/dashboard/materiales"
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#456DBD] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#3A5CA8]"
                 >
                   Subir mi PDF
                 </Link>
@@ -825,7 +825,7 @@ export default function MateriaList({
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-[12px] font-semibold tracking-[0.16em] text-[#456DBD] uppercase">
                             <Globe className="h-3.5 w-3.5" />
                             Compartido
                           </div>

@@ -161,8 +161,8 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
                   <svg width="124" height="124" viewBox="0 0 124 124">
                     <defs>
                       <linearGradient id="rg" x1="0" x2="1">
-                        <stop offset="0" stopColor="#2563EB"></stop>
-                        <stop offset="1" stopColor="#6366F1"></stop>
+                        <stop offset="0" stopColor="#456DBD"></stop>
+                        <stop offset="1" stopColor="#6972C8"></stop>
                       </linearGradient>
                     </defs>
                     <circle
@@ -238,7 +238,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
                     style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}
                   >
                     <b style={{ color: 'var(--t)' }}>{t("Posicionamiento")}</b>
-                    <span style={{ color: '#4338CA', fontWeight: '700' }}>{t("Reforzar · 55%")}</span>
+                    <span style={{ color: '#484E99', fontWeight: '700' }}>{t("Reforzar · 55%")}</span>
                   </div>
                   <div
                     style={{
@@ -263,7 +263,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
                     style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}
                   >
                     <b style={{ color: 'var(--t)' }}>{t("Mercado meta")}</b>
-                    <span style={{ color: '#B45309', fontWeight: '700' }}>{t("Flojo · 30%")}</span>
+                    <span style={{ color: '#AF571E', fontWeight: '700' }}>{t("Flojo · 30%")}</span>
                   </div>
                   <div
                     style={{
@@ -278,7 +278,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
                         width: '30%',
                         height: '100%',
                         borderRadius: '8px',
-                        background: '#D97706',
+                        background: '#C98145',
                       }}
                     ></div>
                   </div>
@@ -290,7 +290,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
                     padding: '10px 14px',
                     fontSize: '12px',
                     marginTop: '14px',
-                    color: '#4338CA',
+                    color: '#484E99',
                   }}
                 >
                   <b>{t("Plan de hoy:")}</b> {t("25 minutos en Mercado meta, directo en tus apuntes.")}
@@ -415,7 +415,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
         <div className="w">
           <div id="como-funciona" className="g2" style={{ alignItems: 'start' }}>
             <div>
-              <div className="eb l" style={{ color: '#A5B4FC' }}>
+              <div className="eb l" style={{ color: '#A9B5F0' }}>
                 {t("Demo interactiva")}
               </div>
               <h2>{t("Si te equivocás, volvés a tu material.")}</h2>
@@ -648,7 +648,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
             width={150}
             height={150}
           />
-          <div className="eb" style={{ justifyContent: 'center', color: '#A5B4FC' }}>
+          <div className="eb" style={{ justifyContent: 'center', color: '#A9B5F0' }}>
             {t("Comenzá hoy mismo")}
           </div>
           <h2 style={{ color: '#fff', maxWidth: '660px', margin: '0 auto', fontSize: '42px' }}>
@@ -665,7 +665,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
             {t("Subir mis apuntes")} <span aria-hidden="true">→</span>
           </HomePdfPickerButton>
           <RegionalPricingMessage placement="home-footer" locale={locale} />
-          <div style={{ fontSize: '13px', color: '#A5B4FC', marginTop: '18px' }}>
+          <div style={{ fontSize: '13px', color: '#A9B5F0', marginTop: '18px' }}>
             {t("Nuestra meta: ayudar a aprobar 10.000 exámenes.")}
           </div>
         </div>

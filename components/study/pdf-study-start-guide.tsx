@@ -43,7 +43,7 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, resources, onStart, 
             <p className="text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
               {t("Tu guía de estudio")}
             </p>
-            <button type="button" onClick={onDismiss} aria-label="Cerrar guía y volver al resumen" className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
+            <button type="button" onClick={onDismiss} aria-label="Cerrar guía y volver al resumen" className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4]">
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
