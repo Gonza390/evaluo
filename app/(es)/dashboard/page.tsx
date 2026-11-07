@@ -8,6 +8,7 @@ import { LazyAcademicProfileReminder } from '@/components/dashboard/lazy-academi
 import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { MaterialCatalogSeed } from '@/components/materials/material-catalog-provider';
 import { getPendingStudyErrorTopicCount } from '@/lib/study-errors';
 import { getDashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { createClientServer } from '@/lib/supabase-server';
@@ -136,6 +137,7 @@ export default async function DashboardPage({
       <div className={materials.length === 0
         ? 'animate-page-enter flex h-full min-h-0 flex-col bg-white px-3 py-2 sm:px-4 sm:py-3 lg:px-6'
         : 'animate-page-enter min-h-screen bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5'}>
+        <MaterialCatalogSeed materials={materials.filter(item => item.processing_status === 'ready').map(item => ({ id: item.id, title: item.title }))} />
         <ReferralPortalDashboardShortcut />
         <div className={materials.length === 0
           ? 'mx-auto flex min-h-0 w-full max-w-[1240px] flex-1 flex-col'
