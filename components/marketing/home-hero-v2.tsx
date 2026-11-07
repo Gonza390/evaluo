@@ -42,7 +42,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
     <>
       <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-          <div className="animate-surface-reveal">
+          <div>
             <PublicSiteHeader primaryHref={primaryHref} trackingLocation="home_header" />
           </div>
         </div>

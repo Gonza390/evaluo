@@ -3,22 +3,38 @@
 @import './tonalidad.css';
 @source '../components/preview';
 
-/* Evaluo motion system: subtle, composited effects for private app screens. */
+/* Sistema de movimiento de Evaluo: UN solo efecto de transición en toda la plataforma.
+   Entrar = fundido + subir 6px (200ms). Salir = fundido + subir 4px (150ms). Misma curva siempre.
+   - Cambio de ruta: lo aplica el contenedor de ClientLayoutClient ([data-evaluo-route-enter]),
+     solo en navegación (no en la primera carga, para no retrasar el LCP).
+   - Pasos dentro de una pantalla (práctica, procesamiento, asistentes, pestañas): .evaluo-enter / .evaluo-exit
+     (o sus alias existentes, que apuntan a los mismos keyframes).
+   - Modales y menús: mismas duraciones vía clases de tw-animate en components/ui.
+   Las pantallas no agregan su propia animación de entrada: así nunca se apilan dos efectos.
+   Se usa fill-mode "backwards" al entrar para no dejar un transform aplicado (rompería position: fixed). */
 :root {
   --evaluo-motion-fast: 140ms;
   --evaluo-motion-normal: 190ms;
+  --evaluo-motion-enter: 200ms;
+  --evaluo-motion-exit: 150ms;
   --evaluo-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --evaluo-motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
 }
-@keyframes evaluo-route-enter {
-  from { opacity: 0.55; }
-  to { opacity: 1; }
+@keyframes evaluo-enter {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
 }
-@keyframes evaluo-surface-enter {
-  from { opacity: 0; transform: translate3d(0, 5px, 0) scale(0.99); }
-  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+@keyframes evaluo-exit {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate3d(0, -4px, 0); }
 }
-[data-evaluo-route-enter] {
-  animation: evaluo-route-enter 170ms var(--evaluo-motion-ease) both;
+[data-evaluo-route-enter],
+.evaluo-enter {
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
+}
+.evaluo-exit {
+  animation: evaluo-exit var(--evaluo-motion-exit) var(--evaluo-motion-ease-exit) forwards;
+  pointer-events: none;
 }
 [data-evaluo-motion-card] {
   transition: transform var(--evaluo-motion-fast) var(--evaluo-motion-ease),
@@ -68,7 +84,7 @@
               backdrop-filter var(--evaluo-motion-normal) ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-evaluo-route-enter], [data-evaluo-motion-card],
+  [data-evaluo-route-enter], .evaluo-enter, .evaluo-exit, [data-evaluo-motion-card],
   [data-evaluo-mobile-nav-item], [data-evaluo-mobile-nav-item]::after,
   [data-evaluo-sidebar-indicator], [data-slot='dialog-overlay'],
   [data-slot='drawer-overlay'] {
@@ -306,17 +322,6 @@
   }
 }
 
-@keyframes studyReveal {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes studyPulseRing {
   0%,
   100% {
@@ -325,22 +330,6 @@
   50% {
     box-shadow: 0 0 0 10px rgba(79, 93, 255, 0);
   }
-}
-
-@keyframes saasLiftIn {
-  0% {
-    opacity: 0;
-    transform: translateY(18px) scale(0.985);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes evaluo-study-tab-enter {
-  from { opacity: 0.65; transform: translate3d(0, 3px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes saasGlow {
@@ -430,16 +419,8 @@
     animation: studyCardFloat 4.6s ease-in-out infinite;
   }
 
-  .animate-study-reveal {
-    animation: studyReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
   .animate-study-focus {
     animation: studyPulseRing 2.8s ease-in-out infinite;
-  }
-
-  .animate-saas-lift-in {
-    animation: saasLiftIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .animate-saas-glow {
@@ -457,12 +438,8 @@
   }
 
   .animate-tab-panel {
-    /* Tabs should respond immediately, without a large layout-shifting entrance. */
-    animation: evaluo-study-tab-enter 150ms var(--evaluo-motion-ease) both;
-  }
-
-  .animate-surface-reveal {
-    animation: saasLiftIn 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+    /* Pestañas: el mismo efecto único de la plataforma. */
+    animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
   }
 
   .animate-progress-sheen::after {

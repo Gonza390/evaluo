@@ -138,7 +138,7 @@ const secondaryButton =
 
 function PremiumShell({ children }: { children: ReactNode }) {
   return (
-    <div className="pv-rise pv-premium-shadow flex w-full max-w-[460px] min-w-0 flex-col gap-[22px] rounded-[22px] border-[1.5px] border-[var(--pv-border)] bg-[var(--pv-card)] p-6 text-slate-950 sm:rounded-[24px] sm:p-8">
+    <div className="pv-premium-shadow flex w-full max-w-[460px] min-w-0 flex-col gap-[22px] rounded-[22px] border-[1.5px] border-[var(--pv-border)] bg-[var(--pv-card)] p-6 text-slate-950 sm:rounded-[24px] sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-extrabold">Premium</h2>
         <span className="rounded-full bg-[var(--pv-tint)] px-2.5 py-1 text-xs font-bold whitespace-nowrap text-[var(--pv-accent)]">
@@ -152,7 +152,7 @@ function PremiumShell({ children }: { children: ReactNode }) {
 
 function FreeCard({ market }: { market: Market | 'unknown' }) {
   return (
-    <div className="pv-rise-2 flex w-full max-w-[460px] min-w-0 flex-col gap-4 rounded-[22px] border border-slate-200 bg-white p-6 sm:max-w-[340px] sm:gap-[22px] sm:rounded-[24px] sm:p-8">
+    <div className="flex w-full max-w-[460px] min-w-0 flex-col gap-4 rounded-[22px] border border-slate-200 bg-white p-6 sm:max-w-[340px] sm:gap-[22px] sm:rounded-[24px] sm:p-8">
       <div className="flex items-baseline justify-between sm:flex-col sm:gap-[22px]">
         <h2 className="text-lg font-extrabold sm:text-xl">Gratis</h2>
         <p className="text-[28px] font-extrabold tracking-tight sm:text-5xl">

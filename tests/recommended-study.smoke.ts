@@ -459,8 +459,8 @@ assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegaci�
 assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La animación debe respetar las preferencias de accesibilidad.');
 assert.match(materialWorkspaceSource, /data-onboarding-transitioning/, 'El contenido debe suavizar el cambio de etapa.');
 const materialStudyCss = readFileSync('app/(es)/materiales/[id]/material-study.css', 'utf8');
-assert.match(materialStudyCss, /evaluo-onboarding-copy-appear/, 'El cambio de texto debe ser suave.');
-assert.match(materialStudyCss, /260ms cubic-bezier/, 'La copia debe aparecer con una transición suave.');
+assert.match(materialStudyCss, /\[data-guide-copy\] \{\n  animation: evaluo-enter var\(--evaluo-motion-enter\)/,
+  'El cambio de texto usa la transición única de la plataforma.');
 assert.match(materialStudyCss, /prefers-reduced-motion: reduce/, 'La animación de la guía debe desactivarse cuando corresponda.');
 assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');

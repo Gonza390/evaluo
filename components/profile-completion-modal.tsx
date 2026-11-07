@@ -132,7 +132,6 @@ export function ProfileCompletionModal({
 
   /* ---- Step state ---- */
   const [step, setStep] = useState(1);
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
 
   /* ---- Step 1-2: University & career ---- */
   const [universidadId, setUniversidadId] = useState('');
@@ -451,18 +450,13 @@ export function ProfileCompletionModal({
   /*  Navigation helpers                                               */
   /* ================================================================ */
 
-  const goToStep = useCallback(
-    (target: number) => {
-      setSlideDirection(target > step ? 'right' : 'left');
-      setStep(target);
-    },
-    [step]
-  );
+  const goToStep = useCallback((target: number) => {
+    setStep(target);
+  }, []);
 
   const goNext = useCallback(() => {
     setStep((prev) => {
       if (prev < TOTAL_STEPS) {
-        setSlideDirection('right');
         return prev + 1;
       }
       return prev;
@@ -472,7 +466,6 @@ export function ProfileCompletionModal({
   const goBack = useCallback(() => {
     setStep((prev) => {
       if (prev > 1) {
-        setSlideDirection('left');
         return prev - 1;
       }
       return prev;
@@ -659,17 +652,9 @@ export function ProfileCompletionModal({
           </div>
         </div>
 
-        {/* ---- Step content with slide animation ---- */}
+        {/* ---- Contenido del paso: efecto único de la plataforma ---- */}
         <div className="relative overflow-hidden">
-          <div
-            key={step}
-            className={cn(
-              'animate-in fade-in-0 duration-300',
-              slideDirection === 'right'
-                ? 'slide-in-from-right-8'
-                : 'slide-in-from-left-8'
-            )}
-          >
+          <div key={step} className="evaluo-enter">
             {/* ====== STEP 1: University ====== */}
             {step === 1 && (
               <div className="px-5 py-5 sm:px-8 sm:py-7">

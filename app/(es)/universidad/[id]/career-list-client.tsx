@@ -115,7 +115,7 @@ export default function CareerListClient({
 
   return (
     <div className="animate-tab-panel pt-6 sm:pt-7">
-      <div className="animate-surface-reveal flex flex-col gap-4 sm:gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4 sm:gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="section-title leading-none text-[#10214C]">
             Todas las carreras
@@ -148,7 +148,7 @@ export default function CareerListClient({
               <Link
                 key={carrera.id}
                 href={`/materias?carreraId=${carrera.id}`}
-                className="surface-card group animate-surface-reveal p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
+                className="surface-card group p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
                 style={{ animationDelay: `${index * 90}ms` }}
               >
                 <div className="flex flex-col items-center gap-4">

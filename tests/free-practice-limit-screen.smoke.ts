@@ -24,8 +24,8 @@ assert.match(screen, /onClick=\{event => onLinkClick\(event, premiumHref\)\}/,
   'Premium navigation must play the exit transition');
 assert.match(screen, /transitionOut\(onBack\)/, 'Returning to the original topic must animate too');
 const motion = read('components/dashboard/practice-motion.css');
-assert.match(motion, /practice-screen-arrive 280ms/);
-assert.match(motion, /practice-screen-depart 200ms/);
+assert.match(motion, /\.practice-screen-enter[^{]*\{animation:evaluo-enter var\(--evaluo-motion-enter\)/);
+assert.match(motion, /\.practice-screen-leave\{animation:evaluo-exit var\(--evaluo-motion-exit\)/);
 assert.match(motion, /prefers-reduced-motion:reduce/, 'Respect reduced motion preferences');
 
 assert.match(screen, /fixed inset-0.*h-dvh/);

@@ -86,15 +86,15 @@ export default async function PricingPage({
         </div>
 
         <section className="mx-auto flex max-w-[760px] flex-col items-center gap-3.5 px-5 pt-8 pb-7 text-center sm:gap-[18px] sm:px-6 sm:pt-14 sm:pb-10">
-          <h1 className="pv-rise text-[34px] leading-[1.08] font-extrabold tracking-[-1.2px] sm:text-[52px] sm:leading-[1.06] sm:tracking-[-2px]">
+          <h1 className="text-[34px] leading-[1.08] font-extrabold tracking-[-1.2px] sm:text-[52px] sm:leading-[1.06] sm:tracking-[-2px]">
             Llegá a cada examen sabiendo que estás listo.
           </h1>
-          <p className="pv-rise max-w-[540px] text-base leading-relaxed text-slate-600 sm:text-lg">
+          <p className="max-w-[540px] text-base leading-relaxed text-slate-600 sm:text-lg">
             Con Gratis sabés dónde estás parado. Con Premium practicás lo que te falta hasta llegar.
           </p>
 
           <div
-            className="pv-rise-2 mt-1.5 flex w-full max-w-[420px] flex-col gap-2.5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-left sm:mt-2"
+            className="mt-1.5 flex w-full max-w-[420px] flex-col gap-2.5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-left sm:mt-2"
             aria-label="Ejemplo de nivel de preparación: 62% en Marketing I, Parcial 1"
           >
             <div className="flex justify-between text-[13px]">
