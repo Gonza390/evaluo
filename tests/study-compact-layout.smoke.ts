@@ -137,6 +137,20 @@ assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scro
   'Los estilos vuelven a mostrar el thumb durante el scroll.');
 assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]:focus-visible/,
   'Navegación por teclado mantiene visible la barra al enfocar el lector.');
+assert.match(globalStyles, /@supports selector\(::-webkit-scrollbar\)/,
+  'Chrome y Safari necesitan reglas separadas de las propiedades estándar.');
+assert.match(globalStyles, /scrollbar-width: auto;\s*scrollbar-color: auto;/,
+  'Restaurar los valores auto en Chromium permite dibujar el thumb personalizado.');
+assert.match(globalStyles, /::-webkit-scrollbar-thumb\s*\{\s*border-radius: 999px;\s*background-color: transparent;/,
+  'El thumb de Chrome debe permanecer completamente transparente cuando no hay scroll.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\]::-webkit-scrollbar-thumb/,
+  'El thumb de Chrome vuelve a mostrarse al detectar desplazamiento.');
+assert.match(globalStyles, /::-webkit-scrollbar-button\s*\{\s*display: none;/,
+  'Eliminar las flechas nativas de Windows que seguían visibles en la captura.');
+assert.match(globalStyles, /scrollbar-gutter: stable;/,
+  'Mostrar y ocultar el thumb sin desplazar el texto.');
+assert.doesNotMatch(workspace, /\[scrollbar-width:thin\]|\[scrollbar-gutter:stable\]/,
+  'Evitar propiedades Tailwind sobre las reglas personalizadas de Chrome.');
 assert.match(globalStyles, /@media \(forced-colors: active\)/,
   'El scrollbar permanece perceptible en modo de alto contraste.');
 assert.match(workspace, /min-h-0 flex-1 overflow-y-auto overscroll-contain/,
