@@ -43,10 +43,20 @@ assert.match(css, /prefers-reduced-motion: reduce/);
 assert.match(css, /\.pricing-editorial:not\(:has\(\.pricing-v2\)\)/);
 assert.match(page, /className="pricing-v2 /);
 
-// Color aprobado en el diseño y misma pantalla en "Mejorar mi plan" (/dashboard/premium).
+// Color aprobado en el diseño. "Mejorar mi plan" (/dashboard/premium) tiene su propia
+// pantalla con precio por semana (7/11), con el mismo acento y la misma lógica de cobro.
 assert.match(css, /--pv-accent: #4a63e7;/);
 assert.match(content, /import '\.\/pricing-v2\.css'/);
-assert.match(premiumPage, /<PricingContent source=\{source\}/);
+assert.match(premiumPage, /<UpgradeScreen locale=\{uiLocale\} source=\{source\}/);
+const upgrade = read('components/pricing/UpgradeScreen.tsx');
+assert.match(upgrade, /import '\.\/pricing-v2\.css'/);
+assert.match(upgrade, /useMercadoPagoCheckout\(/);
+assert.match(upgrade, /useCreemCheckout\(/);
+// El cobro mensual siempre visible: en la nota del plan y en el botón.
+assert.match(upgrade, /'Seguir con Premium'\} · \$\{price\}/);
+assert.match(upgrade, /'Seguir con Premium'\} · \$\{monthly\}/);
+assert.match(upgrade, /\(monthly \* 12\) \/ 52/);
+assert.match(upgrade, /total \/ 26/);
 
 console.log(
   'Pricing redesign: monthly default, no dead buttons, fail-closed region and motion checks passed.'
