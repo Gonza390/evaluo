@@ -26,6 +26,7 @@ import { shiftDayKey } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { PremiumStatusProvider } from '@/components/premium/premium-status-provider';
+import { MaterialCatalogProvider } from '@/components/materials/material-catalog-provider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
 import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
@@ -230,9 +231,11 @@ export default function ClientLayoutClient({
     <UserProvider initialUser={initialUser}>
       <AppLocaleProvider>
         <PremiumStatusProvider>
-          <ShellDataProvider initialProfileSummary={initialProfileSummary}>
-            <ClientLayoutInner>{children}</ClientLayoutInner>
-          </ShellDataProvider>
+          <MaterialCatalogProvider>
+            <ShellDataProvider initialProfileSummary={initialProfileSummary}>
+              <ClientLayoutInner>{children}</ClientLayoutInner>
+            </ShellDataProvider>
+          </MaterialCatalogProvider>
         </PremiumStatusProvider>
         <Toaster />
       </AppLocaleProvider>
