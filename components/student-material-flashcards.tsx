@@ -494,7 +494,7 @@ export function StudentMaterialFlashcards({
       <div className="border-border bg-muted rounded-xl border px-4 py-5 text-center">
         <p className="text-foreground font-medium">{english ? 'Not enough concepts found' : 'No encontramos conceptos suficientes'}</p>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-6">
-          Regenerá el resumen y el glosario para intentar construir tarjetas útiles.
+          {english ? 'Regenerate the summary and glossary to create useful flashcards.' : 'Regenerá el resumen y el glosario para intentar construir tarjetas útiles.'}
         </p>
       </div>
     );
@@ -507,13 +507,13 @@ export function StudentMaterialFlashcards({
           <RotateCcw className="h-5 w-5" />
         </div>
         <h3 className="text-foreground mt-2 text-[18px] font-medium tracking-[-0.04em]">
-          Listo para aprender con flashcards
+          {english ? 'Ready to learn with flashcards' : 'Listo para aprender con flashcards'}
         </h3>
         <p className="text-muted-foreground mx-auto mt-1.5 max-w-lg text-[13px] leading-5">
           {english ? `Practice ${scopedIndices.length} concepts ${allowedCardIndices ? 'from this topic' : 'from the PDF'} using active recall. Try to answer before flipping each card.` : `Vas a practicar ${scopedIndices.length} conceptos ${allowedCardIndices ? 'de este tema' : 'del PDF'} con recuperación activa. Intentá responder antes de voltear cada tarjeta.`}
         </p>
         <Button type="button" onClick={startSession} className="mt-4 min-h-11 rounded-lg px-4 text-[13px]">
-          Comenzar repaso
+          {english ? 'Start review' : 'Comenzar repaso'}
         </Button>
       </div>
     );
