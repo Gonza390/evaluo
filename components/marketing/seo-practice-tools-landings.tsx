@@ -328,8 +328,8 @@ const relatedNeutral = [
 function Landing({ page }: { page: PageContent }) {
   const neutral = page.register === 'neutral';
   const t = neutral
-    ? { method: '02 / Elige el método', sourceNote: 'Tus preguntas se basan en tu propio material; comprueba siempre la información importante con la fuente original.', relatedCta: 'Ver más' }
-    : { method: '02 / Elegí el método', sourceNote: 'Tus preguntas se basan en tu propio material; comprobá siempre la información importante con la fuente original.', relatedCta: 'Conocer la herramienta' };
+    ? { method: '02 / Elige el método', sourceNote: 'Todo se genera a partir de tu propio material; comprueba siempre la información importante con la fuente original.', relatedCta: 'Ver más', exampleKicker: 'Ejemplo de resultado' }
+    : { method: '02 / Elegí el método', sourceNote: 'Todo se genera a partir de tu propio material; comprobá siempre la información importante con la fuente original.', relatedCta: 'Conocer la herramienta', exampleKicker: 'Ejemplo de resultado' };
   const relatedLinks = neutral ? relatedNeutral : related;
   return (
     <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
@@ -367,7 +367,7 @@ function Landing({ page }: { page: PageContent }) {
                   href="#elegir-pdf"
                   eventName="cta_click"
                   payload={{ location: page.tracking + '_hero', cta_name: 'elegir_pdf', destination: '#elegir-pdf' }}
-                  className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl lg:hidden bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   <UploadCloud className="h-4 w-4" aria-hidden="true" />{page.ctaLabel}<ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </TrackedLink>
@@ -376,6 +376,20 @@ function Landing({ page }: { page: PageContent }) {
               <ul className="mt-8 grid gap-2 border-t border-slate-200 pt-6 text-xs font-semibold text-slate-600 sm:grid-cols-2">
                 {page.heroFacts.map((fact) => <li key={fact} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />{fact}</li>)}
               </ul>
+            </div>
+            <div id="elegir-pdf" className="scroll-mt-24">
+              <PdfFirstLandingUploader trackingLocation={page.tracking} sourceKey={page.source} locale={neutral ? 'neutral' : undefined} />
+              <p className="mt-4 text-xs leading-6 text-slate-500"><BookOpen className="mr-2 inline h-4 w-4 text-blue-700" aria-hidden="true" />{t.sourceNote}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-b border-slate-100 bg-slate-50/50 py-16 sm:py-20" aria-labelledby="ejemplo-resultado">
+          <div className="mx-auto grid max-w-[1120px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{t.exampleKicker}</span>
+              <h2 id="ejemplo-resultado" className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{page.uploaderTitle}</h2>
+              <p className="mt-4 text-base leading-8 text-slate-600">{page.uploaderDescription}</p>
             </div>
             <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_25px_60px_rgba(15,23,42,0.09)] sm:p-7">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
@@ -433,21 +447,9 @@ function Landing({ page }: { page: PageContent }) {
           </div>
         </section>
 
-        <section id="elegir-pdf" className="scroll-mt-24 border-b border-slate-100 bg-slate-50/50 py-16 sm:py-20">
-          <div className="mx-auto grid max-w-[1120px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">04 / Tu material</span>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{page.uploaderTitle}</h2>
-              <p className="mt-4 text-base leading-8 text-slate-600">{page.uploaderDescription}</p>
-              <p className="mt-5 text-sm leading-7 text-slate-600"><BookOpen className="mr-2 inline h-4 w-4 text-blue-700" aria-hidden="true" />{t.sourceNote}</p>
-            </div>
-            <PdfFirstLandingUploader trackingLocation={page.tracking} sourceKey={page.source} locale={neutral ? 'neutral' : undefined} />
-          </div>
-        </section>
-
         <section className="border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto grid max-w-[1080px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.85fr_1.15fr]">
-            <div><span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">05 / Preguntas frecuentes</span><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{page.faqTitle}</h2></div>
+            <div><span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">04 / Preguntas frecuentes</span><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{page.faqTitle}</h2></div>
             <div className="divide-y divide-slate-200 border-y border-slate-200">
               {page.faqs.map((faq) => <details key={faq.question} className="py-5"><summary className="cursor-pointer pr-3 text-sm font-bold text-slate-950">{faq.question}</summary><p className="mt-3 text-sm leading-7 text-slate-600">{faq.answer}</p></details>)}
             </div>

@@ -5,12 +5,13 @@ import { FooterHome } from '@/components/footer-home';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
+import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 
 export type PracticeLandingKind = 'true-false' | 'match-concepts';
 export type PracticeLandingLocale = 'es' | 'en';
 
 type LandingCopy = {
- eyebrow: string; title: string; intro: string; exampleHeading: string; examplePrompt: string;
+ eyebrow: string; title: string; metaTitle: string; metaDescription: string; intro: string; exampleHeading: string; examplePrompt: string;
  exampleOptions: string[]; exampleResult: string; stages: {title:string;text:string}[];
  teachingTitle:string;teaching:string[]; cautionTitle:string;caution:string;
  faq:{q:string;a:string}[]; cta:string; secondary:string;
@@ -21,6 +22,8 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
   'true-false': {
    eyebrow:'Practicar con Evaluo · Verdadero o falso',
    title:'Preguntas de verdadero o falso con IA para estudiar',
+   metaTitle:'Verdadero o falso con IA gratis: preguntas desde tu PDF',
+   metaDescription:'Generá preguntas de verdadero o falso con IA a partir de tu PDF, gratis. Elegís el archivo sin registrarte y practicás con explicaciones de cada respuesta.',
    intro:'Convertí tus apuntes en una práctica que te obligue a decidir si una afirmación es correcta y, sobre todo, explicar por qué. Un verdadero o falso bien diseñado no consiste en adivinar: diferencia conceptos parecidos y descubre errores que una lectura rápida puede ocultar.',
    exampleHeading:'Ejemplo de una pregunta que comprueba comprensión',
    examplePrompt:'En una célula eucariota típica, toda la producción de ATP ocurre dentro de las mitocondrias.',
@@ -50,6 +53,8 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
   'match-concepts':{
    eyebrow:'Practicar con Evaluo · Unir conceptos',
    title:'Unir conceptos con IA: estudiá relaciones, no solo definiciones',
+   metaTitle:'Unir conceptos con IA gratis: ejercicios desde tu PDF',
+   metaDescription:'Uní conceptos con IA a partir de tus apuntes en PDF, gratis: elegís el archivo sin registrarte y practicás relaciones entre términos, no solo definiciones.',
    intro:'Los ejercicios de asociación pueden ayudarte a distinguir conceptos cercanos, vincular términos con funciones y recordar qué elemento corresponde a una descripción. En Evaluo podés estudiar tu material por temas y utilizar modalidades de práctica para reforzar lo que todavía confundís.',
    exampleHeading:'Ejemplo de relación conceptual',
    examplePrompt:'¿Qué concepto describe el valor de la mejor alternativa a la que renunciás al elegir una opción?',
@@ -81,6 +86,8 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
   'true-false':{
    eyebrow:'Practice with Evaluo · True or false',
    title:'AI True-or-False Questions for Studying Your Notes',
+   metaTitle:'AI True or False Question Generator from PDF, Free',
+   metaDescription:'Generate true or false questions from your PDF with AI, free. Choose your file without signing up and practice with an explanation for every answer.',
    intro:'A useful true-or-false question does more than ask you to guess. It makes you assess a claim and explain the evidence behind your decision. Practice with your own study material to distinguish related ideas and notice gaps you might miss while rereading.',
    exampleHeading:'A worked question that tests understanding',
    examplePrompt:'In a typical eukaryotic cell, all ATP production takes place in mitochondria.',
@@ -109,6 +116,8 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
   'match-concepts':{
    eyebrow:'Practice with Evaluo · Match concepts',
    title:'Match Concepts From Study Notes With AI',
+   metaTitle:'Match Concepts with AI, Free: Exercises from Your PDF',
+   metaDescription:'Match concepts with AI from your PDF notes, free: choose your file without signing up and practice how terms relate, not just their definitions.',
    intro:'Matching exercises help you connect terms to their functions, distinguish similar concepts, and recall the correct relationship. When studying a topic in Evaluo, use practice as a check of understanding—not merely a game of recognizing familiar words.',
    exampleHeading:'Worked example: distinguish two economic ideas',
    examplePrompt:'Which term means the value of the best alternative you give up when choosing?',
@@ -156,13 +165,18 @@ export function BilingualPracticeLanding({kind,locale}:{kind:PracticeLandingKind
    </div>
   <main>
    <section className="border-b border-slate-100 bg-[linear-gradient(155deg,#F5F7FF_0%,#FFFFFF_80%)]">
-    <div className="mx-auto max-w-[1120px] px-4 py-12 sm:px-8 sm:py-20">
+    <div className="mx-auto grid max-w-[1120px] gap-10 px-4 py-12 sm:px-8 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+     <div>
      <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">{copy.eyebrow}</p>
      <h1 className="mt-4 max-w-4xl text-4xl font-extrabold tracking-tight sm:text-5xl">{copy.title}</h1>
      <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">{copy.intro}</p>
      <div className="mt-7 flex flex-wrap gap-3">
       <TrackedLink href={ctaHref+'?source='+kind+'-'+locale} eventName="cta_click" payload={{location:'seo-'+kind+'-'+locale,cta_name:'subir_material',destination:ctaHref}} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-bold text-white transition hover:bg-blue-800">{copy.cta}<ArrowRight className="h-4 w-4"/></TrackedLink>
       <Link href={secondaryHref} className="inline-flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 hover:border-blue-200">{copy.secondary}</Link>
+     </div>
+     </div>
+     <div id={english?'choose-file':'elegir-pdf'} className="scroll-mt-24">
+      <PdfFirstLandingUploader trackingLocation={'seo_'+kind.replace('-','_')+'_'+locale+'_hero'} sourceKey={kind+'-'+locale} locale={english?'en':undefined} market={english?'en':undefined} />
      </div>
     </div>
    </section>

@@ -286,8 +286,10 @@ export function IaParaEstudiantesExperience() {
             <p className="mx-auto mt-5 max-w-3xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
               Subí los apuntes o PDFs que realmente tenés que rendir y usá IA para entender conceptos, crear resúmenes y flashcards, practicar preguntas y detectar qué necesitás reforzar antes de un parcial o final. El material original sigue siendo la fuente del recorrido.
             </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <PrimaryCta label="Estudiar mis apuntes con IA" trackingPrefix="seo_ia_estudiantes_v2" location="hero" />
+            <div id="elegir-pdf-ia" className="mx-auto mt-8 max-w-2xl scroll-mt-24 text-left">
+              <PdfFirstLandingUploader trackingLocation="seo_ia_estudiantes_v2_hero" sourceKey="ia-para-estudiantes" />
+            </div>
+            <div className="mt-5 flex justify-center">
               <DemoCta trackingPrefix="seo_ia_estudiantes_v2" label="Ver cómo se estudia en Evaluo" />
             </div>
             <p className="mt-4 text-xs font-medium text-slate-500">
@@ -1110,6 +1112,19 @@ export function FlashcardsPdfExperience() {
               </div>
             </div>
 
+            <div id="elegir-pdf-flashcards" className="scroll-mt-24">
+              <PdfFirstLandingUploader trackingLocation="seo_flashcards_pdf_v2_hero" sourceKey="crear-flashcards-desde-pdf" />
+            </div>
+          </div>
+        </section>
+
+        <section aria-label="Ejemplo de flashcard" className="border-b border-slate-100 bg-slate-50/50 py-16 sm:py-20">
+          <div className="mx-auto grid w-full max-w-[1120px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">Ejemplo de resultado</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Así se ve una flashcard creada desde tus apuntes</h2>
+              <p className="mt-4 text-base leading-8 text-slate-600">Cada tarjeta tiene una pregunta al frente y la respuesta al dorso, agrupada por el tema de tu PDF. Intentá recordar antes de darla vuelta.</p>
+            </div>
             <div className="relative min-h-[430px]">
               <div className="absolute left-[10%] right-[4%] top-10 h-[330px] rotate-3 rounded-[28px] border border-blue-100 bg-blue-50/70" />
               <div className="absolute left-[5%] right-[9%] top-5 h-[350px] -rotate-2 rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.06)]" />

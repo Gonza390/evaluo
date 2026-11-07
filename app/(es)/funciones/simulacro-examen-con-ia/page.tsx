@@ -6,13 +6,14 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/funciones/simulacro-examen-con-ia';
 
 export const metadata: Metadata = {
-  title: "Simulacro de examen con IA desde tus apuntes",
-  description: "Prepará un simulacro de examen con IA usando tus apuntes en PDF: practicá preguntas, revisá tus resultados y detectá qué temas reforzar.",
+  title: 'Simulacro de examen con IA gratis desde tus apuntes',
+  description:
+    'Hacé un simulacro de examen con IA a partir de tu PDF, gratis. Elegís el archivo sin registrarte, practicás con preguntas de tu material y ves qué temas reforzar.',
   alternates: hreflangAlternates('mock-exam', 'es-AR'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: "Simulacro de examen con IA desde tus apuntes | Evaluo",
+    title: 'Simulacro de examen con IA gratis desde tus apuntes | Evaluo',
     description: 'Practicá con tus apuntes, interpretá los resultados y reforzá los temas que todavía te cuestan.',
     url: toAbsoluteUrl(path),
   },
