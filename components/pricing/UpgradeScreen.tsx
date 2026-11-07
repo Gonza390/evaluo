@@ -68,17 +68,17 @@ function examLine(exam: UpgradeNextExam, en: boolean) {
 function Header({ en, exam }: { en: boolean; exam: UpgradeNextExam | null }) {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex h-[80px] items-end justify-center gap-1.5 sm:h-[88px]">
+      <div className="flex h-[68px] items-end justify-center gap-1.5 sm:h-[76px]">
         <div className="mb-1.5"><BookIcon size={44} /></div>
-        <Image src="/evi/evi-estudiando.svg" alt={en ? 'Evi studying' : 'Evi estudiando'} width={84} height={84} className="size-[72px] sm:size-[84px]" priority />
+        <Image src="/evi/evi-estudiando.svg" alt={en ? 'Evi studying' : 'Evi estudiando'} width={84} height={84} className="size-[64px] sm:size-[72px]" priority />
         <div className="mb-2"><CapIcon size={44} /></div>
       </div>
-      <h1 className="mt-3.5 text-[30px] leading-[1.1] font-extrabold tracking-[-0.035em] text-slate-950 sm:text-[38px]">
+      <h1 className="mt-2.5 text-[30px] leading-[1.1] font-extrabold tracking-[-0.035em] text-slate-950 sm:text-[38px]">
         {en ? 'Get to your exam' : 'Llegá a tu parcial'}
         <span className="block text-[var(--pv-accent)]">{en ? 'knowing you’re ready' : 'sabiendo que estás listo'}</span>
       </h1>
       {exam ? (
-        <p className="mt-3.5 inline-flex items-center gap-2 text-[15px] text-slate-600">
+        <p className="mt-2.5 inline-flex items-center gap-2 text-[15px] text-slate-600">
           <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
           {examLine(exam, en)}
         </p>
@@ -97,7 +97,7 @@ function Comparison({ en }: { en: boolean }) {
   return (
     <>
       <div
-        className="mt-7 grid w-full grid-cols-[64px_minmax(0,1fr)_96px] items-center gap-x-3 gap-y-3.5 text-left text-[13px]"
+        className="mt-6 grid w-full grid-cols-[64px_minmax(0,1fr)_96px] items-center gap-x-3 gap-y-3.5 text-left text-[13px]"
         aria-label={en ? 'Materials per month: Free 1, Premium up to 90' : 'Apuntes por mes: Gratis 1, Premium hasta 90'}
       >
         <span className="text-slate-500">{en ? 'Free' : 'Gratis'}</span>
@@ -107,7 +107,7 @@ function Comparison({ en }: { en: boolean }) {
         <div className="h-2 rounded-full bg-[var(--pv-accent)]" />
         <span className="font-bold text-slate-950">{en ? 'up to 90/mo' : 'hasta 90/mes'}</span>
       </div>
-      <div className="mt-8 grid w-full grid-cols-4">
+      <div className="mt-6 grid w-full grid-cols-4">
         {stats.map((stat, index) => (
           <div key={stat.label} className={`flex flex-col items-center gap-2 px-1.5 py-1 ${index < stats.length - 1 ? 'border-r border-slate-200' : ''}`}>
             <div className="flex h-9 items-center text-[30px] leading-none font-semibold text-slate-950 sm:text-[34px]">{stat.value}</div>
@@ -237,7 +237,7 @@ function ArgentinaOffer({ en, source, materiaId, parcial, returnTo }: Omit<Props
 
   return (
     <>
-      <div role="radiogroup" aria-label={en ? 'Choose your plan' : 'Elegí tu plan'} className="mt-8 flex w-full flex-col gap-2.5">
+      <div role="radiogroup" aria-label={en ? 'Choose your plan' : 'Elegí tu plan'} className="mt-6 flex w-full flex-col gap-2.5">
         {!offer ? (
           <div className="h-[150px] w-full animate-pulse rounded-[18px] bg-slate-100" aria-label={en ? 'Loading prices' : 'Consultando precios'} />
         ) : (
@@ -328,7 +328,7 @@ function InternationalOffer({ en, source, returnTo, creemAvailable }: { en: bool
 
   return (
     <>
-      <div className="mt-8 w-full">
+      <div className="mt-6 w-full">
         <PlanOption en={en} selected title={en ? 'Monthly' : 'Mensual'} weekly={weekly}
           note={en ? `${monthly} · cancel anytime` : `${monthly} · cancelás cuando quieras`} />
       </div>
@@ -379,15 +379,11 @@ export function UpgradeScreen(props: Props) {
   const back = props.returnTo ?? '/dashboard';
   return (
     <div className="pricing-v2 w-full min-w-0 bg-white text-slate-950">
-      <div className="mx-auto flex max-w-[420px] flex-col items-center px-5 pt-4 pb-28 sm:px-0 sm:pt-6 sm:pb-12">
-        <Link href={back} className="mb-2 inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-slate-600 hover:text-slate-900">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {en ? 'Back' : 'Volver'}
-        </Link>
+      <div className="mx-auto flex max-w-[420px] flex-col items-center px-5 pt-2 pb-28 sm:px-0 sm:pt-3 sm:pb-10">
         <Header en={en} exam={props.nextExam} />
         <Comparison en={en} />
         {market === null ? (
-          <div className="mt-8 h-[180px] w-full animate-pulse rounded-[18px] bg-slate-100" aria-busy="true">
+          <div className="mt-6 h-[180px] w-full animate-pulse rounded-[18px] bg-slate-100" aria-busy="true">
             <span className="sr-only">{en ? 'Checking prices for your country…' : 'Consultando precios para tu país…'}</span>
           </div>
         ) : market.market === 'argentina' ? (
@@ -395,6 +391,11 @@ export function UpgradeScreen(props: Props) {
         ) : (
           <InternationalOffer en={en} source={props.source} returnTo={props.returnTo} creemAvailable={market.creemAvailable} />
         )}
+        {/* Salida discreta al final: no ocupa lugar arriba. */}
+        <Link href={back} className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {en ? 'Not now, go back' : 'Ahora no, volver'}
+        </Link>
       </div>
     </div>
   );
