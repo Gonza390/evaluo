@@ -78,6 +78,13 @@ export function PomodoroHeader({ userId }: { userId: string }) {
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
+  // Reuse this same Pomodoro instance from the mobile PDF radial tools menu.
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener('evaluo:open-pomodoro', handleOpen);
+    return () => window.removeEventListener('evaluo:open-pomodoro', handleOpen);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
