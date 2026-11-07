@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Expand, Minimize, ZoomIn, ZoomOut } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { logError } from '@/lib/observability';
 import {
@@ -96,6 +97,7 @@ export default function PdfViewer({
   persistView = true,
   sourceMode = 'blob',
 }: PdfViewerProps) {
+  const english = useOptionalAppLocale() === 'en';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -144,7 +146,7 @@ export default function PdfViewer({
       } catch (error) {
         logError('pdfViewer.loadReactPdf', error, { url });
         if (active) {
-          setViewerRuntimeError('No pudimos inicializar el lector avanzado.');
+          setViewerRuntimeError(english ? 'Could not initialize the PDF reader.' : 'No pudimos inicializar el lector avanzado.');
         }
       }
     };
@@ -216,7 +218,7 @@ export default function PdfViewer({
         logError('pdfViewer.loadBinary', error, { url });
         if (!active) return;
         setDocumentSourceBlob(null);
-        setDocumentError('No pudimos preparar el archivo PDF para mostrarlo.');
+        setDocumentError(english ? 'Could not prepare the PDF for viewing.' : 'No pudimos preparar el archivo PDF para mostrarlo.');
       } finally {
         if (active) {
           setDocumentLoading(false);
@@ -464,7 +466,7 @@ export default function PdfViewer({
                 isStudyTheme && 'text-slate-100'
               )}
             >
-              {title}
+              {english && title === 'Vista de PDF' ? 'PDF preview' : title}
             </p>
             {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
           </div>
@@ -478,7 +480,7 @@ export default function PdfViewer({
                 'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
-              aria-label="Alejar zoom"
+              aria-label={english ? 'Zoom out' : 'Alejar zoom'}
             >
               <ZoomOut className="h-4 w-4" />
             </button>
@@ -490,7 +492,7 @@ export default function PdfViewer({
                 'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
-              aria-label="Acercar zoom"
+              aria-label={english ? 'Zoom in' : 'Acercar zoom'}
             >
               <ZoomIn className="h-4 w-4" />
             </button>
@@ -516,7 +518,7 @@ export default function PdfViewer({
                 'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
-              aria-label="Pagina anterior"
+              aria-label={english ? 'Previous page' : 'Pagina anterior'}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -532,7 +534,7 @@ export default function PdfViewer({
                 'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
-              aria-label="Pagina siguiente"
+              aria-label={english ? 'Next page' : 'Pagina siguiente'}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -545,7 +547,7 @@ export default function PdfViewer({
                   'inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-white sm:h-10 sm:w-10',
                   isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
                 )}
-                aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                aria-label={isFullscreen ? (english ? 'Exit full screen' : 'Salir de pantalla completa') : (english ? 'Full screen' : 'Pantalla completa')}
               >
                 {isFullscreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
               </button>
@@ -669,7 +671,7 @@ export default function PdfViewer({
                   isStudyTheme && 'text-slate-500'
                 )}
               >
-                {documentError || 'No pudimos preparar el PDF.'}
+                {documentError || (english ? 'Could not prepare the PDF.' : 'No pudimos preparar el PDF.')}
               </div>
             ) : !DocumentComponent || !PageComponent ? (
               <div
@@ -678,7 +680,7 @@ export default function PdfViewer({
                   isStudyTheme && 'text-slate-500'
                 )}
               >
-                Inicializando lector...
+                {english ? 'Initializing PDF reader...' : 'Inicializando lector...'}
               </div>
             ) : (
               <DocumentComponent
@@ -686,12 +688,12 @@ export default function PdfViewer({
                 onLoadSuccess={handleDocumentLoad}
                 loading={
                   <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-                    Cargando paginas...
+                    {english ? 'Loading pages...' : 'Cargando paginas...'}
                   </div>
                 }
                 error={
                   <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-                    No pudimos renderizar este PDF.
+                    {english ? 'Could not render this PDF.' : 'No pudimos renderizar este PDF.'}
                   </div>
                 }
               >
@@ -730,7 +732,7 @@ export default function PdfViewer({
                                 'bg-[linear-gradient(180deg,#1B1C21_0%,#131418_100%)] text-slate-500'
                             )}
                           >
-                            Preparando pagina {pageNumber}...
+                            {english ? 'Preparing page' : 'Preparando pagina'} {pageNumber}...
                           </div>
                         )}
                       </div>
@@ -742,49 +744,47 @@ export default function PdfViewer({
                       <div className="absolute inset-x-5 -top-10 h-14 rounded-full bg-gradient-to-t from-white via-white/80 to-transparent blur-2xl" />
                       <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-blue-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
                         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-blue-700 uppercase">
-                          Preview disponible
+                          {english ? 'Preview available' : 'Preview disponible'}
                           <span className="rounded-full bg-white px-2 py-0.5 text-[12px] text-blue-600">
-                            {previewPageLimit} paginas
+                            {previewPageLimit} {english ? 'pages' : 'paginas'}
                           </span>
                         </div>
                         <p className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
-                          Accedé al material completo
+                          {english ? 'Access the full document' : 'Accedé al material completo'}
                         </p>
                         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
-                          Ya viste una parte del documento. Iniciá sesión para desbloquear la
-                          lectura completa, guardar tu progreso y seguir estudiando dentro de
-                          Evaluo.
+                          {english ? 'You have seen a preview of this document. Sign in to unlock the full text, save your progress and continue studying with Evaluo.' : 'Ya viste una parte del documento. Iniciá sesión para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.'}
                         </p>
                         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
                           <Link
-                            href="/login?mode=signup"
+                            href={english ? '/en/login?mode=signup' : '/login?mode=signup'}
                             onClick={() =>
                               trackMarketingEvent('pdf_gate_cta_clicked', {
                                 location: 'pdf_preview_gate',
                                 resource_title: title,
                                 preview_pages: previewPageLimit,
                                 cta_name: 'crear_cuenta_para_leer',
-                                destination: '/login?mode=signup',
+                                destination: english ? '/en/login?mode=signup' : '/login?mode=signup',
                               })
                             }
                             className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#555CB1] px-6 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)] transition hover:opacity-95"
                           >
-                            Crear cuenta y seguir leyendo
+                            {english ? 'Create an account and keep reading' : 'Crear cuenta y seguir leyendo'}
                           </Link>
                           <Link
-                            href="/login"
+                            href={english ? '/en/login' : '/login'}
                             onClick={() =>
                               trackMarketingEvent('pdf_gate_cta_clicked', {
                                 location: 'pdf_preview_gate',
                                 resource_title: title,
                                 preview_pages: previewPageLimit,
                                 cta_name: 'iniciar_sesion_para_leer',
-                                destination: '/login',
+                                destination: english ? '/en/login' : '/login',
                               })
                             }
                             className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                           >
-                            Iniciar sesión
+                            {english ? 'Sign in' : 'Iniciar sesión'}
                           </Link>
                         </div>
                       </div>
