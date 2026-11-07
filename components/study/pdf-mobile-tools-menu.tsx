@@ -26,25 +26,25 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
   const actions = [
     ...(canShare ? [{
       id: 'share', label: english ? 'Share' : 'Compartir', Icon: Share2,
-      x: -148, y: 0,
+      x: -62, y: 0,
       run: () => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } })),
       enabled: true,
     }] : []),
     {
       id: 'original', label: english ? `Open original ${fileType} file` : `Abrir ${fileType} original`, Icon: ExternalLink,
-      x: -130, y: 70,
+      x: -96, y: 38,
       run: () => window.open(viewerUrl, '_blank', 'noopener,noreferrer'),
       enabled: true,
     },
     {
       id: 'pomodoro', label: english ? 'Study timer' : 'Pomodoro', Icon: Timer,
-      x: -78, y: 123,
+      x: -80, y: 84,
       run: () => window.dispatchEvent(new Event('evaluo:open-pomodoro')),
       enabled: true,
     },
     {
       id: 'evi', label: english ? 'Ask Evi (coming soon)' : 'Preguntar a Evi (próximamente)', Icon: MessageCircle,
-      x: -4, y: 145,
+      x: -34, y: 105,
       run: () => {},
       enabled: false,
     },
