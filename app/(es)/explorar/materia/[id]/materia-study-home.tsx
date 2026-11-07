@@ -365,14 +365,14 @@ export default function MateriaStudyHome({
             onClick={() =>
               trackAction('materia_upload_notes_clicked', { source: 'materia_action_card' })
             }
-            className="group relative overflow-hidden rounded-[24px] border border-[#BFD3FF] bg-[linear-gradient(145deg,#F8FBFF_0%,#EAF2FF_100%)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#8FB4FF] hover:shadow-[0_18px_44px_rgba(37,99,235,0.12)] sm:p-7"
+            className="group relative overflow-hidden rounded-[24px] border border-[#BFD3FF] bg-[linear-gradient(145deg,#F8FBFF_0%,#EAF2FF_100%)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#98B5EE] hover:shadow-[0_18px_44px_rgba(37,99,235,0.12)] sm:p-7"
           >
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-white text-[#2563EB] shadow-[0_10px_25px_rgba(37,99,235,0.10)]">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-white text-[#456DBD] shadow-[0_10px_25px_rgba(37,99,235,0.10)]">
                 <UploadCloud className="h-7 w-7" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-bold tracking-[0.14em] text-[#2563EB] uppercase">
+                <p className="text-[11px] font-bold tracking-[0.14em] text-[#456DBD] uppercase">
                   Estudiá con tu material
                 </p>
                 <h2 className="mt-1.5 text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.7rem]">
@@ -536,7 +536,7 @@ export default function MateriaStudyHome({
             </div>
             <Link
               href={uploadHref}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#AFC8FF] hover:text-[#2563EB]"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#AFC8FF] hover:text-[#456DBD]"
             >
               <UploadCloud className="h-4 w-4" />
               Estudiar con mi PDF
@@ -580,12 +580,12 @@ export default function MateriaStudyHome({
                     className="flex min-h-[230px] flex-col rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.055)] sm:p-5"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF4FF] text-[#2563EB]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF4FF] text-[#456DBD]">
                         <FileText className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-[#EEF4FF] px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-[#2563EB] uppercase">
+                          <span className="rounded-full bg-[#EEF4FF] px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-[#456DBD] uppercase">
                             {moduleLabel}
                           </span>
                           {resumen.pages ? (
@@ -624,7 +624,7 @@ export default function MateriaStudyHome({
                           resumen_id: resumen.id,
                         });
                       }}
-                      className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-[#C7D2FE] px-3.5 text-sm font-semibold text-[#2563EB] transition hover:bg-[#EEF4FF]"
+                      className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-[#C7D2FE] px-3.5 text-sm font-semibold text-[#456DBD] transition hover:bg-[#EEF4FF]"
                     >
                       Ver resumen
                       <ChevronRight className="h-4 w-4" />
@@ -635,7 +635,7 @@ export default function MateriaStudyHome({
             </div>
           ) : (
             <div className="rounded-[22px] border border-dashed border-slate-300 bg-slate-50/70 px-5 py-8 text-center sm:px-8">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#2563EB] shadow-sm">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#456DBD] shadow-sm">
                 <FileText className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-lg font-bold tracking-[-0.03em] text-slate-950">
@@ -648,7 +648,7 @@ export default function MateriaStudyHome({
               <div className="mt-5 flex justify-center">
                 <Link
                   href={uploadHref}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#456DBD] px-5 text-sm font-semibold text-white transition hover:bg-[#3A5CA8]"
                 >
                   <UploadCloud className="h-4 w-4" />
                   Estudiar con mi PDF

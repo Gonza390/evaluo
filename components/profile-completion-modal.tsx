@@ -652,7 +652,7 @@ export function ProfileCompletionModal({
                 key={i}
                 className={cn(
                   'h-1 flex-1 rounded-full transition-all duration-500',
-                  i < step ? 'bg-gradient-to-r from-[#2563EB] to-[#6366F1]' : 'bg-white'
+                  i < step ? 'bg-gradient-to-r from-[#456DBD] to-[#6972C8]' : 'bg-white'
                 )}
               />
             ))}
@@ -675,7 +675,7 @@ export function ProfileCompletionModal({
               <div className="px-5 py-5 sm:px-8 sm:py-7">
                 <DialogHeader className="mb-5 space-y-2 text-left">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#6366F1] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#456DBD] to-[#6972C8] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
                       <School className="h-6 w-6" />
                     </div>
                     <div className="min-w-0">
@@ -751,7 +751,7 @@ export function ProfileCompletionModal({
               <div className="px-5 py-5 sm:px-8 sm:py-7">
                 <DialogHeader className="mb-5 space-y-2 text-left">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#6366F1] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#456DBD] to-[#6972C8] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
                       <GraduationCap className="h-6 w-6" />
                     </div>
                     <div className="min-w-0">
@@ -767,12 +767,12 @@ export function ProfileCompletionModal({
 
                 {universidadSeleccionada && (
                   <div className="mb-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
-                    <School className="h-4 w-4 shrink-0 text-[#2563EB]" />
+                    <School className="h-4 w-4 shrink-0 text-[#456DBD]" />
                     <span className="truncate font-medium">{universidadSeleccionada.nombre}</span>
                     <button
                       type="button"
                       onClick={() => goToStep(1)}
-                      className="ml-auto shrink-0 text-[11px] font-semibold text-[#2563EB] hover:underline"
+                      className="ml-auto shrink-0 text-[11px] font-semibold text-[#456DBD] hover:underline"
                     >
                       Cambiar
                     </button>
@@ -841,7 +841,7 @@ export function ProfileCompletionModal({
               <div className="px-5 py-5 sm:px-8 sm:py-7">
                 <DialogHeader className="mb-5 space-y-2 text-left">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#6366F1] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#456DBD] to-[#6972C8] text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]">
                       <Sparkles className="h-6 w-6" />
                     </div>
                     <div className="min-w-0">
@@ -860,11 +860,11 @@ export function ProfileCompletionModal({
                 {/* Summary chips */}
                 <div className="mb-4 flex flex-wrap gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                    <School className="h-3 w-3 text-[#2563EB]" />
+                    <School className="h-3 w-3 text-[#456DBD]" />
                     {universidadNombre}
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                    <GraduationCap className="h-3 w-3 text-[#2563EB]" />
+                    <GraduationCap className="h-3 w-3 text-[#456DBD]" />
                     {carreraNombre}
                   </span>
                 </div>
@@ -896,7 +896,7 @@ export function ProfileCompletionModal({
                           className={cn(
                             'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition',
                             isSelected
-                              ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-[#2563EB]'
+                              ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-[#456DBD]'
                               : 'hover:bg-white text-slate-700'
                           )}
                         >
@@ -905,7 +905,7 @@ export function ProfileCompletionModal({
                             className={cn(
                               'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
                               isSelected
-                                ? 'border-[#2563EB] bg-[#2563EB] text-white'
+                                ? 'border-[#456DBD] bg-[#456DBD] text-white'
                                 : 'border-slate-300 bg-white'
                             )}
                           >
@@ -919,7 +919,7 @@ export function ProfileCompletionModal({
                 )}
 
                 {selectedMateriaIds.length > 0 && (
-                  <p className="mt-2 text-center text-[12px] font-semibold text-[#2563EB]">
+                  <p className="mt-2 text-center text-[12px] font-semibold text-[#456DBD]">
                     {selectedMateriaIds.length}{' '}
                     {selectedMateriaIds.length === 1 ? 'materia seleccionada' : 'materias seleccionadas'}
                   </p>
@@ -951,7 +951,7 @@ export function ProfileCompletionModal({
                     </span>
                   </p>
                   <p className="text-sm text-slate-600">
-                    en <span className="font-bold text-[#2563EB]">{universidadNombre}</span>
+                    en <span className="font-bold text-[#456DBD]">{universidadNombre}</span>
                   </p>
                   {carreraNombre && (
                     <p className="mt-1 text-xs text-slate-600">Carrera: {carreraNombre}</p>
@@ -960,7 +960,7 @@ export function ProfileCompletionModal({
 
                 <Button
                   onClick={handleGoToDashboard}
-                  className="mt-6 h-12 w-full rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)] hover:opacity-95"
+                  className="mt-6 h-12 w-full rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)] hover:opacity-95"
                 >
                   Ir a Mi espacio
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -1004,7 +1004,7 @@ export function ProfileCompletionModal({
                     type="button"
                     onClick={handleSaveAndFinish}
                     disabled={!canSubmitStep3 || saving}
-                    className="h-11 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] hover:opacity-95"
+                    className="h-11 rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] hover:opacity-95"
                   >
                     {saving ? 'Guardando...' : 'Continuar'}
                     {saving ? null : <ArrowRight className="ml-1.5 h-4 w-4" />}

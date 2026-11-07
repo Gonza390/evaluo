@@ -47,7 +47,7 @@ assert.match(calendar, /border-brand\/25 bg-brand\/10/,
   'Calendar controls retain shared brand colors without requiring a decorative gradient.');
 assert.match(calendar, /text-brand/);
 assert.match(calendar, /var\(--brand\)/);
-assert.doesNotMatch(calendar, /#050B2C|#2563EB|#6366F1/,
+assert.doesNotMatch(calendar, /#050B2C|#456DBD|#6972C8/,
   'Use shared tokens for heading and brand blue rather than isolated hex.');
 assert.doesNotMatch(calendar, /!isCurrentMonth \? 'text-slate-300'/,
   'Dates outside the visible month should retain readable contrast.');

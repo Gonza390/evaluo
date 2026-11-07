@@ -124,7 +124,7 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
             disabled={saving || loading}
             className={cn(
               'h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white',
-              rating === 'up' && 'border-[#A7F3D0] bg-[#ECFDF5] text-emerald-700 hover:bg-[#ECFDF5]'
+              rating === 'up' && 'border-[#C6E9D8] bg-[#F1FBF6] text-emerald-700 hover:bg-[#F1FBF6]'
             )}
           >
             <ThumbsUp className="h-3.5 w-3.5" />
@@ -158,7 +158,7 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
         <button
           type="button"
           onClick={() => setReportOpen((current) => !current)}
-          className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#2563EB] transition hover:text-[#1D4ED8]"
+          className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#456DBD] transition hover:text-[#3A5CA8]"
         >
           <Flag className="h-3 w-3" />
           {reportOpen ? 'Cerrar reporte' : 'Reportar un error en el resumen'}

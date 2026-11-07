@@ -68,7 +68,7 @@ assert.match(screen,/lg:text-\[40px\]/,'Original desktop headline should be 40px
 assert.match(screen,/sm:text-\[44px\]/,'Original monthly price should be 44px on desktop.');
 assert.match(screen,/sm:text-\[24px\]/,'Section headings should retain the original 24px scale.');
 assert.match(screen,/lg:pt-12/,'Desktop screen should use the original 48px upper spacing.');
-assert.match(screen,/rounded-\[24px\] border-2 border-\[#1a5cff\]/,'Original Premium hero card radius and highlight must be kept.');
+assert.match(screen,/rounded-\[24px\] border-2 border-\[#476ebe\]/,'Original Premium hero card radius and highlight must be kept.');
 
 assert.doesNotMatch(screen,/min-h-\[2300px\]/,'Do not reproduce the HTML mockup fixed height.');
 for(const text of [

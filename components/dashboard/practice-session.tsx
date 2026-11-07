@@ -688,7 +688,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">{english ? 'Your mock exam is ready' : 'Tu simulacro está listo'}</h1>
           <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">{english ? 'The questions are based on your uploaded material. Start whenever you are ready.' : 'Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.'}</p>
           <div className="mx-auto mt-5 flex min-w-0 max-w-full items-center gap-3 rounded-[14px] border border-[#E7EBF4] px-4 py-3 text-left sm:max-w-[440px]">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><span aria-hidden="true">▤</span></span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#456DBD]"><span aria-hidden="true">▤</span></span>
             <div className="min-w-0"><p className="text-[10px] font-bold tracking-[.08em] text-slate-500">MATERIAL</p><p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{materialTitle}</p></div>
           </div>
           <div className="mx-auto mt-5 divide-y divide-[#EEF1F6] rounded-[18px] border border-[#E7EBF4] px-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:max-w-[560px] sm:px-6">
@@ -696,7 +696,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               [`${total} ${english ? 'questions' : 'preguntas'}`, verifiedChapterCount >= 2 ? (english ? 'From different topics in your material.' : 'De distintos temas de tu material.') : (english ? 'Created from your material.' : 'Preparadas a partir de tu material.'), '❔'],
               [english ? '15 minutes' : '15 minutos', english ? 'You can submit early if you finish.' : 'Podés entregar antes si terminás.', '◷'],
               [english ? 'Answers shown at the end' : 'Sin soluciones hasta el final', english ? 'You can go back or leave questions unanswered.' : 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
-            ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
+            ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#456DBD]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
           </div>
           <div className="mx-auto mt-6 flex max-w-[560px] flex-col gap-2">
             <button type="button" disabled={freeSessionGate === 'pending'} onClick={() => {
@@ -705,10 +705,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
                 return;
               }
               void claimSessionQuota().then(allowed => { if (allowed) transitionTo(()=>setExamStarted(true)); });
-            }} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
+            }} className="min-h-12 w-full rounded-full bg-[#456DBD] px-6 text-[15px] font-bold text-white transition hover:bg-[#3A5CA8] disabled:opacity-60">
               {t(freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro')}
             </button>
-            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
+            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#456DBD]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
           </div>
         </div>
       </section>

@@ -114,7 +114,7 @@ function PrimaryCta({ location, label, variant = 'solid' }: { location: string; 
       className={
         'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ' +
         (variant === 'outline'
-          ? 'border border-blue-200 bg-white text-[#174BBD] hover:bg-blue-50'
+          ? 'border border-blue-200 bg-white text-[#31549A] hover:bg-blue-50'
           : 'bg-[linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)] text-white shadow-[0_12px_28px_rgba(23,75,189,0.20)] hover:brightness-110')
       }
     >
@@ -161,7 +161,7 @@ export default function ParcialesUbaXxiPage() {
                   cta_name: 'elegir_pdf',
                   destination: PDF_HREF,
                 }}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#174BBD] px-3 text-xs font-bold text-white transition hover:bg-[#0D2F82] sm:px-4"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#31549A] px-3 text-xs font-bold text-white transition hover:bg-[#213763] sm:px-4"
               >
                 Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
@@ -174,11 +174,11 @@ export default function ParcialesUbaXxiPage() {
         <section className="border-b border-blue-100 bg-[radial-gradient(circle_at_88%_8%,rgba(37,99,235,0.13),transparent_42%),linear-gradient(180deg,#ffffff_0%,#f0f5ff_100%)]">
           <div className="mx-auto grid w-full max-w-[1160px] gap-8 px-4 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1.12fr_0.88fr] lg:items-center lg:gap-12 lg:py-20">
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#174BBD]">
+              <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#31549A]">
                 <GraduationCap className="h-4 w-4" aria-hidden="true" /> UBA XXI · Preparación de parciales
               </p>
               <h1 className="mt-5 max-w-2xl text-[2.45rem] font-black leading-[1.07] tracking-[-0.05em] text-[#0f1b3d] sm:text-5xl lg:text-[3.45rem]">
-                Parciales UBA XXI: <span className="text-[#174BBD]">exámenes anteriores</span> y práctica para rendir
+                Parciales UBA XXI: <span className="text-[#31549A]">exámenes anteriores</span> y práctica para rendir
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">
                 Mirá ejemplos de parciales reales de IPC e ICSE de 2025 y 2026, entendé qué tipo de

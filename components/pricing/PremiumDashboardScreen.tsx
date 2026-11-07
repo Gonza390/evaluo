@@ -121,9 +121,9 @@ const benefits = [
   'Mapas mentales y seguimiento del progreso',
 ] as const;
 const reasons = [
-  { title: 'Estudiá más', description: 'Cargá nuevos PDF y Word de distintas materias, hasta 3 por día.', icon: BookOpen, color: '#2a49c9', bg: '#e8eefc' },
+  { title: 'Estudiá más', description: 'Cargá nuevos PDF y Word de distintas materias, hasta 3 por día.', icon: BookOpen, color: '#3c55a0', bg: '#e8eefc' },
   { title: 'Practicá mejor', description: 'Generá preguntas, casos, flashcards y simulacros sin los cupos del Free.', icon: ListChecks, color: '#16774f', bg: '#e7f7ef' },
-  { title: 'Llegá preparado', description: 'Organizá tu tiempo con planes de estudio y seguí tu progreso por tema.', icon: Flag, color: '#b86a0f', bg: '#fff1de' },
+  { title: 'Llegá preparado', description: 'Organizá tu tiempo con planes de estudio y seguí tu progreso por tema.', icon: Flag, color: '#b86a0f', bg: '#fbf2e6' },
 ] as const;
 const comparison = [
   ['Materiales', '1 de por vida', 'Hasta 3 nuevos por día'],
@@ -250,8 +250,8 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   const backHref=returnTo??'/dashboard';
 
   const monthlyButton=(position:'main'|'final')=>
-    mainAction?<Link href={mainAction} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff]">{monthlyCta}</Link>
-    :<button type="button" disabled={monthlyDisabled} onClick={()=>void checkout('monthly')} data-premium-purchase={position} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#1a5cff] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#164fe3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a5cff] disabled:cursor-not-allowed disabled:opacity-60">{loading==='monthly'?<Loader2 className="size-4 animate-spin"/>:null}{loading==='monthly'?t("Abriendo Mercado Pago…"):monthlyCta}</button>;
+    mainAction?<Link href={mainAction} className="flex min-h-[52px] w-full items-center justify-center rounded-full bg-[#476ebe] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#3b5fac] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#476ebe]">{monthlyCta}</Link>
+    :<button type="button" disabled={monthlyDisabled} onClick={()=>void checkout('monthly')} data-premium-purchase={position} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#476ebe] px-5 py-3.5 text-[15px] font-bold sm:text-[16px] text-white transition hover:bg-[#3b5fac] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#476ebe] disabled:cursor-not-allowed disabled:opacity-60">{loading==='monthly'?<Loader2 className="size-4 animate-spin"/>:null}{loading==='monthly'?t("Abriendo Mercado Pago…"):monthlyCta}</button>;
   if (market===null) return <main className="mx-auto max-w-xl px-5 py-24 text-center text-sm text-slate-600"><Loader2 className="mx-auto mb-4 size-6 animate-spin"/> Consultando Premium para tu región…</main>;
   if (market.market==='unknown') return (
     <main role="alert" className="mx-auto max-w-xl px-5 py-16 text-center text-sm leading-7 text-amber-900">
@@ -271,13 +271,13 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
   return <main data-premium-dashboard className="mx-auto w-full max-w-[1240px] px-3 py-7 text-[#0f172a] sm:px-4 sm:py-9 lg:px-6 lg:pb-16 lg:pt-12">
     <div className="mx-auto w-full max-w-[680px] min-w-0">
       <header className="text-center">
-        <span className="inline-flex rounded-full bg-[#eef3ff] px-[14px] py-[5px] text-[12px] font-bold text-[#2a49c9]">Evaluo Premium</span>
+        <span className="inline-flex rounded-full bg-[#eef3ff] px-[14px] py-[5px] text-[12px] font-bold text-[#3c55a0]">Evaluo Premium</span>
         <h1 className="mx-auto mt-4 max-w-[680px] text-[28px] font-extrabold leading-[1.15] tracking-[-.02em] sm:text-[36px] lg:text-[40px]">{t("Estudiá más. Practicá mejor.")}<span className="block">{t("Llegá preparado a tu examen.")}</span></h1>
         <p className="mx-auto mb-9 mt-[14px] max-w-[540px] text-[14px] leading-[1.55] text-[#475569] sm:text-[16px]">{t("Todo lo que necesitás para estudiar, practicar y preparar tus exámenes.")}</p>
       </header>
 
-      <section aria-label={t("Premium mensual")} className="relative rounded-[24px] border-2 border-[#1a5cff] bg-[#f5f8ff] px-5 pb-6 pt-7 sm:px-7 sm:pb-[26px] sm:pt-7">
-        <span className="absolute -top-3 left-5 rounded-full bg-[#1a5cff] px-3 py-1 text-[11px] font-bold text-white">{t("Premium mensual")}</span>
+      <section aria-label={t("Premium mensual")} className="relative rounded-[24px] border-2 border-[#476ebe] bg-[#f5f8ff] px-5 pb-6 pt-7 sm:px-7 sm:pb-[26px] sm:pt-7">
+        <span className="absolute -top-3 left-5 rounded-full bg-[#476ebe] px-3 py-1 text-[11px] font-bold text-white">{t("Premium mensual")}</span>
         <div className="flex flex-wrap items-baseline gap-x-2">
           <span className="text-[38px] font-extrabold tracking-[-.02em] sm:text-[44px]" aria-label={t("Precio mensual")}>{priceMonthly}</span>
           <span className="text-[13px] text-[#5b6475] sm:text-[14px]">{t("ARS por mes")}</span>
@@ -293,14 +293,14 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
       </section>
 
       <details className="group mt-[14px] text-center" data-premium-semester>
-        <summary className="cursor-pointer text-[13px] text-[#475569] marker:hidden sm:text-[14px] [&::-webkit-details-marker]:hidden">{t("¿Preferís pagar una sola vez?")} <strong className="text-[#2a49c9]">{t("Ver plan semestral")}</strong></summary>
+        <summary className="cursor-pointer text-[13px] text-[#475569] marker:hidden sm:text-[14px] [&::-webkit-details-marker]:hidden">{t("¿Preferís pagar una sola vez?")} <strong className="text-[#3c55a0]">{t("Ver plan semestral")}</strong></summary>
         <div className="mt-3 flex flex-col items-stretch gap-3 rounded-[20px] border border-[#e6eaf2] bg-white p-4 text-left sm:flex-row sm:items-center sm:px-5">
           <div className="min-w-0 flex-1">
             <h2 className="text-[13px] font-bold sm:text-[14px]">{(english ? 'Six-month Premium' : 'Premium semestral')} · {priceSemester} ARS</h2>
             <p className="mt-1 text-[12px] leading-[1.5] text-[#5b6475] sm:text-[13px]">{english ? `One-time payment for six months, without auto-renewal. Equivalent to ${formatArs(offer?.semesterEquivalentMonthlyArs??7500)} per month.` : `Pago único por seis meses, sin renovación automática. Equivale a ${formatArs(offer?.semesterEquivalentMonthlyArs??7500)} por mes.`}</p>
             {offer?.semesterAvailable===false?<p className="mt-1 text-[12px] text-[#a16207]">{t("Esta oferta no está disponible en este momento.")}</p>:null}
           </div>
-          <button type="button" onClick={()=>void checkout('semester')} disabled={semesterDisabled||status==='active'||status==='attention'} className="min-h-[42px] shrink-0 rounded-full border border-[#d3def8] bg-white px-5 text-[13px] font-semibold text-[#2a49c9] hover:bg-[#f5f8ff] disabled:cursor-not-allowed disabled:opacity-50">{loading==='semester'?t("Abriendo…"):offer?.semesterAvailable===false?t("No disponible"):t("Elegir")}</button>
+          <button type="button" onClick={()=>void checkout('semester')} disabled={semesterDisabled||status==='active'||status==='attention'} className="min-h-[42px] shrink-0 rounded-full border border-[#d3def8] bg-white px-5 text-[13px] font-semibold text-[#3c55a0] hover:bg-[#f5f8ff] disabled:cursor-not-allowed disabled:opacity-50">{loading==='semester'?t("Abriendo…"):offer?.semesterAvailable===false?t("No disponible"):t("Elegir")}</button>
         </div>
       </details>
 
@@ -310,9 +310,9 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
           <ManualReferralCode offerCode="monthly" variant="compact" hideHeading/>
         </div>
       </details>
-      <Link href={backHref} className="mx-auto mt-2 flex min-h-[42px] w-fit items-center justify-center px-3 text-center text-[13px] font-semibold text-[#475569] hover:text-[#2a49c9]">{t("Volver al estudio sin comprar")}</Link>
+      <Link href={backHref} className="mx-auto mt-2 flex min-h-[42px] w-fit items-center justify-center px-3 text-center text-[13px] font-semibold text-[#475569] hover:text-[#3c55a0]">{t("Volver al estudio sin comprar")}</Link>
       {error?<p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-[12px] text-red-700">{error}</p>:null}
-      {checkoutUrl?<button type="button" onClick={()=>window.open(checkoutUrl,'evaluo-mercadopago')} className="mx-auto mt-2 block text-[12px] font-semibold text-[#2a49c9] underline">{t("Volver a abrir Mercado Pago")}</button>:null}
+      {checkoutUrl?<button type="button" onClick={()=>window.open(checkoutUrl,'evaluo-mercadopago')} className="mx-auto mt-2 block text-[12px] font-semibold text-[#3c55a0] underline">{t("Volver a abrir Mercado Pago")}</button>:null}
 
       <section className="mt-12 text-center sm:mt-16" aria-labelledby="premium-reasons">
         <h2 id="premium-reasons" className="text-[22px] font-extrabold tracking-[-.02em] sm:text-[24px]">{t("Tres razones para pasarte a Premium")}</h2>
@@ -331,12 +331,12 @@ export function PremiumDashboardScreen({source, materiaId, parcial, returnTo}: P
           <table className="w-full min-w-0 table-fixed border-collapse text-[11px] sm:text-[14px]">
             <colgroup><col style={{width:'39.4%'}}/><col style={{width:'30.3%'}}/><col style={{width:'30.3%'}}/></colgroup>
             <thead><tr className="text-[11px] font-bold tracking-[.05em] text-[#5b6475]">
-              <th scope="col" className="px-2.5 py-[13px] text-left sm:px-[22px]">{t("FUNCIONALIDAD")}</th><th scope="col" className="px-2 py-3 text-center">FREE</th><th scope="col" className="px-2 py-3 text-center text-[#2a49c9]">PREMIUM</th>
+              <th scope="col" className="px-2.5 py-[13px] text-left sm:px-[22px]">{t("FUNCIONALIDAD")}</th><th scope="col" className="px-2 py-3 text-center">FREE</th><th scope="col" className="px-2 py-3 text-center text-[#3c55a0]">PREMIUM</th>
             </tr></thead>
             <tbody>{comparison.map(([name,free,premium])=><tr key={name} className="border-t border-[#eef1f6]">
               <th scope="row" className="px-2.5 py-[13px] text-left font-semibold leading-[1.4] break-words sm:px-[22px]">{t(name)}</th>
               <td className="px-1.5 py-[13px] text-center leading-[1.4] break-words text-[#5b6475] sm:px-2">{t(free)}</td>
-              <td className="px-1.5 py-[13px] text-center font-bold leading-[1.4] break-words text-[#2a49c9] sm:px-2">{t(premium)}</td>
+              <td className="px-1.5 py-[13px] text-center font-bold leading-[1.4] break-words text-[#3c55a0] sm:px-2">{t(premium)}</td>
             </tr>)}</tbody>
           </table>
         </div>

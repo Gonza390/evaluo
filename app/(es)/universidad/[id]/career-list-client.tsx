@@ -29,56 +29,56 @@ const CAREER_PRESETS = [
   {
     matchers: ['ingenier', 'sistemas', 'informat', 'software', 'industrial'],
     icon: Building2,
-    iconColor: 'text-[#5B5CF6]',
+    iconColor: 'text-[#636DC3]',
     iconBg: 'bg-[#F1F0FF]',
     description: 'Forma parte del futuro, diseña soluciones reales.',
   },
   {
     matchers: ['medicina', 'medic'],
     icon: Stethoscope,
-    iconColor: 'text-[#22C55E]',
-    iconBg: 'bg-[#ECFDF3]',
+    iconColor: 'text-[#75B882]',
+    iconBg: 'bg-[#F1FBF5]',
     description: 'Vocación, ciencia y compromiso con la vida.',
   },
   {
     matchers: ['derecho', 'abog'],
     icon: Landmark,
-    iconColor: 'text-[#6D5EF8]',
+    iconColor: 'text-[#7070C7]',
     iconBg: 'bg-[#F3F0FF]',
     description: 'Defiende la justicia, construye un mejor mañana.',
   },
   {
     matchers: ['econom', 'admin', 'cont', 'negoc'],
     icon: BriefcaseBusiness,
-    iconColor: 'text-[#F59E0B]',
-    iconBg: 'bg-[#FFF7E8]',
+    iconColor: 'text-[#D9AA74]',
+    iconBg: 'bg-[#FCF7EF]',
     description: 'Entiende el mundo, lidera decisiones.',
   },
   {
     matchers: ['psic'],
     icon: HeartPulse,
-    iconColor: 'text-[#F43F8E]',
+    iconColor: 'text-[#CB718F]',
     iconBg: 'bg-[#FFF0F6]',
     description: 'Mente, comportamiento y bienestar.',
   },
   {
     matchers: ['arquitect', 'urban'],
     icon: Building2,
-    iconColor: 'text-[#3B82F6]',
+    iconColor: 'text-[#5887D2]',
     iconBg: 'bg-[#EEF5FF]',
     description: 'Diseña espacios, transforma realidades.',
   },
   {
     matchers: ['exact', 'matemat', 'fisic', 'quim', 'biolog'],
     icon: Microscope,
-    iconColor: 'text-[#2563EB]',
+    iconColor: 'text-[#456DBD]',
     iconBg: 'bg-[#EFF6FF]',
     description: 'Descubre, analiza y comprende.',
   },
   {
     matchers: ['social', 'comunic', 'period'],
     icon: BookText,
-    iconColor: 'text-[#FB7185]',
+    iconColor: 'text-[#DD8991]',
     iconBg: 'bg-[#FFF1F2]',
     description: 'Comunica, informa y genera impacto.',
   },
@@ -92,7 +92,7 @@ function getCareerPreset(name: string) {
       matchers.some((matcher) => normalizedName.includes(matcher))
     ) ?? {
       icon: GraduationCap,
-      iconColor: 'text-[#5B5CF6]',
+      iconColor: 'text-[#636DC3]',
       iconBg: 'bg-[#F1F0FF]',
       description: 'Explorá una formación pensada para tu futuro profesional.',
     }
@@ -131,7 +131,7 @@ export default function CareerListClient({
             placeholder="Buscar carrera..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 sm:h-10"
+            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#456DBD] focus:outline-none focus:ring-2 focus:ring-[#456DBD]/20 sm:h-10"
           />
         </div>
       </div>
@@ -159,7 +159,7 @@ export default function CareerListClient({
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-[1.02rem] leading-6 font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
+                    <h3 className="text-[1.02rem] leading-6 font-semibold tracking-[-0.035em] text-[#1D2D53] sm:text-[1.1rem]">
                       {carrera.nombre}
                     </h3>
                     <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-slate-600">

@@ -110,7 +110,7 @@ assert.match(setup,/data-study-plan-time-options/, 'La etapa de tiempo debe tene
 assert.match(setup,/sm:grid-cols-4/, 'Las cuatro duraciones van en una fila en escritorio.');
 assert.match(setup,/grid-cols-2 gap-2\.5 sm:grid-cols-4/, 'En móvil se mantienen dos columnas.');
 assert.match(setup,/\[15,30,45,60\]\.map\(value=>/, 'Conservar las duraciones originales.');
-assert.match(setup,/minutes===value\?'border-\[#2563EB\] bg-\[#EEF2FF\]/,
+assert.match(setup,/minutes===value\?'border-\[#456DBD\] bg-\[#EEF2FF\]/,
   'La opción elegida conserva el azul de Evaluo.');
 assert.match(setup,/data-study-plan-time-actions/, 'Acciones debajo de las opciones.');
 assert.match(setup,/onClick=\{\(\)=>setStep\(1\)\}/, 'Atrás retorna a selección de materiales.');

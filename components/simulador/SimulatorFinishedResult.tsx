@@ -196,7 +196,7 @@ export function SimulatorFinishedResult({
     <div className="min-h-[700px] bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_26%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto w-full max-w-5xl">
         <div className="mb-5">
-          <p className="text-sm font-semibold text-[#5D65F6]">Resultado del Simulador</p>
+          <p className="text-sm font-semibold text-[#6673C8]">Resultado del Simulador</p>
           <h1 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
             {materiaNombre || 'Tu materia'} · {getParcialLabel(parcial)}
           </h1>
@@ -226,7 +226,7 @@ export function SimulatorFinishedResult({
                   <p className="mt-3 text-sm text-slate-500">Comparando con tus intentos anteriores...</p>
                 ) : previousAttempt && improvement !== null && previousGrade !== null ? (
                   <div className="mt-3 flex items-start gap-3">
-                    <TrendingUp className={`mt-0.5 h-5 w-5 shrink-0 ${improvement > 0 ? 'text-emerald-600' : 'text-[#5D65F6]'}`} />
+                    <TrendingUp className={`mt-0.5 h-5 w-5 shrink-0 ${improvement > 0 ? 'text-emerald-600' : 'text-[#6673C8]'}`} />
                     <div>
                       <p className="text-sm font-bold text-slate-950 sm:text-base">
                         {improvement > 0 ? `Mejoraste ${improvement}% vs. tu intento anterior` : 'Ya tenés un intento anterior para comparar'}
@@ -236,7 +236,7 @@ export function SimulatorFinishedResult({
                   </div>
                 ) : (
                   <div className="mt-3 flex items-start gap-3">
-                    <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
+                    <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-[#6673C8]" />
                     <div>
                       <p className="text-sm font-bold text-slate-950 sm:text-base">Primer intento en esta materia</p>
                       <p className="mt-1 text-sm leading-6 text-slate-500">Este resultado queda como punto de partida para medir tu próxima mejora.</p>
@@ -266,13 +266,13 @@ export function SimulatorFinishedResult({
                         Tus {wrong} {wrong === 1 ? 'error quedó guardado' : 'errores quedaron guardados'}.
                         Evaluo los cruza con tus apuntes para mostrarte qué tema estudiar y dónde encontrarlo antes de volver a probarte.
                       </p>
-                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
+                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#555CB1]">
                         <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>De tus errores al lugar exacto de tus apuntes que necesitás reforzar.</span>
                       </div>
                       <Link
                         href={misErroresHref}
-                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
+                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
                       >
                         Estudiar lo que fallé en mis apuntes
                         <ArrowRight className="h-4 w-4" />
@@ -287,7 +287,7 @@ export function SimulatorFinishedResult({
                         Detectamos {wrong} {wrong === 1 ? 'punto' : 'puntos'} que te conviene estudiar.
                         Subí los apuntes que realmente entran en tu examen y Evaluo los procesa para encontrar dónde aparece cada tema.
                       </p>
-                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
+                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#555CB1]">
                         <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
                         <span>Pasá de “qué me salió mal” a “qué tengo que estudiar en mis apuntes”.</span>
                       </div>
@@ -304,7 +304,7 @@ export function SimulatorFinishedResult({
                           source: 'preguntero-exam-intent',
                           destination: ownMaterialHref,
                         }}
-                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
+                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
                       >
                         Subir mis apuntes y saber qué estudiar
                         <ArrowRight className="h-4 w-4" />
@@ -323,7 +323,7 @@ export function SimulatorFinishedResult({
                   <>
                     <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">Confirmá el resultado</h2>
                     <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">No tenés errores para repasar. Hacé otro Simulador para comprobar que podés sostener esta nota con preguntas distintas.</p>
-                    <button type="button" onClick={onNewExam} className="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95">
+                    <button type="button" onClick={onNewExam} className="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95">
                       Hacer otro Simulador
                       <ArrowRight className="h-4 w-4" />
                     </button>
@@ -346,7 +346,7 @@ export function SimulatorFinishedResult({
 
               {wrong === 0 ? (
                 <div className="mt-7 border-t border-slate-200 pt-6">
-                  <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
+                  <p className="text-[12px] font-semibold tracking-[0.16em] text-[#456DBD] uppercase">
                     Seguí preparando tu examen
                   </p>
                   <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
@@ -363,7 +363,7 @@ export function SimulatorFinishedResult({
                   {hasReadyOwnMaterial ? (
                     <Link
                       href="/dashboard"
-                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"
+                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8] sm:w-auto"
                     >
                       Continuar estudiando
                       <ArrowRight className="h-4 w-4" />
@@ -382,7 +382,7 @@ export function SimulatorFinishedResult({
                         source: 'preguntero-exam-intent',
                         destination: ownMaterialHref,
                       }}
-                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"
+                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8] sm:w-auto"
                     >
                       Subir mis apuntes
                       <ArrowRight className="h-4 w-4" />

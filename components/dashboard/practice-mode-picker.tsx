@@ -111,18 +111,18 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         </p>
         <div role="radiogroup" aria-label={english ? "Review duration" : "Tipo de repaso"} className="mt-3 grid gap-2 text-left sm:mt-4 sm:grid-cols-2 sm:gap-3">
           {([
-            {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',Icon:Zap,iconClass:'bg-[#FFF3D0] text-[#8B650F]'},
-            {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#2563EB]'},
+            {id:'rapido' as const,title:'Repaso rápido',description:'Lo esencial en pocos minutos: los conceptos clave y lo que más se repite.',time:'≈ 10 min',Icon:Zap,iconClass:'bg-[#F8F3E6] text-[#8B650F]'},
+            {id:'completo' as const,title:'Repaso completo',description:'Recorré el material con más ejercicios y profundizá en cada tema.',time:'≈ 40 min',Icon:BookOpen,iconClass:'bg-[#EEF2FF] text-[#456DBD]'},
           ]).map(option=>{
             const chosen=sessionLength===option.id;
             return <button key={option.id} type="button" role="radio" aria-checked={chosen}
               onClick={()=>setSessionLength(option.id)}
-              className={`relative flex h-full min-w-0 flex-col rounded-xl border px-3 py-2.5 text-left transition-colors sm:rounded-2xl sm:p-3.5 ${chosen?'border-[#2563EB] bg-[#F7FAFF] ring-2 ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
+              className={`relative flex h-full min-w-0 flex-col rounded-xl border px-3 py-2.5 text-left transition-colors sm:rounded-2xl sm:p-3.5 ${chosen?'border-[#456DBD] bg-[#F7FAFF] ring-2 ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
               <span className="flex items-center gap-2.5 pr-7">
                 <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${option.iconClass}`}><option.Icon className="size-[16px]"/></span>
                 <span className="text-[14px] font-semibold tracking-tight text-[#0F1B3D]">{t(option.title)}</span>
               </span>
-              <span aria-hidden="true" className={`absolute right-3 top-3 flex size-[18px] items-center justify-center rounded-full border ${chosen?'border-[#2563EB] bg-[#2563EB]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
+              <span aria-hidden="true" className={`absolute right-3 top-3 flex size-[18px] items-center justify-center rounded-full border ${chosen?'border-[#456DBD] bg-[#456DBD]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
               <span className="mt-2 block text-[11px] leading-[1.4] text-slate-600 sm:min-h-[32px]">{t(option.description)}</span>
               <span className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-2 text-[10px] font-medium leading-[1.35] text-slate-700 sm:text-[11px]">
                 <Clock3 className="size-3.5 shrink-0 text-slate-500"/>{option.time}
@@ -132,7 +132,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         </div>
         <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
           <button type="button" onClick={backToPicker} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">{t("Volver")}</button>
-          <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
+          <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
             {english ? "Continue" : "Continuar"} <ArrowRight className="size-4"/>
           </button>
         </div>
@@ -152,11 +152,11 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
         {material && (
           <div className="relative w-full min-w-0 sm:max-w-[340px]">
             <label htmlFor="practice-material" className="sr-only">{english ? "Study material" : "Material de estudio"}</label>
-            <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#2563EB]" />
+            <FileText aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#456DBD]" />
             <select id="practice-material" value={materialId} onChange={event => {
               setMaterialId(event.target.value); setSelectedMode(null); setActiveHistoryId(null); setPrepareError('');
             }}
-              className="min-h-11 w-full appearance-none truncate border-0 bg-transparent py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] shadow-none outline-none transition-colors hover:text-[#2563EB] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[#2563EB]/25 sm:text-[13px]">
+              className="min-h-11 w-full appearance-none truncate border-0 bg-transparent py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] shadow-none outline-none transition-colors hover:text-[#456DBD] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[#456DBD]/25 sm:text-[13px]">
               {materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
             </select>
             <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -173,7 +173,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
               <p className="mt-1 text-[12px] leading-5 text-[#526079]">{english ? "Upload your notes to unlock all practice modes." : "Subí tu material y desbloqueá las modalidades para practicar."}</p>
             </div>
           </div>
-          <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8] sm:self-auto">
+          <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#456DBD] px-4 text-[12px] font-semibold text-white hover:bg-[#3A5CA8] sm:self-auto">
             {english ? "Upload material" : "Subir mi material"} <ArrowRight className="size-4"/>
           </Link>
         </section>
@@ -186,7 +186,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
       )}
       <div data-practice-columns className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
         <section aria-label={english ? "Practice modes" : "Modalidades de práctica"} className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
-          <div data-practice-modes tabIndex={material ? 0 : -1} role="region" aria-label={english ? "Practice modes: scroll to see all" : "Modalidades de práctica: desplazate para ver todas"} className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4F5DFF] ${!material ? "lg:grid-cols-4" : ""}`}>
+          <div data-practice-modes tabIndex={material ? 0 : -1} role="region" aria-label={english ? "Practice modes: scroll to see all" : "Modalidades de práctica: desplazate para ver todas"} className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#5D70C4] ${!material ? "lg:grid-cols-4" : ""}`}>
             {modes.map(({ title, description, Icon, color }) => {
               const supported = available(title);
               const selected = selectedMode === title;

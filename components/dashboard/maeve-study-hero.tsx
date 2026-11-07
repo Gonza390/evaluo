@@ -95,7 +95,7 @@ export function MaeveStudyHero({
         <div className="mt-4 flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row sm:gap-3">
           {materialsCount > 0 && primaryMaterialHref ? (
             <>
-              <Button asChild className="h-11 w-full rounded-xl bg-[#0066ee] px-5 text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(0,102,238,0.19)] hover:bg-[#0058d4] sm:w-auto">
+              <Button asChild className="h-11 w-full rounded-xl bg-[#4070be] px-5 text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(0,102,238,0.19)] hover:bg-[#3361ac] sm:w-auto">
                 <Link
                   href={nextStudyAction?.href ?? primaryMaterialHref}
                   onClick={() => {
@@ -132,7 +132,7 @@ export function MaeveStudyHero({
             </>
           ) : (
             <Button type="button" data-first-pdf-cta="dashboard_empty" onClick={onUploadClick}
-              className="h-11 w-full max-w-xs rounded-xl bg-[#0066ee] px-5 text-[14px] font-semibold text-white hover:bg-[#0058d4] sm:w-auto">
+              className="h-11 w-full max-w-xs rounded-xl bg-[#4070be] px-5 text-[14px] font-semibold text-white hover:bg-[#3361ac] sm:w-auto">
               {t('Subir mi PDF')} <Upload className="ml-2 h-4 w-4" />
             </Button>
           )}
@@ -162,19 +162,19 @@ function EviMascot({ english = false }: { english?: boolean }) {
       <g className="evi-float">
         <path d="M437 940V985M632 940V985" stroke="#1b1c3a" strokeWidth="32" strokeLinecap="round" />
         <rect x="225" y="85" width="623" height="855" rx="85" fill="#fff" stroke="#1b1c3a" strokeWidth="24" />
-        <path d="M650 85 L848 280 H725 Q650 280 650 210Z" fill="#ffc832" stroke="#1b1c3a" strokeWidth="24" strokeLinejoin="round" />
+        <path d="M650 85 L848 280 H725 Q650 280 650 210Z" fill="#e2cfa3" stroke="#1b1c3a" strokeWidth="24" strokeLinejoin="round" />
         <rect x="322" y="740" width="428" height="28" rx="14" fill="#d5d9f5" />
-        <rect x="314" y="817" width="322" height="42" rx="21" fill="#ffc832" />
-        <ellipse cx="344" cy="585" rx="46" ry="28" fill="#ff9a8b" />
-        <ellipse cx="726" cy="585" rx="46" ry="28" fill="#ff9a8b" />
+        <rect x="314" y="817" width="322" height="42" rx="21" fill="#e2cfa3" />
+        <ellipse cx="344" cy="585" rx="46" ry="28" fill="#eba69b" />
+        <ellipse cx="726" cy="585" rx="46" ry="28" fill="#eba69b" />
         <path d="M225 610 Q160 630 140 700" fill="none" stroke="#1b1c3a" strokeWidth="24" strokeLinecap="round" />
         <circle cx="140" cy="740" r="42" fill="#fff" stroke="#1b1c3a" strokeWidth="22" />
         <path d="M848 610 Q890 650 912 705" fill="none" stroke="#1b1c3a" strokeWidth="24" strokeLinecap="round" />
         <g className="evi-pencil">
           <g transform="translate(930 730) rotate(20)">
-            <rect x="-30" y="-130" width="60" height="250" fill="#ffc832" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
-            <path d="M-30 -130 L30 -130 L0 -195Z" fill="#f9d3a0" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
-            <rect x="-30" y="120" width="60" height="34" fill="#ff9a8b" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
+            <rect x="-30" y="-130" width="60" height="250" fill="#e2cfa3" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
+            <path d="M-30 -130 L30 -130 L0 -195Z" fill="#efd6b5" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
+            <rect x="-30" y="120" width="60" height="34" fill="#eba69b" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
             <path d="M-30 -60H30" stroke="#1b1c3a" strokeWidth="14" />
           </g>
           <circle cx="930" cy="735" r="42" fill="#fff" stroke="#1b1c3a" strokeWidth="22" />
@@ -188,10 +188,10 @@ function EviMascot({ english = false }: { english?: boolean }) {
         <path d="M488 485 Q535 460 582 485M368 468 L318 442M702 468 L752 442" fill="none" stroke="#1b1c3a" strokeWidth="18" strokeLinecap="round" />
         <path d="M468 592 Q540 650 612 582" fill="none" stroke="#1b1c3a" strokeWidth="24" strokeLinecap="round" />
       </g>
-      <circle cx="990" cy="440" r="14" fill="#ffc832" />
-      <circle cx="1000" cy="380" r="9" fill="#2f4cff" />
-      <circle cx="90" cy="250" r="16" fill="#2f4cff" />
-      <circle cx="150" cy="170" r="11" fill="#ffc832" />
+      <circle cx="990" cy="440" r="14" fill="#e2cfa3" />
+      <circle cx="1000" cy="380" r="9" fill="#4965b8" />
+      <circle cx="90" cy="250" r="16" fill="#4965b8" />
+      <circle cx="150" cy="170" r="11" fill="#e2cfa3" />
     </svg>
   );
 }

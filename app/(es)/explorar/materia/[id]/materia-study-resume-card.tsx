@@ -189,11 +189,11 @@ export function MateriaStudyResumeCard({
     >
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-[#2563EB] shadow-sm">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-[#456DBD] shadow-sm">
             <RotateCcw className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-bold tracking-[0.12em] text-[#2563EB] uppercase">
+            <p className="text-[11px] font-bold tracking-[0.12em] text-[#456DBD] uppercase">
               Continuá donde lo dejaste
             </p>
             <h2
@@ -213,7 +213,7 @@ export function MateriaStudyResumeCard({
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white">
                   <div
-                    className="h-full rounded-full bg-[#2563EB] transition-[width]"
+                    className="h-full rounded-full bg-[#456DBD] transition-[width]"
                     style={{ width: `${resumeItem.progress}%` }}
                   />
                 </div>
@@ -227,7 +227,7 @@ export function MateriaStudyResumeCard({
         <Link
           href={resumeItem.href}
           onClick={() => track('resume')}
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#456DBD] px-5 text-sm font-semibold text-white transition hover:bg-[#3A5CA8]"
         >
           {resumeItem.cta}
           <ArrowRight className="h-4 w-4" />

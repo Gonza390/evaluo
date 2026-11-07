@@ -86,7 +86,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
         className="flex h-[min(72dvh,680px)] min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:max-h-full">
         <div className="shrink-0 border-b border-[#EFF2F7] px-4 pb-3 pt-3 sm:px-5 sm:pt-4">
           <button type="button" onClick={onBackToHistory}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[11px] font-semibold text-[#2563EB] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[11px] font-semibold text-[#456DBD] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
             <ArrowLeft className="size-3.5" aria-hidden="true"/> {tr("Volver a prácticas realizadas","Back to completed practice")}
           </button>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -105,7 +105,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
             </div>
           </div>
           <div className="mt-3 h-1 overflow-hidden rounded-full bg-[#EDF1F6]" role="progressbar" aria-label={tr("Porcentaje de respuestas correctas","Percentage of correct answers")} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-            <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`} style={{width:`${percent}%`}}/>
+            <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#D2AF72]'}`} style={{width:`${percent}%`}}/>
           </div>
         </div>
         <div data-practice-history-answers tabIndex={0} role="region" aria-label={tr("Respuestas de la práctica","Practice answers")} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 [scrollbar-color:#B8C6DC_transparent] [scrollbar-width:thin] sm:px-5">
@@ -143,7 +143,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
             {tr("Podés seguir practicando. Reintentá para consultar tus resultados anteriores.","You can keep practicing. Retry to review earlier results.")}
           </p>
           <button type="button" onClick={() => router.refresh()}
-            className="mt-3 min-h-10 rounded-lg bg-[#2563EB] px-4 text-[12px] font-semibold text-white hover:bg-[#1D4ED8]">
+            className="mt-3 min-h-10 rounded-lg bg-[#456DBD] px-4 text-[12px] font-semibold text-white hover:bg-[#3A5CA8]">
             {tr("Reintentar","Try again")}
           </button>
         </div>
@@ -188,7 +188,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
           </p>
           {onStartFlashcards && (
             <button type="button" onClick={onStartFlashcards}
-              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#2563EB] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_5px_15px_rgba(37,99,235,0.16)] transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#456DBD] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_5px_15px_rgba(37,99,235,0.16)] transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
               {tr("Empezar con Flashcards","Start with flashcards")} <ArrowRight className="size-3.5" aria-hidden="true"/>
             </button>
           )}
@@ -200,19 +200,19 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
           </h3>
           <div className="mt-3 space-y-3">
             <div className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E8F0FD] text-[#2563EB]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E8F0FD] text-[#456DBD]">
                 <ChartNoAxesColumnIncreasing className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
               <p className="text-[11px] leading-4 text-[#344054]">{tr("Tu porcentaje de aciertos en cada práctica","Your score for each practice")}</p>
             </div>
             <div className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E4F8EE] text-[#12A05F]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E4F8EE] text-[#389D66]">
                 <History className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
               <p className="text-[11px] leading-4 text-[#344054]">{tr("Tus resultados, ordenados por fecha","Your results, sorted by date")}</p>
             </div>
             <div className="flex items-center gap-2.5">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#F0E9FD] text-[#7A3FE0]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#F0E9FD] text-[#725AB2]">
                 <RotateCcw className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
               <p className="text-[11px] leading-4 text-[#344054]">{tr("Tus errores, para repasarlos con un clic","Your mistakes, ready for review")}</p>
@@ -257,7 +257,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
                       <article key={item.id} className="py-2.5">
                         <button type="button" aria-label={`${english ? 'View details for' : 'Ver el detalle de'} ${labels[item.mode] ?? item.mode}, ${percentOf(item)}%`}
                           onClick={() => onSelectSession(item)}
-                          className="flex w-full items-center gap-2.5 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-[#4F5DFF]">
+                          className="flex w-full items-center gap-2.5 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-[#5D70C4]">
                           <span className={`flex size-9 shrink-0 items-center justify-center rounded-[11px] ${modePalette[item.mode] ?? 'bg-slate-100 text-slate-600'}`}>
                             <Icon className="size-[17px]" strokeWidth={1.8} aria-hidden="true"/>
                           </span>
@@ -277,11 +277,11 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
                         </button>
                         <div className="mt-2 flex items-center gap-3 pl-[46px]">
                           <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[#EDF1F6]">
-                            <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#E0AB45]'}`}
+                            <div className={`h-full rounded-full ${percent >= 80 ? 'bg-emerald-500' : 'bg-[#D2AF72]'}`}
                               style={{ width: `${percent}%` }}/>
                           </div>
                           <button type="button" onClick={() => onSelectSession(item)}
-                            className="shrink-0 text-[10px] font-semibold text-[#2563EB] hover:underline">
+                            className="shrink-0 text-[10px] font-semibold text-[#456DBD] hover:underline">
                             {item.answers?.length && incorrect ? (english ? `Review ${incorrect}` : `Revisar ${incorrect}`) : tr('Ver detalle','View details')}
                           </button>
                         </div>

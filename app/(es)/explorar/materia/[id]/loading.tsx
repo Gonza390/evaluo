@@ -25,7 +25,7 @@ export default function Loading() {
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
               <div className="h-11 w-full animate-pulse rounded-2xl bg-white/10 sm:w-32" />
               <div className="h-11 w-full animate-pulse rounded-2xl bg-white/10 sm:w-36" />
-              <div className="col-span-2 h-11 w-full animate-pulse rounded-2xl bg-[#2563EB]/60 sm:hidden" />
+              <div className="col-span-2 h-11 w-full animate-pulse rounded-2xl bg-[#456DBD]/60 sm:hidden" />
             </div>
           </div>
         </div>

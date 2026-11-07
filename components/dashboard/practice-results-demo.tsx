@@ -143,7 +143,7 @@ export function PracticeResultsDemo({ type }: { type: string }) {
     <div className="min-h-full bg-white px-3 py-4 sm:px-5 sm:py-5">
       <div className="mx-auto max-w-[920px]">
         <div className="mb-3 px-1 pb-3 sm:mb-4 sm:pb-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#2563EB]">Vista previa local · Evaluo</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#456DBD]">Vista previa local · Evaluo</p>
           <h1 className="mt-1 text-[21px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[24px]">Pantallas al finalizar una práctica</h1>
           <p className="mt-1 text-[12px] leading-5 text-[#42506A] sm:text-[13px]">Elegí una pantalla. Los resultados son ficticios; no se realizan actividades, llamadas a IA ni consumo de cupos Free.</p>
           <nav aria-label="Pantallas de resultados" className="mt-4 flex flex-wrap gap-2">
@@ -152,7 +152,7 @@ export function PracticeResultsDemo({ type }: { type: string }) {
                 key={item.type}
                 href={`/dashboard/practicar/resultados-demo?tipo=${item.type}`}
                 aria-current={item.type === current ? 'page' : undefined}
-                className={`inline-flex min-h-9 items-center rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition-colors ${item.type === current ? 'border-[#2563EB] bg-[#EEF2FF] text-[#032269]' : 'border-[#E7EBF4] bg-white text-[#42506A] hover:border-[#2563EB]'}`}
+                className={`inline-flex min-h-9 items-center rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition-colors ${item.type === current ? 'border-[#456DBD] bg-[#EEF2FF] text-[#032269]' : 'border-[#E7EBF4] bg-white text-[#42506A] hover:border-[#456DBD]'}`}
               >
                 {item.label}
               </Link>

@@ -263,7 +263,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 type="button"
                 disabled={!examDate || saving}
                 onClick={() => void save()}
-                className="mt-4 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-bold text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-4 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#456DBD] px-5 text-sm font-bold text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)] transition hover:bg-[#3A5CA8] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {saving ? 'Guardando...' : 'Guardar fecha'}
@@ -316,7 +316,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
               <button
                 type="button"
                 onClick={() => setVisible(false)}
-                className="mt-5 flex h-12 w-full items-center justify-center rounded-2xl bg-[#2563EB] px-5 text-sm font-bold text-white transition hover:bg-[#1D4ED8]"
+                className="mt-5 flex h-12 w-full items-center justify-center rounded-2xl bg-[#456DBD] px-5 text-sm font-bold text-white transition hover:bg-[#3A5CA8]"
               >
                 Entendido
               </button>

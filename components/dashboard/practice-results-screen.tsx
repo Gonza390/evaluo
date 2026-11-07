@@ -47,7 +47,7 @@ function ResultButton({ action, primary = false }: { action?: ResultAction; prim
   const t = (value: string) => studyUiText(locale, value);
   if (!action) return null;
   const className = 'inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[12px] font-semibold transition-colors ' +
-    (primary ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] ' : 'border border-[#E7EBF4] bg-white text-[#42506A] hover:bg-[#F5F7FB] ') +
+    (primary ? 'bg-[#456DBD] text-white hover:bg-[#3A5CA8] ' : 'border border-[#E7EBF4] bg-white text-[#42506A] hover:bg-[#F5F7FB] ') +
     (action.disabled ? 'cursor-not-allowed opacity-50' : '');
   if (action.href && !action.disabled) return (
     <Link href={action.href} className={className}
@@ -125,7 +125,7 @@ export function PracticeResultsScreen({
           </div>
 
           {mistakes.length === 0 ? (
-            <div className="flex items-start gap-3 rounded-[20px] border border-[#D1FADF] bg-[#F6FEF9] px-4 py-5 sm:p-6">
+            <div className="flex items-start gap-3 rounded-[20px] border border-[#E1F4E7] bg-[#F6FEF9] px-4 py-5 sm:p-6">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#067647] text-white"><Check className="size-5" aria-hidden="true" /></span>
               <div>
                 <p className="text-[14px] font-semibold text-[#054F31]">{flashcards ? t('Tarjetas recordadas') : t('Práctica completada')}</p>
@@ -144,7 +144,7 @@ export function PracticeResultsScreen({
                   <details key={entry.index} open={position === 0}
                     className="group overflow-hidden rounded-2xl border border-[#E7EBF4] bg-white shadow-[0_4px_16px_rgba(15,27,61,0.025)]">
                     <summary className="flex cursor-pointer items-center gap-3 px-4 py-3.5 marker:content-none sm:px-4">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#D92D20] text-white">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#BA5649] text-white">
                         <X className="size-3.5" strokeWidth={3} aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1 space-y-1.5">
@@ -156,7 +156,7 @@ export function PracticeResultsScreen({
                             {t(entry.modeLabel || modeLabel)}
                           </span>
                           {entry.chapterTitle && (
-                            <span className="max-w-full truncate rounded-full bg-[#EAF0FB] px-2.5 py-0.5 text-[11px] font-semibold text-[#084BB0]">
+                            <span className="max-w-full truncate rounded-full bg-[#EAF0FB] px-2.5 py-0.5 text-[11px] font-semibold text-[#2A5193]">
                               {entry.chapterTitle}
                             </span>
                           )}
@@ -169,14 +169,14 @@ export function PracticeResultsScreen({
                     </summary>
 
                     <div className="flex flex-col gap-2.5 px-4 pb-4 sm:px-4 sm:pb-4">
-                      <div className="flex items-start gap-2.5 rounded-xl border border-[#FDA29B] bg-[#FEF3F2] px-3 py-3">
-                        <X className="mt-0.5 size-4 shrink-0 text-[#B42318]" strokeWidth={2.4} aria-hidden="true" />
+                      <div className="flex items-start gap-2.5 rounded-xl border border-[#EDABA5] bg-[#FEF3F2] px-3 py-3">
+                        <X className="mt-0.5 size-4 shrink-0 text-[#A04034]" strokeWidth={2.4} aria-hidden="true" />
                         <div className="min-w-0">
-                          <p className="text-[10px] font-bold tracking-[0.08em] text-[#B42318]">{flashcards ? t('NO LO SABÍA') : t('TU RESPUESTA')}</p>
-                          <p className="mt-0.5 break-words text-[13px] leading-5 text-[#7A271A]">{entry.selectedAnswer || (english ? 'No answer' : 'Sin responder')}</p>
+                          <p className="text-[10px] font-bold tracking-[0.08em] text-[#A04034]">{flashcards ? t('NO LO SABÍA') : t('TU RESPUESTA')}</p>
+                          <p className="mt-0.5 break-words text-[13px] leading-5 text-[#742E22]">{entry.selectedAnswer || (english ? 'No answer' : 'Sin responder')}</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-2.5 rounded-xl border border-[#ABEFC6] bg-[#ECFDF3] px-3 py-3">
+                      <div className="flex items-start gap-2.5 rounded-xl border border-[#C3E7D0] bg-[#F1FBF5] px-3 py-3">
                         <Check className="mt-0.5 size-4 shrink-0 text-[#067647]" strokeWidth={2.6} aria-hidden="true" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold tracking-[0.08em] text-[#067647]">{flashcards ? t('CONCEPTO A RECORDAR') : t('RESPUESTA CORRECTA')}</p>
@@ -186,18 +186,18 @@ export function PracticeResultsScreen({
                       {entry.explanation?.trim() && (
                         <div className="rounded-xl border border-[#DBE6F8] bg-[#F7FAFF] px-3.5 py-3">
                           <p className="flex items-center gap-2 text-[13px] font-semibold text-[#0F1B3D]">
-                            <Lightbulb className="size-4 text-[#2563EB]" aria-hidden="true" /> {english ? 'Why' : 'Por qué'}
+                            <Lightbulb className="size-4 text-[#456DBD]" aria-hidden="true" /> {english ? 'Why' : 'Por qué'}
                           </p>
                           <p className="mt-1.5 whitespace-pre-line break-words text-[13px] leading-[1.6] text-[#42506A]">{entry.explanation}</p>
                         </div>
                       )}
                       {materialHref && (
                         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                          <Link href={materialHref} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2563EB] hover:text-[#084BB0]">
-                            <span aria-hidden="true" className="flex h-6 min-w-5 items-center justify-center rounded bg-[#D92D3A] px-0.5 text-[7px] font-bold text-white">{documentLabel}</span>
+                          <Link href={materialHref} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#456DBD] hover:text-[#2A5193]">
+                            <span aria-hidden="true" className="flex h-6 min-w-5 items-center justify-center rounded bg-[#BB5654] px-0.5 text-[7px] font-bold text-white">{documentLabel}</span>
                             {entry.pageStart ? t('Ver en tu material · pág. ') + entry.pageStart : t('Ver en tu material')}
                           </Link>
-                          <Link href={summaryHref!} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2563EB] hover:text-[#084BB0]">
+                          <Link href={summaryHref!} className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#456DBD] hover:text-[#2A5193]">
                             {english ? 'Review this topic summary' : 'Repasar el resumen del tema'} <ArrowRight className="size-3.5" aria-hidden="true" />
                           </Link>
                         </div>
@@ -218,7 +218,7 @@ export function PracticeResultsScreen({
                 {correctEntries.map((entry) => (
                   <li key={entry.index} className="rounded-xl border border-[#E7EBF4] bg-white px-3 py-3 sm:px-4">
                     <div className="flex items-start gap-2.5">
-                      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#ECFDF3] text-[#067647]">
+                      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#F1FBF5] text-[#067647]">
                         <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">

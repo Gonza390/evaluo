@@ -157,16 +157,16 @@ button[aria-label='Mostrar respuesta'] > div > div:first-child > p:last-child {
 
 button[aria-label='Mostrar respuesta'] > div > div:first-child > p:last-child::before {
   content: '↻';
-  color: #2563eb;
+  color: #456dbd;
   font-size: 1rem;
   line-height: 1;
 }
 
 /* Dorso: la respuesta se reconoce inmediatamente como el estado correcto. */
 button[aria-label='Mostrar pregunta'] > div > div:nth-child(2) {
-  border-color: #bbf7d0 !important;
+  border-color: #d4eedc !important;
   border-radius: 24px !important;
-  background: linear-gradient(155deg, #ffffff 0%, #f0fdf4 100%) !important;
+  background: linear-gradient(155deg, #ffffff 0%, #f3fbf6 100%) !important;
   box-shadow: 0 18px 48px rgb(15 23 42 / 0.08) !important;
 }
 
@@ -174,9 +174,9 @@ button[aria-label='Mostrar pregunta'] > div > div:nth-child(2) > p:first-child {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border: 1px solid #bbf7d0;
+  border: 1px solid #d4eedc;
   border-radius: 999px;
-  background: #f0fdf4;
+  background: #f3fbf6;
   padding: 0.42rem 0.7rem;
   color: #15803d !important;
   letter-spacing: 0.08em !important;
@@ -184,7 +184,7 @@ button[aria-label='Mostrar pregunta'] > div > div:nth-child(2) > p:first-child {
 
 button[aria-label='Mostrar pregunta'] > div > div:nth-child(2) > p:first-child::after {
   content: '✓ Correcta';
-  border-left: 1px solid #bbf7d0;
+  border-left: 1px solid #d4eedc;
   padding-left: 0.45rem;
   color: #166534;
   font-weight: 700;

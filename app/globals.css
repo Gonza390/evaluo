@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import './tonalidad.css';
 @source '../components/preview';
 
 /* Evaluo motion system: subtle, composited effects for private app screens. */
@@ -9,34 +10,48 @@
   --evaluo-motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes evaluo-route-enter {
-  from { opacity: 0.55; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes evaluo-surface-enter {
-  from { opacity: 0; transform: translate3d(0, 5px, 0) scale(0.99); }
-  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translate3d(0, 5px, 0) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 [data-evaluo-route-enter] {
   animation: evaluo-route-enter 170ms var(--evaluo-motion-ease) both;
 }
 [data-evaluo-motion-card] {
-  transition: transform var(--evaluo-motion-fast) var(--evaluo-motion-ease),
-              box-shadow var(--evaluo-motion-normal) var(--evaluo-motion-ease),
-              border-color var(--evaluo-motion-normal) ease;
+  transition:
+    transform var(--evaluo-motion-fast) var(--evaluo-motion-ease),
+    box-shadow var(--evaluo-motion-normal) var(--evaluo-motion-ease),
+    border-color var(--evaluo-motion-normal) ease;
 }
 @media (hover: hover) and (pointer: fine) {
   [data-evaluo-motion-card]:hover {
     transform: translate3d(0, -2px, 0);
-    box-shadow: 0 12px 24px -14px rgb(15 23 42 / 0.20);
+    box-shadow: 0 12px 24px -14px rgb(15 23 42 / 0.2);
   }
 }
 @media (hover: none), (pointer: coarse) {
-  [data-evaluo-motion-card]:active { transform: scale(0.989); }
+  [data-evaluo-motion-card]:active {
+    transform: scale(0.989);
+  }
 }
 [data-evaluo-mobile-nav-item] {
   position: relative;
-  transition: color var(--evaluo-motion-fast) ease,
-              background-color var(--evaluo-motion-fast) ease;
+  transition:
+    color var(--evaluo-motion-fast) ease,
+    background-color var(--evaluo-motion-fast) ease;
 }
 [data-evaluo-mobile-nav-item]::after {
   content: '';
@@ -49,33 +64,42 @@
   background: var(--brand);
   transform: scaleX(0);
   opacity: 0;
-  transition: transform var(--evaluo-motion-normal) var(--evaluo-motion-ease),
-              opacity var(--evaluo-motion-fast) ease;
+  transition:
+    transform var(--evaluo-motion-normal) var(--evaluo-motion-ease),
+    opacity var(--evaluo-motion-fast) ease;
 }
 [data-evaluo-mobile-nav-item][aria-current='page']::after {
   transform: scaleX(1);
   opacity: 1;
 }
 [data-evaluo-sidebar-indicator] {
-  transition: transform 210ms var(--evaluo-motion-ease),
-              width 210ms var(--evaluo-motion-ease),
-              height 210ms var(--evaluo-motion-ease),
-              opacity var(--evaluo-motion-fast) ease;
+  transition:
+    transform 210ms var(--evaluo-motion-ease),
+    width 210ms var(--evaluo-motion-ease),
+    height 210ms var(--evaluo-motion-ease),
+    opacity var(--evaluo-motion-fast) ease;
 }
-[data-slot='dialog-overlay'], [data-slot='drawer-overlay'] {
-  transition: opacity var(--evaluo-motion-normal) ease,
-              backdrop-filter var(--evaluo-motion-normal) ease;
+[data-slot='dialog-overlay'],
+[data-slot='drawer-overlay'] {
+  transition:
+    opacity var(--evaluo-motion-normal) ease,
+    backdrop-filter var(--evaluo-motion-normal) ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-evaluo-route-enter], [data-evaluo-motion-card],
-  [data-evaluo-mobile-nav-item], [data-evaluo-mobile-nav-item]::after,
-  [data-evaluo-sidebar-indicator], [data-slot='dialog-overlay'],
+  [data-evaluo-route-enter],
+  [data-evaluo-motion-card],
+  [data-evaluo-mobile-nav-item],
+  [data-evaluo-mobile-nav-item]::after,
+  [data-evaluo-sidebar-indicator],
+  [data-slot='dialog-overlay'],
   [data-slot='drawer-overlay'] {
     animation: none !important;
     transition: none !important;
     transform: none !important;
   }
-  [data-evaluo-sidebar-indicator] { display: none; }
+  [data-evaluo-sidebar-indicator] {
+    display: none;
+  }
 }
 
 /* Dentro de un PDF, la navegación de estudio reemplaza la navegación general. */
@@ -92,23 +116,23 @@
   --card-foreground: oklch(0.15 0.01 230);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.01 230);
-  --primary: oklch(0.537 0.229 253.9);
+  --primary: oklch(0.537 0.134 253.9);
   --primary-foreground: oklch(1 0 0);
-  --brand: #2563eb;
-  --brand-2: #6366f1;
+  --brand: #456dbd;
+  --brand-2: #6972c8;
   --heading: #0f1b3d;
-  --accent-violet: #5b5fef;
+  --accent-violet: #626dc3;
   --secondary: oklch(0.96 0.005 210);
   --secondary-foreground: oklch(0.15 0.01 230);
   --muted: oklch(0.95 0.005 210);
   --muted-foreground: oklch(0.45 0.02 230);
-  --accent: oklch(0.585 0.208 266.3);
+  --accent: oklch(0.585 0.131 266.3);
   --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.577 0.131 27.325);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.9 0.01 210);
   --input: oklch(0.92 0.01 210);
-  --ring: oklch(0.537 0.229 253.9);
+  --ring: oklch(0.537 0.134 253.9);
   --radius: 0.875rem;
   --radius-card: calc(var(--radius) + 8px);
   --radius-panel: calc(var(--radius) + 14px);
@@ -338,8 +362,14 @@
 }
 
 @keyframes evaluo-study-tab-enter {
-  from { opacity: 0.65; transform: translate3d(0, 3px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from {
+    opacity: 0.65;
+    transform: translate3d(0, 3px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 @keyframes saasGlow {
@@ -404,16 +434,16 @@
 }
 
 @utility bg-brand {
-  background-color: #2563eb;
+  background-color: #456dbd;
 }
 @utility bg-brand-2 {
-  background-color: #6366f1;
+  background-color: #6972c8;
 }
 @utility text-brand {
-  color: #2563eb;
+  color: #456dbd;
 }
 @utility text-brand-2 {
-  color: #6366f1;
+  color: #6972c8;
 }
 @utility text-heading {
   color: #0f1b3d;
@@ -523,13 +553,17 @@
     grid-column: auto !important;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > div[class*='border-emerald-100'] {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > div[class*='border-emerald-100'] {
     grid-column: 1 / -1 !important;
     padding-top: 0.65rem;
     padding-bottom: 0.65rem;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > div[class*='border-blue-100'] {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > div[class*='border-blue-100'] {
     display: flex;
     min-width: 0;
     align-items: center;
@@ -537,7 +571,10 @@
     padding: 0.65rem 0.8rem;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > div[class*='border-blue-100'] > p {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > div[class*='border-blue-100']
+    > p {
     margin: 0;
     flex: 0 0 auto;
     font-size: 0.62rem;
@@ -546,7 +583,10 @@
     white-space: nowrap;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > div[class*='border-blue-100'] > div {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > div[class*='border-blue-100']
+    > div {
     margin-top: 0 !important;
     min-width: 0;
     flex: 1 1 auto;
@@ -554,21 +594,32 @@
     overflow: hidden;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > div[class*='border-blue-100'] > div > span {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > div[class*='border-blue-100']
+    > div
+    > span {
     white-space: nowrap;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > div[class*='border-blue-100'] > div > span:last-child {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > div[class*='border-blue-100']
+    > div
+    > span:last-child {
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > div:nth-child(2) > p:last-child {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > div:nth-child(2)
+    > p:last-child {
     grid-column: 1 / -1 !important;
     margin-top: 0;
   }
 
-  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl'] > [data-slot='dialog-footer'] {
+  [data-slot='dialog-content'][class*='max-h-[88vh]'][class*='max-w-2xl']
+    > [data-slot='dialog-footer'] {
     padding-top: 0.75rem;
     padding-bottom: 0.75rem;
   }
@@ -601,15 +652,25 @@
 /* Al entrar al paso 3 (Progreso), aparecen los estados ilustrativos en secuencia.
    Nunca se anima ni se modifica la evidencia real del alumno. */
 @keyframes evaluo-onboarding-status-reveal {
-  from { opacity: 0.25; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0.25;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 [data-onboarding-step='progress'] [data-tour-example-topic] {
   animation: evaluo-onboarding-status-reveal 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-[data-onboarding-step='progress'] [data-tour-example-topic]:nth-child(2) { animation-delay: 75ms; }
-[data-onboarding-step='progress'] [data-tour-example-topic]:nth-child(3) { animation-delay: 150ms; }
+[data-onboarding-step='progress'] [data-tour-example-topic]:nth-child(2) {
+  animation-delay: 75ms;
+}
+[data-onboarding-step='progress'] [data-tour-example-topic]:nth-child(3) {
+  animation-delay: 150ms;
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-onboarding-step='progress'] [data-tour-example-topic] {
@@ -620,10 +681,18 @@
 /* Giro real de Flashcards sin caras superpuestas: la tarjeta se pone de perfil
    en el centro y la pregunta/respuesta cambia sólo durante ese instante. */
 @keyframes evaluo-flashcard-turn {
-  0% { transform: perspective(1100px) rotateY(0deg); }
-  49.9% { transform: perspective(1100px) rotateY(90deg); }
-  50% { transform: perspective(1100px) rotateY(-90deg); }
-  100% { transform: perspective(1100px) rotateY(0deg); }
+  0% {
+    transform: perspective(1100px) rotateY(0deg);
+  }
+  49.9% {
+    transform: perspective(1100px) rotateY(90deg);
+  }
+  50% {
+    transform: perspective(1100px) rotateY(-90deg);
+  }
+  100% {
+    transform: perspective(1100px) rotateY(0deg);
+  }
 }
 
 .animate-flashcard-turn {

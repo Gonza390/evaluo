@@ -70,7 +70,7 @@ export function UnlamEditorialGuide() {
                 <Link href="/login?mode=login" className="inline-flex min-h-11 items-center text-xs font-semibold text-slate-600 hover:text-slate-950">Entrar</Link>
                 <TrackedLink href={uploadHref} eventName="cta_click"
                   payload={{ location: 'seo_ingreso_unlam_2027_header', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
-                  className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#174BBD] px-3 text-xs font-bold text-white transition hover:bg-[#0D2F82] sm:px-4">
+                  className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#31549A] px-3 text-xs font-bold text-white transition hover:bg-[#213763] sm:px-4">
                   Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </TrackedLink>
               </div>
@@ -84,13 +84,13 @@ export function UnlamEditorialGuide() {
           <div className="mx-auto grid w-full max-w-[1160px] gap-6 px-4 pb-8 pt-8 sm:gap-8 sm:px-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)] lg:items-center lg:gap-12 lg:py-16">
             <div className="min-w-0">
               <div className="max-w-[820px]">
-                <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.11em] text-[#174BBD] sm:text-[11px]">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.11em] text-[#31549A] sm:text-[11px]">
                   <span>Guía 2027</span>
-                  <span className="h-1 w-1 rounded-full bg-[#2563EB]" />
+                  <span className="h-1 w-1 rounded-full bg-[#456DBD]" />
                   <span>Universidad Nacional de La Matanza</span>
                 </div>
                 <h1 className="mt-5 max-w-[720px] text-[2.45rem] font-black leading-[1.07] tracking-[-0.05em] text-[#0f1b3d] sm:text-5xl lg:text-[3.45rem]">
-                  Curso de Ingreso <span className="text-[#174BBD]">UNLaM 2027</span>: materias, fechas y cómo estudiar
+                  Curso de Ingreso <span className="text-[#31549A]">UNLaM 2027</span>: materias, fechas y cómo estudiar
                 </h1>
                 <p className="mt-5 max-w-2xl text-[15px] leading-7 text-slate-600 sm:text-base sm:leading-8">
                   Consultá las materias según tu carrera, las fechas oficiales de 2027 y una guía para preparar el manual. Además, podés resolver ejercicios gratuitos y continuar practicando con tus propios apuntes en Evaluo.
@@ -118,7 +118,7 @@ export function UnlamEditorialGuide() {
                     href="#materias-unlam"
                     eventName="cta_click"
                     payload={{ location: 'seo_ingreso_unlam_2027_hero', cta_name: 'ver_materias_por_carrera', destination: '#materias-unlam' }}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-3 text-sm font-bold text-[#174BBD] transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-3 text-sm font-bold text-[#31549A] transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                   >
                     Ver materias de mi carrera
                   </TrackedLink>
@@ -231,7 +231,7 @@ export function UnlamEditorialGuide() {
               </div>
               <TrackedLink href={uploadHref} eventName="cta_click"
                 payload={{ location: 'seo_ingreso_unlam_2027_final', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
-                className="mt-5 inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#0D2F82] hover:bg-blue-50 sm:mt-0">
+                className="mt-5 inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#213763] hover:bg-blue-50 sm:mt-0">
                 <UploadCloud className="h-4 w-4" aria-hidden="true" /> Elegir mi PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
             </div>

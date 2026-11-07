@@ -30,7 +30,7 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
       <div className="mx-auto w-full max-w-5xl">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
+            <p className="text-sm font-semibold text-[#6673C8]">Resultados del simulador</p>
             <h1 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
               Derecho Procesal Público · Parcial 1
             </h1>
@@ -84,7 +84,7 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                   </div>
                 ) : (
                   <div className="mt-3 flex items-start gap-3">
-                    <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
+                    <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-[#6673C8]" />
                     <div>
                       <p className="text-sm font-bold text-slate-950 sm:text-base">
                         Primer intento en esta materia
@@ -117,13 +117,13 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                   Volvé sólo sobre las preguntas que fallaste y recuperá esos puntos antes del
                   próximo intento.
                 </p>
-                <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
+                <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#555CB1]">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>Cada respuesta tiene la explicación correcta para repasar.</span>
                 </div>
                 <Link
                   href={errorsHref}
-                  className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95"
+                  className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-5 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95"
                 >
                   Repasar mis errores
                   <ArrowRight className="h-4 w-4" />
@@ -131,7 +131,7 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
               </div>
 
               <div className="py-6">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
+                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#456DBD] uppercase">
                   Seguí estudiando con tus apuntes
                 </p>
                 <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
@@ -142,7 +142,7 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                 </p>
                 <Link
                   href={uploadHref}
-                  className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
+                  className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8]"
                 >
                   Subir mi PDF
                   <ArrowRight className="h-4 w-4" />

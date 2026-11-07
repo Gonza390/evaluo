@@ -10,10 +10,10 @@ import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 
 type Format = { title: string; label: string; color: string; icon?: 'book' | 'audio' };
 const illustratedFormats: Format[] = [
-  { title: 'PDF', label: 'PDF', color: 'bg-[#d92d3a]' },
-  { title: 'PPTX', label: 'Presentaciones', color: 'bg-[#c2570c]' },
-  { title: 'DOCX', label: 'Documentos', color: 'bg-[#1d5fd1]' },
-  { title: 'Libros', label: 'Libros', color: 'bg-[#6a40c9]', icon: 'book' },
+  { title: 'PDF', label: 'PDF', color: 'bg-[#bb5654]' },
+  { title: 'PPTX', label: 'Presentaciones', color: 'bg-[#b85f2d]' },
+  { title: 'DOCX', label: 'Documentos', color: 'bg-[#3865b3]' },
+  { title: 'Libros', label: 'Libros', color: 'bg-[#6652a7]', icon: 'book' },
   { title: 'Grabaciones', label: 'Grabaciones', color: 'bg-[#08976b]', icon: 'audio' },
 ];
 
@@ -67,9 +67,9 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         onDragLeave={(event) => { event.preventDefault(); setIsDragging(false); }}
         onDrop={handleDrop}
         aria-label={t("Arrastrá un archivo PDF o presioná para elegirlo")}
-        className={`mt-3 flex w-full max-w-[620px] cursor-pointer flex-col items-center rounded-[18px] border-2 border-dashed px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-4 sm:rounded-[22px] sm:px-5 sm:py-4 ${isDragging ? 'border-[#2563eb] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6394f0] hover:bg-[#f0f6ff]'}`}
+        className={`mt-3 flex w-full max-w-[620px] cursor-pointer flex-col items-center rounded-[18px] border-2 border-dashed px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-4 sm:rounded-[22px] sm:px-5 sm:py-4 ${isDragging ? 'border-[#456dbd] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6f96dd] hover:bg-[#f0f6ff]'}`}
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#0b63e5] sm:size-10">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#3c6cba] sm:size-10">
           <Upload className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
         </span>
         <span className="mt-2 text-[15px] font-medium tracking-[-0.02em] text-[#0f1623] sm:text-[17px]">{t("Arrastrá tu PDF acá")}</span>
