@@ -55,7 +55,7 @@ assert.match(page, /initialDiagnostic=\{isOwner && query\.diagnostico === '1' &&
 assert.match(page, /recommendedStudyAvailable=\{isOwner && material.processing_status === 'ready'\}/);
 
 assert.match(page, /user\?\.app_metadata\?\.\[FIRST_PDF_ONBOARDING_SKIPPED_KEY\]/);
-assert.match(page, /const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted/);
+assert.match(page, /const shouldShowFirstPdfGuide = (?:!isEnglishStudyEntry && )?eligibleByAccount && !previouslyCompleted/);
 assert.match(workspace, /await completeFirstPdfOnboardingAction\(\)/,
   'The finish CTA must persist completion before closing.');
 assert.match(workspace, /if \(!result\.success\)/);

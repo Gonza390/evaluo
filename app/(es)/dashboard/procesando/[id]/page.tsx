@@ -6,7 +6,7 @@ import { FullscreenProcessing } from '@/components/pdf-processing/fullscreen-pro
 import { isUuid } from '@/lib/uuid';
 
 export const metadata: Metadata = {
-  title: 'Preparando material | Evaluo',
+  title: 'Preparando material',
   robots: { index: false, follow: false },
 };
 

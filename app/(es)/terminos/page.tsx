@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Términos y condiciones | Evaluo',
+  title: 'Términos y condiciones',
   description:
     'Términos y condiciones de uso de Evaluo: condiciones del servicio, contenido de usuarios, uso responsable de la IA, propiedad intelectual y limitación de responsabilidad.',
   alternates: {

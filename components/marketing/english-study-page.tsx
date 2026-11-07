@@ -5,14 +5,25 @@ import { InternationalDocumentLanguage } from '@/components/marketing/internatio
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { toAbsoluteUrl } from '@/lib/site';
 import { ENGLISH_PAGES, ENGLISH_PAGE_ORDER, type EnglishPageKey } from '@/lib/english-seo-content';
+import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 
 const slugs: Record<EnglishPageKey, string> = {
   home: 'English study resources',
   'pdf-to-quiz': 'PDF to Quiz',
   'pdf-to-flashcards': 'PDF to Flashcards',
   'study-pdf-with-ai': 'Study a PDF with AI',
+  'ai-test-prep': 'AI Test Prep',
+  'ai-for-students': 'AI for Students',
+  'ai-pdf-summarizer': 'AI PDF Summarizer',
+  'pdf-to-mind-map': 'PDF to Mind Map',
+  'practice-by-topic': 'Practice by Topic',
 };
+
+function formatReviewed(iso: string) {
+  return new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+}
 
 export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
   const page = ENGLISH_PAGES[pageKey];
@@ -20,13 +31,27 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
   const breadcrumbs = [{ name: 'English study guides', path: '/en/resources' }];
   if (pageKey !== 'home') breadcrumbs.push({ name: slugs[pageKey], path: page.path });
   const breadcrumbData = buildBreadcrumbJsonLd(breadcrumbs);
+  // Article solo para guías con revisión editorial fechada: autor y editor reales, sin ratings.
+  const articleData = page.reviewed
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: page.title,
+        description: page.description,
+        inLanguage: 'en',
+        mainEntityOfPage: toAbsoluteUrl(page.path),
+        dateModified: page.reviewed,
+        author: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/en') },
+        publisher: { '@type': 'Organization', name: 'Evaluo', logo: { '@type': 'ImageObject', url: toAbsoluteUrl('/evaluo-logo-icono.svg') } },
+      }
+    : null;
 
   return (
     <div lang="en" className="min-h-screen bg-white text-slate-950">
       <InternationalDocumentLanguage lang="en" />
-      <JsonLd data={breadcrumbData} />
+      <JsonLd data={articleData ? [breadcrumbData, articleData] : breadcrumbData} />
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <EnglishSeoHeader />
+        <EnglishSeoHeader alternateHref={hreflangAlternatePath(page.path, 'es')} />
       </div>
 
       <main>
@@ -51,6 +76,11 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
             <p className="mt-6 max-w-3xl text-sm leading-6 text-slate-600">
               <strong className="font-semibold text-slate-800">For:</strong> {page.audience}
             </p>
+            {page.reviewed ? (
+              <p className="mt-2 text-xs text-slate-500">
+                Published by Evaluo · Updated <time dateTime={page.reviewed}>{formatReviewed(page.reviewed)}</time>
+              </p>
+            ) : null}
           </div>
         </section>
 
@@ -135,6 +165,29 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
           </div>
         </section>
 
+        {page.product ? (
+          <section aria-labelledby="evaluo-product" className="border-b border-slate-100 bg-blue-50/40 py-14 sm:py-16">
+            <div className="mx-auto max-w-6xl px-5 sm:px-8">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">Using Evaluo</p>
+              <h2 id="evaluo-product" className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-slate-950">{page.product.title}</h2>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-700">{page.product.intro}</p>
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {page.product.points.map((point) => (
+                  <article key={point.title} className="rounded-2xl border border-blue-100 bg-white p-6">
+                    <CheckCircle2 className="h-5 w-5 text-blue-700" aria-hidden="true" />
+                    <h3 className="mt-3 text-base font-bold text-slate-950">{point.title}</h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">{point.detail}</p>
+                  </article>
+                ))}
+              </div>
+              <p className="mt-6 max-w-4xl rounded-xl border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-700">
+                <strong className="font-semibold text-slate-900">Plans:</strong> {page.product.plan}{' '}
+                <Link href="/en/pricing" className="font-semibold text-blue-700 underline underline-offset-4">See current plans</Link>
+              </p>
+            </div>
+          </section>
+        ) : null}
+
         <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
           <h2 className="text-3xl font-bold tracking-tight text-slate-950">Frequently asked questions</h2>
           <div className="mt-6 max-w-4xl divide-y divide-slate-200 border-y border-slate-200">
@@ -187,7 +240,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
               <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Turn the next study session into progress you can check.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-200">
                 Start with your PDF or Word notes, practice by topic, then check answers against the source.
-                These guides are free to read. Use the English entry flow to see the latest account features and availability.
+                These guides are free to read, and you can start using Evaluo in English for free with one PDF or Word document.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-blue-50">

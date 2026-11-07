@@ -31,7 +31,8 @@ const titles = new Set();
 for (const [file, name] of pages) {
   const source = read(file);
   assert.match(source, /robots: \{ index: true, follow: true \}/, file);
-  assert.ok(source.includes('canonical: toAbsoluteUrl(' + name + ')'), file + ': canonical missing');
+  // Las páginas del registro hreflang reciben canonical propio vía hreflangAlternates (ver hreflang-clusters.smoke).
+  assert.ok(source.includes('canonical: toAbsoluteUrl(' + name + ')') || source.includes('hreflangAlternates('), file + ': canonical missing');
   const title = source.match(/export const metadata: Metadata = \{\s*title: ['"]([^'"]+)['"]/);
   assert.ok(title, file + ': unique metadata title missing');
   assert.ok(title[1].length >= 30 && title[1].length <= 75, file + ': SEO title length');

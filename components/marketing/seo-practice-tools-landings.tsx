@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, CheckCircle2, FileText, ListChecks, Sparkles, Tar
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
+import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -158,7 +159,7 @@ function Landing({ page }: { page: PageContent }) {
       <MarketingAnalyticsSlot />
       <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Evaluo', path: '/' }, { name: page.titlePrefix.replace(':', ''), path: page.path }])} />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={page.tracking + '_header'} />
+        <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={page.tracking + '_header'} alternateHref={hreflangAlternatePath(page.path, 'en')} />
       </div>
       <main>
         <section className="border-b border-slate-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.15),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">

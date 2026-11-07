@@ -6,7 +6,7 @@ import { premiumDashboardHref, safePremiumReturnTo } from '@/lib/premium-flow';
 import { PremiumDashboardScreen } from '@/components/pricing/PremiumDashboardScreen';
 
 export const metadata: Metadata = {
-  title: 'Premium | Evaluo',
+  title: 'Premium',
   robots: { index: false, follow: false },
 };
 

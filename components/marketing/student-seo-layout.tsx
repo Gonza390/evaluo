@@ -10,7 +10,8 @@ import type { SeoHub } from '@/lib/student-seo-content';
 
 export function studyMetadata(path:string,title:string,description:string):Metadata {
   return {
-    title: title + ' | Evaluo',
+    // El layout ya aplica la plantilla '%s | Evaluo'; agregar la marca acá la duplicaba.
+    title,
     description,
     alternates:{canonical:toAbsoluteUrl(path)},
     robots:{index:true,follow:true},

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import type { Metadata } from 'next';
 import {
   ArrowRight,
@@ -23,7 +24,7 @@ const uploadHref = '/estudiar-pdf-con-ia?source=seo-mapa-mental-pdf';
 export const metadata: Metadata = {
   title: "Crear mapa mental desde PDF con IA: pasos y ejemplo",
   description: "Mapa mental desde PDF con IA: mirá un ejemplo, aprendé a organizar conceptos y repasá el mismo material. La función de mapa mental es Premium en Evaluo.",
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: hreflangAlternates('mind-map', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
@@ -69,7 +70,7 @@ export default function CrearMapaMentalDesdePdfPage() {
       />
 
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader primaryHref={uploadHref} trackingLocation="seo_mapa_mental_pdf_header" />
+        <PublicSiteHeader primaryHref={uploadHref} trackingLocation="seo_mapa_mental_pdf_header" alternateHref="/en/pdf-to-mind-map" />
       </div>
 
       <main>

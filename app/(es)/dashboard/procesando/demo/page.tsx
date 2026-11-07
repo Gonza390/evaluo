@@ -4,7 +4,7 @@ import { FullscreenProcessing } from '@/components/pdf-processing/fullscreen-pro
 import type { StudentMaterialProcessingState } from '@/app/dashboard/materiales/actions';
 
 export const metadata: Metadata = {
-  title: 'Demostración de procesamiento | Evaluo',
+  title: 'Demostración de procesamiento',
   robots: { index: false, follow: false },
 };
 

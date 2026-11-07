@@ -29,7 +29,7 @@ assert.match(workspace, /data-mobile-summary-active=\{activeTab === 'resumen' &&
 const mobileOverflow = workspace.split('data-pdf-mobile-more-trigger')[1]?.split('</DropdownMenuContent>')[0] ?? '';
 assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
   'The three-dot menu must not duplicate the visible Back button.');
-assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original/, 
+assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original|\{english \? "Open original" : "Abrir"\} \{isDocx \? "Word" : "PDF"\}/, 
   'Keep the original PDF action in the overflow menu.');
 const globalStyles = readFileSync('app/globals.css', 'utf8');
 assert.doesNotMatch(globalStyles, /data-student-material-share-control/,
@@ -51,7 +51,7 @@ assert.match(workspace, /DropdownMenuItem asChild/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
   'The old header and Guide remain desktop-only.');
-assert.match(workspace, /Abrir \{isDocx \? 'Word' : 'PDF'\} original/,
+assert.match(workspace, /Abrir \{isDocx \? 'Word' : 'PDF'\} original|\{english \? "Open original" : "Abrir"\} \{isDocx \? "Word" : "PDF"\}/,
   'The menu must provide access to the original document.');
 assert.match(materialStatus, /\{title\}/,
   'Keep the material title during processing and error states.');

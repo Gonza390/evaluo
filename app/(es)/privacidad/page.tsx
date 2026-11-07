@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 
 export const metadata = {
-  title: 'Política de privacidad | Evaluo',
+  title: 'Política de privacidad',
   description:
     'Política de privacidad de Evaluo: qué datos recopilamos, cómo los usamos, cómo protegemos tu información y cuáles son tus derechos conforme a la Ley 25.326 de Protección de Datos Personales.',
   alternates: {

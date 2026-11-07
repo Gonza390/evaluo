@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SeoComparisonLanding } from '@/components/marketing/seo-comparison-landings';
+import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/comparar/evaluo-vs-quizlet';
@@ -7,7 +8,7 @@ const path = '/comparar/evaluo-vs-quizlet';
 export const metadata: Metadata = {
   title: "Alternativa a Quizlet: flashcards y exámenes desde PDF",
   description: "¿Buscás una alternativa a Quizlet? Compará tarjetas, tests y funciones con IA para preparar parciales desde tus apuntes PDF en Evaluo.",
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: hreflangAlternates('compare-quizlet', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

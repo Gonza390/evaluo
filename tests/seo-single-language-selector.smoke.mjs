@@ -23,7 +23,7 @@ assert.match(selector, /href\.startsWith\('\/\/'\)/);
 assert.doesNotMatch(selector, /flag: '🇺🇸'/);
 assert.match(publicHeader, /LandingLanguageSelector locale="es"/);
 assert.match(englishHeader, /LandingLanguageSelector locale="en"/);
-assert.match(landing, /<EnglishSeoHeader \/>/);
+assert.match(landing, /<EnglishSeoHeader alternateHref=\{hreflangAlternatePath\(page\.path, 'es'\)\} \/>/);
 assert.match(blog, /alternateHref=\{translation \? getStudyBlogPath/);
 assert.doesNotMatch(blog, /English version' : 'Versión en español'/);
 assert.doesNotMatch(blog, /copy\.otherLocale/);

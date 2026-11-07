@@ -5,10 +5,16 @@ function source(path: string) {
   return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 }
 
+// Las páginas migradas al registro hreflang (lib/seo/hreflang-clusters.ts) obtienen
+// canonical propio + alternates recíprocos desde `hreflangAlternates(...)`; ese contrato
+// se valida por comportamiento en tests/hreflang-clusters.smoke.ts.
+const CANONICAL_TOKEN = /^canonical:\s*(toAbsoluteUrl\(path\)|'\/[^']*')$/;
+
 function assertIncludesAll(path: string, required: string[]) {
   const content = source(path);
   for (const token of required) {
-    assert.ok(content.includes(token), `${path} must include ${token}`);
+    const viaRegistry = CANONICAL_TOKEN.test(token) && content.includes('hreflangAlternates(');
+    assert.ok(content.includes(token) || viaRegistry, `${path} must include ${token}`);
   }
 }
 
@@ -496,13 +502,16 @@ for (const market of ['es', 'es-mx', 'es-co', 'es-es']) {
     `International market ${market} needs an indexable sitemap URL`,
   );
 }
-assertIncludesAll('lib/international-study-landings.ts', [
-  "es: toAbsoluteUrl(STUDY_MARKETS.es.path)",
+assertIncludesAll('lib/seo/hreflang-clusters.ts', [
+  "es: '/es/estudiar-pdf-con-ia'",
   "'es-MX':",
   "'es-CO':",
   "'es-ES':",
   "'es-AR':",
-  "'x-default':",
+  "'x-default'",
+]);
+assertIncludesAll('lib/international-study-landings.ts', [
+  "hreflangLanguages('study-pdf')",
   'canonical: url',
   'robots: { index: true, follow: true }',
   'guía de estudio',
@@ -695,7 +704,7 @@ for (const [path, expectedTitle] of acquisitionSeoTitles) {
   const head = content.slice(content.indexOf('export const metadata'), content.indexOf('openGraph:'));
   assert.ok(head.includes(expectedTitle), path + ' needs the intended keyword in the primary title');
   assert.ok(!/title:\s*['"][^'"\n]*\|\s*Evaluo/.test(head), path + ' must not duplicate the root title suffix');
-  assert.ok(/canonical:\s*toAbsoluteUrl\(path\)/.test(content), path + ' must preserve its canonical');
+  assert.ok(/canonical:\s*toAbsoluteUrl\(path\)/.test(content) || content.includes('hreflangAlternates('), path + ' must preserve its canonical');
   assert.ok(/index:\s*true/.test(content), path + ' must remain indexable');
   assert.ok(!content.includes('| Evaluo | Evaluo'), path + ' must have no duplicate brand in social metadata');
 }
@@ -833,8 +842,9 @@ const guideRows = JSON.parse(guideJson![1]) as Array<{
   category: string;
   review: string;
 }>;
-assert.equal(guideRows.length, 8, 'Publish exactly eight original guides');
-assert.equal(new Set(guideRows.map((guide) => guide.slug)).size, 8, 'SEO slugs must be unique');
+// 'como-estudiar-examen-tipo-test' se consolidó en /blog con un 301 (next.config.mjs).
+assert.equal(guideRows.length, 7, 'Publish exactly seven original guides');
+assert.equal(new Set(guideRows.map((guide) => guide.slug)).size, guideRows.length, 'SEO slugs must be unique');
 for (const guide of guideRows) {
   const prose = [
     guide.opening, guide.focus, guide.review,
@@ -932,8 +942,8 @@ for(const m of indexMarkets){
     assert.ok(!m.href.startsWith('/es/paises/'), 'Do not invent unsupported country pages');
   }
 }
-assertIncludesAll('lib/international-study-landings.ts', [
-  "'es-MX':", "'es-CO':", "'es-ES':", "'es-AR':", "'x-default':"
+assertIncludesAll('lib/seo/hreflang-clusters.ts', [
+  "'es-MX':", "'es-CO':", "'es-ES':", "'es-AR':", "'x-default'"
 ]);
 
 
@@ -970,7 +980,7 @@ const rootMetadata = source('app/(es)/layout.tsx');
 assert.ok(!rootMetadata.includes("'geo.region'"), 'AR geo region should be home-only');
 assert.ok(!rootMetadata.includes("'geo.placename'"), 'AR geo city should be home-only');
 assert.ok(!rootMetadata.includes("locale: 'es_AR'"), 'Root OG should not force Argentina');
-assertIncludesAll('app/(es)/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "languages: { 'es-AR': '/' }"]);
+assertIncludesAll('app/(es)/page.tsx', ["'geo.region': 'AR'", "'geo.placename': 'Argentina'", "hreflangAlternates('home', 'es')"]);
 assertIncludesAll('next.config.mjs', [
   "'/es-mx/:path*', 'es-MX'",
   "'/es-co/:path*', 'es-CO'",
@@ -1106,9 +1116,8 @@ assertIncludesAll('lib/english-seo-metadata.ts', [
   "alternates: { canonical: url",
   'robots: { index: true, follow: true }',
   "locale: 'en_US'",
-  "STUDY_HREFLANG, en: url",
-  "'/convertir-pdf-en-preguntas'",
-  "'/funciones/crear-flashcards-desde-pdf'",
+  "hreflangClusterForPath(page.path)",
+  "hreflangLanguages(cluster)",
 ]);
 assertIncludesAll('lib/english-seo-content.ts', [
   "path: '/en/resources'",
@@ -1123,10 +1132,8 @@ assertIncludesAll('components/marketing/english-study-page.tsx', [
   'lang="en"',
   '<InternationalDocumentLanguage lang="en" />',
   "href={ENGLISH_PAGES[key].path}",
-  'The English homepage, sign-in and first PDF upload flow are available in English',
   'Illustrative study examples',
   'How to verify this answer',
-  'Explore the English homepage',
 ]);
 assertIncludesAll('app/sitemap.ts', [
   '${baseUrl}/en`',
@@ -1136,10 +1143,13 @@ assertIncludesAll('app/sitemap.ts', [
 ]);
 assertIncludesAll('next.config.mjs', ["['/en', 'en']", "['/en/:path*', 'en']"]);
 assertIncludesAll('components/footer-home.tsx', ['href="/en"', 'English study guides']);
-assertIncludesAll('components/marketing/international-study-landing.tsx', ['href="/en"', 'English']);
-assertIncludesAll('lib/international-study-landings.ts', ["en: toAbsoluteUrl('/en/study-pdf-with-ai')"]);
-assertIncludesAll('app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', ["en: toAbsoluteUrl('/en/pdf-to-flashcards')"]);
-assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', ["en:toAbsoluteUrl('/en/pdf-to-quiz')"]);
+assertIncludesAll('lib/seo/hreflang-clusters.ts', [
+  "en: '/en/study-pdf-with-ai'",
+  "en: '/en/pdf-to-flashcards'",
+  "en: '/en/pdf-to-quiz'",
+]);
+assertIncludesAll('app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', ["hreflangAlternates('pdf-to-flashcards', 'es')"]);
+assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', ["hreflangAlternates('pdf-to-quiz', 'es')"]);
 
 assertIncludesAll('lighthouserc.seo.cjs', [
   'http://localhost:3000/en',
@@ -1179,16 +1189,12 @@ assertIncludesAll('components/LoginFormGoogleFirst.tsx', [
   "locale = 'es'",
   "const english = locale === 'en'",
   "getAuthContextCopy(nextPath, reason, isSignUp, english)",
-  "The English dashboard and first upload flow are available",
-  "Some advanced study tools, account emails and payment screens",
-  "Terms (Spanish)",
-  "Privacy Policy (Spanish)",
+  "english ? 'Terms' : 'Términos'",
+  "english ? 'Privacy Policy' : 'Política de privacidad'",
   "Account created. Check your email",
 ]);
 assertIncludesAll('components/marketing/english-study-page.tsx', [
-  'href="/en/login?mode=signup"',
-  'Create an account (English sign-up)',
-  'Explore the English homepage',
+  'href="/en/login?mode=signup&next=',
 ]);
 assertIncludesAll('components/GlobalClientRuntime.tsx', [
   "pathname === '/en' || pathname.startsWith('/en/')",
@@ -1204,7 +1210,7 @@ assert.ok(!source('app/sitemap.ts').includes('${baseUrl}/en/login'),
 // Visual consistency: explicit white heading on dark English SEO panel.
 assertIncludesAll('components/marketing/english-study-page.tsx', [
   'bg-[#101D42] py-12 text-white',
-  'text-2xl font-bold tracking-tight text-white">Evaluo’s English study guides',
+  'text-2xl font-bold tracking-tight text-white">',
 ]);
 assertIncludesAll('scripts/qa-seo-visual.mjs', [
   "'/en/pdf-to-quiz'",

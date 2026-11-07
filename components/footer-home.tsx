@@ -316,10 +316,12 @@ function EnglishHomeFooter() {
           <div className="flex flex-col gap-2 text-xs text-white/80">
             <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-white/60">Explore</p>
             <Link href="/en">Home</Link>
+            <Link href="/en/features">Features</Link>
+            <Link href="/en/ai-test-prep">AI test prep</Link>
+            <Link href="/en/pdf-to-flashcards">AI flashcard generator</Link>
+            <Link href="/en/ai-pdf-summarizer">AI PDF summarizer</Link>
+            <Link href="/en/compare">Compare study tools</Link>
             <Link href="/en/resources">English study guides</Link>
-            <Link href="/en/pdf-to-quiz">PDF to practice questions</Link>
-            <Link href="/en/pdf-to-flashcards">PDF to flashcards</Link>
-            <Link href="/en/study-pdf-with-ai">Study a PDF with AI</Link>
             <Link href="/en/blog">Study blog</Link>
             <Link href="/en/login?mode=signup">Create a free account</Link>
             <Link href="/">Español</Link>

@@ -5,7 +5,7 @@ import { getEnglishSeoMetadata } from '@/lib/english-seo-metadata';
 export const metadata: Metadata = {
   ...getEnglishSeoMetadata('home'),
   alternates: { canonical: '/en/resources' },
-  title: 'English PDF study guides and worked examples | Evaluo',
+  title: 'English PDF study guides and worked examples',
   description: 'Explore educational PDF study guides, practice questions and worked examples from Evaluo.',
 };
 

@@ -426,5 +426,13 @@
   {
     "file": "tests/seo-single-language-selector.smoke.mjs",
     "alias": false
+  },
+  {
+    "file": "tests/hreflang-clusters.smoke.ts",
+    "alias": true
+  },
+  {
+    "file": "tests/english-seo-content.smoke.ts",
+    "alias": true
   }
 ]

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { EnglishCreemPaymentResult } from '@/components/pricing/EnglishCreemPaymentResult';
 
 export const metadata: Metadata = {
-  title: 'Payment status | Evaluo',
+  title: 'Payment status',
   robots: { index: false, follow: false },
 };
 

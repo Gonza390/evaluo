@@ -6,7 +6,7 @@ import { isQaAccount, QA_ACCOUNT_EMAIL } from '@/lib/qa-account';
 import { restartQaFirstPdfOnboardingAction } from './actions';
 
 export const metadata: Metadata = {
-  title: 'Pruebas de onboarding | Evaluo',
+  title: 'Pruebas de onboarding',
   robots: { index: false, follow: false },
 };
 

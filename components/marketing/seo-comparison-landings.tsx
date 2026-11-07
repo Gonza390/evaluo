@@ -7,15 +7,21 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { SeoComparisonProductDemo } from '@/components/marketing/seo-comparison-product-demo';
+import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
+import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
+import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
+import { COMPARISONS_EN } from '@/components/marketing/seo-comparison-content-en';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
-type ComparisonId = 'notebooklm' | 'chatgpt' | 'quizlet';
+export type ComparisonId = 'notebooklm' | 'chatgpt' | 'quizlet';
+export type ComparisonLocale = 'es' | 'en';
 type Feature = { label: string; other: string; evaluo: string };
 type Detail = { title: string; description: string };
 type Faq = { question: string; answer: string };
 type Source = { title: string; href: string };
-type Comparison = {
+export type Comparison = {
   path: string;
   name: string;
   pricingHref: string;
@@ -164,11 +170,75 @@ const comparisons: Record<ComparisonId, Comparison> = {
   },
 };
 
-const relatedPages: Array<{ href: string; title: string; description: string }> = [
-  { href: '/comparar/evaluo-vs-notebooklm', title: 'Evaluo vs. NotebookLM', description: 'Compará la consulta de fuentes y los recorridos de estudio.' },
-  { href: '/comparar/evaluo-vs-chatgpt', title: 'Evaluo vs. ChatGPT', description: 'Diferencias entre conversación guiada y práctica por temas.' },
-  { href: '/comparar/evaluo-vs-quizlet', title: 'Evaluo vs. Quizlet', description: 'Tarjetas y tests frente a preparación desde tu PDF.' },
-];
+const relatedPages: Record<ComparisonLocale, Array<{ href: string; title: string; description: string }>> = {
+  es: [
+    { href: '/comparar/evaluo-vs-notebooklm', title: 'Evaluo vs. NotebookLM', description: 'Compará la consulta de fuentes y los recorridos de estudio.' },
+    { href: '/comparar/evaluo-vs-chatgpt', title: 'Evaluo vs. ChatGPT', description: 'Diferencias entre conversación guiada y práctica por temas.' },
+    { href: '/comparar/evaluo-vs-quizlet', title: 'Evaluo vs. Quizlet', description: 'Tarjetas y tests frente a preparación desde tu PDF.' },
+  ],
+  en: [
+    { href: '/en/compare/evaluo-vs-notebooklm', title: 'Evaluo vs. NotebookLM', description: 'Researching sources versus a topic-by-topic study path.' },
+    { href: '/en/compare/evaluo-vs-chatgpt', title: 'Evaluo vs. ChatGPT', description: 'Guided conversation versus practice organized by topic.' },
+    { href: '/en/compare/evaluo-vs-quizlet', title: 'Evaluo vs. Quizlet', description: 'Flashcard sets and tests versus exam prep from your PDF.' },
+  ],
+};
+
+const UI = {
+  es: {
+    home: '/', pricing: '/pricing', uploaderId: 'elegir-pdf-comparacion', tableId: 'tabla-comparativa',
+    tryCta: 'Probar Evaluo con mi PDF', seeComparison: 'Ver comparación',
+    byline: (name: string) => 'Comparación elaborada por Evaluo · Revisada el 29 de octubre de 2026 · Sin afiliación con ' + name,
+    decisionKicker: 'Una decisión práctica', decisionTitle: '¿Qué necesitás hoy?',
+    exploreTitle: 'Comprender y explorar', exploreText: (name: string) => 'Usá las herramientas de ' + name + ' cuando sus formatos te resulten más útiles.',
+    practiceTitle: 'Practicar con una secuencia por tema', practiceText: 'Empezá por tu PDF en Evaluo y continuá hacia preguntas, resultados y refuerzo.',
+    tableKicker: 'Comparación', tableTitle: 'Qué ofrece cada herramienta para estudiar',
+    tableIntro: 'Son enfoques diferentes y tienen funciones que se superponen. La tabla describe las experiencias principales sin sugerir que una sea mejor en todos los casos.',
+    criteria: 'Criterio', tableNote: 'La disponibilidad puede variar según plan, país, cuenta o cambios de producto. Revisá la documentación oficial enlazada al final.',
+    goalKicker: 'Según tu objetivo', goalTitle: (name: string) => '¿Cuándo elegir ' + name + ' y cuándo Evaluo?',
+    otherFits: (name: string) => 'Cuándo tiene sentido ' + name, otherFitsSub: 'Situaciones donde sus herramientas pueden ayudarte.',
+    evaluoFits: 'Cuándo tiene sentido Evaluo', evaluoFitsSub: 'Situaciones donde conviene estudiar con una secuencia basada en tu PDF.',
+    exampleKicker: 'Ejemplo universitario', exampleTitle: 'Cómo preparar una materia: orientación y prueba de producto',
+    exampleIntro: 'Los escenarios con otras plataformas son orientativos. Debajo podés probar un PDF de muestra de Evaluo con las mismas pantallas que usamos para estudiar.',
+    withName: (name: string) => 'Con ' + name, withEvaluo: 'Con Evaluo', howToDecide: 'Cómo decidir',
+    plansKicker: 'Acceso y planes', plansTitle: '¿Cuál es gratis y qué cambia al pagar?', officialPricing: 'Ver acceso y precios oficiales',
+    evaluoPricing: 'Podés comenzar gratis y pasar a Premium para ampliar las funciones de estudio. El precio vigente se muestra en la página de planes; evitamos mostrar un importe fijo desactualizado.',
+    evaluoPricingLink: 'Ver planes y precios de Evaluo',
+    uploadKicker: 'Probá con tu archivo', uploadTitle: 'Elegí un PDF para estudiar en Evaluo',
+    uploadText: 'Seleccioná tus apuntes antes de registrarte. Después creá el material y empezá a trabajar sus temas, preguntas y resultados con las funciones disponibles en tu plan.',
+    uploadNote: 'No necesitás registrarte para elegir el archivo.', uploadButton: 'Elegir PDF o Word',
+    faqKicker: 'Dudas habituales', faqTitle: (name: string) => 'Preguntas sobre Evaluo y ' + name,
+    sourcesKicker: 'Fuentes y transparencia', sourcesTitle: 'Cómo verificamos esta comparación',
+    sourcesText: (name: string) => 'Esta guía editorial se elaboró a partir de documentación pública de ' + name + ' y las funciones documentadas de Evaluo. No es una prueba controlada de calidad ni una certificación de ninguna de las dos plataformas. Revisada el 29 de octubre de 2026.',
+    sourcesEvaluo: 'Funciones y precios de Evaluo', relatedTitle: 'Otras comparaciones para elegir cómo estudiar',
+  },
+  en: {
+    home: '/en', pricing: '/en/pricing', uploaderId: 'choose-pdf', tableId: 'comparison-table',
+    tryCta: 'Try Evaluo with my PDF', seeComparison: 'See the comparison',
+    byline: (name: string) => 'Comparison written by Evaluo · Reviewed October 29, 2026 · Not affiliated with ' + name,
+    decisionKicker: 'A practical decision', decisionTitle: 'What do you need today?',
+    exploreTitle: 'Understand and explore', exploreText: (name: string) => 'Use ' + name + '’s tools when their formats work better for you.',
+    practiceTitle: 'Practice topic by topic', practiceText: 'Start from your PDF in Evaluo and move on to questions, results and review.',
+    tableKicker: 'Comparison', tableTitle: 'What each tool offers for studying',
+    tableIntro: 'They take different approaches and some features overlap. The table describes the main experiences without implying that one is better in every case.',
+    criteria: 'Criteria', tableNote: 'Availability may vary by plan, country, account or product changes. Check the official documentation linked at the end.',
+    goalKicker: 'By goal', goalTitle: (name: string) => 'When to choose ' + name + ' and when to choose Evaluo',
+    otherFits: (name: string) => 'When ' + name + ' makes sense', otherFitsSub: 'Situations where its tools can help.',
+    evaluoFits: 'When Evaluo makes sense', evaluoFitsSub: 'Situations where a study sequence built on your PDF helps.',
+    exampleKicker: 'University example', exampleTitle: 'How to prepare a course with each tool',
+    exampleIntro: 'The scenarios are illustrative. Below you can start with your own PDF in Evaluo.',
+    withName: (name: string) => 'With ' + name, withEvaluo: 'With Evaluo', howToDecide: 'How to decide',
+    plansKicker: 'Access and plans', plansTitle: 'Which is free, and what changes when you pay?', officialPricing: 'See official access and pricing',
+    evaluoPricing: 'You can start free and upgrade to Premium for more study features. Current prices are shown on the pricing page; we avoid quoting a fixed amount that may go out of date.',
+    evaluoPricingLink: 'See Evaluo plans and pricing',
+    uploadKicker: 'Try it with your file', uploadTitle: 'Choose a PDF to study in Evaluo',
+    uploadText: 'Pick your notes, then create a free account. Evaluo turns them into topics, practice questions and results, within the features of your plan.',
+    uploadNote: 'You can choose the file before signing up.', uploadButton: 'Choose a PDF or Word file',
+    faqKicker: 'Common questions', faqTitle: (name: string) => 'Questions about Evaluo and ' + name,
+    sourcesKicker: 'Sources and transparency', sourcesTitle: 'How we checked this comparison',
+    sourcesText: (name: string) => 'This editorial guide is based on ' + name + '’s public documentation and Evaluo’s documented features. It is not a controlled quality test or a certification of either platform. Reviewed October 29, 2026.',
+    sourcesEvaluo: 'Evaluo features and pricing', relatedTitle: 'More comparisons to choose how to study',
+  },
+} as const;
 
 function CompareSection({ title, subtitle, points }: { title: string; subtitle: string; points: Detail[] }) {
   return (
@@ -187,16 +257,30 @@ function CompareSection({ title, subtitle, points }: { title: string; subtitle: 
   );
 }
 
-export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId }) {
-  const c = comparisons[comparison];
-  const uploaderAnchor = '#elegir-pdf-comparacion';
-  const tracking = 'seo_comparison_' + comparison;
+export function SeoComparisonLanding({ comparison, locale = 'es' }: { comparison: ComparisonId; locale?: ComparisonLocale }) {
+  const english = locale === 'en';
+  const c = english ? COMPARISONS_EN[comparison] : comparisons[comparison];
+  const t = UI[locale];
+  const uploaderAnchor = '#' + t.uploaderId;
+  const tracking = 'seo_comparison_' + comparison + (english ? '_en' : '');
+  // La demo pública usa un PDF de muestra en español: solo se muestra en la edición ES.
+  const showDemo = !english;
+  // La sección 04 es la demo (con su propio encabezado); sin demo, la numeración se corre.
+  const offset = showDemo ? 1 : 0;
+  const n = { table: 1, goal: 2, example: 3, plans: 4 + offset, upload: 5 + offset, faq: 6 + offset, sources: 7 + offset };
+  const kicker = (num: number, label: string) => String(num).padStart(2, '0') + ' / ' + label;
+  const alternateHref = hreflangAlternatePath(c.path, english ? 'es' : 'en');
   return (
-    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div lang={english ? 'en' : undefined} className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      {english ? <InternationalDocumentLanguage lang="en" /> : null}
       <MarketingAnalyticsSlot />
-      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Evaluo', path: '/' }, { name: 'Evaluo vs. ' + c.name, path: c.path }])} />
+      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Evaluo', path: t.home }, { name: 'Evaluo vs. ' + c.name, path: c.path }])} />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={tracking + '_header'} />
+        {english ? (
+          <EnglishSeoHeader alternateHref={alternateHref} />
+        ) : (
+          <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={tracking + '_header'} alternateHref={alternateHref} />
+        )}
       </div>
       <main>
         <section className="border-b border-slate-100 bg-[radial-gradient(circle_at_75%_0%,rgba(99,102,241,0.14),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
@@ -209,34 +293,34 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
               <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600">{c.intro}</p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <TrackedLink href={uploaderAnchor} eventName="cta_click" payload={{ location: tracking + '_hero', cta_name: 'elegir_pdf', destination: uploaderAnchor }} className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
-                  <UploadCloud className="h-4 w-4" aria-hidden="true" />Probar Evaluo con mi PDF<ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  <UploadCloud className="h-4 w-4" aria-hidden="true" />{t.tryCta}<ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </TrackedLink>
-                <Link href="#tabla-comparativa" className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700">Ver comparación</Link>
+                <Link href={'#' + t.tableId} className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700">{t.seeComparison}</Link>
               </div>
-              <p className="mt-6 text-xs leading-6 text-slate-500">Comparación elaborada por Evaluo · Revisada el 29 de octubre de 2026 · Sin afiliación con {c.name}</p>
+              <p className="mt-6 text-xs leading-6 text-slate-500">{t.byline(c.name)}</p>
             </div>
             <div className="rounded-[28px] border border-blue-100 bg-white p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] sm:p-8">
               <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><BookOpen className="h-5 w-5" aria-hidden="true" /></span>
-                <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">Una decisión práctica</p><h2 className="text-lg font-bold text-slate-950">¿Qué necesitás hoy?</h2></div>
+                <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">{t.decisionKicker}</p><h2 className="text-lg font-bold text-slate-950">{t.decisionTitle}</h2></div>
               </div>
               <div className="mt-6 space-y-5">
-                <div className="flex gap-3"><FileText className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" /><div><p className="font-bold text-slate-950">Comprender y explorar</p><p className="mt-1 text-sm leading-7 text-slate-600">Usá las herramientas de {c.name} cuando sus formatos te resulten más útiles.</p></div></div>
-                <div className="flex gap-3"><Target className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" /><div><p className="font-bold text-slate-950">Practicar con una secuencia por tema</p><p className="mt-1 text-sm leading-7 text-slate-600">Empezá por tu PDF en Evaluo y continuá hacia preguntas, resultados y refuerzo.</p></div></div>
+                <div className="flex gap-3"><FileText className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" /><div><p className="font-bold text-slate-950">{t.exploreTitle}</p><p className="mt-1 text-sm leading-7 text-slate-600">{t.exploreText(c.name)}</p></div></div>
+                <div className="flex gap-3"><Target className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" /><div><p className="font-bold text-slate-950">{t.practiceTitle}</p><p className="mt-1 text-sm leading-7 text-slate-600">{t.practiceText}</p></div></div>
               </div>
               <p className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-sm leading-6 text-slate-700">{c.fact}</p>
             </div>
           </div>
         </section>
 
-        <section id="tabla-comparativa" className="scroll-mt-24 border-b border-slate-100 py-16 sm:py-20">
+        <section id={t.tableId} className="scroll-mt-24 border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">01 / Comparación</p>
-            <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Qué ofrece cada herramienta para estudiar</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">Son enfoques diferentes y tienen funciones que se superponen. La tabla describe las experiencias principales sin sugerir que una sea mejor en todos los casos.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.table, t.tableKicker)}</p>
+            <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.tableTitle}</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{t.tableIntro}</p>
             <div className="mt-8 overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full min-w-[650px] border-collapse text-left text-sm leading-6">
-                <thead className="bg-slate-50 text-slate-950"><tr><th scope="col" className="w-1/4 p-5 font-bold">Criterio</th><th scope="col" className="p-5 font-bold">{c.name}</th><th scope="col" className="bg-blue-50/60 p-5 font-bold">Evaluo</th></tr></thead>
+                <thead className="bg-slate-50 text-slate-950"><tr><th scope="col" className="w-1/4 p-5 font-bold">{t.criteria}</th><th scope="col" className="p-5 font-bold">{c.name}</th><th scope="col" className="bg-blue-50/60 p-5 font-bold">Evaluo</th></tr></thead>
                 <tbody>
                   {c.rows.map((r) => (
                     <tr key={r.label} className="border-t border-slate-200">
@@ -248,57 +332,70 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
                 </tbody>
               </table>
             </div>
-            <p className="mt-4 text-xs leading-6 text-slate-500">La disponibilidad puede variar según plan, país, cuenta o cambios de producto. Revisá la documentación oficial enlazada al final.</p>
+            <p className="mt-4 text-xs leading-6 text-slate-500">{t.tableNote}</p>
           </div>
         </section>
 
         <section className="border-b border-slate-100 bg-slate-50/60 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">02 / Según tu objetivo</p>
-            <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">¿Cuándo elegir {c.name} y cuándo Evaluo?</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.goal, t.goalKicker)}</p>
+            <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.goalTitle(c.name)}</h2>
             <div className="mt-8 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8"><CompareSection title={'Cuándo tiene sentido ' + c.name} subtitle={'Situaciones donde sus herramientas pueden ayudarte.'} points={c.bestForOther} /></div>
-              <div className="rounded-2xl border border-blue-200 bg-white p-6 sm:p-8"><CompareSection title="Cuándo tiene sentido Evaluo" subtitle="Situaciones donde conviene estudiar con una secuencia basada en tu PDF." points={c.bestForEvaluo} /></div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8"><CompareSection title={t.otherFits(c.name)} subtitle={t.otherFitsSub} points={c.bestForOther} /></div>
+              <div className="rounded-2xl border border-blue-200 bg-white p-6 sm:p-8"><CompareSection title={t.evaluoFits} subtitle={t.evaluoFitsSub} points={c.bestForEvaluo} /></div>
             </div>
           </div>
         </section>
 
         <section className="border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">03 / Ejemplo universitario</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Cómo preparar una materia: orientación y prueba de producto</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">Los escenarios con otras plataformas son orientativos. Debajo podés probar un PDF de muestra de Evaluo con las mismas pantallas que usamos para estudiar.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.example, t.exampleKicker)}</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.exampleTitle}</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{t.exampleIntro}</p>
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <article className="rounded-2xl border border-slate-200 bg-white p-6"><Layers3 className="h-5 w-5 text-slate-600" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-slate-950">Con {c.name}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{c.exampleOther}</p></article>
-              <article className="rounded-2xl border border-blue-200 bg-blue-50/30 p-6"><Target className="h-5 w-5 text-blue-700" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-slate-950">Con Evaluo</h3><p className="mt-3 text-sm leading-7 text-slate-600">{c.exampleEvaluo}</p></article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-6"><Layers3 className="h-5 w-5 text-slate-600" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-slate-950">{t.withName(c.name)}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{c.exampleOther}</p></article>
+              <article className="rounded-2xl border border-blue-200 bg-blue-50/30 p-6"><Target className="h-5 w-5 text-blue-700" aria-hidden="true" /><h3 className="mt-4 text-lg font-bold text-slate-950">{t.withEvaluo}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{c.exampleEvaluo}</p></article>
             </div>
-            <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-6"><h3 className="text-base font-bold text-slate-950">Cómo decidir</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.practicalTip}</p><p className="mt-3 text-sm leading-7 text-slate-600">{c.limitations}</p></div>
-            <p className="mt-6 text-sm leading-7 text-slate-600">También podés <Link href="/convertir-pdf-en-preguntas" className="font-bold text-blue-700 underline underline-offset-4">generar preguntas desde tu PDF</Link>, <Link href="/funciones/practicar-por-tema" className="font-bold text-blue-700 underline underline-offset-4">practicar por tema</Link> o <Link href="/funciones/simulacro-examen-con-ia" className="font-bold text-blue-700 underline underline-offset-4">preparar un simulacro</Link>.</p>
+            <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-6"><h3 className="text-base font-bold text-slate-950">{t.howToDecide}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.practicalTip}</p><p className="mt-3 text-sm leading-7 text-slate-600">{c.limitations}</p></div>
+            {english ? (
+              <p className="mt-6 text-sm leading-7 text-slate-600">You can also <Link href="/en/ai-test-prep" className="font-bold text-blue-700 underline underline-offset-4">build a practice test from your notes</Link>, <Link href="/en/pdf-to-quiz" className="font-bold text-blue-700 underline underline-offset-4">turn a PDF into a quiz</Link> or <Link href="/en/pdf-to-flashcards" className="font-bold text-blue-700 underline underline-offset-4">generate flashcards with AI</Link>.</p>
+            ) : (
+              <p className="mt-6 text-sm leading-7 text-slate-600">También podés <Link href="/convertir-pdf-en-preguntas" className="font-bold text-blue-700 underline underline-offset-4">generar preguntas desde tu PDF</Link>, <Link href="/funciones/practicar-por-tema" className="font-bold text-blue-700 underline underline-offset-4">practicar por tema</Link> o <Link href="/funciones/simulacro-examen-con-ia" className="font-bold text-blue-700 underline underline-offset-4">preparar un simulacro</Link>.</p>
+            )}
           </div>
         </section>
 
-        <SeoComparisonProductDemo comparison={comparison} />
+        {showDemo ? <SeoComparisonProductDemo comparison={comparison} /> : null}
 
         <section className="border-b border-slate-100 bg-slate-50/60 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] gap-9 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">05 / Acceso y planes</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">¿Cuál es gratis y qué cambia al pagar?</h2></div>
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.plans, t.plansKicker)}</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.plansTitle}</h2></div>
             <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-5"><h3 className="font-bold text-slate-950">{c.name}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.otherPricing}</p><a href={c.pricingHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Ver acceso y precios oficiales</a></div>
-              <div className="rounded-xl border border-blue-200 bg-white p-5"><h3 className="font-bold text-slate-950">Evaluo</h3><p className="mt-2 text-sm leading-7 text-slate-600">Podés comenzar gratis y pasar a Premium para ampliar las funciones de estudio. El precio vigente se muestra en la página de planes; evitamos mostrar un importe fijo desactualizado.</p><Link href="/pricing" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">Ver planes y precios de Evaluo</Link></div>
+              <div className="rounded-xl border border-slate-200 bg-white p-5"><h3 className="font-bold text-slate-950">{c.name}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{c.otherPricing}</p><a href={c.pricingHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">{t.officialPricing}</a></div>
+              <div className="rounded-xl border border-blue-200 bg-white p-5"><h3 className="font-bold text-slate-950">Evaluo</h3><p className="mt-2 text-sm leading-7 text-slate-600">{t.evaluoPricing}</p><Link href={t.pricing} className="mt-3 inline-block text-xs font-bold text-blue-700 underline underline-offset-4">{t.evaluoPricingLink}</Link></div>
             </div>
           </div>
         </section>
 
-        <section id="elegir-pdf-comparacion" className="scroll-mt-24 border-b border-slate-100 py-16 sm:py-20">
+        <section id={t.uploaderId} className="scroll-mt-24 border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">06 / Probá con tu archivo</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Elegí un PDF para estudiar en Evaluo</h2><p className="mt-4 text-sm leading-7 text-slate-600">Seleccioná tus apuntes antes de registrarte. Después creá el material y empezá a trabajar sus temas, preguntas y resultados con las funciones disponibles en tu plan.</p><p className="mt-5 flex items-center gap-2 text-xs text-slate-600"><CheckCircle2 className="h-4 w-4 text-blue-600" aria-hidden="true" />No necesitás registrarte para elegir el archivo.</p></div>
-            <PdfFirstLandingUploader trackingLocation={tracking} sourceKey={'compare-' + comparison} />
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.upload, t.uploadKicker)}</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.uploadTitle}</h2><p className="mt-4 text-sm leading-7 text-slate-600">{t.uploadText}</p><p className="mt-5 flex items-center gap-2 text-xs text-slate-600"><CheckCircle2 className="h-4 w-4 text-blue-600" aria-hidden="true" />{t.uploadNote}</p></div>
+            {english ? (
+              <div className="rounded-[24px] border border-blue-100 bg-blue-50/40 p-8 text-center">
+                <UploadCloud className="mx-auto h-8 w-8 text-blue-700" aria-hidden="true" />
+                <HomePdfPickerButton locale="en" location={tracking} ctaName="choose_pdf" className="from-brand to-brand-2 mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white">
+                  {t.uploadButton}
+                </HomePdfPickerButton>
+              </div>
+            ) : (
+              <PdfFirstLandingUploader trackingLocation={tracking} sourceKey={'compare-' + comparison} />
+            )}
           </div>
         </section>
 
         <section className="border-b border-slate-100 bg-slate-50/40 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] gap-9 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">07 / Dudas habituales</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Preguntas sobre Evaluo y {c.name}</h2></div>
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.faq, t.faqKicker)}</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.faqTitle(c.name)}</h2></div>
             <div className="divide-y divide-slate-200 border-y border-slate-200">
               {c.faqs.map((faq) => <details key={faq.question} className="py-5"><summary className="cursor-pointer text-sm font-bold text-slate-950">{faq.question}</summary><p className="mt-3 text-sm leading-7 text-slate-600">{faq.answer}</p></details>)}
             </div>
@@ -307,26 +404,26 @@ export function SeoComparisonLanding({ comparison }: { comparison: ComparisonId 
 
         <section className="border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">08 / Fuentes y transparencia</p>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Cómo verificamos esta comparación</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">Esta guía editorial se elaboró a partir de documentación pública de {c.name} y las funciones documentadas de Evaluo. No es una prueba controlada de calidad ni una certificación de ninguna de las dos plataformas. Revisada el 29 de octubre de 2026.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.sources, t.sourcesKicker)}</p>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{t.sourcesTitle}</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{t.sourcesText(c.name)}</p>
             <ul className="mt-5 space-y-2 text-sm text-blue-700">
               {c.sources.map((source) => <li key={source.href}><a href={source.href} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">{source.title}</a></li>)}
-              <li><Link href="/pricing" className="font-semibold underline underline-offset-4">Funciones y precios de Evaluo</Link></li>
+              <li><Link href={t.pricing} className="font-semibold underline underline-offset-4">{t.sourcesEvaluo}</Link></li>
             </ul>
           </div>
         </section>
 
         <section className="bg-slate-50/50 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Otras comparaciones para elegir cómo estudiar</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{t.relatedTitle}</h2>
             <div className="mt-7 grid gap-4 md:grid-cols-2">
-              {relatedPages.filter((r) => r.href !== c.path).map((r) => <Link key={r.href} href={r.href} className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-blue-200"><h3 className="text-base font-bold text-slate-950">{r.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{r.description}</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">Ver comparación <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></Link>)}
+              {relatedPages[locale].filter((r) => r.href !== c.path).map((r) => <Link key={r.href} href={r.href} className="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-blue-200"><h3 className="text-base font-bold text-slate-950">{r.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{r.description}</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">{t.seeComparison} <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></Link>)}
             </div>
           </div>
         </section>
       </main>
-      <FooterHome />
+      <FooterHome locale={locale} />
     </div>
   );
 }
