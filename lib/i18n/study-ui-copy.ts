@@ -148,6 +148,7 @@ export const STUDY_UI_ENGLISH: Record<string, string> = {
   "Progreso: errores por resolver en este PDF": "Progress: errors to review in this PDF",
   "Más opciones del material": "More material options",
   "Compartir": "Share",
+  "Compartir este PDF": "Share this PDF",
   "Ver guía": "View guide",
   "Volver a ver la guía de cuatro pasos": "Revisit the four-step guide",
   "Abrir PDF original": "Open original PDF",
