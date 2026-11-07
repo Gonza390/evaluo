@@ -149,6 +149,10 @@ assert.match(checkout,/returnTo:|checkoutReturnPath\(requestBody\.returnTo\)/);
 assert.match(checkout,/hasPremiumSubscriptionAccess\(subscription\.status, subscription\.expires_at\)/);
 assert.match(resultPage,/safePremiumReturnTo\(value\)/);
 assert.match(result,/premiumPaymentResultState\(details\)/);
+// El pie del resultado muestra el proveedor real del cobro (Creem o Mercado Pago).
+assert.match(result,/paymentProviderNote\(details\.provider \?\? details\.checkoutProvider\)/);
+assert.doesNotMatch(result,/>\s*Pago procesado de forma segura con Mercado Pago\.\s*</);
+assert.match(result,/startsWith\('creem'\)\) return 'Pago procesado de forma segura con Creem\.'/);
 assert.match(result,/notifyPremiumAccessChanged\(\)/);
 assert.match(result,/cta: 'Continuar estudiando'/);
 assert.match(result,/premiumPricingHref\(\{source, materiaId, parcial, returnTo\}\)/);
