@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useUser } from '@/hooks/useUser';
+import { usePathname } from 'next/navigation';
 
 export type ReadyMaterial = { id: string; title: string };
 type CatalogSnapshot = { userId: string; materials: ReadyMaterial[]; loadedAt: number };
@@ -18,6 +19,7 @@ const CatalogContext = createContext<CatalogContextValue | null>(null);
 
 export function MaterialCatalogProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
+  const pathname = usePathname();
   const userId = user?.id ?? null;
   const [snapshot, setSnapshot] = useState<CatalogSnapshot | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -70,6 +72,14 @@ export function MaterialCatalogProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('evaluo:materials-changed', onCatalogChanged);
     };
   }, [userId, ensureFresh, refresh]);
+
+  useEffect(() => {
+    // Navigation into Practicar revalidates silently so uploads and newly-ready
+    // documents appear, while the cached cards remain immediately visible.
+    if (pathname === '/dashboard/practicar' && snapshotRef.current?.userId === userId) {
+      void refresh(true);
+    }
+  }, [pathname, userId, refresh]);
 
   const seed = useCallback((materials: ReadyMaterial[]) => {
     if (!userId) return;
