@@ -145,7 +145,7 @@ assert.match(workspace, /window\.clearTimeout\(previous\)/,
   'El timer de ocultación se reinicia durante el scroll continuo.');
 assert.match(workspace, /for \(const \[element, timer\] of timers\)/,
   'Los temporizadores de scrollbar se limpian al desmontar el lector.');
-assert.match(globalStyles, /\[data-pdf-auto-scrollbar\] \{\s*scrollbar-width: thin;\s*scrollbar-color: transparent transparent;/,
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\] \{\s*(?:scrollbar-gutter: stable;\s*)?scrollbar-width: thin;\s*scrollbar-color: transparent transparent;/,
   'La barra inactiva mantiene el scroll y no dibuja un thumb.');
 assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\]/,
   'Los estilos vuelven a mostrar el thumb durante el scroll.');
