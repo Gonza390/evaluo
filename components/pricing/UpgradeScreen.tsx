@@ -378,7 +378,12 @@ export function UpgradeScreen(props: Props) {
   const market = useCheckoutMarket();
   const back = props.returnTo ?? '/dashboard';
   return (
-    <div className="pricing-v2 w-full min-w-0 bg-white text-slate-950">
+    <div className="pricing-v2 relative w-full min-w-0 bg-white text-slate-950">
+      {/* Arriba a la izquierda, fuera del flujo: no empuja el contenido hacia abajo. */}
+      <Link href={back} className="absolute top-2 left-3 z-10 inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-medium text-slate-600 hover:text-slate-900 sm:top-3 sm:left-5">
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {en ? 'Back' : 'Volver'}
+      </Link>
       <div className="mx-auto flex max-w-[420px] flex-col items-center px-5 pt-2 pb-28 sm:px-0 sm:pt-3 sm:pb-10">
         <Header en={en} exam={props.nextExam} />
         <Comparison en={en} />
@@ -391,11 +396,7 @@ export function UpgradeScreen(props: Props) {
         ) : (
           <InternationalOffer en={en} source={props.source} returnTo={props.returnTo} creemAvailable={market.creemAvailable} />
         )}
-        {/* Salida discreta al final: no ocupa lugar arriba. */}
-        <Link href={back} className="mt-4 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          {en ? 'Not now, go back' : 'Ahora no, volver'}
-        </Link>
+
       </div>
     </div>
   );
