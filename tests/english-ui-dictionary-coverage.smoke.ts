@@ -22,6 +22,9 @@ const studentFacingFiles = [
   'components/student-material-flashcards.tsx',
   'components/student-material-diagnostic.tsx',
   'components/student-material-exam.tsx',
+  'components/material-study-workspace.tsx',
+  'components/study/pdf-study-start-guide.tsx',
+  'components/study/summary-completion-popup.tsx',
   'app/(es)/calendario/page.tsx',
 ];
 let checked = 0;
