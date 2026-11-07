@@ -36,56 +36,56 @@ const CALLOUT_CONFIG: Record<StudyCalloutKind, StudyCalloutConfig> = {
   important: {
     label: 'Importante',
     icon: Sparkles,
-    containerClassName: 'border-blue-400 bg-blue-50/80',
+    containerClassName: 'border-blue-400 bg-blue-50/35',
     iconClassName: 'bg-blue-100 text-blue-700',
     labelClassName: 'text-blue-800',
   },
   'study-tip': {
     label: 'Clave de estudio',
     icon: Lightbulb,
-    containerClassName: 'border-amber-400 bg-amber-50/80',
+    containerClassName: 'border-amber-400 bg-amber-50/35',
     iconClassName: 'bg-amber-100 text-amber-700',
     labelClassName: 'text-amber-800',
   },
   example: {
     label: 'Ejemplo aplicado',
     icon: BookOpenCheck,
-    containerClassName: 'border-emerald-400 bg-emerald-50/80',
+    containerClassName: 'border-emerald-400 bg-emerald-50/35',
     iconClassName: 'bg-emerald-100 text-emerald-700',
     labelClassName: 'text-emerald-800',
   },
   definition: {
     label: 'Definición',
     icon: BookOpenCheck,
-    containerClassName: 'border-sky-400 bg-sky-50/80',
+    containerClassName: 'border-sky-400 bg-sky-50/35',
     iconClassName: 'bg-sky-100 text-sky-700',
     labelClassName: 'text-sky-800',
   },
   classification: {
     label: 'Clasificación',
     icon: ListTree,
-    containerClassName: 'border-violet-400 bg-violet-50/80',
+    containerClassName: 'border-violet-400 bg-violet-50/30',
     iconClassName: 'bg-violet-100 text-violet-700',
     labelClassName: 'text-violet-800',
   },
   process: {
     label: 'Proceso',
     icon: Workflow,
-    containerClassName: 'border-cyan-400 bg-cyan-50/80',
+    containerClassName: 'border-cyan-400 bg-cyan-50/30',
     iconClassName: 'bg-cyan-100 text-cyan-700',
     labelClassName: 'text-cyan-800',
   },
   formula: {
     label: 'Fórmula',
     icon: Sigma,
-    containerClassName: 'border-blue-400 bg-blue-50/80',
+    containerClassName: 'border-blue-400 bg-blue-50/30',
     iconClassName: 'bg-blue-100 text-blue-700',
     labelClassName: 'text-blue-800',
   },
   confusion: {
     label: 'Confusión frecuente',
     icon: CircleAlert,
-    containerClassName: 'border-rose-400 bg-rose-50/80',
+    containerClassName: 'border-rose-400 bg-rose-50/30',
     iconClassName: 'bg-rose-100 text-rose-700',
     labelClassName: 'text-rose-800',
   },
@@ -267,22 +267,36 @@ function StudyCallout({
   itemKey: string;
 }) {
   const config = CALLOUT_CONFIG[kind];
+  const Icon = config.icon;
 
   return (
     <div
       className={cn(
-        'rounded-2xl border-0 px-4 py-3.5 sm:px-5',
+        'rounded-r-[12px] border-y-0 border-r-0 border-l-[3px] px-3.5 py-3 sm:px-4',
         config.containerClassName
       )}
     >
       <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            'mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px]',
+            config.iconClassName
+          )}
+        >
+          <Icon className="h-3 w-3" />
+        </span>
+
         <div className="min-w-0 flex-1">
-          {/* Etiqueta en minúscula y sin ícono: el color del recuadro ya indica el tipo. */}
-          <p className={cn('text-[12px] font-semibold', config.labelClassName)}>
+          <p
+            className={cn(
+              'text-[10.5px] font-medium tracking-[0.1em] uppercase',
+              config.labelClassName
+            )}
+          >
             {config.label}
           </p>
 
-          <p className="mt-1 text-[14px] leading-[1.6] text-slate-700 sm:text-[15px]">
+          <p className="mt-1.5 text-[13.5px] leading-6 text-slate-700 sm:text-[14px]">
             {renderInlineMarkdown(content)}
           </p>
 
@@ -348,7 +362,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
             {bodyRows.map((row, rowIndex) => (
               <tr
                 key={`${row.columns.join('|')}-${rowIndex}`}
-                className="odd:bg-white even:bg-slate-50/80"
+                className="odd:bg-white even:bg-slate-50/35"
               >
                 {row.columns.map((column, columnIndex) => (
                   <td

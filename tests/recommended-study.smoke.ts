@@ -540,12 +540,12 @@ assert.match(
 assert.ok(materialWorkspaceSource.includes('activeSummaryChapterIndex'),
   'El índice Contenido debe mantener una sección de lectura activa.');
 assert.equal(
-  materialWorkspaceSource.split('data-active-chapter={activeSummaryChapterIndex === index || undefined}').length - 1, 1,
-  'El tema activo debe distinguirse en el índice desplegable (único en todos los tamaños desde nov-2026).'
+  materialWorkspaceSource.split('data-active-chapter={activeSummaryChapterIndex === index || undefined}').length - 1, 2,
+  'El tema activo debe distinguirse en los índices móvil y escritorio.'
 );
 assert.equal(
-  materialWorkspaceSource.split("aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}").length - 1, 1,
-  'El índice debe exponer el capítulo activo para accesibilidad.'
+  materialWorkspaceSource.split("aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}").length - 1, 2,
+  'Ambos índices deben exponer el capítulo activo para accesibilidad.'
 );
 assert.ok(materialWorkspaceSource.includes("region.addEventListener('scroll', scheduleSync"),
   'El índice debe seguir el desplazamiento interno del lector.');

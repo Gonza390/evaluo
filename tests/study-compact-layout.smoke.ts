@@ -67,34 +67,34 @@ assert.doesNotMatch(workspace, /<h2 className="text-foreground hidden max-w-\[10
   'The PDF title must not appear a second time in the summary on either viewport.');
 assert.match(workspace, /data-evaluo-desktop-reader-title/,
   'Desktop reader keeps a compact title, Back action and Guide access in one row.');
-assert.match(workspace, /href=\{backHref\}\s+aria-label=\{t\("Volver"\)\}/,
-  'Desktop Back is a compact icon button with an accessible name (rediseño nov-2026).');
+assert.match(workspace, /aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200"/,
+  'Desktop navigation controls are visually separated from the document title.');
 assert.match(workspace, /data-study-summary-intro/,
   'Hiding the duplicate title must not remove the introductory summary.');
 
 
 assert.match(workspace, /data-study-summary-intro/,
   'El texto introductorio debe estar identificado para medir y controlar su altura.');
-assert.match(workspace, /!summaryIntroExpanded && 'line-clamp-2'/,
-  'La introducción larga se abrevia a dos líneas y se expande a pedido (rediseño nov-2026).');
+assert.match(workspace, /line-clamp-4 sm:line-clamp-none/,
+  'La introducción larga sólo debe abreviarse en móvil.');
 assert.match(workspace, /aria-expanded=\{summaryIntroExpanded\}/,
   'La descripción debe poder expandirse y contraerse de forma accesible.');
 assert.match(workspace, /Leer introducción completa/,
   'El estudiante debe poder acceder a todo el contenido.');
-assert.match(workspace, /max-w-\[680px\] text-\[14px\] leading-\[1\.65\]/,
-  'La introducción usa el mismo ancho de lectura que los capítulos.');
-assert.match(workspace, /max-w-\[680px\] min-w-0/,
-  'El lector de capítulos usa una columna de lectura cómoda.');
+assert.match(workspace, /max-w-\[1040px\] text-\[13px\] leading-\[1\.65\]/,
+  'La introducción debe aprovechar más ancho con tipografía compacta.');
+assert.match(workspace, /max-w-\[940px\] min-w-0/,
+  'El lector de capítulos debe aprovechar el ancho disponible.');
 assert.match(workspace, /text-\[16px\] leading-\[1\.4\] font-semibold/,
   'Los títulos de capítulo deben mantener una jerarquía legible sin ocupar demasiado.');
-assert.match(workspace, /scroll-mt-5 py-6 first:pt-3/,
-  'Los capítulos se separan con aire en lugar de líneas.');
+assert.match(workspace, /border-b py-4 first:pt-0/,
+  'Se deben reducir los espacios entre capítulos.');
 assert.match(richText, /space-y-2\.5 \[&_h4\]:text-\[15px\]/,
   'El contenido largo conserva espaciado compacto y encabezados legibles.');
 assert.match(richText, /\[&_p\]:text-\[15px\] \[&_p\]:leading-\[1\.7\]/,
   'El cuerpo de lectura mantiene el tamaño y la altura de línea actuales.');
-assert.match(styles, /border-b-2 border-transparent bg-transparent px-0 text-\[14px\]/,
-  'Las pestañas del estudio son texto con subrayado, sin bordes ni fondos.');
+assert.match(styles, /h-8 flex-none shrink-0 rounded-lg border px-2\.5 text-\[12px\]/,
+  'Las pestañas del estudio deben ser compactas.');
 assert.doesNotMatch(workspace, /transform:scale\(|zoom:/,
   'No usar zoom que distorsione los popups, controles o interacción.');
 
