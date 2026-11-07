@@ -379,7 +379,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             ) : !user ? (
               <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                 <div className="hidden lg:block">
-                  <EstimatedStudyActivity />
+                  {locale !== 'en' ? <EstimatedStudyActivity /> : null}
                 </div>
                 <PublicGuestActions trackingLocation="discovery_header" />
               </div>
@@ -387,7 +387,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               <>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
                   <div className="hidden lg:block">
-                    <EstimatedStudyActivity compact={isCompactAppRoute} />
+                    {locale !== 'en' ? <EstimatedStudyActivity compact={isCompactAppRoute} /> : null}
                   </div>
                   <PomodoroHeader key={user.id} userId={user.id} />
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
