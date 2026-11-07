@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { useMaterialCatalog } from '@/components/materials/material-catalog-provider';
 import { PracticeModePicker } from '@/components/dashboard/practice-mode-picker';
 
@@ -8,6 +9,7 @@ export function PracticeHomeContent({ requestedMaterialId, advancedPracticeEnabl
   requestedMaterialId: string | null;
   advancedPracticeEnabled: boolean;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const { materials, loading, error, refresh } = useMaterialCatalog();
   useEffect(() => {
     if (materials === null && !loading && !error) void refresh();
@@ -18,12 +20,12 @@ export function PracticeHomeContent({ requestedMaterialId, advancedPracticeEnabl
       <main role="status" className="mx-auto w-full max-w-[1190px] px-5 py-8 text-sm text-[#66758D]">
         {error ? (
           <div>
-            <p>No pudimos cargar tus materiales.</p>
+            <p>{english ? 'Could not load your study materials.' : 'No pudimos cargar tus materiales.'}</p>
             <button className="mt-3 rounded-xl border px-4 py-2 text-[#456DBD]" onClick={() => void refresh()}>
-              Reintentar
+              {english ? 'Try again' : 'Reintentar'}
             </button>
           </div>
-        ) : 'Cargando tus materiales…'}
+        ) : (english ? 'Loading your study materials…' : 'Cargando tus materiales…')}
       </main>
     );
   }
