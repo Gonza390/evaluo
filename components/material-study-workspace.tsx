@@ -2071,17 +2071,17 @@ export function MaterialStudyWorkspace({
               <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-medium">
                 <span className="inline-flex items-center gap-2">
                   <ListTree className="text-primary h-4 w-4" />
-                  Índice del resumen
+                  {english ? 'Summary contents' : 'Índice del resumen'}
                 </span>
                 <span className="text-muted-foreground text-[11px] font-medium">
-                  {summaryChapters.length} capítulos
+                  {summaryChapters.length} {english ? (summaryChapters.length === 1 ? 'chapter' : 'chapters') : 'capítulos'}
                 </span>
               </summary>
               <nav
                 data-pdf-auto-scrollbar
                 onScroll={showScrollbarWhileScrolling}
                 className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1"
-                aria-label="Índice del resumen"
+                aria-label={english ? 'Summary contents' : 'Índice del resumen'}
               >
                 <ol className="space-y-1">
                   {summaryChapters.map((chapter, index) => (
@@ -2118,13 +2118,13 @@ export function MaterialStudyWorkspace({
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
                 <div className="flex max-h-[calc(100vh-14rem)] min-h-0 flex-col">
                   <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-medium tracking-[0.16em] uppercase">
-                    Contenido
+                    {english ? 'Contents' : 'Contenido'}
                   </p>
                   <nav
                     data-pdf-auto-scrollbar
                     onScroll={showScrollbarWhileScrolling}
                     className="min-h-0 overflow-y-auto overscroll-contain pr-2"
-                    aria-label="Índice del resumen"
+                    aria-label={english ? 'Summary contents' : 'Índice del resumen'}
                   >
                     <ol className="space-y-1.5">
                       {summaryChapters.map((chapter, index) => (
