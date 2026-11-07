@@ -286,7 +286,7 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
         <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
         <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
         <div className="h-3 w-5/6 animate-pulse rounded bg-slate-200" />
-        <span className="sr-only">{t('Preparando visor del PDF')}</span>
+        <span className="sr-only">Preparando visor del PDF</span>
       </div>
     </div>
   ),
