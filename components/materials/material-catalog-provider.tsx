@@ -54,10 +54,13 @@ export function MaterialCatalogProvider({ children }: { children: ReactNode }) {
     try { await task; } finally { if (inFlight.current?.promise === task) inFlight.current = null; }
   }, [userId]);
 
-  const ensureFresh = useCallback(() => { void refresh(false); }, [refresh]);
+  const ensureFresh = useCallback(() => {
+    // Do not request a catalog on every private page. Refresh only a catalog
+    // already used by the session; screens needing it trigger their own load.
+    if (snapshotRef.current?.userId === userId) void refresh(false);
+  }, [refresh, userId]);
   useEffect(() => {
     if (!userId) return;
-    ensureFresh();
     const onFocus = () => ensureFresh();
     const onCatalogChanged = () => { void refresh(true); };
     window.addEventListener('focus', onFocus);
