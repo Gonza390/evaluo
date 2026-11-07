@@ -3,6 +3,7 @@ import { accountAppLocale } from '@/lib/i18n/app-locale';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { MaterialCatalogSeed } from '@/components/materials/material-catalog-provider';
 import { StudyPlanSetup } from '@/components/dashboard/study-plan-setup';
 import { StudyPlanNextStep } from '@/components/dashboard/study-plan-next-step';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
@@ -54,7 +55,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
   const {data:personalPlan}=await supabase.from('student_personal_study_plans' as never)
     .select('exam_date').eq('user_id',user.id).maybeSingle();
   const hasSavedPlan=Boolean(personalPlan);
-  if (materials.length === 0) return <EmptyStudyPlan locale={locale} />;
+  if (materials.length === 0) return <><MaterialCatalogSeed materials={[]} /><EmptyStudyPlan locale={locale} /></>;
   // El plan creado pertenece al apartado Plan de estudio, no a Estudiar ni a Mi espacio.
   if (hasSavedPlan) {
     const planMaterials = await Promise.all(materials.map(async material=>{
@@ -68,11 +69,12 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       });
       return {id:material.id,title:material.title,topicCount:topics.length,topics};
     }));
-    return <StudyPlanSetup materials={planMaterials} mode="view" />;
+    return <><MaterialCatalogSeed materials={materials.map(item => ({ id: item.id, title: item.title }))} /><StudyPlanSetup materials={planMaterials} mode="view" /></>;
   }
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:h-[calc(100dvh-52px)] xl:overflow-hidden">
+      <MaterialCatalogSeed materials={materials.map(item => ({ id: item.id, title: item.title }))} />
       <div className="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
