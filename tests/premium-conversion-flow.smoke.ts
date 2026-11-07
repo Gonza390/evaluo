@@ -126,7 +126,8 @@ assert.equal(premiumPaymentResultState({plan:'free',status:'past_due'}),'attenti
 
 const pricing=read('app/(es)/pricing/page.tsx');
 const selector=read('components/pricing/PricingPlanSelector.tsx');
-const card=read('components/pricing/PaymentCheckoutCard.tsx');
+// La lógica de checkout ARS vive en un hook compartido por la tarjeta y /pricing.
+const card=read('components/pricing/PaymentCheckoutCard.tsx')+read('hooks/use-mercadopago-checkout.ts');
 const checkout=read('app/api/payments/checkout/route.ts');
 const result=read('components/pricing/PaymentResult.tsx');
 const resultPage=read('app/(es)/pricing/resultado/page.tsx');

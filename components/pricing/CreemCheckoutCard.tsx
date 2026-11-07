@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCreemCheckout } from '@/hooks/use-creem-checkout';
 import Link from 'next/link';
 import { Check, ArrowRight, Loader2, ShieldCheck, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,51 +32,8 @@ export function CreemCheckoutCard({ features, mode, available, locale }: Props) 
   const english = (locale ?? currentLocale) === 'en';
   const tr = (es: string, en: string) => english ? en : es;
   const displayFeatures = english ? features.map(item => FEATURE_EN[item] ?? item) : features;
-  const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [premium, setPremium] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    let active = true;
-    void fetch('/api/payments/status', { cache: 'no-store' })
-      .then(async r => r.ok ? (await r.json()) as { plan?: string } : null)
-      .then(data => { if (active) setPremium(data?.plan === 'premium'); })
-      .catch(() => undefined)
-      .finally(() => { if (active) setChecking(false); });
-    return () => { active = false; };
-  }, []);
-
-  async function start() {
-    setError(null);
-    setLoading(true);
-    try {
-      const r = await fetch('/api/payments/creem/checkout', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerCode: 'monthly', locale: english ? 'en' : 'es' }),
-      });
-      const data = await r.json() as {
-        checkoutUrl?: string; error?: string; amountCents?: number; currency?: string; mode?: string;
-      };
-      if (r.status === 401) {
-        window.location.assign((english ? '/en/login?mode=login&intent=premium&next=' : '/login?mode=login&intent=premium&next=') + encodeURIComponent(location.pathname + location.search));
-        return;
-      }
-      if (r.status === 409) throw new Error(data.error === 'already_subscribed'
-        ? tr("Ya tenés Premium. Revisá tu suscripción desde Configuración.","You already have Premium. Review your subscription in Settings.")
-        : tr("Ya tenés una compra en curso. Esperá unos minutos antes de volver a intentar.","You have a purchase in progress. Please try again in a few minutes."));
-      if (!r.ok || !data.checkoutUrl || data.currency !== 'USD' || data.amountCents !== 999 || data.mode !== mode) {
-        throw new Error(tr("No se pudo preparar el checkout. Intentá nuevamente.","We could not prepare checkout. Please try again."));
-      }
-      const target = new URL(data.checkoutUrl);
-      if (target.protocol !== 'https:' || !(target.hostname === 'creem.io' || target.hostname.endsWith('.creem.io'))) {
-        throw new Error(tr("La URL de pago no es segura.","The payment URL is not secure."));
-      }
-      window.location.assign(target.toString());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : tr("No se pudo iniciar el pago.","We could not start payment."));
-      setLoading(false);
-    }
-  }
+  // Estado del plan y apertura de Creem viven en el hook compartido.
+  const { loading, checking, premium, error, start } = useCreemCheckout({ english, mode });
 
   const demo = mode === 'test';
   return (
