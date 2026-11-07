@@ -2842,12 +2842,12 @@ export function MaterialStudyWorkspace({
                 type="button"
                 data-pdf-mobile-more-trigger
                 aria-label={t("Más opciones del material")}
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="group inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-[background-color,box-shadow,transform] duration-200 ease-out hover:bg-slate-50 active:scale-95 data-[state=open]:bg-slate-100 data-[state=open]:shadow-[0_4px_16px_rgba(15,23,42,0.10)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none"
               >
-                <Ellipsis className="size-[18px]" aria-hidden="true" />
+                <Ellipsis className="size-[18px] transition-transform duration-200 ease-out group-data-[state=open]:rotate-90 motion-reduce:transition-none" aria-hidden="true" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="min-w-[200px] rounded-xl p-2">
+            <DropdownMenuContent align="end" sideOffset={8} className="min-w-[200px] origin-top-right rounded-xl p-2 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 motion-reduce:animate-none">
               {shareAvailable && isOwner && !demo ? (
                 <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}>
                   <Share2 className="size-4" aria-hidden="true" />
