@@ -174,7 +174,7 @@ export function StudentMaterialsWorkspace({
                 <article
                   data-evaluo-motion-card
                   key={material.id}
-                  className="relative flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.992] motion-reduce:transform-none motion-reduce:transition-none motion-safe:hover:shadow-[0_9px_22px_rgba(15,23,42,0.07)] hover:border-slate-300 motion-safe:hover:md:-translate-y-[2px] sm:px-3.5"
+                  className="relative flex h-full flex-col gap-2 rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3 py-3 transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.992] motion-reduce:transform-none motion-reduce:transition-none motion-safe:hover:shadow-[0_9px_22px_rgba(15,23,42,0.07)] hover:border-slate-300 md:motion-safe:hover:-translate-y-[2px] sm:px-3.5"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between xl:flex-col xl:items-stretch xl:justify-start">
                     <div className="flex min-w-0 items-center gap-3">
