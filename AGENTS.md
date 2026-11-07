@@ -12,6 +12,23 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 EdTech web platform — Next.js 16 (App Router), React 19, TypeScript, Supabase, Tailwind v4. Full architecture doc: `PROYECTO_EVALUO.md` (Spanish; docs and comments are Spanish). Requires Node 22.
 
+## Flujo de trabajo (obligatorio para todos los chats y agentes)
+
+Varios chats/agentes trabajan en paralelo sobre `master`. Reglas:
+
+- **`master`** = integración. **`main`** = producción (protegida: solo PR con check "CI required"; Vercel despliega automáticamente desde `main`).
+- Cada tarea: rama corta desde el `master` más reciente (`git fetch origin && git checkout -b <tipo>/<tema> origin/master`).
+- **Al terminar una tarea, integrarla en `master` sin esperar a nadie:**
+  1. `git fetch origin && git rebase origin/master`
+  2. `npx tsc --noEmit && npm run lint && npm test` (deben pasar)
+  3. `git checkout master && git merge --ff-only origin/master && git merge --no-ff <rama>` y `git push origin master`
+  4. Si el push falla porque `master` avanzó: repetir desde el paso 1. Si hay conflicto en archivos de otro chat, resolver conservando su trabajo; si no es obvio, avisar al usuario.
+- No dejar PRs abiertos esperando merge ni trabajo sin integrar al terminar.
+- Agrupar commits: un push a `master` por tarea terminada, no por cada cambio (cada push dispara el CI).
+- **Nunca** pushear ni abrir PRs contra `main`. El release `master → main` lo hace un único responsable (el chat de infraestructura o el usuario), con un PR y CI en verde, y sale todo junto.
+- **Migraciones (`supabase/migrations`)**: la DB es compartida con producción. Solo el chat de infraestructura las aplica; los demás chats agregan el archivo y avisan.
+- Archivos compartidos (`package.json`, `next.config.mjs`, `proxy.ts`, `tests/smoke-manifest.json`, `vercel.json`, `.github/workflows`): cambios mínimos y en commits separados.
+
 ## Commands
 
 - `npm run dev` / `build` / `start` — Next.js.
