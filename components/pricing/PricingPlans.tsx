@@ -211,7 +211,7 @@ function PlanToggle({ plan, onChange }: { plan: Plan; onChange: (plan: Plan) => 
 }
 
 /** Barra fija en teléfono: aparece solo cuando el botón de la tarjeta quedó arriba, fuera de la pantalla. */
-function useStickyCta(target: React.RefObject<HTMLElement | null>, enabled: boolean) {
+export function useStickyCta(target: React.RefObject<HTMLElement | null>, enabled: boolean) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const node = target.current;
