@@ -7,12 +7,12 @@ import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { studyUiText } from '@/lib/i18n/study-ui-copy';
 
 const modes = [
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', slug: 'mixto', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
   { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', slug: 'flashcards', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
   { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', slug: 'opciones', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
   { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', slug: 'unir', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
   { title: 'Completar', description: 'Encontrá la palabra que falta.', slug: 'completar', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
   { title: 'Casos', description: 'Aplicá conceptos a situaciones.', slug: 'casos', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
+  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', slug: 'mixto', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
   { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', slug: 'simulacro', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
 ] as const;
 
