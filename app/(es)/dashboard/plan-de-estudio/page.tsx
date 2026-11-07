@@ -65,7 +65,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       const sections = Array.isArray(raw) ? raw : [];
       const topics = sections.map((section: unknown, index: number) => {
         const item = section as { title?: string; body?: string };
-        const words = (item.body ?? '').trim().split(/\\s+/u).filter(Boolean).length;
+        const words = (item.body ?? '').trim().split(/\s+/u).filter(Boolean).length;
         return {
           title: item.title?.trim() || `Tema ${index + 1}`,
           estimatedMinutes: Math.max(10, Math.ceil(words / 180) + 10),
