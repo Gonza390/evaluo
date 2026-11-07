@@ -511,9 +511,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     // on demand from the study workspace.
     const shouldShowFirstPdfGuide = !isEnglishStudyEntry && eligibleByAccount && !previouslyCompleted;
 
-    const shareAvailable = isOwner && Boolean(
-      academicProfile.universidadId && academicProfile.carreraId && material.materia_id
-    );
+    // El dueño puede compartir su material aunque no haya completado
+    // universidad/carrera/materia; la acción de servidor valida la titularidad.
+    const shareAvailable = isOwner;
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
     if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
