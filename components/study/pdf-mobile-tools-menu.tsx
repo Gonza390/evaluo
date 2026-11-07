@@ -26,25 +26,25 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
   const actions = [
     ...(canShare ? [{
       id: 'share', label: english ? 'Share' : 'Compartir', Icon: Share2,
-      x: -64, y: 0,
+      x: -56, y: 0,
       run: () => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } })),
       enabled: true,
     }] : []),
     {
       id: 'original', label: english ? `Open original ${fileType} file` : `Abrir ${fileType} original`, Icon: ExternalLink,
-      x: -117, y: 33,
+      x: -101, y: 29,
       run: () => window.open(viewerUrl, '_blank', 'noopener,noreferrer'),
       enabled: true,
     },
     {
       id: 'pomodoro', label: english ? 'Study timer' : 'Pomodoro', Icon: Timer,
-      x: -107, y: 92,
+      x: -91, y: 77,
       run: () => window.dispatchEvent(new Event('evaluo:open-pomodoro')),
       enabled: true,
     },
     {
       id: 'evi', label: english ? 'Ask Evi (coming soon)' : 'Preguntar a Evi (próximamente)', Icon: MessageCircle,
-      x: -45, y: 100,
+      x: -39, y: 88,
       run: () => {},
       enabled: false,
     },
@@ -71,7 +71,7 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
             tabIndex={open && enabled ? 0 : -1}
             disabled={!enabled}
             onClick={() => { setOpen(false); run(); }}
-            className={`pointer-events-auto absolute right-[-4px] top-[-4px] flex size-12 items-center justify-center rounded-full border border-[#E7EBF4] bg-white text-[#42506A] shadow-[0_7px_22px_rgba(15,27,61,0.10)] transition-[opacity,transform] ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] motion-reduce:transition-none ${enabled ? 'hover:text-[#4F5DFF] active:scale-95' : 'cursor-not-allowed opacity-60'}`}
+            className={`pointer-events-auto absolute right-[-4px] top-[-4px] flex size-10 items-center justify-center rounded-full border border-[#E7EBF4] bg-white text-[#42506A] shadow-[0_7px_22px_rgba(15,27,61,0.10)] transition-[opacity,transform] ease-[cubic-bezier(.2,.8,.2,1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] motion-reduce:transition-none ${enabled ? 'hover:text-[#4F5DFF] active:scale-95' : 'cursor-not-allowed opacity-60'}`}
             style={{
               opacity: open ? (enabled ? 1 : 0.55) : 0,
               transform: open ? `translate(${x}px,${y}px) scale(1)` : 'translate(0px,0px) scale(0.65)',
@@ -80,7 +80,7 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
               pointerEvents: open && enabled ? 'auto' : 'none',
             }}
           >
-            <Icon className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
+            <Icon className="size-4" strokeWidth={1.8} aria-hidden="true" />
           </button>
         ))}
       </div>
