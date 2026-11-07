@@ -37,15 +37,15 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
     {
       id: 'settings',
       label: messages.navigation.settings,
-      x: -67,
-      y: 43,
+      x: -50,
+      y: 26,
       Icon: Settings,
     },
     {
       id: 'feedback',
       label: messages.navigation.feedback,
-      x: -15,
-      y: 91,
+      x: -13,
+      y: 63,
       Icon: MessageSquarePlus,
     },
   ] as const;
