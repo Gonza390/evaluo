@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import './practice-motion.css';
@@ -24,17 +24,50 @@ const modes = [
   { title: 'Con tus palabras', displayTitle: 'Explicá con tus palabras', description: 'Explicá un tema como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
 ] as const;
 
-export function PracticeModePicker({ materials, initialMaterialId, history, historyLoadError = false, advancedPracticeEnabled = false }: {
+export function PracticeModePicker({ materials, initialMaterialId, advancedPracticeEnabled = false }: {
   materials: Material[];
   initialMaterialId: string | null;
-  history: PracticeHistoryEntry[];
-  historyLoadError?: boolean;
   advancedPracticeEnabled?: boolean;
 }) {
   const locale = useOptionalAppLocale();
   const english = locale === 'en';
   const t = (value: string) => studyUiText(locale, value);
   const [materialId, setMaterialId] = useState(() => materials.find(m => m.id === initialMaterialId)?.id ?? materials[0]?.id ?? '');
+  const [history, setHistory] = useState<PracticeHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyLoadError, setHistoryLoadError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setHistoryLoading(true);
+    setHistoryLoadError(false);
+    void fetch('/api/practice/history', { cache: 'no-store', signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) throw new Error('history_unavailable');
+        const payload: unknown = await response.json();
+        if (!payload || typeof payload !== 'object' || !('history' in payload) || !Array.isArray(payload.history)) {
+          throw new Error('invalid_history');
+        }
+        setHistory(payload.history as PracticeHistoryEntry[]);
+      })
+      .catch(error => {
+        if (controller.signal.aborted) return;
+        setHistoryLoadError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setHistoryLoading(false);
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    // Keep the selected material when possible; handle deleted/processed PDFs.
+    if (!materials.some(item => item.id === materialId)) {
+      setMaterialId(materials.find(item => item.id === initialMaterialId)?.id ?? materials[0]?.id ?? '');
+      setSelectedMode(null);
+      setActiveHistoryId(null);
+    }
+  }, [materials, initialMaterialId, materialId]);
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
   const [leavingReview, setLeavingReview] = useState(false);
@@ -208,12 +241,16 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
           </div>
           {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
         </section>
-        {material && <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
-          historyLoadError={historyLoadError}
-          onSelectSession={entry => setActiveHistoryId(entry.id)}
-          selectedSession={activeHistoryEntry}
-          onBackToHistory={() => setActiveHistoryId(null)}
-          onStartFlashcards={() => openReview('Flashcards')} />}
+        {material && (historyLoading
+          ? <aside role="status" aria-live="polite" className="min-h-[220px] rounded-[18px] border border-[#E7EBF4] bg-white p-5 text-[12px] text-[#66758D]">
+              {english ? 'Loading your practice history…' : 'Cargando tus prácticas realizadas…'}
+            </aside>
+          : <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}
+              historyLoadError={historyLoadError}
+              onSelectSession={entry => setActiveHistoryId(entry.id)}
+              selectedSession={activeHistoryEntry}
+              onBackToHistory={() => setActiveHistoryId(null)}
+              onStartFlashcards={() => openReview('Flashcards')} />)}
       </div>
     </main>
   );
