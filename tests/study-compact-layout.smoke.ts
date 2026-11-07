@@ -115,4 +115,33 @@ assert.match(exam, /onClick=\{\(\) => setSelectedSize\(option\.count\)\}/,
 assert.match(exam, /hidden text-\[11px\] leading-\[1\.4\] opacity-80 sm:block/,
   'Las descripciones largas se ocultan solo en móvil para mantener las tres tarjetas legibles.');
 
+// El índice (móvil y escritorio) y el área de lectura revelan el thumb
+// sólo al desplazarse. No alterar el scroll ni introducir un scrollbar global.
+assert.equal((workspace.match(/data-pdf-auto-scrollbar/g) ?? []).length, 3,
+  'Índice móvil, índice desktop y lector deben tener scrollbars autohide.');
+assert.equal((workspace.match(/onScroll=\{showScrollbarWhileScrolling\}/g) ?? []).length, 3,
+  'Los tres paneles deben revelar su propia barra cuando reciben scroll.');
+assert.match(workspace, /element\.dataset\.pdfScrollbarScrolling = 'true'/,
+  'La barra debe aparecer al empezar a desplazarse.');
+assert.match(workspace, /delete element\.dataset\.pdfScrollbarScrolling/,
+  'La barra debe ocultarse al terminar la interacción.');
+assert.match(workspace, /\}, 900\)\)/,
+  'El thumb no debe quedar permanentemente visible.');
+assert.match(workspace, /window\.clearTimeout\(previous\)/,
+  'El timer de ocultación se reinicia durante el scroll continuo.');
+assert.match(workspace, /for \(const \[element, timer\] of timers\)/,
+  'Los temporizadores de scrollbar se limpian al desmontar el lector.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\] \{\s*scrollbar-width: thin;\s*scrollbar-color: transparent transparent;/,
+  'La barra inactiva mantiene el scroll y no dibuja un thumb.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\]/,
+  'Los estilos vuelven a mostrar el thumb durante el scroll.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]:focus-visible/,
+  'Navegación por teclado mantiene visible la barra al enfocar el lector.');
+assert.match(globalStyles, /@media \(forced-colors: active\)/,
+  'El scrollbar permanece perceptible en modo de alto contraste.');
+assert.match(workspace, /min-h-0 flex-1 overflow-y-auto overscroll-contain/,
+  'La lectura debe conservar el scroll vertical nativo.');
+assert.match(workspace, /min-h-0 overflow-y-auto overscroll-contain pr-2/,
+  'El índice desktop debe seguir siendo desplazable.');
+
 console.log('Compact material study layout smoke: OK.');
