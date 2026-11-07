@@ -23,7 +23,8 @@ const international = read('app/api/payments/creem/checkout/route.ts');
 const pricing = read('app/(en)/en/pricing/page.tsx');
 const englishReturn = read('app/(en)/en/pricing/result/page.tsx');
 const resultClient = read('components/pricing/EnglishCreemPaymentResult.tsx');
-const creemCard = read('components/pricing/CreemCheckoutCard.tsx');
+// La lógica de checkout USD vive en un hook compartido por la tarjeta y /pricing.
+const creemCard = read('components/pricing/CreemCheckoutCard.tsx') + read('hooks/use-creem-checkout.ts');
 const publicPricing = read('components/pricing/PricingPlanSelector.tsx');
 const premiumPricing = read('components/pricing/PremiumDashboardScreen.tsx');
 const login = read('components/LoginFormGoogleFirst.tsx');

@@ -6,93 +6,98 @@
   background: var(--background);
 }
 
-.pricing-editorial main,
-.pricing-editorial main > section,
-.pricing-editorial main > section > div,
-.pricing-editorial article,
-.pricing-editorial article > div {
+.pricing-editorial:not(:has(.pricing-v2)) main,
+.pricing-editorial:not(:has(.pricing-v2)) main > section,
+.pricing-editorial:not(:has(.pricing-v2)) main > section > div,
+.pricing-editorial:not(:has(.pricing-v2)) article,
+.pricing-editorial:not(:has(.pricing-v2)) article > div {
   min-width: 0;
   max-width: 100%;
 }
 
-.pricing-editorial main > section:first-of-type > .absolute {
+.pricing-editorial:not(:has(.pricing-v2)) main > section:first-of-type > .absolute {
   display: none !important;
 }
 
-.pricing-editorial main > section:first-of-type a[href='#elegir-plan'] {
+.pricing-editorial:not(:has(.pricing-v2)) main > section:first-of-type a[href='#elegir-plan'] {
   box-shadow: none !important;
   transform: none !important;
 }
 
-.pricing-editorial article.rounded-3xl,
-.pricing-editorial [class*='rounded-3xl'] {
+.pricing-editorial:not(:has(.pricing-v2)) article.rounded-3xl,
+.pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-3xl'] {
   border-radius: 18px !important;
   box-shadow: none !important;
 }
 
-.pricing-editorial .shadow-xl,
-.pricing-editorial .shadow-lg,
-.pricing-editorial .shadow-sm,
-.pricing-editorial [class*='shadow-['] {
+.pricing-editorial:not(:has(.pricing-v2)) .shadow-xl,
+.pricing-editorial:not(:has(.pricing-v2)) .shadow-lg,
+.pricing-editorial:not(:has(.pricing-v2)) .shadow-sm,
+.pricing-editorial:not(:has(.pricing-v2)) [class*='shadow-['] {
   box-shadow: none !important;
 }
 
-.pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden {
+.pricing-editorial:not(:has(.pricing-v2)) #elegir-plan > div > .mt-8.overflow-hidden {
   max-width: 100%;
   border-radius: 16px !important;
   box-shadow: none !important;
 }
 
-.pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden > div > span:first-child,
-.pricing-editorial article li,
-.pricing-editorial article p,
-.pricing-editorial article a,
-.pricing-editorial article button {
+.pricing-editorial:not(:has(.pricing-v2))
+  #elegir-plan
+  > div
+  > .mt-8.overflow-hidden
+  > div
+  > span:first-child,
+.pricing-editorial:not(:has(.pricing-v2)) article li,
+.pricing-editorial:not(:has(.pricing-v2)) article p,
+.pricing-editorial:not(:has(.pricing-v2)) article a,
+.pricing-editorial:not(:has(.pricing-v2)) article button {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.pricing-editorial button,
-.pricing-editorial a {
+.pricing-editorial:not(:has(.pricing-v2)) button,
+.pricing-editorial:not(:has(.pricing-v2)) a {
   max-width: 100%;
   box-shadow: none !important;
 }
 
-.pricing-editorial [class*='rounded-[32px]'],
-.pricing-editorial [class*='rounded-[28px]'],
-.pricing-editorial [class*='rounded-[24px]'] {
+.pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-[32px]'],
+.pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-[28px]'],
+.pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-[24px]'] {
   border-radius: 18px !important;
 }
 
 /* La muestra Premium usa columnas que pueden encogerse sin empujar el viewport. */
-.pricing-editorial [role='tablist'] {
+.pricing-editorial:not(:has(.pricing-v2)) [role='tablist'] {
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   min-width: 0;
 }
 
-.pricing-editorial [role='tab'] {
+.pricing-editorial:not(:has(.pricing-v2)) [role='tab'] {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 @media (max-width: 639px) {
-  .pricing-editorial article.rounded-3xl,
-  .pricing-editorial [class*='rounded-3xl'],
-  .pricing-editorial [class*='rounded-[32px]'],
-  .pricing-editorial [class*='rounded-[28px]'],
-  .pricing-editorial [class*='rounded-[24px]'] {
+  .pricing-editorial:not(:has(.pricing-v2)) article.rounded-3xl,
+  .pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-3xl'],
+  .pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-[32px]'],
+  .pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-[28px]'],
+  .pricing-editorial:not(:has(.pricing-v2)) [class*='rounded-[24px]'] {
     border-radius: 14px !important;
   }
 
   /* Evita que "Recomendado" se superponga con la etiqueta de precio fundador. */
-  .pricing-editorial article > .absolute.top-5.right-5 {
+  .pricing-editorial:not(:has(.pricing-v2)) article > .absolute.top-5.right-5 {
     position: static !important;
     align-self: flex-end;
     margin-bottom: 0.75rem;
   }
 
-  .pricing-editorial article > div:first-of-type > span.inline-flex,
-  .pricing-editorial main > section:first-of-type span.inline-flex {
+  .pricing-editorial:not(:has(.pricing-v2)) article > div:first-of-type > span.inline-flex,
+  .pricing-editorial:not(:has(.pricing-v2)) main > section:first-of-type span.inline-flex {
     max-width: 100%;
     white-space: normal;
     text-align: center;
@@ -100,13 +105,104 @@
   }
 
   /* La comparación conserva tres columnas pero permite que la función se parta en varias líneas. */
-  .pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden > div {
+  .pricing-editorial:not(:has(.pricing-v2)) #elegir-plan > div > .mt-8.overflow-hidden > div {
     grid-template-columns: minmax(0, 1fr) 56px 66px !important;
   }
 
-  .pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden > div > span:first-child {
+  .pricing-editorial:not(:has(.pricing-v2))
+    #elegir-plan
+    > div
+    > .mt-8.overflow-hidden
+    > div
+    > span:first-child {
     padding-right: 0.5rem;
     font-size: 0.8125rem;
     line-height: 1.15rem;
+  }
+}
+
+/* ── /pricing rediseño (nov-2026) ─────────────────────────────────────────
+   Paleta suave aprobada en el diseño: un único acento índigo (#4A63E7) con
+   tintes derivados. Las reglas de arriba no aplican a esta página. */
+.pricing-v2 {
+  --pv-accent: #4a63e7;
+  --pv-tint: color-mix(in srgb, var(--pv-accent) 8%, white);
+  --pv-card: color-mix(in srgb, var(--pv-accent) 4%, white);
+  --pv-border: color-mix(in srgb, var(--pv-accent) 35%, white);
+}
+
+.pricing-v2 .pv-premium-shadow {
+  box-shadow: 0 24px 48px color-mix(in srgb, var(--pv-accent) 12%, transparent);
+}
+
+@keyframes pv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pv-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pricing-v2 .pv-rise {
+  animation: pv-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.pricing-v2 .pv-rise-2 {
+  animation: pv-rise 0.6s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.pricing-v2 .pv-swap {
+  animation: pv-swap 0.3s ease both;
+}
+.pricing-v2 .pv-faq[open] p {
+  animation: pv-swap 0.25s ease both;
+}
+.pricing-v2 .pv-pill {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pricing-v2 .pv-sticky {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pricing-v2 .pv-btn {
+  transition:
+    transform 0.15s ease,
+    filter 0.2s ease,
+    background-color 0.2s ease;
+}
+.pricing-v2 .pv-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .pricing-v2 .pv-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-v2 .pv-rise,
+  .pricing-v2 .pv-rise-2,
+  .pricing-v2 .pv-swap,
+  .pricing-v2 .pv-faq[open] p {
+    animation: none;
+  }
+  .pricing-v2 .pv-pill,
+  .pricing-v2 .pv-sticky,
+  .pricing-v2 .pv-btn {
+    transition: none;
   }
 }

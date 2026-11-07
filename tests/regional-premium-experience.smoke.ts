@@ -41,9 +41,15 @@ assert.doesNotMatch(selector, /<CreemCheckoutCard[^>]*mode="test"/,
 assert.match(premium, /useCheckoutMarket\(\)/);
 assert.match(premium, /market\?\.market !== 'argentina'/);
 assert.match(premium, /market\.market==='international'/);
-assert.match(spanish, /<RegionalPricingMessage locale="es" placement="featured"/);
-assert.match(spanish, /<RegionalPricingMessage locale="es" placement="hero"/);
-assert.match(spanish, /<RegionalPricingMessage locale="es" placement="billing"/);
+// /pricing (rediseño nov-2026): la oferta regional vive en PricingPlans y es fail-closed.
+const spanishPlans = read('components/pricing/PricingPlans.tsx');
+assert.match(spanish, /<PricingPlans\s+source=\{source\}/);
+assert.match(spanishPlans, /useCheckoutMarket\(\)/);
+assert.match(spanishPlans, /market\.market === 'unknown'/);
+assert.match(spanishPlans, /market\.market === 'argentina'/);
+assert.match(spanishPlans, /creemAvailable=\{market\.creemAvailable\}/);
+assert.match(spanishPlans, /Pago seguro con Mercado Pago/);
+assert.match(spanishPlans, /US\$ 9,99/);
 assert.doesNotMatch(spanish, /<section aria-label="Precio internacional de Evaluo"/);
 assert.match(english, /<RegionalPricingMessage locale="en" placement="billing"/);
 assert.doesNotMatch(english, /In Argentina, local offers are billed/);

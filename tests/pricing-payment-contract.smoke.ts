@@ -17,7 +17,9 @@ import {
 const source = (path: string) => readFileSync(resolve(path), 'utf8');
 const checkout = source('app/api/payments/checkout/route.ts');
 const offer = source('app/api/payments/offer/route.ts');
-const checkoutCard = source('components/pricing/PaymentCheckoutCard.tsx');
+// La lógica de checkout ARS vive en un hook compartido por la tarjeta y /pricing.
+const checkoutCard =
+  source('components/pricing/PaymentCheckoutCard.tsx') + source('hooks/use-mercadopago-checkout.ts');
 const mercadopago = source('lib/payments/mercadopago.ts');
 const webhook = source('app/api/webhooks/mercadopago/route.ts');
 const planSync = source('ops/pricing/launch-premium-price-9990.sql');
