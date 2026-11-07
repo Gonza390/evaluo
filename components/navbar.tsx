@@ -271,7 +271,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4] ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center p-0'
-                      : compact ? 'min-h-10 w-full gap-2 px-1.5 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
+                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#5D70C4] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
@@ -295,11 +295,11 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
+                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
-                  <CircleHelp className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>{messages.navigation.feedback}</p> : null}
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg"><CircleHelp className="size-4" aria-hidden="true" /></span>
+                  {!collapsed ? <span className="min-w-0 flex-1 text-left font-semibold">{messages.navigation.feedback}</span> : null}
                 </button>
 
                 <DropdownMenu>
@@ -307,10 +307,10 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                       collapsed
                         ? 'mx-auto h-11 w-11 justify-center px-0 py-0'
-                        : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2' : 'w-full gap-2.5 px-3 py-2.5'
+                        : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1' : 'min-h-11 w-full gap-2.5 px-2 py-1.5'
                     }`}
                   >
-                    <Avatar className={compact ? 'h-7 w-7 shrink-0' : 'h-8 w-8'}>
+                    <Avatar className="size-8 shrink-0">
                       <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -320,7 +320,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     </Avatar>
                     {!collapsed ? (
                       <div className="min-w-0 flex-1 overflow-hidden">
-                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-sm"}`}>
+                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-[13px]"}`}>
                           {getUserName()}
                         </p>
                       </div>
