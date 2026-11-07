@@ -22,7 +22,6 @@ import {
   BookOpenText,
   BrainCircuit,
   Clock3,
-  CircleAlert,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -30,7 +29,6 @@ import {
   Share2,
   ExternalLink,
   FileText,
-  ListTree,
   Loader2,
   Map as MapIcon,
   Sparkles,
@@ -1821,30 +1819,22 @@ export function MaterialStudyWorkspace({
   const tabHeader = (
     <div
       className={cn(
-        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-2.5 py-1.5 sm:px-3 sm:py-2 md:flex'
+        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-5 md:flex'
       )}
     >
-      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
-        {STUDY_TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              data-recommended-tab={tab.id}
-              data-pdf-study-tab
-              className={pdfStudyTabClassName}
-            >
-              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {t(tab.label)}
-              {tab.premium ? (
-                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase sm:text-[11px]">
-                  Premium
-                </span>
-              ) : null}
-            </TabsTrigger>
-          );
-        })}
+      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-6 overflow-x-auto rounded-none bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
+        {/* Pestañas solo con texto: sin íconos ni etiquetas extra (Mapa mental incluido). */}
+        {STUDY_TABS.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            data-recommended-tab={tab.id}
+            data-pdf-study-tab
+            className={pdfStudyTabClassName}
+          >
+            {t(tab.label)}
+          </TabsTrigger>
+        ))}
         {hasProgress ? (
           <TabsTrigger
             value="progreso"
@@ -1853,7 +1843,6 @@ export function MaterialStudyWorkspace({
             data-has-pending={hasPendingStudyErrors || undefined}
             className={pdfStudyTabClassName}
           >
-            <CircleAlert className="h-4 w-4" />
             {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
@@ -1884,7 +1873,6 @@ export function MaterialStudyWorkspace({
               'inline-flex items-center justify-center gap-1.5 transition'
             )}
           >
-            <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
@@ -2016,23 +2004,23 @@ export function MaterialStudyWorkspace({
         value="resumen"
         className="animate-tab-panel outline-none"
       >
-        <div className="mx-auto w-full max-w-[1240px] py-1 sm:py-1.5">
-          <header className="border-border border-b pb-3 md:pb-5">
+        <div className="mx-auto w-full max-w-[720px] py-1 sm:py-1.5">
+          <header className="pb-1">
             <p
               data-study-summary-intro
               className={cn(
-                'text-muted-foreground mt-0 max-w-[1040px] text-[13px] leading-[1.65]',
-                !summaryIntroExpanded && 'line-clamp-4 sm:line-clamp-none'
+                'text-muted-foreground mt-0 max-w-[680px] text-[14px] leading-[1.65]',
+                !summaryIntroExpanded && 'line-clamp-2'
               )}
             >
               {studySummary.shortSummary}
             </p>
-            {studySummary.shortSummary.length > 220 ? (
+            {studySummary.shortSummary.length > 140 ? (
               <button
                 type="button"
                 aria-expanded={summaryIntroExpanded}
                 onClick={() => setSummaryIntroExpanded((value) => !value)}
-                className="text-primary mt-1 text-[12px] font-medium hover:underline sm:hidden"
+                className="text-primary mt-1 text-[13px] font-medium hover:underline"
               >
                 {t(summaryIntroExpanded ? "Ver menos" : "Leer introducción completa")}
               </button>
@@ -2051,41 +2039,37 @@ export function MaterialStudyWorkspace({
           </header>
 
           {summaryChapters.length > 0 ? (
-            <details className="group border-border bg-muted/55 mt-3 rounded-xl border px-3 py-2.5 xl:hidden">
-              <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-medium">
-                <span className="inline-flex items-center gap-2">
-                  <ListTree className="text-primary h-4 w-4" />
-                  Índice del resumen
-                </span>
-                <span className="text-muted-foreground text-[11px] font-medium">
-                  {summaryChapters.length} capítulos
-                </span>
+            // Índice fijo arriba del lector: muestra en qué capítulo estás mientras bajás.
+            <details data-summary-chapter-index className="group bg-card sticky top-0 z-10 -mx-1 mt-2 px-1 py-1">
+              <summary className="text-muted-foreground hover:text-foreground inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 rounded-lg text-[13px] transition-colors [&::-webkit-details-marker]:hidden">
+                {english
+                  ? `Chapter ${activeSummaryChapterIndex + 1} of ${summaryChapters.length}`
+                  : `Capítulo ${activeSummaryChapterIndex + 1} de ${summaryChapters.length}`}
+                <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" aria-hidden="true" />
               </summary>
               <nav
-                className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+                className="border-border bg-card absolute top-full left-0 z-20 mt-1 max-h-[min(50vh,380px)] w-[min(360px,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl border p-2 shadow-[0_12px_32px_rgba(15,23,42,0.12)] [scrollbar-width:thin]"
                 aria-label="Índice del resumen"
               >
-                <ol className="space-y-1">
+                <ol className="space-y-0.5">
                   {summaryChapters.map((chapter, index) => (
                     <li key={chapter.anchor}>
                       <a
                         href={`#${chapter.anchor}`}
-                        onClick={(event) => handleSummaryChapterNavigation(event, chapter.anchor, index)}
+                        onClick={(event) => {
+                          event.currentTarget.closest('details')?.removeAttribute('open');
+                          handleSummaryChapterNavigation(event, chapter.anchor, index);
+                        }}
                         data-active-chapter={activeSummaryChapterIndex === index || undefined}
                         aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                         className={cn(
-                          'flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[13px] leading-5 transition-colors',
+                          'flex items-start gap-2.5 rounded-xl px-3 py-2.5 text-[14px] leading-5 transition-colors',
                           activeSummaryChapterIndex === index
-                            ? 'border-primary bg-primary/10 text-primary font-medium'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'text-foreground/80 hover:bg-muted'
                         )}
                       >
-                        <span className={cn(
-                          'mt-0.5 min-w-5 font-medium tabular-nums',
-                          activeSummaryChapterIndex === index ? 'text-primary' : 'text-muted-foreground'
-                        )}>
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
+                        <span className="text-muted-foreground min-w-4 tabular-nums">{index + 1}</span>
                         <span>{chapter.displayTitle}</span>
                       </a>
                     </li>
@@ -2095,51 +2079,8 @@ export function MaterialStudyWorkspace({
             </details>
           ) : null}
 
-          <div className="mt-3 xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:items-start xl:gap-5 2xl:grid-cols-[220px_minmax(0,1fr)] 2xl:gap-6">
-            {summaryChapters.length > 0 ? (
-              <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
-                <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
-                  <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-medium tracking-[0.16em] uppercase">
-                    Contenido
-                  </p>
-                  <nav
-                    className="min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable] [scrollbar-width:thin]"
-                    aria-label="Índice del resumen"
-                  >
-                    <ol className="space-y-1.5">
-                      {summaryChapters.map((chapter, index) => (
-                        <li key={chapter.anchor}>
-                          <a
-                            href={`#${chapter.anchor}`}
-                            onClick={(event) =>
-                              handleSummaryChapterNavigation(event, chapter.anchor, index)
-                            }
-                            data-active-chapter={activeSummaryChapterIndex === index || undefined}
-                            aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
-                            className={cn(
-                              'group flex items-start gap-2 rounded-lg border-l-[3px] px-2 py-1.5 text-[12px] leading-[1.45] transition-colors',
-                              activeSummaryChapterIndex === index
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
-                            )}
-                          >
-                            <span className={cn(
-                              'min-w-5 font-medium tabular-nums transition',
-                              activeSummaryChapterIndex === index ? 'text-primary' : 'text-slate-300 group-hover:text-primary'
-                            )}>
-                              {String(index + 1).padStart(2, '0')}
-                            </span>
-                            <span>{chapter.displayTitle}</span>
-                          </a>
-                        </li>
-                      ))}
-                    </ol>
-                  </nav>
-                </div>
-              </aside>
-            ) : null}
-
-            <main className="max-w-[940px] min-w-0">
+          <div className="mt-2">
+            <main className="max-w-[680px] min-w-0">
               {summaryChapters.length > 0 ? (
                 <div>
                   {summaryChapters.map((section, index) => (
@@ -2148,18 +2089,41 @@ export function MaterialStudyWorkspace({
                       key={`${section.title}:${section.body}`}
                       data-summary-reading-section={index}
                       tabIndex={index === 0 ? -1 : undefined}
-                      className="border-border scroll-mt-5 border-b py-4 first:pt-0 last:border-b-0 last:pb-2 sm:py-5"
+                      className="scroll-mt-5 py-6 first:pt-3 last:pb-2 sm:py-8"
                     >
-                      <header className="mb-2.5 sm:mb-3">
-                        <p className="text-primary text-[11px] font-medium tracking-[0.12em] uppercase">
-                          Capítulo {String(index + 1).padStart(2, '0')}
+                      <header className="mb-3 sm:mb-4">
+                        <p className="text-muted-foreground text-[13px]">
+                          {english ? `Chapter ${index + 1}` : `Capítulo ${index + 1}`}
                         </p>
-                        <h3 className="text-foreground mt-1 text-[17px] leading-[1.45] font-medium tracking-[-0.025em]">
+                        <h3 className="text-foreground mt-1.5 text-[20px] leading-[1.25] font-semibold tracking-[-0.02em] sm:text-[22px]">
                           {section.displayTitle}
                         </h3>
                       </header>
 
                       <StudyRichText body={section.body} compact />
+
+                      {topicQuestionCounts[index] ? (
+                        <div
+                          data-summary-chapter-check={index}
+                          className="border-border mt-6 flex flex-col gap-3 rounded-2xl border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-foreground text-[15px] font-semibold">
+                              {english ? 'Did you get it?' : '¿Lo entendiste?'}
+                            </p>
+                            <p className="text-muted-foreground mt-0.5 text-[13px]">
+                              {english ? 'Test yourself on this topic.' : 'Probate con preguntas de este tema.'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-primary inline-flex min-h-11 shrink-0 items-center justify-center self-start rounded-full px-5 text-[14px] font-semibold transition active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none sm:self-auto"
+                            onClick={() => startChapterEvaluation(index)}
+                          >
+                            {english ? 'Test me' : 'Probarme'}
+                          </button>
+                        </div>
+                      ) : null}
 
                       {summaryCheckPlan[index] && summaryCheckPolicy.has(index) ? (
                         <div
@@ -2598,7 +2562,52 @@ export function MaterialStudyWorkspace({
     >
       {tabHeader}
       {regenerationOverlay}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      {(!demo || demo.progress) && activeTab === 'resumen' && !progressOpen ? (
+        // Teléfono y tablet: alternar entre el resumen y el documento original.
+        <div
+          role="radiogroup"
+          aria-label={english ? 'What to view' : 'Qué ver'}
+          data-study-view-toggle
+          className="bg-muted relative mx-3 grid shrink-0 grid-cols-2 rounded-full p-1 xl:hidden"
+        >
+          <span
+            aria-hidden="true"
+            className="bg-card absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full shadow-[0_1px_4px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none"
+            style={{ transform: `translateX(${isViewerVisible ? '100%' : '0%'})` }}
+          />
+          <button
+            type="button"
+            role="radio"
+            aria-checked={!isViewerVisible}
+            onClick={() => setIsViewerVisible(false)}
+            className={cn(
+              'relative z-10 min-h-10 rounded-full text-[14px] font-semibold transition-colors',
+              isViewerVisible ? 'text-muted-foreground' : 'text-foreground'
+            )}
+          >
+            {t('Resumen')}
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isViewerVisible}
+            onClick={() => setIsViewerVisible(true)}
+            className={cn(
+              'relative z-10 min-h-10 rounded-full text-[14px] font-semibold transition-colors',
+              isViewerVisible ? 'text-foreground' : 'text-muted-foreground'
+            )}
+          >
+            {english ? (isDocx ? 'Your Word file' : 'Your PDF') : isDocx ? 'Tu Word' : 'Tu PDF'}
+          </button>
+        </div>
+      ) : null}
+      <div
+        className={cn(
+          'relative flex min-h-0 flex-1 flex-col overflow-hidden',
+          // El visor se superpone al contenido: asegurar alto aunque el contenedor no tenga uno fijo.
+          activeTab === 'resumen' && !progressOpen && isViewerVisible && 'min-h-[65dvh]'
+        )}
+      >
         <div
           className={cn(
             'flex min-h-0 flex-1 flex-col overflow-hidden',
@@ -2846,18 +2855,18 @@ export function MaterialStudyWorkspace({
           <div data-evaluo-desktop-reader-title className="flex min-w-0 flex-1 items-center gap-3">
             <Link
               href={backHref}
-              className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-medium transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label={t("Volver")}
+              title={t("Volver")}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              {t("Volver")}
+              <ChevronLeft className="size-5" aria-hidden="true" />
             </Link>
-            <span aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200" />
             {isOwner && !demo ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" aria-label={`Cambiar material actual: ${title}`}
                     className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
-                    <span className="min-w-0 truncate text-[14px] sm:text-[16px]" title={title}>{title}</span>
+                    <span className="min-w-0 truncate text-[15px] font-semibold sm:text-[16px]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
@@ -2954,7 +2963,7 @@ export function MaterialStudyWorkspace({
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-1.5 sm:px-3 xl:pb-2 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
-          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-none">
             <Tabs
               data-demo-focus="study"
               value={progressOpen ? 'progreso' : activeTab}
@@ -2985,7 +2994,7 @@ export function MaterialStudyWorkspace({
 
                   {isViewerVisible ? (
                     <ResizablePanel id="study-viewer-panel" order={2} defaultSize={40} minSize={26}>
-                      <div data-demo-focus="pdf" className="bg-card relative h-full min-w-0 p-2">
+                      <div data-demo-focus="pdf" className="bg-muted/60 relative h-full min-w-0 p-3">
                         <button
                           type="button"
                           onClick={() => setIsViewerVisible(false)}

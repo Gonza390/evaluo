@@ -2,8 +2,9 @@
 export const pdfStudyQuestionActionsClassName =
   'border-border bg-card mt-4 flex justify-end border-t py-3 md:pt-5 md:pb-0 [&>button]:min-h-11 [&>button]:w-full md:[&>button]:w-auto';
 
+// Pestañas como texto con subrayado (rediseño nov-2026): sin borde ni fondo, el activo se subraya.
 export const pdfStudyTabClassName =
-  'border-border bg-card text-muted-foreground hover:bg-muted h-8 flex-none shrink-0 rounded-lg border px-2.5 text-[12px] font-medium shadow-none data-[state=active]:border-primary/30 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none';
+  'text-muted-foreground hover:text-foreground relative h-11 flex-none shrink-0 gap-1.5 rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 text-[14px] font-medium shadow-none transition-colors data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none';
 
 export const pdfStudyControlsClassName =
   '[&_[data-slot=button]]:rounded-lg [&_[data-slot=button]]:text-[13px] [&_[data-slot=button]]:shadow-none';
