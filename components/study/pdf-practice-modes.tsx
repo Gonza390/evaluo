@@ -7,13 +7,13 @@ import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { studyUiText } from '@/lib/i18n/study-ui-copy';
 
 const modes = [
-  { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', slug: 'flashcards', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
-  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', slug: 'opciones', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
-  { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', slug: 'unir', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
-  { title: 'Completar', description: 'Encontrá la palabra que falta.', slug: 'completar', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
-  { title: 'Casos', description: 'Aplicá conceptos a situaciones.', slug: 'casos', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', slug: 'mixto', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
-  { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', slug: 'simulacro', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
+  { title: 'Flashcards', displayTitle: 'Flashcards', description: 'Recordá conceptos con tarjetas.', slug: 'flashcards', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
+  { title: 'Opciones', displayTitle: 'Verdadero o falso', description: 'Evaluá si una afirmación es correcta.', slug: 'opciones', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
+  { title: 'Unir conceptos', displayTitle: 'Relacionar conceptos', description: 'Uní términos con sus definiciones.', slug: 'unir', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
+  { title: 'Completar', displayTitle: 'Completar frases', description: 'Encontrá la palabra que falta.', slug: 'completar', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
+  { title: 'Casos', displayTitle: 'Casos prácticos', description: 'Aplicá lo aprendido a situaciones.', slug: 'casos', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
+  { title: 'Mixto', displayTitle: 'Práctica mixta', description: 'Combiná diferentes ejercicios.', slug: 'mixto', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
+  { title: 'Simulacro de examen', displayTitle: 'Simulacro de examen', description: 'Practicá con tiempo y resultados.', slug: 'simulacro', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
 ] as const;
 
 export function PdfPracticeModes({ materialId }: { materialId: string }) {
@@ -73,7 +73,7 @@ export function PdfPracticeModes({ materialId }: { materialId: string }) {
               <button key={mode.slug} type="button" onClick={() => { setDuration('rapido'); setSelected(mode); }}
                 className={`flex min-h-[122px] min-w-0 flex-col items-start rounded-2xl border border-transparent p-3.5 text-left transition-all duration-150 hover:brightness-[0.985] hover:shadow-[0_4px_16px_rgba(15,23,42,0.035)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:min-h-[142px] sm:p-4 ${mode.color}`}>
                 <mode.Icon className="size-4" aria-hidden="true" />
-                <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{t(mode.title)}</span>
+                <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{t(mode.displayTitle)}</span>
                 <span className="mt-1 text-[11px] leading-[1.4] opacity-85">{t(mode.description)}</span>
               </button>
             ))}
