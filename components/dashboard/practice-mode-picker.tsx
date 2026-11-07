@@ -14,14 +14,14 @@ import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, 
 
 type Material = { id: string; title: string };
 const modes = [
-  { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
-  { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
-  { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
-  { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
-  { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
-  { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
-  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
+  { title: 'Flashcards', displayTitle: 'Flashcards', description: 'Recordá conceptos con tarjetas.', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
+  { title: 'Opciones', displayTitle: 'Verdadero o falso', description: 'Evaluá si una afirmación es correcta.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
+  { title: 'Unir conceptos', displayTitle: 'Relacionar conceptos', description: 'Uní términos con sus definiciones.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
+  { title: 'Completar', displayTitle: 'Completar frases', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
+  { title: 'Casos', displayTitle: 'Casos prácticos', description: 'Aplicá lo aprendido a situaciones.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
+  { title: 'Mixto', displayTitle: 'Práctica mixta', description: 'Combiná diferentes ejercicios.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
+  { title: 'Simulacro de examen', displayTitle: 'Simulacro de examen', description: 'Practicá con tiempo y resultados.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
+  { title: 'Con tus palabras', displayTitle: 'Explicá con tus palabras', description: 'Explicá un tema como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
 ] as const;
 
 export function PracticeModePicker({ materials, initialMaterialId, history, historyLoadError = false, advancedPracticeEnabled = false }: {
@@ -187,7 +187,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
       <div data-practice-columns className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
         <section aria-label={english ? "Practice modes" : "Modalidades de práctica"} className="min-w-0 lg:flex lg:min-h-0 lg:flex-col">
           <div data-practice-modes tabIndex={material ? 0 : -1} role="region" aria-label={english ? "Practice modes: scroll to see all" : "Modalidades de práctica: desplazate para ver todas"} className={`${scrollbarStyles.scrollArea} grid grid-cols-2 gap-3 lg:min-h-0 lg:flex-1 lg:content-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1.5 lg:pb-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#5D70C4] ${!material ? "lg:grid-cols-4" : ""}`}>
-            {modes.map(({ title, description, Icon, color }) => {
+            {modes.map(({ title, displayTitle, description, Icon, color }) => {
               const supported = available(title);
               const selected = selectedMode === title;
               return (
@@ -199,7 +199,7 @@ export function PracticeModePicker({ materials, initialMaterialId, history, hist
                     {!material && <LockKeyhole className="size-[13px] opacity-75" aria-hidden="true" />}
                     {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                   </span>
-                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{t(title)}</span>
+                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{t(displayTitle)}</span>
                   <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{t(description)}</span>
                   {material && !supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">{english ? "Coming soon" : "Próximamente"}</span> : null}
                 </button>
