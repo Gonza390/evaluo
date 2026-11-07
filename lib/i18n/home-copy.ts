@@ -1,5 +1,13 @@
 /** Shared Spanish homepage text translated into English. Kept outside the client bundle. */
 export const HOME_ENGLISH_TEXT: Record<string, string> = {
+  "Crear flashcards desde PDF": "Create flashcards from a PDF",
+  "Convertí tus apuntes en tarjetas de repaso por tema.": "Turn your notes into topic-based flashcards.",
+  "Generar preguntas desde PDF": "Generate questions from a PDF",
+  "Practicá con preguntas de tu propio material.": "Practice with questions based on your own material.",
+  "Simulacro de examen con IA": "AI practice exam",
+  "Probá cómo te iría antes del parcial o el final.": "See how ready you are before your exam.",
+  "Practicar por tema": "Practice by topic",
+  "Reforzá el capítulo que más te cuesta.": "Review the chapter you find most difficult.",
   "Cómo funciona": "How it works",
   "Plan de estudio": "Study plan",
   "Planes": "Plans",
