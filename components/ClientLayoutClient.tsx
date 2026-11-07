@@ -395,14 +395,14 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  <PomodoroHeader key={user.id} userId={user.id} />
+                  <div className="order-1 md:order-none"><PomodoroHeader key={user.id} userId={user.id} /></div>
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
                     href="/calendario"
                     data-mobile-calendar-link
                     aria-label={messages.navigation.calendar}
                     aria-current={pathname === '/calendario' || pathname.startsWith('/calendario/') ? 'page' : undefined}
-                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
+                    className={`order-2 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
                       pathname === '/calendario' || pathname.startsWith('/calendario/')
                         ? 'bg-blue-50 text-brand'
                         : 'text-slate-600 hover:bg-slate-50'
@@ -410,16 +410,18 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   >
                     <CalendarDays className="h-[19px] w-[19px]" aria-hidden="true" />
                   </Link>
+                  <div className="order-3 md:order-none">
                   <MobileProfileMenu
                     initials={getUserInitials()}
                     avatarUrl={user.user_metadata?.avatar_url}
                     sourcePath={pathname}
                   />
+                  </div>
                   <button
                     type="button"
                     aria-label={locale === 'en' ? `View study streak: ${streakDays} days` : `Ver racha de estudio: ${streakDays} días` }
                     onClick={() => setShowStreakDialog(true)}
-                    className="inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
+                    className="order-4 inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
                   >
                     <Flame className="h-4 w-4" aria-hidden="true" />
                     <span className="text-xs font-semibold">{streakDays}</span>
