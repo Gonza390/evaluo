@@ -148,7 +148,7 @@ assert.match(endpoint,/verifyGeneratedTrueFalse\(parsed,fragments\)/);
 assert.match(endpoint,/\.eq\('user_id',user\.id\)/);
 assert.match(endpoint,/enforceStrictRateLimit\(/);
 assert.match(endpoint,/['"]practice-ai-true-false:/);
-assert.match(picker,/Decidí si cada afirmación es verdadera o falsa/);
+assert.match(picker,/displayTitle: 'Verdadero o falso', description: 'Evaluá si una afirmación es correcta.'/);
 assert.doesNotMatch(upload,/practice\/true-false/,
   'No true-false generation while initially processing a PDF/DOCX.');
 console.log('Opciones on-click True/False grounding, answer balance and UI integration: passed');

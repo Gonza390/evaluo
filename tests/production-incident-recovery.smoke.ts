@@ -43,17 +43,16 @@ for (const valid of [
 ]) assert.equal(isTerminalAuthSessionError(valid), false);
 
 const pdfFirst = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
-const quickPdf = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
-for (const client of [pdfFirst, quickPdf]) {
+// quick-pdf-upload.tsx se eliminó (sin uso): el único cargador es PdfFirstUploadShell.
+for (const client of [pdfFirst]) {
   assert.match(client, /createSingleFlightPolling/);
   assert.match(client, /outcome\.kind === 'error'/);
   assert.match(client, /window\.setInterval/);
   assert.doesNotMatch(client, /const state = await getStudentMaterialProcessingStateAction\(/);
 }
 assert.match(pdfFirst, /router\.push\(`\/dashboard\/procesando\/\$\{result\.materialId\}`\)/);
-assert.match(quickPdf, /processStudentMaterialAction\(result\.materialId\)\.catch/);
 
-for (const client of [pdfFirst, quickPdf]) {
+for (const client of [pdfFirst]) {
   assert.match(client, /fetchStudentMaterialProcessingState/);
 }
 const stateRoute = readFileSync('app/api/student-materials/[id]/processing-state/route.ts', 'utf8');

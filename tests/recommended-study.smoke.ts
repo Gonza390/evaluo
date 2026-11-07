@@ -349,7 +349,6 @@ assert.doesNotMatch(summaryChapterFinishSource, /preguntas generadas|máximo de 
   'No mostrar cantidades ni explicaciones largas en la tarjeta.');
 
 const firstUploadSource = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
-const quickUploadSource = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
 
 assert.match(materialWorkspaceSource, /<PdfStudyStartGuide/,
   'Resumen debe mostrar directamente la guía de estudio.');
@@ -363,8 +362,6 @@ assert.match(materialPageSource, /query\.inicio === '1'/,
   'Solo el enlace posterior a la carga debe solicitar la guía inicial.');
 assert.match(firstUploadSource, /\?inicio=1/,
   'La carga normal debe solicitar la guía para el PDF nuevo.');
-assert.match(quickUploadSource, /\?inicio=1/,
-  'La carga rápida debe solicitar la guía para el PDF nuevo.');
 assert.match(materialWorkspaceSource, /if \(outcome === 'completed' && \(demo \|\| isOwner\)\) \{/,
   'Completar el recorrido puede abrir la guía de estudio.');
 assert.match(materialWorkspaceSource, /setStudyStartGuideOpen\(false\);/,

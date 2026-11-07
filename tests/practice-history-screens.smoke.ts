@@ -105,7 +105,7 @@ assert.match(picker, /aria-label=(?:"Modalidades de práctica: desplazate para v
 assert.match(picker, /scrollbarStyles\.scrollArea/, 'La barra de las modalidades queda oculta sin desactivar scroll');
 assert.match(panel, /lg:h-full lg:min-h-0/, 'El historial queda fijo dentro de la columna');
 assert.doesNotMatch(panel, /lg:sticky/, 'No depende del scroll general de página');
-assert.match(picker, /material && <PracticeHistoryPanel/, 'Sin PDF no se presenta un historial engañoso');
+assert.match(picker, /\{material && \(historyLoading\s*\?[\s\S]*?: <PracticeHistoryPanel/, 'Sin PDF no se presenta un historial engañoso');
 assert.match(picker, /onStartFlashcards=\{\(\) => openReview\('Flashcards'\)\}/,
   'El botón del vacío usa el flujo real de selección de Flashcards');
 assert.match(panel, /if \(historyLoadError\)/, 'La falla de lectura no se confunde con una cuenta vacía');
@@ -120,7 +120,7 @@ assert.match(panel, /groups\.map\(group => \(/, 'Se mantiene la lista de prácti
 assert.match(panel, /scrollbarStyles\.scrollArea/, 'La lista mantiene scroll con barra invisible');
 assert.match(panel, /router\.refresh\(\)/, 'Hay recuperación tras error');
 assert.match(panel, /flex-1 overflow-y-auto overscroll-contain border-t/, 'Solo la lista del historial tiene scroll interno');
-assert.match(page, /historyLoadError=\{historyLoadError\}/, 'El error llega al panel');
+assert.match(picker, /historyLoadError=\{historyLoadError\}/, 'El error llega al panel');
 assert.match(history, /throw new Error\('practice_history_unavailable'\)/);
 assert.match(history, /history_session_id/, 'Los eventos antiguos y actuales no se duplican por heurística amplia');
 assert.match(api, /history_session_id: attemptId/, 'Cada guardado tiene correlación exacta');

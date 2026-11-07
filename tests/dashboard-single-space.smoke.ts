@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const dashboardSource = readFileSync(resolve('app/(es)/dashboard/page.tsx'), 'utf8');
@@ -150,8 +150,8 @@ assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-1\.5 py-1' : 'min-h-11
 // ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
 assert.match(navbarSource, /compact \? 'grid-cols-\[minmax\(0,1fr\)_32px\]' : 'grid-cols-\[minmax\(0,1fr\)_40px\]'/);
 assert.match(navbarSource, /compact \? 'gap-1' : 'gap-2'/);
-// El grupo superior se separa 16 px más del encabezado solo en Mi espacio.
-assert.match(navbarSource, /compact \? "pt-5" : "pt-2"/);
+// Menos aire arriba del menú compacto (948c019).
+assert.match(navbarSource, /compact \? "pt-1" : "pt-2"/);
 assert.match(navbarSource, /compact \? 'w-8' : 'w-10'/);
 assert.match(navbarSource, /<ReferralPortalNavLink collapsed=\{collapsed\} pathname=\{pathname\} compact=\{compact\} \/>/);
 const referralNavSource = readFileSync(resolve('components/referrals/ReferralPortalNavLink.tsx'), 'utf8');
@@ -201,7 +201,8 @@ assert.match(mobileProfileMenuSource, /messages\.navigation\.feedback/,
   'The profile menu must offer Sugerencias.');
 assert.match(mobileProfileMenuSource, /href="\/configuracion"/,
   'Ajustes must lead to the existing configuration page.');
-assert.match(mobileProfileMenuSource, /onSelect=\{\(\) => setFeedbackOpen\(true\)\}/,
+// Menú circular (5ab9af2): el botón de Sugerencias abre el formulario existente.
+assert.match(mobileProfileMenuSource, /setOpen\(false\);\s*setFeedbackOpen\(true\);/,
   'Sugerencias must open the existing feedback form.');
 assert.match(mobileProfileMenuSource, /<FeedbackDialog open=\{feedbackOpen\} onOpenChange=\{setFeedbackOpen\} sourcePath=\{sourcePath\} \/>/,
   'The feedback flow must stay connected to its source path.');
@@ -218,7 +219,8 @@ assert.match(navbarSource, /compact \? 'w-\[176px\]' : 'w-\[248px\]'/);
 // This regression guard forbids resizing the overall dashboard layout.
 const heroWithoutSvgAnimationStyles = dashboardHeroSource.replace(/<style jsx global>[\s\S]*?<\/style>/g, '');
 for (const source of [dashboardSource, heroWithoutSvgAnimationStyles, dashboardMaterialsSource]) {
-  assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
+  // active:scale-[…] es la respuesta al presionar una tarjeta, no un zoom del layout.
+  assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|(?<!active:)\bscale-\[/);
 }
 
 // Escala privada compartida: todas las vistas autenticadas mantienen el
@@ -251,7 +253,7 @@ assert.match(compactHeader, /'text-\[20px\] leading-\[1\.3\] sm:text-\[22px\]'/)
 
 // Las microinteracciones no deben romper navegación, contenido o accesibilidad.
 const motionStyles = readFileSync(resolve('app/globals.css'), 'utf8');
-const dashboardLoadingSource = readFileSync(resolve('app/(es)/dashboard/loading.tsx'), 'utf8');
+// /dashboard ya no tiene loading.tsx: conserva la vista actual al navegar (1b2fb35).
 const calendarLoadingSource = readFileSync(resolve('app/(es)/calendario/loading.tsx'), 'utf8');
 const progressLoadingSource = readFileSync(resolve('app/(es)/dashboard/explicaciones/loading.tsx'), 'utf8');
 const drawerSource = readFileSync(resolve('components/ui/drawer.tsx'), 'utf8');
@@ -283,7 +285,8 @@ assert.doesNotMatch(motionStyles, /saasLiftIn|studyReveal|evaluo-route-enter \d/
 assert.match(motionStyles, /\[data-evaluo-motion-card\]/);
 assert.match(dialogSource, /backdrop-blur-\[2px\]/);
 assert.match(drawerSource, /backdrop-blur-\[2px\]/);
-for (const loading of [dashboardLoadingSource, calendarLoadingSource, progressLoadingSource]) {
+assert.equal(existsSync(resolve('app/(es)/dashboard/loading.tsx')), false);
+for (const loading of [calendarLoadingSource, progressLoadingSource]) {
   assert.match(loading, /Skeleton/, 'Show real layout skeletons during route loading.');
   assert.match(loading, /sr-only/, 'Loading must still have accessible text.');
 }

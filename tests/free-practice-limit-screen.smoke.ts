@@ -136,7 +136,10 @@ assert.match(modePage, /returnTo:practiceHref/, 'Premium activation should resum
 assert.match(modePage, /backHref=\{backHref\}/, 'The secondary CTA must return to the previous context');
 assert.match(modePage, /safePremiumReturnTo\(returnTo\)/, 'Never allow external return URLs');
 assert.match(modePicker, /encodeURIComponent\(returnTo\)/);
-assert.match(practiceHome, /requestedMaterialId && materials\.some/, 'Back link must preselect the original owned material');
+// La selección vive en el cliente: solo se preselecciona un material propio de la lista.
+assert.match(practiceHome, /requestedMaterialId=\{requestedMaterialId\}/);
+assert.match(read('components/dashboard/practice-mode-picker.tsx'), /materials\.find\(m => m\.id === initialMaterialId\)\?\.id \?\? materials\[0\]\?\.id/,
+  'Back link must preselect the original owned material');
 
 // The visual-only demonstration is never routable on Vercel or production.
 assert.match(demo, /process\.env\.NODE_ENV !== 'development'/);
