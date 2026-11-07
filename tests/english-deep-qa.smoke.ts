@@ -35,4 +35,15 @@ for (const path of [
 ]) {
   check(path, ['useOptionalAppLocale', "=== 'en'", 'Loading']);
 }
+// A fallback to the Spanish source string is not acceptable for any English
+// homepage CTA: this catches new t(...) literals not added to the dictionary.
+const homepage = read('components/marketing/home-redesign.tsx');
+const homeDictionary = read('lib/i18n/home-copy.ts');
+const translatedHomeKeys = new Set(
+  [...homeDictionary.matchAll(/^\\s*"([^"]+)":/gm)].map(m => m[1])
+);
+const homeKeys = [...homepage.matchAll(/\\bt\\(\\s*(["'])(.*?)\\1\\s*\\)/g)].map(m => m[2]);
+const untranslatedHomeKeys = [...new Set(homeKeys.filter(key => !translatedHomeKeys.has(key)))];
+assert.deepEqual(untranslatedHomeKeys, [], 'English homepage has unlocalized t(...) strings');
+
 console.log('[english-deep-qa] English PDF/DOCX reader, exam date, summary, feedback, referral, loading, auth-recovery and screen-reader paths checked (static coverage).');
