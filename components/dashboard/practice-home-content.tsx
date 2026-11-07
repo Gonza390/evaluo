@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { useMaterialCatalog } from '@/components/materials/material-catalog-provider';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { PracticeModePicker } from '@/components/dashboard/practice-mode-picker';
 
 export function PracticeHomeContent({ requestedMaterialId, advancedPracticeEnabled }: {
@@ -11,6 +12,7 @@ export function PracticeHomeContent({ requestedMaterialId, advancedPracticeEnabl
 }) {
   const english = useOptionalAppLocale() === 'en';
   const { materials, loading, error, refresh } = useMaterialCatalog();
+  const english = useOptionalAppLocale() === 'en';
   useEffect(() => {
     if (materials === null && !loading && !error) void refresh();
   }, [materials, loading, error, refresh]);
