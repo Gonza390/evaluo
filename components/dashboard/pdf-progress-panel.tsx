@@ -946,7 +946,7 @@ export function PdfProgressPanel({
             <div data-progress-overview className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,300px)]">
               <section aria-label={tr("Resumen de tu progreso","Your progress summary")} className="flex min-w-0 flex-col items-start gap-4 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
                 <svg className="size-[82px] shrink-0 sm:size-[90px]" viewBox="0 0 100 100" role="img"
-                  aria-label={touchedTopics + ' de ' + topics.length + ' temas con actividad registrada'}>
+                  aria-label={english ? `${touchedTopics} of ${topics.length} topics with recorded activity` : touchedTopics + ' de ' + topics.length + ' temas con actividad registrada'}>
                   <circle cx="50" cy="50" r="40" stroke="#E7EBF4" strokeWidth="9" fill="none" />
                   <circle cx="50" cy="50" r="40" stroke="#456DBD" strokeWidth="9" strokeLinecap="round" fill="none"
                     strokeDasharray={String(topics.length ? Math.round((touchedTopics / topics.length) * 251.3) : 0) + ' 251.3'}
@@ -960,7 +960,7 @@ export function PdfProgressPanel({
                   <p className="mt-1 text-[13px] font-semibold text-[#0F1B3D] sm:text-[14px]">
                     {assessmentData?.loadError
                       ? tr("Comprobación con preguntas no disponible","Question-based assessment unavailable")
-                      : assessedTopics + ' de ' + topics.length + ' comprobados con preguntas'}
+                      : english ? `${assessedTopics} of ${topics.length} assessed with questions` : assessedTopics + ' de ' + topics.length + ' comprobados con preguntas'}
                   </p>
                   {topics.length > 0 && (
                     <div className="mt-3 flex gap-1" role="img" aria-label={tr("Estado de actividad de cada tema","Activity state for each topic")}>
@@ -1087,13 +1087,13 @@ export function PdfProgressPanel({
                     else openTopic(topic.id);
                   };
                   const activityText = pendingCount > 0
-                    ? pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
+                    ? english ? `${pendingCount} ${pendingCount === 1 ? 'difficulty' : 'difficulties'} to review` : pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
                     : assessmentData?.loadError
                       ? tr("Resultados de preguntas temporalmente no disponibles","Question results temporarily unavailable")
                       : assessedCount > 0
                       ? correctCount + tr(' de ',' of ') + (correctCount + incorrectCount) + tr(' respuestas correctas registradas',' correct answers recorded')
                       : selfReportedCount > 0
-                        ? selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
+                        ? english ? `${selfReportedCount} self-${selfReportedCount === 1 ? 'assessment' : 'assessments'} · not yet checked with questions` : selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
                         : tr("Todavía sin preguntas corregidas","No graded questions yet");
                   return (
                     <li key={topic.id} data-progress-topic-row>
