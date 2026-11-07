@@ -14,14 +14,14 @@ import { ArrowRight, ArrowLeft, BookOpen, Check, ChevronDown, Clock3, FileText, 
 
 type Material = { id: string; title: string };
 const modes = [
-  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
   { title: 'Flashcards', description: 'Recordá y girá las tarjetas.', Icon: Layers3, color: 'bg-[#E2F2F7] text-[#41839B]' },
   { title: 'Opciones', description: 'Decidí si cada afirmación es verdadera o falsa.', Icon: Check, color: 'bg-[#E3F2E5] text-[#398052]' },
   { title: 'Unir conceptos', description: 'Relacioná términos y definiciones.', Icon: Network, color: 'bg-[#E0F2F0] text-[#348C85]' },
   { title: 'Completar', description: 'Encontrá la palabra que falta.', Icon: ListChecks, color: 'bg-[#FAE9DE] text-[#AE663F]' },
   { title: 'Casos', description: 'Aplicá conceptos a situaciones.', Icon: BookOpen, color: 'bg-[#EBE4FA] text-[#6C52A8]' },
-  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
+  { title: 'Mixto', description: 'Una mezcla de todo, como en un examen.', Icon: Zap, color: 'bg-[#FCF2DF] text-[#9A712C]' },
   { title: 'Simulacro de examen', description: 'Con reloj y resultados al final.', Icon: Timer, color: 'bg-[#E9EAED] text-[#626B7A]' },
+  { title: 'Con tus palabras', description: 'Explicá el tema como en un oral.', Icon: Mic, color: 'bg-[#FAE8EB] text-[#B65370]' },
 ] as const;
 
 export function PracticeModePicker({ materials, initialMaterialId, history, historyLoadError = false, advancedPracticeEnabled = false }: {
