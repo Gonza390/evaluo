@@ -62,6 +62,9 @@ assert.equal(HREFLANG_CLUSTERS.pricing.en, '/en/pricing');
 assert.equal(HREFLANG_CLUSTERS['pdf-to-flashcards'].en, '/en/pdf-to-flashcards');
 
 assert.equal(HREFLANG_CLUSTERS['mock-exam'].en, '/en/ai-test-prep');
+// "generador de exámenes IA": landing ES neutra como `es`/x-default y la versión AR (voseo) como `es-AR`.
+assert.equal(HREFLANG_CLUSTERS['mock-exam'].es, '/es/generador-de-examenes-con-ia');
+assert.equal(HREFLANG_CLUSTERS['mock-exam']['es-AR'], '/funciones/simulacro-examen-con-ia');
 // "estudiar con IA": guía ES neutra como `es`/x-default y la landing en voseo como `es-AR`.
 assert.equal(hreflangLanguages('ai-for-students')['x-default'], hreflangLanguages('ai-for-students').es);
 assert.match(hreflangLanguages('ai-for-students').es, /\/es\/guias\/como-estudiar-con-ia$/);

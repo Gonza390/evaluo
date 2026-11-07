@@ -8,7 +8,7 @@ const path = '/funciones/simulacro-examen-con-ia';
 export const metadata: Metadata = {
   title: "Simulacro de examen con IA desde tus apuntes",
   description: "Prepará un simulacro de examen con IA usando tus apuntes en PDF: practicá preguntas, revisá tus resultados y detectá qué temas reforzar.",
-  alternates: hreflangAlternates('mock-exam', 'es'),
+  alternates: hreflangAlternates('mock-exam', 'es-AR'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

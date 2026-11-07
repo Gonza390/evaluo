@@ -35,7 +35,11 @@ export const HREFLANG_CLUSTERS = {
   'pdf-to-flashcards': { es: '/funciones/crear-flashcards-desde-pdf', en: '/en/pdf-to-flashcards' },
   'true-false': { es: '/funciones/verdadero-falso-con-ia', en: '/en/ai-true-false-questions' },
   'match-concepts': { es: '/funciones/unir-conceptos-con-ia', en: '/en/match-concepts-with-ai' },
-  'mock-exam': { es: '/funciones/simulacro-examen-con-ia', en: '/en/ai-test-prep' },
+  'mock-exam': {
+    es: '/es/generador-de-examenes-con-ia',
+    'es-AR': '/funciones/simulacro-examen-con-ia',
+    en: '/en/ai-test-prep',
+  },
   'compare-notebooklm': { es: '/comparar/evaluo-vs-notebooklm', en: '/en/compare/evaluo-vs-notebooklm' },
   'compare-chatgpt': { es: '/comparar/evaluo-vs-chatgpt', en: '/en/compare/evaluo-vs-chatgpt' },
   'compare-quizlet': { es: '/comparar/evaluo-vs-quizlet', en: '/en/compare/evaluo-vs-quizlet' },

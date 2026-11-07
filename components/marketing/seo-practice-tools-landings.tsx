@@ -38,6 +38,8 @@ type PageContent = {
   uploaderTitle: string;
   uploaderDescription: string;
   ctaLabel: string;
+  /** 'neutral' = tuteo para el mundo hispano fuera de Argentina (rutas /es/). Por defecto, voseo AR. */
+  register?: 'neutral';
 };
 
 const MOCK: PageContent = {
@@ -146,6 +148,61 @@ const TOPIC: PageContent = {
   ctaLabel: 'Elegir PDF para estudiar por tema',
 };
 
+const GENERATOR_NEUTRAL: PageContent = {
+  register: 'neutral',
+  path: '/es/generador-de-examenes-con-ia',
+  tracking: 'seo_generador_examenes_ia_es',
+  source: 'generador-de-examenes-con-ia',
+  eyebrow: 'Generador de exámenes con IA',
+  titlePrefix: 'Generador de exámenes con IA:',
+  titleAccent: 'practica con preguntas de tus propios apuntes',
+  intro:
+    'Sube el PDF o el documento de Word con el que estudias y genera un examen de práctica con IA: preguntas por tema, un simulacro que mezcla todo el temario y resultados que te muestran qué repasar. Las preguntas salen de tu material, no de un banco genérico, y sirven para practicar; no son preguntas oficiales de ningún examen.',
+  heroFacts: ['Preguntas a partir de tu PDF o Word', 'Simulacro con todo el temario', 'Resultados por tema para saber qué repasar', 'Empieza gratis con un documento'],
+  exampleLabel: 'Ejemplo ilustrativo · Química',
+  exampleContext: 'Examen de práctica · Ácidos y bases',
+  exampleQuestion: 'Una disolución A tiene pH 3 y una disolución B tiene pH 5. ¿Cuál es más ácida y cuántas veces mayor es su concentración de iones H⁺?',
+  exampleAnswer:
+    'La disolución A es más ácida. Como la escala de pH es logarítmica, dos unidades de diferencia equivalen a una concentración de H⁺ 10² = 100 veces mayor. Una buena pregunta de examen obliga a aplicar la escala, no solo a recordar que un pH bajo es ácido.',
+  stepsTitle: 'Cómo crear un examen de práctica con IA a partir de tus apuntes',
+  stepsDescription:
+    'Un examen generado con IA es útil cuando se parece a tu curso y te devuelve al material cuando fallas. Estos son los pasos que siguen los estudiantes que mejor lo aprovechan.',
+  steps: [
+    { title: 'Sube el documento del examen', description: 'Usa los apuntes, la guía o el capítulo que realmente entra. Si el examen cubre varias unidades, revisa que el documento las incluya todas.' },
+    { title: 'Practica tema por tema', description: 'Responde primero preguntas de cada tema sin mirar los apuntes. Así descubres los puntos débiles mientras todavía hay tiempo para estudiarlos.' },
+    { title: 'Haz el simulacro completo', description: 'Mezcla todos los temas en condiciones parecidas al examen real y revisa el resultado por tema, no solo la nota final, para decidir qué repasar.' },
+  ],
+  whenTitle: '¿Cuándo conviene usar un generador de exámenes?',
+  whenIntro:
+    'No todo momento del estudio pide lo mismo. El generador rinde más cuando ya leíste el material y necesitas comprobar qué recuerdas y qué sabes aplicar.',
+  useCases: [
+    { title: 'Una o dos semanas antes del examen', description: 'Practica por tema para encontrar los huecos y planificar los repasos que quedan.' },
+    { title: 'Los días previos', description: 'Haz un simulacro completo con tiempo limitado para ensayar cómo respondes cuando se mezclan los temas.' },
+    { title: 'Después de corregir errores', description: 'Vuelve a practicar con preguntas nuevas sobre los temas que fallaste para comprobar que lo entendiste.' },
+  ],
+  qualityTitle: 'Cómo saber si un examen generado con IA es bueno',
+  qualityDescription:
+    'La IA puede generar muchas preguntas en segundos, pero no todas sirven igual. Usa estos criterios para aprovecharlas y para detectar las que conviene descartar.',
+  quality: [
+    { title: 'Cubre todo el temario', description: 'Un examen que solo pregunta por el primer capítulo da una nota engañosa. Comprueba que aparezcan todas las unidades que entran.' },
+    { title: 'Pide aplicar, no solo recordar', description: 'Las mejores preguntas plantean un caso, un cálculo o una comparación. Si todas se responden copiando una frase, faltan preguntas de aplicación.' },
+    { title: 'Explica cada respuesta', description: 'La corrección debe decir por qué una opción es correcta y llevarte a la parte de tus apuntes donde está la idea.' },
+    { title: 'Se verifica con la fuente', description: 'La IA puede equivocarse, sobre todo con fórmulas, tablas o páginas escaneadas. Ante una duda, manda tu documento y tu docente.' },
+  ],
+  faqTitle: 'Preguntas frecuentes sobre generar exámenes con IA',
+  faqs: [
+    { question: '¿Puedo crear un examen con IA a partir de mi PDF?', answer: 'Sí. Evaluo lee tu PDF o documento de Word, lo organiza por temas y genera preguntas de opción múltiple, verdadero o falso, relacionar conceptos y casos prácticos, además de un simulacro con todo el temario.' },
+    { question: '¿Es gratis el generador de exámenes?', answer: 'Puedes empezar gratis con un documento: el plan Free incluye 12 preguntas de opción múltiple, 10 de verdadero o falso, 2 casos prácticos, 1 ronda de relacionar conceptos y 1 simulacro. Premium amplía los documentos, las explicaciones y los modos de simulacro. Consulta los precios vigentes en la página de planes.' },
+    { question: '¿Las preguntas son las del examen real?', answer: 'No. Son preguntas de práctica generadas a partir de tu material. No son preguntas oficiales, filtradas ni aprobadas por ninguna institución, y conviene verificar las respuestas importantes con tus apuntes.' },
+    { question: '¿Qué diferencia hay entre practicar por tema y hacer un simulacro?', answer: 'Practicar por tema concentra las preguntas en una unidad para encontrar errores concretos. El simulacro mezcla todo el temario para ensayar el examen completo. Lo ideal es combinar ambos.' },
+    { question: '¿Sirve para exámenes de admisión o certificaciones?', answer: 'Sirve para practicar el contenido que tengas en tu material. Si el examen tiene un formato oficial, combina esta práctica con los modelos y las condiciones publicados por la institución.' },
+  ],
+  uploaderTitle: 'Genera tu examen de práctica',
+  uploaderDescription:
+    'Elige tu PDF o documento de Word antes de crear la cuenta. Después verás los temas, las preguntas de práctica y el simulacro con el resultado por tema.',
+  ctaLabel: 'Generar examen con mi PDF',
+};
+
 const related = [
   { href: '/convertir-pdf-en-preguntas', title: 'Generar preguntas desde PDF', description: 'Transformá el material en preguntas que te ayuden a recuperar y aplicar conceptos.' },
   { href: '/funciones/simulacro-examen-con-ia', title: 'Simulacro de examen con IA', description: 'Ensayá cómo respondés y decidí qué temas conviene volver a estudiar.' },
@@ -153,13 +210,38 @@ const related = [
   { href: '/funciones/resumir-pdf-con-ia', title: 'Resumir PDF con IA', description: 'Ubicá las ideas principales y conservá el material como referencia.' },
 ];
 
+const relatedNeutral = [
+  { href: '/es/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', description: 'Convierte tus apuntes en temas, preguntas y repasos.' },
+  { href: '/es/guias/como-estudiar-con-ia', title: 'Cómo estudiar con IA', description: 'Método para aprender con IA sin que piense por ti.' },
+  { href: '/es/guias/como-preparar-un-parcial', title: 'Cómo preparar un parcial', description: 'Plan de estudio por temas hasta el día del examen.' },
+  { href: '/es/guias/como-hacer-preguntas-de-estudio-desde-pdf', title: 'Preguntas de estudio desde un PDF', description: 'Cómo formular preguntas que comprueben comprensión.' },
+];
+
 function Landing({ page }: { page: PageContent }) {
+  const neutral = page.register === 'neutral';
+  const t = neutral
+    ? { method: '02 / Elige el método', sourceNote: 'Tus preguntas se basan en tu propio material; comprueba siempre la información importante con la fuente original.', relatedCta: 'Ver más' }
+    : { method: '02 / Elegí el método', sourceNote: 'Tus preguntas se basan en tu propio material; comprobá siempre la información importante con la fuente original.', relatedCta: 'Conocer la herramienta' };
+  const relatedLinks = neutral ? relatedNeutral : related;
   return (
     <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <MarketingAnalyticsSlot />
       <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Evaluo', path: '/' }, { name: page.titlePrefix.replace(':', ''), path: page.path }])} />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-        <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={page.tracking + '_header'} alternateHref={hreflangAlternatePath(page.path, 'en')} />
+        {neutral ? (
+          <PublicSiteHeader
+            variant="landing"
+            trackingLocation={page.tracking + '_header'}
+            alternateHref={hreflangAlternatePath(page.path, 'en')}
+            actions={
+              <a href="#elegir-pdf" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2">
+                Elegir mi PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            }
+          />
+        ) : (
+          <PublicSiteHeader primaryHref="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" trackingLocation={page.tracking + '_header'} alternateHref={hreflangAlternatePath(page.path, 'en')} />
+        )}
       </div>
       <main>
         <section className="border-b border-slate-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.15),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
@@ -216,14 +298,18 @@ function Landing({ page }: { page: PageContent }) {
 
         <section className="border-b border-slate-100 bg-slate-50/60 py-16 sm:py-20">
           <div className="mx-auto max-w-[1120px] px-4 sm:px-8">
-            <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">02 / Elegí el método</span>
+            <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{t.method}</span>
             <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{page.whenTitle}</h2>
             <p className="mt-4 max-w-3xl text-base leading-8 text-slate-600">{page.whenIntro}</p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {page.useCases.map((item) => <article key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6"><Target className="h-5 w-5 text-blue-700" aria-hidden="true" /><h3 className="mt-4 text-base font-bold text-slate-950">{item.title}</h3><p className="mt-3 text-sm leading-7 text-slate-600">{item.description}</p></article>)}
             </div>
             <p className="mt-7 max-w-3xl text-sm leading-7 text-slate-700">
-              Para generar preguntas sobre tus apuntes, empezá por <Link href="/convertir-pdf-en-preguntas" className="font-semibold text-blue-700 underline underline-offset-4">convertir el PDF en preguntas</Link>. Si querés otra modalidad, consultá <Link href={page.path === MOCK.path ? TOPIC.path : MOCK.path} className="font-semibold text-blue-700 underline underline-offset-4">{page.path === MOCK.path ? 'cómo practicar por tema' : 'cómo preparar un simulacro de examen'}</Link>.
+              {neutral ? (
+                <>Si quieres trabajar todo el PDF y no solo el examen, empieza por <Link href="/es/estudiar-pdf-con-ia" className="font-semibold text-blue-700 underline underline-offset-4">estudiar el PDF con IA</Link>. Para usar la IA sin que piense por ti, consulta <Link href="/es/guias/como-estudiar-con-ia" className="font-semibold text-blue-700 underline underline-offset-4">cómo estudiar con IA</Link>.</>
+              ) : (
+                <>Para generar preguntas sobre tus apuntes, empezá por <Link href="/convertir-pdf-en-preguntas" className="font-semibold text-blue-700 underline underline-offset-4">convertir el PDF en preguntas</Link>. Si querés otra modalidad, consultá <Link href={page.path === MOCK.path ? TOPIC.path : MOCK.path} className="font-semibold text-blue-700 underline underline-offset-4">{page.path === MOCK.path ? 'cómo practicar por tema' : 'cómo preparar un simulacro de examen'}</Link>.</>
+              )}
             </p>
           </div>
         </section>
@@ -245,9 +331,9 @@ function Landing({ page }: { page: PageContent }) {
               <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">04 / Tu material</span>
               <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{page.uploaderTitle}</h2>
               <p className="mt-4 text-base leading-8 text-slate-600">{page.uploaderDescription}</p>
-              <p className="mt-5 text-sm leading-7 text-slate-600"><BookOpen className="mr-2 inline h-4 w-4 text-blue-700" aria-hidden="true" />Tus preguntas se basan en tu propio material; comprobá siempre la información importante con la fuente original.</p>
+              <p className="mt-5 text-sm leading-7 text-slate-600"><BookOpen className="mr-2 inline h-4 w-4 text-blue-700" aria-hidden="true" />{t.sourceNote}</p>
             </div>
-            <PdfFirstLandingUploader trackingLocation={page.tracking} sourceKey={page.source} />
+            <PdfFirstLandingUploader trackingLocation={page.tracking} sourceKey={page.source} locale={neutral ? 'neutral' : undefined} />
           </div>
         </section>
 
@@ -264,12 +350,12 @@ function Landing({ page }: { page: PageContent }) {
           <div className="mx-auto max-w-[1120px] px-4 sm:px-8">
             <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Otras formas de estudiar con el mismo PDF</h2>
             <div className="mt-7 grid gap-4 md:grid-cols-2">
-              {related.filter((item) => item.href !== page.path).map((item) => <Link key={item.href} href={item.href} className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-blue-200"><h3 className="text-base font-bold text-slate-950 group-hover:text-blue-700">{item.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{item.description}</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">Conocer la herramienta <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></Link>)}
+              {relatedLinks.filter((item) => item.href !== page.path).map((item) => <Link key={item.href} href={item.href} className="group rounded-2xl border border-slate-200 bg-white p-6 hover:border-blue-200"><h3 className="text-base font-bold text-slate-950 group-hover:text-blue-700">{item.title}</h3><p className="mt-2 text-sm leading-7 text-slate-600">{item.description}</p><span className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-blue-700">{t.relatedCta} <ArrowRight className="h-4 w-4" aria-hidden="true" /></span></Link>)}
             </div>
           </div>
         </section>
       </main>
-      <FooterHome />
+      <FooterHome register={neutral ? 'neutral' : undefined} />
     </div>
   );
 }
@@ -280,4 +366,8 @@ export function SimulacroExamenIaLanding() {
 
 export function PracticarPorTemaLanding() {
   return <Landing page={TOPIC} />;
+}
+
+export function GeneradorExamenesNeutralLanding() {
+  return <Landing page={GENERATOR_NEUTRAL} />;
 }
