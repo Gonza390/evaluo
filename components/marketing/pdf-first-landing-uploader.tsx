@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, ShieldCheck, UploadCloud, X } from 'lucide-react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/file-rules';
 import { isUuid } from '@/lib/uuid';
 
 function formatBytes(bytes: number) {

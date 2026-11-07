@@ -434,5 +434,9 @@
   {
     "file": "tests/english-seo-content.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/client-bundle-hygiene.smoke.mjs",
+    "alias": false
   }
 ]

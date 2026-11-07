@@ -18,7 +18,7 @@ import {
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/validation';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile, studentMaterialFileKind, STUDENT_MATERIAL_DOCX_MIME } from '@/lib/student-materials/file-rules';
 import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
 
