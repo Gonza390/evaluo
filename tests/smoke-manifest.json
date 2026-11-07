@@ -438,5 +438,9 @@
   {
     "file": "tests/client-bundle-hygiene.smoke.mjs",
     "alias": false
+  },
+  {
+    "file": "tests/crawler-locale-redirect.smoke.ts",
+    "alias": true
   }
 ]
