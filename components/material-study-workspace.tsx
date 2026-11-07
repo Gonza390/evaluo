@@ -286,7 +286,7 @@ const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
         <div className="h-5 w-2/3 animate-pulse rounded bg-slate-200" />
         <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
         <div className="h-3 w-5/6 animate-pulse rounded bg-slate-200" />
-        <span className="sr-only">Preparando visor del PDF</span>
+        <span className="sr-only">{t('Preparando visor del PDF')}</span>
       </div>
     </div>
   ),
@@ -1778,7 +1778,7 @@ export function MaterialStudyWorkspace({
           </Button>
           <Button type="button" size="sm" className="min-h-10 rounded-lg text-[13px]"
             disabled={!topicQuestionCounts[index]} onClick={() => startChapterEvaluation(index)}>
-            Practicar este tema <ChevronRight aria-hidden className="h-4 w-4" />
+            {t('Practicar este tema')} <ChevronRight aria-hidden className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -1873,7 +1873,7 @@ export function MaterialStudyWorkspace({
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
             )}
-            {hasPendingStudyErrors && <span className="sr-only">: errores por resolver</span>}
+            {hasPendingStudyErrors && <span className="sr-only">{english ? ': errors to review' : ': errores por resolver'}</span>}
           </TabsTrigger>
         ) : null}
         {isOwner && !demo && !hasProgress ? (
@@ -1884,8 +1884,8 @@ export function MaterialStudyWorkspace({
             data-has-pending={hasPendingStudyErrors || undefined}
             aria-label={
               hasPendingStudyErrors
-                ? 'Progreso: errores por resolver en este PDF'
-                : 'Progreso de este PDF'
+                ? t('Progreso: errores por resolver en este PDF')
+                : t('Progreso de este PDF')
             }
             onClick={() => {
               trackMarketingEvent('cta_click', {
@@ -2057,10 +2057,10 @@ export function MaterialStudyWorkspace({
             {diagnosticReviewTopics.length > 0 ? (
               <div className="border-primary mt-3 border-l-2 pl-3">
                 <p className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">
-                  Según tu diagnóstico
+                  {english ? 'Based on your diagnostic' : 'Según tu diagnóstico'}
                 </p>
                 <p className="text-foreground mt-1 text-[14px] font-medium">
-                  Empezá por {diagnosticReviewTopics[0]}
+                  {english ? 'Start with ' : 'Empezá por '}{diagnosticReviewTopics[0]}
                 </p>
               </div>
             ) : null}
@@ -2274,7 +2274,7 @@ export function MaterialStudyWorkspace({
                   <div className="min-w-0">
                     <p className="text-foreground text-[13px] font-medium">{english ? 'Ready to keep practicing?' : '¿Seguimos con la práctica?'}</p>
                     <p className="text-muted-foreground mt-1 text-[12px] leading-5">
-                      Comprobá cuánto aprendiste de este tema.
+                      {english ? 'Check how much you learned from this topic.' : 'Comprobá cuánto aprendiste de este tema.'}
                     </p>
                   </div>
                   <Button
@@ -2282,14 +2282,14 @@ export function MaterialStudyWorkspace({
                     className="min-h-10 self-start rounded-lg px-3 text-[12px] sm:shrink-0"
                     onClick={() => startChapterEvaluation(glossaryTopicIndex)}
                   >
-                    Practicar este tema <ChevronRight aria-hidden className="ml-1 h-4 w-4" />
+                    {t('Practicar este tema')} <ChevronRight aria-hidden className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
               ) : null}
             </div>
           ) : (
             <p className="text-muted-foreground px-2 py-3 text-[13px] leading-5">
-              Todavía no pudimos detectar un glosario claro a partir de este PDF.
+              {english ? 'We could not identify a clear glossary from this PDF yet.' : 'Todavía no pudimos detectar un glosario claro a partir de este PDF.'}
             </p>
           )}
         </div>
