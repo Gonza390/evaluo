@@ -14,6 +14,8 @@ import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { getTopicStudyResources, tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-materials/types';
 import type { StudyQuestion, StudyFlashcard } from '@/lib/student-materials/pedagogy';
+import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
+import type { PlanDay } from '@/lib/student-materials/study-plan-distribution';
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
@@ -34,7 +36,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       .order('created_at', { ascending: false })
       .limit(24),
     supabase.from('student_personal_study_plans' as never)
-      .select('exam_date').eq('user_id', user.id).maybeSingle(),
+      .select('exam_date,daily_minutes,material_ids,preferences,schedule,updated_at').eq('user_id', user.id).maybeSingle(),
     searchParams,
   ]);
   if (materialsResult.error) throw materialsResult.error;
@@ -73,7 +75,42 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       });
       return { id: material.id, title: material.title, topicCount: topics.length, topics };
     });
-    return <><MaterialCatalogSeed materials={catalog} /><StudyPlanSetup materials={planMaterials} mode="view" /></>;
+    // Render Mi plan with actual server data, avoiding a second client-side loading screen.
+    const plan = planResult.data as {
+      exam_date: string;
+      daily_minutes: number;
+      material_ids: string[];
+      preferences: string[];
+      schedule: PlanDay[];
+      updated_at: string;
+    };
+    const planIds = Array.isArray(plan.material_ids) ? plan.material_ids : [];
+    let completedKeys: string[] = [];
+    let planCompletedKeys: string[] = [];
+    let preparationPercent = 0;
+    if (planIds.length > 0) {
+      const [readingResult, practiceResult] = await Promise.all([
+        supabase.from('student_material_topic_activity_progress' as never)
+          .select('material_id,topic_index').eq('user_id', user.id)
+          .eq('activity', 'reading').in('material_id', planIds),
+        supabase.from('student_personal_study_plan_practice_progress' as never)
+          .select('material_id,topic_index,mode').eq('user_id', user.id)
+          .in('material_id', planIds),
+      ]);
+      if (readingResult.error) throw readingResult.error;
+      if (practiceResult.error && !['42P01', 'PGRST205'].includes(practiceResult.error.code ?? '')) {
+        throw practiceResult.error;
+      }
+      completedKeys = ((readingResult.data ?? []) as Array<{material_id:string;topic_index:number}>)
+        .map(row => `${row.material_id}:${row.topic_index}`);
+      const practice = (practiceResult.data ?? []) as PlanPracticeCompletion[];
+      planCompletedKeys = completedPlanTopics(plan.schedule, plan.preferences, plan.daily_minutes, completedKeys, practice);
+      preparationPercent = planPreparationProgress(plan.schedule, plan.preferences, plan.daily_minutes, completedKeys, practice).percent;
+    }
+    return <><MaterialCatalogSeed materials={catalog} /><StudyPlanSetup
+      materials={planMaterials} mode="view"
+      initialPlanData={{ plan, completedKeys, planCompletedKeys, preparationProgress: { percent: preparationPercent } }}
+    /></>;
   }
 
   let topicCount = 0;
