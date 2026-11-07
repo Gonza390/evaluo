@@ -702,7 +702,7 @@ export function StudentMaterialExam({
 
   if (!started) {
     return (
-      <div className="mx-auto w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3">
+      <div className={cn("w-full max-w-[940px] px-1 py-2 sm:px-2 sm:py-3", topicSectionIndex !== undefined && "mx-auto")}>
         {topicSectionIndex !== undefined && onReturnToTopic && (
           <button
             type="button"
