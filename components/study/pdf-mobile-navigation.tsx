@@ -48,8 +48,10 @@ export function PdfMobileNavigation({
   ];
   const itemClass = (selected: boolean) =>
     cn(
-      'focus-visible:outline-ring flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2',
-      selected ? 'bg-primary/10 text-blue-800 dark:text-blue-200' : 'text-muted-foreground hover:bg-muted'
+      'focus-visible:outline-ring flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+      selected
+        ? 'bg-card text-foreground shadow-[0_1px_4px_rgba(15,23,42,0.1)]'
+        : 'text-muted-foreground hover:text-foreground'
     );
   const moreActive = active === 'glosario' || active === 'mapa';
 
@@ -57,9 +59,9 @@ export function PdfMobileNavigation({
     <nav
       data-pdf-mobile-navigation
       aria-label={english ? 'Study tools for this document' : 'Herramientas de este PDF'}
-      className="border-border bg-card fixed inset-x-0 bottom-0 z-40 border-t px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] md:hidden"
+      className="bg-card fixed inset-x-0 bottom-0 z-40 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
     >
-      <div className={cn('grid gap-1', showProgress ? 'grid-cols-5' : 'grid-cols-4')}>
+      <div className={cn('bg-muted grid gap-1 rounded-full p-1', showProgress ? 'grid-cols-5' : 'grid-cols-4')}>
         {items.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
