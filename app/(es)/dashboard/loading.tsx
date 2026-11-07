@@ -1,13 +1,17 @@
+'use client';
+
 import { Skeleton } from '@/components/ui/skeleton';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 /**
  * The loading shape mirrors Mi espacio so the interface feels stable
  * while Next.js resolves the dashboard's server data.
  */
 export default function DashboardLoading() {
+  const english = useOptionalAppLocale() === 'en';
   return (
-    <div aria-busy="true" aria-label="Cargando Mi espacio" className="min-h-full bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
-      <span className="sr-only" role="status">Cargando materiales y progreso</span>
+    <div aria-busy="true" aria-label={english ? 'Loading my study space' : 'Cargando Mi espacio'} className="min-h-full bg-white px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+      <span className="sr-only" role="status">{english ? 'Loading materials and progress' : 'Cargando materiales y progreso'}</span>
       <div className="mx-auto w-full max-w-[1240px] space-y-3">
         <section className="rounded-[1.25rem] border border-slate-100 bg-white px-4 py-5 sm:px-5" aria-hidden="true">
           <div className="mx-auto flex max-w-[760px] flex-col items-center gap-3">
