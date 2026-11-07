@@ -59,4 +59,10 @@ assert.match(ui, /Reanudar/);
 assert.match(ui, /Reiniciar/);
 assert.match(ui, /¡Completaste tus 25 minutos!/);
 assert.doesNotMatch(ui, /45 min|60 min|tiempo de descanso|descanso automático/i);
+// En un PDF el temporizador vive en el encabezado del lector (uno solo montado a la vez).
+const studyWorkspace = readFileSync('components/material-study-workspace.tsx', 'utf8');
+assert.match(shell, /!isMaterialStudyRoute \? <PomodoroHeader key=\{user\.id\} userId=\{user\.id\} \/> : null/);
+assert.match(studyWorkspace, /pomodoroUserId && !demo && isDesktopHeader \?/);
+assert.match(studyWorkspace, /pomodoroUserId && !demo && !isDesktopHeader \?/);
+assert.match(readFileSync('app/(es)/materiales/[id]/page.tsx', 'utf8'), /pomodoroUserId=\{user\?\.id\}/);
 console.log('Pomodoro 25-minute timer checks passed.');

@@ -551,6 +551,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
               : undefined
           }
           backHref={backHref}
+          pomodoroUserId={user?.id}
           canRegenerate={canRegenerate}
           fileName={material.file_name}
           isPremium={isPremium}
