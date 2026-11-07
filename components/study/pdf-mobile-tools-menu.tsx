@@ -38,7 +38,7 @@ export function PdfMobileToolsMenu({ materialId, viewerUrl, fileType, canShare }
     },
     {
       id: 'pomodoro', label: english ? 'Study timer' : 'Pomodoro', Icon: Timer,
-      x: -22, y: 68,
+      x: -32, y: 68,
       run: () => window.dispatchEvent(new Event('evaluo:open-pomodoro')),
       enabled: true,
     },
