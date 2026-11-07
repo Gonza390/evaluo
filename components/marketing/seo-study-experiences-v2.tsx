@@ -384,6 +384,10 @@ export function IaParaEstudiantesExperience() {
                 Revisá fechas, definiciones, citas y datos contra el material original. Si tu universidad tiene reglas sobre IA o datos personales, respetalas antes de compartir documentos.
                 {' '}<a className="font-semibold text-blue-700 underline underline-offset-4" href="https://www.ox.ac.uk/students/life/it/genai-tools/guidance-on-safe-and-responsible-use-of-genai" target="_blank" rel="noopener noreferrer">Orientación de la Universidad de Oxford sobre IA y estudio</a>.
               </p>
+              <p className="mt-3 text-sm leading-6 text-slate-700">
+                Método completo, con un ejemplo para verificar respuestas y reglas de honestidad académica:{' '}
+                <Link href="/es/guias/como-estudiar-con-ia" className="font-semibold text-blue-700 underline underline-offset-4">cómo estudiar con IA sin hacer trampa</Link>.
+              </p>
             </div>
           </div>
         </section>

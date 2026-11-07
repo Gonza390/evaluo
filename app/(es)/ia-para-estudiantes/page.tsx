@@ -8,7 +8,7 @@ const path = '/ia-para-estudiantes';
 export const metadata: Metadata = {
   title: "IA para estudiantes: resumí PDFs y prepará exámenes",
   description: "IA para estudiantes universitarios: resumí tus PDFs, creá flashcards y practicá preguntas de examen desde tus apuntes. Empezá con Evaluo.",
-  alternates: hreflangAlternates('ai-for-students', 'es'),
+  alternates: hreflangAlternates('ai-for-students', 'es-AR'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',

@@ -39,7 +39,11 @@ export const HREFLANG_CLUSTERS = {
   'compare-notebooklm': { es: '/comparar/evaluo-vs-notebooklm', en: '/en/compare/evaluo-vs-notebooklm' },
   'compare-chatgpt': { es: '/comparar/evaluo-vs-chatgpt', en: '/en/compare/evaluo-vs-chatgpt' },
   'compare-quizlet': { es: '/comparar/evaluo-vs-quizlet', en: '/en/compare/evaluo-vs-quizlet' },
-  'ai-for-students': { es: '/ia-para-estudiantes', en: '/en/ai-for-students' },
+  'ai-for-students': {
+    es: '/es/guias/como-estudiar-con-ia',
+    'es-AR': '/ia-para-estudiantes',
+    en: '/en/ai-for-students',
+  },
   'pdf-summary': { es: '/funciones/resumir-pdf-con-ia', en: '/en/ai-pdf-summarizer' },
   'mind-map': { es: '/funciones/crear-mapa-mental-desde-pdf', en: '/en/pdf-to-mind-map' },
   'practice-by-topic': { es: '/funciones/practicar-por-tema', en: '/en/practice-by-topic' },
