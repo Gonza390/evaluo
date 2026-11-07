@@ -329,9 +329,9 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   <DropdownMenuContent
                     align="start"
                     side="top"
-                    sideOffset={10}
-                    collisionPadding={12}
-                    className="w-[min(320px,calc(100vw-24px))] rounded-[20px] border border-[#E7EBF4] bg-white p-3 shadow-[0_12px_36px_rgba(15,27,61,0.12)]"
+                    sideOffset={2}
+                    avoidCollisions={false}
+                    className="w-[min(264px,calc(100vw-24px))] rounded-2xl border border-[#E7EBF4] bg-white p-2 shadow-[0_12px_32px_rgba(15,27,61,0.12)]"
                   >
                     <div className="px-2 pb-3 pt-1">
                       <p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{getUserName()}</p>
