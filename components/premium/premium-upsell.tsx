@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, Crown, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -25,6 +26,7 @@ export function PremiumUpsell({
   materiaId,
   parcial,
 }: PremiumUpsellProps) {
+  const router = useRouter();
   const currentReturnTo = useCallback(() => {
     const url = new URL(window.location.href);
     if (source === 'material_mapa_mental') {
@@ -48,7 +50,8 @@ export function PremiumUpsell({
       materia_id: materiaId ?? undefined,
     });
 
-    window.location.assign(premiumDashboardHref({
+    // Navegación del cliente: así se aplica la transición única entre pantallas.
+    router.push(premiumDashboardHref({
       source, materiaId, parcial, returnTo: currentReturnTo(),
     }));
   };

@@ -55,3 +55,69 @@
     transition: none;
   }
 }
+
+/* ── "Mejorar mi plan" (UpgradeScreen): animaciones decorativas ─────────────
+   No son entradas de pantalla (esa la hace la transición única de la ruta):
+   Evi y sus objetos flotan suave, y la barra de Premium se llena una vez y
+   tiene un brillo que pasa cada tanto. Sin animación con prefers-reduced-motion. */
+.pricing-v2 .pv-float {
+  animation: pv-float 3.6s ease-in-out infinite;
+}
+.pricing-v2 .pv-float-late {
+  animation: pv-float 3.6s ease-in-out -1.2s infinite;
+}
+.pricing-v2 .pv-float-later {
+  animation: pv-float 3.6s ease-in-out -2.4s infinite;
+}
+@keyframes pv-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.pricing-v2 .pv-bar-fill {
+  position: relative;
+  overflow: hidden;
+  transform-origin: left center;
+  animation: pv-bar-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s backwards;
+}
+.pricing-v2 .pv-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-120%);
+  animation: pv-bar-shine 3.2s ease-in-out 1.3s infinite;
+}
+@keyframes pv-bar-fill {
+  from {
+    transform: scaleX(0.03);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes pv-bar-shine {
+  0% {
+    transform: translateX(-120%);
+  }
+  45%,
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-v2 .pv-float,
+  .pricing-v2 .pv-float-late,
+  .pricing-v2 .pv-float-later,
+  .pricing-v2 .pv-bar-fill,
+  .pricing-v2 .pv-bar-fill::after {
+    animation: none;
+  }
+}
