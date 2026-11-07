@@ -4,6 +4,7 @@ import { BadgePercent, CreditCard, MousePointerClick, UsersRound } from 'lucide-
 import { createClientServer } from '@/lib/supabase-server';
 import { getReferralPortalData } from '@/lib/referral-portal';
 import { SITE_URL } from '@/lib/site';
+import { accountAppLocale } from '@/lib/i18n/app-locale';
 import { PartnerReferralActions } from '@/components/referrals/PartnerReferralActions';
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -12,14 +13,14 @@ const currency = new Intl.NumberFormat('es-AR', {
   maximumFractionDigits: 0,
 });
 
-function percent(value: number) {
-  return `${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value)}%`;
+function percent(value: number, english = false) {
+  return `${new Intl.NumberFormat(english ? 'en-US' : 'es-AR', { maximumFractionDigits: 1 }).format(value)}%`;
 }
 
-function appliesLabel(value: 'all' | 'monthly' | 'semester') {
-  if (value === 'monthly') return 'Mensual';
-  if (value === 'semester') return '6 meses';
-  return 'Mensual y 6 meses';
+function appliesLabel(value: 'all' | 'monthly' | 'semester', english = false) {
+  if (value === 'monthly') return english ? 'Monthly' : 'Mensual';
+  if (value === 'semester') return english ? '6 months' : '6 meses';
+  return english ? 'Monthly and 6 months' : 'Mensual y 6 meses';
 }
 
 function MetricTooltip({ children }: { children: React.ReactNode }) {
@@ -40,23 +41,25 @@ export default async function ReferidosPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/login?mode=login&next=/referidos');
+  const english = accountAppLocale(user.user_metadata) === 'en';
+  const tr = (es: string, en: string) => english ? en : es;
 
   const portal = await getReferralPortalData(user).catch(() => null);
   if (!portal) {
     return (
       <section className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Referidos</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">{tr('Referidos', 'Referrals')}</p>
         <h1 className="mt-2 text-[20px] leading-[1.3] font-bold tracking-[-0.04em] text-slate-950 sm:text-[22px]">
-          No hay un programa asociado a esta cuenta
+          {tr('No hay un programa asociado a esta cuenta', 'No referral program is linked to this account')}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-          El acceso aparece automáticamente cuando el administrador vincula tu email verificado a un referente.
+          {tr('El acceso aparece automáticamente cuando el administrador vincula tu email verificado a un referente.', 'Access appears once the administrator connects your verified email to a referral partner.')}
         </p>
         <Link
           href="/dashboard"
           className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-slate-950 px-3 text-[13px] font-semibold text-white"
         >
-          Volver al inicio
+          {tr('Volver al inicio', 'Back to my study space')}
         </Link>
       </section>
     );
@@ -72,53 +75,53 @@ export default async function ReferidosPage() {
 
   const metrics = [
     {
-      label: 'Atribuidos',
+      label: tr('Atribuidos', 'Attributed users'),
       value: portal.summary.attributedUsers,
       icon: UsersRound,
-      help: 'Usuarios vinculados a tu código o link.',
+      help: tr('Usuarios vinculados a tu código o link.', 'Users attributed to your referral code or link.'),
     },
     {
       label: 'Checkouts',
       value: portal.summary.checkoutAttempts,
       icon: MousePointerClick,
-      help: 'Usuarios que iniciaron un checkout con tu código.',
+      help: tr('Usuarios que iniciaron un checkout con tu código.', 'Users who started checkout with your code.'),
     },
     {
-      label: 'Conversiones',
+      label: tr('Conversiones', 'Conversions'),
       value: portal.summary.approvedCheckouts,
       icon: BadgePercent,
-      help: 'Checkouts o suscripciones aprobadas.',
+      help: tr('Checkouts o suscripciones aprobadas.', 'Approved checkouts or subscriptions.'),
     },
     {
-      label: 'Pagos',
+      label: tr('Pagos', 'Payments'),
       value: portal.summary.approvedPayments,
       icon: CreditCard,
-      help: 'Pagos efectivamente acreditados.',
+      help: tr('Pagos efectivamente acreditados.', 'Payments successfully received.'),
     },
   ];
 
   return (
     <section className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
       <div className="border-b border-slate-200 pb-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Programa de referidos</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">{tr('Programa de referidos', 'Referral program')}</p>
         <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-[20px] leading-[1.3] font-bold tracking-[-0.04em] text-slate-950 sm:text-[22px]">
-              {primaryPartner?.brandName ?? 'Tus referidos'}
+              {primaryPartner?.brandName ?? tr('Tus referidos', 'Your referrals')}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
               {portal.partners.length === 1
                 ? primaryPartner?.name
-                : `${portal.partners.length} referentes asociados a tu cuenta`}
+                : `${portal.partners.length} ${english ? 'partners linked to your account' : 'referentes asociados a tu cuenta'}`}
             </p>
           </div>
 
           {primaryCode ? (
             <div className="min-w-0 lg:text-right">
-              <p className="text-xs font-semibold text-slate-500">Código principal</p>
+              <p className="text-xs font-semibold text-slate-500">{tr('Código principal', 'Primary code')}</p>
               <p className="mt-1 font-mono text-xl font-bold tracking-tight text-slate-950">{primaryCode.code}</p>
               <p className="mt-1 text-xs text-slate-500">
-                {percent(primaryCode.discountPercent)} de descuento · {appliesLabel(primaryCode.appliesTo)}
+                {percent(primaryCode.discountPercent, english)} {tr('de descuento', 'discount')} · {appliesLabel(primaryCode.appliesTo, english)}
               </p>
             </div>
           ) : null}
@@ -129,7 +132,7 @@ export default async function ReferidosPage() {
         <div className="border-b border-slate-200 py-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-500">Tu link</p>
+              <p className="text-xs font-semibold text-slate-500">{tr('Tu link', 'Your link')}</p>
               <p className="mt-1 truncate font-mono text-sm font-semibold text-slate-900">
                 {`${siteUrl}/?ref=${encodeURIComponent(primaryCode.code)}`}
               </p>
@@ -157,35 +160,35 @@ export default async function ReferidosPage() {
           </div>
         ))}
         <div className="group relative cursor-help border-l border-slate-200 pl-4">
-          <p className="text-xs font-semibold text-slate-500">Conversión</p>
-          <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">{percent(conversionRate)}</p>
-          <MetricTooltip>Conversiones sobre usuarios atribuidos.</MetricTooltip>
+          <p className="text-xs font-semibold text-slate-500">{tr('Conversión', 'Conversion')}</p>
+          <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">{percent(conversionRate, english)}</p>
+          <MetricTooltip>{tr('Conversiones sobre usuarios atribuidos.', 'Conversions out of attributed users.')}</MetricTooltip>
         </div>
       </div>
 
       <div className="grid gap-4 border-b border-slate-200 py-4 sm:grid-cols-2">
         <div>
-          <p className="text-xs font-semibold text-slate-500">Facturación atribuida</p>
+          <p className="text-xs font-semibold text-slate-500">{tr('Facturación atribuida', 'Attributed revenue')}</p>
           <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">
             {currency.format(portal.summary.revenueArs)}
           </p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Pagos efectivamente aprobados por Mercado Pago.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{tr('Pagos efectivamente aprobados por Mercado Pago.', 'Payments successfully approved by Mercado Pago.')}</p>
         </div>
         <div>
-          <p className="text-xs font-semibold text-slate-500">Descuentos otorgados</p>
+          <p className="text-xs font-semibold text-slate-500">{tr('Descuentos otorgados', 'Discounts granted')}</p>
           <p className="mt-1.5 text-[20px] font-bold tracking-[-0.04em] text-slate-950">
             {currency.format(portal.summary.discountsArs)}
           </p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Beneficio comercial aplicado a tus conversiones.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{tr('Beneficio comercial aplicado a tus conversiones.', 'Discounts applied to your conversions.')}</p>
         </div>
       </div>
 
       <div className="py-6">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold tracking-[-0.03em] text-slate-950">Rendimiento por código</h2>
+            <h2 className="text-lg font-bold tracking-[-0.03em] text-slate-950">{tr('Rendimiento por código', 'Performance by code')}</h2>
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              Sólo ves estadísticas agregadas de los códigos asociados a tu referente.
+              {tr('Sólo ves estadísticas agregadas de los códigos asociados a tu referente.', 'Only aggregate statistics for your partner codes are shown.')}
             </p>
           </div>
         </div>
@@ -194,14 +197,14 @@ export default async function ReferidosPage() {
           <table className="min-w-[940px] w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
-                <th className="px-3 py-3 font-semibold">Código</th>
-                <th className="px-3 py-3 font-semibold">Atribuidos</th>
+                <th className="px-3 py-3 font-semibold">{tr('Código', 'Code')}</th>
+                <th className="px-3 py-3 font-semibold">{tr('Atribuidos', 'Attributed')}</th>
                 <th className="px-3 py-3 font-semibold">Checkouts</th>
-                <th className="px-3 py-3 font-semibold">Conversiones</th>
-                <th className="px-3 py-3 font-semibold">Pagos</th>
-                <th className="px-3 py-3 font-semibold">Conversión</th>
-                <th className="px-3 py-3 font-semibold">Facturación</th>
-                <th className="px-3 py-3 font-semibold">Estado</th>
+                <th className="px-3 py-3 font-semibold">{tr('Conversiones', 'Conversions')}</th>
+                <th className="px-3 py-3 font-semibold">{tr('Pagos', 'Payments')}</th>
+                <th className="px-3 py-3 font-semibold">{tr('Conversión', 'Conversion')}</th>
+                <th className="px-3 py-3 font-semibold">{tr('Facturación', 'Revenue')}</th>
+                <th className="px-3 py-3 font-semibold">{tr('Estado', 'Status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -214,18 +217,18 @@ export default async function ReferidosPage() {
                     <td className="px-3 py-3">
                       <p className="font-mono text-sm font-bold text-slate-950">{code.code}</p>
                       <p className="mt-1 text-[11px] text-slate-400">
-                        {percent(code.discountPercent)} · {appliesLabel(code.appliesTo)}
+                        {percent(code.discountPercent, english)} · {appliesLabel(code.appliesTo, english)}
                       </p>
                     </td>
                     <td className="px-3 py-3 text-slate-700">{code.attributedUsers}</td>
                     <td className="px-3 py-3 text-slate-700">{code.checkoutAttempts}</td>
                     <td className="px-3 py-3 font-semibold text-slate-900">{code.approvedCheckouts}</td>
                     <td className="px-3 py-3 font-semibold text-slate-900">{code.approvedPayments}</td>
-                    <td className="px-3 py-3 text-slate-700">{percent(codeConversion)}</td>
+                    <td className="px-3 py-3 text-slate-700">{percent(codeConversion, english)}</td>
                     <td className="px-3 py-3 font-semibold text-slate-900">{currency.format(code.revenueArs)}</td>
                     <td className="px-3 py-3">
                       <span className={code.isActive ? 'font-semibold text-emerald-700' : 'text-slate-500'}>
-                        {code.isActive ? 'Activo' : 'Pausado'}
+                        {code.isActive ? tr('Activo', 'Active') : tr('Pausado', 'Paused')}
                       </span>
                     </td>
                   </tr>
@@ -234,7 +237,7 @@ export default async function ReferidosPage() {
               {!portal.codes.length ? (
                 <tr>
                   <td colSpan={8} className="px-3 py-8 text-center text-sm text-slate-500">
-                    Todavía no hay códigos asociados a tu referente.
+                    {tr('Todavía no hay códigos asociados a tu referente.', 'No referral codes are linked to your partner yet.')}
                   </td>
                 </tr>
               ) : null}
