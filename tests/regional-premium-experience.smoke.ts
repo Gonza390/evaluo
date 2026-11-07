@@ -8,8 +8,9 @@ const countries: Array<[string | null, 'argentina' | 'international' | 'unknown'
   ['US', 'international'], ['ES', 'international'],
   ['MX', 'international'], ['BR', 'international'],
   ['CL', 'international'], ['UY', 'international'], ['CO', 'international'],
-  [null, 'unknown'], ['', 'unknown'], ['bad', 'unknown'],
-  ['XX', 'unknown'], ['ZZ', 'unknown'], ['EU', 'unknown'],
+  // País sin confirmar → USD (decisión de producto nov-2026), nunca ARS por defecto.
+  [null, 'international'], ['', 'international'], ['bad', 'international'],
+  ['XX', 'international'], ['ZZ', 'international'], ['EU', 'international'],
 ];
 for (const [country, expected] of countries) {
   assert.equal(resolveCheckoutMarket(country, 'production'), expected);
@@ -31,7 +32,7 @@ assert.match(availability, /resolveCheckoutMarket\(country, process\.env\.VERCEL
 assert.match(availability, /creemAvailable: mode === 'live' && isCreemModeEnabled\('live'\)/,
   'A Preview TEST key must not enable the LIVE checkout card');
 assert.match(hook, /fetch\('\/api\/payments\/creem\/availability'/);
-assert.match(hook, /market: 'unknown'/);
+assert.match(hook, /market === 'unknown' \? 'international' : market/);
 assert.match(selector, /useCheckoutMarket\(\)/);
 assert.match(selector, /market\.market === 'international'/);
 assert.match(selector, /market\.market === 'unknown'/);

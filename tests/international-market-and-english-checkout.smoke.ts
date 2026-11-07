@@ -8,11 +8,12 @@ assert.equal(resolveCheckoutMarket('US', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('ES', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('MX', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('CO', 'production'), 'international');
-assert.equal(resolveCheckoutMarket(null, 'production'), 'unknown');
-assert.equal(resolveCheckoutMarket('', 'production'), 'unknown');
-assert.equal(resolveCheckoutMarket('bad-header', 'production'), 'unknown');
+// País sin confirmar → USD (nunca ARS por defecto).
+assert.equal(resolveCheckoutMarket(null, 'production'), 'international');
+assert.equal(resolveCheckoutMarket('', 'production'), 'international');
+assert.equal(resolveCheckoutMarket('bad-header', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('AR', 'preview'), 'argentina');
-assert.equal(resolveCheckoutMarket(null, 'preview'), 'unknown');
+assert.equal(resolveCheckoutMarket(null, 'preview'), 'international');
 assert.equal(resolveCheckoutMarket('US', 'preview'), 'international');
 assert.equal(resolveCheckoutMarket('MX', 'preview'), 'international');
 

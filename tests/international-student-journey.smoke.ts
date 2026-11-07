@@ -37,7 +37,7 @@ for (const country of ['US','GB','ES','MX','BR']) {
   assert.equal(resolveCheckoutMarket(country, 'production'), 'international');
 }
 assert.equal(resolveCheckoutMarket('AR', 'production'), 'argentina');
-assert.equal(resolveCheckoutMarket(null, 'production'), 'unknown');
+assert.equal(resolveCheckoutMarket(null, 'production'), 'international');
 
 const hypotheticalMaterialId = '11111111-2222-4333-8444-555555555555';
 const ready = buildStudentMaterialReadyMessage({
