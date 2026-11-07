@@ -5,15 +5,15 @@ import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 const alternates = hreflangAlternates('mock-exam', 'es');
 
 export const metadata: Metadata = {
-  title: 'Generador de exámenes con IA: practica con tus apuntes',
+  title: 'Generador de exámenes con IA gratis: desde tu PDF',
   description:
-    'Genera exámenes de práctica con IA desde tu PDF o Word: preguntas por tema, simulacro con todo el temario y resultados para saber qué repasar. Empieza gratis.',
+    'Generador de exámenes con IA gratis: sube tu PDF o Word y practica con preguntas de tu propio material. Eliges el archivo sin registrarte y ves qué temas repasar.',
   alternates,
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
     locale: 'es_419',
-    title: 'Generador de exámenes con IA: practica con tus apuntes | Evaluo',
+    title: 'Generador de exámenes con IA gratis: desde tu PDF | Evaluo',
     description: 'Preguntas de práctica y simulacros generados a partir de tus propios apuntes, con resultados por tema.',
     url: alternates.canonical,
   },

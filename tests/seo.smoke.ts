@@ -86,7 +86,7 @@ assertIncludesAll('app/sitemap.ts', [
 ]);
 assertIncludesAll('app/(es)/convertir-pdf-en-preguntas/page.tsx', [
   'PdfPracticePage',
-  'Generar preguntas a partir de PDF con IA',
+  'Generar preguntas a partir de un PDF con IA',
   'canonical:toAbsoluteUrl(path)',
 ]);
 for (const [pagePath, experience] of [
@@ -529,10 +529,12 @@ assertIncludesAll('components/marketing/international-study-landing.tsx', [
   'STUDY_MARKET_ORDER',
 ]);
 assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
-  "locale?: 'neutral'",
+  "locale?: 'neutral' | 'en'",
   'market?: string',
   'market,',
-  'isInternational',
+  "const t = COPY[locale ?? 'ar'];",
+  "No sign-up needed to choose your file.",
+  "locale === 'en' ? '/en/login' : '/login'",
 ]);
 
 
@@ -686,14 +688,14 @@ assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', ['index: false', 'f
 
 /* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
 const acquisitionSeoTitles: Array<[string, string]> = [
-  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes: resumí PDFs y prepará exámenes'],
-  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA: resumen, preguntas y práctica'],
-  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA: ejemplo de resumen y práctica'],
-  ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de PDF con IA'],
-  ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde PDF con IA'],
-  ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de PDF con IA'],
-  ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA desde tus apuntes'],
-  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde PDF'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes gratis: resumí PDFs y prepará exámenes'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA gratis: resumen, preguntas y flashcards'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA gratis: resumen por temas en minutos'],
+  ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de un PDF con IA, gratis'],
+  ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde un PDF con IA'],
+  ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de un PDF con IA, gratis'],
+  ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA gratis desde tus apuntes'],
+  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde tu PDF, gratis'],
   ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar PDF'],
   ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar PDF y practicar'],
   ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet: flashcards y exámenes desde PDF'],
@@ -1319,3 +1321,14 @@ assertIncludesAll('scripts/audit-live-domain-migration.mjs', [
   'retired route HTTP 410',
   'sitemap excludes retired country pages',
 ]);
+
+/* Tool-first: el selector de archivo vive en el hero de cada landing de producto (ES y EN). */
+for (const [path, marker] of [
+  ['components/marketing/seo-practice-tools-landings.tsx', '<div id="elegir-pdf" className="scroll-mt-24">'],
+  ['components/marketing/seo-study-experiences-v2.tsx', '<div id="elegir-pdf-flashcards" className="scroll-mt-24">'],
+  ['components/marketing/seo-study-experiences-v2.tsx', '<div id="elegir-pdf-ia"'],
+  ['components/marketing/english-study-page.tsx', '<div id="choose-file" className="scroll-mt-24">'],
+  ['components/marketing/bilingual-practice-landings.tsx', "<div id={english?'choose-file':'elegir-pdf'}"],
+] as const) {
+  assert.ok(source(path).includes(marker), path + ' must render the file picker in the hero');
+}
