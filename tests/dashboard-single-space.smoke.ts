@@ -150,8 +150,8 @@ assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-1\.5 py-1' : 'min-h-11
 // ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
 assert.match(navbarSource, /compact \? 'grid-cols-\[minmax\(0,1fr\)_32px\]' : 'grid-cols-\[minmax\(0,1fr\)_40px\]'/);
 assert.match(navbarSource, /compact \? 'gap-1' : 'gap-2'/);
-// Menos aire arriba del menú compacto (948c019).
-assert.match(navbarSource, /compact \? "pt-1" : "pt-2"/);
+// Sin aire extra arriba del menú lateral (948c019, 01a1a1b).
+assert.match(navbarSource, /aria-label=\{messages\.navigation\.mainNavigation\} className=\{`relative space-y-1 \$\{compact \? "pt-0" : "pt-0"\}`\}/);
 assert.match(navbarSource, /compact \? 'w-8' : 'w-10'/);
 assert.match(navbarSource, /<ReferralPortalNavLink collapsed=\{collapsed\} pathname=\{pathname\} compact=\{compact\} \/>/);
 const referralNavSource = readFileSync(resolve('components/referrals/ReferralPortalNavLink.tsx'), 'utf8');
