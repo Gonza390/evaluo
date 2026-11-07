@@ -310,7 +310,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                         : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1' : 'min-h-11 w-full gap-2.5 px-2 py-1.5'
                     }`}
                   >
-                    <Avatar className="size-8 shrink-0">
+                    <span className="flex size-8 shrink-0 items-center justify-center">
+                    <Avatar className="size-[30px] shrink-0">
                       <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -318,6 +319,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                         <AvatarImage src={user.user_metadata.avatar_url} />
                       ) : null}
                     </Avatar>
+                    </span>
                     {!collapsed ? (
                       <div className="min-w-0 flex-1 overflow-hidden">
                         <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-[13px]"}`}>
