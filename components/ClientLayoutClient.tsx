@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase-client';
 import { shiftDayKey } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
+import { PremiumStatusProvider } from '@/components/premium/premium-status-provider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
 import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
@@ -228,9 +229,11 @@ export default function ClientLayoutClient({
   return (
     <UserProvider initialUser={initialUser}>
       <AppLocaleProvider>
-        <ShellDataProvider initialProfileSummary={initialProfileSummary}>
-          <ClientLayoutInner>{children}</ClientLayoutInner>
-        </ShellDataProvider>
+        <PremiumStatusProvider>
+          <ShellDataProvider initialProfileSummary={initialProfileSummary}>
+            <ClientLayoutInner>{children}</ClientLayoutInner>
+          </ShellDataProvider>
+        </PremiumStatusProvider>
         <Toaster />
       </AppLocaleProvider>
     </UserProvider>
