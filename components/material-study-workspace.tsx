@@ -22,7 +22,6 @@ import {
   BookOpenText,
   BrainCircuit,
   Clock3,
-  CircleAlert,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -84,6 +83,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
+import { PomodoroHeader } from '@/components/dashboard/pomodoro-header';
 import {
   pdfStudyTabClassName,
   pdfStudyControlsClassName,
@@ -203,6 +203,8 @@ const MaterialProgressContent = dynamic(
 
 type MaterialStudyWorkspaceProps = {
   backHref: string;
+  /** Usuario con sesión: muestra el temporizador de 25 minutos en el encabezado del PDF. */
+  pomodoroUserId?: string;
   fileName: string;
   canRegenerate: boolean;
   isPremium: boolean;
@@ -339,6 +341,7 @@ function buildSummaryChapterAnchor(index: number, value: string) {
 
 export function MaterialStudyWorkspace({
   backHref,
+  pomodoroUserId,
   canRegenerate,
   fileName,
   isPremium,
@@ -523,6 +526,15 @@ export function MaterialStudyWorkspace({
   const summaryCheckConsecutiveSkipsRef = useRef(0);
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
+  // Un solo temporizador montado a la vez: en el encabezado de escritorio o en el móvil.
+  const [isDesktopHeader, setIsDesktopHeader] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 768px)');
+    const sync = () => setIsDesktopHeader(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
   const activeTab = demo?.activeTab ?? localActiveTab;
   // Las pestañas inactivas usan forceMount para preservar intentos, pero su
   // contenido no debe montarse antes de la primera visita del estudiante.
@@ -1821,30 +1833,22 @@ export function MaterialStudyWorkspace({
   const tabHeader = (
     <div
       className={cn(
-        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-2.5 py-1.5 sm:px-3 sm:py-2 md:flex'
+        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-5 md:flex'
       )}
     >
-      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
-        {STUDY_TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              data-recommended-tab={tab.id}
-              data-pdf-study-tab
-              className={pdfStudyTabClassName}
-            >
-              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {t(tab.label)}
-              {tab.premium ? (
-                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase sm:text-[11px]">
-                  Premium
-                </span>
-              ) : null}
-            </TabsTrigger>
-          );
-        })}
+      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-6 overflow-x-auto rounded-none bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
+        {/* Pestañas como texto libre con subrayado: sin íconos, recuadros ni etiquetas extra. */}
+        {STUDY_TABS.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            data-recommended-tab={tab.id}
+            data-pdf-study-tab
+            className={pdfStudyTabClassName}
+          >
+            {t(tab.label)}
+          </TabsTrigger>
+        ))}
         {hasProgress ? (
           <TabsTrigger
             value="progreso"
@@ -1853,7 +1857,6 @@ export function MaterialStudyWorkspace({
             data-has-pending={hasPendingStudyErrors || undefined}
             className={pdfStudyTabClassName}
           >
-            <CircleAlert className="h-4 w-4" />
             {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
@@ -1884,7 +1887,6 @@ export function MaterialStudyWorkspace({
               'inline-flex items-center justify-center gap-1.5 transition'
             )}
           >
-            <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
@@ -2813,6 +2815,9 @@ export function MaterialStudyWorkspace({
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {pomodoroUserId && !demo && !isDesktopHeader ? (
+            <PomodoroHeader userId={pomodoroUserId} alignEnd />
+          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -2846,18 +2851,18 @@ export function MaterialStudyWorkspace({
           <div data-evaluo-desktop-reader-title className="flex min-w-0 flex-1 items-center gap-3">
             <Link
               href={backHref}
-              className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-medium transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label={t("Volver")}
+              title={t("Volver")}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              {t("Volver")}
+              <ChevronLeft className="size-5" aria-hidden="true" />
             </Link>
-            <span aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200" />
             {isOwner && !demo ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" aria-label={`Cambiar material actual: ${title}`}
                     className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
-                    <span className="min-w-0 truncate text-[14px] sm:text-[16px]" title={title}>{title}</span>
+                    <span className="min-w-0 truncate text-[15px] font-semibold sm:text-[16px]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
@@ -2897,6 +2902,9 @@ export function MaterialStudyWorkspace({
             >
               {t("Ver guía")}
             </button>
+          ) : null}
+          {pomodoroUserId && !demo && isDesktopHeader ? (
+            <PomodoroHeader userId={pomodoroUserId} alignEnd />
           ) : null}
         </div>
       </section>

@@ -24,7 +24,14 @@ function readSavedTimer(key: string, now: number): PomodoroState {
 }
 
 /** Small non-modal 25-minute timer in Evaluo's persistent app header. */
-export function PomodoroHeader({ userId }: { userId: string }) {
+export function PomodoroHeader({
+  userId,
+  alignEnd = false,
+}: {
+  userId: string;
+  /** Alinea el panel al borde derecho del botón (p. ej. en el encabezado de un PDF). */
+  alignEnd?: boolean;
+}) {
   const english = useOptionalAppLocale() === 'en';
   const tr = (es: string, en: string) => english ? en : es;
   const key = `evaluo_pomodoro_25_${userId}`;
@@ -133,7 +140,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
           role="dialog"
           aria-label={tr("Temporizador de estudio","Study timer")}
           data-pomodoro-panel
-          className="absolute right-[-112px] top-[calc(100%+8px)] z-50 w-[min(292px,calc(100vw-24px))] rounded-[18px] border border-[#E7EBF4] bg-white p-4 text-[#0F1B3D] shadow-[0_16px_48px_rgba(15,27,61,.14)] md:right-0"
+          className={`absolute ${alignEnd ? 'right-0' : 'right-[-112px] md:right-0'} top-[calc(100%+8px)] z-50 w-[min(292px,calc(100vw-24px))] rounded-[18px] border border-[#E7EBF4] bg-white p-4 text-[#0F1B3D] shadow-[0_16px_48px_rgba(15,27,61,.14)]`}
         >
           <div className="flex items-center justify-between gap-2">
             <p className="text-[14px] font-semibold">{tr('Tiempo de estudio','Study time')}</p>

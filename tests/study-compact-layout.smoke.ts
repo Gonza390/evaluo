@@ -67,8 +67,8 @@ assert.doesNotMatch(workspace, /<h2 className="text-foreground hidden max-w-\[10
   'The PDF title must not appear a second time in the summary on either viewport.');
 assert.match(workspace, /data-evaluo-desktop-reader-title/,
   'Desktop reader keeps a compact title, Back action and Guide access in one row.');
-assert.match(workspace, /aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200"/,
-  'Desktop navigation controls are visually separated from the document title.');
+assert.match(workspace, /href=\{backHref\}\s+aria-label=\{t\("Volver"\)\}/,
+  'Desktop Back is a free icon button (no box) with an accessible name.');
 assert.match(workspace, /data-study-summary-intro/,
   'Hiding the duplicate title must not remove the introductory summary.');
 
@@ -93,8 +93,8 @@ assert.match(richText, /space-y-2\.5 \[&_h4\]:text-\[15px\]/,
   'El contenido largo conserva espaciado compacto y encabezados legibles.');
 assert.match(richText, /\[&_p\]:text-\[15px\] \[&_p\]:leading-\[1\.7\]/,
   'El cuerpo de lectura mantiene el tamaño y la altura de línea actuales.');
-assert.match(styles, /h-8 flex-none shrink-0 rounded-lg border px-2\.5 text-\[12px\]/,
-  'Las pestañas del estudio deben ser compactas.');
+assert.match(styles, /border-b-2 border-transparent bg-transparent px-0 text-\[14px\]/,
+  'Las pestañas del estudio son texto libre con subrayado, sin recuadros.');
 assert.doesNotMatch(workspace, /transform:scale\(|zoom:/,
   'No usar zoom que distorsione los popups, controles o interacción.');
 
