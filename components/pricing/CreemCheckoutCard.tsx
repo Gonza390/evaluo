@@ -39,15 +39,15 @@ export function CreemCheckoutCard({ features, mode, available, locale }: Props) 
   return (
     <article className="flex h-full flex-col rounded-3xl border-2 border-blue-200 bg-white p-6 shadow-lg shadow-blue-100/50 sm:p-8">
       <div>
-        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
+        <span className="inline-flex rounded-full bg-blue-50 px-3 py-1.5 text-chico font-semibold text-blue-700">
           {demo ? tr("Premium · Prueba sin cobro","Premium · No-charge test") : tr("Premium internacional","International Premium")}
         </span>
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">{tr("Tu estudio, sin fronteras","Your learning, without borders")}</h2>
+        <h2 className="mt-4 text-titulo font-semibold tracking-titulo text-slate-950">{tr("Tu estudio, sin fronteras","Your learning, without borders")}</h2>
         <div className="mt-4 flex items-baseline gap-2">
           <span className="text-4xl font-bold text-slate-950">{english ? 'US$ 9.99' : 'US$ 9,99'}</span>
-          <span className="text-sm text-slate-600">{tr("/mes","/month")}</span>
+          <span className="text-cuerpo text-slate-600">{tr("/mes","/month")}</span>
         </div>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
+        <p className="mt-3 text-cuerpo leading-6 text-slate-600">
           {demo
             ? tr("Simulación en Creem Test Mode: no se cobra dinero ni se activa Premium real.","Creem Test Mode simulation: no real money is charged and actual Premium access is not activated.")
             : tr("Suscripción mensual en USD con renovación automática. Creem muestra los impuestos aplicables y el total antes de confirmar el pago.","Monthly subscription in USD with automatic renewal. Creem shows applicable taxes and the final total before payment.")}
@@ -55,7 +55,7 @@ export function CreemCheckoutCard({ features, mode, available, locale }: Props) 
       </div>
       <ul className="mt-7 flex-1 space-y-4">
         {displayFeatures.map(f => (
-          <li key={f} className="flex gap-3 text-sm leading-6 text-slate-800">
+          <li key={f} className="flex gap-3 text-cuerpo leading-6 text-slate-800">
             <Check className="mt-1 h-4 w-4 shrink-0 text-blue-700" aria-hidden="true" /> {f}
           </li>
         ))}
@@ -75,8 +75,8 @@ export function CreemCheckoutCard({ features, mode, available, locale }: Props) 
             {!checking && !loading && available ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
           </Button>
         )}
-        {error ? <p role="alert" className="mt-3 text-center text-xs text-red-600">{error}</p> : null}
-        <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
+        {error ? <p role="alert" className="mt-3 text-center text-chico text-red-600">{error}</p> : null}
+        <p className="mt-3 flex items-center justify-center gap-2 text-center text-etiqueta leading-5 text-slate-500">
           <ShieldCheck className="h-4 w-4 text-blue-700" />
           {demo ? tr("Modo seguro de prueba · Sin cobros reales","Safe test mode · No real charges") : tr("Pago procesado por Creem · Cancelación de renovaciones disponible","Payment processed by Creem · You can cancel future renewals")}
         </p>

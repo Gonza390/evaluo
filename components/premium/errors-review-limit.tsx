@@ -23,7 +23,7 @@ export function ErrorsReviewLimit({ materiaId, parcial }: { materiaId: string; p
         <div className="mt-4 text-center">
           <Link
             href="/dashboard"
-            className="text-sm font-semibold text-slate-500 transition hover:text-slate-700"
+            className="text-cuerpo font-semibold text-slate-500 transition hover:text-slate-700"
           >
             Volver a Mi espacio
           </Link>

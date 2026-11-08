@@ -41,7 +41,7 @@ function BookIcon({ size }: { size: number }) {
     <svg width={size} height={size * 0.8125} viewBox="0 0 64 52" aria-hidden="true">
       <path d="M32 10 C24 4 12 4 4 6 V44 C12 42 24 42 32 48 Z" fill="#eef1fd" stroke="var(--pv-accent)" strokeWidth="2.5" strokeLinejoin="round" />
       <path d="M32 10 C40 4 52 4 60 6 V44 C52 42 40 42 32 48 Z" fill="#ffffff" stroke="var(--pv-accent)" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M11 16h14M11 23h14M11 30h10M39 16h14M39 23h14M39 30h10" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round" />
+      <path d="M11 16h14M11 23h14M11 30h10M39 16h14M39 23h14M39 30h10" stroke="#a9b5f0" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -50,9 +50,9 @@ function CapIcon({ size }: { size: number }) {
   return (
     <svg width={size} height={size * 0.75} viewBox="0 0 64 48" aria-hidden="true">
       <path d="M32 6 L60 18 L32 30 L4 18 Z" fill="var(--pv-accent)" stroke="#0f172a" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M16 24 V36 C16 40 48 40 48 36 V24 L32 30 Z" fill="#3245b8" stroke="#0f172a" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M52 21 V34" stroke="#f5b82e" strokeWidth="2.5" strokeLinecap="round" />
-      <circle cx="52" cy="36" r="3" fill="#f5b82e" />
+      <path d="M16 24 V36 C16 40 48 40 48 36 V24 L32 30 Z" fill="#3c4f97" stroke="#0f172a" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M52 21 V34" stroke="#dbbf8c" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="52" cy="36" r="3" fill="#dbbf8c" />
     </svg>
   );
 }
