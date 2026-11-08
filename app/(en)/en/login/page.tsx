@@ -1,7 +1,4 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { previewLoginCanonicalUrl } from '@/lib/auth/preview-login-origin';
 import LoginFormGoogleFirst from '@/components/LoginFormGoogleFirst';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { EnglishLoginLocale } from '@/components/i18n/english-login-locale';
@@ -9,23 +6,14 @@ import '../../../(es)/login/login-clean.css';
 
 export const metadata: Metadata = {
   title: 'Sign in or create an account',
-  description: 'Sign in to Evaluo using Google or email and continue to your first PDF or Word upload.',
+  description:
+    'Sign in to Evaluo using Google or email and continue to your first PDF or Word upload.',
   robots: { index: false, follow: true },
 };
 
-export default async function EnglishLoginPage({
-  searchParams,
-}: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const destination = previewLoginCanonicalUrl({
-    host: (await headers()).get('host'),
-    vercelEnvironment: process.env.VERCEL_ENV,
-    branch: process.env.VERCEL_GIT_COMMIT_REF,
-    pathname: '/en/login',
-    searchParams: (await searchParams) ?? {},
-  });
-  if (destination) redirect(destination);
+// Página estática: el formulario lee next/reason en el navegador. La redirección
+// de los Previews de master al host canónico la hace proxy.ts (previewLoginCanonicalUrl).
+export default function EnglishLoginPage() {
   return (
     <main lang="en" className="login-editorial min-h-screen bg-white px-4 py-6 sm:px-6 sm:py-10">
       <InternationalDocumentLanguage lang="en" />

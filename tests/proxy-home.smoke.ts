@@ -340,7 +340,34 @@ try {
   assert.equal(publicPage.headers.get('location'), null);
   assert.equal(authState.calls, callsBeforePublicPage, 'Las demás páginas públicas no cambian.');
 
+  // Previews de master: /login redirige al host canónico (antes lo hacía la página).
+  const previousVercelEnv = process.env.VERCEL_ENV;
+  const previousBranch = process.env.VERCEL_GIT_COMMIT_REF;
+  process.env.VERCEL_ENV = 'preview';
+  process.env.VERCEL_GIT_COMMIT_REF = 'master';
+  try {
+    const previewLogin = await proxy(
+      new NextRequest(
+        'https://evaluo-abc123-olmosgonza69-9002s-projects.vercel.app/login?next=%2Fdashboard'
+      )
+    );
+    const previewLocation = new URL(previewLogin.headers.get('location')!);
+    assert.equal(previewLocation.host, 'evaluo-git-master-olmosgonza69-9002s-projects.vercel.app');
+    assert.equal(previewLocation.pathname, '/login');
+    assert.equal(previewLocation.searchParams.get('next'), '/dashboard');
+    const canonicalPreviewLogin = await proxy(
+      new NextRequest('https://evaluo-git-master-olmosgonza69-9002s-projects.vercel.app/login')
+    );
+    assert.equal(canonicalPreviewLogin.headers.get('location'), null);
+  } finally {
+    if (previousVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = previousVercelEnv;
+    if (previousBranch === undefined) delete process.env.VERCEL_GIT_COMMIT_REF;
+    else process.env.VERCEL_GIT_COMMIT_REF = previousBranch;
+  }
+
   // /explorar/materia/[id] sin parámetros: reescritura a la variante cacheada.
+  const callsBeforeMateria = authState.calls;
   const materiaCached = await proxy(
     new NextRequest('https://evaluo.com.ar/explorar/materia/derecho--abc?utm_source=google')
   );
@@ -360,7 +387,7 @@ try {
     new URL(materiaDirect.headers.get('location')!).pathname,
     '/explorar/materia/derecho--abc'
   );
-  assert.equal(authState.calls, callsBeforePublicPage, 'Materia no valida sesión en el proxy.');
+  assert.equal(authState.calls, callsBeforeMateria, 'Materia no valida sesión en el proxy.');
 } finally {
   hooks.deregister();
   Reflect.deleteProperty(globalThis, '__evaluoProxyAuthTest');

@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { previewLoginCanonicalUrl, EVALUO_MASTER_PREVIEW_HOST } from '../lib/auth/preview-login-origin.ts';
+import {
+  previewLoginCanonicalUrl,
+  EVALUO_MASTER_PREVIEW_HOST,
+} from '../lib/auth/preview-login-origin.ts';
 
 const input = {
   host: 'evaluo-k9xj7s8hw-olmosgonza69-9002s-projects.vercel.app',
@@ -27,19 +30,32 @@ assert.equal(previewLoginCanonicalUrl({ ...input, branch: 'experimental' }), nul
 assert.equal(previewLoginCanonicalUrl({ ...input, host: 'evaluoapp.com' }), null);
 assert.equal(previewLoginCanonicalUrl({ ...input, host: 'evil.example' }), null);
 assert.equal(previewLoginCanonicalUrl({ ...input, host: 'evaluo-bad-attacker.vercel.app' }), null);
-assert.equal(previewLoginCanonicalUrl({ ...input, host: EVALUO_MASTER_PREVIEW_HOST + '.evil.example' }), null);
-const en = previewLoginCanonicalUrl({ ...input, pathname: '/en/login', searchParams: { next: '/en/pricing' }});
+assert.equal(
+  previewLoginCanonicalUrl({ ...input, host: EVALUO_MASTER_PREVIEW_HOST + '.evil.example' }),
+  null
+);
+const en = previewLoginCanonicalUrl({
+  ...input,
+  pathname: '/en/login',
+  searchParams: { next: '/en/pricing' },
+});
 assert.equal(new URL(en!).pathname, '/en/login');
+// La redirección vive en proxy.ts para que /login y /en/login sean estáticas.
+const proxySource = readFileSync('proxy.ts', 'utf8');
+assert.match(proxySource, /previewLoginCanonicalUrl\(\{/);
+assert.match(proxySource, /pathname === '\/login' \|\| pathname === '\/en\/login'/);
+assert.match(proxySource, /if \(previewDestination\)/);
 for (const page of ['app/(es)/login/page.tsx', 'app/(en)/en/login/page.tsx']) {
   const source = readFileSync(page, 'utf8');
-  assert.match(source, /previewLoginCanonicalUrl/);
-  assert.match(source, /if \(destination\) redirect\(destination\)/);
+  assert.doesNotMatch(source, /headers\(\)|searchParams\s*[?:}]/);
 }
 const primaryLogin = readFileSync('components/LoginFormGoogleFirst.tsx', 'utf8');
 assert.match(primaryLogin, /new URL\('\/auth\/callback', window\.location\.origin\)/);
-const callback = readFileSync('app/(es)/auth/callback/route.ts','utf8');
+const callback = readFileSync('app/(es)/auth/callback/route.ts', 'utf8');
 assert.match(callback, /requestUrl\.origin/);
 const creemCheckout = readFileSync('app/api/payments/creem/checkout/route.ts', 'utf8');
 assert.match(creemCheckout, /const successOrigin = mode === 'test' \? requestOrigin : site/);
 assert.match(creemCheckout, /mode === 'test' && origin !== requestOrigin/);
-console.log('Auth: master Preview login uses stable canonical origin, preserving path, production unchanged.');
+console.log(
+  'Auth: master Preview login uses stable canonical origin, preserving path, production unchanged.'
+);
