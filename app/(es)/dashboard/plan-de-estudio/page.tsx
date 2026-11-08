@@ -16,12 +16,13 @@ import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-mater
 import type { StudyQuestion, StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 import type { PlanDay } from '@/lib/student-materials/study-plan-distribution';
+import { getSessionUser } from '@/lib/auth-session';
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
 export default async function StudyPlanPage({ searchParams }: { searchParams?: Promise<{ material?: string }> }) {
   const supabase = await createClientServer();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) redirect('/login?next=/dashboard/plan-de-estudio');
   const locale = accountAppLocale(user.user_metadata) ?? 'es';
   const english = locale === 'en';

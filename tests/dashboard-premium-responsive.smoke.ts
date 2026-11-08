@@ -9,7 +9,7 @@ const mobileMenu=read('components/mobile-profile-menu.tsx');
 const localeMessages=read('lib/i18n/messages.ts');
 assert.match(localeMessages,/por semana · cobro mensual/, 'The Spanish monthly-billing disclosure must remain in the ES dictionary.');
 
-assert.match(page,/auth\.getUser\(\)/,'Premium dashboard must require student authentication.');
+assert.match(page,/await getSessionUser\(\)/,'Premium dashboard must require student authentication.');
 assert.match(page,/safePremiumReturnTo\(params\.returnTo\)/,'Returning to the current study activity should stay safe.');
 assert.match(nav,/href="\/dashboard\/premium"/,'Student sidebar must open redesigned Premium screen.');
 assert.match(nav, /data-sidebar-plan-upgrade/,

@@ -21,6 +21,7 @@ import {
   PRACTICE_BANK_VERSION, safePracticeBank, sourceFingerprint,
 } from '@/lib/student-materials/practice-on-demand';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
+import { getSessionUser } from '@/lib/auth-session';
 
 /**
  * Server-only source-backed unlock. Only verified material items become reusable.
@@ -71,7 +72,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
   const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards'];
   if (!supported.includes(mode) || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createClientServer();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) {
     const entryLocale = (await cookies()).get('evaluo_ui_locale')?.value;
     redirect((entryLocale === 'en' ? '/en/login' : '/login') + '?next=' + encodeURIComponent('/dashboard/practicar/' + id + '/' + mode));

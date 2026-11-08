@@ -17,7 +17,7 @@ assert.match(upload, /router\.push\(`\/dashboard\/procesando\/\$\{result\.materi
   'The upload must open the full-page experience, not a blocking processing modal.');
 assert.match(route, /getStudentMaterialProcessingStateAction\(id\)/,
   'The processing screen must restore the real material status securely.');
-assert.match(route, /auth\.getUser\(\)/);
+assert.match(route, /await getSessionUser\(\)/);
 assert.match(screen, /const SCENE_MS = 6500/);
 assert.match(localDemo, /process\.env\.NODE_ENV !== 'development'/,
   'Local demo route must be inaccessible in deployed environments.');

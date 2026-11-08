@@ -5,6 +5,7 @@ import { FileText, ArrowRight } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { isUuid } from '@/lib/uuid';
 import { accountAppLocale } from '@/lib/i18n/app-locale';
+import { getSessionUser } from '@/lib/auth-session';
 
 export const metadata: Metadata = {
   title: 'Progreso de tu PDF',
@@ -19,9 +20,7 @@ export default async function PdfProgressPage({
   const { material: materialId, error: requestedError, from } = await searchParams;
   if (materialId && !isUuid(materialId)) notFound();
   const supabase = await createClientServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user)
     redirect(
       `/login?next=${encodeURIComponent(`/dashboard/progreso${materialId ? `?material=${materialId}` : ''}`)}`
