@@ -63,17 +63,20 @@ export async function POST(request: Request) {
       metadata: Json;
     }> = [];
 
+    // Con tandas, un evento inválido se descarta solo: no tira los demás.
+    let skipped = 0;
     for (const payload of payloads) {
       const eventName = (payload.event_name ?? '').trim();
       const sessionKey = (payload.session_key ?? '').trim();
-      if (!eventName || !sessionKey || eventName.length > 80 || sessionKey.length > 120) {
-        return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
-      }
-      if (!isAllowedAnalyticsEventName(eventName)) {
-        return NextResponse.json(
-          { ok: false, skipped: 'invalid_event_name' },
-          { status: 202 }
-        );
+      if (
+        !eventName ||
+        !sessionKey ||
+        eventName.length > 80 ||
+        sessionKey.length > 120 ||
+        !isAllowedAnalyticsEventName(eventName)
+      ) {
+        skipped += 1;
+        continue;
       }
 
       const normalizedMetadata = sanitizeAnalyticsMetadata(
@@ -81,7 +84,8 @@ export async function POST(request: Request) {
         payload.metadata
       );
       if (JSON.stringify(normalizedMetadata).length > 4_000) {
-        return NextResponse.json({ error: 'metadata_too_large' }, { status: 400 });
+        skipped += 1;
+        continue;
       }
 
       rows.push({
@@ -94,15 +98,24 @@ export async function POST(request: Request) {
       });
     }
 
+    if (rows.length === 0) {
+      return NextResponse.json({ ok: false, skipped: 'no_valid_events' }, { status: 202 });
+    }
+
     if (!isAdminClientConfigured()) {
       return NextResponse.json({ ok: false, skipped: 'missing_admin_env' }, { status: 202 });
     }
 
     const admin = createAdminClient();
+    // getClaims() verifica el JWT localmente (claves ECC): sin viaje al servidor
+    // de Auth en cada tanda de eventos. Alcanza para atribuir el evento y para
+    // las reglas de QA y admin, que solo leen id, email y app_metadata.
     const supabase = await createClientServer();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: claimsData } = await supabase.auth.getClaims();
+    const claims = claimsData?.claims;
+    const user = claims?.sub
+      ? { id: claims.sub, email: claims.email, app_metadata: claims.app_metadata ?? {} }
+      : null;
 
     if (isQaAccount(user)) {
       // Un usuario QA nunca debe poder borrar eventos asociados a session_key enviados por cliente.
@@ -124,7 +137,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, accepted: rows.length });
+    return NextResponse.json({ ok: true, accepted: rows.length, skipped });
   } catch {
     return NextResponse.json({ error: 'unexpected_error' }, { status: 500 });
   }

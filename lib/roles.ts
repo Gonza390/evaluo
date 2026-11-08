@@ -22,11 +22,13 @@ export function isAdminRole(role: AppRole | null | undefined) {
   return normalizeRole(role) === ADMIN_ROLE;
 }
 
-export function getTrustedSessionRole(user: User | null | undefined): AppRole | null {
+export function getTrustedSessionRole(
+  user: Pick<User, 'app_metadata'> | null | undefined
+): AppRole | null {
   const appMetadataRole = normalizeRole(user?.app_metadata?.role);
   return appMetadataRole === ADMIN_ROLE ? ADMIN_ROLE : null;
 }
 
-export function isAdminUserSession(user: User | null | undefined) {
+export function isAdminUserSession(user: Pick<User, 'app_metadata'> | null | undefined) {
   return getTrustedSessionRole(user) === ADMIN_ROLE;
 }

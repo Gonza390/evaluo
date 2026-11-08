@@ -28,7 +28,9 @@ export async function resolveUserRole(user: User | null | undefined): Promise<Ap
   return getCachedProfileRole(user.id);
 }
 
-export async function resolveAdminActor(user: User | null | undefined): Promise<boolean> {
+export async function resolveAdminActor(
+  user: Pick<User, 'id' | 'app_metadata'> | null | undefined
+): Promise<boolean> {
   if (!user?.id) return false;
   if (isAdminUserSession(user)) return true;
   return isAdminRole(await getCachedProfileRoleAdmin(user.id));
