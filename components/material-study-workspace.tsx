@@ -548,6 +548,15 @@ export function MaterialStudyWorkspace({
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
+  // La pestaña inicial se pinta sin animación: si arrancara invisible (opacity 0),
+  // el contenido principal (LCP) se demoraría hasta que el hilo principal quede libre.
+  // Al cambiar de pestaña se usa el efecto único de la plataforma.
+  const initialTabRef = useRef(activeTab);
+  const [tabSwitched, setTabSwitched] = useState(false);
+  useEffect(() => {
+    if (activeTab !== initialTabRef.current) setTabSwitched(true);
+  }, [activeTab]);
+  const tabPanelMotion = tabSwitched ? 'animate-tab-panel' : undefined;
   // Las pestañas inactivas usan forceMount para preservar intentos, pero su
   // contenido no debe montarse antes de la primera visita del estudiante.
   const [visitedInteractiveTabs, setVisitedInteractiveTabs] = useState<StudyTabId[]>(() =>
@@ -2030,7 +2039,7 @@ export function MaterialStudyWorkspace({
         data-demo-focus="study-section"
         data-recommended-summary
         value="resumen"
-        className="animate-tab-panel outline-none"
+        className={cn(tabPanelMotion, "outline-none")}
       >
         <div className="mx-auto w-full max-w-[1240px] py-1 sm:py-1.5">
           <header className="border-border border-b pb-3 md:pb-5">
@@ -2206,7 +2215,7 @@ export function MaterialStudyWorkspace({
         </div>
       </TabsContent>
 
-      <TabsContent data-demo-focus="study-section" value="glosario" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="glosario" className={tabPanelMotion}>
         <div data-study-glossary className="mx-auto w-full max-w-[1240px] px-1 py-1 sm:px-2 sm:py-1.5">
           {glossaryTopicIndex === null ? (
             <header className="border-border mb-3 border-b pb-3 sm:pb-4">
@@ -2299,7 +2308,7 @@ export function MaterialStudyWorkspace({
         data-demo-focus="study-section"
         value="tarjetas"
         forceMount
-        className="animate-tab-panel data-[state=inactive]:hidden"
+        className={cn(tabPanelMotion, "data-[state=inactive]:hidden")}
       >
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
@@ -2332,7 +2341,7 @@ export function MaterialStudyWorkspace({
       <TabsContent
         value="ejercicios"
         forceMount
-        className="animate-tab-panel data-[state=inactive]:hidden"
+        className={cn(tabPanelMotion, "data-[state=inactive]:hidden")}
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
@@ -2434,7 +2443,7 @@ export function MaterialStudyWorkspace({
         </Activity>
       </TabsContent>
 
-      <TabsContent data-demo-focus="study-section" value="mapa" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="mapa" className={tabPanelMotion}>
         {isPremium ? (
           <StudyDocumentShell
             compact
@@ -2560,7 +2569,7 @@ export function MaterialStudyWorkspace({
         <TabsContent
           value="progreso"
           forceMount
-          className="animate-tab-panel data-[state=inactive]:hidden"
+          className={cn(tabPanelMotion, "data-[state=inactive]:hidden")}
         >
           {progressOpen
             ? (displayedProgressContent ??
