@@ -5,6 +5,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { premiumDashboardHref, safePremiumReturnTo } from '@/lib/premium-flow';
 import { UpgradeScreen } from '@/components/pricing/UpgradeScreen';
 import { getUpgradeNextExam } from '@/lib/premium-next-exam';
+import { getSessionUser } from '@/lib/auth-session';
 
 export const metadata: Metadata = {
   title: 'Premium',
@@ -27,7 +28,7 @@ export default async function DashboardPremiumPage({
   const safeReturn = safePremiumReturnTo(params.returnTo);
   const returnTo = safeReturn && !safeReturn.startsWith('/dashboard/premium') ? safeReturn : undefined;
   const supabase = await createClientServer();
-  const {data:{user}} = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) {
     // El login no debe borrar la modalidad, materia y tema del upsell.
     const nextPath = premiumDashboardHref({source, materiaId, parcial, returnTo});

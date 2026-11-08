@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { appendPregunteroAttribution } from '../lib/preguntero-attribution.ts';
 import {
@@ -347,3 +347,15 @@ for (const table of ['student_material_summaries', 'student_material_glossaries'
 assert.equal((securedStudyRls.match(/to authenticated/g) ?? []).length, 3);
 
 console.log('Route smoke tests passed.');
+
+// Las páginas con PublicLayout (/landings/*, /resumenes/*) deben poder cachearse:
+// el header público no puede leer cookies ni llamar a Auth en el servidor.
+const publicHeaderActionsSource = readFileSync(resolve('components/public-header-actions.tsx'), 'utf8');
+assert.match(publicHeaderActionsSource, /^'use client';/);
+assert.doesNotMatch(publicHeaderActionsSource, /from '@\/lib\/supabase-server'|await [a-z]+\.auth\./);
+assert.doesNotMatch(seoLandingSource, /force-dynamic/);
+assert.equal(
+  existsSync(resolve('app/(es)/landings/estudiar/[materia]/layout.tsx')),
+  false,
+  'La landing SEO usa ISR (revalidate = 600); no volver a forzarla dinámica desde un layout.'
+);

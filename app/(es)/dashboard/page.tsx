@@ -16,6 +16,7 @@ import { isUuid } from '@/lib/uuid';
 import { logError } from '@/lib/observability';
 import { accountAppLocale, parseAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
+import { getSessionUser } from '@/lib/auth-session';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -66,9 +67,7 @@ export default async function DashboardPage({
     dailyMinutes = '',
   } = await searchParams;
   const supabase = await createClientServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   if (!user) {
     const params = new URLSearchParams();

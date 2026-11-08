@@ -29,11 +29,8 @@ export function PremiumUpsell({
   const router = useRouter();
   const currentReturnTo = useCallback(() => {
     const url = new URL(window.location.href);
-    if (source === 'material_mapa_mental') {
-      url.searchParams.set('tab', 'mapa');
-    }
     return `${url.pathname}${url.search}${url.hash}`;
-  }, [source]);
+  }, []);
 
   useEffect(() => {
     trackMarketingEvent('premium_gate_viewed', {
@@ -56,14 +53,7 @@ export function PremiumUpsell({
     }));
   };
 
-  const contextualCopy =
-    source === 'material_mapa_mental'
-      ? {
-          title: 'Mapa mental',
-          description:
-            'Conectá los temas y conceptos clave de este PDF para repasar más rápido y detectar qué necesitás reforzar.',
-        }
-      : { title, description };
+  const contextualCopy = { title, description };
 
   return (
     <StudyStatePanel

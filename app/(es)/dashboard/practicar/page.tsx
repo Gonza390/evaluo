@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { createClientServer } from '@/lib/supabase-server';
 import { PracticeHomeContent } from '@/components/dashboard/practice-home-content';
+import { getSessionUser } from '@/lib/auth-session';
 
 export const metadata: Metadata = {
   title: 'Practicar',
@@ -14,8 +14,7 @@ export default async function PracticeHomePage({
   searchParams?: Promise<{ materialId?: string }>;
 }) {
   const requestedMaterialId = (await searchParams)?.materialId ?? null;
-  const supabase = await createClientServer();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) redirect('/login?next=/dashboard/practicar');
 
   return <PracticeHomeContent

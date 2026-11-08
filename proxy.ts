@@ -12,6 +12,7 @@ import {
 } from '@/lib/proxy-security';
 import {
   normalizeReferralCode,
+  REFERRAL_CLAIMED_COOKIE_NAME,
   REFERRAL_COOKIE_MAX_AGE_SECONDS,
   REFERRAL_COOKIE_NAME,
 } from '@/lib/referrals';
@@ -224,10 +225,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const supabase = createClient(request, response);
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  // getClaims() verifica la firma del JWT con el JWKS en memoria (claves
+  // asimétricas) y evita un viaje al servidor de Auth en cada navegación.
+  // Si el proyecto firma con HS256, supabase-js cae solo a getUser().
+  // También renueva la sesión vencida y escribe las cookies nuevas.
+  const { data: claimsData, error: authError } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub } : null;
 
   // Un refresh token revocado puede permanecer en cookies de una pestaña vieja.
   // Borramos sólo cookies de Auth, evitando propagar el JWT inválido a otras
@@ -254,13 +257,31 @@ export async function proxy(request: NextRequest) {
       normalizeReferralCode(request.nextUrl.searchParams.get('ref')) ??
       normalizeReferralCode(request.cookies.get(REFERRAL_COOKIE_NAME)?.value);
 
-    if (referralCode) {
+    // La cookie de referido dura 30 días y la usa el checkout, así que no se
+    // borra. Para no llamar a la RPC en cada navegación, se recuerda qué
+    // código ya se atribuyó a qué usuario; un código o usuario nuevo reintenta.
+    const claimMarker = referralCode ? `${referralCode}:${user.id}` : null;
+    const alreadyClaimed =
+      claimMarker !== null &&
+      request.cookies.get(REFERRAL_CLAIMED_COOKIE_NAME)?.value === claimMarker;
+
+    if (referralCode && claimMarker && !alreadyClaimed) {
       const rpcClient = supabase as unknown as SupabaseClient;
       try {
-        await rpcClient.rpc('claim_my_referral_attribution', {
+        const { error } = await rpcClient.rpc('claim_my_referral_attribution', {
           p_code: referralCode,
           p_source: 'link',
         });
+        // Solo se marca si la RPC respondió: un fallo transitorio reintenta.
+        if (!error) {
+          response.cookies.set(REFERRAL_CLAIMED_COOKIE_NAME, claimMarker, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            path: '/',
+            maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
+          });
+        }
       } catch {
         // La atribución es best effort y nunca debe bloquear navegación o auth.
       }

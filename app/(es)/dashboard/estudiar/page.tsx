@@ -7,6 +7,7 @@ import { StudyReadingCards } from '@/components/dashboard/study-reading-cards';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isUuid } from '@/lib/uuid';
 import { pdfProgressReviewHref } from '@/lib/study-error-navigation';
+import { getSessionUser } from '@/lib/auth-session';
 
 export const metadata: Metadata = {
   title: 'Estudiar',
@@ -22,9 +23,7 @@ export default async function StudyErrorsPage({
   searchParams?: Promise<{ error?: string; material?: string }>;
 }) {
   const supabase = await createClientServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   if (!user) {
     redirect('/login?next=/dashboard/estudiar');
