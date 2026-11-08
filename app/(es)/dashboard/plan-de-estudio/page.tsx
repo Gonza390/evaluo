@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { accountAppLocale } from '@/lib/i18n/app-locale';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
-import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { MaterialCatalogSeed } from '@/components/materials/material-catalog-provider';
 import { StudyPlanSetup } from '@/components/dashboard/study-plan-setup';
 import { StudyPlanNextStep } from '@/components/dashboard/study-plan-next-step';
 import { StudyPlanNext } from '@/components/dashboard/study-plan-next';
@@ -14,6 +14,8 @@ import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 import { getTopicStudyResources, tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import type { StudySummarySection, StudyGlossaryItem } from '@/lib/student-materials/types';
 import type { StudyQuestion, StudyFlashcard } from '@/lib/student-materials/pedagogy';
+import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
+import type { PlanDay } from '@/lib/student-materials/study-plan-distribution';
 
 export const metadata: Metadata = { title: 'Plan de estudio | Evaluo', robots: { index: false, follow: false } };
 
@@ -24,11 +26,93 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
   const locale = accountAppLocale(user.user_metadata) ?? 'es';
   const english = locale === 'en';
 
-  const materials = (await fetchStudentMaterialsByUser(supabase, user.id)).filter(
+  // El tipo de vista y los PDFs son independientes: consultarlos en paralelo.
+  // Proyección ligera: esta página solo necesita el id y título de los PDFs listos.
+  // Aplicamos el límite antes de filtrar por estado, igual que el catálogo anterior.
+  const [materialsResult, planResult, query] = await Promise.all([
+    supabase.from('student_materials')
+      .select('id,title,processing_status')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(24),
+    supabase.from('student_personal_study_plans' as never)
+      .select('exam_date,daily_minutes,material_ids,preferences,schedule,updated_at').eq('user_id', user.id).maybeSingle(),
+    searchParams,
+  ]);
+  if (materialsResult.error) throw materialsResult.error;
+  if (planResult.error) throw planResult.error;
+  const materials = (materialsResult.data ?? []).filter(
     material => material.processing_status === 'ready'
   );
-  const requested = (await searchParams)?.material;
+  const hasSavedPlan = Boolean(planResult.data);
+  const requested = query?.material;
   const first = materials.find(material => material.id === requested) ?? materials[0] ?? null;
+  const catalog = materials.map(material => ({ id: material.id, title: material.title }));
+
+  if (materials.length === 0) return <><MaterialCatalogSeed materials={[]} /><EmptyStudyPlan locale={locale} /></>;
+
+  // El plan guardado no necesita descargar glosario ni banco de ejercicios.
+  // Recuperamos los resúmenes de todos los PDFs con una única petición.
+  if (hasSavedPlan) {
+    const { data: summaryRows, error: summaryError } = await supabase
+      .from('student_material_summaries')
+      .select('student_material_id,summary_sections')
+      .in('student_material_id', materials.map(material => material.id));
+    if (summaryError) throw summaryError;
+    const sectionsByMaterial = new Map(
+      (summaryRows ?? []).map(row => [row.student_material_id, row.summary_sections])
+    );
+    const planMaterials = materials.map(material => {
+      const raw = sectionsByMaterial.get(material.id);
+      const sections = Array.isArray(raw) ? raw : [];
+      const topics = sections.map((section: unknown, index: number) => {
+        const item = section as { title?: string; body?: string };
+        const words = (item.body ?? '').trim().split(/\s+/u).filter(Boolean).length;
+        return {
+          title: item.title?.trim() || `Tema ${index + 1}`,
+          estimatedMinutes: Math.max(10, Math.ceil(words / 180) + 10),
+        };
+      });
+      return { id: material.id, title: material.title, topicCount: topics.length, topics };
+    });
+    // Render Mi plan with actual server data, avoiding a second client-side loading screen.
+    const plan = planResult.data as unknown as {
+      exam_date: string;
+      daily_minutes: number;
+      material_ids: string[];
+      preferences: string[];
+      schedule: PlanDay[];
+      updated_at: string;
+    };
+    const planIds = Array.isArray(plan.material_ids) ? plan.material_ids : [];
+    let completedKeys: string[] = [];
+    let planCompletedKeys: string[] = [];
+    let preparationPercent = 0;
+    if (planIds.length > 0) {
+      const [readingResult, practiceResult] = await Promise.all([
+        supabase.from('student_material_topic_activity_progress' as never)
+          .select('material_id,topic_index').eq('user_id', user.id)
+          .eq('activity', 'reading').in('material_id', planIds),
+        supabase.from('student_personal_study_plan_practice_progress' as never)
+          .select('material_id,topic_index,mode').eq('user_id', user.id)
+          .in('material_id', planIds),
+      ]);
+      if (readingResult.error) throw readingResult.error;
+      if (practiceResult.error && !['42P01', 'PGRST205'].includes(practiceResult.error.code ?? '')) {
+        throw practiceResult.error;
+      }
+      completedKeys = ((readingResult.data ?? []) as Array<{material_id:string;topic_index:number}>)
+        .map(row => `${row.material_id}:${row.topic_index}`);
+      const practice = (practiceResult.data ?? []) as PlanPracticeCompletion[];
+      planCompletedKeys = completedPlanTopics(plan.schedule, plan.preferences, plan.daily_minutes, completedKeys, practice);
+      preparationPercent = planPreparationProgress(plan.schedule, plan.preferences, plan.daily_minutes, completedKeys, practice).percent;
+    }
+    return <><MaterialCatalogSeed materials={catalog} /><StudyPlanSetup
+      materials={planMaterials} mode="view"
+      initialPlanData={{ plan, completedKeys, planCompletedKeys, preparationProgress: { percent: preparationPercent } }}
+    /></>;
+  }
+
   let topicCount = 0;
   let topicActivities: Array<{questions:boolean;flashcards:boolean;glossary:boolean;readingMinutes:number;questionsMinutes:number;flashcardsMinutes:number;glossaryMinutes:number;title:string}> = [];
   if (first) {
@@ -51,28 +135,10 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
     });
   }
 
-  const {data:personalPlan}=await supabase.from('student_personal_study_plans' as never)
-    .select('exam_date').eq('user_id',user.id).maybeSingle();
-  const hasSavedPlan=Boolean(personalPlan);
-  if (materials.length === 0) return <EmptyStudyPlan locale={locale} />;
-  // El plan creado pertenece al apartado Plan de estudio, no a Estudiar ni a Mi espacio.
-  if (hasSavedPlan) {
-    const planMaterials = await Promise.all(materials.map(async material=>{
-      const {data} = await supabase.from('student_material_summaries')
-        .select('summary_sections').eq('student_material_id',material.id).maybeSingle();
-      const sections = Array.isArray(data?.summary_sections) ? data.summary_sections : [];
-      const topics = sections.map((section:unknown,index:number)=>{
-        const item=section as {title?:string;body?:string};
-        const words=(item.body??'').trim().split(/\s+/u).filter(Boolean).length;
-        return {title:item.title?.trim()||`Tema ${index+1}`,estimatedMinutes:Math.max(10,Math.ceil(words/180)+10)};
-      });
-      return {id:material.id,title:material.title,topicCount:topics.length,topics};
-    }));
-    return <StudyPlanSetup materials={planMaterials} mode="view" />;
-  }
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-3 py-3 text-slate-900 sm:px-4 sm:py-4 lg:px-6 lg:py-5 xl:h-[calc(100dvh-52px)] xl:overflow-hidden">
+      <MaterialCatalogSeed materials={catalog} />
       <div className="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">

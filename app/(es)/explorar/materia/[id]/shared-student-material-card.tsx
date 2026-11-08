@@ -171,7 +171,7 @@ export function SharedStudentMaterialCard({
     <article
       className={`h-full min-w-0 max-w-full overflow-hidden rounded-[24px] border bg-white p-3.5 transition duration-200 sm:p-4 ${
         isEnriched
-          ? 'border-[#BFCBFF] shadow-[0_14px_34px_rgba(37,99,235,0.07)] hover:border-[#91AAFF] hover:shadow-[0_18px_40px_rgba(37,99,235,0.10)]'
+          ? 'border-[#BFCBFF] shadow-[0_14px_34px_rgba(37,99,235,0.07)] hover:border-[#98ACEB] hover:shadow-[0_18px_40px_rgba(37,99,235,0.10)]'
           : 'border-slate-200 shadow-[0_10px_26px_rgba(15,23,42,0.05)] hover:border-slate-300'
       }`}
     >
@@ -180,7 +180,7 @@ export function SharedStudentMaterialCard({
           <div className="flex min-w-0 items-baseline">
             <span
               className={`min-w-0 text-[9px] font-extrabold uppercase leading-4 tracking-[0.14em] ${
-                isEnriched ? 'text-[#2563EB]' : 'text-emerald-700'
+                isEnriched ? 'text-[#456DBD]' : 'text-emerald-700'
               }`}
             >
               {isComplete
@@ -212,7 +212,7 @@ export function SharedStudentMaterialCard({
                   }`}
                 >
                   <Icon
-                    className={`h-3.5 w-3.5 shrink-0 ${available ? 'text-[#2563EB]' : 'text-slate-300'}`}
+                    className={`h-3.5 w-3.5 shrink-0 ${available ? 'text-[#456DBD]' : 'text-slate-300'}`}
                   />
                   <span className="min-w-0 truncate">{label}</span>
                 </div>
@@ -235,7 +235,7 @@ export function SharedStudentMaterialCard({
               onClick={handleOpen}
               className={`inline-flex min-h-11 min-w-0 w-full items-center justify-between rounded-[13px] px-3.5 py-2.5 text-[12px] font-bold transition ${
                 isEnriched
-                  ? 'bg-gradient-to-r from-[#2563EB] to-[#6366F1] text-white shadow-[0_8px_18px_rgba(37,99,235,0.16)] hover:from-[#1D4ED8] hover:to-[#4F46E5]'
+                  ? 'bg-gradient-to-r from-[#456DBD] to-[#6972C8] text-white shadow-[0_8px_18px_rgba(37,99,235,0.16)] hover:from-[#3A5CA8] hover:to-[#555CB1]'
                   : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
               }`}
             >
@@ -246,7 +246,7 @@ export function SharedStudentMaterialCard({
             <a
               href={downloadHref}
               onClick={handleDownload}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] border border-slate-200 bg-white text-slate-600 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#2563EB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] border border-slate-200 bg-white text-slate-600 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#456DBD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#456DBD]/30"
               aria-label={`Descargar ${material.title} con portada de Evaluo`}
               title="Descargar PDF"
             >
@@ -256,7 +256,7 @@ export function SharedStudentMaterialCard({
             <button
               type="button"
               onClick={() => void handleShare()}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] border border-slate-200 bg-white text-slate-600 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#2563EB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] border border-slate-200 bg-white text-slate-600 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#456DBD] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#456DBD]/30"
               aria-label={`Compartir ${material.title}`}
               title={shareCopied ? 'Enlace copiado' : 'Compartir PDF'}
             >

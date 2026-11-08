@@ -85,7 +85,9 @@ assert.match(exam, /notDueInTimeZone/);
 assert.match(exam, /for \(const offset of \[-1, 0, 1\]\)/);
 const settings = read('app/(es)/configuracion/page.tsx');
 const zoneUi = read('components/i18n/time-zone-preference.tsx');
-assert.match(settings, /<TimeZonePreference\s*\/>/);
+// Timezone is captured from the browser and stored in auth metadata, without
+// requiring a settings control (removed intentionally in the simplified UI).
+assert.match(settings, /useAppLocale/);
 const localeProvider = read('components/i18n/app-locale-provider.tsx');
 assert.match(localeProvider, /data\.time_zone = detectedZone/);
 assert.match(localeProvider, /const savedZone = parseAccountTimeZone/);
@@ -98,5 +100,6 @@ for (const legal of ['terms','privacy','billing','refunds','acceptable-use','cop
 }
 const enPricing=read('app/(en)/en/pricing/page.tsx');
 assert.match(enPricing, /PricingPlanSelector locale="en"/);
-assert.match(read('components/pricing/CreemCheckoutCard.tsx'), /creem\.io/);
+assert.match(read('components/pricing/CreemCheckoutCard.tsx'), /useCreemCheckout/);
+assert.match(read('components/pricing/CreemCheckoutCard.tsx'), /onClick=\{\(\) => void start\(\)\}/);
 console.log('[english-global] Four bilingual lifecycle emails, locale metadata, per-account exam dates, legal and study recovery verified.');

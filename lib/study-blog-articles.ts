@@ -1,6 +1,8 @@
 import { MASTER_ES_BLOG, MASTER_EN_BLOG } from './study-blog-master-expansion';
 import { EXPANDED_ES_BLOG, EXPANDED_EN_BLOG } from './study-blog-expansion';
 import { NOV5_ES_BLOG, NOV5_EN_BLOG } from './study-blog-2026-11-05';
+import { NOV8_ES_BLOG } from './study-blog-2026-11-08';
+import { NOV8_EN_BLOG } from './study-blog-2026-11-08-en';
 import { EXAM_STUDY_TIME_EN_BLOG } from './study-blog-exam-time-2026-11-05';
 import { NOV5_SEMRUSH_EN_BLOG } from './study-blog-semrush-2026-11-05-en';
 export type StudyBlogLocale = 'es' | 'en';
@@ -29,6 +31,7 @@ export const STUDY_BLOG_ARTICLES: Record<StudyBlogLocale, StudyBlogArticle[]> = 
     ...MASTER_ES_BLOG,
     ...EXPANDED_ES_BLOG,
     ...NOV5_ES_BLOG,
+    ...NOV8_ES_BLOG,
     {
       key: 'accounting',
       slug: 'como-estudiar-contabilidad',
@@ -251,6 +254,7 @@ export const STUDY_BLOG_ARTICLES: Record<StudyBlogLocale, StudyBlogArticle[]> = 
     }
   ],
   en: [
+    ...NOV8_EN_BLOG,
     ...NOV5_SEMRUSH_EN_BLOG,
     ...EXAM_STUDY_TIME_EN_BLOG,
     ...MASTER_EN_BLOG,

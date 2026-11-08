@@ -34,7 +34,7 @@ export function PracticeHistoryDetail({ session, onBack }: {
     <main data-practice-detail className="practice-screen-enter mx-auto flex h-full min-h-0 w-full max-w-[1190px] flex-col px-3 pb-20 pt-4 text-[#0F1B3D] sm:px-5 sm:pt-6 lg:overflow-hidden lg:px-7 lg:pb-5" aria-labelledby="practice-detail-title">
       <div className="shrink-0">
         <button type="button" onClick={onBack}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-[12px] font-medium text-[#42506A] transition-colors hover:bg-[#EEF2FF] hover:text-[#2563EB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-[12px] font-medium text-[#42506A] transition-colors hover:bg-[#EEF2FF] hover:text-[#456DBD] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
           <ArrowLeft className="size-4" aria-hidden="true"/> {tr('Volver a Practicar','Back to Practice')}
         </button>
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -61,7 +61,7 @@ export function PracticeHistoryDetail({ session, onBack }: {
             </div>
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#EDF1F6]" aria-label={`${tr("Progreso","Progress")}: ${score}%`}>
-            <div className={`h-full rounded-full ${score>=80?'bg-[#38A169]':'bg-[#E0AB45]'}`} style={{width:`${score}%`}}/>
+            <div className={`h-full rounded-full ${score>=80?'bg-[#38A169]':'bg-[#D2AF72]'}`} style={{width:`${score}%`}}/>
           </div>
         </section>
         <section className="mt-4" aria-labelledby="practice-answers-title">

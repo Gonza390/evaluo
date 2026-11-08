@@ -248,7 +248,7 @@ function renderPageReference(pageReference: string | null, key: string) {
   return (
     <div key={`${key}-reference`} className="pt-1.5">
       <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-400">
-        <FileText className="h-3 w-3 text-[#2563EB]/70" />
+        <FileText className="h-3 w-3 text-[#456DBD]/70" />
         {pageReference}
       </span>
     </div>
@@ -451,7 +451,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
 
       content.push(
         <div key={itemKey} className="flex items-start gap-3 py-0.5">
-          <span className="mt-0.5 inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF4FF] px-1.5 text-[11px] font-medium text-[#2563EB]">
+          <span className="mt-0.5 inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF4FF] px-1.5 text-[11px] font-medium text-[#456DBD]">
             {itemNumber}
           </span>
           <div className="min-w-0 flex-1">
@@ -470,7 +470,7 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
 
       content.push(
         <div key={itemKey} className="flex items-start gap-2.5">
-          <span className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+          <span className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[#456DBD]" />
           <div className="min-w-0 flex-1">
             <p className="text-[13.5px] leading-6 text-slate-700">
               {renderInlineMarkdown(bulletText)}

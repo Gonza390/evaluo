@@ -93,10 +93,10 @@ export function SharedStudentMaterialCard({
         <div className="flex min-w-0 flex-col">
           <div className="flex items-start gap-3.5">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] border border-slate-100 bg-white shadow-[0_8px_22px_rgba(37,99,235,0.08)]">
-              <Sparkles className="h-7 w-7 text-[#2563EB]" />
+              <Sparkles className="h-7 w-7 text-[#456DBD]" />
             </div>
             <div className="min-w-0 pt-0.5">
-              <span className="inline-flex rounded-full border border-[#AFC1FF] bg-white px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#2563EB] sm:text-[10px]">
+              <span className="inline-flex rounded-full border border-[#B3C2F5] bg-white px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#456DBD] sm:text-[10px]">
                 {isComplete ? 'Material de estudio completo' : 'Material de estudio'}
               </span>
               <p className="mt-2 text-[11px] font-semibold text-slate-400">
@@ -124,7 +124,7 @@ export function SharedStudentMaterialCard({
                 }`}
               >
                 <Icon
-                  className={`h-4 w-4 shrink-0 ${available ? 'text-[#2563EB]' : 'text-slate-300'}`}
+                  className={`h-4 w-4 shrink-0 ${available ? 'text-[#456DBD]' : 'text-slate-300'}`}
                 />
                 <span>{label}</span>
               </div>
@@ -134,7 +134,7 @@ export function SharedStudentMaterialCard({
           <div className="mt-4 border-t border-slate-100 pt-3">
             <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF2FF] text-[9px] font-black text-[#2563EB]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF2FF] text-[9px] font-black text-[#456DBD]">
                   EV
                 </div>
                 <span>Compartido por un estudiante</span>
@@ -145,7 +145,7 @@ export function SharedStudentMaterialCard({
 
           <Link
             href={href}
-            className="mt-4 inline-flex min-h-12 w-full items-center justify-between rounded-[14px] bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-3 text-sm font-bold text-white shadow-[0_9px_22px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
+            className="mt-4 inline-flex min-h-12 w-full items-center justify-between rounded-[14px] bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-4 py-3 text-sm font-bold text-white shadow-[0_9px_22px_rgba(37,99,235,0.18)] transition hover:from-[#3A5CA8] hover:to-[#555CB1]"
           >
             <span>Estudiar este apunte</span>
             <ArrowRight className="h-4 w-4" />

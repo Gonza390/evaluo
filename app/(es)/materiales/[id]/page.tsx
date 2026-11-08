@@ -511,9 +511,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     // on demand from the study workspace.
     const shouldShowFirstPdfGuide = !isEnglishStudyEntry && eligibleByAccount && !previouslyCompleted;
 
-    const shareAvailable = isOwner && Boolean(
-      academicProfile.universidadId && academicProfile.carreraId && material.materia_id
-    );
+    // El dueño puede compartir su material aunque no haya completado
+    // universidad/carrera/materia; la acción de servidor valida la titularidad.
+    const shareAvailable = isOwner;
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
     if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
@@ -607,7 +607,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
               <div className="overflow-hidden rounded-[24px] border border-blue-200 bg-[linear-gradient(135deg,#EFF6FF_0%,#FFFFFF_48%,#EEF2FF_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(37,99,235,0.08)] sm:px-6 sm:py-6">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-start gap-3.5">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#2563EB] text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)]">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] bg-[#456DBD] text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)]">
                       <UploadCloud className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
@@ -635,7 +635,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                       materia_nombre: materia?.nombre ?? null,
                       destination: ownMaterialHref,
                     }}
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
+                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8]"
                   >
                     Subir mi PDF
                     <ArrowRight className="h-4 w-4" />

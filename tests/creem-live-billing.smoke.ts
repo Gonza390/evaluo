@@ -174,7 +174,7 @@ try {
   assert.match(liveRoute,/reconcileCreemBillingEvent\(admin,'live',payload\)/);
   assert.match(testRoute,/reconcileCreemBillingEvent\(admin, 'test', payload\)/);
   assert.match(testRoute,/VERCEL_ENV === 'production'/);
-  const oldCard=readFileSync('components/pricing/PaymentCheckoutCard.tsx','utf8');
+  const oldCard=readFileSync('hooks/use-mercadopago-checkout.ts','utf8');
   assert.match(oldCard,/expectedBaseAmountArs: displayedPrice/);
   console.log('Creem USD: sandbox isolation, signed live payment, renewal, cancellation, refund, replay passed.');
 } finally {

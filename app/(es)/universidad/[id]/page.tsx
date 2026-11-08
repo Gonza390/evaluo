@@ -205,15 +205,15 @@ function FacultyGrid({ universidadId, facultades }: { universidadId: string; fac
           <Link
             key={facultad.id}
             href={`/universidad/${universidadId}?tab=carreras&facultadId=${facultad.id}`}
-            className="surface-card group animate-surface-reveal p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
+            className="surface-card group p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
             style={{ animationDelay: `${index * 80}ms` }}
           >
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#2563EB]">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#456DBD]">
                 <Building2 className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="text-[1.02rem] font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
+                <h3 className="text-[1.02rem] font-semibold tracking-[-0.035em] text-[#1D2D53] sm:text-[1.1rem]">
                   {facultad.nombre}
                 </h3>
                 <p className="mt-1 text-sm text-slate-600">Ver carreras</p>

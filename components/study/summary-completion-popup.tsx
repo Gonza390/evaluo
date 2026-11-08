@@ -66,19 +66,18 @@ export function SummaryCompletionPopup({
                   id="summary-completion-title"
                   className="text-foreground mt-1.5 text-[20px] leading-6 font-bold tracking-[-0.04em] sm:text-[20px]"
                 >
-                  Terminaste el resumen
+                  {english ? 'You finished the summary' : 'Terminaste el resumen'}
                 </h2>
               </DialogTitle>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-                Ya recorriste los temas principales de este PDF. Comprobá cuánto aprendiste con
-                preguntas generadas a partir del material que acabás de estudiar.
+                {english ? 'You have reviewed the main topics in this document. Check what you learned with questions grounded in your material.' : 'Ya recorriste los temas principales de este PDF. Comprobá cuánto aprendiste con preguntas generadas a partir del material que acabás de estudiar.'}
               </p>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              aria-label="Cerrar"
+              aria-label={english ? 'Close' : 'Cerrar'}
               className="text-muted-foreground hover:text-foreground inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-slate-100"
             >
               <X className="h-4 w-4" />
@@ -93,7 +92,7 @@ export function SummaryCompletionPopup({
               <div className="min-w-0">
                 <h3 className="text-foreground text-[16px] font-bold">{t("Practicá con tu PDF")}</h3>
                 <p className="text-muted-foreground mt-1 text-[13px] leading-5">
-                  Respondé ejercicios creados a partir de este mismo material y descubrí qué conceptos conviene reforzar.
+                  {english ? 'Answer questions based on this material and find out which concepts need more review.' : 'Respondé ejercicios creados a partir de este mismo material y descubrí qué conceptos conviene reforzar.'}
                 </p>
               </div>
             </div>
@@ -111,10 +110,10 @@ export function SummaryCompletionPopup({
           {hasPending ? (
             <div className="border-border mt-3 rounded-xl border bg-card p-4">
               <p className="text-foreground text-[13px] font-semibold">
-                También tenés {pendingCount} {pendingCount === 1 ? 'tema pendiente' : 'temas pendientes'} para reforzar
+                {english ? `You also have ${pendingCount} ${pendingCount === 1 ? 'topic' : 'topics'} to review` : `También tenés ${pendingCount} ${pendingCount === 1 ? 'tema pendiente' : 'temas pendientes'} para reforzar`}
               </p>
               <p className="text-muted-foreground mt-1 text-xs leading-5">
-                Podés revisarlos ahora o hacer una nueva práctica.
+                {english ? 'Review them now or start another practice session.' : 'Podés revisarlos ahora o hacer una nueva práctica.'}
               </p>
               <button
                 type="button"
@@ -122,14 +121,14 @@ export function SummaryCompletionPopup({
                 className="border-border text-foreground hover:bg-muted mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-[13px] font-semibold transition"
               >
                 <RotateCcw className="size-4" aria-hidden="true" />
-                Reforzar mis errores
+                {english ? 'Review my mistakes' : 'Reforzar mis errores'}
               </button>
             </div>
           ) : null}
 
           <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="text-muted-foreground text-[11px] font-bold tracking-[0.1em] uppercase">
-              ¿Querés repasar antes?
+              {english ? 'Want to review first?' : '¿Querés repasar antes?'}
             </p>
 
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -165,7 +164,7 @@ export function SummaryCompletionPopup({
             </div>
           </div>
           <p className="text-muted-foreground mt-4 text-center text-[11px] leading-5">
-            Podés cerrar esta ventana y volver al resumen cuando quieras.
+            {english ? 'You can close this window and return to the summary whenever you want.' : 'Podés cerrar esta ventana y volver al resumen cuando quieras.'}
           </p>
         </div>
       </DialogContent>

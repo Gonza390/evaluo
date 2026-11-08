@@ -9,7 +9,7 @@ import { hasPremiumAccess } from '@/lib/premium';
 import { PREMIUM_STUDY_LIMITS } from '@/lib/study-commercial-entitlements';
 import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { premiumUpgradeForLimit, FreeStudyV2UploadLimitError, type PremiumUpgrade } from '@/lib/premium-flow';
-import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
+import { freeStudyMaterialIdsThisMonth } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
@@ -152,16 +152,16 @@ async function assertStudentMaterialQuota(userId: string) {
     const activeIds = (materialsResult.data ?? [])
       .filter(material => material.processing_status !== 'failed')
       .map(material => material.id);
-    const historicalIds = await historicalFreeStudyMaterialIds(userId);
+    const monthIds = await freeStudyMaterialIdsThisMonth(userId);
     // El modelo nuevo comienza desde cero: sólo cuentan claims creados luego
     // del lanzamiento, no materiales que ya tuviera el estudiante.
     const used = isFreeStudyV2Active()
-      ? historicalIds.length
+      ? monthIds.length
       : activeIds.length;
-    if (used >= (isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT)) {
+    if (used >= (isFreeStudyV2Active() ? FREE_STUDY_V2.materialsPerMonth : FREE_MATERIAL_UPLOAD_LIMIT)) {
       if (isFreeStudyV2Active()) {
         throw new FreeStudyV2UploadLimitError(
-          'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.'
+          'Ya usaste tu apunte gratis del mes. Podés seguir estudiándolo o usar Premium para agregar otro.'
         );
       }
       throw new Error('Ya usaste tus 2 PDFs gratuitos. Tu cupo se renueva cada 15 días o podés continuar con Premium.');

@@ -31,10 +31,7 @@ import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavL
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
-import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase-client';
-
-const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
 
 type NavbarProps = {
   collapsed: boolean;
@@ -200,8 +197,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
       onClick={collapsed ? onToggleCollapsed : undefined}
     >
       <div className="flex h-full min-h-0 flex-col">
-        <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 py-2.5" : "px-3 py-4"}`}>
-          <nav ref={navRef} aria-label={messages.navigation.mainNavigation} className={`relative space-y-1 ${compact ? "pt-5" : "pt-2"}`}>
+        <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${compact ? "px-2 pt-0 pb-2.5" : "px-3 pt-1 pb-4"}`}>
+          <nav ref={navRef} aria-label={messages.navigation.mainNavigation} className={`relative space-y-1 ${compact ? "pt-0" : "pt-0"}`}>
             <div
               className={`grid items-center ${compact ? 'gap-1' : 'gap-2'} ${
                 collapsed ? 'grid-cols-1 justify-items-center' : compact ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_40px]'
@@ -271,13 +268,13 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   title={collapsed ? messages.navigation.improvePlan : undefined}
                   aria-label={collapsed ? messages.navigation.improvePlan : undefined}
                   aria-current={isNavItemActive(pathname, '/dashboard/premium') ? 'page' : undefined}
-                  className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] ${
+                  className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4] ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center p-0'
-                      : compact ? 'min-h-10 w-full gap-2 px-1.5 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
+                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#4F5DFF] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#5D70C4] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
                     <TrendingUp className="h-4 w-4" aria-hidden="true" />
                   </span>
                   {!collapsed ? (
@@ -298,11 +295,11 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2 text-[12px]' : 'w-full gap-2.5 px-3 py-2.5'
+                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
                   }`}
                 >
-                  <CircleHelp className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className={compact ? "text-[12px] font-medium" : "text-sm font-medium"}>{messages.navigation.feedback}</p> : null}
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg"><CircleHelp className="size-4" aria-hidden="true" /></span>
+                  {!collapsed ? <span className="min-w-0 flex-1 text-left font-semibold">{messages.navigation.feedback}</span> : null}
                 </button>
 
                 <DropdownMenu>
@@ -310,10 +307,11 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                       collapsed
                         ? 'mx-auto h-11 w-11 justify-center px-0 py-0'
-                        : compact ? 'min-h-10 w-full gap-2 px-2.5 py-2' : 'w-full gap-2.5 px-3 py-2.5'
+                        : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1' : 'min-h-11 w-full gap-2.5 px-2 py-1.5'
                     }`}
                   >
-                    <Avatar className={compact ? 'h-7 w-7 shrink-0' : 'h-8 w-8'}>
+                    <span className="flex size-8 shrink-0 items-center justify-center">
+                    <Avatar className="size-7 shrink-0">
                       <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -321,33 +319,46 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                         <AvatarImage src={user.user_metadata.avatar_url} />
                       ) : null}
                     </Avatar>
+                    </span>
                     {!collapsed ? (
                       <div className="min-w-0 flex-1 overflow-hidden">
-                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-sm"}`}>
+                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-[13px]"}`}>
                           {getUserName()}
                         </p>
                       </div>
                     ) : null}
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <LanguageMenuItem />
-                    <DropdownMenuItem asChild>
-                      <Link href="/configuracion" className="w-full text-sm">
-                        <Settings className="mr-2 h-4 w-4" />
+                  <DropdownMenuContent
+                    align="start"
+                    side="top"
+                    sideOffset={2}
+                    avoidCollisions={false}
+                    className={`${collapsed ? "w-[224px]" : compact ? "w-[160px]" : "w-[224px]"} max-w-[calc(100vw-24px)] rounded-2xl border border-[#E7EBF4] bg-white p-2 shadow-[0_12px_32px_rgba(15,27,61,0.12)]`}
+                  >
+                    <div className="px-2 pb-3 pt-1">
+                      {user.email ? (
+                        <p className="truncate text-[12px] text-[#7F8AA3]">{user.email}</p>
+                      ) : null}
+                    </div>
+                    <DropdownMenuItem asChild className="min-h-11 rounded-xl px-3 text-[14px] font-medium text-[#42506A] focus:bg-[#F5F7FB] focus:text-[#0F1B3D]">
+                      <Link href="/configuracion" className="flex w-full items-center gap-3">
+                        <Settings className="!size-[18px] text-[#66758D]" aria-hidden="true" />
                         {messages.navigation.settings}
                       </Link>
                     </DropdownMenuItem>
+                    <div role="separator" className="my-2 h-px bg-[#E7EBF4]" />
                     <DropdownMenuItem
-                      className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
+                      className="min-h-11 gap-3 rounded-xl px-3 text-[14px] font-medium text-[#C65353] focus:bg-[#FFF4F4] focus:text-[#B93838]"
                       onClick={async () => {
                         const { error } = await supabase.auth.signOut();
                         if (error) {
                           logError('navbar.signOut', error, { userId: user.id });
+                          return;
                         }
                         window.location.assign(locale === 'en' ? '/en/login' : '/login');
                       }}
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <LogOut className="!size-[18px] text-current" aria-hidden="true" />
                       {messages.navigation.signOut}
                     </DropdownMenuItem>
                   </DropdownMenuContent>

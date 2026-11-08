@@ -66,7 +66,7 @@ export function MaterialStudyStatusWorkspace({
         <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-[#456DBD]"
           >
             <ChevronLeft className="h-4 w-4" />
             {english ? 'Back' : 'Volver'}
@@ -89,7 +89,7 @@ export function MaterialStudyStatusWorkspace({
                   key={label}
                   className={`inline-flex h-8 flex-none items-center gap-1.5 rounded-[13px] border px-2.5 text-[12px] sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px] ${
                     index === 0
-                      ? 'border-[#BFDBFE] bg-[#EEF4FF] text-[#2563EB]'
+                      ? 'border-[#BFDBFE] bg-[#EEF4FF] text-[#456DBD]'
                       : 'border-slate-200 bg-white text-slate-400'
                   }`}
                 >
@@ -119,7 +119,7 @@ export function MaterialStudyStatusWorkspace({
               <div className="flex items-start gap-3.5">
                 <div
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] ${
-                    failed ? 'bg-red-50 text-red-500' : 'bg-[#EEF4FF] text-[#2563EB]'
+                    failed ? 'bg-red-50 text-red-500' : 'bg-[#EEF4FF] text-[#456DBD]'
                   }`}
                 >
                   {failed ? <FileText className="h-5 w-5" /> : <Loader2 className="h-5 w-5 animate-spin" />}

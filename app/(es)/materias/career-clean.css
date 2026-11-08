@@ -69,8 +69,8 @@
   .animate-page-enter
   > section:first-of-type
   + div
-  button[class*='text-[#2563EB]'] {
-  border-bottom-color: #2563eb !important;
+  button[class*='text-[#456DBD]'] {
+  border-bottom-color: #456dbd !important;
 }
 
 /* Información es contenido editorial: una sección con datos, no una card con mini-cards. */

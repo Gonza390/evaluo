@@ -1,5 +1,13 @@
 /** Shared Spanish homepage text translated into English. Kept outside the client bundle. */
 export const HOME_ENGLISH_TEXT: Record<string, string> = {
+  "Crear flashcards desde PDF": "Create flashcards from a PDF",
+  "Convertí tus apuntes en tarjetas de repaso por tema.": "Turn your notes into topic-based flashcards.",
+  "Generar preguntas desde PDF": "Generate questions from a PDF",
+  "Practicá con preguntas de tu propio material.": "Practice with questions based on your own material.",
+  "Simulacro de examen con IA": "AI practice exam",
+  "Probá cómo te iría antes del parcial o el final.": "See how ready you are before your exam.",
+  "Practicar por tema": "Practice by topic",
+  "Reforzá el capítulo que más te cuesta.": "Review the chapter you find most difficult.",
   "Cómo funciona": "How it works",
   "Plan de estudio": "Study plan",
   "Planes": "Plans",
@@ -78,7 +86,7 @@ export const HOME_ENGLISH_TEXT: Record<string, string> = {
   "Gratis": "Free",
   "Empezá a estudiar con tus propios apuntes, sin tarjeta.": "Start studying with your own notes, no card needed.",
   "$0 · sin tarjeta": "$0 · no card required",
-  "1 material PDF o Word gratis de por vida": "1 free PDF or Word material per account",
+  "1 material PDF o Word gratis por mes": "1 free PDF or Word material per month",
   "Hasta 100 páginas y 20 MB por archivo": "Up to 100 pages and 20 MB per file",
   "Resumen, glosario, flashcards y práctica básica": "Summary, glossary, flashcards and basic practice",
   "Empezá gratis": "Start for free",

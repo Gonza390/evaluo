@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
-import { isFreeStudyV2Active, FREE_STUDY_V2 } from '@/lib/free-study-v2';
+import { isFreeStudyV2Active, FREE_STUDY_V2, freeUploadPeriod } from '@/lib/free-study-v2';
 import { FREE_STUDY_KIND_LIMIT, type FreeStudyUnlockKind } from '@/lib/free-study-v2-server';
 import { premiumUpgradeForLimit, type PremiumGateReason } from '@/lib/premium-flow';
 import { PREMIUM_STUDY_LIMITS } from '@/lib/study-commercial-entitlements';
@@ -43,8 +43,8 @@ export async function GET(request: Request) {
     const [unlocks, upload, plan] = await Promise.all([
       admin.from('free_study_v2_unlocks' as never)
         .select('kind').eq('user_id',user.id).limit(120),
-      admin.from('free_study_v2_upload_claims' as never)
-        .select('user_id').eq('user_id',user.id).maybeSingle(),
+      admin.from('free_study_v2_monthly_upload_claims' as never)
+        .select('user_id').eq('user_id',user.id).eq('period',freeUploadPeriod()).maybeSingle(),
       admin.from('free_study_v2_plan_claims' as never)
         .select('user_id').eq('user_id',user.id).maybeSingle(),
     ]);
@@ -54,6 +54,7 @@ export async function GET(request: Request) {
     const counts = {} as Record<FreeStudyUnlockKind,number>;
     const kinds:FreeStudyUnlockKind[] = [
       'multiple_choice','true_false','matching_round','case','flashcard','simulator',
+      'complete_round','mixed_round',
     ];
     for (const kind of kinds) counts[kind] = 0;
     for (const row of unlocks.data ?? []) {
@@ -68,13 +69,15 @@ export async function GET(request: Request) {
     };
 
     const quotas = {
-      material_upload: makeQuota(upload.data ? 1:0,FREE_STUDY_V2.materialsLifetime,'material_upload'),
+      material_upload: makeQuota(upload.data ? 1:0,FREE_STUDY_V2.materialsPerMonth,'material_upload'),
       multiple_choice: makeQuota(counts.multiple_choice,FREE_STUDY_KIND_LIMIT.multiple_choice,'multiple_choice'),
       true_false: makeQuota(counts.true_false,FREE_STUDY_KIND_LIMIT.true_false,'true_false'),
       matching_round: makeQuota(counts.matching_round,FREE_STUDY_KIND_LIMIT.matching_round,'matching_round'),
       case: makeQuota(counts.case,FREE_STUDY_KIND_LIMIT.case,'case'),
       flashcard: makeQuota(counts.flashcard,FREE_STUDY_KIND_LIMIT.flashcard,'flashcard'),
       simulator: makeQuota(counts.simulator,FREE_STUDY_KIND_LIMIT.simulator,'simulator'),
+      complete_round: makeQuota(counts.complete_round,FREE_STUDY_KIND_LIMIT.complete_round,'complete'),
+      mixed_round: makeQuota(counts.mixed_round,FREE_STUDY_KIND_LIMIT.mixed_round,'mixed'),
       study_plan: makeQuota(plan.data ? 1:0,FREE_STUDY_V2.studyPlans,'study_plan'),
     };
     return NextResponse.json({active:true,plan:'free',quotas},

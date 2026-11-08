@@ -32,7 +32,7 @@ export function TourCard({
         }
       `}</style>
       <div
-        className={`w-[320px] rounded-[26px] border border-border bg-card p-5 shadow-[0_24px_60px_rgba(15,23,42,0.18)] animate-saas-lift-in max-sm:w-auto max-sm:rounded-[24px] max-sm:p-4 ${className}`}
+        className={`w-[320px] rounded-[26px] border border-border bg-card p-5 shadow-[0_24px_60px_rgba(15,23,42,0.18)] evaluo-enter max-sm:w-auto max-sm:rounded-[24px] max-sm:p-4 ${className}`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>

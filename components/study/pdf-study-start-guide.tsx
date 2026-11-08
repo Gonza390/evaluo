@@ -43,25 +43,25 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, resources, onStart, 
             <p className="text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
               {t("Tu guía de estudio")}
             </p>
-            <button type="button" onClick={onDismiss} aria-label="Cerrar guía y volver al resumen" className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
+            <button type="button" onClick={onDismiss} aria-label={english ? 'Close guide and return to summary' : 'Cerrar guía y volver al resumen'} className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4]">
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
 
           <DialogTitle ref={headingRef} tabIndex={-1} className="text-foreground mt-2.5 text-left text-[20px] font-bold leading-tight tracking-[-0.035em] outline-none">
-            ¡Vamos a estudiar el tema 1!
+            {english ? "Let's study your first topic!" : '¡Vamos a estudiar el tema 1!'}
           </DialogTitle>
           <DialogDescription id="pdf-study-start-description" className="text-muted-foreground mt-2 text-left text-[12.5px] leading-[1.6]">
-            Empezá leyendo el resumen. Usá el glosario y las flashcards para repasar, y después practicá para comprobar cuánto aprendiste.
+            {english ? 'Start by reading the summary. Use the glossary and flashcards to review, then practice to check what you learned.' : 'Empezá leyendo el resumen. Usá el glosario y las flashcards para repasar, y después practicá para comprobar cuánto aprendiste.'}
           </DialogDescription>
 
           <div className="border-border mt-4 border-t pt-4">
             <p className="text-primary text-[10px] font-bold uppercase tracking-[0.12em]">{t("Tu primer tema")}</p>
             <p data-pdf-study-first-topic className="text-foreground mt-1 break-words text-[14px] font-bold leading-5">
-              {hasFirstTopic ? firstTopicTitle : 'El resumen de tu material'}
+              {hasFirstTopic ? firstTopicTitle : (english ? 'Your material summary' : 'El resumen de tu material')}
             </p>
             <p className="text-muted-foreground mt-2 text-[12px] leading-5">
-              En todo tu PDF tenés:
+              {english ? 'Your document includes:' : 'En todo tu PDF tenés:'}
             </p>
 
             <div data-pdf-study-resources className="mt-3 grid grid-cols-3 gap-2">
@@ -74,14 +74,14 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, resources, onStart, 
                 <Layers className="text-primary size-5" aria-hidden="true" />
                 <span className="text-foreground mt-2 text-[12px] font-semibold">{t("Flashcards")}</span>
                 <span data-pdf-study-flashcards-caption className="text-muted-foreground mt-0.5 text-[10.5px]">
-                  {resources.totalFlashcards} {resources.totalFlashcards === 1 ? 'tarjeta' : 'tarjetas'}
+                  {resources.totalFlashcards} {english ? (resources.totalFlashcards === 1 ? 'card' : 'cards') : (resources.totalFlashcards === 1 ? 'tarjeta' : 'tarjetas')}
                 </span>
               </div>
               <div className="border-border bg-muted/25 flex min-w-0 flex-col items-center rounded-[13px] border px-1.5 py-3 text-center">
                 <SquareLibrary className="text-primary size-5" aria-hidden="true" />
                 <span className="text-foreground mt-2 text-[12px] font-semibold">{t("Glosario")}</span>
                 <span data-pdf-study-glossary-caption className="text-muted-foreground mt-0.5 text-[10.5px]">
-                  {resources.totalGlossaryTerms} {resources.totalGlossaryTerms === 1 ? 'término' : 'términos'}
+                  {resources.totalGlossaryTerms} {english ? (resources.totalGlossaryTerms === 1 ? 'term' : 'terms') : (resources.totalGlossaryTerms === 1 ? 'término' : 'términos')}
                 </span>
               </div>
             </div>
@@ -90,7 +90,7 @@ export function PdfStudyStartGuide({ open, firstTopicTitle, resources, onStart, 
 
         <div data-pdf-study-start-footer className="border-border bg-card shrink-0 border-t px-5 py-4 sm:px-6">
           <button type="button" data-pdf-study-start-cta onClick={onStart} className="bg-primary hover:bg-primary/90 focus-visible:outline-primary flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">
-            {hasFirstTopic ? 'Leer el tema 1' : 'Ir al resumen'}
+            {hasFirstTopic ? (english ? 'Read topic 1' : 'Leer el tema 1') : (english ? 'Go to summary' : 'Ir al resumen')}
             <ArrowRight className="size-4" aria-hidden="true" />
           </button>
         </div>

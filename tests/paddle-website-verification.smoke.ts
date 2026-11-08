@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 const read = (path: string) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 
 // Compliance de pagos internacionales (Creem como Merchant of Record).
-// El precio y la mención a Creem en /pricing viven en RegionalPricingMessage (oferta regional fail-closed).
+// El precio y la mención a Creem en /pricing viven en PricingPlans (oferta regional fail-closed);
+// RegionalPricingMessage los sigue mostrando en la home y en /en/pricing.
 const paths = [
   'app/(es)/terminos/page.tsx',
   'app/(es)/reembolsos/page.tsx',
@@ -30,8 +31,16 @@ assert.match(terms, /creem\.io\/buyer-terms/);
 assert.match(refunds, /derechos de desistimiento/);
 assert.match(billing, /Compras internacionales con Creem/);
 assert.match(billing, /Merchant of Record/);
-assert.match(pricing, /<RegionalPricingMessage locale="es" placement="featured" \/>/);
-assert.match(pricing, /<RegionalPricingMessage locale="es" placement="billing" \/>/);
+// /pricing (rediseño nov-2026): precio, mención a Creem y links legales junto al precio en PricingPlans.
+const pricingPlans = read('components/pricing/PricingPlans.tsx');
+assert.match(pricing, /<PricingContent\s/);
+assert.match(read('components/pricing/PricingContent.tsx'), /<PricingPlans\s/);
+assert.doesNotMatch(pricingPlans, /Paddle|paddle\.net/i);
+assert.match(pricingPlans, /Pago seguro con Creem/);
+assert.match(pricingPlans, /Renovación mensual automática/);
+for (const url of ['/terminos', '/privacidad', '/reembolsos', '/facturacion']) {
+  assert.ok(pricingPlans.includes('href="' + url + '"'), 'pricing plans legal link ' + url);
+}
 assert.match(regionalPricing, /US\$ 9,99/);
 assert.match(regionalPricing, /renovación mensual automática/);
 // Links legales visibles junto al precio (recuperados de main).

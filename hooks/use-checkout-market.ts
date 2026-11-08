@@ -10,8 +10,10 @@ export type CheckoutAvailability = {
   monthlyUsdCents: number;
 };
 
+// Si no se pudo consultar la región, se muestra la oferta en USD (sin habilitar el pago:
+// creemAvailable queda en false hasta que el servidor lo confirme).
 const UNAVAILABLE: CheckoutAvailability = {
-  market: 'unknown',
+  market: 'international',
   creemAvailable: false,
   previewTestAvailable: false,
   monthlyUsdCents: 999,
@@ -40,7 +42,8 @@ export function loadCheckoutMarket(): Promise<CheckoutAvailability> {
         return UNAVAILABLE;
       }
       return {
-        market,
+        // País sin confirmar → misma experiencia que fuera de Argentina (USD).
+        market: market === 'unknown' ? 'international' : market,
         creemAvailable: payload.creemAvailable === true,
         previewTestAvailable: payload.previewTestAvailable === true,
         monthlyUsdCents: payload.monthlyUsdCents === 999 ? 999 : UNAVAILABLE.monthlyUsdCents,

@@ -985,7 +985,7 @@ export default function CalendarioPage() {
                             <span aria-hidden="true" data-calendar-plan-day className="size-1.5 shrink-0 rounded-full bg-brand" />
                           ) : null}
                           {isPlanExamDay ? (
-                            <span aria-hidden="true" data-calendar-plan-exam className="size-1.5 shrink-0 rounded-full bg-[#D97706]" />
+                            <span aria-hidden="true" data-calendar-plan-exam className="size-1.5 shrink-0 rounded-full bg-[#C98145]" />
                           ) : null}
                           {cellEvents.length > 0 ? (
                             <div className="min-w-0 flex-1 overflow-hidden">
@@ -1065,7 +1065,7 @@ export default function CalendarioPage() {
                 <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" /> {english ? "Study day" : "Día de estudio"}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-[#D97706]" aria-hidden="true" /> {english ? "Study plan exam" : "Examen del plan"}
+                <span className="size-1.5 rounded-full bg-[#C98145]" aria-hidden="true" /> {english ? "Study plan exam" : "Examen del plan"}
               </span>
             </div>
           </section>

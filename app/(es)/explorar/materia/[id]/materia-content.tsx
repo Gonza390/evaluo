@@ -765,7 +765,7 @@ export default function MateriaContent({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563eb]">
+                    <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#456dbd]">
                       {resumen.title}
                     </h3>
                   </div>
@@ -852,7 +852,7 @@ export default function MateriaContent({
                         materia_id: materiaId,
                       });
                     }}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[#456DBD] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4f63b8]"
                   >
                     <Download className="h-4 w-4" />
                     Descargar
@@ -925,7 +925,7 @@ export default function MateriaContent({
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563eb]">
+                    <p className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#456dbd]">
                       {recurso.nombre}
                     </p>
                   </div>
@@ -1005,7 +1005,7 @@ export default function MateriaContent({
                     });
                     void handleSecureDownload(recurso);
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4050f0]"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#456DBD] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4f63b8]"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Descargar
@@ -1329,7 +1329,7 @@ export default function MateriaContent({
               </button>
               <Link
                 href={`/explorar/materia/${materiaId}?tab=pregunteros${carreraId ? `&carreraId=${carreraId}` : ''}`}
-                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] sm:h-auto sm:w-auto sm:px-5 sm:py-3"
+                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#3A5CA8] hover:to-[#555CB1] sm:h-auto sm:w-auto sm:px-5 sm:py-3"
               >
                 <Sparkles className="h-4 w-4" />
                 Ir a Pregunteros
@@ -1352,7 +1352,7 @@ export default function MateriaContent({
                 onClick={() => handleTabChange(tab.id as typeof activeTab)}
                 className={`relative min-h-[48px] rounded-xl px-2 py-2 text-[12px] leading-4 font-medium transition-all duration-300 sm:min-h-0 sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
                   activeTab === tab.id
-                    ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#2563EB] sm:after:content-[""]'
+                    ? 'bg-[#EEF2FF] text-[#456DBD] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#456DBD] sm:after:content-[""]'
                     : 'text-slate-500 hover:bg-white hover:text-slate-700 sm:hover:bg-transparent'
                 }`}
               >
@@ -1389,7 +1389,7 @@ export default function MateriaContent({
                     value={busqueda}
                     onChange={(event) => setBusqueda(event.target.value)}
                     placeholder="Buscar resumen..."
-                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pr-4 pl-10 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 focus:outline-none sm:h-10 sm:w-72"
+                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pr-4 pl-10 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#456DBD] focus:ring-2 focus:ring-[#456DBD]/20 focus:outline-none sm:h-10 sm:w-72"
                   />
                 </div>
               </div>
@@ -1403,11 +1403,11 @@ export default function MateriaContent({
                   <button
                     key={unidad.id}
                     onClick={() => setActiveUnidad(String(unidad.id))}
-                    className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#2563EB] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
+                    className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#456DBD] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
                   >
                     <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
                     <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
-                    <p className="mt-3 text-xs font-medium text-[#2563EB]">
+                    <p className="mt-3 text-xs font-medium text-[#456DBD]">
                       {realResumenesCount} resúmenes
                     </p>
                   </button>
@@ -1430,11 +1430,11 @@ export default function MateriaContent({
                   <div key={unidad.id} className="space-y-3">
                     <button
                       onClick={() => setActiveUnidad(String(unidad.id))}
-                      className={`surface-card w-full rounded-[var(--radius-card)] p-4 text-left transition ${isActiveModule ? 'border-[#2563EB] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
+                      className={`surface-card w-full rounded-[var(--radius-card)] p-4 text-left transition ${isActiveModule ? 'border-[#456DBD] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
                     >
                       <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
                       <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
-                      <p className="mt-3 text-xs font-medium text-[#2563EB]">
+                      <p className="mt-3 text-xs font-medium text-[#456DBD]">
                         {realResumenesCount} resúmenes
                       </p>
                     </button>
@@ -1511,7 +1511,7 @@ export default function MateriaContent({
 
                 <Link
                   href="/dashboard/materiales"
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#3A5CA8] hover:to-[#555CB1]"
                 >
                   Subir mi PDF
                 </Link>
@@ -1589,7 +1589,7 @@ export default function MateriaContent({
                           <button
                             type="button"
                             onClick={() => void handleSharePreguntero(simulador.parcial)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#C7D2FE] hover:text-[#2563EB]"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#C7D2FE] hover:text-[#456DBD]"
                             aria-label={`Compartir ${simulador.titulo}`}
                             title="Compartir"
                           >
@@ -1615,7 +1615,7 @@ export default function MateriaContent({
                             label: simulador.titulo,
                           })
                         }
-                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0] sm:w-auto"
+                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4f63b8] sm:w-auto"
                       >
                         Iniciar Preguntero
                       </Link>

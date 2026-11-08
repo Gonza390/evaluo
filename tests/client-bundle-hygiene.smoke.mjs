@@ -7,7 +7,6 @@ import { readFileSync } from 'node:fs';
 const clientUploaders = [
   'components/marketing/home-pdf-picker-button.tsx',
   'components/marketing/pdf-first-landing-uploader.tsx',
-  'components/dashboard/quick-pdf-upload.tsx',
   'components/dashboard/pdf-first-upload-shell.tsx',
 ];
 for (const file of clientUploaders) {

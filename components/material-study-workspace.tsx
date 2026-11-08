@@ -15,6 +15,7 @@ import {
   useState,
   type ReactNode,
   type MouseEvent,
+  type UIEvent,
   type SetStateAction,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,11 +23,9 @@ import {
   BookOpenText,
   BrainCircuit,
   Clock3,
-  CircleAlert,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  Ellipsis,
   Share2,
   ExternalLink,
   FileText,
@@ -84,6 +83,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
+import { PdfMobileToolsMenu } from '@/components/study/pdf-mobile-tools-menu';
+import { PdfPracticeModes } from '@/components/study/pdf-practice-modes';
 import {
   pdfStudyTabClassName,
   pdfStudyControlsClassName,
@@ -455,6 +456,29 @@ export function MaterialStudyWorkspace({
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const [activeSummaryChapterIndex, setActiveSummaryChapterIndex] = useState(0);
+  // Las barras del índice y del lector se muestran sólo mientras se desplazan.
+  // El temporizador vive en una ref: no vuelve a renderizar los capítulos al hacer scroll.
+  const autoScrollbarTimersRef = useRef(new Map<HTMLElement, number>());
+  const showScrollbarWhileScrolling = useCallback((event: UIEvent<HTMLElement>) => {
+    const element = event.currentTarget;
+    element.dataset.pdfScrollbarScrolling = 'true';
+    const previous = autoScrollbarTimersRef.current.get(element);
+    if (previous !== undefined) window.clearTimeout(previous);
+    autoScrollbarTimersRef.current.set(element, window.setTimeout(() => {
+      delete element.dataset.pdfScrollbarScrolling;
+      autoScrollbarTimersRef.current.delete(element);
+    }, 900));
+  }, []);
+  useEffect(() => {
+    const timers = autoScrollbarTimersRef.current;
+    return () => {
+      for (const [element, timer] of timers) {
+        window.clearTimeout(timer);
+        delete element.dataset.pdfScrollbarScrolling;
+      }
+      timers.clear();
+    };
+  }, []);
   const scrollFirstChapterSmoothlyRef = useRef(false);
   const [studyStartGuideOpen, setStudyStartGuideOpen] = useState(false);
   const [chapterFinishIndex, setChapterFinishIndex] = useState<number | null>(null);
@@ -524,6 +548,15 @@ export function MaterialStudyWorkspace({
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
+  // La pestaña inicial se pinta sin animación: si arrancara invisible (opacity 0),
+  // el contenido principal (LCP) se demoraría hasta que el hilo principal quede libre.
+  // Al cambiar de pestaña se usa el efecto único de la plataforma.
+  const initialTabRef = useRef(activeTab);
+  const [tabSwitched, setTabSwitched] = useState(false);
+  useEffect(() => {
+    if (activeTab !== initialTabRef.current) setTabSwitched(true);
+  }, [activeTab]);
+  const tabPanelMotion = tabSwitched ? 'animate-tab-panel' : undefined;
   // Las pestañas inactivas usan forceMount para preservar intentos, pero su
   // contenido no debe montarse antes de la primera visita del estudiante.
   const [visitedInteractiveTabs, setVisitedInteractiveTabs] = useState<StudyTabId[]>(() =>
@@ -1754,7 +1787,7 @@ export function MaterialStudyWorkspace({
           </Button>
           <Button type="button" size="sm" className="min-h-10 rounded-lg text-[13px]"
             disabled={!topicQuestionCounts[index]} onClick={() => startChapterEvaluation(index)}>
-            Practicar este tema <ChevronRight aria-hidden className="h-4 w-4" />
+            {t('Practicar este tema')} <ChevronRight aria-hidden className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -1821,30 +1854,22 @@ export function MaterialStudyWorkspace({
   const tabHeader = (
     <div
       className={cn(
-        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-2.5 py-1.5 sm:px-3 sm:py-2 md:flex'
+        'border-border hidden shrink-0 items-center justify-between gap-2 border-b px-5 md:flex'
       )}
     >
-      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
-        {STUDY_TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              data-recommended-tab={tab.id}
-              data-pdf-study-tab
-              className={pdfStudyTabClassName}
-            >
-              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {t(tab.label)}
-              {tab.premium ? (
-                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase sm:text-[11px]">
-                  Premium
-                </span>
-              ) : null}
-            </TabsTrigger>
-          );
-        })}
+      <TabsList className="hidden h-auto min-w-0 flex-1 justify-start gap-6 overflow-x-auto rounded-none bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
+        {/* Pestañas como texto libre con subrayado: sin íconos, recuadros ni etiquetas extra. */}
+        {STUDY_TABS.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            data-recommended-tab={tab.id}
+            data-pdf-study-tab
+            className={pdfStudyTabClassName}
+          >
+            {t(tab.label)}
+          </TabsTrigger>
+        ))}
         {hasProgress ? (
           <TabsTrigger
             value="progreso"
@@ -1853,12 +1878,11 @@ export function MaterialStudyWorkspace({
             data-has-pending={hasPendingStudyErrors || undefined}
             className={pdfStudyTabClassName}
           >
-            <CircleAlert className="h-4 w-4" />
             {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
             )}
-            {hasPendingStudyErrors && <span className="sr-only">: errores por resolver</span>}
+            {hasPendingStudyErrors && <span className="sr-only">{english ? ': errors to review' : ': errores por resolver'}</span>}
           </TabsTrigger>
         ) : null}
         {isOwner && !demo && !hasProgress ? (
@@ -1869,8 +1893,8 @@ export function MaterialStudyWorkspace({
             data-has-pending={hasPendingStudyErrors || undefined}
             aria-label={
               hasPendingStudyErrors
-                ? 'Progreso: errores por resolver en este PDF'
-                : 'Progreso de este PDF'
+                ? t('Progreso: errores por resolver en este PDF')
+                : t('Progreso de este PDF')
             }
             onClick={() => {
               trackMarketingEvent('cta_click', {
@@ -1884,7 +1908,6 @@ export function MaterialStudyWorkspace({
               'inline-flex items-center justify-center gap-1.5 transition'
             )}
           >
-            <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             {t('Progreso')}
             {hasPendingStudyErrors && (
               <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
@@ -1915,7 +1938,7 @@ export function MaterialStudyWorkspace({
       <div className="border-border bg-card w-full max-w-xl overflow-hidden rounded-[1.75rem] border shadow-[0_30px_90px_rgba(15,23,42,0.2)]">
         <div className="bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_40%,#EEF4FF_100%)] px-5 py-5 sm:px-6">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-none">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#D9AA74] text-white shadow-none">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
             <div className="min-w-0">
@@ -1951,7 +1974,7 @@ export function MaterialStudyWorkspace({
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2.5 w-2.5 rounded-full ${
-                        isDone ? 'bg-emerald-500' : isActive ? 'bg-[#F59E0B]' : 'bg-slate-300'
+                        isDone ? 'bg-emerald-500' : isActive ? 'bg-[#D9AA74]' : 'bg-slate-300'
                       }`}
                     />
                     <span
@@ -1963,7 +1986,7 @@ export function MaterialStudyWorkspace({
                     </span>
                   </div>
                   {isActive ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#D9AA74]" />
                   ) : null}
                 </div>
               );
@@ -2003,6 +2026,8 @@ export function MaterialStudyWorkspace({
       data-onboarding-panel={recommendedActive || undefined}
       data-onboarding-transitioning={(recommendedActive && onboardingFading) || undefined}
       tabIndex={0}
+      data-pdf-auto-scrollbar
+      onScroll={showScrollbarWhileScrolling}
       className={cn(
         'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-3 sm:pb-3',
         demo && 'h-full min-h-0 overflow-y-auto',
@@ -2014,7 +2039,7 @@ export function MaterialStudyWorkspace({
         data-demo-focus="study-section"
         data-recommended-summary
         value="resumen"
-        className="animate-tab-panel outline-none"
+        className={cn(tabPanelMotion, "outline-none")}
       >
         <div className="mx-auto w-full max-w-[1240px] py-1 sm:py-1.5">
           <header className="border-border border-b pb-3 md:pb-5">
@@ -2041,29 +2066,31 @@ export function MaterialStudyWorkspace({
             {diagnosticReviewTopics.length > 0 ? (
               <div className="border-primary mt-3 border-l-2 pl-3">
                 <p className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">
-                  Según tu diagnóstico
+                  {english ? 'Based on your diagnostic' : 'Según tu diagnóstico'}
                 </p>
                 <p className="text-foreground mt-1 text-[14px] font-medium">
-                  Empezá por {diagnosticReviewTopics[0]}
+                  {english ? 'Start with ' : 'Empezá por '}{diagnosticReviewTopics[0]}
                 </p>
               </div>
             ) : null}
           </header>
 
           {summaryChapters.length > 0 ? (
-            <details className="group border-border bg-muted/55 mt-3 rounded-xl border px-3 py-2.5 xl:hidden">
+            <details className="group mt-3 py-1 xl:hidden">
               <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-medium">
                 <span className="inline-flex items-center gap-2">
                   <ListTree className="text-primary h-4 w-4" />
-                  Índice del resumen
+                  {english ? 'Summary contents' : 'Índice del resumen'}
                 </span>
                 <span className="text-muted-foreground text-[11px] font-medium">
-                  {summaryChapters.length} capítulos
+                  {summaryChapters.length} {english ? (summaryChapters.length === 1 ? 'chapter' : 'chapters') : 'capítulos'}
                 </span>
               </summary>
               <nav
-                className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
-                aria-label="Índice del resumen"
+                data-pdf-auto-scrollbar
+                onScroll={showScrollbarWhileScrolling}
+                className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1"
+                aria-label={english ? 'Summary contents' : 'Índice del resumen'}
               >
                 <ol className="space-y-1">
                   {summaryChapters.map((chapter, index) => (
@@ -2074,10 +2101,10 @@ export function MaterialStudyWorkspace({
                         data-active-chapter={activeSummaryChapterIndex === index || undefined}
                         aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                         className={cn(
-                          'flex items-start gap-2.5 rounded-lg border-l-[3px] px-2.5 py-2 text-[13px] leading-5 transition-colors',
+                          'flex items-start gap-2.5 px-0 py-2 text-[14px] leading-5 transition-colors',
                           activeSummaryChapterIndex === index
-                            ? 'border-primary bg-primary/10 text-primary font-medium'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
                         <span className={cn(
@@ -2098,13 +2125,15 @@ export function MaterialStudyWorkspace({
           <div className="mt-3 xl:grid xl:grid-cols-[200px_minmax(0,1fr)] xl:items-start xl:gap-5 2xl:grid-cols-[220px_minmax(0,1fr)] 2xl:gap-6">
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
-                <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-3">
+                <div className="flex max-h-[calc(100vh-14rem)] min-h-0 flex-col">
                   <p className="text-muted-foreground mb-2 shrink-0 text-[11px] font-medium tracking-[0.16em] uppercase">
-                    Contenido
+                    {english ? 'Contents' : 'Contenido'}
                   </p>
                   <nav
-                    className="min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable] [scrollbar-width:thin]"
-                    aria-label="Índice del resumen"
+                    data-pdf-auto-scrollbar
+                    onScroll={showScrollbarWhileScrolling}
+                    className="min-h-0 overflow-y-auto overscroll-contain pr-2"
+                    aria-label={english ? 'Summary contents' : 'Índice del resumen'}
                   >
                     <ol className="space-y-1.5">
                       {summaryChapters.map((chapter, index) => (
@@ -2117,10 +2146,10 @@ export function MaterialStudyWorkspace({
                             data-active-chapter={activeSummaryChapterIndex === index || undefined}
                             aria-current={activeSummaryChapterIndex === index ? 'location' : undefined}
                             className={cn(
-                              'group flex items-start gap-2 rounded-lg border-l-[3px] px-2 py-1.5 text-[12px] leading-[1.45] transition-colors',
+                              'group flex items-start gap-2 px-0 py-1.5 text-[13px] leading-[1.45] transition-colors',
                               activeSummaryChapterIndex === index
-                                ? 'border-primary bg-primary/10 text-primary font-medium'
-                                : 'text-muted-foreground hover:bg-muted/50 hover:text-primary border-transparent'
+                                ? 'text-primary font-medium'
+                                : 'text-muted-foreground hover:text-foreground'
                             )}
                           >
                             <span className={cn(
@@ -2186,7 +2215,7 @@ export function MaterialStudyWorkspace({
         </div>
       </TabsContent>
 
-      <TabsContent data-demo-focus="study-section" value="glosario" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="glosario" className={tabPanelMotion}>
         <div data-study-glossary className="mx-auto w-full max-w-[1240px] px-1 py-1 sm:px-2 sm:py-1.5">
           {glossaryTopicIndex === null ? (
             <header className="border-border mb-3 border-b pb-3 sm:pb-4">
@@ -2254,7 +2283,7 @@ export function MaterialStudyWorkspace({
                   <div className="min-w-0">
                     <p className="text-foreground text-[13px] font-medium">{english ? 'Ready to keep practicing?' : '¿Seguimos con la práctica?'}</p>
                     <p className="text-muted-foreground mt-1 text-[12px] leading-5">
-                      Comprobá cuánto aprendiste de este tema.
+                      {english ? 'Check how much you learned from this topic.' : 'Comprobá cuánto aprendiste de este tema.'}
                     </p>
                   </div>
                   <Button
@@ -2262,14 +2291,14 @@ export function MaterialStudyWorkspace({
                     className="min-h-10 self-start rounded-lg px-3 text-[12px] sm:shrink-0"
                     onClick={() => startChapterEvaluation(glossaryTopicIndex)}
                   >
-                    Practicar este tema <ChevronRight aria-hidden className="ml-1 h-4 w-4" />
+                    {t('Practicar este tema')} <ChevronRight aria-hidden className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
               ) : null}
             </div>
           ) : (
             <p className="text-muted-foreground px-2 py-3 text-[13px] leading-5">
-              Todavía no pudimos detectar un glosario claro a partir de este PDF.
+              {english ? 'We could not identify a clear glossary from this PDF yet.' : 'Todavía no pudimos detectar un glosario claro a partir de este PDF.'}
             </p>
           )}
         </div>
@@ -2279,7 +2308,7 @@ export function MaterialStudyWorkspace({
         data-demo-focus="study-section"
         value="tarjetas"
         forceMount
-        className="animate-tab-panel data-[state=inactive]:hidden"
+        className={cn(tabPanelMotion, "data-[state=inactive]:hidden")}
       >
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
         <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
@@ -2312,7 +2341,7 @@ export function MaterialStudyWorkspace({
       <TabsContent
         value="ejercicios"
         forceMount
-        className="animate-tab-panel data-[state=inactive]:hidden"
+        className={cn(tabPanelMotion, "data-[state=inactive]:hidden")}
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
@@ -2407,19 +2436,22 @@ export function MaterialStudyWorkspace({
                 onComplete={() => { if (!demo && practiceSectionIndex !== undefined) markActivity(materialId, practiceSectionIndex, 'questions'); else if (practiceSectionIndex === undefined) requestExamDatePrompt(); }}
               />
             )) : null}
+            {!demo && isOwner && !diagnosticMode && !recommendedActive && practiceSectionIndex === undefined ? (
+              <PdfPracticeModes materialId={materialId} />
+            ) : null}
           </div>
         </Activity>
       </TabsContent>
 
-      <TabsContent data-demo-focus="study-section" value="mapa" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="mapa" className={tabPanelMotion}>
         {isPremium ? (
           <StudyDocumentShell
             compact
-            title="Mapa mental"
+            title={english ? "Mind map" : "Mapa mental"}
             description={
               demo
                 ? undefined
-                : 'Vista de los temas y conceptos principales detectados en este PDF.'
+                : english ? 'Overview of the main topics and concepts identified in this PDF.' : 'Vista de los temas y conceptos principales detectados en este PDF.'
             }
           >
             <div
@@ -2470,7 +2502,7 @@ export function MaterialStudyWorkspace({
                     demo && 'text-xs! leading-4!'
                   )}
                 >
-                  Nodo central
+                  {english ? 'Central node' : 'Nodo central'}
                 </p>
                 <p
                   className={cn(
@@ -2496,7 +2528,7 @@ export function MaterialStudyWorkspace({
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
-                  {demo ? 'Conceptos' : 'Conceptos clave'}
+                  {english ? (demo ? 'Concepts' : 'Key concepts') : (demo ? 'Conceptos' : 'Conceptos clave')}
                 </p>
                 {usefulGlossary.slice(0, 4).map((item, index) => (
                   <div key={item.term} className={'space-y-2'}>
@@ -2519,16 +2551,16 @@ export function MaterialStudyWorkspace({
         ) : (
           <div className="border-border bg-card rounded-2xl border p-4 sm:p-5">
             <PremiumUpsell
-              title="El mapa mental es exclusivo Premium"
-              description="Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."
+              title={english ? "Mind maps are a Premium feature" : "El mapa mental es exclusivo Premium"}
+              description={english ? "See the key topics and concepts in your PDF at a glance to study faster and connect ideas." : "Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."}
               source="material_mapa_mental"
               materiaId={materiaId}
               features={[
-                'Mapa mental de cada PDF que subas',
-                'Temas y conceptos clave conectados',
-                'Todo tu espacio de estudio en un solo lugar',
+                english ? 'A mind map for every PDF you upload' : 'Mapa mental de cada PDF que subas',
+                english ? 'Connected topics and key concepts' : 'Temas y conceptos clave conectados',
+                english ? 'Your study resources in one place' : 'Todo tu espacio de estudio en un solo lugar',
               ]}
-              ctaLabel="Desbloquear mapa mental con Premium"
+              ctaLabel={english ? "Unlock mind maps with Premium" : "Desbloquear mapa mental con Premium"}
             />
           </div>
         )}
@@ -2537,7 +2569,7 @@ export function MaterialStudyWorkspace({
         <TabsContent
           value="progreso"
           forceMount
-          className="animate-tab-panel data-[state=inactive]:hidden"
+          className={cn(tabPanelMotion, "data-[state=inactive]:hidden")}
         >
           {progressOpen
             ? (displayedProgressContent ??
@@ -2813,32 +2845,12 @@ export function MaterialStudyWorkspace({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                data-pdf-mobile-more-trigger
-                aria-label={t("Más opciones del material")}
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                <Ellipsis className="size-[18px]" aria-hidden="true" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="min-w-[200px] rounded-xl p-2">
-              {shareAvailable && isOwner && !demo ? (
-                <DropdownMenuItem onSelect={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}>
-                  <Share2 className="size-4" aria-hidden="true" />
-                  {t("Compartir")}
-                </DropdownMenuItem>
-              ) : null}
-              <DropdownMenuItem asChild>
-                <a href={viewerUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="size-4" aria-hidden="true" />
-                  {english ? "Open original" : "Abrir"} {isDocx ? "Word" : "PDF"} {english ? "file" : "original"}
-                </a>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <PdfMobileToolsMenu
+            materialId={materialId}
+            viewerUrl={viewerUrl}
+            fileType={isDocx ? 'Word' : 'PDF'}
+            canShare={shareAvailable && isOwner && !demo}
+          />
         </div>
 
         {/* Desktop keeps the current reader heading and Guide action. */}
@@ -2846,18 +2858,18 @@ export function MaterialStudyWorkspace({
           <div data-evaluo-desktop-reader-title className="flex min-w-0 flex-1 items-center gap-3">
             <Link
               href={backHref}
-              className="text-muted-foreground hover:text-primary inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[12px] font-medium transition-colors hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label={t("Volver")}
+              title={t("Volver")}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              {t("Volver")}
+              <ChevronLeft className="size-5" aria-hidden="true" />
             </Link>
-            <span aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200" />
             {isOwner && !demo ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" aria-label={`Cambiar material actual: ${title}`}
                     className="flex min-w-0 max-w-full items-center gap-2 rounded-lg px-2 py-1 text-left font-medium text-slate-900 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary">
-                    <span className="min-w-0 truncate text-[14px] sm:text-[16px]" title={title}>{title}</span>
+                    <span className="min-w-0 truncate text-[15px] font-semibold sm:text-[16px]" title={title}>{title}</span>
                     <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
@@ -2877,6 +2889,20 @@ export function MaterialStudyWorkspace({
               <h1 className="text-foreground min-w-0 truncate text-[14px] font-semibold tracking-[-0.03em] sm:text-[16px]" title={title}>{title}</h1>
             )}
           </div>
+
+          {shareAvailable && isOwner && !demo ? (
+            <button
+              type="button"
+              data-pdf-desktop-share-trigger
+              onClick={() => window.dispatchEvent(new CustomEvent('evaluo:share-material', { detail: { materialId } }))}
+              aria-label={t("Compartir este PDF")}
+              title={t("Compartir este PDF")}
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-2 text-[12px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
+            >
+              <Share2 className="size-4" strokeWidth={1.9} aria-hidden="true" />
+              <span>{t("Compartir")}</span>
+            </button>
+          ) : null}
 
           {isOwner && !demo && !recommendedActive ? (
             <button
@@ -2954,7 +2980,7 @@ export function MaterialStudyWorkspace({
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-1.5 sm:px-3 xl:pb-2 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
-          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="bg-card relative h-full min-h-0 w-full overflow-hidden">
             <Tabs
               data-demo-focus="study"
               value={progressOpen ? 'progreso' : activeTab}
@@ -3037,7 +3063,7 @@ export function MaterialStudyWorkspace({
             demo && !demo.progress ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col'
           )}
         >
-          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="bg-card flex min-h-0 flex-1 flex-col overflow-hidden">
             {content}
           </div>
 

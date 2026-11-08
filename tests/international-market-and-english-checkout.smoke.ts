@@ -8,11 +8,12 @@ assert.equal(resolveCheckoutMarket('US', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('ES', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('MX', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('CO', 'production'), 'international');
-assert.equal(resolveCheckoutMarket(null, 'production'), 'unknown');
-assert.equal(resolveCheckoutMarket('', 'production'), 'unknown');
-assert.equal(resolveCheckoutMarket('bad-header', 'production'), 'unknown');
+// País sin confirmar → USD (nunca ARS por defecto).
+assert.equal(resolveCheckoutMarket(null, 'production'), 'international');
+assert.equal(resolveCheckoutMarket('', 'production'), 'international');
+assert.equal(resolveCheckoutMarket('bad-header', 'production'), 'international');
 assert.equal(resolveCheckoutMarket('AR', 'preview'), 'argentina');
-assert.equal(resolveCheckoutMarket(null, 'preview'), 'unknown');
+assert.equal(resolveCheckoutMarket(null, 'preview'), 'international');
 assert.equal(resolveCheckoutMarket('US', 'preview'), 'international');
 assert.equal(resolveCheckoutMarket('MX', 'preview'), 'international');
 
@@ -23,9 +24,11 @@ const international = read('app/api/payments/creem/checkout/route.ts');
 const pricing = read('app/(en)/en/pricing/page.tsx');
 const englishReturn = read('app/(en)/en/pricing/result/page.tsx');
 const resultClient = read('components/pricing/EnglishCreemPaymentResult.tsx');
-const creemCard = read('components/pricing/CreemCheckoutCard.tsx');
+// La lógica de checkout USD vive en un hook compartido por la tarjeta y /pricing.
+const creemCard = read('components/pricing/CreemCheckoutCard.tsx') + read('hooks/use-creem-checkout.ts');
 const publicPricing = read('components/pricing/PricingPlanSelector.tsx');
-const premiumPricing = read('components/pricing/PremiumDashboardScreen.tsx');
+// /dashboard/premium usa UpgradeScreen (ES y EN); el mercado viene de useCheckoutMarket.
+const premiumPricing = read('components/pricing/UpgradeScreen.tsx');
 const login = read('components/LoginFormGoogleFirst.tsx');
 const callback = read('app/(es)/auth/callback/route.ts');
 
@@ -41,7 +44,8 @@ assert.match(pricing, /<PricingPlanSelector locale="en"/);
 assert.match(pricing, /<RegionalPricingMessage locale="en" placement="billing"/);
 assert.doesNotMatch(pricing, /In Argentina, local offers are billed/);
 assert.match(publicPricing, /market\.market === 'unknown'/);
-assert.match(premiumPricing, /market\.market==='unknown'/);
+assert.match(premiumPricing, /useCheckoutMarket\(\)/);
+assert.match(read('hooks/use-checkout-market.ts'), /creemAvailable: false/);
 assert.match(login, /callback\.searchParams\.set\('ui_locale', locale\)/);
 assert.match(callback, /authEntryLocale === 'en' \? '\/en\/login'/);
 assert.match(englishReturn, /robots: \{ index: false, follow: false \}/);

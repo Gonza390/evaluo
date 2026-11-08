@@ -1,8 +1,12 @@
+import { cache } from 'react';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
 
-export async function hasPremiumAccess(userId: string): Promise<boolean> {
+// React cache deduplicates Premium lookups only within the current server request.
+// Never use a process-wide cache for entitlement checks: checkout and subscription
+// changes must be observed by subsequent requests.
+export const hasPremiumAccess = cache(async (userId: string): Promise<boolean> => {
   if (!userId) return false;
   const admin = createAdminClient();
 
@@ -31,7 +35,7 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
   ).some(
     (s) => premiumPlanIds.has(s.plan_id) && hasPremiumSubscriptionAccess(s.status, s.expires_at)
   );
-}
+});
 
 export async function requirePremiumUser() {
   const supabase = await createClientServer();

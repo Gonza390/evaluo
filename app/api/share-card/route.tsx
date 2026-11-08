@@ -32,19 +32,19 @@ export async function GET(request: Request) {
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '40px 46px', borderRadius: 34, border: '1px solid #DCE5F2', background: '#FFFFFF', boxShadow: '0 28px 80px rgba(15,23,42,0.10)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-            <div style={{ width: 58, height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 17, background: 'linear-gradient(135deg,#2563EB 0%,#6366F1 100%)', color: '#FFFFFF', fontSize: 32, fontWeight: 900 }}>E</div>
+            <div style={{ width: 58, height: 58, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 17, background: 'linear-gradient(135deg,#456DBD 0%,#6972C8 100%)', color: '#FFFFFF', fontSize: 32, fontWeight: 900 }}>E</div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.04em' }}>Evaluo</div>
               <div style={{ marginTop: 2, fontSize: 16, color: '#64748B' }}>Tu espacio académico</div>
             </div>
           </div>
-          <div style={{ display: 'flex', borderRadius: 999, padding: '10px 16px', background: '#EEF4FF', color: '#2563EB', fontSize: 15, fontWeight: 800, letterSpacing: '0.1em' }}>{copy.eyebrow}</div>
+          <div style={{ display: 'flex', borderRadius: 999, padding: '10px 16px', background: '#EEF4FF', color: '#456DBD', fontSize: 15, fontWeight: 800, letterSpacing: '0.1em' }}>{copy.eyebrow}</div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', marginTop: 50, maxWidth: 960 }}>
           <div style={{ fontSize: titleSize, lineHeight: 1.04, letterSpacing: '-0.055em', fontWeight: 850 }}>{title}</div>
           <div style={{ marginTop: 17, fontSize: 25, lineHeight: 1.35, color: '#475569' }}>{subtitle}</div>
-          <div style={{ marginTop: 11, fontSize: 18, fontWeight: 700, color: '#2563EB' }}>{detail}</div>
+          <div style={{ marginTop: 11, fontSize: 18, fontWeight: 700, color: '#456DBD' }}>{detail}</div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>

@@ -22,36 +22,53 @@ assert.match(workspace, /data-pdf-mobile-document-header[^\n]+md:hidden/,
   'The mobile PDF header must use the compact three-part design.');
 assert.match(workspace, /data-pdf-mobile-title-trigger/,
   'The center pill must allow reading the complete document title.');
-assert.match(workspace, /data-pdf-mobile-more-trigger/,
+// Menú de tres puntos en el teléfono → botones radiales (1461348): PdfMobileToolsMenu.
+const mobileTools = readFileSync('components/study/pdf-mobile-tools-menu.tsx', 'utf8');
+assert.match(workspace, /<PdfMobileToolsMenu[\s\S]*?canShare=\{shareAvailable && isOwner && !demo\}/,
+  'The mobile tools menu receives the same sharing eligibility.');
+assert.match(mobileTools, /data-pdf-mobile-more-trigger/,
   'The three-dot control must open a functional menu.');
 assert.match(workspace, /data-mobile-summary-active=\{activeTab === 'resumen' && !progressOpen \? 'true' : undefined\}/,
   'The mobile summary state remains scoped to the active tab.');
-const mobileOverflow = workspace.split('data-pdf-mobile-more-trigger')[1]?.split('</DropdownMenuContent>')[0] ?? '';
-assert.doesNotMatch(mobileOverflow, /<Link href=\{backHref\}>|\bVolver\b/,
+assert.doesNotMatch(mobileTools, /\bVolver\b/,
   'The three-dot menu must not duplicate the visible Back button.');
-assert.match(mobileOverflow, /Abrir \{isDocx \? 'Word' : 'PDF'\} original|\{english \? "Open original" : "Abrir"\} \{isDocx \? "Word" : "PDF"\}/, 
+assert.match(mobileTools, /Abrir \$\{fileType\} original/,
   'Keep the original PDF action in the overflow menu.');
 const globalStyles = readFileSync('app/globals.css', 'utf8');
 assert.doesNotMatch(globalStyles, /data-student-material-share-control/,
   'The retired share action must not rely on CSS visibility overrides.');
 const shareControl = readFileSync('components/student-material-share-control.tsx', 'utf8');
 assert.match(materialPage, /<StudentMaterialShareControl[\s\S]*?mobileMenuOnly[\s\S]*?\/>/,
-  'The PDF keeps its share handler mounted for mobile only.');
+  'The PDF keeps one share controller for both the mobile overflow and desktop header.');
 assert.match(materialPage, /shareAvailable=\{shareAvailable\}/,
   'The mobile reader gets the same sharing eligibility as the share handler.');
-assert.match(mobileOverflow, /shareAvailable && isOwner && !demo[\s\S]*?evaluo:share-material[\s\S]*?Compartir/,
+assert.match(mobileTools, /canShare \? \[\{[\s\S]*?evaluo:share-material/,
   'The three-dot menu preserves the Share action for the material owner.');
+assert.match(materialPage, /const shareAvailable = isOwner;/,
+  'The owner can share their PDF even when academic metadata is incomplete.');
+const desktopShare = workspace.indexOf('data-pdf-desktop-share-trigger');
+const desktopGuide = workspace.indexOf('data-reopen-first-pdf-guide', desktopShare);
+assert.ok(desktopShare > 0 && desktopGuide > desktopShare,
+  'Share stays immediately beside the Guide action on the desktop PDF header.');
+assert.match(workspace, /shareAvailable && isOwner && !demo \? \(\s*<button[\s\S]*?data-pdf-desktop-share-trigger/,
+  'The desktop Share action is only available to the material owner.');
+assert.match(workspace, /data-pdf-desktop-share-trigger[\s\S]*?onClick=\{\(\) => window\.dispatchEvent\(new CustomEvent\('evaluo:share-material'/,
+  'Desktop Share reuses the existing verified privacy and link-sharing flow.');
+assert.match(workspace, /data-pdf-desktop-share-trigger[\s\S]*?rounded-full px-2 text-\[12px\] font-medium text-slate-500/,
+  'Desktop Share has the same quiet rounded styling as the Pomodoro header control.');
+assert.match(workspace, /<Share2 className="size-4" strokeWidth=\{1\.9\} aria-hidden="true" \/>/,
+  'The deskop action uses the subtle outline Share icon.');
 assert.match(shareControl, /window\.addEventListener\('evaluo:share-material'/,
   'The mobile menu still has a real sharing event handler.');
-assert.match(shareControl, /mobileMenuOnly \? 'md:hidden'/,
-  'The share handler is not visible on desktop.');
+assert.match(shareControl, /mobileMenuOnly && !confirmOpen \? 'hidden' : 'flex'/,
+  'The share controller stays hidden until a privacy confirmation is needed on either viewport.');
 assert.match(shareControl, /\{!mobileMenuOnly \? \(/,
   'The floating share button is absent on this reader, including mobile.');
-assert.match(workspace, /DropdownMenuItem asChild/,
+assert.match(workspace, /<DropdownMenuItem key=\{pdf\.id\} asChild>/,
   'Mobile dropdown menus must expose real navigation actions.');
 assert.match(workspace, /hidden w-full items-center gap-3[^\n]*md:flex/,
   'The old header and Guide remain desktop-only.');
-assert.match(workspace, /Abrir \{isDocx \? 'Word' : 'PDF'\} original|\{english \? "Open original" : "Abrir"\} \{isDocx \? "Word" : "PDF"\}/,
+assert.match(workspace, /fileType=\{isDocx \? 'Word' : 'PDF'\}/,
   'The menu must provide access to the original document.');
 assert.match(materialStatus, /\{title\}/,
   'Keep the material title during processing and error states.');
@@ -67,8 +84,8 @@ assert.doesNotMatch(workspace, /<h2 className="text-foreground hidden max-w-\[10
   'The PDF title must not appear a second time in the summary on either viewport.');
 assert.match(workspace, /data-evaluo-desktop-reader-title/,
   'Desktop reader keeps a compact title, Back action and Guide access in one row.');
-assert.match(workspace, /aria-hidden="true" className="h-5 w-px shrink-0 bg-slate-200"/,
-  'Desktop navigation controls are visually separated from the document title.');
+assert.match(workspace, /href=\{backHref\}\s+aria-label=\{t\("Volver"\)\}/,
+  'Desktop Back is a free icon button (no box) with an accessible name.');
 assert.match(workspace, /data-study-summary-intro/,
   'Hiding the duplicate title must not remove the introductory summary.');
 
@@ -93,8 +110,8 @@ assert.match(richText, /space-y-2\.5 \[&_h4\]:text-\[15px\]/,
   'El contenido largo conserva espaciado compacto y encabezados legibles.');
 assert.match(richText, /\[&_p\]:text-\[15px\] \[&_p\]:leading-\[1\.7\]/,
   'El cuerpo de lectura mantiene el tamaño y la altura de línea actuales.');
-assert.match(styles, /h-8 flex-none shrink-0 rounded-lg border px-2\.5 text-\[12px\]/,
-  'Las pestañas del estudio deben ser compactas.');
+assert.match(styles, /border-b-2 border-transparent bg-transparent px-0 text-\[14px\]/,
+  'Las pestañas del estudio son texto libre con subrayado, sin recuadros.');
 assert.doesNotMatch(workspace, /transform:scale\(|zoom:/,
   'No usar zoom que distorsione los popups, controles o interacción.');
 
@@ -110,9 +127,66 @@ assert.match(exam, /data-onboarding-practice-options className="grid w-full max-
   'Los tres tamaños de práctica se muestran en una misma fila desde móvil.');
 assert.doesNotMatch(exam, /index === 2 && sizeOptions\.length === 3 && 'col-span-2'/,
   'La última tarjeta no debe ocupar dos columnas ni producir una segunda fila.');
-assert.match(exam, /onClick=\{\(\) => setSelectedSize\(option\.count\)\}/,
+assert.match(exam, /onClick=\{\(\) => \{ setSelectedSize\(option\.count\); void startExam\(option\.count\); \}\}/,
   'Seleccionar cualquier tarjeta conserva la interacción real.');
 assert.match(exam, /hidden text-\[11px\] leading-\[1\.4\] opacity-80 sm:block/,
   'Las descripciones largas se ocultan solo en móvil para mantener las tres tarjetas legibles.');
 
+// El índice (móvil y escritorio) y el área de lectura revelan el thumb
+// sólo al desplazarse. No alterar el scroll ni introducir un scrollbar global.
+assert.equal((workspace.match(/data-pdf-auto-scrollbar/g) ?? []).length, 3,
+  'Índice móvil, índice desktop y lector deben tener scrollbars autohide.');
+assert.equal((workspace.match(/onScroll=\{showScrollbarWhileScrolling\}/g) ?? []).length, 3,
+  'Los tres paneles deben revelar su propia barra cuando reciben scroll.');
+assert.match(workspace, /element\.dataset\.pdfScrollbarScrolling = 'true'/,
+  'La barra debe aparecer al empezar a desplazarse.');
+assert.match(workspace, /delete element\.dataset\.pdfScrollbarScrolling/,
+  'La barra debe ocultarse al terminar la interacción.');
+assert.match(workspace, /\}, 900\)\)/,
+  'El thumb no debe quedar permanentemente visible.');
+assert.match(workspace, /window\.clearTimeout\(previous\)/,
+  'El timer de ocultación se reinicia durante el scroll continuo.');
+assert.match(workspace, /for \(const \[element, timer\] of timers\)/,
+  'Los temporizadores de scrollbar se limpian al desmontar el lector.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\] \{\s*(?:scrollbar-gutter: stable;\s*)?scrollbar-width: thin;\s*scrollbar-color: transparent transparent;/,
+  'La barra inactiva mantiene el scroll y no dibuja un thumb.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\]/,
+  'Los estilos vuelven a mostrar el thumb durante el scroll.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]:focus-visible/,
+  'Navegación por teclado mantiene visible la barra al enfocar el lector.');
+assert.match(globalStyles, /@supports selector\(::-webkit-scrollbar\)/,
+  'Chrome y Safari necesitan reglas separadas de las propiedades estándar.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\],\s*\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\],\s*\[data-pdf-auto-scrollbar\]:focus-visible\s*\{\s*scrollbar-width: auto;\s*scrollbar-color: auto;/,
+  'Chromium utiliza los thumb personalizados tanto en reposo como al desplazarse y recibir foco.');
+assert.match(globalStyles, /::-webkit-scrollbar-thumb\s*\{\s*border-radius: 999px;\s*background-color: transparent;/,
+  'El thumb de Chrome debe permanecer completamente transparente cuando no hay scroll.');
+assert.match(globalStyles, /\[data-pdf-auto-scrollbar\]\[data-pdf-scrollbar-scrolling='true'\]::-webkit-scrollbar-thumb/,
+  'El thumb de Chrome vuelve a mostrarse al detectar desplazamiento.');
+assert.match(globalStyles, /::-webkit-scrollbar-button\s*\{\s*display: none;/,
+  'Eliminar las flechas nativas de Windows que seguían visibles en la captura.');
+assert.match(globalStyles, /scrollbar-gutter: stable;/,
+  'Mostrar y ocultar el thumb sin desplazar el texto.');
+assert.doesNotMatch(workspace, /\[scrollbar-width:thin\]|\[scrollbar-gutter:stable\]/,
+  'Evitar propiedades Tailwind sobre las reglas personalizadas de Chrome.');
+assert.match(globalStyles, /@media \(forced-colors: active\)/,
+  'El scrollbar permanece perceptible en modo de alto contraste.');
+assert.match(workspace, /min-h-0 flex-1 overflow-y-auto overscroll-contain/,
+  'La lectura debe conservar el scroll vertical nativo.');
+assert.match(workspace, /min-h-0 overflow-y-auto overscroll-contain pr-2/,
+  'El índice desktop debe seguir siendo desplazable.');
+
 console.log('Compact material study layout smoke: OK.');
+
+// LCP del visor (demo/material-estudio en Lighthouse CI, máx. 4200 ms):
+// la pestaña inicial no arranca invisible y Supabase no entra en el JS inicial.
+assert.match(workspace, /const tabPanelMotion = tabSwitched \? 'animate-tab-panel' : undefined;/);
+assert.doesNotMatch(workspace, /className="animate-tab-panel/);
+const userHook = readFileSync('hooks/useUser.tsx', 'utf8');
+assert.doesNotMatch(userHook, /^import \{ supabase \}/m, 'useUser must not load Supabase before first paint.');
+assert.match(userHook, /import\('@\/lib\/supabase-client'\)/);
+// El visor y el proveedor de idioma no cargan Supabase de forma estática (JS inicial).
+for (const file of ['lib/study-plan-progress.ts', 'components/i18n/app-locale-provider.tsx']) {
+  const source = readFileSync(file, 'utf8');
+  assert.doesNotMatch(source, /^import \{ supabase \} from '@\/lib\/supabase-client';/m, file);
+  assert.match(source, /import\('@\/lib\/supabase-client'\)/, file);
+}

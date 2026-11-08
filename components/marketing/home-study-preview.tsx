@@ -12,7 +12,7 @@ const previewLabels = [
 export function HomeStudyPreview() {
   return (
     <div
-      className="animate-surface-reveal relative mx-auto w-full max-w-[620px]"
+      className="relative mx-auto w-full max-w-[620px]"
       style={{ animationDelay: '100ms' }}
       role="region"
       aria-label="Vista previa de herramientas de estudio sobre un mismo PDF"

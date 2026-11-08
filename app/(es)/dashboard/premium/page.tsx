@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClientServer } from '@/lib/supabase-server';
 import { premiumDashboardHref, safePremiumReturnTo } from '@/lib/premium-flow';
-import { PremiumDashboardScreen } from '@/components/pricing/PremiumDashboardScreen';
+import { UpgradeScreen } from '@/components/pricing/UpgradeScreen';
+import { getUpgradeNextExam } from '@/lib/premium-next-exam';
 
 export const metadata: Metadata = {
   title: 'Premium',
@@ -34,6 +35,14 @@ export default async function DashboardPremiumPage({
     redirect((entryLocale === 'en' ? '/en/login' : '/login') + '?mode=login&intent=premium&next=' + encodeURIComponent(nextPath));
   }
 
-  return <PremiumDashboardScreen source={source} materiaId={materiaId}
-    parcial={parcial} returnTo={returnTo} />;
+  // "Mejorar mi plan" y los upsells de la app: pantalla propia con precio por
+  // semana (diseño 7/11), en español e inglés. /pricing queda para visitantes.
+  const uiLocale = (await cookies()).get('evaluo_ui_locale')?.value === 'en' ? 'en' : 'es';
+  const nextExam = await getUpgradeNextExam(supabase, user.id);
+  return (
+    <main className="w-full min-w-0 bg-white">
+      <UpgradeScreen locale={uiLocale} source={source} materiaId={materiaId}
+        parcial={parcial} returnTo={returnTo} nextExam={nextExam} />
+    </main>
+  );
 }

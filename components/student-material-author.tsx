@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Share2 } from 'lucide-react';
 import { MaterialFeedbackPrompt } from '@/components/material-feedback-prompt';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 type StudentMaterialAuthorProps = {
   materialId: string;
 };
 
 export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps) {
+  const english = useOptionalAppLocale() === 'en';
   const [name, setName] = useState<string | null>(null);
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [hasOwnerShareControl, setHasOwnerShareControl] = useState(false);
@@ -68,8 +70,8 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     if (typeof navigator.share === 'function') {
       try {
         await navigator.share({
-          title: document.title || 'Material de estudio | Evaluo',
-          text: 'Material de estudio compartido en Evaluo.',
+          title: document.title || (english ? 'Study material | Evaluo' : 'Material de estudio | Evaluo'),
+          text: english ? 'Study material shared on Evaluo.' : 'Material de estudio compartido en Evaluo.',
           url,
         });
         return;
@@ -101,8 +103,8 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
           <button
             type="button"
             onClick={() => void sharePublicPdf()}
-            aria-label={copied ? 'Enlace copiado' : 'Compartir este PDF'}
-            title={copied ? 'Enlace copiado' : 'Compartir este PDF'}
+            aria-label={copied ? (english ? 'Link copied' : 'Enlace copiado') : (english ? 'Share this PDF' : 'Compartir este PDF')}
+            title={copied ? (english ? 'Link copied' : 'Enlace copiado') : (english ? 'Share this PDF' : 'Compartir este PDF')}
             className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring fixed right-4 bottom-20 z-40 inline-flex size-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 md:right-6 md:bottom-6"
           >
             {copied ? (
@@ -111,7 +113,7 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
               <Share2 aria-hidden="true" className="h-4 w-4" />
             )}
             <span role="status" className="sr-only">
-              {copied ? 'Enlace copiado' : ''}
+              {copied ? (english ? 'Link copied' : 'Enlace copiado') : ''}
             </span>
           </button>,
           document.body

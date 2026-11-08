@@ -59,4 +59,6 @@ assert.match(ui, /Reanudar/);
 assert.match(ui, /Reiniciar/);
 assert.match(ui, /¡Completaste tus 25 minutos!/);
 assert.doesNotMatch(ui, /45 min|60 min|tiempo de descanso|descanso automático/i);
+// Ícono de cronómetro libre (sin recuadro) en la barra general.
+assert.match(ui, /<Timer className=/);
 console.log('Pomodoro 25-minute timer checks passed.');

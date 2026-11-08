@@ -8,8 +8,9 @@ const countries: Array<[string | null, 'argentina' | 'international' | 'unknown'
   ['US', 'international'], ['ES', 'international'],
   ['MX', 'international'], ['BR', 'international'],
   ['CL', 'international'], ['UY', 'international'], ['CO', 'international'],
-  [null, 'unknown'], ['', 'unknown'], ['bad', 'unknown'],
-  ['XX', 'unknown'], ['ZZ', 'unknown'], ['EU', 'unknown'],
+  // País sin confirmar → USD (decisión de producto nov-2026), nunca ARS por defecto.
+  [null, 'international'], ['', 'international'], ['bad', 'international'],
+  ['XX', 'international'], ['ZZ', 'international'], ['EU', 'international'],
 ];
 for (const [country, expected] of countries) {
   assert.equal(resolveCheckoutMarket(country, 'production'), expected);
@@ -17,7 +18,7 @@ for (const [country, expected] of countries) {
 }
 const availability = read('app/api/payments/creem/availability/route.ts');
 const selector = read('components/pricing/PricingPlanSelector.tsx');
-const premium = read('components/pricing/PremiumDashboardScreen.tsx');
+const premium = read('components/pricing/UpgradeScreen.tsx');
 const spanish = read('app/(es)/pricing/page.tsx');
 const english = read('app/(en)/en/pricing/page.tsx');
 const home = read('components/marketing/home-redesign.tsx');
@@ -31,7 +32,7 @@ assert.match(availability, /resolveCheckoutMarket\(country, process\.env\.VERCEL
 assert.match(availability, /creemAvailable: mode === 'live' && isCreemModeEnabled\('live'\)/,
   'A Preview TEST key must not enable the LIVE checkout card');
 assert.match(hook, /fetch\('\/api\/payments\/creem\/availability'/);
-assert.match(hook, /market: 'unknown'/);
+assert.match(hook, /market === 'unknown' \? 'international' : market/);
 assert.match(selector, /useCheckoutMarket\(\)/);
 assert.match(selector, /market\.market === 'international'/);
 assert.match(selector, /market\.market === 'unknown'/);
@@ -39,11 +40,18 @@ assert.match(selector, /market\?\.market === 'argentina' \? <details/);
 assert.doesNotMatch(selector, /<CreemCheckoutCard[^>]*mode="test"/,
   'Preview must not mix a USD test card with Argentina ARS plans');
 assert.match(premium, /useCheckoutMarket\(\)/);
-assert.match(premium, /market\?\.market !== 'argentina'/);
-assert.match(premium, /market\.market==='international'/);
-assert.match(spanish, /<RegionalPricingMessage locale="es" placement="featured"/);
-assert.match(spanish, /<RegionalPricingMessage locale="es" placement="hero"/);
-assert.match(spanish, /<RegionalPricingMessage locale="es" placement="billing"/);
+assert.match(premium, /market\.market === 'argentina' \? \(\s*<ArgentinaOffer/);
+assert.match(premium, /<InternationalOffer[^>]*creemAvailable=\{market\.creemAvailable\}/);
+// /pricing (rediseño nov-2026): la oferta regional vive en PricingPlans y es fail-closed.
+const spanishPlans = read('components/pricing/PricingPlans.tsx');
+assert.match(spanish, /<PricingContent\s+source=\{source\}/);
+assert.match(read('components/pricing/PricingContent.tsx'), /<PricingPlans source=\{source\}/);
+assert.match(spanishPlans, /useCheckoutMarket\(\)/);
+assert.match(spanishPlans, /market\.market === 'unknown'/);
+assert.match(spanishPlans, /market\.market === 'argentina'/);
+assert.match(spanishPlans, /creemAvailable=\{market\.creemAvailable\}/);
+assert.match(spanishPlans, /Pago seguro con Mercado Pago/);
+assert.match(spanishPlans, /US\$ 9,99/);
 assert.doesNotMatch(spanish, /<section aria-label="Precio internacional de Evaluo"/);
 assert.match(english, /<RegionalPricingMessage locale="en" placement="billing"/);
 assert.doesNotMatch(english, /In Argentina, local offers are billed/);
@@ -73,11 +81,7 @@ assert.match(creem, /international_checkout_only/);
 const offerApi = read('app/api/payments/offer/route.ts');
 assert.match(offerApi, /resolveCheckoutMarket\(/);
 assert.match(offerApi, /if \(market !== 'argentina'\)[\s\S]{0,200}offer_unavailable_for_region/);
+// El menú móvil del avatar ya no muestra precios (menú circular, 5ab9af2): no puede mostrar ARS.
 const mobileMenu = read('components/mobile-profile-menu.tsx');
-assert.match(mobileMenu, /loadCheckoutMarket\(\)/);
-assert.match(mobileMenu, /availability\.market !== 'argentina'[\s\S]{0,120}setWeeklyPrice\(null\)/);
-assert.ok(
-  mobileMenu.indexOf("availability.market !== 'argentina'") < mobileMenu.indexOf("fetch('/api/payments/offer'"),
-  'El menú móvil sólo puede pedir la oferta en ARS después de confirmar Argentina.'
-);
+assert.doesNotMatch(mobileMenu, /fetch\('\/api\/payments\/offer'/);
 console.log('[regional-premium] ARS in Argentina, USD abroad, no mixed public pricing, country-specific checkout passed.');

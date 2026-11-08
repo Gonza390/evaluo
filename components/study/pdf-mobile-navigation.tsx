@@ -49,7 +49,7 @@ export function PdfMobileNavigation({
   const itemClass = (selected: boolean) =>
     cn(
       'focus-visible:outline-ring flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2',
-      selected ? 'bg-primary/10 text-blue-800 dark:text-blue-200' : 'text-muted-foreground hover:bg-muted'
+      selected ? 'bg-[#EEF2FF] text-[#2563EB] opacity-100' : 'text-[#42506A] hover:bg-[#F5F7FB]'
     );
   const moreActive = active === 'glosario' || active === 'mapa';
 

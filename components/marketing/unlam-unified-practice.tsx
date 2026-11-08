@@ -35,12 +35,12 @@ export function UnlamUnifiedPractice() {
         <div className="mt-6 grid max-w-3xl gap-2 sm:grid-cols-2" role="group" aria-label="Tipo de práctica">
           <button type="button" aria-pressed={mode === 'modelo_seminario'} onClick={() => choose('modelo_seminario')}
             className={'flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
-              (mode === 'modelo_seminario' ? 'border-[#174BBD] bg-[#174BBD] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
+              (mode === 'modelo_seminario' ? 'border-[#31549A] bg-[#31549A] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
             <FileQuestion className="h-5 w-5 shrink-0" aria-hidden="true" /> Modelo guiado: Seminario
           </button>
           <button type="button" aria-pressed={mode === 'materias'} onClick={() => choose('materias')}
             className={'flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
-              (mode === 'materias' ? 'border-[#174BBD] bg-[#174BBD] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
+              (mode === 'materias' ? 'border-[#31549A] bg-[#31549A] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
             <BookOpenCheck className="h-5 w-5 shrink-0" aria-hidden="true" /> Ejercicios por materia
           </button>
         </div>

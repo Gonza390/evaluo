@@ -28,6 +28,14 @@ const title: Record<Mode, string> = {
 const rotate = <T,>(values: T[], amount: number) =>
   values.length ? [...values.slice(amount % values.length), ...values.slice(0, amount % values.length)] : values;
 
+/** Rondas Free reclamadas como sesión completa (una por cuenta, idempotente por material). */
+const FREE_SESSION_CLAIMS: Partial<Record<string, { kind: string; itemKey: string }>> = {
+  unir: { kind: 'matching_round', itemKey: 'matching:first' },
+  simulacro: { kind: 'simulator', itemKey: 'simulator:first' },
+  completar: { kind: 'complete_round', itemKey: 'complete:first' },
+  mixto: { kind: 'mixed_round', itemKey: 'mixed:first' },
+};
+
 export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false, quotaPremiumHref, quotaBackHref, quotaBackLabel, previewResult }: {
   mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
@@ -79,8 +87,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const [leavingActivity, setLeavingActivity] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(15 * 60);
   const [examStarted, setExamStarted] = useState(false);
+  // Unir, Completar y Mixto se reclaman al estar listos; el simulacro al pulsar Comenzar.
+  const sessionRound = freeV2 ? FREE_SESSION_CLAIMS[mode] : undefined;
   const [freeSessionGate, setFreeSessionGate] = useState<'new'|'pending'|'allowed'|'denied'|'error'>(
-    freeV2 && (mode === 'unir' || mode === 'simulacro') ? 'new' : 'allowed'
+    sessionRound ? 'new' : 'allowed'
   );
   const freeSessionGateBusy = useRef(false);
   const [deadline, setDeadline] = useState<number | null>(null);
@@ -104,7 +114,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     }
     if (mode === 'unir') return [];
     if (mode === 'completar')
-      return shufflePracticeItems(rotate(pairs, round * 5).slice(0, reviewLength === 'rapido' ? 6 : 8))
+      return shufflePracticeItems(rotate(pairs, round * 5).slice(0, freeV2 || reviewLength === 'rapido' ? 6 : 8))
         .map(pair => ({ type: 'recall' as const, pair }));
     if (mode === 'casos')
       return shufflePracticeItems(rotate(contexts, round * 5).slice(0, freeV2 ? 2 : reviewLength === 'rapido' ? 6 : 8))
@@ -126,14 +136,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const ready = previewResult !== undefined ? true : mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
     mode === 'casos' ? contexts.length >= (freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
     mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
-    mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && distinctApplicationCases(contexts).length >= 1 :
+    // La ronda gratis de Mixto no genera casos nuevos: usa la aplicación sólo si ya existe.
+    mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && (freeV2 || distinctApplicationCases(contexts).length >= 1) :
     mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
     mode === 'simulacro' && freeV2 ? tasks.length >= 20 :
     tasks.length >= MIN_CASES_PER_PRACTICE;
   // La ruta puede preparar contenido sin gastar el único uso. La ronda
   // se reclama al estar verificada y lista; el simulacro al pulsar Comenzar.
   const claimSessionQuota = useCallback(async (): Promise<boolean> => {
-    if (!freeV2 || (mode !== 'unir' && mode !== 'simulacro')) return true;
+    if (!sessionRound) return true;
     if (freeSessionGateBusy.current) return false;
     freeSessionGateBusy.current = true;
     setFreeSessionGate('pending');
@@ -141,8 +152,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       const response = await fetch('/api/free-study-v2/claim', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          materialId, kind: mode === 'unir' ? 'matching_round' : 'simulator',
-          itemKey: mode === 'unir' ? 'matching:first' : 'simulator:first',
+          materialId, kind: sessionRound.kind, itemKey: sessionRound.itemKey,
         }),
       });
       const result: unknown = await response.json();
@@ -159,11 +169,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     } finally {
       freeSessionGateBusy.current = false;
     }
-  }, [freeV2, mode, materialId]);
+  }, [sessionRound, materialId]);
   useEffect(() => {
-    if (freeV2 && mode === 'unir' && ready && freeSessionGate === 'new')
+    if (sessionRound && mode !== 'simulacro' && ready && freeSessionGate === 'new')
       void claimSessionQuota();
-  }, [freeV2, mode, ready, freeSessionGate, claimSessionQuota]);
+  }, [sessionRound, mode, ready, freeSessionGate, claimSessionQuota]);
 
   const correctAt = (index: number) => {
     if (previewResult) return index < previewResult.correct;
@@ -306,7 +316,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   useEffect(() => {
     const needsMore = mode === 'casos'
       ? contexts.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)
-      : mode === 'mixto' ? options.length < 4 || contexts.length < 1
+      : mode === 'mixto' ? options.length < 4 || (!freeV2 && contexts.length < 1)
       : mode === 'simulacro'
         ? options.length < (freeV2 ? 20 : MIN_CASES_PER_PRACTICE) : false;
     const automaticLimit = mode === 'casos' ? 3 : 6;
@@ -557,11 +567,12 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   if (freeV2 && freeSessionGate === 'denied' && quotaPremiumHref && quotaBackHref) {
     return <FreePracticeLimitScreen
       kind={mode === 'unir' ? 'matching_round' : mode === 'casos' ? 'case'
-        : mode === 'opciones' ? 'true_false' : 'simulator'}
+        : mode === 'opciones' ? 'true_false' : mode === 'completar' ? 'complete'
+        : mode === 'mixto' ? 'mixed' : 'simulator'}
       premiumHref={quotaPremiumHref} backHref={quotaBackHref}
       backLabel={quotaBackLabel} materialTitle={materialTitle}/>;
   }
-  if (freeV2 && freeSessionGate === 'error' && (mode === 'unir' || mode === 'simulacro')) {
+  if (sessionRound && freeSessionGate === 'error') {
     return <main className="mx-auto max-w-[780px] px-4 py-8">
       <p role="alert" className="text-sm text-slate-700">{english ? 'We could not confirm your quota. Trying again will not deduct an already recorded session twice.' : 'No pudimos confirmar tu cupo. Reintentá: si el uso anterior se registró, no se descontará otra vez.'}</p>
       <button type="button" className="mt-4 min-h-11 rounded-xl border px-4 text-sm"
@@ -571,7 +582,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       <Link href={quotaBackHref ?? '/dashboard/practicar'} className="ml-4 text-sm text-blue-600 underline">{english ? 'Back to practice' : 'Volver a Practicar'}</Link>
     </main>;
   }
-  if (freeV2 && mode === 'unir' && ready && freeSessionGate !== 'allowed')
+  if (sessionRound && mode !== 'simulacro' && ready && freeSessionGate !== 'allowed')
     return <PracticePreparing mode={mode} ready={false}/>;
   if (!finished && (pendingPreparation || (ready && !revealPractice)))
     return <PracticePreparing mode={mode} ready={ready} />;
@@ -688,7 +699,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           <h1 className="mt-3 text-[25px] font-extrabold tracking-[-.035em] text-[#0F1B3D] sm:text-[32px]">{english ? 'Your mock exam is ready' : 'Tu simulacro está listo'}</h1>
           <p className="mx-auto mt-2 max-w-[45ch] text-[14px] leading-6 text-slate-600 sm:text-[15px]">{english ? 'The questions are based on your uploaded material. Start whenever you are ready.' : 'Armé las preguntas con lo que cargaste. Cuando quieras, arrancamos.'}</p>
           <div className="mx-auto mt-5 flex min-w-0 max-w-full items-center gap-3 rounded-[14px] border border-[#E7EBF4] px-4 py-3 text-left sm:max-w-[440px]">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]"><span aria-hidden="true">▤</span></span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#456DBD]"><span aria-hidden="true">▤</span></span>
             <div className="min-w-0"><p className="text-[10px] font-bold tracking-[.08em] text-slate-500">MATERIAL</p><p className="truncate text-[13px] font-semibold text-[#0F1B3D]">{materialTitle}</p></div>
           </div>
           <div className="mx-auto mt-5 divide-y divide-[#EEF1F6] rounded-[18px] border border-[#E7EBF4] px-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:max-w-[560px] sm:px-6">
@@ -696,7 +707,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
               [`${total} ${english ? 'questions' : 'preguntas'}`, verifiedChapterCount >= 2 ? (english ? 'From different topics in your material.' : 'De distintos temas de tu material.') : (english ? 'Created from your material.' : 'Preparadas a partir de tu material.'), '❔'],
               [english ? '15 minutes' : '15 minutos', english ? 'You can submit early if you finish.' : 'Podés entregar antes si terminás.', '◷'],
               [english ? 'Answers shown at the end' : 'Sin soluciones hasta el final', english ? 'You can go back or leave questions unanswered.' : 'Podés volver atrás y dejar respuestas sin completar.', '✓'],
-            ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#2563EB]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
+            ].map(([title,description,icon])=><div key={title} className="flex items-center gap-3 py-4 text-left"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-[#456DBD]">{icon}</span><div className="min-w-0"><p className="text-[14px] font-semibold text-[#0F1B3D]">{title}</p><p className="mt-0.5 text-[12px] leading-5 text-slate-600 sm:text-[13px]">{description}</p></div></div>)}
           </div>
           <div className="mx-auto mt-6 flex max-w-[560px] flex-col gap-2">
             <button type="button" disabled={freeSessionGate === 'pending'} onClick={() => {
@@ -705,10 +716,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
                 return;
               }
               void claimSessionQuota().then(allowed => { if (allowed) transitionTo(()=>setExamStarted(true)); });
-            }} className="min-h-12 w-full rounded-full bg-[#2563EB] px-6 text-[15px] font-bold text-white transition hover:bg-[#1D4ED8] disabled:opacity-60">
+            }} className="min-h-12 w-full rounded-full bg-[#456DBD] px-6 text-[15px] font-bold text-white transition hover:bg-[#3A5CA8] disabled:opacity-60">
               {t(freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro')}
             </button>
-            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#2563EB]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
+            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#456DBD]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
           </div>
         </div>
       </section>
@@ -721,9 +732,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')} {english ? 'remaining' : 'restantes'}
         </span> : <span>{answeredCount} {english ? 'of' : 'de'} {total} {english ? 'answered' : 'respondidas'}</span>}
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full bg-blue-600 transition-all"
-          style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / total * 100) + '%' }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+        role="progressbar"
+        aria-label={english ? 'Practice progress' : 'Progreso de la práctica'}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round((mode === 'unir' ? answeredCount : step + 1) / Math.max(total, 1) * 100)}>
+        <div className="h-full rounded-full bg-blue-600 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          style={{ width: ((mode === 'unir' ? answeredCount : step + 1) / Math.max(total, 1) * 100) + '%' }} />
       </div>
       {mode === 'unir' ? <>
         <p className="mb-2 mt-6 text-xs font-medium text-slate-600">{english ? "First, choose a concept" : "Primero elegí un concepto"}</p>

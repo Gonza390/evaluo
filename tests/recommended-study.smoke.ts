@@ -349,7 +349,6 @@ assert.doesNotMatch(summaryChapterFinishSource, /preguntas generadas|máximo de 
   'No mostrar cantidades ni explicaciones largas en la tarjeta.');
 
 const firstUploadSource = readFileSync('components/dashboard/pdf-first-upload-shell.tsx', 'utf8');
-const quickUploadSource = readFileSync('components/dashboard/quick-pdf-upload.tsx', 'utf8');
 
 assert.match(materialWorkspaceSource, /<PdfStudyStartGuide/,
   'Resumen debe mostrar directamente la guía de estudio.');
@@ -363,8 +362,6 @@ assert.match(materialPageSource, /query\.inicio === '1'/,
   'Solo el enlace posterior a la carga debe solicitar la guía inicial.');
 assert.match(firstUploadSource, /\?inicio=1/,
   'La carga normal debe solicitar la guía para el PDF nuevo.');
-assert.match(quickUploadSource, /\?inicio=1/,
-  'La carga rápida debe solicitar la guía para el PDF nuevo.');
 assert.match(materialWorkspaceSource, /if \(outcome === 'completed' && \(demo \|\| isOwner\)\) \{/,
   'Completar el recorrido puede abrir la guía de estudio.');
 assert.match(materialWorkspaceSource, /setStudyStartGuideOpen\(false\);/,
@@ -459,8 +456,8 @@ assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegaci�
 assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La animación debe respetar las preferencias de accesibilidad.');
 assert.match(materialWorkspaceSource, /data-onboarding-transitioning/, 'El contenido debe suavizar el cambio de etapa.');
 const materialStudyCss = readFileSync('app/(es)/materiales/[id]/material-study.css', 'utf8');
-assert.match(materialStudyCss, /evaluo-onboarding-copy-appear/, 'El cambio de texto debe ser suave.');
-assert.match(materialStudyCss, /260ms cubic-bezier/, 'La copia debe aparecer con una transición suave.');
+assert.match(materialStudyCss, /\[data-guide-copy\] \{\n  animation: evaluo-enter var\(--evaluo-motion-enter\)/,
+  'El cambio de texto usa la transición única de la plataforma.');
 assert.match(materialStudyCss, /prefers-reduced-motion: reduce/, 'La animación de la guía debe desactivarse cuando corresponda.');
 assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');

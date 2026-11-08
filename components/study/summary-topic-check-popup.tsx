@@ -14,6 +14,7 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { ReviewQuestion } from '@/lib/study-error-review-contract';
 import type { SummaryCheckQuestion } from '@/lib/student-materials/summary-checks';
 import { cn } from '@/lib/utils';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 
 type Props = {
   open: boolean;
@@ -45,7 +46,7 @@ function brief(value: string, max = 300) {
   return `${partial.slice(0, cut > 140 ? cut : max).trim()}…`;
 }
 
-function fallbackReinforcementText(question: SummaryCheckQuestion) {
+function fallbackReinforcementText(question: SummaryCheckQuestion, english = false) {
   const explanation = question.explanation?.trim() ?? '';
   const genericExplanation =
     /^la respuesta conserva/i.test(explanation) ||
@@ -56,7 +57,7 @@ function fallbackReinforcementText(question: SummaryCheckQuestion) {
     return brief(explanation);
   }
 
-  return brief(`La idea clave es: ${question.answer}`);
+  return brief(english ? `The key idea is: ${question.answer}` : `La idea clave es: ${question.answer}`);
 }
 
 export function SummaryTopicCheckPopup({
@@ -68,6 +69,8 @@ export function SummaryTopicCheckPopup({
   recordResults,
   onContinue,
 }: Props) {
+  const english = useOptionalAppLocale() === 'en';
+  const tr = (es: string, en: string) => english ? en : es;
   const [phase, setPhase] = useState<Phase>('choice');
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -235,17 +238,17 @@ export function SummaryTopicCheckPopup({
   const resultCopy =
     correctCount === 2
       ? {
-          title: 'Bien, seguí con el próximo tema.',
-          detail: 'Entendiste los puntos principales de lo que acabás de leer.',
+          title: tr('Bien, seguí con el próximo tema.', 'Great, move on to the next topic.'),
+          detail: tr('Entendiste los puntos principales de lo que acabás de leer.', 'You understood the main points of what you just read.'),
         }
       : correctCount === 1
         ? {
-            title: 'Hay una idea que conviene reforzar.',
-            detail: 'Podés corregirla ahora sin salir del resumen.',
+            title: tr('Hay una idea que conviene reforzar.', 'One idea needs more review.'),
+            detail: tr('Podés corregirla ahora sin salir del resumen.', 'You can review it now without leaving the summary.'),
           }
         : {
-            title: 'Conviene reforzar este tema antes de seguir.',
-            detail: 'Te mostramos brevemente qué revisar y te damos otra oportunidad.',
+            title: tr('Conviene reforzar este tema antes de seguir.', 'Review this topic before continuing.'),
+            detail: tr('Te mostramos brevemente qué revisar y te damos otra oportunidad.', 'We will show you what to review and give you another chance.'),
           };
 
   const prepareReinforcement = async (question: SummaryCheckQuestion, index: number) => {
@@ -257,7 +260,7 @@ export function SummaryTopicCheckPopup({
     setReinforcementText('');
     setIsSubmitting(true);
 
-    const fallback = fallbackReinforcementText(question);
+    const fallback = fallbackReinforcementText(question, english);
 
     if (!recordResults) {
       setReinforcementText(fallback);
@@ -269,7 +272,7 @@ export function SummaryTopicCheckPopup({
     if (!errorId) {
       setReinforcementText(fallback);
       setReinforcementMessage(
-        'No pudimos vincular este error con el repaso automático. Igual podés seguir estudiando.'
+        tr('No pudimos vincular este error con el repaso automático. Igual podés seguir estudiando.', 'We could not link this mistake to the automatic review. You can still continue studying.')
       );
       setIsSubmitting(false);
       return;
@@ -278,15 +281,14 @@ export function SummaryTopicCheckPopup({
     const result = await generateInlineSummaryCheckHelpAction(errorId, materialId).catch(() => ({
       success: false,
       text: undefined,
-      message: 'No pudimos conectar. Podés seguir leyendo y reintentar la ayuda.',
+      message: tr('No pudimos conectar. Podés seguir leyendo y reintentar la ayuda.', 'Could not connect. You can continue reading and retry the review.'),
     }));
     if (result.success && result.text) {
       setReinforcementText(result.text);
     } else {
       setReinforcementText(fallback);
       setReinforcementMessage(
-        result.message ??
-          'No pudimos generar la explicación con IA. Te mostramos la ayuda disponible.'
+        (english ? 'We could not generate an AI explanation. Here is the available review.' : result.message ?? 'No pudimos generar la explicación con IA. Te mostramos la ayuda disponible.')
       );
     }
 
@@ -329,7 +331,7 @@ export function SummaryTopicCheckPopup({
     const errorId = errorIds[activeFailedQuestion.id];
     if (!errorId) {
       setReinforcementMessage(
-        'No pudimos preparar una nueva pregunta para este error. Podés seguir estudiando.'
+        tr('No pudimos preparar una nueva pregunta para este error. Podés seguir estudiando.', 'We could not prepare another question. You can continue studying.')
       );
       setIsSubmitting(false);
       return;
@@ -338,11 +340,11 @@ export function SummaryTopicCheckPopup({
     const result = await generateReviewCheckAction(errorId, materialId).catch(() => ({
       success: false,
       question: undefined,
-      message: 'No pudimos conectar. Intentá nuevamente.',
+      message: tr('No pudimos conectar. Intentá nuevamente.', 'Could not connect. Please try again.'),
     }));
     if (!result.success || !result.question) {
       setReinforcementMessage(
-        result.message ?? 'No pudimos preparar una nueva pregunta. Intentá nuevamente.'
+        (english ? 'We could not prepare another question. Please try again.' : result.message ?? 'No pudimos preparar una nueva pregunta. Intentá nuevamente.')
       );
       setIsSubmitting(false);
       return;
@@ -385,12 +387,12 @@ export function SummaryTopicCheckPopup({
         () => ({
           success: false,
           correct: undefined,
-          message: 'No pudimos guardar la respuesta. Revisá tu conexión y reintentá.',
+          message: tr('No pudimos guardar la respuesta. Revisá tu conexión y reintentá.', 'Could not save your answer. Check your connection and try again.'),
         })
       );
       if (!result.success || typeof result.correct !== 'boolean') {
         setReinforcementMessage(
-          result.message ?? 'No pudimos guardar esta respuesta. Intentá nuevamente.'
+          (english ? 'We could not save this answer. Please try again.' : result.message ?? 'No pudimos guardar esta respuesta. Intentá nuevamente.')
         );
         setIsSubmitting(false);
         return;
@@ -445,7 +447,7 @@ export function SummaryTopicCheckPopup({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-primary text-[10.5px] font-extrabold tracking-[0.15em] uppercase">
-                Terminaste este tema
+                {tr('Terminaste este tema', 'Topic complete')}
               </p>
               <DialogTitle asChild>
                 <h2
@@ -459,7 +461,7 @@ export function SummaryTopicCheckPopup({
             <button
               type="button"
               onClick={skip}
-              aria-label="Seguir estudiando"
+              aria-label={tr('Seguir estudiando', 'Continue studying')}
               className="text-muted-foreground hover:text-foreground inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-slate-100"
             >
               <X className="h-4 w-4" />
@@ -471,16 +473,15 @@ export function SummaryTopicCheckPopup({
               role="alert"
               className="border-destructive text-foreground mt-4 border-l-2 pl-3 text-sm"
             >
-              No pudimos guardar tu respuesta. Volvé a confirmarla para conservar tu progreso, o
-              elegí seguir estudiando sin guardarla.
+              {tr('No pudimos guardar tu respuesta. Volvé a confirmarla para conservar tu progreso, o elegí seguir estudiando sin guardarla.', 'We could not save your answer. Confirm it again to keep your progress, or continue studying without saving it.')}
             </p>
           ) : null}
 
           {phase === 'choice' ? (
             <div className="mt-6">
-              <h3 className="text-foreground text-[1.05rem] font-bold">Practicá si entendiste</h3>
+              <h3 className="text-foreground text-[1.05rem] font-bold">{tr('Practicá si entendiste', 'Check your understanding')}</h3>
               <p className="text-muted-foreground mt-1 text-[13px]">
-                2 preguntas rápidas · menos de 1 minuto
+                {tr('2 preguntas rápidas · menos de 1 minuto', '2 quick questions · under 1 minute')}
               </p>
 
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -489,14 +490,14 @@ export function SummaryTopicCheckPopup({
                   onClick={start}
                   className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center rounded-lg px-4 text-[13px] font-semibold text-white transition"
                 >
-                  Comprobar
+                  {tr('Comprobar', 'Check')}
                 </button>
                 <button
                   type="button"
                   onClick={skip}
                   className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-[13px] font-semibold transition"
                 >
-                  Seguir estudiando
+                  {tr('Seguir estudiando', 'Continue studying')}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -507,10 +508,10 @@ export function SummaryTopicCheckPopup({
             <div className="mt-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-primary text-[11px] font-bold">
-                  Pregunta {questionIndex + 1} de 2
+                  {tr('Pregunta', 'Question')} {questionIndex + 1} {tr('de', 'of')} 2
                 </span>
                 <span className="text-muted-foreground text-[10.5px] font-semibold">
-                  {isPrevious ? 'Recordando el tema anterior' : 'Sobre este tema'}
+                  {isPrevious ? tr('Recordando el tema anterior', 'Reviewing the previous topic') : tr('Sobre este tema', 'About this topic')}
                 </span>
               </div>
 
@@ -545,7 +546,7 @@ export function SummaryTopicCheckPopup({
                   onClick={skip}
                   className="text-muted-foreground hover:text-foreground text-[12.5px] font-semibold transition"
                 >
-                  Seguir estudiando
+                  {tr('Seguir estudiando', 'Continue studying')}
                 </button>
                 <button
                   type="button"
@@ -557,7 +558,7 @@ export function SummaryTopicCheckPopup({
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <>
-                      {questionIndex === 1 ? 'Ver resultado' : 'Siguiente'}
+                      {questionIndex === 1 ? tr('Ver resultado', 'See result') : tr('Siguiente', 'Next')}
                       <ChevronRight className="h-3.5 w-3.5" />
                     </>
                   )}
@@ -584,7 +585,7 @@ export function SummaryTopicCheckPopup({
               </div>
 
               <p className="text-muted-foreground mt-3 text-[11px] font-bold tracking-[0.08em] uppercase">
-                {correctCount}/2 correctas
+                {correctCount}/2 {tr('correctas', 'correct')}
               </p>
               <h3 className="text-foreground mt-1 text-[16px] font-bold">{resultCopy.title}</h3>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
@@ -594,7 +595,7 @@ export function SummaryTopicCheckPopup({
               {failedTopics.length > 0 ? (
                 <div className="border-border bg-muted/70 mt-4 rounded-lg border px-3.5 py-3">
                   <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.08em] uppercase">
-                    Para reforzar
+                    {tr('Para reforzar', 'Topics to review')}
                   </p>
                   <div className="mt-1.5 grid gap-1">
                     {failedTopics.map((topic) => (
@@ -615,7 +616,7 @@ export function SummaryTopicCheckPopup({
                   onClick={() => onContinue('completed')}
                   className="bg-primary hover:bg-primary/90 mt-4 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg px-4 text-[13px] font-semibold text-white transition"
                 >
-                  Seguir estudiando
+                  {tr('Seguir estudiando', 'Continue studying')}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               ) : (
@@ -626,14 +627,14 @@ export function SummaryTopicCheckPopup({
                     className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-semibold text-white transition"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Reforzar ahora
+                    {tr('Reforzar ahora', 'Review now')}
                   </button>
                   <button
                     type="button"
                     onClick={() => onContinue('completed')}
                     className="border-border bg-card text-foreground hover:bg-muted inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-[13px] font-semibold transition"
                   >
-                    Seguir estudiando
+                    {tr('Seguir estudiando', 'Continue studying')}
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -645,7 +646,7 @@ export function SummaryTopicCheckPopup({
             <div className="mt-6">
               <div className="rounded-[16px] border border-amber-100 bg-amber-50/60 px-4 py-4">
                 <p className="text-[10.5px] font-extrabold tracking-[0.12em] text-amber-700 uppercase">
-                  Ojo con esta idea
+                  {tr('Ojo con esta idea', 'Pay attention to this concept')}
                 </p>
                 <p className="text-foreground mt-2 text-[14px] leading-6 font-semibold">
                   {activeFailedQuestion.topic || topicTitle}
@@ -654,11 +655,11 @@ export function SummaryTopicCheckPopup({
                 {isSubmitting && !reinforcementText ? (
                   <div className="text-muted-foreground mt-2 flex items-center gap-2 text-[13px]">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Preparando una explicación con tu PDF…
+                    {tr('Preparando una explicación con tu PDF…', 'Preparing an explanation using your PDF…')}
                   </div>
                 ) : (
                   <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-                    {reinforcementText || fallbackReinforcementText(activeFailedQuestion)}
+                    {reinforcementText || fallbackReinforcementText(activeFailedQuestion, english)}
                   </p>
                 )}
               </div>
@@ -668,7 +669,7 @@ export function SummaryTopicCheckPopup({
               ) : null}
 
               <p className="text-muted-foreground mt-4 text-[12.5px] leading-5">
-                Después te hacemos una pregunta nueva sobre la misma idea.
+                {tr('Después te hacemos una pregunta nueva sobre la misma idea.', 'Next, you will get a new question about the same idea.')}
               </p>
 
               <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
@@ -679,14 +680,14 @@ export function SummaryTopicCheckPopup({
                   className="bg-primary enabled:hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-[13px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Comprobar de nuevo
+                  {tr('Comprobar de nuevo', 'Check again')}
                 </button>
                 <button
                   type="button"
                   onClick={() => onContinue('completed')}
                   className="border-border bg-card text-foreground hover:bg-muted inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-[13px] font-semibold transition"
                 >
-                  Seguir estudiando
+                  {tr('Seguir estudiando', 'Continue studying')}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -696,9 +697,9 @@ export function SummaryTopicCheckPopup({
           {phase === 'retry' && activeFailedQuestion && reviewQuestion ? (
             <div className="mt-5">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-primary text-[11px] font-bold">Comprobalo de nuevo</span>
+                <span className="text-primary text-[11px] font-bold">{tr('Comprobalo de nuevo', 'Try another question')}</span>
                 <span className="text-muted-foreground text-[10.5px] font-semibold">
-                  {reinforceIndex + 1} de {failedQuestions.length}
+                  {reinforceIndex + 1} {tr('de', 'of')} {failedQuestions.length}
                 </span>
               </div>
 
@@ -742,7 +743,7 @@ export function SummaryTopicCheckPopup({
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <>
-                      Comprobar
+                      {tr('Comprobar', 'Check')}
                       <ChevronRight className="h-3.5 w-3.5" />
                     </>
                   )}
@@ -770,17 +771,17 @@ export function SummaryTopicCheckPopup({
 
               <h3 className="text-foreground mt-3 text-[1.08rem] font-bold">
                 {resolvedRetryCount === failedQuestions.length
-                  ? 'Bien, corregiste lo que había fallado.'
-                  : 'Listo. Ya repasaste este bloque.'}
+                  ? tr('Bien, corregiste lo que había fallado.', 'Great, you corrected the earlier mistakes.')
+                  : tr('Listo. Ya repasaste este bloque.', 'Done. You have reviewed this section.')}
               </h3>
               <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
                 {resolvedRetryCount === failedQuestions.length
-                  ? 'Podés seguir estudiando con la idea más clara.'
+                  ? tr('Podés seguir estudiando con la idea más clara.', 'You can keep studying with a clearer understanding.')
                   : saveFailed
-                    ? 'Podés volver al material para repasar lo que todavía cuesta.'
+                    ? tr('Podés volver al material para repasar lo que todavía cuesta.', 'You can return to the material to review what is still difficult.')
                     : recordResults
-                      ? 'Lo que todavía cuesta quedó guardado en Progreso para volver después.'
-                      : 'En tu propio PDF, lo que todavía cuesta quedaría en Progreso para volver después.'}
+                      ? tr('Lo que todavía cuesta quedó guardado en Progreso para volver después.', 'What still needs work was saved in Progress for later review.')
+                      : tr('En tu propio PDF, lo que todavía cuesta quedaría en Progreso para volver después.', 'With your own PDF, topics needing more practice will appear in Progress.')}
               </p>
 
               <button

@@ -19,7 +19,7 @@ assert.match(sitemap, /baseUrl\}\/sobre-evaluo/);
 assert.match(footer, /href="\/sobre-evaluo"/);
 assert.match(llms, /https:\/\/evaluoapp\.com\/sobre-evaluo/);
 assert.match(llms, /https:\/\/evaluoapp\.com\/pricing/);
-assert.match(pricing, /1 material PDF o Word gratis de por vida/);
+assert.match(pricing, /1 material PDF o Word gratis por mes/);
 assert.match(pricing, /3 materiales PDF o Word por día/);
 assert.match(home, /PDF o Word/);
 assert.match(seo, /sameAs:/);

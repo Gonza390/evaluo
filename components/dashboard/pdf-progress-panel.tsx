@@ -59,7 +59,7 @@ function topicStatus(topic: PdfProgressTopic, english = false) {
   if (topic.errors.some((error) => error.status === 'resolved'))
     return {
       label: topic.evidence.some((item) => item.correct > 0)
-        ? 'Repaso comprobado'
+        ? tr('Repaso comprobado','Review verified')
         : tr("Repasado","Reviewed"),
       Icon: CheckCircle2,
       style: 'bg-primary/10 text-primary',
@@ -409,10 +409,10 @@ export function PdfProgressPanel({
                   }
                 >
                   {currentTopic?.errors.some((error) => error.status === 'resolved')
-                    ? 'Volver a comprobar'
+                    ? tr('Volver a comprobar','Check again')
                     : currentTopic && topicAssessmentCount(currentTopic) > 0
-                      ? 'Comprobar lo aprendido'
-                      : 'Practicar este tema'}
+                      ? tr('Comprobar lo aprendido','Check what you learned')
+                      : tr('Practicar este tema','Practice this topic')}
                 </button>
               ) : onPractice ? (
                 <button
@@ -563,7 +563,7 @@ export function PdfProgressPanel({
                       ' xl:hidden'
                     }
                   >
-                    {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : 'Practicar este tema'}
+                    {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : tr('Practicar este tema','Practice this topic')}
                     <ArrowRight size={16} />
                   </button>
                 )}
@@ -946,9 +946,9 @@ export function PdfProgressPanel({
             <div data-progress-overview className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,300px)]">
               <section aria-label={tr("Resumen de tu progreso","Your progress summary")} className="flex min-w-0 flex-col items-start gap-4 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
                 <svg className="size-[82px] shrink-0 sm:size-[90px]" viewBox="0 0 100 100" role="img"
-                  aria-label={touchedTopics + ' de ' + topics.length + ' temas con actividad registrada'}>
+                  aria-label={english ? `${touchedTopics} of ${topics.length} topics with recorded activity` : touchedTopics + ' de ' + topics.length + ' temas con actividad registrada'}>
                   <circle cx="50" cy="50" r="40" stroke="#E7EBF4" strokeWidth="9" fill="none" />
-                  <circle cx="50" cy="50" r="40" stroke="#2563EB" strokeWidth="9" strokeLinecap="round" fill="none"
+                  <circle cx="50" cy="50" r="40" stroke="#456DBD" strokeWidth="9" strokeLinecap="round" fill="none"
                     strokeDasharray={String(topics.length ? Math.round((touchedTopics / topics.length) * 251.3) : 0) + ' 251.3'}
                     transform="rotate(-90 50 50)" />
                   <text x="50" y="56" fontSize="20" fontWeight="700" textAnchor="middle" fill="#0F1B3D">
@@ -960,24 +960,24 @@ export function PdfProgressPanel({
                   <p className="mt-1 text-[13px] font-semibold text-[#0F1B3D] sm:text-[14px]">
                     {assessmentData?.loadError
                       ? tr("Comprobación con preguntas no disponible","Question-based assessment unavailable")
-                      : assessedTopics + ' de ' + topics.length + ' comprobados con preguntas'}
+                      : english ? `${assessedTopics} of ${topics.length} assessed with questions` : assessedTopics + ' de ' + topics.length + ' comprobados con preguntas'}
                   </p>
                   {topics.length > 0 && (
                     <div className="mt-3 flex gap-1" role="img" aria-label={tr("Estado de actividad de cada tema","Activity state for each topic")}>
                       {topicStates.map((state, index) => (
                         <span key={topics[index].id} title={topics[index].title}
                           className={'h-1.5 min-w-0 flex-1 rounded-full ' +
-                            (state === 'review' ? 'bg-[#D92D20]' : state === 'assessed' ? 'bg-[#2563EB]' :
+                            (state === 'review' ? 'bg-[#BA5649]' : state === 'assessed' ? 'bg-[#456DBD]' :
                               state === 'self' ? 'bg-[#A6C5FA]' : state === 'reviewed' ? 'bg-[#8CCBA9]' : 'bg-[#E7EBF4]')} />
                       ))}
                     </div>
                   )}
                   <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-medium text-[#66758D] sm:text-[11px]">
                     {[
-                      { label: tr("Con preguntas","With questions"), color: 'bg-[#2563EB]' },
+                      { label: tr("Con preguntas","With questions"), color: 'bg-[#456DBD]' },
                       { label: tr("Autoevaluado","Self-assessed"), color: 'bg-[#A6C5FA]' },
                       { label: tr("Repasado","Reviewed"), color: 'bg-[#8CCBA9]' },
-                      { label: tr("Por reforzar","Needs review"), color: 'bg-[#D92D20]' },
+                      { label: tr("Por reforzar","Needs review"), color: 'bg-[#BA5649]' },
                       { label: tr("Sin evaluar","Not assessed"), color: 'bg-[#E7EBF4]' },
                     ].map((item) => (
                       <span key={item.label} className="inline-flex items-center gap-1.5">
@@ -989,7 +989,7 @@ export function PdfProgressPanel({
               </section>
               {recommendedTopic && (
                 <section aria-label={tr("Actividad recomendada","Recommended activity")} className="rounded-2xl border border-[#D9E6FF] bg-[#F4F8FF] p-4 sm:p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2563EB]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#456DBD]">
                     {recommendedNeedsReview ? tr("Para seguir avanzando","To keep making progress") : evaluated === 0 ? tr("Empezá por este tema","Start with this topic") : tr("Tu próxima actividad","Your next activity")}
                   </p>
                   <h2 className="mt-2 break-words text-[15px] font-semibold leading-[1.4] text-[#0F1B3D] sm:text-[16px]">
@@ -1001,7 +1001,7 @@ export function PdfProgressPanel({
                       : tr("Leé el tema y comprobá lo aprendido con una práctica.","Read the topic and check your understanding with practice.")}
                   </p>
                   <button type="button" onClick={() => openTopic(recommendedTopic.id)}
-                    className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+                    className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-[12px] font-semibold text-white transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
                     {recommendedNeedsReview ? tr("Continuar estudiando","Continue studying") : tr("Comenzar a estudiar","Start studying")} <ArrowRight className="size-4" aria-hidden="true" />
                   </button>
                 </section>
@@ -1028,7 +1028,7 @@ export function PdfProgressPanel({
                     <span>{t("Buscar tema")}</span>
                     <input type="search" value={search} onChange={(event) => setSearch(event.target.value)}
                       placeholder={tr("Nombre del tema o capítulo","Topic or chapter name")}
-                      className="mt-1.5 min-h-10 w-full rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] text-[#0F1B3D] outline-none focus-visible:border-[#2563EB] focus-visible:ring-1 focus-visible:ring-[#2563EB]" />
+                      className="mt-1.5 min-h-10 w-full rounded-lg border border-[#E7EBF4] bg-white px-3 text-[12px] text-[#0F1B3D] outline-none focus-visible:border-[#456DBD] focus-visible:ring-1 focus-visible:ring-[#456DBD]" />
                   </label>
                 )}
               </div>
@@ -1087,47 +1087,47 @@ export function PdfProgressPanel({
                     else openTopic(topic.id);
                   };
                   const activityText = pendingCount > 0
-                    ? pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
+                    ? english ? `${pendingCount} ${pendingCount === 1 ? 'difficulty' : 'difficulties'} to review` : pendingCount + (pendingCount === 1 ? ' dificultad pendiente' : ' dificultades pendientes')
                     : assessmentData?.loadError
                       ? tr("Resultados de preguntas temporalmente no disponibles","Question results temporarily unavailable")
                       : assessedCount > 0
                       ? correctCount + tr(' de ',' of ') + (correctCount + incorrectCount) + tr(' respuestas correctas registradas',' correct answers recorded')
                       : selfReportedCount > 0
-                        ? selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
+                        ? english ? `${selfReportedCount} self-${selfReportedCount === 1 ? 'assessment' : 'assessments'} · not yet checked with questions` : selfReportedCount + (selfReportedCount === 1 ? ' autoevaluación' : ' autoevaluaciones') + ' · falta comprobar con preguntas'
                         : tr("Todavía sin preguntas corregidas","No graded questions yet");
                   return (
                     <li key={topic.id} data-progress-topic-row>
                       <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1.5 px-3 py-3 sm:grid-cols-[30px_minmax(0,1fr)_auto_auto] sm:gap-x-3 sm:px-4">
                         <span className={'flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold sm:size-[30px] ' +
-                          (pendingCount > 0 ? 'bg-[#FEF3F2] text-[#B42318]' :
-                            assessedCount > 0 ? 'bg-[#EAF1FF] text-[#1A4FB3]' :
-                              selfReportedCount > 0 ? 'bg-[#EAF1FF] text-[#1A4FB3]' :
+                          (pendingCount > 0 ? 'bg-[#FEF3F2] text-[#A04034]' :
+                            assessedCount > 0 ? 'bg-[#EAF1FF] text-[#2F549A]' :
+                              selfReportedCount > 0 ? 'bg-[#EAF1FF] text-[#2F549A]' :
                                 'bg-[#F1F4F9] text-[#66758D]')}>
                           {pendingCount > 0 ? <Flag className="size-4" aria-hidden="true" /> : questionIndex + 1}
                         </span>
                         <button type="button" onClick={() => openTopic(topic.id)}
                           aria-expanded={topicId === topic.id}
                           aria-controls={String(panelId) + '-topic-detail-' + topic.id}
-                          className="min-w-0 text-left focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]">
+                          className="min-w-0 text-left focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
                           <span className="block break-words text-[12px] font-semibold leading-[1.45] text-[#0F1B3D] sm:text-[13px]">
                             {topic.title}
                           </span>
                           <span className="mt-0.5 block text-[11px] leading-[1.5] text-[#66758D]">{activityText}</span>
                           <span className={'mt-1 inline-flex items-center gap-1 text-[10px] font-medium sm:hidden ' +
-                            (pendingCount > 0 ? 'text-[#B42318]' : 'text-[#66758D]')}>
+                            (pendingCount > 0 ? 'text-[#A04034]' : 'text-[#66758D]')}>
                             <Icon className="size-3" aria-hidden="true" />{statusLabel}
                           </span>
                         </button>
                         <span className={'hidden min-w-[85px] items-center gap-1 text-[11px] font-semibold sm:inline-flex ' +
-                          (pendingCount > 0 ? 'text-[#B42318]' : 'text-[#42506A]')}>
+                          (pendingCount > 0 ? 'text-[#A04034]' : 'text-[#42506A]')}>
                           <span className={'flex size-5 items-center justify-center rounded-full ' + style}>
                             <Icon className="size-3" aria-hidden="true" />
                           </span>{statusLabel}
                         </span>
                         <button type="button" onClick={nextAction}
-                          className={'inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg px-2.5 text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] sm:min-w-[90px] sm:px-3 sm:text-[12px] ' +
-                            (pendingCount > 0 ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8]' :
-                              'text-[#2563EB] hover:bg-[#EEF2FF]')}>
+                          className={'inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg px-2.5 text-[11px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD] sm:min-w-[90px] sm:px-3 sm:text-[12px] ' +
+                            (pendingCount > 0 ? 'bg-[#456DBD] text-white hover:bg-[#3A5CA8]' :
+                              'text-[#456DBD] hover:bg-[#EEF2FF]')}>
                           {actionLabel}
                         </button>
                       </div>
@@ -1162,7 +1162,7 @@ export function PdfProgressPanel({
                 <button
                   type="button"
                   onClick={() => openTopic('unmatched')}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-[#D9E6FF] bg-white px-4 text-[12px] font-semibold text-[#2563EB] hover:bg-[#EEF2FF]"
+                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-[#D9E6FF] bg-white px-4 text-[12px] font-semibold text-[#456DBD] hover:bg-[#EEF2FF]"
                 >
                   {tr('Ver estos conceptos','View these concepts')}
                   <ArrowRight size={16} />

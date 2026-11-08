@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const dashboardSource = readFileSync(resolve('app/(es)/dashboard/page.tsx'), 'utf8');
@@ -150,8 +150,8 @@ assert.match(navbarSource, /compact \? 'min-h-10 gap-2 px-1\.5 py-1' : 'min-h-11
 // ni comprimir su área de navegación. El enlace opcional sigue la misma escala.
 assert.match(navbarSource, /compact \? 'grid-cols-\[minmax\(0,1fr\)_32px\]' : 'grid-cols-\[minmax\(0,1fr\)_40px\]'/);
 assert.match(navbarSource, /compact \? 'gap-1' : 'gap-2'/);
-// El grupo superior se separa 16 px más del encabezado solo en Mi espacio.
-assert.match(navbarSource, /compact \? "pt-5" : "pt-2"/);
+// Sin aire extra arriba del menú lateral (948c019, 01a1a1b).
+assert.match(navbarSource, /aria-label=\{messages\.navigation\.mainNavigation\} className=\{`relative space-y-1 \$\{compact \? "pt-0" : "pt-0"\}`\}/);
 assert.match(navbarSource, /compact \? 'w-8' : 'w-10'/);
 assert.match(navbarSource, /<ReferralPortalNavLink collapsed=\{collapsed\} pathname=\{pathname\} compact=\{compact\} \/>/);
 const referralNavSource = readFileSync(resolve('components/referrals/ReferralPortalNavLink.tsx'), 'utf8');
@@ -201,7 +201,8 @@ assert.match(mobileProfileMenuSource, /messages\.navigation\.feedback/,
   'The profile menu must offer Sugerencias.');
 assert.match(mobileProfileMenuSource, /href="\/configuracion"/,
   'Ajustes must lead to the existing configuration page.');
-assert.match(mobileProfileMenuSource, /onSelect=\{\(\) => setFeedbackOpen\(true\)\}/,
+// Menú circular (5ab9af2): el botón de Sugerencias abre el formulario existente.
+assert.match(mobileProfileMenuSource, /setOpen\(false\);\s*setFeedbackOpen\(true\);/,
   'Sugerencias must open the existing feedback form.');
 assert.match(mobileProfileMenuSource, /<FeedbackDialog open=\{feedbackOpen\} onOpenChange=\{setFeedbackOpen\} sourcePath=\{sourcePath\} \/>/,
   'The feedback flow must stay connected to its source path.');
@@ -218,7 +219,8 @@ assert.match(navbarSource, /compact \? 'w-\[176px\]' : 'w-\[248px\]'/);
 // This regression guard forbids resizing the overall dashboard layout.
 const heroWithoutSvgAnimationStyles = dashboardHeroSource.replace(/<style jsx global>[\s\S]*?<\/style>/g, '');
 for (const source of [dashboardSource, heroWithoutSvgAnimationStyles, dashboardMaterialsSource]) {
-  assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|\bscale-\[/);
+  // active:scale-[…] es la respuesta al presionar una tarjeta, no un zoom del layout.
+  assert.doesNotMatch(source, /\bzoom\s*:|transform:\s*scale\(|(?<!active:)\bscale-\[/);
 }
 
 // Escala privada compartida: todas las vistas autenticadas mantienen el
@@ -251,7 +253,7 @@ assert.match(compactHeader, /'text-\[20px\] leading-\[1\.3\] sm:text-\[22px\]'/)
 
 // Las microinteracciones no deben romper navegación, contenido o accesibilidad.
 const motionStyles = readFileSync(resolve('app/globals.css'), 'utf8');
-const dashboardLoadingSource = readFileSync(resolve('app/(es)/dashboard/loading.tsx'), 'utf8');
+// /dashboard ya no tiene loading.tsx: conserva la vista actual al navegar (1b2fb35).
 const calendarLoadingSource = readFileSync(resolve('app/(es)/calendario/loading.tsx'), 'utf8');
 const progressLoadingSource = readFileSync(resolve('app/(es)/dashboard/explicaciones/loading.tsx'), 'utf8');
 const drawerSource = readFileSync(resolve('components/ui/drawer.tsx'), 'utf8');
@@ -260,10 +262,12 @@ assert.match(appChromeSource, /data-evaluo-mobile-nav-item="true"/);
 assert.match(appChromeSource, /setPendingDestination\(\{ href: item.href, fromPath: pathname \}\)/);
 assert.match(appChromeSource, /aria-current=\{isActive \? 'page' : undefined\}/);
 assert.match(appChromeSource, /key=\{pathname\} data-evaluo-route-enter/);
-assert.match(appChromeSource, /hasPrivateRouteTransition = isCompactAppRoute \|\| \(Boolean\(user\) && !isLegalRoute\)/,
-  'The existing screen transition must cover every authenticated app route, not only compact dashboards.');
-assert.match(appChromeSource, /\{hasPrivateRouteTransition \? \(/,
-  'Page entering uses the shared route wrapper for all authenticated screens.');
+assert.match(appChromeSource, /hasRouteTransition = !isAdministradorRoute;/,
+  'The single screen transition must cover the whole platform (except /administrador).');
+assert.match(appChromeSource, /\{hasRouteTransition \? \(/,
+  'Page entering uses the shared route wrapper for every screen.');
+assert.match(appChromeSource, /data-evaluo-route-enter=\{animateRouteEnter \? '' : undefined\}/,
+  'The route transition only runs on navigation, never on the first paint (LCP).');
 assert.doesNotMatch(appChromeSource, /\{isCompactAppRoute \? \(\s*<div key=\{pathname\} data-evaluo-route-enter/,
   'Do not restrict global page transitions to the compact route subset.');
 assert.match(navbarSource, /data-evaluo-sidebar-indicator/);
@@ -272,10 +276,17 @@ assert.match(dashboardHeroSource, /data-evaluo-motion-card/);
 assert.match(dashboardMaterialsSource, /data-evaluo-motion-card/);
 assert.match(motionStyles, /prefers-reduced-motion: reduce/);
 assert.match(motionStyles, /\[data-evaluo-route-enter\]/);
+assert.match(motionStyles, /@keyframes evaluo-enter/, 'One shared enter effect for the whole platform.');
+assert.match(motionStyles, /@keyframes evaluo-exit/, 'One shared exit effect for the whole platform.');
+assert.match(motionStyles, /--evaluo-motion-enter: 200ms;/);
+assert.match(motionStyles, /--evaluo-motion-exit: 150ms;/);
+assert.doesNotMatch(motionStyles, /saasLiftIn|studyReveal|evaluo-route-enter \d/,
+  'No parallel page-entrance effects: screens use the shared transition.');
 assert.match(motionStyles, /\[data-evaluo-motion-card\]/);
 assert.match(dialogSource, /backdrop-blur-\[2px\]/);
 assert.match(drawerSource, /backdrop-blur-\[2px\]/);
-for (const loading of [dashboardLoadingSource, calendarLoadingSource, progressLoadingSource]) {
+assert.equal(existsSync(resolve('app/(es)/dashboard/loading.tsx')), false);
+for (const loading of [calendarLoadingSource, progressLoadingSource]) {
   assert.match(loading, /Skeleton/, 'Show real layout skeletons during route loading.');
   assert.match(loading, /sr-only/, 'Loading must still have accessible text.');
 }

@@ -63,7 +63,7 @@ export function buildStudentMaterialReadyMessage(input: {
                 <p style="margin:0 0 8px;font-size:16px;line-height:1.65;color:#475569;">${safeIntro}</p>
                 <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${english ? 'Your summary, flashcards, practice questions and progress tracking are ready. Start studying with your notes.' : 'Tu resumen, flashcards, ejercicios y seguimiento del progreso ya están disponibles para empezar a trabajar con tus apuntes.'}</p>
 
-                <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${english ? 'Start studying my PDF' : 'Empezar con mi PDF'}</a>
+                <a href="${safeUrl}" style="display:inline-block;background:#456DBD;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${english ? 'Start studying my PDF' : 'Empezar con mi PDF'}</a>
 
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${english ? 'You received this email because the PDF you uploaded has finished processing.' : 'Te avisamos porque el PDF que subiste terminó de procesarse.'}</p>
 

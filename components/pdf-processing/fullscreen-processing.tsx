@@ -39,7 +39,7 @@ const descriptions = [
 ];
 
 function ExampleTag() {
-  return <span className="rounded-full border border-[#dbe6f8] bg-white px-2.5 py-0.5 text-[10px] font-semibold text-[#0b63e5]">Ejemplo</span>;
+  return <span className="rounded-full border border-[#dbe6f8] bg-white px-2.5 py-0.5 text-[10px] font-semibold text-[#3c6cba]">Ejemplo</span>;
 }
 function Label({ children }: { children: React.ReactNode }) {
   return <p className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#344054]">{children}</p>;
@@ -49,8 +49,8 @@ function ExampleDocument() {
   return <section className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-[20px] border border-[#e3eaf5] bg-[#f8faff] p-3.5 shadow-[0_6px_20px_rgba(20,60,140,0.035)] sm:p-4">
     <Label>TU DOCUMENTO</Label>
     <div aria-hidden="true" className="relative flex min-h-[165px] flex-1 flex-col gap-1.5 overflow-hidden rounded-2xl border border-[#dbe6f8] bg-white p-4 sm:min-h-[205px]">
-      {lines.map((width, index) => <div key={index} className={`shrink-0 rounded-[5px] ${index === 0 || index === 5 || index === 9 ? 'h-2 bg-[#c9d1e0]' : index===6||index===7 ? 'h-1.5 bg-[#ffe28a]' : 'h-1.5 bg-[#e8ecf2]'}`} style={{ width: `${width}%` }} />)}
-      <div className="pointer-events-none absolute inset-x-0 top-[48%] h-12 border-y border-[#0b63e5] bg-[#0b63e5]/[.08]" />
+      {lines.map((width, index) => <div key={index} className={`shrink-0 rounded-[5px] ${index === 0 || index === 5 || index === 9 ? 'h-2 bg-[#c9d1e0]' : index===6||index===7 ? 'h-1.5 bg-[#ede4c7]' : 'h-1.5 bg-[#e8ecf2]'}`} style={{ width: `${width}%` }} />)}
+      <div className="pointer-events-none absolute inset-x-0 top-[48%] h-12 border-y border-[#3c6cba] bg-[#3c6cba]/[.08]" />
     </div>
   </section>;
 }
@@ -62,7 +62,7 @@ function TopicsExample() {
       ['Elasticidad', 'Elasticidad precio · Demanda inelástica'],
       ['Costos de producción', ''],
     ].map(([name, detail], index) => <div className="flex gap-3" key={name}>
-      <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fb] text-[12px] font-bold text-[#084bb0]">{index+1}</span>
+      <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-[#eaf0fb] text-[12px] font-bold text-[#2a5193]">{index+1}</span>
       <div className="min-w-0">
         <p className="text-[14px] font-semibold text-[#0f1623]">{name}</p>
         {detail ? <p className="mt-1 text-[12px] leading-5 text-[#667085]">{detail}</p> : null}
@@ -73,7 +73,7 @@ function TopicsExample() {
 }
 function SceneOrganize() {
   return <div data-processing-layout="organize" className="mx-auto flex w-full max-w-[800px] flex-col items-stretch justify-center gap-4 lg:flex-row">
-    <ExampleDocument/><div data-processing-arrow aria-hidden="true" className="flex items-center justify-center text-[#0b63e5] lg:-mx-1"><ArrowRight className="size-4 rotate-90 lg:rotate-0"/></div><TopicsExample/>
+    <ExampleDocument/><div data-processing-arrow aria-hidden="true" className="flex items-center justify-center text-[#3c6cba] lg:-mx-1"><ArrowRight className="size-4 rotate-90 lg:rotate-0"/></div><TopicsExample/>
   </div>;
 }
 function SceneUnderstand({fileName}: {fileName:string}) {
@@ -81,24 +81,24 @@ function SceneUnderstand({fileName}: {fileName:string}) {
     <section aria-label="Ejemplo de resumen de un tema" className="flex min-w-0 flex-[1.6] flex-col gap-3 rounded-[20px] border border-[#e3eaf5] bg-gradient-to-b from-[#f3f7ff] to-white px-4 py-4 shadow-[0_6px_20px_rgba(20,60,140,0.035)] sm:px-5 sm:py-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><Label>TEMA 2 · RESUMEN</Label><ExampleTag/></div>
       <h2 className="text-[18px] font-bold leading-[1.2] tracking-[-.02em] text-[#0f1623] sm:text-[21px]">Elasticidad precio de la demanda</h2>
-      <p className="text-[13px] leading-[1.55] text-[#344054] sm:text-[14px]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">elástica</span>, una pequeña suba de precio reduce mucho las ventas.</p>
-      <p className="text-[13px] leading-[1.55] text-[#344054] sm:text-[14px]">En cambio, si es <span className="rounded-md bg-[#fff1bd] px-1.5 py-0.5 font-semibold text-[#0f1623]">inelástica</span>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</p>
+      <p className="text-[13px] leading-[1.55] text-[#344054] sm:text-[14px]">Mide cuánto cambia la cantidad demandada de un bien cuando varía su precio. Si la demanda es <span className="rounded-md bg-[#f5f1e0] px-1.5 py-0.5 font-semibold text-[#0f1623]">elástica</span>, una pequeña suba de precio reduce mucho las ventas.</p>
+      <p className="text-[13px] leading-[1.55] text-[#344054] sm:text-[14px]">En cambio, si es <span className="rounded-md bg-[#f5f1e0] px-1.5 py-0.5 font-semibold text-[#0f1623]">inelástica</span>, los compradores casi no reaccionan. Pasa con los bienes de primera necesidad.</p>
       <div className="mt-0.5 flex flex-wrap items-center gap-2">
         <span className="mr-1 text-[12px] font-semibold text-[#4b5565]">Conceptos clave</span>
-        {['Elasticidad','Demanda inelástica','Bien sustituto'].map(item=><span key={item} className="rounded-full bg-[#eaf0fb] px-3 py-1.5 text-[12px] font-semibold text-[#084bb0]">{item}</span>)}
+        {['Elasticidad','Demanda inelástica','Bien sustituto'].map(item=><span key={item} className="rounded-full bg-[#eaf0fb] px-3 py-1.5 text-[12px] font-semibold text-[#2a5193]">{item}</span>)}
       </div>
-      <div className="mt-2"><div className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de botón, no disponible durante el procesamiento"><BookOpen size={18}/> Practicar este tema</div></div>
+      <div className="mt-2"><div className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#3c6cba] px-4 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de botón, no disponible durante el procesamiento"><BookOpen size={18}/> Practicar este tema</div></div>
     </section>
     <section aria-label="Fragmento de tu material original" className="flex min-w-0 flex-1 flex-col gap-3 rounded-[20px] border border-[#e8ecf2] bg-white p-3.5 shadow-[0_5px_18px_rgba(20,40,80,0.03)] sm:p-4 lg:max-w-[290px]">
       <Label>EN TU MATERIAL</Label>
       <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-[26px] shrink-0 items-center justify-center rounded-md bg-[#d92d3a] text-[9px] font-bold text-white">PDF</span>
+        <span className="flex h-8 w-[26px] shrink-0 items-center justify-center rounded-md bg-[#bb5654] text-[9px] font-bold text-white">PDF</span>
         <div className="min-w-0"><p className="truncate text-[13px] font-semibold">{fileName}</p><p className="text-[12px] text-[#667085]">Página 14</p></div>
       </div>
       <div className="flex flex-1 flex-col gap-2.5 rounded-2xl border border-[#dbe6f8] bg-[#f8faff] px-3.5 py-4">
-        {[90,82,94,88,64,86].map((width,index)=><div key={index} className={`h-2 rounded ${index===2||index===3?'bg-[#ffe28a]':'bg-[#e1e6ef]'}`} style={{width:`${width}%`}} />)}
+        {[90,82,94,88,64,86].map((width,index)=><div key={index} className={`h-2 rounded ${index===2||index===3?'bg-[#ede4c7]':'bg-[#e1e6ef]'}`} style={{width:`${width}%`}} />)}
       </div>
-      <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#0b63e5]">Ver en el documento <ArrowRight size={16}/></p>
+      <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#3c6cba]">Ver en el documento <ArrowRight size={16}/></p>
     </section>
   </div>;
 }
@@ -109,7 +109,7 @@ function SceneMemorize() {
         <div className="flex items-center justify-between gap-3"><Label>PREGUNTA</Label><ExampleTag/></div>
         <p className="text-[19px] font-bold leading-[1.25] tracking-[-.025em] sm:text-[22px]">¿Qué mide la elasticidad precio de la demanda?</p>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex min-h-[40px] items-center gap-2.5 rounded-full bg-[#0b63e5] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta</div>
+          <div className="inline-flex min-h-[40px] items-center gap-2.5 rounded-full bg-[#3c6cba] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)]" aria-label="Ejemplo de tarjeta, no disponible durante el procesamiento">Ver respuesta</div>
           <span className="text-[13px] text-[#4b5565]">Pensala antes de darla vuelta.</span>
         </div>
       </div>
@@ -133,23 +133,23 @@ function ScenePractice() {
       <div className="flex flex-wrap items-center justify-between gap-2"><Label>PRÁCTICA · PREGUNTA 3</Label><ExampleTag/></div>
       <h2 className="text-[16px] font-bold leading-6 tracking-[-.02em] text-[#0f1623] sm:text-[18px]">Si la demanda de un bien es elástica y su precio sube, ¿qué pasa con la cantidad demandada?</h2>
       <div className="space-y-2.5">
-        {['Aumenta','Se mantiene igual','Disminuye bastante'].map((answer,index)=><div key={answer} className={`flex items-center gap-3 rounded-2xl border-[1.5px] p-3 text-left text-[13px] font-medium ${index===1?'border-[#fda29b] bg-[#fff1f0] text-[#b42318]':'border-[#d0d5dd] bg-white text-[#344054]'}`}>
+        {['Aumenta','Se mantiene igual','Disminuye bastante'].map((answer,index)=><div key={answer} className={`flex items-center gap-3 rounded-2xl border-[1.5px] p-3 text-left text-[13px] font-medium ${index===1?'border-[#edaba5] bg-[#fff1f0] text-[#a04034]':'border-[#d0d5dd] bg-white text-[#344054]'}`}>
           <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-current/20">{String.fromCharCode(65+index)}</span>
           <span className="flex-1">{answer}</span>{index===1?<span className="text-[12px] font-semibold">Incorrecta</span>:null}
         </div>)}
       </div>
       <div className="space-y-2.5 rounded-[17px] border border-[#dbe6f8] bg-[#f8faff] p-3.5 sm:p-4">
-        <p className="flex items-center gap-2 text-[14px] font-bold text-[#0f1623]"><Lightbulb size={18} className="text-[#0b63e5]"/> Casi. Así se razona esta pregunta</p>
+        <p className="flex items-center gap-2 text-[14px] font-bold text-[#0f1623]"><Lightbulb size={18} className="text-[#3c6cba]"/> Casi. Así se razona esta pregunta</p>
         <p className="text-[13px] leading-6 text-[#344054]">Cuando la demanda es elástica, los compradores reaccionan mucho al precio. Por eso, si el precio sube, la cantidad demandada baja más que proporcionalmente.</p>
-        <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#0b63e5]">Repasar en el resumen del tema <ArrowRight size={15}/></p>
+        <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#3c6cba]">Repasar en el resumen del tema <ArrowRight size={15}/></p>
       </div>
     </section>
     <section className="min-w-0 flex-1 space-y-4 rounded-[20px] border border-[#e8ecf2] bg-white p-3.5 sm:p-4 lg:max-w-[245px]">
       <Label>TU AVANCE</Label>
-      <div className="flex flex-wrap gap-2">{[1,2,3,4,5].map(i=><span key={i} className={`flex size-8 items-center justify-center rounded-full text-[12px] font-semibold ${i<3?'bg-[#067647] text-white':i===3?'bg-[#d92d20] text-white':'border-2 border-[#d0d5dd] text-[#667085]'}`}>{i<3?<Check size={16}/>:i===3?'×':i}</span>)}</div>
+      <div className="flex flex-wrap gap-2">{[1,2,3,4,5].map(i=><span key={i} className={`flex size-8 items-center justify-center rounded-full text-[12px] font-semibold ${i<3?'bg-[#067647] text-white':i===3?'bg-[#ba5649] text-white':'border-2 border-[#d0d5dd] text-[#667085]'}`}>{i<3?<Check size={16}/>:i===3?'×':i}</span>)}</div>
       <div className="space-y-2 border-t border-[#e8ecf2] pt-4">
         <p className="text-[12px] font-semibold text-[#4b5565]">Para reforzar</p>
-        <span className="inline-flex rounded-full bg-[#fff1bd] px-3.5 py-2 text-[12px] font-semibold text-[#7a5500]">Elasticidad</span>
+        <span className="inline-flex rounded-full bg-[#f5f1e0] px-3.5 py-2 text-[12px] font-semibold text-[#7a5500]">Elasticidad</span>
       </div>
     </section>
   </div>;
@@ -269,12 +269,12 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
         <span className="text-[14px] font-bold tracking-[-.01em]">Evaluo</span>
       </div>
       {!ready?<div data-processing-file-name className="col-span-2 row-start-2 flex min-w-0 items-center justify-center gap-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
-        <span className="flex h-6 w-[22px] shrink-0 items-center justify-center rounded-md bg-[#d92d3a] text-[9px] font-semibold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
+        <span className="flex h-6 w-[22px] shrink-0 items-center justify-center rounded-md bg-[#bb5654] text-[9px] font-semibold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
         <span title={state.fileName} className="max-w-[min(72vw,280px)] truncate text-[11px] font-medium text-[#42506A] sm:max-w-[190px] sm:text-[12px] lg:max-w-[250px]">{state.fileName}</span>
       </div>:null}
       <div className="col-start-2 row-start-1 flex w-full max-w-[280px] min-w-0 items-center justify-self-end gap-2.5 sm:col-start-3 sm:gap-3">
         <div role="progressbar" aria-label={english ? 'Document processing progress' : state.message||'Progreso del procesamiento'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e8ecf2]">
-          <div className={`h-full rounded-full transition-[width] duration-500 ${ready?'bg-[#067647]':'bg-[#0b63e5]'}`} style={{width:`${progress}%`}}/>
+          <div className={`h-full rounded-full transition-[width] duration-500 ${ready?'bg-[#067647]':'bg-[#3c6cba]'}`} style={{width:`${progress}%`}}/>
         </div>
         <span className={`min-w-12 text-right text-[12px] font-bold tabular-nums ${ready?'text-[#067647]':''}`}>{progress} %</span>
       </div>
@@ -284,19 +284,19 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
       {failed? <section data-processing-final-motion role="alert" className="mx-auto w-full max-w-[600px] space-y-5 rounded-[22px] border border-[#e3eaf5] bg-[#f8faff] p-5 text-center">
         <h1 className="text-[22px] font-bold">{english ? "We couldn't process your document" : 'No pudimos procesar tu material'}</h1>
         <p className="text-[13px] text-[#4b5565]">{english ? 'Processing was interrupted. Try again or return later.' : state.error||state.message}</p>
-        <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b63e5] px-5 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> {english ? 'Try again' : 'Reintentar'}</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-5 text-sm font-semibold">{english ? 'Back to my study space' : 'Volver a Mi espacio'}</Link></div>
+        <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#3c6cba] px-5 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> {english ? 'Try again' : 'Reintentar'}</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-5 text-sm font-semibold">{english ? 'Back to my study space' : 'Volver a Mi espacio'}</Link></div>
       </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[660px] flex-col items-center rounded-[20px] border border-[#e3eaf5] bg-gradient-to-b from-[#f3f7ff] to-white px-4 py-5 text-center sm:px-6 sm:py-6">
         <Image src="/evi-procesamiento-listo.svg" alt="" width={96} height={96} className="mx-auto size-20 object-contain sm:size-24"/>
-        <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#abefc6] bg-[#ecfdf3] px-3.5 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> {english ? 'Processing complete' : 'Procesamiento completo'}</span>
+        <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#c3e7d0] bg-[#f1fbf5] px-3.5 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> {english ? 'Processing complete' : 'Procesamiento completo'}</span>
         <h1 className="mt-4 text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[27px]">{english ? 'Your document is ready to study' : 'Tu material está listo para estudiar'}</h1>
         <p className="mt-3 max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">{english ? 'Start with your first topic, then learn at your own pace.' : 'Ya podés comenzar por el primer tema y avanzar a tu ritmo.'}</p>
         <div className="mt-5 flex w-full max-w-[520px] flex-wrap items-center gap-3 rounded-[17px] border border-[#dbe6f8] bg-white p-3.5 text-left">
-          <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-[#d92d3a] text-[12px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
+          <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-[#bb5654] text-[12px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
           <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">{english ? 'Topic summaries · Flashcards and glossary · Practice' : 'Resúmenes por tema · Tarjetas y glosario · Práctica'}</p></div>
         </div>
         <div className="mt-5 flex w-full max-w-[290px] flex-col gap-3">
-          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#0b63e5] px-5 text-[14px] font-semibold text-white hover:bg-[#084bb0]" >{english ? 'Start studying' : 'Empezar a estudiar'} <ArrowRight size={17}/></Link>
-          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-4 text-[13px] font-semibold text-[#0b63e5] hover:bg-[#eef4ff]" >{english ? 'Create my study plan' : 'Preparar mi plan de estudios'}</Link>
+          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#3c6cba] px-5 text-[14px] font-semibold text-white hover:bg-[#2a5193]" >{english ? 'Start studying' : 'Empezar a estudiar'} <ArrowRight size={17}/></Link>
+          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-4 text-[13px] font-semibold text-[#3c6cba] hover:bg-[#eef4ff]" >{english ? 'Create my study plan' : 'Preparar mi plan de estudios'}</Link>
         </div>
       </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[850px] flex-1 flex-col items-center justify-center gap-4 sm:gap-5">
         <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-4 sm:gap-5">
@@ -314,12 +314,12 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
       <ol className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3" aria-label={english ? 'Study workflow' : 'Recorrido de estudio'}>
         {(english ? ENGLISH_STEPS : STEPS).map((step,index)=><li key={step} className="flex items-center gap-2">
           {index>0?<span aria-hidden="true" className="mr-1 h-0.5 w-3 bg-[#e8ecf2] sm:w-6"/>:null}
-          <span className={`flex size-3 items-center justify-center rounded-full ${ready?'bg-[#067647]':index===visibleScene?'bg-[#0b63e5] ring-4 ring-[#dbe6f8]':index<visibleScene?'bg-[#0b63e5]':'bg-[#d0d5dd]'}`}>{ready||index<visibleScene?<Check className="size-2.5 text-white"/>:null}</span>
+          <span className={`flex size-3 items-center justify-center rounded-full ${ready?'bg-[#067647]':index===visibleScene?'bg-[#3c6cba] ring-4 ring-[#dbe6f8]':index<visibleScene?'bg-[#3c6cba]':'bg-[#d0d5dd]'}`}>{ready||index<visibleScene?<Check className="size-2.5 text-white"/>:null}</span>
           <span className={`text-[12px] sm:text-[12px] ${!ready&&index===visibleScene?'font-semibold text-[#0f1623]':'text-[#667085]'}`}>{step}</span>
         </li>)}
       </ol>
       <div className="flex min-w-0 items-start gap-3 text-[12px] leading-5 text-[#4b5565] sm:text-[12px]">
-        {!ready&&!failed?<Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-[#0b63e5]"/>:<CheckCircle2 size={16} className="text-[#067647]"/>}
+        {!ready&&!failed?<Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-[#3c6cba]"/>:<CheckCircle2 size={16} className="text-[#067647]"/>}
         <span>{english ? (failed ? 'Try again without uploading your file a second time.' : ready ? 'Everything is ready. Start whenever you like.' : connectionIssues ? 'Still processing. Reconnecting…' : visibleScene === 0 ? 'Reading your document and finding its main topics…' : visibleScene === 1 ? 'Preparing clear summaries for each topic…' : visibleScene === 2 ? 'Creating flashcards and a glossary to review…' : 'Checking and saving your study materials…') : failed?'Podés reintentar sin volver a subir el archivo.':ready?'Todo preparado. Podés empezar cuando quieras.':connectionIssues?'Seguimos procesando. Restableciendo la conexión…':visibleScene===0?'Leyendo tu documento y detectando los temas principales…':visibleScene===1?'Armando resúmenes claros para cada tema…':visibleScene===2?'Preparando tarjetas y glosario para que repases…':'Revisando y guardando todo tu material…'}</span>
       </div>
 

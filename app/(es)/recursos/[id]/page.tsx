@@ -441,7 +441,7 @@ function RecursoContent() {
           </div>
         </div>
 
-        <section className="surface-panel animate-saas-lift-in mb-4 px-4 py-4 sm:px-5">
+        <section className="surface-panel mb-4 px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">{nombreMateria}</p>
@@ -599,7 +599,7 @@ function RecursoContent() {
                 <PdfViewer
                   url={viewerUrl}
                   title={selectedResource?.nombre || 'Documento Evaluo'}
-                  className="animate-saas-lift-in border-0 shadow-none"
+                  className="border-0 shadow-none"
                   heightClassName="min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh]"
                   forcePreviewLock={viewerIsPreview}
                 />
@@ -647,7 +647,7 @@ function RecursoContent() {
                         key={recurso.id}
                         type="button"
                         onClick={() => setSelectedResourceId(recurso.id)}
-                        className={`animate-saas-lift-in w-full rounded-2xl border p-4 text-left transition ${
+                        className={`w-full rounded-2xl border p-4 text-left transition ${
                           active
                             ? 'border-blue-300 bg-blue-50 shadow-[0_10px_30px_rgba(79,93,255,0.12)]'
                             : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-white'

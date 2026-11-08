@@ -60,7 +60,7 @@ export default async function DemoMaterialEstudioPage({
                 cta_name: 'convertir_mi_pdf',
                 destination: uploadHref,
               }}
-              className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:opacity-95"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:opacity-95"
             >
               Subir mi propio PDF
             </TrackedLink>

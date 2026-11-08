@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  alternates: hreflangAlternates('pricing', 'en'),
 };
 const freeFeatures = [
- '1 lifetime PDF or Word upload',
+ '1 PDF or Word upload per month',
  'Topic summaries and glossary',
  '12 multiple-choice and 10 true-or-false questions',
  '25 flashcards, 2 practical cases and 1 matching round',
@@ -30,10 +30,10 @@ export default function EnglishPricingPage() {
   <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
    <nav className="flex items-center justify-between gap-4">
     <Link href="/en" className="text-xl font-extrabold tracking-tight">Evaluo</Link>
-    <Link href="/en/login?mode=signup" className="rounded-full bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white">Create account</Link>
+    <Link href="/en/login?mode=signup" className="rounded-full bg-[#456DBD] px-5 py-2.5 text-sm font-semibold text-white">Create account</Link>
    </nav>
    <header className="mx-auto mb-10 mt-12 max-w-3xl text-center sm:mt-16">
-    <p className="text-xs font-bold uppercase tracking-widest text-[#4F5DFF]">Free and Premium</p>
+    <p className="text-xs font-bold uppercase tracking-widest text-[#5D70C4]">Free and Premium</p>
     <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-5xl">Study better with your own notes</h1>
     <p className="mt-4 text-base leading-7 text-[#42506A]">Start free with your PDF or Word documents. Upgrade to Premium when you need more materials, practice and study tools.</p>
    </header>

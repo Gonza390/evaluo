@@ -48,6 +48,9 @@ const PAYMENT_RESULT_EN: Record<string,string> = {
   "Promoción aplicada": "Promotion applied",
   "Procesando pago": "Processing payment",
   "Estamos confirmando tu pago": "We are confirming your payment",
+  "Pago procesado de forma segura con Creem.": "Payment securely processed by Creem.",
+  "Pago procesado de forma segura con Mercado Pago.": "Payment securely processed by Mercado Pago.",
+  "Pago procesado de forma segura.": "Payment securely processed.",
   "El proveedor de pago puede tardar unos instantes en notificarnos. No vuelvas a pagar mientras verificamos el estado de este intento.": "It may take a moment for your payment provider to notify us. Please do not pay again while we verify this payment.",
   "Actualizar estado": "Refresh status",
   "Volver": "Back",
@@ -208,6 +211,13 @@ function successContext(source: string, returnTo: string | undefined) {
     };
   }
   return null;
+}
+
+/** Texto del pie según el proveedor que procesó el cobro (nunca asumir Mercado Pago). */
+function paymentProviderNote(provider: string | null | undefined): string {
+  if (provider?.startsWith('creem')) return 'Pago procesado de forma segura con Creem.';
+  if (provider?.startsWith('mercadopago')) return 'Pago procesado de forma segura con Mercado Pago.';
+  return 'Pago procesado de forma segura.';
 }
 
 function resolvePaymentResultState(details: PaymentDetails): PaymentResultState {
@@ -581,7 +591,7 @@ export function PaymentResult({
         ) : null}
         <p className={`${contextualSuccess ? '' : 'mt-2 '}flex items-start gap-2`}>
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-          Pago procesado de forma segura con Mercado Pago.
+          {t(paymentProviderNote(details.provider ?? details.checkoutProvider))}
         </p>
       </footer>
     </section>

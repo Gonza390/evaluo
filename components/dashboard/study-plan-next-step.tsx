@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getProgress, syncStudyPlanProgress, type Activity, type TopicActivities } from '@/lib/study-plan-progress';
 
 const modes: Record<Activity, { label: string; tab: string; minutes: keyof TopicActivities; description: string }> = {
@@ -15,12 +15,26 @@ const modes: Record<Activity, { label: string; tab: string; minutes: keyof Topic
 export function StudyPlanNextStep({ materialId, topicActivities }: { materialId: string; topicActivities: TopicActivities[] }) {
  const english = useOptionalAppLocale() === 'en';
  const [progress,setProgress]=useState({percent:0,done:0,total:0,record:{} as Record<string,boolean>});
+ const [animateProgress,setAnimateProgress]=useState(false);
+ const frameRef=useRef<number | null>(null);
  useEffect(()=>{
   let active=true;
+  // Restore the persisted percentage immediately; only animate later changes.
+  setAnimateProgress(false);
   const update=()=>{if(active)setProgress(getProgress(materialId,topicActivities))};
-  update(); void syncStudyPlanProgress(materialId).then(update);
+  update();
+  frameRef.current=window.requestAnimationFrame(()=>{
+   frameRef.current=window.requestAnimationFrame(()=>{
+    if(active)setAnimateProgress(true);
+   });
+  });
+  void syncStudyPlanProgress(materialId).then(update);
   window.addEventListener('focus',update); window.addEventListener('pageshow',update);
-  return ()=>{active=false;window.removeEventListener('focus',update);window.removeEventListener('pageshow',update)};
+  return ()=>{
+   active=false;
+   if(frameRef.current!==null)window.cancelAnimationFrame(frameRef.current);
+   window.removeEventListener('focus',update);window.removeEventListener('pageshow',update);
+  };
  },[materialId,topicActivities]);
  let next: { topic: number; activity: Activity } | null=null;
  for(let i=0;i<topicActivities.length && !next;i++){
@@ -38,7 +52,7 @@ export function StudyPlanNextStep({ materialId, topicActivities }: { materialId:
    return <>
     <h3 className="text-[14px] font-medium leading-snug tracking-tight text-slate-900">{topic.title || (english ? 'Topic ' : 'Tema ')+(selection.topic+1)}</h3>
     <p className="text-[11px] leading-4 text-slate-500">{english ? ({reading:'Read this topic to move forward in your plan.',questions:'Check what you have learned with practice questions.',flashcards:'Review key concepts with flashcards.',glossary:'Review key concepts before moving on.'} as Record<Activity,string>)[selection.activity] : mode.description}</p>
-    <Link href={'/materiales/'+materialId+'?tab='+mode.tab+'&studyTopic='+selection.topic} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#D7E3FB] bg-[#EEF2FF] px-4 text-[13px] font-semibold text-[#315DAB] transition-colors hover:border-[#BBCDF4] hover:bg-[#E2EAFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF]">
+    <Link href={'/materiales/'+materialId+'?tab='+mode.tab+'&studyTopic='+selection.topic} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#D7E3FB] bg-[#EEF2FF] px-4 text-[13px] font-semibold text-[#315DAB] transition-colors hover:border-[#BBCDF4] hover:bg-[#E2EAFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4]">
       {english ? (progress.done===0 ? 'Start studying' : 'Continue now') : (progress.done===0 ? 'Comenzar a estudiar' : 'Continuar ahora')} <ArrowRight className="size-4"/>
     </Link>
    </>;
@@ -47,7 +61,7 @@ export function StudyPlanNextStep({ materialId, topicActivities }: { materialId:
   ) : <p className="text-[12px] text-slate-500">{english ? 'No topics are available to study yet.' : 'Todavía no hay temas disponibles para estudiar.'}</p>}
   <div className="border-t border-slate-100 pt-2.5">
    <div className="mb-2 flex items-center justify-between text-[11px] text-slate-500"><span>{english ? 'Your progress' : 'Tu progreso'}</span><span>{progress.percent}%</span></div>
-   <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label={english ? "Material progress" : "Avance del material"}><div className="h-full rounded-full bg-slate-500 transition-[width]" style={{width:progress.percent+'%'}}/></div>
+   <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label={english ? "Material progress" : "Avance del material"}><div className={`h-full rounded-full bg-slate-500 motion-reduce:transition-none ${animateProgress ? 'transition-[width] duration-500 ease-out' : ''}`} style={{width:progress.percent+'%'}}/></div>
    <p className="mt-2 text-[11px] text-slate-500">{progress.done} {english ? 'of' : 'de'} {progress.total} {english ? 'activities completed' : 'actividades completadas'}</p>
   </div>
  </div>;

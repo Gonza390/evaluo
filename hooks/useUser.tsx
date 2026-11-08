@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase-client';
 
 interface UserContextType {
   user: User | null;
@@ -73,26 +72,30 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
       setLoading(false);
     };
 
-    if (!hasServerSnapshot) {
-      void supabase.auth.getSession().then(({ data: { session } }) => {
+    let unsubscribe: (() => void) | null = null;
+
+    // El cliente de Supabase se carga después de pintar: así no bloquea el primer
+    // render (LCP) de las páginas que solo necesitan saber si hay sesión.
+    void import('@/lib/supabase-client').then(({ supabase }) => {
+      if (!isMounted) return;
+      if (!hasServerSnapshot) {
+        void supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!isMounted) return;
+          applySessionUser(session?.user ?? null);
+        });
+      }
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!isMounted) return;
         applySessionUser(session?.user ?? null);
       });
-    }
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!isMounted) {
-        return;
-      }
-
-      applySessionUser(session?.user ?? null);
+      unsubscribe = () => subscription.unsubscribe();
     });
 
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, [hasServerSnapshot]);
 

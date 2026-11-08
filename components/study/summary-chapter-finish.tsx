@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { ArrowRight, BookOpen, CheckCircle2, Layers3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
@@ -35,6 +36,7 @@ export function SummaryChapterFinish({
   onContinue: () => void;
   onClose: () => void;
 }) {
+  const english = useOptionalAppLocale() === 'en';
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   return (
@@ -58,7 +60,7 @@ export function SummaryChapterFinish({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Cerrar y volver al resumen"
+              aria-label={english ? 'Close and return to summary' : 'Cerrar y volver al resumen'}
               className="text-muted-foreground hover:bg-muted flex size-8 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <X aria-hidden className="size-4" />
@@ -66,9 +68,9 @@ export function SummaryChapterFinish({
           </div>
 
           <DialogTitle ref={headingRef} tabIndex={-1} className="text-foreground mt-2 text-left text-[20px] font-bold leading-tight tracking-[-0.04em] outline-none">
-            Descubrí qué sabés y qué necesitás reforzar
+            {english ? 'Find out what you know and what to review' : 'Descubrí qué sabés y qué necesitás reforzar'}
           </DialogTitle>
-          <p className="text-muted-foreground mt-1.5 text-[12px]">Lectura finalizada</p>
+          <p className="text-muted-foreground mt-1.5 text-[12px]">{english ? 'Reading complete' : 'Lectura finalizada'}</p>
 
           <Button
             type="button"
@@ -77,16 +79,16 @@ export function SummaryChapterFinish({
             disabled={!canEvaluate}
             className="mt-3 min-h-11 w-full rounded-lg text-[13px] font-semibold"
           >
-            Comprobar cuánto aprendí <ArrowRight aria-hidden className="ml-1 h-4 w-4" />
+            {english ? 'Check my understanding' : 'Comprobar cuánto aprendí'} <ArrowRight aria-hidden className="ml-1 h-4 w-4" />
           </Button>
           {!canEvaluate ? (
             <p role="status" className="text-muted-foreground mt-2 text-center text-xs">
-              Todavía no hay preguntas fiables para evaluar este tema.
+              {english ? 'There are not enough reliable questions to assess this topic yet.' : 'Todavía no hay preguntas fiables para evaluar este tema.'}
             </p>
           ) : null}
 
           <div className="mt-3 text-center">
-            <p className="text-muted-foreground text-[12px]">¿Querés repasar antes?</p>
+            <p className="text-muted-foreground text-[12px]">{english ? 'Want to review first?' : '¿Querés repasar antes?'}</p>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <Button
                 type="button"
@@ -108,7 +110,7 @@ export function SummaryChapterFinish({
                 onClick={onGlossary}
                 className="min-h-10 rounded-lg px-3 text-[12px] font-medium"
               >
-                <BookOpen aria-hidden className="mr-1.5 h-3.5 w-3.5" /> Glosario
+                <BookOpen aria-hidden className="mr-1.5 h-3.5 w-3.5" /> {english ? 'Glossary' : 'Glosario'}
               </Button>
             </div>
           </div>
@@ -121,7 +123,7 @@ export function SummaryChapterFinish({
                 onClick={onContinue}
                 className="text-muted-foreground hover:text-foreground min-h-10 rounded-lg px-3 text-[12px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                Seguir leyendo
+                {english ? 'Keep reading' : 'Seguir leyendo'}
               </button>
             </div>
           ) : null}

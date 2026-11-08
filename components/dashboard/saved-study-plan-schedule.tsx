@@ -61,7 +61,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
           const dayTitle=day.date===today ? t('Hoy') : fullDate(day.date, locale);
           return <div key={day.date}>
             <button type="button" onClick={()=>setSelectedDate(day.date)} aria-pressed={selectedDay}
-              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#2563EB] ${selectedDay?'bg-slate-50/70':''}`}>
+              className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#456DBD] ${selectedDay?'bg-slate-50/70':''}`}>
               <span className={`flex size-11 shrink-0 flex-col items-center justify-center rounded-lg ${selectedDay?'bg-[#EEF2FF]':'bg-[#F5F7FB]'}`}>
                 <span className="text-[9px] font-medium uppercase text-[#7F8AA3]">{weekday(day.date, locale)}</span>
                 <span className="text-[17px] font-semibold leading-5 text-[#0F1B3D]">{dateObj(day.date).getDate()}</span>
@@ -70,7 +70,7 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
                 <span className="block truncate text-[12px] font-medium capitalize text-[#0F1B3D]">{dayTitle}</span>
                 <span className="mt-0.5 block text-[11px] text-[#66758D]">{day.topics.length} {day.topics.length===1 ? (english ? 'topic' : 'tema') : (english ? 'topics' : 'temas')} · {day.estimatedMinutes+day.topics.filter(topic=>bonusActivities.has(`${topic.materialId}:${topic.topicIndex}`)).length*8+(optionalReviews.has(day.date)?8:0)} {english ? 'estimated min' : 'min estimados'}</span>
               </span>
-              {allRead?<Check className="size-4 shrink-0 text-[#35816A]" aria-label={english ? "Topics read" : "Temas leídos"}/>:<ArrowRight className={`size-4 shrink-0 ${selectedDay?'text-[#2563EB]':'text-[#9DA9BE]'}`}/>}
+              {allRead?<Check className="size-4 shrink-0 text-[#35816A]" aria-label={english ? "Topics read" : "Temas leídos"}/>:<ArrowRight className={`size-4 shrink-0 ${selectedDay?'text-[#456DBD]':'text-[#9DA9BE]'}`}/>}
             </button>
             {selectedDay&&<div className="border-t border-[#EFF2F7] bg-white">
               {day.topics.map((topic,topicPosition)=>{
@@ -82,13 +82,13 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
                 return <div key={topicKey} className={topicPosition?'border-t border-[#EFF2F7]':''}>
                   <button type="button" data-saved-plan-topic-toggle aria-expanded={isExpanded} aria-controls={panelId}
                     onClick={()=>setExpandedTopic({date:day.date,key:topicKey})}
-                    className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#2563EB] ${isExpanded?'bg-[#FAFBFD]':''}`}>
+                    className={`flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#456DBD] ${isExpanded?'bg-[#FAFBFD]':''}`}>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[12px] font-medium leading-5 text-[#0F1B3D]">{topic.title}</span>
                       {isExpanded&&<span className="mt-0.5 block truncate text-[11px] text-[#66758D]">{topic.materialTitle} · {fullyDone ? (english ? 'Completed' : 'Completado') : read ? (english ? 'Read' : 'Lectura hecha') : `${topic.estimatedMinutes} ${english ? 'min approx.' : 'min aprox.'}`}</span>}
                     </span>
                     {fullyDone&&<Check className="size-4 shrink-0 text-[#35816A]" aria-label={english ? "Topic completed" : "Tema completado"}/>}
-                    <ChevronDown className={`size-4 shrink-0 text-[#9DA9BE] transition-transform ${isExpanded?'rotate-180 text-[#2563EB]':''}`} aria-hidden="true"/>
+                    <ChevronDown className={`size-4 shrink-0 text-[#9DA9BE] transition-transform ${isExpanded?'rotate-180 text-[#456DBD]':''}`} aria-hidden="true"/>
                   </button>
                   {isExpanded&&<div id={panelId} data-saved-plan-topic-details className="border-t border-[#EFF2F7] bg-white">
                     {recommendTopicActivities(topic,preferences,dailyMinutes,bonusActivities.get(topicKey)??0).map((step,index)=>{
@@ -120,11 +120,11 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
             </div>}
           </div>;
         })}
-        {scheduled.length>3&&<button type="button" onClick={()=>setShowAll(v=>{if(v && scheduled.slice(0,3).every(day=>day.date!==selectedDate))setSelectedDate(scheduled[0]?.date??null);return !v})} className="flex min-h-10 w-full items-center px-3.5 text-left text-[12px] font-medium text-[#2563EB] hover:bg-[#F7F9FD]">
+        {scheduled.length>3&&<button type="button" onClick={()=>setShowAll(v=>{if(v && scheduled.slice(0,3).every(day=>day.date!==selectedDate))setSelectedDate(scheduled[0]?.date??null);return !v})} className="flex min-h-10 w-full items-center px-3.5 text-left text-[12px] font-medium text-[#456DBD] hover:bg-[#F7F9FD]">
           {showAll ? t('Ver menos') : `+ ${scheduled.length-3} ${english ? 'more days' : 'días más'}`}
         </button>}
         <div className="flex items-center gap-3 px-3.5 py-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#FFF3E3] text-[#B8792E]"><Flag className="size-4" aria-hidden="true"/></span>
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-[#FCF4E9] text-[#B8792E]"><Flag className="size-4" aria-hidden="true"/></span>
           <span className="min-w-0 flex-1">
             <span className="block text-[12px] font-medium text-[#0F1B3D]">{t("Examen")}</span>
             <span className="mt-0.5 block text-[11px] capitalize text-[#66758D]">{examDateLabel(examDate, locale)}</span>

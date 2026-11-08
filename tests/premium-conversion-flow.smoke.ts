@@ -107,8 +107,8 @@ for(const name of ['premium','ultimo-intento']) {
 const dashboardPremium=read('app/(es)/dashboard/premium/page.tsx');
 assert.match(dashboardPremium,/nextPath = premiumDashboardHref\(\{source, materiaId, parcial, returnTo\}\)/,
   'After logging in, keep the original study action in the checkout context');
-assert.match(read('components/pricing/PremiumDashboardScreen.tsx'),
-  /status==='active'\?\(returnTo\?\?'\/dashboard'\)/,
+assert.match(read('components/pricing/UpgradeScreen.tsx'),
+  /subscriptionStatus === 'active' \? \(\s*<Link href=\{returnTo \?\? '\/dashboard'\}/,
   'Existing subscribers must resume their requested action instead of landing on the dashboard');
 
 assert.equal(new FreeStudyV2UploadLimitError('used').code,'free_v2_material_limit');
@@ -126,7 +126,8 @@ assert.equal(premiumPaymentResultState({plan:'free',status:'past_due'}),'attenti
 
 const pricing=read('app/(es)/pricing/page.tsx');
 const selector=read('components/pricing/PricingPlanSelector.tsx');
-const card=read('components/pricing/PaymentCheckoutCard.tsx');
+// La lógica de checkout ARS vive en un hook compartido por la tarjeta y /pricing.
+const card=read('components/pricing/PaymentCheckoutCard.tsx')+read('hooks/use-mercadopago-checkout.ts');
 const checkout=read('app/api/payments/checkout/route.ts');
 const result=read('components/pricing/PaymentResult.tsx');
 const resultPage=read('app/(es)/pricing/resultado/page.tsx');
@@ -148,6 +149,10 @@ assert.match(checkout,/returnTo:|checkoutReturnPath\(requestBody\.returnTo\)/);
 assert.match(checkout,/hasPremiumSubscriptionAccess\(subscription\.status, subscription\.expires_at\)/);
 assert.match(resultPage,/safePremiumReturnTo\(value\)/);
 assert.match(result,/premiumPaymentResultState\(details\)/);
+// El pie del resultado muestra el proveedor real del cobro (Creem o Mercado Pago).
+assert.match(result,/paymentProviderNote\(details\.provider \?\? details\.checkoutProvider\)/);
+assert.doesNotMatch(result,/>\s*Pago procesado de forma segura con Mercado Pago\.\s*</);
+assert.match(result,/startsWith\('creem'\)\) return 'Pago procesado de forma segura con Creem\.'/);
 assert.match(result,/notifyPremiumAccessChanged\(\)/);
 assert.match(result,/cta: 'Continuar estudiando'/);
 assert.match(result,/premiumPricingHref\(\{source, materiaId, parcial, returnTo\}\)/);
@@ -181,7 +186,7 @@ assert.match(quotaApi,/eq\('user_id',user\.id\)/);
 assert.match(quotaApi,/premiumUpgradeForLimit\(reason,\{materialId\}\)/);
 assert.match(quotaApi,/free_study_v2_unlocks/);
 assert.match(quotaApi,/free_study_v2_plan_claims/);
-assert.match(quotaApi,/free_study_v2_upload_claims/);
+assert.match(quotaApi,/free_study_v2_monthly_upload_claims[\s\S]*freeUploadPeriod\(\)/);
 assert.match(quotaApi,/Cache-Control': 'private, no-store/);
 assert.match(quotaApi,/quotas:null/);
 assert.match(quotaApi,/status:503/);

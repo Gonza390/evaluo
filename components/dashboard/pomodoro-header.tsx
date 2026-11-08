@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { CheckCircle2, Clock3, Pause, Play, RotateCcw, X } from 'lucide-react';
+import { CheckCircle2, Pause, Play, RotateCcw, Timer, X } from 'lucide-react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import {
   INITIAL_POMODORO,
@@ -78,6 +78,13 @@ export function PomodoroHeader({ userId }: { userId: string }) {
     return () => window.clearTimeout(timeout);
   }, [notice]);
 
+  // Reuse this same Pomodoro instance from the mobile PDF radial tools menu.
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener('evaluo:open-pomodoro', handleOpen);
+    return () => window.removeEventListener('evaluo:open-pomodoro', handleOpen);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -120,9 +127,9 @@ export function PomodoroHeader({ userId }: { userId: string }) {
         aria-label={running || paused ? (english ? `Study timer: ${time} remaining` : `Temporizador de estudio: ${time} restantes`) : finished ? tr('Temporizador: sesión completada','Study timer: session complete') : tr('Abrir temporizador de estudio de 25 minutos','Open 25-minute study timer')}
         aria-expanded={open}
         aria-controls={popupId}
-        className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-[12px] font-semibold tabular-nums transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB] ${running || paused || open ? 'bg-[#EEF2FF] text-[#2563EB]' : finished ? 'text-[#16774f]' : 'text-[#42506A]'}`}
+        className={`inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-semibold tabular-nums transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD] ${open ? 'bg-slate-100' : ''} ${running || paused ? 'text-[#456DBD]' : finished ? 'text-[#16774f]' : 'text-slate-500 hover:text-slate-800'}`}
       >
-        {finished ? <CheckCircle2 className="size-[19px]" aria-hidden="true" /> : <Clock3 className="size-[19px]" aria-hidden="true" />}
+        {finished ? <CheckCircle2 className="size-5" aria-hidden="true" /> : <Timer className="size-5" strokeWidth={1.9} aria-hidden="true" />}
         {running || paused ? <span aria-hidden="true" className="min-w-[39px] text-right">{time}</span> : null}
         {finished ? <span className="hidden sm:inline">{tr('Listo','Done')}</span> : null}
       </button>
@@ -141,7 +148,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
               type="button"
               onClick={() => setOpen(false)}
               aria-label={tr("Cerrar temporizador","Close timer")}
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[#7F8AA3] hover:bg-[#F5F7FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[#7F8AA3] hover:bg-[#F5F7FB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
             >
               <X className="size-4" aria-hidden="true"/>
             </button>
@@ -157,7 +164,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
           <button
             type="button"
             onClick={handlePrimary}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
           >
             {running ? <Pause className="size-4" aria-hidden="true"/> : <Play className="size-4" aria-hidden="true"/>}
             {running ? tr('Pausar','Pause') : paused ? tr('Reanudar','Resume') : finished ? tr('Comenzar de nuevo','Start again') : tr('Comenzar','Start')}
@@ -167,7 +174,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
             <button
               type="button"
               onClick={() => update(INITIAL_POMODORO)}
-              className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-medium text-[#66758D] transition-colors hover:bg-[#F5F7FB] hover:text-[#2563EB] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2563EB]"
+              className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-medium text-[#66758D] transition-colors hover:bg-[#F5F7FB] hover:text-[#456DBD] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
             >
               <RotateCcw className="size-3.5" aria-hidden="true" /> {tr('Reiniciar','Reset')}
             </button>

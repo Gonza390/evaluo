@@ -7,8 +7,8 @@ import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { PREMIUM_STUDY_LIMITS } from '@/lib/study-commercial-entitlements';
 import { premiumUpgradeForLimit, FreeStudyV2UploadLimitError, type PremiumUpgrade } from '@/lib/premium-flow';
-import { FREE_STUDY_V2, isFreeStudyV2Active } from '@/lib/free-study-v2';
-import { historicalFreeStudyMaterialIds } from '@/lib/free-study-v2-materials';
+import { FREE_STUDY_V2, isFreeStudyV2Active, nextFreeUploadAt } from '@/lib/free-study-v2';
+import { freeStudyMaterialIdsThisMonth } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
@@ -171,15 +171,16 @@ async function getStudentMaterialUploadQuotaForUser(
     };
   }
 
-  const historicalIds = await historicalFreeStudyMaterialIds(userId);
+  const monthIds = await freeStudyMaterialIdsThisMonth(userId);
   // Free V2 reinicia el cupo comercial en el lanzamiento. Los PDFs viejos
   // siguen disponibles, pero sólo cuenta el claim creado bajo el nuevo modelo.
   const used = isFreeStudyV2Active()
-    ? historicalIds.length
+    ? monthIds.length
     : countedMaterials.length;
-  const freeLimit = isFreeStudyV2Active() ? FREE_STUDY_V2.materialsLifetime : FREE_MATERIAL_UPLOAD_LIMIT;
+  const freeLimit = isFreeStudyV2Active() ? FREE_STUDY_V2.materialsPerMonth : FREE_MATERIAL_UPLOAD_LIMIT;
   const remaining = Math.max(0, freeLimit - used);
-  let nextAvailableAt: string | null = null;
+  let nextAvailableAt: string | null = isFreeStudyV2Active() && remaining === 0
+    ? nextFreeUploadAt(now).toISOString() : null;
 
   if (!isFreeStudyV2Active() && remaining === 0 && countedMaterials.length > 0) {
     const blockingIndex = Math.max(0, countedMaterials.length - FREE_MATERIAL_UPLOAD_LIMIT);
@@ -258,7 +259,7 @@ async function assertStudentMaterialQuota(userId: string) {
   } else if (!hasUnlimitedUploads && (quota.remaining ?? 0) <= 0) {
     if (isFreeStudyV2Active()) {
       throw new FreeStudyV2UploadLimitError(
-        'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.'
+        'Ya usaste tu apunte gratis del mes. Podés seguir estudiándolo o usar Premium para agregar otro.'
       );
     }
     throw new Error('Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.');

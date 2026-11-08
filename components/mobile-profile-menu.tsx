@@ -1,30 +1,16 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ChevronRight, Crown, MessageSquarePlus, Settings } from 'lucide-react';
-import { useState } from 'react';
-import { usePremium } from '@/hooks/usePremium';
-import { loadCheckoutMarket } from '@/hooks/use-checkout-market';
+import { MessageSquarePlus, Settings } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import dynamic from 'next/dynamic';
 
-// Keep the profile menu and feedback flow out of the global app-shell bundle.
-const LanguageMenuItem = dynamic(() => import('@/components/i18n/language-menu-item').then(m => m.LanguageMenuItem));
-
+// Mantener el formulario de sugerencias fuera del bundle inicial.
 const FeedbackDialog = dynamic(() =>
-  import('@/components/FeedbackDialog').then((module) => module.FeedbackDialog)
+  import('@/components/FeedbackDialog').then(module => module.FeedbackDialog)
 );
-
-// Un solo estado de resaltado para todas las opciones del menú de perfil móvil.
-const mobileMenuItemHighlight =
-  'text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] hover:text-[#0F1B3D] focus:bg-[#EEF2FF] focus:text-[#0F1B3D] data-[highlighted]:bg-[#EEF2FF] data-[highlighted]:text-[#0F1B3D]';
 
 type MobileProfileMenuProps = {
   initials: string;
@@ -33,105 +19,114 @@ type MobileProfileMenuProps = {
 };
 
 export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobileProfileMenuProps) {
+  const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  // Precio semanal ya formateado en la moneda de la región del visitante.
-  // Argentina ve sólo ARS; el resto del mundo ve sólo USD; región desconocida no ve precio.
-  const [weeklyPrice, setWeeklyPrice] = useState<string | null>(null);
-  const { isPremium } = usePremium();
   const { messages, locale } = useAppLocale();
+  const english = locale === 'en';
 
-  const refreshPrice = () => {
-    if (isPremium) return;
-    void loadCheckoutMarket()
-      .then(async (availability) => {
-        if (availability.market === 'international') {
-          const weeklyUsd = Math.round((availability.monthlyUsdCents * 7) / 30) / 100;
-          setWeeklyPrice(
-            new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'es-AR', {
-              style: 'currency',
-              currency: 'USD',
-              currencyDisplay: 'code',
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(weeklyUsd)
-          );
-          return;
-        }
-        if (availability.market !== 'argentina') {
-          setWeeklyPrice(null);
-          return;
-        }
-        const response = await fetch('/api/payments/offer', { cache: 'no-store' });
-        if (!response.ok) return;
-        const offer = (await response.json()) as { monthlyPriceArs?: number };
-        if (typeof offer.monthlyPriceArs === 'number' && Number.isFinite(offer.monthlyPriceArs) && offer.monthlyPriceArs > 0) {
-          setWeeklyPrice(
-            new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(
-              Math.round((offer.monthlyPriceArs * 7) / 30)
-            )
-          );
-        }
-      })
-      .catch(() => {});
-  };
+  useEffect(() => {
+    if (!open) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [open]);
+
+  const actions = [
+    {
+      id: 'settings',
+      label: messages.navigation.settings,
+      x: -50,
+      y: 26,
+      Icon: Settings,
+    },
+    {
+      id: 'feedback',
+      label: messages.navigation.feedback,
+      x: -13,
+      y: 63,
+      Icon: MessageSquarePlus,
+    },
+  ] as const;
 
   return (
     <>
-      <DropdownMenu onOpenChange={(open) => { if (open) refreshPrice(); }}>
-        <DropdownMenuTrigger asChild>
+      <div className="relative z-[62] inline-flex size-10 shrink-0 md:hidden" data-mobile-profile-menu>
+        {open ? (
           <button
             type="button"
-            data-mobile-profile-menu-trigger
-            aria-label={messages.navigation.profileMenu}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
-          >
-            <Avatar className="h-8 w-8 shrink-0">
-              <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
-                {initials}
-              </AvatarFallback>
-              {avatarUrl ? <AvatarImage src={avatarUrl} /> : null}
-            </Avatar>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          data-mobile-profile-menu
-          align="end"
-          sideOffset={8}
-          className="w-60 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg md:hidden"
-        >
-          <LanguageMenuItem className={'flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-[13px] ' + mobileMenuItemHighlight} />
-          <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
-            <Link href="/configuracion" className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px]">
-              <Settings className="h-4 w-4" aria-hidden="true" />
-              {messages.navigation.settings}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className={'flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 text-[13px] ' + mobileMenuItemHighlight}
-            onSelect={() => setFeedbackOpen(true)}
-          >
-            <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
-            {messages.navigation.feedback}
-          </DropdownMenuItem>
-          {!isPremium ? (
-            <DropdownMenuItem asChild className={mobileMenuItemHighlight}>
-              <Link href="/dashboard/premium?source=mobile_profile_menu"
-                className={'mt-1 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 ' + mobileMenuItemHighlight}>
-                <Crown className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-medium">{messages.navigation.upgrade}</span>
-                  <span className="block text-[10px] text-slate-500">
-                    {weeklyPrice !== null
-                      ? `≈ ${weeklyPrice} ${messages.navigation.perWeek}`
-                      : messages.navigation.viewPlans}
+            tabIndex={-1}
+            aria-label={english ? 'Close profile options' : 'Cerrar opciones de perfil'}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[-1] bg-transparent"
+          />
+        ) : null}
+        <div className="pointer-events-none absolute right-0 top-0 size-10">
+          {actions.map(({ id, label, x, y, Icon }, index) => (
+            <div
+              key={id}
+              className="pointer-events-none absolute right-[-2px] top-[-2px] size-11"
+              style={{
+                opacity: open ? 1 : 0,
+                transform: open
+                  ? `translate(${x}px,${y}px) scale(1)`
+                  : 'translate(0px,0px) scale(0.65)',
+                transition: 'opacity 230ms ease-out, transform 230ms cubic-bezier(.2,.8,.2,1)',
+                transitionDelay: open ? `${index * 35}ms` : '0ms',
+              }}
+            >
+              {id === 'settings' ? (
+                <Link
+                  href="/configuracion"
+                  tabIndex={open ? 0 : -1}
+                  aria-label={label}
+                  title={label}
+                  onClick={() => setOpen(false)}
+                  className={`flex size-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+                >
+                  <span className="flex size-9 items-center justify-center rounded-full border border-[#E7EBF4] bg-white text-[#42506A] shadow-[0_5px_18px_rgba(15,27,61,0.10)]">
+                    <Icon className="size-[15px]" strokeWidth={1.8} aria-hidden="true" />
                   </span>
-                </span>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
-              </Link>
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  tabIndex={open ? 0 : -1}
+                  aria-label={label}
+                  title={label}
+                  onClick={() => {
+                    setOpen(false);
+                    setFeedbackOpen(true);
+                  }}
+                  className={`flex size-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4F5DFF] ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}
+                >
+                  <span className="flex size-9 items-center justify-center rounded-full border border-[#E7EBF4] bg-white text-[#42506A] shadow-[0_5px_18px_rgba(15,27,61,0.10)]">
+                    <Icon className="size-[15px]" strokeWidth={1.8} aria-hidden="true" />
+                  </span>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          data-mobile-profile-menu-trigger
+          aria-label={open
+            ? (english ? 'Close profile options' : 'Cerrar opciones de perfil')
+            : messages.navigation.profileMenu}
+          aria-expanded={open}
+          onClick={() => setOpen(value => !value)}
+          className={`relative z-10 inline-flex size-10 items-center justify-center rounded-full transition-[background-color,transform] duration-200 ease-out active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none ${open ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
+        >
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
+              {initials}
+            </AvatarFallback>
+            {avatarUrl ? <AvatarImage src={avatarUrl} /> : null}
+          </Avatar>
+        </button>
+      </div>
       {feedbackOpen ? (
         <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} sourcePath={sourcePath} />
       ) : null}

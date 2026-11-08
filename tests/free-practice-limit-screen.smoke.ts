@@ -24,8 +24,8 @@ assert.match(screen, /onClick=\{event => onLinkClick\(event, premiumHref\)\}/,
   'Premium navigation must play the exit transition');
 assert.match(screen, /transitionOut\(onBack\)/, 'Returning to the original topic must animate too');
 const motion = read('components/dashboard/practice-motion.css');
-assert.match(motion, /practice-screen-arrive 280ms/);
-assert.match(motion, /practice-screen-depart 200ms/);
+assert.match(motion, /\.practice-screen-enter[^{]*\{animation:evaluo-enter var\(--evaluo-motion-enter\)/);
+assert.match(motion, /\.practice-screen-leave\{animation:evaluo-exit var\(--evaluo-motion-exit\)/);
 assert.match(motion, /prefers-reduced-motion:reduce/, 'Respect reduced motion preferences');
 
 assert.match(screen, /fixed inset-0.*h-dvh/);
@@ -90,14 +90,16 @@ assert.match(modePage, /listFreeStudyUnlockedKeys/);
 assert.match(modePage, /!Array\.from\(keys\)\.some\(key => key\.startsWith\(material\.id \+ ':'\)\)/);
 // La navegación no debe consumir la única ronda ni el simulacro antes de estar listos.
 assert.match(modePage, /keys\.size >= 1 && !keys\.has\(ownedKey\)/);
-assert.match(modePage, /return exhausted\(kind\)/);
+assert.match(modePage, /return exhausted\(session\.reason\)/);
 assert.doesNotMatch(modePage, /await claimFreeStudyUnlock\(\{\s*userId:user\.id,materialId:material\.id,kind:'simulator'/);
-assert.match(modePage, /return exhausted\(mode === 'completar' \? 'complete' : 'mixed'\)/);
-assert.match(screen, /premiumOnly = kind === 'complete' \|\| kind === 'mixed'/);
-assert.match(screen, /Esta práctica es parte de Premium/);
+// Completar y Mixto tienen 1 ronda gratis cada uno (Mixto no descuenta otros cupos).
+assert.match(modePage, /completar: \{ kind: 'complete_round', itemKey: 'complete:first'/);
+assert.match(modePage, /mixto: \{ kind: 'mixed_round', itemKey: 'mixed:first'/);
+assert.doesNotMatch(modePage, /return exhausted\(mode === 'completar'/);
+assert.doesNotMatch(screen, /premiumOnly/);
 const session = read('components/dashboard/practice-session.tsx');
 assert.match(session, /const claimSessionQuota = useCallback/);
-assert.match(session, /mode === 'unir' && ready && freeSessionGate === 'new'/);
+assert.match(session, /sessionRound && mode !== 'simulacro' && ready && freeSessionGate === 'new'/);
 assert.match(session, /freeV2 && response\.status === 403 && code === 'free_quota_exhausted'/);
 assert.match(session, /freeV2 && response\.status === 403 && errorCode === 'free_quota_exhausted'/);
 assert.match(session, /kind=\{mode === 'unir' \? 'matching_round' : mode === 'casos' \? 'case'/);
@@ -134,7 +136,10 @@ assert.match(modePage, /returnTo:practiceHref/, 'Premium activation should resum
 assert.match(modePage, /backHref=\{backHref\}/, 'The secondary CTA must return to the previous context');
 assert.match(modePage, /safePremiumReturnTo\(returnTo\)/, 'Never allow external return URLs');
 assert.match(modePicker, /encodeURIComponent\(returnTo\)/);
-assert.match(practiceHome, /requestedMaterialId && materials\.some/, 'Back link must preselect the original owned material');
+// La selección vive en el cliente: solo se preselecciona un material propio de la lista.
+assert.match(practiceHome, /requestedMaterialId=\{requestedMaterialId\}/);
+assert.match(read('components/dashboard/practice-mode-picker.tsx'), /materials\.find\(m => m\.id === initialMaterialId\)\?\.id \?\? materials\[0\]\?\.id/,
+  'Back link must preselect the original owned material');
 
 // The visual-only demonstration is never routable on Vercel or production.
 assert.match(demo, /process\.env\.NODE_ENV !== 'development'/);

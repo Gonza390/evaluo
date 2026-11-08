@@ -108,11 +108,11 @@ export default function AcceptableUsePolicyPage() {
         </div>
       </div>
       <main className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-20">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#42506A] transition hover:text-[#2563EB]">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#42506A] transition hover:text-[#456DBD]">
           <ArrowLeft className="h-4 w-4" /> Volver al inicio
         </Link>
         <header className="mt-8 rounded-[28px] border border-[#E7EBF4] bg-white px-6 py-9 sm:px-10 sm:py-12">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#4F5DFF]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#5D70C4]">
             <ShieldCheck className="h-4 w-4" /> Uso responsable de Evaluo
           </div>
           <h1 className="mt-5 max-w-3xl text-3xl font-extrabold tracking-[-0.055em] sm:text-5xl">
@@ -130,7 +130,7 @@ export default function AcceptableUsePolicyPage() {
               { icon: LockKeyhole, title: 'Privacidad y seguridad', text: 'No compartas datos ajenos ni contenido restringido.' },
             ].map((item) => (
               <div key={item.title} className="rounded-2xl border border-[#E7EBF4] bg-[#F5F7FB] p-4">
-                <item.icon className="h-5 w-5 text-[#4F5DFF]" aria-hidden="true" />
+                <item.icon className="h-5 w-5 text-[#5D70C4]" aria-hidden="true" />
                 <h2 className="mt-3 text-sm font-bold">{item.title}</h2>
                 <p className="mt-1 text-xs leading-6 text-[#42506A]">{item.text}</p>
               </div>
@@ -146,7 +146,7 @@ export default function AcceptableUsePolicyPage() {
                   <p key={text} className="mt-4 text-[15px] leading-8 text-[#42506A]">{text}</p>
                 ))}
                 {section.items ? (
-                  <ul className="mt-5 list-disc space-y-3 pl-5 text-[15px] leading-7 text-[#42506A] marker:text-[#4F5DFF]">
+                  <ul className="mt-5 list-disc space-y-3 pl-5 text-[15px] leading-7 text-[#42506A] marker:text-[#5D70C4]">
                     {section.items.map((item) => <li key={item}>{item}</li>)}
                   </ul>
                 ) : null}
@@ -154,9 +154,9 @@ export default function AcceptableUsePolicyPage() {
             ))}
             <div className="rounded-2xl border border-[#E7EBF4] bg-[#EEF2FF] p-6 text-sm leading-7 text-[#42506A]">
               Esta política se complementa con los{' '}
-              <Link href="/terminos" className="font-semibold text-[#2563EB] underline underline-offset-4">Términos y Condiciones</Link>, la{' '}
-              <Link href="/privacidad" className="font-semibold text-[#2563EB] underline underline-offset-4">Política de Privacidad</Link> y la{' '}
-              <Link href="/copyright" className="font-semibold text-[#2563EB] underline underline-offset-4">Política de Copyright</Link>.
+              <Link href="/terminos" className="font-semibold text-[#456DBD] underline underline-offset-4">Términos y Condiciones</Link>, la{' '}
+              <Link href="/privacidad" className="font-semibold text-[#456DBD] underline underline-offset-4">Política de Privacidad</Link> y la{' '}
+              <Link href="/copyright" className="font-semibold text-[#456DBD] underline underline-offset-4">Política de Copyright</Link>.
             </div>
           </article>
           <aside className="hidden lg:block">
@@ -165,11 +165,11 @@ export default function AcceptableUsePolicyPage() {
               <ol className="mt-4 space-y-3">
                 {sections.map((section) => (
                   <li key={section.id}>
-                    <a href={`#${section.id}`} className="text-sm leading-6 text-[#42506A] transition hover:text-[#2563EB]">{section.title.replace(/^\d+\. /, '')}</a>
+                    <a href={`#${section.id}`} className="text-sm leading-6 text-[#42506A] transition hover:text-[#456DBD]">{section.title.replace(/^\d+\. /, '')}</a>
                   </li>
                 ))}
               </ol>
-              <Link href="/terminos" className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#2563EB]">
+              <Link href="/terminos" className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#456DBD]">
                 Ver términos <ArrowUpRight className="h-4 w-4" />
               </Link>
             </nav>

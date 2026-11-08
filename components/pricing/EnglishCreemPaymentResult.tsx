@@ -77,16 +77,16 @@ export function EnglishCreemPaymentResult({ attemptId }: { attemptId: string | n
   return <section className="mx-auto max-w-xl rounded-3xl border border-[#E7EBF4] bg-white px-6 py-12 text-center shadow-sm sm:px-10">
     {state === 'active' ? <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" aria-hidden="true" />
       : state === 'failed' || state === 'error' ? <XCircle className="mx-auto h-12 w-12 text-amber-600" aria-hidden="true" />
-      : <Clock3 className="mx-auto h-12 w-12 text-[#2563EB]" aria-hidden="true" />}
+      : <Clock3 className="mx-auto h-12 w-12 text-[#456DBD]" aria-hidden="true" />}
     <h1 className="mt-5 text-2xl font-bold tracking-tight sm:text-3xl">{title[state]}</h1>
     <p className="mt-4 text-sm leading-7 text-[#42506A]" role="status">{description[state]}</p>
     <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
       {state === 'active' ? (
-        <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-white">Continue studying</Link>
+        <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-sm font-bold text-white">Continue studying</Link>
       ) : state === 'signin' ? (
-        <Link href={'/en/login?mode=login&next=' + encodeURIComponent('/en/pricing/result?attemptId=' + attemptId)} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-white">Sign in</Link>
+        <Link href={'/en/login?mode=login&next=' + encodeURIComponent('/en/pricing/result?attemptId=' + attemptId)} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-sm font-bold text-white">Sign in</Link>
       ) : (
-        <Link href="/en/pricing" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-white">Back to plans</Link>
+        <Link href="/en/pricing" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-sm font-bold text-white">Back to plans</Link>
       )}
       {checking ? <button type="button" onClick={() => { setState('checking'); setRefresh(n => n + 1); }}
         className="min-h-11 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-[#0F1B3D]">Check again</button> : null}

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   corregirPreguntaDemo,
   finalizarSimuladorAction,
@@ -366,7 +366,7 @@ function SimulatorTourCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[12px] font-semibold tracking-[0.18em] text-[#2563EB] uppercase">
+          <p className="text-[12px] font-semibold tracking-[0.18em] text-[#456DBD] uppercase">
             Paso {stepIndex + 1} de {totalSteps}
           </p>
           <h3 className="mt-2 text-[1.05rem] font-bold text-slate-950 max-sm:text-[0.98rem]">
@@ -385,7 +385,7 @@ function SimulatorTourCard({
 
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#2563EB] to-[#5B7BFF] transition-all duration-300"
+          className="h-full rounded-full bg-gradient-to-r from-[#456DBD] to-[#6B84D4] transition-all duration-300"
           style={{ width: progressWidth }}
         />
       </div>
@@ -415,7 +415,7 @@ function SimulatorTourCard({
         <button
           type="button"
           onClick={onNext}
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] max-sm:w-full"
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-[#456DBD] px-4 text-sm font-semibold text-white transition hover:bg-[#3A5CA8] max-sm:w-full"
         >
           {stepIndex === totalSteps - 1 ? 'Entendido' : 'Siguiente'}
         </button>
@@ -435,6 +435,7 @@ export default function SimuladorExamen({
   acquisitionVariant,
 }: SimuladorExamenProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const landingEntry =
     mode === 'regular' && !premiumOnly ? parseSimulatorLandingEntry(searchParams) : null;
@@ -770,7 +771,7 @@ export default function SimuladorExamen({
   ]);
 
   const progressRingStyle = {
-    background: `conic-gradient(#2563EB ${progressPercent * 3.6}deg, var(--border) ${progressPercent * 3.6}deg)`,
+    background: `conic-gradient(#456DBD ${progressPercent * 3.6}deg, var(--border) ${progressPercent * 3.6}deg)`,
   };
 
   useEffect(() => {
@@ -2165,7 +2166,7 @@ export default function SimuladorExamen({
           <Card className="w-full max-w-4xl overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
             <div className="grid gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-12">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF] ring-1 ring-[#D9DBFF]">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#626DC3] ring-1 ring-[#D9DBFF]">
                   <Trophy className="h-4 w-4" />
                   Simulador de muestra
                 </div>
@@ -2180,7 +2181,7 @@ export default function SimuladorExamen({
                   <span
                     className={cn(
                       'text-[3rem] leading-none font-bold tracking-[-0.07em]',
-                      porcentaje >= 60 ? 'text-[#4F46E5]' : 'text-rose-600'
+                      porcentaje >= 60 ? 'text-[#555CB1]' : 'text-rose-600'
                     )}
                   >
                     {porcentaje}%
@@ -2199,7 +2200,7 @@ export default function SimuladorExamen({
                     onClick={() =>
                       void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'login')
                     }
-                    className="inline-flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-base font-semibold text-white shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95"
+                    className="inline-flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-base font-semibold text-white shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95"
                   >
                     Iniciar sesión
                   </Link>
@@ -2208,7 +2209,7 @@ export default function SimuladorExamen({
                     onClick={() =>
                       void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'signup')
                     }
-                    className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 px-6 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF]"
+                    className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 px-6 text-base font-semibold text-[#6673C8] hover:bg-[#EEF0FF]"
                   >
                     Crear cuenta
                   </Link>
@@ -2283,16 +2284,16 @@ export default function SimuladorExamen({
               )}
             >
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.10),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_22%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6366F1]/50 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6972C8]/50 to-transparent" />
               <div className="absolute inset-0 overflow-hidden">
                 {[
-                  'left-12 top-24 bg-[#5B5FEF]',
-                  'left-40 top-12 bg-[#F97316]',
-                  'left-64 top-36 bg-[#FBBF24]',
-                  'right-16 top-20 bg-[#7C3AED]',
-                  'right-36 top-36 bg-[#60A5FA]',
-                  'right-60 top-10 bg-[#F97316]',
-                  'left-80 top-20 bg-[#93C5FD]',
+                  'left-12 top-24 bg-[#626DC3]',
+                  'left-40 top-12 bg-[#D78A63]',
+                  'left-64 top-36 bg-[#DEC797]',
+                  'right-16 top-20 bg-[#735DB5]',
+                  'right-36 top-36 bg-[#74A6E4]',
+                  'right-60 top-10 bg-[#D78A63]',
+                  'left-80 top-20 bg-[#9DC5F2]',
                 ].map((item) => (
                   <span
                     key={item}
@@ -2308,7 +2309,7 @@ export default function SimuladorExamen({
                       'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm',
                       needsMotivation
                         ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-                        : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF]'
+                        : 'bg-[#EEF0FF] text-[#626DC3] ring-1 ring-[#D9DBFF]'
                     )}
                   >
                     {needsMotivation ? (
@@ -2329,9 +2330,9 @@ export default function SimuladorExamen({
                       className={cn(
                         'text-[3.1rem] leading-none font-bold tracking-[-0.07em]',
                         porcentaje >= 85
-                          ? 'text-[#4F46E5]'
+                          ? 'text-[#555CB1]'
                           : porcentaje >= 60
-                            ? 'text-[#2563EB]'
+                            ? 'text-[#456DBD]'
                             : 'text-rose-600'
                       )}
                     >
@@ -2351,7 +2352,7 @@ export default function SimuladorExamen({
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                     <Button
                       onClick={() => setShowResultsFace(true)}
-                      className="h-12 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-base font-semibold shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95"
+                      className="h-12 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-base font-semibold shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95"
                     >
                       Ver diagnóstico completo
                     </Button>
@@ -2367,7 +2368,7 @@ export default function SimuladorExamen({
                     <Button
                       variant="ghost"
                       onClick={() => window.history.back()}
-                      className="h-12 rounded-xl px-4 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] hover:text-[#4C55E6]"
+                      className="h-12 rounded-xl px-4 text-base font-semibold text-[#6673C8] hover:bg-[#EEF0FF] hover:text-[#5564B9]"
                     >
                       Volver a la materia
                     </Button>
@@ -2478,7 +2479,7 @@ export default function SimuladorExamen({
                   <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:px-6">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                       <div className="max-w-2xl">
-                        <p className="text-sm font-semibold text-[#5D65F6]">
+                        <p className="text-sm font-semibold text-[#6673C8]">
                           Resultados del simulador
                         </p>
                         <h3 className="mt-1 text-[2rem] font-bold tracking-[-0.04em] text-slate-900 sm:text-[2.35rem]">
@@ -2751,7 +2752,7 @@ export default function SimuladorExamen({
                         </p>
                         <Link
                           href={pdfActivationHref}
-                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.28)] hover:opacity-95 sm:w-auto"
+                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.28)] hover:opacity-95 sm:w-auto"
                         >
                           Usar mis apuntes para saber qué estudiar
                         </Link>
@@ -2790,7 +2791,7 @@ export default function SimuladorExamen({
                               source: 'simulator_explanations',
                               materia_id: materiaId,
                             });
-                            window.location.assign(premiumDashboardHref({
+                            router.push(premiumDashboardHref({
                               source:'simulator_explanations',
                               materiaId, parcial,
                               returnTo:'/dashboard/explicaciones',

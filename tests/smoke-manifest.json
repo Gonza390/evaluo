@@ -420,6 +420,10 @@
     "alias": false
   },
   {
+    "file": "tests/pricing-redesign.smoke.ts",
+    "alias": false
+  },
+  {
     "file": "tests/seo-english-acquisition.smoke.mjs",
     "alias": false
   },
@@ -442,5 +446,9 @@
   {
     "file": "tests/crawler-locale-redirect.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/creem-unsupported-countries.smoke.ts",
+    "alias": false
   }
 ]

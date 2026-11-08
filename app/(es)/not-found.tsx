@@ -20,7 +20,7 @@ export default function NotFound() {
         <div className="mt-8 grid w-full gap-3 sm:grid-cols-3">
           <Link
             href="/explorar"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(37,99,235,0.20)] transition hover:opacity-95"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(37,99,235,0.20)] transition hover:opacity-95"
           >
             <BookOpen className="h-4 w-4" />
             Explorar materias

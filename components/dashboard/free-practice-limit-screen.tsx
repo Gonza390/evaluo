@@ -102,7 +102,6 @@ export function FreePracticeLimitScreen({
   }, [mounted, kind, materialTitle, topicLabel, backLabel]);
 
   const mode = (english ? modesEnglish : modes)[kind];
-  const premiumOnly = kind === 'complete' || kind === 'mixed';
   const place = topicLabel || materialTitle || t('Tu material', 'Your material');
 
   // Reuse the 280ms entrance / 200ms departure from the practice flow.
@@ -144,7 +143,7 @@ export function FreePracticeLimitScreen({
           {t('Práctica', 'Practice')} · {place}
         </span>
         {backControl(
-          'flex size-11 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]',
+          'flex size-11 shrink-0 items-center justify-center rounded-full border border-[#e8ecf2] bg-white transition-colors hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3c6cba]',
           <X className="size-[18px] text-[#344054]" aria-hidden="true"/>, t('Cerrar y ', 'Close and ') + localizedBackLabel.toLowerCase(),
         )}
       </header>
@@ -157,7 +156,7 @@ export function FreePracticeLimitScreen({
         <section className="flex w-full flex-col items-center text-center">
           <Image src="/evi-practica-limite.svg" width={104} height={104} alt={t('Evi con un candado', 'Evi with a padlock')} className="size-[72px] shrink-0"/>
           <h1 id="free-practice-limit-title" className="mt-1.5 text-[23px] font-bold leading-[1.16] tracking-[-.03em] sm:text-[27px]">
-            {premiumOnly ? t('Esta práctica es parte de Premium', 'This practice mode is part of Premium') : t('Ya agotaste tu límite gratuito', 'You have reached your Free limit')}
+            {t('Ya agotaste tu límite gratuito', 'You have reached your Free limit')}
           </h1>
 
           <div className="mt-2.5 flex max-w-full flex-wrap justify-center gap-2">
@@ -172,7 +171,7 @@ export function FreePracticeLimitScreen({
             <div className="relative overflow-hidden rounded-[20px] border border-[#cfdcf5] bg-gradient-to-b from-[#f3f7ff] via-white to-white px-4 pb-3 pt-3 text-left shadow-[0_8px_24px_rgba(20,60,140,0.10)] sm:px-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] font-bold tracking-[.16em] text-[#344054]">{mode.preview}</span>
-                <span className="max-w-[140px] truncate rounded-full bg-[#eaf0fb] px-2.5 py-1 text-[11px] font-semibold text-[#084bb0]">
+                <span className="max-w-[140px] truncate rounded-full bg-[#eaf0fb] px-2.5 py-1 text-[11px] font-semibold text-[#2a5193]">
                   {topicLabel ?? t('Tu material','Your material')}
                 </span>
               </div>
@@ -187,25 +186,25 @@ export function FreePracticeLimitScreen({
               </div>
               <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 top-11 bg-gradient-to-b from-white/15 to-white/70"/>
               <span className="absolute left-1/2 top-[62%] inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-[#cfdcf5] bg-white py-1.5 pl-2 pr-3.5 text-[12px] font-semibold shadow-[0_10px_26px_rgba(20,60,140,0.18)] sm:text-[14px]">
-                <span className="flex size-6 items-center justify-center rounded-full bg-[#0b63e5] text-white"><LockKeyhole className="size-[15px]"/></span>
+                <span className="flex size-6 items-center justify-center rounded-full bg-[#3c6cba] text-white"><LockKeyhole className="size-[15px]"/></span>
                 {t('Se desbloquea con Premium','Unlock with Premium')}
               </span>
             </div>
           </div>
 
           <p className="mt-3 max-w-[440px] text-[12px] leading-[1.5] text-[#4b5565] sm:text-[13px]">
-            {premiumOnly
-              ? (english ? `With Premium you unlock ${mode.noun} to keep studying your material.` : `Con Premium desbloqueás ${mode.noun} para seguir estudiando con tu material.`)
-              : (english ? `You have used all your Free ${mode.noun}. You can repeat previously unlocked activities or keep practicing with Premium.` : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`)}
+            {english
+              ? `You have used all your Free ${mode.noun}. You can repeat previously unlocked activities or keep practicing with Premium.`
+              : `Ya agotaste el cupo de ${mode.noun} del plan gratis. Podés repetir las actividades desbloqueadas o seguir practicando con Premium.`}
           </p>
 
           <div className="mt-3 flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
             <Link href={premiumHref} onClick={event => onLinkClick(event, premiumHref)} aria-disabled={leaving}
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-full bg-[#0b63e5] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] sm:w-auto hover:bg-[#084bb0] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5]">
-              {t('Practicar con ', 'Practice with ')}<span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold tracking-[.04em] text-[#084bb0]">PREMIUM</span>
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3c6cba] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] sm:w-auto hover:bg-[#2a5193] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3c6cba]">
+              {t('Practicar con ', 'Practice with ')}<span className="rounded-full bg-white px-2.5 py-[3px] text-[11px] font-bold tracking-[.04em] text-[#2a5193]">PREMIUM</span>
             </Link>
             {backControl(
-              'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-[13px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b63e5] sm:w-auto sm:text-[14px]',
+              'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-[13px] font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3c6cba] sm:w-auto sm:text-[14px]',
               <><ArrowLeft className="size-[18px]" aria-hidden="true"/>{localizedBackLabel}</>,
             )}
           </div>

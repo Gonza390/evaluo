@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase-client';
 import { isTerminalAuthSessionError } from '@/lib/auth-session-errors';
+import { APP_LOCALE_STORAGE_KEY } from '@/lib/i18n/app-locale';
 
 const DEFAULT_IDLE_MINUTES = 60;
 const MIN_IDLE_MINUTES = 15;
@@ -71,8 +72,13 @@ export default function SessionIdleGuard() {
       hasSessionRef.current = false;
       clearLastActivity();
       const currentPath = `${window.location.pathname}${window.location.search}`;
-      const nextPath = window.location.pathname.startsWith('/login') ? '/dashboard' : currentPath;
-      window.location.replace(`/login?reason=${reason}&next=${encodeURIComponent(nextPath)}`);
+      const nextPath = /^\/(?:en\/)?login(?:\/|$)/.test(window.location.pathname) ? '/dashboard' : currentPath;
+      // The app's persisted language survives sign-out; an expired English session
+      // must never drop the learner on a Spanish-only auth screen.
+      let english = false;
+      try { english = window.localStorage.getItem(APP_LOCALE_STORAGE_KEY) === 'en'; } catch { /* storage optional */ }
+      const loginRoute = english ? '/en/login' : '/login';
+      window.location.replace(`${loginRoute}?reason=${reason}&next=${encodeURIComponent(nextPath)}`);
     };
 
     const expireSession = async (reason: 'inactive' | 'auth-expired' = 'inactive') => {

@@ -26,6 +26,16 @@ import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
  * Server-only source-backed unlock. Only verified material items become reusable.
  * All limits belong to the account and persist after deleting a material.
  */
+/** Rondas Free que se reclaman como sesión (una por cuenta). */
+const FREE_SESSION_ROUNDS = {
+  unir: { kind: 'matching_round', itemKey: 'matching:first', reason: 'matching_round' },
+  simulacro: { kind: 'simulator', itemKey: 'simulator:first', reason: 'simulator' },
+  completar: { kind: 'complete_round', itemKey: 'complete:first', reason: 'complete' },
+  mixto: { kind: 'mixed_round', itemKey: 'mixed:first', reason: 'mixed' },
+} as const satisfies Record<string, { kind: FreeStudyUnlockKind; itemKey: string; reason: FreePracticeLimitKind }>;
+/** Preguntas de opción múltiple que entran en la ronda gratis de Mixto. */
+const FREE_MIXED_QUESTIONS = 8;
+
 async function firstFreeItems<T>(args: {
   userId: string; materialId: string; kind: FreeStudyUnlockKind;
   items: T[]; limit: number; keyPrefix: string;
@@ -114,11 +124,6 @@ export default async function PracticeModePage({ params, searchParams }: { param
       premiumHref={premiumUpgradeForLimit(kind, {materialId:material.id, returnTo:practiceHref}).href}/>;
 
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
-  if (freeV2 && (mode === 'completar' || mode === 'mixto')) {
-    // Modos disponibles sólo para Premium: no consumir un cupo Free ni
-    // generar ejercicios antes de mostrar el bloqueo comercial.
-    return exhausted(mode === 'completar' ? 'complete' : 'mixed');
-  }
   const artifacts = await loadOrBuildPedagogicalArtifacts({
     admin, materialId: material.id, summary: studySummary, glossary,
   });
@@ -186,22 +191,22 @@ export default async function PracticeModePage({ params, searchParams }: { param
     explanation: q.explanation, level: q.level, pageStart: q.reference.pageStart,
     chapterTitle: q.chapterTitle ?? null, kind: q.kind ?? undefined,
   }));
+  // La ronda gratis de Mixto es independiente: usa preguntas verificadas de
+  // este material sin descontar el cupo de opción múltiple. La protege el
+  // claim 'mixed_round' (uno por cuenta), comprobado abajo antes de enviarlas.
   const freeQuestions = freeV2 && mode === 'mixto'
-    ? await firstFreeItems({
-      userId:user.id, materialId:material.id, kind:'multiple_choice',
-      items:sourceQuestions, limit:FREE_STUDY_V2.multipleChoice, keyPrefix:'question',
-    }) : sourceQuestions;
+    ? sourceQuestions.slice(0, FREE_MIXED_QUESTIONS) : sourceQuestions;
   // Al abrir una ruta no se gasta una ronda ni un simulacro. Primero
   // comprobamos si el cupo está agotado en otro material. La ronda se reclama
   // al estar lista y el simulacro cuando el estudiante pulsa «Comenzar».
-  if (freeV2 && (mode === 'unir' || mode === 'simulacro')) {
-    const kind = mode === 'unir' ? 'matching_round' : 'simulator';
+  if (freeV2 && (mode === 'unir' || mode === 'simulacro' || mode === 'completar' || mode === 'mixto')) {
+    const session = FREE_SESSION_ROUNDS[mode];
     const keys = await listFreeStudyUnlockedKeys({
-      userId:user.id,kind,premium:false,
+      userId:user.id,kind:session.kind,premium:false,
     });
-    const ownedKey = material.id + (mode === 'unir' ? ':matching:first' : ':simulator:first');
+    const ownedKey = material.id + ':' + session.itemKey;
     if (keys && keys.size >= 1 && !keys.has(ownedKey)) {
-      return exhausted(kind);
+      return exhausted(session.reason);
     }
   }
   // A missing bank table during rollout is safe: keep the original source-backed practice.
@@ -228,9 +233,10 @@ export default async function PracticeModePage({ params, searchParams }: { param
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
     freeV2={freeV2}
     quotaBackHref={backHref} quotaBackLabel={backLabel}
-    quotaPremiumHref={freeV2 && ['unir','simulacro','casos','opciones'].includes(mode)
+    quotaPremiumHref={freeV2 && ['unir','simulacro','casos','opciones','completar','mixto'].includes(mode)
       ? premiumUpgradeForLimit(mode === 'unir' ? 'matching_round'
-        : mode === 'simulacro' ? 'simulator' : mode === 'casos' ? 'case' : 'true_false',
+        : mode === 'simulacro' ? 'simulator' : mode === 'casos' ? 'case'
+        : mode === 'completar' ? 'complete' : mode === 'mixto' ? 'mixed' : 'true_false',
           {materialId:material.id, returnTo:practiceHref}).href : undefined}
     materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={freeV2 ? cases : savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={true}

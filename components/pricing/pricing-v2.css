@@ -1,0 +1,123 @@
+/* ── Pricing (rediseño nov-2026) ─────────────────────────────────────────
+   Se usa en /pricing y en /dashboard/premium ("Mejorar mi plan").
+   Acento índigo aprobado en el diseño (#4A63E7) con tintes derivados.
+   Excepción deliberada a la tonalidad general (claude/tonalidad-colores):
+   el usuario pidió conservar el color que aprobó para esta pantalla. */
+.pricing-v2 {
+  --pv-accent: #4a63e7;
+  --pv-tint: color-mix(in srgb, var(--pv-accent) 8%, white);
+  --pv-card: color-mix(in srgb, var(--pv-accent) 4%, white);
+  --pv-border: color-mix(in srgb, var(--pv-accent) 35%, white);
+}
+
+.pricing-v2 .pv-premium-shadow {
+  box-shadow: 0 24px 48px color-mix(in srgb, var(--pv-accent) 12%, transparent);
+}
+
+/* Sin entrada propia al cargar: la transición entre pantallas la hace el contenedor de la app.
+   El cambio de precio y las preguntas usan el efecto único (app/globals.css). */
+.pricing-v2 .pv-swap,
+.pricing-v2 .pv-faq[open] p {
+  animation: evaluo-enter var(--evaluo-motion-enter) var(--evaluo-motion-ease) backwards;
+}
+.pricing-v2 .pv-pill {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pricing-v2 .pv-sticky {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pricing-v2 .pv-btn {
+  transition:
+    transform 0.15s ease,
+    filter 0.2s ease,
+    background-color 0.2s ease;
+}
+.pricing-v2 .pv-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) {
+  .pricing-v2 .pv-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-v2 .pv-swap,
+  .pricing-v2 .pv-faq[open] p {
+    animation: none;
+  }
+  .pricing-v2 .pv-pill,
+  .pricing-v2 .pv-sticky,
+  .pricing-v2 .pv-btn {
+    transition: none;
+  }
+}
+
+/* ── "Mejorar mi plan" (UpgradeScreen): animaciones decorativas ─────────────
+   No son entradas de pantalla (esa la hace la transición única de la ruta):
+   Evi y sus objetos flotan suave, y la barra de Premium se llena una vez y
+   tiene un brillo que pasa cada tanto. Sin animación con prefers-reduced-motion. */
+.pricing-v2 .pv-float {
+  animation: pv-float 3.6s ease-in-out infinite;
+}
+.pricing-v2 .pv-float-late {
+  animation: pv-float 3.6s ease-in-out -1.2s infinite;
+}
+.pricing-v2 .pv-float-later {
+  animation: pv-float 3.6s ease-in-out -2.4s infinite;
+}
+@keyframes pv-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.pricing-v2 .pv-bar-fill {
+  position: relative;
+  overflow: hidden;
+  transform-origin: left center;
+  animation: pv-bar-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s backwards;
+}
+.pricing-v2 .pv-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-120%);
+  animation: pv-bar-shine 3.2s ease-in-out 1.3s infinite;
+}
+@keyframes pv-bar-fill {
+  from {
+    transform: scaleX(0.03);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes pv-bar-shine {
+  0% {
+    transform: translateX(-120%);
+  }
+  45%,
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-v2 .pv-float,
+  .pricing-v2 .pv-float-late,
+  .pricing-v2 .pv-float-later,
+  .pricing-v2 .pv-bar-fill,
+  .pricing-v2 .pv-bar-fill::after {
+    animation: none;
+  }
+}

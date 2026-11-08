@@ -25,9 +25,10 @@ import { supabase } from '@/lib/supabase-client';
 import { shiftDayKey } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
+import { PremiumStatusProvider } from '@/components/premium/premium-status-provider';
+import { MaterialCatalogProvider } from '@/components/materials/material-catalog-provider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
 import { PomodoroHeader } from '@/components/dashboard/pomodoro-header';
 
@@ -229,9 +230,13 @@ export default function ClientLayoutClient({
   return (
     <UserProvider initialUser={initialUser}>
       <AppLocaleProvider>
-        <ShellDataProvider initialProfileSummary={initialProfileSummary}>
-          <ClientLayoutInner>{children}</ClientLayoutInner>
-        </ShellDataProvider>
+        <PremiumStatusProvider>
+          <MaterialCatalogProvider>
+            <ShellDataProvider initialProfileSummary={initialProfileSummary}>
+              <ClientLayoutInner>{children}</ClientLayoutInner>
+            </ShellDataProvider>
+          </MaterialCatalogProvider>
+        </PremiumStatusProvider>
         <Toaster />
       </AppLocaleProvider>
     </UserProvider>
@@ -240,9 +245,12 @@ export default function ClientLayoutClient({
 
 function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, loading: userLoading, getUserInitials, getUserName } = useUser();
+  const [firstPathname] = useState(pathname);
+  const [hasNavigated, setHasNavigated] = useState(false);
+  if (!hasNavigated && pathname !== firstPathname) setHasNavigated(true);
+  const { user, loading: userLoading, getUserInitials } = useUser();
   const { messages, locale } = useAppLocale();
-  const { profileSummary, streak } = useShellData();
+  const { streak } = useShellData();
   const streakDays = streak?.streakDays ?? 0;
   const streakDayKeys = streak?.streakDayKeys ?? [];
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -275,10 +283,11 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       pathname === '/referidos' ||
       pathname.startsWith('/referidos/') ||
       pathname.startsWith('/materiales/'));
-  // Un solo efecto breve de entrada para todas las rutas de la aplicación autenticada.
-  // Conservamos la escala compacta exclusivamente donde ya existía; el fade no
-  // modifica medidas ni sustituye animaciones específicas dentro de las pantallas.
-  const hasPrivateRouteTransition = isCompactAppRoute || (Boolean(user) && !isLegalRoute);
+  // Transición única entre pantallas (app/globals.css → evaluo-enter) para toda la plataforma,
+  // salvo /administrador. Solo corre al navegar: la primera carga se pinta sin animación
+  // para no retrasar el LCP. Las pantallas no agregan su propia entrada.
+  const hasRouteTransition = !isAdministradorRoute;
+  const animateRouteEnter = hasNavigated || pathname !== firstPathname;
   const isExploreExperienceRoute =
     pathname === '/explorar' ||
     pathname.startsWith('/universidad/') ||
@@ -382,18 +391,18 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               </div>
             ) : (
               <>
-                <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
+                <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5 lg:gap-1.5">
                   <div className="hidden lg:block">
                     <EstimatedStudyActivity compact={isCompactAppRoute} />
                   </div>
-                  <PomodoroHeader key={user.id} userId={user.id} />
+                  <div className="order-2 md:order-none"><PomodoroHeader key={user.id} userId={user.id} /></div>
                   {/* Calendario queda al lado del perfil en la barra superior móvil. */}
                   <Link
                     href="/calendario"
                     data-mobile-calendar-link
                     aria-label={messages.navigation.calendar}
                     aria-current={pathname === '/calendario' || pathname.startsWith('/calendario/') ? 'page' : undefined}
-                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
+                    className={`order-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden ${
                       pathname === '/calendario' || pathname.startsWith('/calendario/')
                         ? 'bg-blue-50 text-brand'
                         : 'text-slate-600 hover:bg-slate-50'
@@ -401,51 +410,30 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   >
                     <CalendarDays className="h-[19px] w-[19px]" aria-hidden="true" />
                   </Link>
+                  <div className="order-4 md:hidden">
                   <MobileProfileMenu
                     initials={getUserInitials()}
                     avatarUrl={user.user_metadata?.avatar_url}
                     sourcePath={pathname}
                   />
+                  </div>
                   <button
                     type="button"
                     aria-label={locale === 'en' ? `View study streak: ${streakDays} days` : `Ver racha de estudio: ${streakDays} días` }
                     onClick={() => setShowStreakDialog(true)}
-                    className="inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
+                    className="order-3 inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
                   >
                     <Flame className="h-4 w-4" aria-hidden="true" />
                     <span className="text-xs font-semibold">{streakDays}</span>
                   </button>
                   <button
                     type="button"
+                    aria-label={locale === 'en' ? `View study streak: ${streakDays} days` : `Ver racha de estudio: ${streakDays} días`}
                     onClick={() => setShowStreakDialog(true)}
-                    className="hidden min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5 md:inline-flex"
+                    className="hidden min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:inline-flex"
                   >
-                    <Avatar className={`flex h-8 w-8 shrink-0 ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}>
-                      <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                      {user.user_metadata?.avatar_url ? (
-                        <AvatarImage src={user.user_metadata.avatar_url} />
-                      ) : null}
-                    </Avatar>
-
-                    <div className="hidden min-w-0 flex-1 sm:block">
-                      <p className={`truncate font-semibold tracking-[-0.01em] text-slate-900 ${isCompactAppRoute ? 'text-[12.5px]' : 'text-[0.88rem]'}`}>
-                        {getUserName()}
-                      </p>
-                      <p className="mt-0.5 max-w-[250px] truncate text-[11px] text-slate-400">
-                        {profileSummary.carreraNombre && profileSummary.universidadNombre
-                          ? `${profileSummary.carreraNombre} | ${profileSummary.universidadNombre}`
-                          : profileSummary.carreraNombre ||
-                            profileSummary.universidadNombre ||
-                            (locale === 'en' ? 'Your profile' : 'Tu perfil')}
-                      </p>
-                    </div>
-
-                    <span className="inline-flex shrink-0 items-center gap-1 text-blue-600">
-                      <Flame className="h-4 w-4" />
-                      <span className="text-xs font-semibold">{streakDays}</span>
-                    </span>
+                    <Flame className="h-4 w-4" aria-hidden="true" />
+                    <span className="text-xs font-semibold">{streakDays}</span>
                   </button>
                 </div>
 
@@ -628,8 +616,8 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
-            {hasPrivateRouteTransition ? (
-              <div key={pathname} data-evaluo-route-enter className={`${isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : isDesktopStudyPlanRoute ? 'min-h-full w-full xl:h-full xl:min-h-0' : isDesktopPracticeHomeRoute ? 'min-h-full w-full lg:h-full lg:min-h-0' : 'min-h-full w-full'} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:overflow-hidden' : ''}`}>
+            {hasRouteTransition ? (
+              <div key={pathname} data-evaluo-route-enter={animateRouteEnter ? '' : undefined} className={`${isMaterialStudyRoute ? 'flex min-h-0 w-full flex-1 flex-col' : isDesktopStudyPlanRoute ? 'min-h-full w-full xl:h-full xl:min-h-0' : isDesktopPracticeHomeRoute ? 'min-h-full w-full lg:h-full lg:min-h-0' : 'min-h-full w-full'} ${pathname === '/dashboard' ? 'has-[[data-empty-study-space]]:flex has-[[data-empty-study-space]]:min-h-0 has-[[data-empty-study-space]]:flex-1 has-[[data-empty-study-space]]:flex-col has-[[data-empty-study-space]]:overflow-hidden' : ''}`}>
                 {children}
               </div>
             ) : children}

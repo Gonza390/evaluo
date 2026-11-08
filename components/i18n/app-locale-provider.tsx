@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useUser } from '@/hooks/useUser';
-import { supabase } from '@/lib/supabase-client';
+// Supabase se carga solo al guardar preferencias: este proveedor está en casi
+// todas las pantallas y no debe sumar el cliente al JavaScript inicial (LCP).
+const loadSupabase = () => import('@/lib/supabase-client').then((module) => module.supabase);
 import {
   APP_LOCALE_STORAGE_KEY, accountAppLocale, parseAppLocale, type AppLocale,
 } from '@/lib/i18n/app-locale';
@@ -55,7 +57,7 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
     const data: { ui_locale?: AppLocale; time_zone?: string } = {};
     if (missingLocale) data.ui_locale = storedLocale() ?? locale;
     if (detectedZone) data.time_zone = detectedZone;
-    void supabase.auth.updateUser({ data }).catch(() => undefined);
+    void loadSupabase().then((supabase) => supabase.auth.updateUser({ data })).catch(() => undefined);
   }, [loading, initialized, user?.id, user?.user_metadata?.time_zone, accountLocale, locale]);
 
   const studyLocale = studyOverride ?? savedStudyLocale ?? locale;
@@ -87,6 +89,7 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
     try {
       if (user) {
         // A language preference in user_metadata must never grant access or affect RLS.
+        const supabase = await loadSupabase();
         const { error } = await supabase.auth.updateUser({ data: { ui_locale: next } });
         if (error) throw error;
       }
@@ -101,6 +104,7 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
     setSavingStudyLocale(true);
     try {
       if (!user) throw new Error('Study language requires a signed-in account');
+      const supabase = await loadSupabase();
       const { error } = await supabase.auth.updateUser({ data: { study_locale: next } });
       if (error) throw error;
       setStudyOverride(next);
