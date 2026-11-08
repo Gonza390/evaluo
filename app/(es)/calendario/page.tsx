@@ -52,7 +52,6 @@ import {
 import { logError } from '@/lib/observability';
 import { validateCalendarWrite, describeCalendarSaveError } from '@/lib/calendar-write-validation';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { AppPageHeader } from '@/components/ui/app-page-header';
 import type { PlanDay } from '@/lib/student-materials/study-plan-distribution';
 
@@ -221,7 +220,6 @@ export default function CalendarioPage() {
   const [careerMateriaLoading, setCareerMateriaLoading] = useState(false);
   const [careerId, setCareerId] = useState<string | null>(null);
   const [careerName, setCareerName] = useState<string | null>(null);
-  const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -1424,19 +1422,6 @@ export default function CalendarioPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
-        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-2xl border border-slate-200/90 bg-white p-0 text-slate-900 shadow-[0_18px_56px_rgba(15,23,42,0.12)]">
-          <div className="px-4 py-4 sm:px-5 sm:py-5">
-            <PremiumUpsell
-              title={english ? "Plan your next exam" : "Armá el plan para tu próximo parcial"}
-              description={english ? "You have used the three exam dates included in Free. Premium lets you organize more exams and receive reminders." : "Ya usaste los 3 exámenes del plan gratuito. Con Premium organizá toda la cursada y recibí recordatorios antes de cada fecha."}
-              source="calendario_exam_limit"
-              features={english ? ['Unlimited exams', 'Organize all your exams', 'Full academic calendar'] : ['Parciales ilimitados', 'Organización completa de tus parciales', 'Calendario completo para toda la cursada']}
-              ctaLabel={english ? 'Organize my exams with Premium' : 'Organizar mis parciales con Premium'}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
