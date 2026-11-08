@@ -184,3 +184,9 @@ assert.doesNotMatch(workspace, /className="animate-tab-panel/);
 const userHook = readFileSync('hooks/useUser.tsx', 'utf8');
 assert.doesNotMatch(userHook, /^import \{ supabase \}/m, 'useUser must not load Supabase before first paint.');
 assert.match(userHook, /import\('@\/lib\/supabase-client'\)/);
+// El visor y el proveedor de idioma no cargan Supabase de forma estática (JS inicial).
+for (const file of ['lib/study-plan-progress.ts', 'components/i18n/app-locale-provider.tsx']) {
+  const source = readFileSync(file, 'utf8');
+  assert.doesNotMatch(source, /^import \{ supabase \} from '@\/lib\/supabase-client';/m, file);
+  assert.match(source, /import\('@\/lib\/supabase-client'\)/, file);
+}
