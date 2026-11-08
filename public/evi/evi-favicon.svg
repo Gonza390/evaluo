@@ -1,9 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-<title>Evi, favicon</title>
-<rect width="64" height="64" rx="14" fill="#2563EB"/>
-<path d="M21 11 H38 L49 22 V47 Q49 53 43 53 H21 Q15 53 15 47 V17 Q15 11 21 11 Z" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round"/>
-<path d="M38 11 V19 Q38 22 41 22 H49 Z" fill="#FFC933" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round"/>
-<circle cx="25" cy="33" r="3.2" fill="#1B1B3A"/>
-<circle cx="39" cy="33" r="3.2" fill="#1B1B3A"/>
-<path d="M26 41 Q32 46.5 38 41" stroke="#1B1B3A" stroke-width="3" stroke-linecap="round" fill="none"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 6 88 102" fill="none"><path d="M40 10 H72 L96 34 V88 Q96 104 80 104 H40 Q24 104 24 88 V26 Q24 10 40 10 Z" fill="#fff" stroke="#1b1c3a" stroke-width="4" stroke-linejoin="round"/><path d="M72 10 V26 Q72 34 80 34 H96 Z" fill="#ffc933" stroke="#1b1c3a" stroke-width="4" stroke-linejoin="round"/><circle cx="47" cy="58" r="5" fill="#1b1c3a"/><circle cx="73" cy="58" r="5" fill="#1b1c3a"/><circle cx="48.6" cy="56.2" r="1.6" fill="#fff"/><circle cx="74.6" cy="56.2" r="1.6" fill="#fff"/><ellipse cx="39" cy="70" rx="5.5" ry="3.2" fill="#f2b8ad"/><ellipse cx="81" cy="70" rx="5.5" ry="3.2" fill="#f2b8ad"/><path d="M52 71 Q60 78 68 71" fill="none" stroke="#1b1c3a" stroke-width="4" stroke-linecap="round"/></svg>

@@ -9,6 +9,7 @@ import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
+import { Personaje } from '@/components/brand/personaje';
 
 type Props = {
   materialsCount: number;
@@ -68,7 +69,11 @@ export function MaeveStudyHero({
     >
       <div className="mx-auto flex max-w-[950px] flex-col items-center">
         <div className="h-[84px] w-[84px] sm:h-[104px] sm:w-[104px]">
-          <EviMascot english={locale === 'en'} />
+          <Personaje
+            estado={isFirstPdfState ? 'contento' : 'concentrado'}
+            title={locale === 'en' ? 'Evi, Evaluo’s mascot' : 'Evi, la mascota de Evaluo'}
+            className="h-full w-full"
+          />
         </div>
         <h1 className="mt-2 text-titulo leading-[1.18] font-bold tracking-titulo text-[#0b0c1e] sm:mt-2 sm:text-destacado">
           {firstName && firstName !== 'Estudiante'
@@ -138,61 +143,6 @@ export function MaeveStudyHero({
           )}
         </div>
       </div>
-      <style jsx global>{`
-        .evi-float { animation: evi-float 4s ease-in-out infinite; transform-origin: center; }
-        .evi-shadow { animation: evi-shadow 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-        .evi-blink { animation: evi-blink 5s infinite; transform-box: fill-box; transform-origin: center; }
-        .evi-pencil { animation: evi-write 1.4s ease-in-out infinite; transform-origin: 930px 735px; }
-        @keyframes evi-float { 50% { transform: translateY(-18px); } }
-        @keyframes evi-shadow { 50% { transform: scale(.88); opacity: .6; } }
-        @keyframes evi-blink { 0%,93%,100% { transform: scaleY(1); } 96% { transform: scaleY(.08); } }
-        @keyframes evi-write { 50% { transform: rotate(-9deg); } }
-        @media (prefers-reduced-motion: reduce) {
-          .evi-float, .evi-shadow, .evi-blink, .evi-pencil { animation: none; }
-        }
-      `}</style>
     </section>
   );
 }
-
-function EviMascot({ english = false }: { english?: boolean }) {
-  return (
-    <svg viewBox="0 -80 1024 1104" role="img" aria-label={english ? "Evi, Evaluo’s mascot" : "Evi, la mascota de Evaluo"} className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
-      <ellipse className="evi-shadow" cx="535" cy="975" rx="260" ry="30" fill="#d5d9ee" />
-      <g className="evi-float">
-        <path d="M437 940V985M632 940V985" stroke="#1b1c3a" strokeWidth="32" strokeLinecap="round" />
-        <rect x="225" y="85" width="623" height="855" rx="85" fill="#fff" stroke="#1b1c3a" strokeWidth="24" />
-        <path d="M650 85 L848 280 H725 Q650 280 650 210Z" fill="#e2cfa3" stroke="#1b1c3a" strokeWidth="24" strokeLinejoin="round" />
-        <rect x="322" y="740" width="428" height="28" rx="14" fill="#d5d9f5" />
-        <rect x="314" y="817" width="322" height="42" rx="21" fill="#e2cfa3" />
-        <ellipse cx="344" cy="585" rx="46" ry="28" fill="#eba69b" />
-        <ellipse cx="726" cy="585" rx="46" ry="28" fill="#eba69b" />
-        <path d="M225 610 Q160 630 140 700" fill="none" stroke="#1b1c3a" strokeWidth="24" strokeLinecap="round" />
-        <circle cx="140" cy="740" r="42" fill="#fff" stroke="#1b1c3a" strokeWidth="22" />
-        <path d="M848 610 Q890 650 912 705" fill="none" stroke="#1b1c3a" strokeWidth="24" strokeLinecap="round" />
-        <g className="evi-pencil">
-          <g transform="translate(930 730) rotate(20)">
-            <rect x="-30" y="-130" width="60" height="250" fill="#e2cfa3" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
-            <path d="M-30 -130 L30 -130 L0 -195Z" fill="#efd6b5" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
-            <rect x="-30" y="120" width="60" height="34" fill="#eba69b" stroke="#1b1c3a" strokeWidth="18" strokeLinejoin="round" />
-            <path d="M-30 -60H30" stroke="#1b1c3a" strokeWidth="14" />
-          </g>
-          <circle cx="930" cy="735" r="42" fill="#fff" stroke="#1b1c3a" strokeWidth="22" />
-        </g>
-        <circle cx="428" cy="490" r="62" fill="#e6eeff" stroke="#1b1c3a" strokeWidth="18" />
-        <circle cx="642" cy="490" r="62" fill="#e6eeff" stroke="#1b1c3a" strokeWidth="18" />
-        <g className="evi-blink">
-          <circle cx="428" cy="490" r="30" fill="#1b1c3a" /><circle cx="439" cy="478" r="9" fill="#fff" />
-          <circle cx="642" cy="490" r="30" fill="#1b1c3a" /><circle cx="653" cy="478" r="9" fill="#fff" />
-        </g>
-        <path d="M488 485 Q535 460 582 485M368 468 L318 442M702 468 L752 442" fill="none" stroke="#1b1c3a" strokeWidth="18" strokeLinecap="round" />
-        <path d="M468 592 Q540 650 612 582" fill="none" stroke="#1b1c3a" strokeWidth="24" strokeLinecap="round" />
-      </g>
-      <circle cx="990" cy="440" r="14" fill="#e2cfa3" />
-      <circle cx="1000" cy="380" r="9" fill="#4965b8" />
-      <circle cx="90" cy="250" r="16" fill="#4965b8" />
-      <circle cx="150" cy="170" r="11" fill="#e2cfa3" />
-    </svg>
-  );
-}
-
