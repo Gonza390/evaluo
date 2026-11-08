@@ -224,10 +224,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const supabase = createClient(request, response);
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  // getClaims() verifica la firma del JWT con el JWKS en memoria (claves
+  // asimétricas) y evita un viaje al servidor de Auth en cada navegación.
+  // Si el proyecto firma con HS256, supabase-js cae solo a getUser().
+  // También renueva la sesión vencida y escribe las cookies nuevas.
+  const { data: claimsData, error: authError } = await supabase.auth.getClaims();
+  const user = claimsData?.claims?.sub ? { id: claimsData.claims.sub } : null;
 
   // Un refresh token revocado puede permanecer en cookies de una pestaña vieja.
   // Borramos sólo cookies de Auth, evitando propagar el JWT inválido a otras

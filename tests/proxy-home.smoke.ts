@@ -14,11 +14,11 @@ const mockAuthModule = `
     Reflect.get(globalThis, '__evaluoProxyAuthTest').clients += 1;
     return {
       auth: {
-        async getUser() {
+        async getClaims() {
           const state = Reflect.get(globalThis, '__evaluoProxyAuthTest');
           state.calls += 1;
           if (state.cookies.length) options.cookies.setAll(state.cookies);
-          return { data: { user: state.user }, error: null };
+          return { data: state.user ? { claims: { sub: state.user.id } } : null, error: null };
         }
       },
       async rpc() { return { data: null, error: null }; }
