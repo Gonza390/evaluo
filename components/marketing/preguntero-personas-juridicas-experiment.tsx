@@ -205,9 +205,7 @@ export function PregunteroPersonasJuridicasExperiment({
                       key={number}
                       className="grid grid-cols-[42px_minmax(0,1fr)] gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 sm:px-6"
                     >
-                      <span className="pt-0.5 text-[10px] font-black text-blue-700">
-                        {number}
-                      </span>
+                      <span className="pt-0.5 text-[10px] font-black text-blue-700">{number}</span>
                       <div>
                         <p className="text-sm font-bold text-slate-950">{stepTitle}</p>
                         <p className="mt-1 text-xs leading-5 text-slate-600">{description}</p>
@@ -265,6 +263,7 @@ export function PregunteroPersonasJuridicasExperiment({
 
             <TrackedLink
               href={experimentSimulatorHref}
+              preserveAttribution
               eventName="preguntero_landing_cta_clicked"
               payload={primaryPayload('sample_questions')}
               className="from-brand to-brand-2 mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)]"
@@ -354,6 +353,7 @@ export function PregunteroPersonasJuridicasExperiment({
               </h2>
               <TrackedLink
                 href={experimentSimulatorHref}
+                preserveAttribution
                 eventName="preguntero_landing_cta_clicked"
                 payload={primaryPayload('final_cta')}
                 className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-bold text-slate-950 shadow-sm transition hover:-translate-y-0.5"
@@ -370,6 +370,7 @@ export function PregunteroPersonasJuridicasExperiment({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden">
         <TrackedLink
           href={experimentSimulatorHref}
+          preserveAttribution
           eventName="preguntero_landing_cta_clicked"
           payload={primaryPayload('mobile_sticky')}
           className="from-brand to-brand-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-sm font-bold text-white"

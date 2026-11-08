@@ -15,6 +15,13 @@ import { buildShareCardPath } from '@/lib/share-card';
 
 export const revalidate = 600;
 
+// Sin rutas prearmadas en el build: cada página se genera en la primera visita
+// y queda en la caché de Vercel (ISR). Sin esto, la ruta dinámica se renderiza
+// en cada pedido aunque declare revalidate.
+export function generateStaticParams() {
+  return [];
+}
+
 type PageProps = {
   params: Promise<{
     materia: string;

@@ -20,6 +20,13 @@ import {
 
 export const revalidate = 600;
 
+// ISR: cada parcial se genera en la primera visita y queda en la caché de Vercel.
+// La página no lee los parámetros de la URL (eso la volvería dinámica): los utm_*
+// se suman al link del simulador en el navegador (TrackedLink preserveAttribution).
+export function generateStaticParams() {
+  return [];
+}
+
 const PERSONAS_JURIDICAS_MATERIA_ID = '5a10b059-546d-41a1-8ed8-d9fb1dd7581d';
 const DERECHO_SUCESORIO_MATERIA_ID = '555d3d0a-206e-42e2-adf8-08f1063448e6';
 const PREGUNTERO_ACQUISITION_VARIANT = 'preguntero_landing_v1';
@@ -29,7 +36,6 @@ type PageProps = {
     materia: string;
     parcial: string;
   }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function buildParcialTitle(materiaNombre: string, parcial: '1' | '2' | 'integrador') {
@@ -108,8 +114,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PregunteroParcialPage({ params, searchParams }: PageProps) {
-  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+export default async function PregunteroParcialPage({ params }: PageProps) {
+  const resolvedParams = await params;
   const materiaId = parseSeoEntitySlug(resolvedParams.materia).id;
   const parcial = parsePregunteroParcial(resolvedParams.parcial);
 
@@ -126,17 +132,13 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
   const expectedMateriaSlug = buildSeoEntitySlug(data.materiaNombre, data.materiaId);
   const pregunteroHref = `/pregunteros/${expectedMateriaSlug}`;
   if (resolvedParams.materia !== expectedMateriaSlug) {
-    redirect(appendPregunteroAttribution(canonicalHref, resolvedSearchParams));
+    redirect(canonicalHref);
   }
 
   const { label } = parcialToPreguntaFilter(data.parcial);
-  const simulatorSearchParams = {
-    ...resolvedSearchParams,
-    acq: PREGUNTERO_ACQUISITION_VARIANT,
-  };
   const simuladorHref = appendPregunteroAttribution(
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
-    simulatorSearchParams
+    { acq: PREGUNTERO_ACQUISITION_VARIANT }
   );
   const materiaHref = `/explorar/materia/${expectedMateriaSlug}`;
   const resumenHref = `/resumenes/${expectedMateriaSlug}`;
