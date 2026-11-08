@@ -117,7 +117,7 @@ export function ManualReferralCode({
   if (compact) {
     return (
       <div className={hideHeading ? "w-full text-left" : "w-full border-t border-slate-200 pt-3 text-left"}>
-        {!hideHeading ? <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
+        {!hideHeading ? <div className="flex items-center gap-2 text-etiqueta font-semibold text-slate-600 sm:text-chico">
           <Tag className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
           {tr('¿Tenés un código de descuento?','Have a discount code?')}
         </div> : null}
@@ -139,13 +139,13 @@ export function ManualReferralCode({
             placeholder={hideHeading ? tr("Código","Code") : tr("Ej. MARCA20","e.g. BRAND20")}
             autoComplete="off"
             spellCheck={false}
-            className="h-10 min-w-0 rounded-xl bg-white text-xs font-medium uppercase tracking-wide sm:text-sm"
+            className="h-10 min-w-0 rounded-xl bg-white text-chico font-medium uppercase tracking-etiqueta sm:text-cuerpo"
             aria-label={tr("Código de descuento","Discount code")}
           />
           <Button
             type="button"
             variant="outline"
-            className="h-10 shrink-0 rounded-xl px-4 text-xs sm:text-sm"
+            className="h-10 shrink-0 rounded-xl px-4 text-chico sm:text-cuerpo"
             onClick={() => void applyCode()}
             loading={loading}
             disabled={!code.trim()}
@@ -155,21 +155,21 @@ export function ManualReferralCode({
         </div>
 
         {applied ? (
-          <div className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-emerald-700 sm:text-xs">
+          <div className="mt-2 flex items-start gap-2 text-etiqueta leading-4 text-emerald-700 sm:text-chico">
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <p>
-              <span className="font-bold">
+              <span className="font-semibold">
                 {applied.code} · {applied.discountPercent}% {tr('aplicado','applied')}.
               </span>{' '}
               {tr('Total','Total')} {offerCode === 'semester' ? tr('por 6 meses','for 6 months') : tr('mensual','monthly')}:{' '}
-              <span className="font-bold">{currency.format(applied.amountArs)}</span> · {tr('ahorrás','you save')}{' '}
+              <span className="font-semibold">{currency.format(applied.amountArs)}</span> · {tr('ahorrás','you save')}{' '}
               {currency.format(applied.discountAmountArs)}.
             </p>
           </div>
         ) : null}
 
         {error ? (
-          <p role="alert" className="mt-2 text-[11px] leading-4 text-rose-600 sm:text-xs">
+          <p role="alert" className="mt-2 text-etiqueta leading-4 text-rose-600 sm:text-chico">
             {error}
           </p>
         ) : null}
@@ -180,7 +180,7 @@ export function ManualReferralCode({
   return (
     <div className="mx-auto mb-7 max-w-2xl">
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5">
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <div className="flex items-center gap-2 text-cuerpo font-semibold text-slate-900">
           <Tag className="h-4 w-4 text-blue-600" aria-hidden="true" />
           {tr('¿Tenés un código de descuento?','Have a discount code?')}
         </div>
@@ -202,7 +202,7 @@ export function ManualReferralCode({
             placeholder={tr("Ej. MARCA20","e.g. BRAND20")}
             autoComplete="off"
             spellCheck={false}
-            className="h-11 rounded-xl bg-white font-medium uppercase tracking-wide"
+            className="h-11 rounded-xl bg-white font-medium uppercase tracking-etiqueta"
             aria-label={tr("Código de descuento","Discount code")}
           />
           <Button
@@ -218,19 +218,19 @@ export function ManualReferralCode({
         </div>
 
         {applied ? (
-          <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-emerald-50 px-3 py-3 text-sm">
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-emerald-50 px-3 py-3 text-cuerpo">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
             <div className="min-w-0">
               <p className="font-semibold text-emerald-900">
                 {applied.code} · {applied.discountPercent}% {tr('de descuento','off')}
               </p>
-              <p className="mt-0.5 text-xs leading-5 text-emerald-800">
+              <p className="mt-0.5 text-chico leading-5 text-emerald-800">
                 {applied.brandName ? `${applied.brandName} · ` : ''}
                 {offerCode === 'semester' ? tr('Total por 6 meses','Total for 6 months') : tr('Total mensual','Monthly total')}:{' '}
-                <span className="font-bold">{currency.format(applied.amountArs)}</span>
+                <span className="font-semibold">{currency.format(applied.amountArs)}</span>
                 {' · '}{tr('Ahorrás','You save')} {currency.format(applied.discountAmountArs)}.
               </p>
-              <p className="mt-0.5 text-[11px] leading-4 text-emerald-700">
+              <p className="mt-0.5 text-etiqueta leading-4 text-emerald-700">
                 {tr('El descuento y la disponibilidad se vuelven a confirmar al iniciar el pago.','Discount and availability are verified again at checkout.')}
               </p>
             </div>
@@ -238,7 +238,7 @@ export function ManualReferralCode({
         ) : null}
 
         {error ? (
-          <p role="alert" className="mt-2 text-xs leading-5 text-rose-600">
+          <p role="alert" className="mt-2 text-chico leading-5 text-rose-600">
             {error}
           </p>
         ) : null}

@@ -52,10 +52,10 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         priority
         className="h-[72px] w-[72px] shrink-0 object-contain sm:h-[92px] sm:w-[92px] lg:h-[106px] lg:w-[106px]"
       />
-      <h1 className="mt-2 max-w-[800px] text-[24px] font-semibold leading-[1.14] tracking-[-0.035em] text-[#0f1623] sm:text-[30px] lg:text-[32px]">
+      <h1 className="mt-2 max-w-[800px] text-titulo font-semibold leading-[1.14] tracking-titulo text-[#0f1623] sm:text-destacado lg:text-destacado">
         {locale === 'en' ? `What are we studying today${firstName ? `, ${firstName}` : ''}?` : `¿Qué estudiamos hoy${firstName ? `, ${firstName}` : ''}?`}
       </h1>
-      <p className="mt-1.5 max-w-[560px] text-[12px] leading-[1.45] text-[#526079] sm:text-[13px]">
+      <p className="mt-1.5 max-w-[560px] text-chico leading-[1.45] text-[#526079] sm:text-ui">
         {t("Subí tu primer material y Evaluo lo convierte en resumen, práctica y plan de estudio.")}
       </p>
 
@@ -72,8 +72,8 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#3c6cba] sm:size-10">
           <Upload className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
         </span>
-        <span className="mt-2 text-[15px] font-medium tracking-[-0.02em] text-[#0f1623] sm:text-[17px]">{t("Arrastrá tu PDF acá")}</span>
-        <span className="mt-1 text-[12px] text-[#526079]">
+        <span className="mt-2 text-cuerpo font-medium tracking-titulo text-[#0f1623] sm:text-subtitulo">{t("Arrastrá tu PDF acá")}</span>
+        <span className="mt-1 text-chico text-[#526079]">
           <span className="sm:hidden">{t("o tocá acá para elegirlo")}</span>
           <span className="hidden sm:inline">{t("o hacé clic para elegirlo")}</span>
         </span>
@@ -83,9 +83,9 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
               <span className={`${styles.fileFormatIcon} flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`} style={{ animationDelay: `${index * 140}ms` }}>
                 {format.icon === 'book' ? <BookOpen className="size-[18px]" aria-hidden="true" />
                   : format.icon === 'audio' ? <AudioLines className="size-[18px]" aria-hidden="true" />
-                    : <span className="text-[9px] font-bold">{format.title}</span>}
+                    : <span className="text-etiqueta font-semibold">{format.title}</span>}
               </span>
-              <span className="text-[9px] text-[#667085] sm:text-[10px]">{t(format.label)}</span>
+              <span className="text-etiqueta text-[#667085] sm:text-etiqueta">{t(format.label)}</span>
             </span>
           ))}
         </span>

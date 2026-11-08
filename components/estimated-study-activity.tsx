@@ -203,7 +203,7 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 font-semibold text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:border-emerald-300 hover:bg-emerald-50 ${compact ? 'h-9 px-3 text-[12px]' : 'h-10 px-3.5 text-sm'}`}
+          className={`inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 font-semibold text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:border-emerald-300 hover:bg-emerald-50 ${compact ? 'h-9 px-3 text-chico' : 'h-10 px-3.5 text-cuerpo'}`}
           aria-label={english ? `Estimated: ${count} studying` : `Estimación: ${count} estudiando`}
         >
           <span className="relative flex h-2.5 w-2.5 shrink-0">
@@ -225,10 +225,10 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
               <GraduationCap className="h-4.5 w-4.5" />
             </span>
             <div>
-              <p className="text-sm font-bold tracking-[-0.02em] text-slate-950">
+              <p className="text-cuerpo font-semibold tracking-titulo text-slate-950">
                 {english ? `${count} estimated students studying` : `${count} estudiantes estimados estudiando`}
               </p>
-              <p className="mt-0.5 text-xs leading-5 text-slate-500">
+              <p className="mt-0.5 text-chico leading-5 text-slate-500">
                 {english ? 'across different universities' : 'en distintas universidades'}
               </p>
             </div>
@@ -239,10 +239,10 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
           {displayedUniversities.map((university, index) => (
             <div
               key={university.name}
-              className="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-sm transition-colors"
+              className="flex items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-cuerpo transition-colors"
             >
               <div className="flex min-w-0 items-center gap-2.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-[11px] font-bold text-slate-400">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-etiqueta font-semibold text-slate-400">
                   {index + 1}
                 </span>
                 <span className="truncate font-medium text-slate-700">{english && university.name === 'Otras universidades' ? 'Other universities' : university.name}</span>
@@ -255,7 +255,7 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
         </div>
 
         <div className="border-t border-slate-100 px-4 py-3">
-          <p className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
+          <p className="flex items-center gap-2 text-etiqueta font-medium text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             {english ? 'Estimated activity · not a live count' : 'Actividad estimada · no es un conteo en vivo'}
           </p>

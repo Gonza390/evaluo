@@ -17,7 +17,7 @@ export function PracticeHomeContent({ requestedMaterialId, advancedPracticeEnabl
 
   if (materials === null) {
     return (
-      <main role="status" className="mx-auto w-full max-w-[1190px] px-5 py-8 text-sm text-[#66758D]">
+      <main role="status" className="mx-auto w-full max-w-[1190px] px-5 py-8 text-cuerpo text-[#66758D]">
         {error ? (
           <div>
             <p>{english ? 'Could not load your study materials.' : 'No pudimos cargar tus materiales.'}</p>

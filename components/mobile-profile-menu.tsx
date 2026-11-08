@@ -120,7 +120,7 @@ export function MobileProfileMenu({ initials, avatarUrl, sourcePath }: MobilePro
           className={`relative z-10 inline-flex size-10 items-center justify-center rounded-full transition-[background-color,transform] duration-200 ease-out active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none ${open ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
         >
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
+            <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-chico font-semibold text-white">
               {initials}
             </AvatarFallback>
             {avatarUrl ? <AvatarImage src={avatarUrl} /> : null}

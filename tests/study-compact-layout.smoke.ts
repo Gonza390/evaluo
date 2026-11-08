@@ -110,7 +110,7 @@ assert.match(richText, /space-y-2\.5 \[&_h4\]:text-\[15px\]/,
   'El contenido largo conserva espaciado compacto y encabezados legibles.');
 assert.match(richText, /\[&_p\]:text-\[15px\] \[&_p\]:leading-\[1\.7\]/,
   'El cuerpo de lectura mantiene el tamaño y la altura de línea actuales.');
-assert.match(styles, /border-b-2 border-transparent bg-transparent px-0 text-\[14px\]/,
+assert.match(styles, /border-b-2 border-transparent bg-transparent px-0 text-cuerpo/,
   'Las pestañas del estudio son texto libre con subrayado, sin recuadros.');
 assert.doesNotMatch(workspace, /transform:scale\(|zoom:/,
   'No usar zoom que distorsione los popups, controles o interacción.');

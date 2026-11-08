@@ -16,7 +16,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 21px;
+  font-size: 20px;
 }
 .journey-upload-background {
   display: grid;
@@ -58,7 +58,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
 .journey-background-content > p {
   margin-top: 12px;
   color: var(--muted-foreground);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
 }
 .journey-upload-form {
@@ -79,10 +79,10 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   flex-shrink: 0;
 }
 .journey-upload-title h2 {
-  font-size: 22px;
+  font-size: 24px;
 }
 .journey-upload-form > p {
-  font-size: 14px;
+  font-size: 15px;
   margin-top: 8px;
 }
 .journey-upload-file {
@@ -95,7 +95,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   border-radius: 10px;
 }
 .journey-upload-file strong {
-  font-size: 14px;
+  font-size: 15px;
   display: block;
   overflow-wrap: anywhere;
 }
@@ -117,7 +117,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
 }
 .journey-upload-submit {
   width: 100%;
@@ -127,7 +127,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   background: var(--primary);
   color: var(--primary-foreground);
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 .journey-modal-overlay {
@@ -211,7 +211,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
 }
 .journey-processing-status strong {
   display: block;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
 }
 .journey-processing-status > div:last-child > span {
@@ -301,7 +301,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
 }
 .journey-document h2 {
   margin-top: 10px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 650;
   line-height: 1.15;
   letter-spacing: -0.3px;
@@ -372,7 +372,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   border-radius: 10px;
   background: var(--primary);
   color: var(--primary-foreground);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 .journey-start-button:hover {
@@ -416,7 +416,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
 }
 .journey-complete .journey-eyebrow {
   letter-spacing: 1px;
-  font-size: 10px;
+  font-size: 11px;
 }
 .journey-complete h1 {
   margin-top: 12px;
@@ -449,14 +449,14 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   font-weight: 600;
 }
 .journey-content-column h1 {
-  font-size: 25px;
+  font-size: 24px;
   font-weight: 650;
   line-height: 1.16;
   letter-spacing: -0.65px;
   margin-top: 6px;
 }
 .journey-content-column p {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   margin-top: 10px;
   color: var(--muted-foreground);
@@ -503,7 +503,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
 }
 .journey-example .journey-question {
   color: var(--foreground);
-  font-size: 14px;
+  font-size: 15px;
   margin-top: 8px;
 }
 .journey-option {
@@ -530,7 +530,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   margin-top: 10px;
 }
 .journey-saved-topic strong {
-  font-size: 14px;
+  font-size: 15px;
 }
 .journey-saved-topic > span {
   font-size: 12px;
@@ -547,7 +547,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   flex-shrink: 0;
 }
 .journey-help-example strong {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 .journey-check-example {
@@ -608,7 +608,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   gap: 8px;
   align-items: center;
   color: var(--primary);
-  font-size: 14px;
+  font-size: 15px;
 }
 .journey-ready-summary {
   border-top: 1px solid var(--border);
@@ -621,11 +621,11 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
   margin-top: 8px;
 }
 .journey-ready-summary h3 {
-  font-size: 18px;
+  font-size: 17px;
   margin-top: 24px;
 }
 .journey-ready-summary p {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.7;
   margin-top: 12px;
 }
@@ -742,7 +742,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
     font-size: 12px;
   }
   .journey-content-column h1 {
-    font-size: 25px;
+    font-size: 24px;
   }
   .journey-content-column p {
     margin-top: 8px;
@@ -845,7 +845,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
     padding-bottom: 8px;
   }
   .journey-complete h1 {
-    font-size: 22px;
+    font-size: 24px;
     margin-top: 0;
   }
   .journey-complete p {
@@ -868,7 +868,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
     padding: 6px;
   }
   .journey-document h2 {
-    font-size: 9px;
+    font-size: 11px;
     margin-top: 6px;
   }
   .journey-document-rule {
@@ -900,7 +900,7 @@ body:has([data-pdf-processing-preview]) nextjs-portal {
     padding-bottom: 8px;
   }
   .journey-content-column h1 {
-    font-size: 22px;
+    font-size: 24px;
   }
   .journey-content-column p {
     font-size: 13px;

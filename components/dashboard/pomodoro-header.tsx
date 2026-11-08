@@ -127,7 +127,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
         aria-label={running || paused ? (english ? `Study timer: ${time} remaining` : `Temporizador de estudio: ${time} restantes`) : finished ? tr('Temporizador: sesión completada','Study timer: session complete') : tr('Abrir temporizador de estudio de 25 minutos','Open 25-minute study timer')}
         aria-expanded={open}
         aria-controls={popupId}
-        className={`inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-[13px] font-semibold tabular-nums transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD] ${open ? 'bg-slate-100' : ''} ${running || paused ? 'text-[#456DBD]' : finished ? 'text-[#16774f]' : 'text-slate-500 hover:text-slate-800'}`}
+        className={`inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-ui font-semibold tabular-nums transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD] ${open ? 'bg-slate-100' : ''} ${running || paused ? 'text-[#456DBD]' : finished ? 'text-[#16774f]' : 'text-slate-500 hover:text-slate-800'}`}
       >
         {finished ? <CheckCircle2 className="size-5" aria-hidden="true" /> : <Timer className="size-5" strokeWidth={1.9} aria-hidden="true" />}
         {running || paused ? <span aria-hidden="true" className="min-w-[39px] text-right">{time}</span> : null}
@@ -143,7 +143,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
           className="absolute right-[-112px] top-[calc(100%+8px)] z-50 w-[min(292px,calc(100vw-24px))] rounded-[18px] border border-[#E7EBF4] bg-white p-4 text-[#0F1B3D] shadow-[0_16px_48px_rgba(15,27,61,.14)] md:right-0"
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[14px] font-semibold">{tr('Tiempo de estudio','Study time')}</p>
+            <p className="text-cuerpo font-semibold">{tr('Tiempo de estudio','Study time')}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -155,8 +155,8 @@ export function PomodoroHeader({ userId }: { userId: string }) {
           </div>
 
           <div className="py-5 text-center">
-            <p className="text-[40px] font-semibold leading-none tracking-[-.045em] tabular-nums">{time}</p>
-            <p className="mt-2 text-[12px] text-[#7F8AA3]">
+            <p className="text-[40px] font-semibold leading-none tracking-titulo tabular-nums">{time}</p>
+            <p className="mt-2 text-chico text-[#7F8AA3]">
               {finished ? tr('¡Completaste tus 25 minutos!','You completed your 25 minutes!') : tr('Sesión de concentración','Focus session')}
             </p>
           </div>
@@ -164,7 +164,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
           <button
             type="button"
             onClick={handlePrimary}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-ui font-semibold text-white transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
           >
             {running ? <Pause className="size-4" aria-hidden="true"/> : <Play className="size-4" aria-hidden="true"/>}
             {running ? tr('Pausar','Pause') : paused ? tr('Reanudar','Resume') : finished ? tr('Comenzar de nuevo','Start again') : tr('Comenzar','Start')}
@@ -174,7 +174,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
             <button
               type="button"
               onClick={() => update(INITIAL_POMODORO)}
-              className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-medium text-[#66758D] transition-colors hover:bg-[#F5F7FB] hover:text-[#456DBD] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
+              className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl text-chico font-medium text-[#66758D] transition-colors hover:bg-[#F5F7FB] hover:text-[#456DBD] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]"
             >
               <RotateCcw className="size-3.5" aria-hidden="true" /> {tr('Reiniciar','Reset')}
             </button>
@@ -183,7 +183,7 @@ export function PomodoroHeader({ userId }: { userId: string }) {
       ) : null}
 
       {notice && !open ? (
-        <div role="status" aria-live="polite" data-pomodoro-complete className="fixed right-3 top-[60px] z-[60] flex max-w-[calc(100vw-24px)] items-center gap-2 rounded-xl border border-[#D3EEDD] bg-white px-3 py-3 text-[12px] font-semibold text-[#16774f] shadow-[0_8px_32px_rgba(15,27,61,.12)] sm:right-6">
+        <div role="status" aria-live="polite" data-pomodoro-complete className="fixed right-3 top-[60px] z-[60] flex max-w-[calc(100vw-24px)] items-center gap-2 rounded-xl border border-[#D3EEDD] bg-white px-3 py-3 text-chico font-semibold text-[#16774f] shadow-[0_8px_32px_rgba(15,27,61,.12)] sm:right-6">
           <CheckCircle2 className="size-4 shrink-0" aria-hidden="true"/> {tr('¡Completaste tus 25 minutos!','You completed your 25 minutes!')}
           <button type="button" aria-label={tr("Cerrar aviso","Dismiss notice")} onClick={() => setNotice(false)} className="ml-1 rounded p-1 hover:bg-[#F5F7FB]">
             <X className="size-3.5" aria-hidden="true"/>

@@ -74,18 +74,18 @@ const appChromeSource = readFileSync(resolve('components/ClientLayoutClient.tsx'
 
 assert.match(dashboardSource, /max-w-\[1240px\]/);
 assert.match(dashboardSource, /px-3 py-3 sm:px-4 sm:py-4/);
-assert.match(dashboardHeroSource, /text-\[25px\].*sm:text-\[32px\]/);
-assert.match(dashboardHeroSource, /h-11.*text-\[14px\]/);
+assert.match(dashboardHeroSource, /text-titulo.*sm:text-destacado/);
+assert.match(dashboardHeroSource, /h-11.*text-cuerpo/);
 assert.match(dashboardHeroSource, /nextStudyAction\?\.href \?\? primaryMaterialHref/);
 assert.match(dashboardHeroSource, /onClick=\{onUploadClick\}/);
 assert.match(dashboardChromeSource, /min-w-0 space-y-3 overflow-x-clip/);
-assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-\[20px\]/);
+assert.match(dashboardMaterialsSource, /sm:\[&_h2\]:text-titulo-sm/);
 assert.match(dashboardMaterialsSource, /title=(?:"Tus PDFs"|\{t\("Tus PDFs"\)\})\s+visuallyHiddenTitle/,
   'Keep an accessible section label without repeating Tus PDFs visually.');
 const appPageHeaderSource = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
 assert.match(appPageHeaderSource, /visuallyHiddenTitle && 'sr-only'/,
   'The section heading must be visually hidden, not left as a blank row.');
-assert.match(dashboardMaterialsSource, /text-\[13\.5px\] font-semibold leading-5/);
+assert.match(dashboardMaterialsSource, /text-ui font-semibold leading-5/);
 assert.match(dashboardMaterialsSource, /deleteStudentMaterialAction/);
 assert.doesNotMatch(dashboardMaterialsSource.split('      <Dialog')[0], /material\.file_name/,
   'PDF cards should not repeat the uploaded filename below the title.');
@@ -135,7 +135,7 @@ assert.match(appChromeSource, /isExploreExperienceRoute/);
 assert.match(appChromeSource, /<EstimatedStudyActivity compact=\{isCompactAppRoute\} \/>/);
 const activitySource = readFileSync(resolve('components/estimated-study-activity.tsx'), 'utf8');
 assert.match(activitySource, /compact = false/);
-assert.match(activitySource, /compact \? 'h-9 px-3 text-\[12px\]' : 'h-10 px-3\.5 text-sm'/);
+assert.match(activitySource, /compact \? 'h-9 px-3 text-chico' : 'h-10 px-3\.5 text-cuerpo'/);
 assert.match(appChromeSource, /stablePrivateHeader\s*\? 'min-h-\[52px\] py-1 sm:min-h-\[52px\] sm:py-1' : 'min-h-18 py-3 sm:min-h-20'/,
   'All authenticated routes share a consistent compact topbar.');
 assert.match(appChromeSource, /<Navbar collapsed=\{effectiveSidebarCollapsed\} onToggleCollapsed=\{handleSidebarToggle\} compact=\{isCompactAppRoute\} \/>/);
@@ -240,7 +240,7 @@ const compactHistory = readFileSync(resolve('components/dashboard/explanations-h
 const compactReferrals = readFileSync(resolve('app/(es)/referidos/page.tsx'), 'utf8');
 const compactHeader = readFileSync(resolve('components/ui/app-page-header.tsx'), 'utf8');
 for (const page of [compactCalendar, compactSettings, compactProgressList, compactHistory, compactReferrals]) {
-  assert.match(page, /text-\[20px\]|size="compact"/);
+  assert.match(page, /text-titulo-sm|text-\[20px\]|size="compact"/);
 }
 assert.match(compactCalendar, /max-w-\[1240px\]/);
 assert.match(compactSettings, /max-w-\[760px\]/);

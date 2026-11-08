@@ -90,7 +90,7 @@ function NavItem({
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
   useEffect(() => { if (pendingFrom !== null && pathname !== pendingFrom) setPendingFrom(null); }, [pathname, pendingFrom]);
   const pending = pendingFrom === pathname && !active;
-  const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} transition-colors duration-150 ${
+  const baseClass = `group relative z-10 flex items-center rounded-lg ${compact ? 'text-chico' : 'text-ui'} transition-colors duration-150 ${
     active
       ? 'text-slate-900 font-medium'
       : 'text-slate-600 font-medium hover:bg-slate-50 hover:text-slate-900'
@@ -271,7 +271,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`group flex min-w-0 items-center rounded-xl text-[#0F1B3D] transition-colors hover:bg-[#EEF2FF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4] ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center p-0'
-                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
+                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-chico' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-ui'
                   }`}
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#5D70C4] transition-colors group-hover:bg-[#E3E8FF] group-focus-visible:bg-[#E3E8FF]">
@@ -295,7 +295,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-[12px]' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-[13px]'
+                      : compact ? 'min-h-10 w-full gap-2.5 px-2 py-1 text-chico' : 'min-h-11 w-full gap-2.5 px-2 py-1.5 text-ui'
                   }`}
                 >
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-lg"><CircleHelp className="size-4" aria-hidden="true" /></span>
@@ -312,7 +312,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   >
                     <span className="flex size-8 shrink-0 items-center justify-center">
                     <Avatar className="size-7 shrink-0">
-                      <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
+                      <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-chico font-semibold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
                       {user.user_metadata?.avatar_url ? (
@@ -322,7 +322,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     </span>
                     {!collapsed ? (
                       <div className="min-w-0 flex-1 overflow-hidden">
-                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-[12px]" : "text-[13px]"}`}>
+                        <p className={`truncate font-semibold text-slate-900 ${compact ? "text-chico" : "text-ui"}`}>
                           {getUserName()}
                         </p>
                       </div>
@@ -337,10 +337,10 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                   >
                     <div className="px-2 pb-3 pt-1">
                       {user.email ? (
-                        <p className="truncate text-[12px] text-[#7F8AA3]">{user.email}</p>
+                        <p className="truncate text-chico text-[#7F8AA3]">{user.email}</p>
                       ) : null}
                     </div>
-                    <DropdownMenuItem asChild className="min-h-11 rounded-xl px-3 text-[14px] font-medium text-[#42506A] focus:bg-[#F5F7FB] focus:text-[#0F1B3D]">
+                    <DropdownMenuItem asChild className="min-h-11 rounded-xl px-3 text-cuerpo font-medium text-[#42506A] focus:bg-[#F5F7FB] focus:text-[#0F1B3D]">
                       <Link href="/configuracion" className="flex w-full items-center gap-3">
                         <Settings className="!size-[18px] text-[#66758D]" aria-hidden="true" />
                         {messages.navigation.settings}
@@ -348,7 +348,7 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                     </DropdownMenuItem>
                     <div role="separator" className="my-2 h-px bg-[#E7EBF4]" />
                     <DropdownMenuItem
-                      className="min-h-11 gap-3 rounded-xl px-3 text-[14px] font-medium text-[#C65353] focus:bg-[#FFF4F4] focus:text-[#B93838]"
+                      className="min-h-11 gap-3 rounded-xl px-3 text-cuerpo font-medium text-[#C65353] focus:bg-[#FFF4F4] focus:text-[#B93838]"
                       onClick={async () => {
                         const { error } = await supabase.auth.signOut();
                         if (error) {
@@ -377,8 +377,8 @@ export function Navbar({ collapsed, onToggleCollapsed, compact = false }: Navbar
                 <LogIn className="h-4 w-4 shrink-0" />
                 {!collapsed ? (
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">{locale === 'en' ? 'Sign in' : 'Iniciar sesión'}</p>
-                    <p className="text-[12px] text-slate-500">{locale === 'en' ? 'Save your progress and study materials' : 'Guardá tu progreso y tus materias'}</p>
+                    <p className="text-cuerpo font-medium">{locale === 'en' ? 'Sign in' : 'Iniciar sesión'}</p>
+                    <p className="text-chico text-slate-500">{locale === 'en' ? 'Save your progress and study materials' : 'Guardá tu progreso y tus materias'}</p>
                   </div>
                 ) : null}
               </Link>

@@ -149,7 +149,7 @@ export function StudyErrorDetail({
   const inlineNotice = notice ? (
     <p
       role="alert"
-      className="border-destructive/40 !text-foreground mt-5 border-l-2 pl-3 !text-sm"
+      className="border-destructive/40 !text-foreground mt-5 border-l-2 pl-3 !text-cuerpo"
     >
       {notice}
     </p>
@@ -321,28 +321,28 @@ export function StudyErrorDetail({
         <div className="space-y-6" data-topic-reinforcement>
           <section data-study-error-tour="error" className="border-border bg-card rounded-xl border p-3.5 sm:p-4" aria-labelledby="reinforcement-difficulty-heading">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id="reinforcement-difficulty-heading" className="text-primary text-xs font-bold tracking-wide uppercase">
+              <h3 id="reinforcement-difficulty-heading" className="text-primary text-chico font-semibold tracking-etiqueta uppercase">
                 {t("La pregunta que te costó")}
               </h3>
-              <span className="text-muted-foreground text-xs">
+              <span className="text-muted-foreground text-chico">
                 {resolved ? (english ? 'Review completed' : 'Refuerzo completado') : `${item.failureCount} ${english ? (item.failureCount === 1 ? 'difficult attempt' : 'difficult attempts') : (item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad')}`}
               </span>
             </div>
-            <h2 ref={heading} tabIndex={-1} className="text-foreground mt-3 text-[16px] font-semibold leading-6 break-words outline-none">
+            <h2 ref={heading} tabIndex={-1} className="text-foreground mt-3 text-cuerpo font-semibold leading-6 break-words outline-none">
               {item.prompt}
             </h2>
             {(item.selectedAnswer || item.correctAnswer) && (
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {item.selectedAnswer && (
                   <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3">
-                    <p className="text-destructive text-xs font-semibold">{t("Tu respuesta anterior")}</p>
-                    <p className="text-foreground mt-1.5 text-[13px] leading-5 break-words">{item.selectedAnswer}</p>
+                    <p className="text-destructive text-chico font-semibold">{t("Tu respuesta anterior")}</p>
+                    <p className="text-foreground mt-1.5 text-ui leading-5 break-words">{item.selectedAnswer}</p>
                   </div>
                 )}
                 {item.correctAnswer && (
                   <div className="border-primary/20 bg-primary/5 rounded-lg border p-3">
-                    <p className="text-primary text-xs font-semibold">{t("Respuesta correcta")}</p>
-                    <p className="text-foreground mt-1.5 text-[13px] leading-5 break-words">{item.correctAnswer}</p>
+                    <p className="text-primary text-chico font-semibold">{t("Respuesta correcta")}</p>
+                    <p className="text-foreground mt-1.5 text-ui leading-5 break-words">{item.correctAnswer}</p>
                   </div>
                 )}
               </div>
@@ -350,42 +350,42 @@ export function StudyErrorDetail({
           </section>
           <div ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
             <div>
-              <h3 id="reinforcement-explanation-heading" className="text-[16px] font-semibold">
+              <h3 id="reinforcement-explanation-heading" className="text-cuerpo font-semibold">
                 {t("Entendamos por qué")}
               </h3>
-              <p className="text-muted-foreground mt-1 text-sm leading-6">
+              <p className="text-muted-foreground mt-1 text-cuerpo leading-6">
                 {t("Revisá la explicación de tu actividad antes de probar con otra pregunta.")}
               </p>
             </div>
             {groundedContrast && (
               <div className="border-primary/20 bg-primary/5 rounded-lg border p-3 sm:p-5">
-                <p className="text-primary mb-2 text-xs font-semibold">{t("Por qué tu elección era diferente")}</p>
-                <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words">
+                <p className="text-primary mb-2 text-chico font-semibold">{t("Por qué tu elección era diferente")}</p>
+                <p className="text-foreground max-w-[72ch] text-ui leading-6 break-words">
                   {groundedContrast}
                 </p>
               </div>
             )}
             {originalExplanation ? (
               <div className="border-border bg-muted/30 rounded-lg border p-3 sm:p-4">
-                <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words whitespace-pre-line">
+                <p className="text-foreground max-w-[72ch] text-ui leading-6 break-words whitespace-pre-line">
                   {originalExplanation}
                 </p>
               </div>
             ) : (
-              <p className="text-muted-foreground rounded-xl border p-4 text-sm leading-6">
+              <p className="text-muted-foreground rounded-xl border p-4 text-cuerpo leading-6">
                 {t("Esta respuesta no tiene una explicación guardada. Podés pedir una explicación basada en tu material.")}
               </p>
             )}
             {messages.map((message) => (
               <div key={message.kind} className="border-border rounded-lg border p-3 sm:p-4">
-                <p className="text-primary mb-2 text-xs font-semibold">
+                <p className="text-primary mb-2 text-chico font-semibold">
                   {t(message.kind === 'simpler' ? 'Explicación más simple' : message.kind === 'example' ? 'Un ejemplo para entenderlo' : 'Explicación adicional')}
                 </p>
-                <p className="text-foreground max-w-[72ch] text-[13.5px] leading-6 break-words whitespace-pre-line">{message.text}</p>
+                <p className="text-foreground max-w-[72ch] text-ui leading-6 break-words whitespace-pre-line">{message.text}</p>
               </div>
             ))}
             {pendingHelp && (
-              <p role="status" className="text-muted-foreground text-sm">
+              <p role="status" className="text-muted-foreground text-cuerpo">
                 {t(materialId ? 'Revisando tus apuntes…' : 'Preparando explicación…')}
               </p>
             )}
@@ -406,7 +406,7 @@ export function StudyErrorDetail({
             )}
             {source && (
               <div className="border-border border-t pt-2" data-study-error-tour="source">
-                <button type="button" onClick={openSource} disabled={Boolean(busy)} aria-expanded={sourceOpen} aria-controls={`topic-source-${item.id}`} className="text-primary inline-flex min-h-11 items-center gap-2 text-left text-sm font-medium">
+                <button type="button" onClick={openSource} disabled={Boolean(busy)} aria-expanded={sourceOpen} aria-controls={`topic-source-${item.id}`} className="text-primary inline-flex min-h-11 items-center gap-2 text-left text-cuerpo font-medium">
                   <BookOpen className="h-4 w-4" aria-hidden="true" />
                   {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
                   {pageLabel(source.pageStart, source.pageEnd, english) ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}` : ''}
@@ -414,13 +414,13 @@ export function StudyErrorDetail({
                 </button>
                 {sourceOpen && (
                   <div id={`topic-source-${item.id}`} className="border-primary/30 mt-2 space-y-3 border-l-2 pl-4">
-                    <blockquote className="text-foreground text-sm leading-7 break-words whitespace-pre-line">
+                    <blockquote className="text-foreground text-cuerpo leading-7 break-words whitespace-pre-line">
                       {source.excerpt}
                     </blockquote>
                     {source.materialId && (
                       <Link
                         href={documentHref ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}` : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`}
-                        className="text-primary inline-flex min-h-11 items-center text-sm font-semibold underline"
+                        className="text-primary inline-flex min-h-11 items-center text-cuerpo font-semibold underline"
                       >
                         {t("Consultar PDF original")}
                       </Link>
@@ -434,8 +434,8 @@ export function StudyErrorDetail({
           </div>
           {resolved ? (
             <section className="border-primary/20 bg-primary/5 rounded-xl border p-5">
-              <h3 className="text-[16px] font-semibold">{t("Esta dificultad ya fue reforzada")}</h3>
-              <p className="text-muted-foreground mt-2 text-sm leading-6">
+              <h3 className="text-cuerpo font-semibold">{t("Esta dificultad ya fue reforzada")}</h3>
+              <p className="text-muted-foreground mt-2 text-cuerpo leading-6">
                 {t("Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.")}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
@@ -451,8 +451,8 @@ export function StudyErrorDetail({
             </section>
           ) : (
             <section className="border-border border-t pt-5" data-study-error-tour="practice">
-              <h3 className="text-[16px] font-semibold">{t("¿Lo entendiste? Comprobémoslo.")}</h3>
-              <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-6">
+              <h3 className="text-cuerpo font-semibold">{t("¿Lo entendiste? Comprobémoslo.")}</h3>
+              <p className="text-muted-foreground mt-2 max-w-prose text-cuerpo leading-6">
                 {t("Respondé una situación distinta, sin consultar la explicación. Un acierto resuelve esta dificultad, pero no demuestra dominio de todo el tema.")}
               </p>
               {materialId ? (
@@ -461,7 +461,7 @@ export function StudyErrorDetail({
                   Comprobar lo aprendido <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
-                <p className="text-muted-foreground mt-3 text-sm">
+                <p className="text-muted-foreground mt-3 text-cuerpo">
                   {t("Necesitás asociar un PDF para comprobar esta dificultad con una nueva pregunta.")}
                 </p>
               )}
@@ -474,14 +474,14 @@ export function StudyErrorDetail({
           <h2
             ref={heading}
             tabIndex={-1}
-            className="scroll-mt-24 text-[20px] font-bold tracking-[-0.04em] outline-none sm:text-[22px]"
+            className="scroll-mt-24 text-titulo-sm font-semibold tracking-titulo outline-none sm:text-titulo"
           >
             {t("Comprobá lo aprendido")}
           </h2>
-          <p className="!text-muted-foreground mt-2 !text-sm">
+          <p className="!text-muted-foreground mt-2 !text-cuerpo">
             {t("Mismo concepto, una situación diferente. Respondé sin consultar la explicación.")}
           </p>
-          <p className="!text-foreground mt-3 !text-[16px]">{question.question}</p>
+          <p className="!text-foreground mt-3 !text-cuerpo">{question.question}</p>
           <fieldset className="mt-6 space-y-3" disabled={Boolean(result) || Boolean(busy)}>
             <legend className="sr-only">{t("Elegí una respuesta")}</legend>
             {question.options.map((option, index) => (
@@ -496,11 +496,11 @@ export function StudyErrorDetail({
                   onChange={() => setAnswer(index)}
                   className="accent-primary mt-1 shrink-0"
                 />
-                <span className="min-w-0 text-sm leading-6 break-words">
+                <span className="min-w-0 text-cuerpo leading-6 break-words">
                   {option}
                   {result && (result.correctIndex === index || answer === index) && (
                     <span
-                      className={`mt-1 block text-xs font-semibold ${result.correctIndex === index ? 'text-primary' : 'text-destructive'}`}
+                      className={`mt-1 block text-chico font-semibold ${result.correctIndex === index ? 'text-primary' : 'text-destructive'}`}
                     >
                       {t(result.correctIndex === index ? 'Respuesta correcta' : 'Tu respuesta incorrecta')}
                     </span>
@@ -532,7 +532,7 @@ export function StudyErrorDetail({
               <h3
                 ref={resultHeading}
                 tabIndex={-1}
-                className="flex items-center gap-2 text-[20px] font-bold outline-none"
+                className="flex items-center gap-2 text-titulo-sm font-semibold outline-none"
               >
                 {result.correct ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-700" />
@@ -556,7 +556,7 @@ export function StudyErrorDetail({
                         : `Te quedan ${pendingCount} errores pendientes en este PDF.`
                   : 'El error sigue pendiente. Volvé a la explicación y pedí una versión más simple o un ejemplo.'}
               </p>
-              <p className="!text-foreground mt-3 !text-sm">{result.feedback}</p>
+              <p className="!text-foreground mt-3 !text-cuerpo">{result.feedback}</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 {result.correct ? (
                   <>
@@ -591,8 +591,8 @@ export function StudyErrorDetail({
       ) : (
         <>
           <div data-study-error-tour="error">
-            <div className="mb-3 flex flex-wrap gap-2 text-xs">
-              <span className="text-muted-foreground py-1 text-xs">
+            <div className="mb-3 flex flex-wrap gap-2 text-chico">
+              <span className="text-muted-foreground py-1 text-chico">
                 {t(studyErrorSourceLabels[item.sourceType])}
               </span>
               <span className="text-muted-foreground py-1">
@@ -605,7 +605,7 @@ export function StudyErrorDetail({
               className={
                 embedded
                   ? 'sr-only'
-                  : 'scroll-mt-24 text-2xl font-black tracking-tighter break-words outline-none sm:text-3xl'
+                  : 'scroll-mt-24 text-titulo font-black tracking-titulo break-words outline-none sm:text-destacado'
               }
             >
               {item.topic}
@@ -615,7 +615,7 @@ export function StudyErrorDetail({
             </p>
             {(item.selectedAnswer || item.correctAnswer) && (
               <details open={embedded || undefined} className="group mt-3">
-                <summary className="text-muted-foreground hover:text-foreground focus-visible:outline-ring flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
+                <summary className="text-muted-foreground hover:text-foreground focus-visible:outline-ring flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-cuerpo focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
                   {t("Ver mi respuesta anterior")}
                   <ChevronDown
                     className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"
@@ -625,18 +625,18 @@ export function StudyErrorDetail({
                 <div className="mt-2 grid gap-4 pb-2 sm:grid-cols-2">
                   {item.selectedAnswer && (
                     <div className="border-destructive/40 border-l-2 pl-4">
-                      <p className="!text-destructive !text-xs font-semibold">
+                      <p className="!text-destructive !text-chico font-semibold">
                         {t("Respuesta incorrecta")}
                       </p>
-                      <p className="!text-foreground mt-2 !text-sm break-words">
+                      <p className="!text-foreground mt-2 !text-cuerpo break-words">
                         {item.selectedAnswer}
                       </p>
                     </div>
                   )}
                   {item.correctAnswer && (
                     <div className="border-l-2 border-emerald-500/40 pl-4">
-                      <p className="!text-xs font-semibold !text-emerald-700">{t("Respuesta correcta")}</p>
-                      <p className="!text-foreground mt-2 !text-sm break-words">
+                      <p className="!text-chico font-semibold !text-emerald-700">{t("Respuesta correcta")}</p>
+                      <p className="!text-foreground mt-2 !text-cuerpo break-words">
                         {item.correctAnswer}
                       </p>
                     </div>
@@ -674,14 +674,14 @@ export function StudyErrorDetail({
             {source ? (
               <>
                 <button
-                  className="text-muted-foreground hover:text-primary focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 py-3 text-left text-xs leading-5 transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:text-sm"
+                  className="text-muted-foreground hover:text-primary focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 py-3 text-left text-chico leading-5 transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:text-cuerpo"
                   disabled={Boolean(busy)}
                   onClick={openSource}
                   aria-expanded={sourceOpen}
                   aria-controls={`source-${item.id}`}
                 >
                   <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 text-[11px] leading-4 break-words">
+                  <span className="min-w-0 flex-1 text-etiqueta leading-4 break-words">
                     {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
                     {pageLabel(source.pageStart, source.pageEnd, english)
                       ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}`
@@ -697,10 +697,10 @@ export function StudyErrorDetail({
                 </button>
                 {sourceOpen && (
                   <div id={`source-${item.id}`} className="border-primary/30 mt-2 border-l-2 pl-4">
-                    <blockquote className="text-sm leading-7 break-words whitespace-pre-line">
+                    <blockquote className="text-cuerpo leading-7 break-words whitespace-pre-line">
                       {source.excerpt}
                     </blockquote>
-                    <p className="!text-muted-foreground mt-3 !text-xs">
+                    <p className="!text-muted-foreground mt-3 !text-chico">
                       {source.materialTitle}
                       {pageLabel(source.pageStart, source.pageEnd, english)
                         ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}`
@@ -712,7 +712,7 @@ export function StudyErrorDetail({
                           ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}`
                           : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`
                       }
-                      className="text-primary mt-2 inline-flex min-h-11 items-center text-xs font-semibold underline"
+                      className="text-primary mt-2 inline-flex min-h-11 items-center text-chico font-semibold underline"
                     >
                       {t("Abrir PDF completo")}
                     </Link>
@@ -721,10 +721,10 @@ export function StudyErrorDetail({
               </>
             ) : (
               <div className="border-border mt-5 border-l-2 pl-4">
-                <h3 className="text-sm font-semibold">
+                <h3 className="text-cuerpo font-semibold">
                   {t("Este error todavía no tiene un PDF asociado")}
                 </h3>
-                <p className="!text-muted-foreground mt-2 !text-sm">
+                <p className="!text-muted-foreground mt-2 !text-cuerpo">
                   Elegí tus apuntes. Evaluo verificará si contienen información para repasar este
                   concepto.
                 </p>
@@ -734,7 +734,7 @@ export function StudyErrorDetail({
                       aria-label={t("PDF para asociar")}
                       value={associateId}
                       onChange={(event) => setAssociateId(event.target.value)}
-                      className="border-border bg-background min-h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm"
+                      className="border-border bg-background min-h-11 min-w-0 flex-1 rounded-xl border px-3 text-cuerpo"
                     >
                       <option value="">{t("Elegir mi PDF")}</option>
                       {materials.map((material) => (
@@ -767,7 +767,7 @@ export function StudyErrorDetail({
                 )}
                 <Link
                   href={`/dashboard/materiales?openUpload=1&source=study_error${item.materiaId ? `&materiaId=${item.materiaId}` : ''}`}
-                  className="text-primary mt-3 inline-flex min-h-11 items-center text-sm font-semibold underline"
+                  className="text-primary mt-3 inline-flex min-h-11 items-center text-cuerpo font-semibold underline"
                 >
                   {t("Subir mis apuntes")}
                 </Link>
@@ -778,7 +778,7 @@ export function StudyErrorDetail({
           {(resolved || !materialId || reviewed || noticeAction === 'check') && (
             <section data-study-error-tour="practice" className="border-border mt-3 border-t pt-3">
               {resolved ? (
-                <p className="!text-foreground !text-sm">
+                <p className="!text-foreground !text-cuerpo">
                   {t("Este error quedó resuelto después de tu repaso.")}
                 </p>
               ) : materialId && reviewed ? (
@@ -797,14 +797,14 @@ export function StudyErrorDetail({
                   </button>
                 </>
               ) : !materialId ? (
-                <p className="!text-muted-foreground !text-sm">
+                <p className="!text-muted-foreground !text-cuerpo">
                   {t("Asociá un PDF para comprobar lo aprendido con una pregunta basada en tu material.")}
                 </p>
               ) : null}
               {activityHref && resolved && (
                 <Link
                   href={activityHref}
-                  className="text-muted-foreground mt-3 inline-flex min-h-11 w-fit items-center py-2 text-xs font-semibold underline"
+                  className="text-muted-foreground mt-3 inline-flex min-h-11 w-fit items-center py-2 text-chico font-semibold underline"
                 >
                   {t("Volver a la actividad original")}
                 </Link>

@@ -12,7 +12,7 @@ export function PublicBrandLink() {
     <Link
       href="/"
       aria-label="Ir al inicio de Evaluo"
-      className="group flex min-w-0 items-center gap-2 text-lg font-black tracking-[-0.045em] text-slate-950 sm:gap-2.5 sm:text-2xl"
+      className="group flex min-w-0 items-center gap-2 text-subtitulo font-semibold tracking-titulo text-slate-950 sm:gap-2.5 sm:text-titulo"
     >
       <Image
         src="/evaluo-logo-icono.svg"
@@ -39,7 +39,7 @@ export function PublicGuestActions({
     <div className="flex shrink-0 items-center gap-2 sm:gap-3">
       <Link
         href="/login?mode=login"
-        className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center rounded-xl px-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 min-[380px]:px-2 sm:px-3 sm:text-xs"
+        className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center rounded-xl px-1.5 text-etiqueta font-semibold transition focus-visible:outline-none focus-visible:ring-2 min-[380px]:px-2 sm:px-3 sm:text-chico"
       >
         <span className="sm:hidden">Entrar</span>
         <span className="hidden sm:inline">Iniciar sesión</span>
@@ -52,7 +52,7 @@ export function PublicGuestActions({
           cta_name: 'crear_cuenta_gratis',
           destination: primaryHref,
         }}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-xl px-2 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 min-[380px]:px-2.5 sm:gap-1.5 sm:px-4 sm:text-xs"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-xl px-2 text-etiqueta font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 min-[380px]:px-2.5 sm:gap-1.5 sm:px-4 sm:text-chico"
       >
         <span className="sm:hidden">Crear cuenta</span>
         <span className="hidden sm:inline">Crear cuenta gratis</span>
@@ -82,7 +82,7 @@ export function PublicSiteHeader({
       {variant === 'marketing' ? (
         <nav
           aria-label="Navegación principal"
-          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-slate-200/80 bg-white/90 p-1.5 text-[11px] font-bold text-slate-600 shadow-[0_8px_24px_rgba(15,23,42,0.04)] backdrop-blur lg:flex"
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-slate-200/80 bg-white/90 p-1.5 text-etiqueta font-semibold text-slate-600 shadow-[0_8px_24px_rgba(15,23,42,0.04)] backdrop-blur lg:flex"
         >
           <Link
             href="/#producto"

@@ -100,7 +100,7 @@ export function StudentMaterialsWorkspace({
         <AppPageHeader
           as="h2"
           size="compact"
-          className="gap-3 pb-3 sm:pb-3 [&_h2]:text-[19px] sm:[&_h2]:text-[20px] [&_h2]:tracking-[-0.04em]"
+          className="gap-3 pb-3 sm:pb-3 [&_h2]:text-titulo-sm sm:[&_h2]:text-titulo-sm [&_h2]:tracking-titulo"
           eyebrow={t("Tu estudio")}
           title={t("Tus PDFs")}
           visuallyHiddenTitle
@@ -121,7 +121,7 @@ export function StudentMaterialsWorkspace({
                 value={materialQuery}
                 onChange={(event) => setMaterialQuery(event.target.value)}
                 placeholder={t("Buscar un PDF...")}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pr-10 pl-10 text-[13px] text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/15"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white py-2 pr-10 pl-10 text-ui text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/15"
               />
               {materialQuery ? (
                 <button
@@ -134,7 +134,7 @@ export function StudentMaterialsWorkspace({
                 </button>
               ) : null}
             </div>
-            <span className="shrink-0 text-[12px] font-medium text-slate-500" aria-live="polite">
+            <span className="shrink-0 text-chico font-medium text-slate-500" aria-live="polite">
               {visibleMaterials.length} {locale === 'en' ? 'of' : 'de'} {initialMaterials.length} PDFs
             </span>
           </div>
@@ -155,12 +155,12 @@ export function StudentMaterialsWorkspace({
             />
           ) : visibleMaterials.length === 0 ? (
             <div className="col-span-full flex flex-col items-start gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-6">
-              <p className="text-[13px] font-semibold text-slate-900">{t("No encontramos PDFs con ese nombre.")}</p>
-              <p className="text-[12px] text-slate-600">{t("Probá con otra palabra o volvé a mostrar todos tus materiales.")}</p>
+              <p className="text-ui font-semibold text-slate-900">{t("No encontramos PDFs con ese nombre.")}</p>
+              <p className="text-chico text-slate-600">{t("Probá con otra palabra o volvé a mostrar todos tus materiales.")}</p>
               <button
                 type="button"
                 onClick={() => setMaterialQuery('')}
-                className="text-brand mt-1 min-h-9 rounded-lg px-1 text-[12.5px] font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="text-brand mt-1 min-h-9 rounded-lg px-1 text-chico font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 {t("Mostrar todos")}
               </button>
@@ -183,7 +183,7 @@ export function StudentMaterialsWorkspace({
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-[13.5px] font-semibold leading-5 tracking-[-0.025em] text-slate-950">
+                        <h3 className="text-ui font-semibold leading-5 tracking-titulo text-slate-950">
                           <Link
                             href={material.processing_status === 'ready' ? getStudentMaterialRoute(material.id) : `/dashboard/procesando/${material.id}`}
                             className="rounded-sm before:absolute before:inset-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
@@ -193,24 +193,24 @@ export function StudentMaterialsWorkspace({
                           </Link>
                         </h3>
                         {isShared ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-etiqueta font-semibold text-emerald-700">
                             <Globe className="h-3.5 w-3.5" />
                             {t("Compartido")}
                           </span>
                         ) : null}
                         {isFailed ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-etiqueta font-semibold text-red-700">
                             <CircleAlert className="h-3.5 w-3.5" />
                             {t("Necesita revisión")}
                           </span>
                         ) : material.processing_status !== 'ready' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-etiqueta font-semibold text-amber-700">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             {t("Procesando")}
                           </span>
                         ) : null}
                       </div>
-                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
+                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-etiqueta font-medium text-slate-500">
                         <span>{formatDate(material.created_at, locale)}</span>
                         {material.page_count ? <span>{material.page_count} {t('páginas')}</span> : null}
                       </div>
@@ -245,10 +245,10 @@ export function StudentMaterialsWorkspace({
                 <Trash2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-slate-950">
+                <DialogTitle className="text-subtitulo font-semibold tracking-titulo text-slate-950">
                   {t("¿Eliminar este material?")}
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                <DialogDescription className="mt-1.5 text-ui leading-5 text-slate-600">
                   {t("Se borrará el PDF y todo su espacio de estudio (resumen, glosario, flashcards y práctica). Esta acción no se puede deshacer.")}
                 </DialogDescription>
               </div>
@@ -256,10 +256,10 @@ export function StudentMaterialsWorkspace({
 
             {materialToDelete ? (
               <div className="mt-4 rounded-[1rem] border border-slate-200 bg-white px-3.5 py-3">
-                <p className="text-sm font-semibold break-words text-slate-950">
+                <p className="text-cuerpo font-semibold break-words text-slate-950">
                   {materialToDelete.title}
                 </p>
-                <p className="mt-0.5 text-[12.5px] break-all text-slate-500">
+                <p className="mt-0.5 text-chico break-all text-slate-500">
                   {materialToDelete.file_name}
                 </p>
               </div>

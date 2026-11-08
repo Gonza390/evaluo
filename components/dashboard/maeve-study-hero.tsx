@@ -70,12 +70,12 @@ export function MaeveStudyHero({
         <div className="h-[84px] w-[84px] sm:h-[104px] sm:w-[104px]">
           <EviMascot english={locale === 'en'} />
         </div>
-        <h1 className="mt-2 text-[25px] leading-[1.18] font-bold tracking-[-0.04em] text-[#0b0c1e] sm:mt-2 sm:text-[32px]">
+        <h1 className="mt-2 text-titulo leading-[1.18] font-bold tracking-titulo text-[#0b0c1e] sm:mt-2 sm:text-destacado">
           {firstName && firstName !== 'Estudiante'
             ? locale === 'en' ? `What are we studying today, ${firstName}?` : `¿Qué estudiamos hoy, ${firstName}?`
             : t('¿Qué estudiamos hoy?')}
         </h1>
-        <p className="mt-3 max-w-[760px] text-[13px] leading-[1.5] text-[#5a6481] sm:text-[14px]">
+        <p className="mt-3 max-w-[760px] text-ui leading-[1.5] text-[#5a6481] sm:text-cuerpo">
           {isFirstPdfState
             ? t('Subí el PDF que tenés que estudiar y Evaluo te ayuda a entenderlo, practicar y reforzar.')
             : t(nextStudyAction?.description ?? 'Elegí un material para continuar o sumá uno nuevo.')}
@@ -85,8 +85,8 @@ export function MaeveStudyHero({
           <div className="mt-4 grid w-full max-w-xl grid-cols-2 gap-2 sm:grid-cols-4">
             {FIRST_PDF_STEPS.map((step, index) => (
               <div key={step} className="flex items-center gap-2 rounded-xl border border-blue-100/80 bg-white/80 px-2.5 py-2 text-left">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">{index + 1}</span>
-                <span className="text-xs font-semibold text-slate-700">{t(step)}</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-chico font-semibold text-blue-700">{index + 1}</span>
+                <span className="text-chico font-semibold text-slate-700">{t(step)}</span>
               </div>
             ))}
           </div>
@@ -95,7 +95,7 @@ export function MaeveStudyHero({
         <div className="mt-4 flex w-full flex-col items-center justify-center gap-2 sm:w-auto sm:flex-row sm:gap-3">
           {materialsCount > 0 && primaryMaterialHref ? (
             <>
-              <Button asChild className="h-11 w-full rounded-xl bg-[#4070be] px-5 text-[14px] font-semibold text-white shadow-[0_10px_22px_rgba(0,102,238,0.19)] hover:bg-[#3361ac] sm:w-auto">
+              <Button asChild className="h-11 w-full rounded-xl bg-[#4070be] px-5 text-cuerpo font-semibold text-white shadow-[0_10px_22px_rgba(0,102,238,0.19)] hover:bg-[#3361ac] sm:w-auto">
                 <Link
                   href={nextStudyAction?.href ?? primaryMaterialHref}
                   onClick={() => {
@@ -113,7 +113,7 @@ export function MaeveStudyHero({
               </Button>
               {pendingReinforcementCount > 0 && nextStudyAction?.kind !== 'reinforce' ? (
                 <Link href="/dashboard/explicaciones"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-blue-700"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-cuerpo font-semibold text-blue-700"
                   onClick={() => trackMarketingEvent('cta_click', {
                     location: 'dashboard_pending_errors',
                     cta_name: 'review_pending_errors',
@@ -125,14 +125,14 @@ export function MaeveStudyHero({
                 </Link>
               ) : null}
               <button type="button" onClick={onUploadClick}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold text-[#526582] transition-colors hover:text-[#0f1b3d] sm:w-auto">
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-cuerpo font-semibold text-[#526582] transition-colors hover:text-[#0f1b3d] sm:w-auto">
                 <Upload className="h-4 w-4" />
                 {t('Subir otro PDF')}
               </button>
             </>
           ) : (
             <Button type="button" data-first-pdf-cta="dashboard_empty" onClick={onUploadClick}
-              className="h-11 w-full max-w-xs rounded-xl bg-[#4070be] px-5 text-[14px] font-semibold text-white hover:bg-[#3361ac] sm:w-auto">
+              className="h-11 w-full max-w-xs rounded-xl bg-[#4070be] px-5 text-cuerpo font-semibold text-white hover:bg-[#3361ac] sm:w-auto">
               {t('Subir mi PDF')} <Upload className="ml-2 h-4 w-4" />
             </Button>
           )}

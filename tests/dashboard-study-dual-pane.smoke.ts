@@ -16,7 +16,7 @@ assert.match(workspace, /getStudentMaterialRoute\(material\.id\)/,
 assert.match(workspace, /setMaterialToDelete\(material\)/);
 assert.match(workspace, /dashboard_empty_materials/);
 assert.match(estudiar, /<StudyReadingCards/);
-assert.match(studyCards, /<h2 className="mb-2 text-\[12px\] font-medium text-slate-500">\{english \? 'Your files' : 'Tus archivos'\}<\/h2>/);
+assert.match(studyCards, /<h2 className="mb-2 text-chico font-medium text-slate-500">\{english \? 'Your files' : 'Tus archivos'\}<\/h2>/);
 assert.ok(studyCards.indexOf("'Tus archivos'}</h2>") > -1 && studyCards.indexOf("'Tus archivos'}</h2>") < studyCards.indexOf('{renderMaterial(activeMaterial)}'), 'Tus archivos va antes de la primera tarjeta de PDF.');
 assert.match(studyCards, /\{otherMaterials\.map\(renderMaterial\)\}/, 'Los demás PDFs conservan su listado y orden.');
 assert.doesNotMatch(estudiar, /<StudyPlanSetup|<PracticeModePicker/);

@@ -84,10 +84,10 @@ export function ProfileSettingsForm({
       className="border-border bg-card space-y-4 rounded-xl border p-3.5 sm:p-4"
       aria-label={tr("Datos de tu perfil","Your profile information")}
     >
-      <h2 className="text-foreground text-[15px] font-semibold">{tr("Datos personales","Personal information")}</h2>
+      <h2 className="text-foreground text-cuerpo font-semibold">{tr("Datos personales","Personal information")}</h2>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="nombre" className="text-foreground text-[13px] font-medium">
+          <Label htmlFor="nombre" className="text-foreground text-ui font-medium">
             {tr("Nombre","Name")}
           </Label>
           <Input
@@ -95,12 +95,12 @@ export function ProfileSettingsForm({
             value={nombre}
             onChange={(event) => setNombre(event.target.value)}
             placeholder={tr("Tu nombre completo","Your full name")}
-            className="border-input bg-card h-11 rounded-lg text-base md:text-[13px]"
+            className="border-input bg-card h-11 rounded-lg text-cuerpo md:text-ui"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="text-foreground text-[13px] font-medium">
+          <Label htmlFor="email" className="text-foreground text-ui font-medium">
             {tr("Correo electrónico","Email address")}
           </Label>
           <Input
@@ -108,7 +108,7 @@ export function ProfileSettingsForm({
             value={email}
             readOnly
             disabled
-            className="border-input bg-card text-muted-foreground h-11 rounded-lg text-base disabled:opacity-100 md:text-[13px]"
+            className="border-input bg-card text-muted-foreground h-11 rounded-lg text-cuerpo disabled:opacity-100 md:text-ui"
           />
         </div>
       </div>
@@ -116,12 +116,12 @@ export function ProfileSettingsForm({
       <div>
         <div className="flex items-center gap-2">
           <Globe2 className="text-brand h-4 w-4" />
-          <h2 className="text-foreground text-sm font-bold">{tr("Contacto","Contact details")}</h2>
+          <h2 className="text-foreground text-cuerpo font-semibold">{tr("Contacto","Contact details")}</h2>
         </div>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="pais" className="text-foreground text-[13px] font-medium">
+            <Label htmlFor="pais" className="text-foreground text-ui font-medium">
               {tr("País","Country")}
             </Label>
             <div className="relative">
@@ -131,13 +131,13 @@ export function ProfileSettingsForm({
                 value={pais}
                 onChange={(event) => setPais(event.target.value)}
                 placeholder={tr("Ej: Argentina","e.g. Argentina")}
-                className="border-input bg-card h-11 rounded-lg pl-10 text-base md:text-[13px]"
+                className="border-input bg-card h-11 rounded-lg pl-10 text-cuerpo md:text-ui"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="telefono" className="text-foreground text-[13px] font-medium">
+            <Label htmlFor="telefono" className="text-foreground text-ui font-medium">
               {tr("Teléfono","Phone")} <span className="text-muted-foreground font-normal">{tr("(opcional)","(optional)")}</span>
             </Label>
             <div className="relative">
@@ -148,7 +148,7 @@ export function ProfileSettingsForm({
                 value={telefono}
                 onChange={(event) => setTelefono(event.target.value)}
                 placeholder={english ? 'e.g. +1 555 0100' : 'Ej: +54 9 11 1234 5678'}
-                className="border-input bg-card h-11 rounded-lg pl-10 text-base md:text-[13px]"
+                className="border-input bg-card h-11 rounded-lg pl-10 text-cuerpo md:text-ui"
               />
             </div>
           </div>
@@ -159,12 +159,12 @@ export function ProfileSettingsForm({
         className="border-border space-y-3 border-t pt-4"
         aria-labelledby="academic-settings-title"
       >
-        <h2 id="academic-settings-title" className="text-foreground text-[15px] font-semibold">
+        <h2 id="academic-settings-title" className="text-foreground text-cuerpo font-semibold">
           {tr("Tu formación","Your education")}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="universidad-search" className="text-foreground text-[13px] font-medium">
+            <Label htmlFor="universidad-search" className="text-foreground text-ui font-medium">
               {tr("Universidad","University")}
             </Label>
             <div className="relative">
@@ -179,7 +179,7 @@ export function ProfileSettingsForm({
                   setCarreraSearch('');
                 }}
                 placeholder={tr("Buscá tu universidad","Search for your university")}
-                className="border-input bg-card h-11 rounded-lg pl-10 text-base md:text-[13px]"
+                className="border-input bg-card h-11 rounded-lg pl-10 text-cuerpo md:text-ui"
               />
             </div>
             {!universidadId ? (
@@ -189,7 +189,7 @@ export function ProfileSettingsForm({
                     <Spinner size="sm" />
                   </div>
                 ) : universidades.length === 0 ? (
-                  <div className="text-muted-foreground px-4 py-4 text-sm">
+                  <div className="text-muted-foreground px-4 py-4 text-cuerpo">
                     {hasLoadedUniversidades
                       ? tr("No encontramos esa universidad.","University not found.")
                       : tr("Escribí al menos 2 letras para buscar tu universidad.","Enter at least two letters to search.")}
@@ -205,7 +205,7 @@ export function ProfileSettingsForm({
                         setCarreraId('');
                         setCarreraSearch('');
                       }}
-                      className={`hover:bg-primary/5 flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[13px] transition ${
+                      className={`hover:bg-primary/5 flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-ui transition ${
                         universidadId === universidad.id
                           ? 'bg-primary/5 text-primary'
                           : 'text-foreground'
@@ -213,7 +213,7 @@ export function ProfileSettingsForm({
                     >
                       <span>{universidad.nombre}</span>
                       {universidadId === universidad.id ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1 text-chico font-semibold">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           {tr("Seleccionada","Selected")}
                         </span>
@@ -226,7 +226,7 @@ export function ProfileSettingsForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="carrera-search" className="text-foreground text-[13px] font-medium">
+            <Label htmlFor="carrera-search" className="text-foreground text-ui font-medium">
               {tr("Carrera","Degree program")}
             </Label>
             <div className="relative">
@@ -244,7 +244,7 @@ export function ProfileSettingsForm({
                     ? (english ? `Search for your degree program at ${universidadSeleccionada.nombre}` : `Buscá tu carrera en ${universidadSeleccionada.nombre}`)
                     : tr("Primero seleccioná una universidad","Select a university first")
                 }
-                className="border-input bg-card h-11 rounded-lg pl-10 text-base disabled:opacity-60 md:text-[13px]"
+                className="border-input bg-card h-11 rounded-lg pl-10 text-cuerpo disabled:opacity-60 md:text-ui"
               />
             </div>
             {universidadId && !carreraId ? (
@@ -254,11 +254,11 @@ export function ProfileSettingsForm({
                     <Spinner size="sm" />
                   </div>
                 ) : !universidadId ? (
-                  <div className="text-muted-foreground px-4 py-4 text-sm">
+                  <div className="text-muted-foreground px-4 py-4 text-cuerpo">
                     {tr("Primero seleccioná una universidad.","Select a university first.")}
                   </div>
                 ) : carrerasFiltradas.length === 0 ? (
-                  <div className="text-muted-foreground px-4 py-4 text-sm">
+                  <div className="text-muted-foreground px-4 py-4 text-cuerpo">
                     {tr("No encontramos carreras para esa búsqueda.","No degree programs match that search.")}
                   </div>
                 ) : (
@@ -270,13 +270,13 @@ export function ProfileSettingsForm({
                         setCarreraId(carrera.id);
                         setCarreraSearch(carrera.nombre);
                       }}
-                      className={`hover:bg-primary/5 flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-[13px] transition ${
+                      className={`hover:bg-primary/5 flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-ui transition ${
                         carreraId === carrera.id ? 'bg-primary/5 text-primary' : 'text-foreground'
                       }`}
                     >
                       <span>{carrera.nombre}</span>
                       {carreraId === carrera.id ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1 text-chico font-semibold">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           {tr("Seleccionada","Selected")}
                         </span>
@@ -290,14 +290,14 @@ export function ProfileSettingsForm({
         </div>
       </section>
       <div className="space-y-1.5 sm:max-w-xs">
-        <Label htmlFor="anio-carrera" className="text-foreground text-[13px] font-medium">
+        <Label htmlFor="anio-carrera" className="text-foreground text-ui font-medium">
           {tr("Año de carrera que cursás","Current year of your degree program")}{" "}
           <span className="text-muted-foreground font-normal">{tr("(opcional)","(optional)")}</span>
         </Label>
         <Select value={anioCarrera || undefined} onValueChange={setAnioCarrera}>
           <SelectTrigger
             id="anio-carrera"
-            className="border-input bg-card h-11 w-full rounded-lg text-base md:text-[13px]"
+            className="border-input bg-card h-11 w-full rounded-lg text-cuerpo md:text-ui"
           >
             <SelectValue placeholder={tr("Seleccioná tu año","Select your year")} />
           </SelectTrigger>
@@ -314,7 +314,7 @@ export function ProfileSettingsForm({
         <Button
           type="submit"
           disabled={!canSave || saving}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg text-[13px] font-semibold sm:w-auto"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-lg text-ui font-semibold sm:w-auto"
         >
           {saving ? (
             <>
@@ -328,7 +328,7 @@ export function ProfileSettingsForm({
             </>
           )}
         </Button>
-        <p className="text-muted-foreground text-xs leading-5">
+        <p className="text-muted-foreground text-chico leading-5">
           {tr("Podés guardar un solo cambio sin completar el resto del perfil.","You can save a single change without filling out the rest of the profile.")}
         </p>
       </div>

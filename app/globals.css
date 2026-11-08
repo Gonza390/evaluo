@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './tonalidad.css';
+@import './tipografia.css';
 @source '../components/preview';
 
 /* Sistema de movimiento de Evaluo: UN solo efecto de transición en toda la plataforma.
