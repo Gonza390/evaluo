@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const REFERRAL_COOKIE_NAME = 'evaluo_ref';
+/** Marca `<código>:<userId>` ya atribuido, para no repetir la RPC en cada navegación. */
+export const REFERRAL_CLAIMED_COOKIE_NAME = 'evaluo_ref_claimed';
 export const REFERRAL_COOKIE_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 export type ReferralAttribution = {

@@ -1,14 +1,33 @@
+'use client';
+
+import { useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
-import { createClientServer } from '@/lib/supabase-server';
 
-export async function PublicHeaderActions() {
-  const supabase = await createClientServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// Antes era un Server Component que llamaba a auth.getUser(): leía cookies y
+// volvía dinámicas todas las páginas con PublicLayout (/landings/*,
+// /resumenes/*), sin caché y con un viaje a Auth por visita. Ahora el HTML
+// cacheado muestra los botones de invitado y, al hidratar, el navegador cambia
+// a "Ir a Mi espacio" si hay cookie de sesión. Solo decide qué links mostrar:
+// la sesión la valida proxy.ts al entrar a una ruta privada.
+const SESSION_COOKIE = /(?:^|;\s*)sb-[a-zA-Z0-9_-]+-auth-token(?:\.\d+)?=[^;]+/;
 
-  if (user) {
+function subscribe() {
+  return () => {};
+}
+
+function hasSessionCookie() {
+  return SESSION_COOKIE.test(document.cookie);
+}
+
+function serverSnapshot() {
+  return false;
+}
+
+export function PublicHeaderActions() {
+  const signedIn = useSyncExternalStore(subscribe, hasSessionCookie, serverSnapshot);
+
+  if (signedIn) {
     return (
       <nav className="flex items-center gap-2 sm:gap-3">
         <Link
