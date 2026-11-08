@@ -176,3 +176,11 @@ assert.match(workspace, /min-h-0 overflow-y-auto overscroll-contain pr-2/,
   'El índice desktop debe seguir siendo desplazable.');
 
 console.log('Compact material study layout smoke: OK.');
+
+// LCP del visor (demo/material-estudio en Lighthouse CI, máx. 4200 ms):
+// la pestaña inicial no arranca invisible y Supabase no entra en el JS inicial.
+assert.match(workspace, /const tabPanelMotion = tabSwitched \? 'animate-tab-panel' : undefined;/);
+assert.doesNotMatch(workspace, /className="animate-tab-panel/);
+const userHook = readFileSync('hooks/useUser.tsx', 'utf8');
+assert.doesNotMatch(userHook, /^import \{ supabase \}/m, 'useUser must not load Supabase before first paint.');
+assert.match(userHook, /import\('@\/lib\/supabase-client'\)/);
