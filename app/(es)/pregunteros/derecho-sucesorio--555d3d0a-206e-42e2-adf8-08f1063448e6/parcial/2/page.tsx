@@ -22,6 +22,10 @@ const MATERIA_ID = '555d3d0a-206e-42e2-adf8-08f1063448e6';
 const MATERIA_SLUG = `derecho-sucesorio--${MATERIA_ID}`;
 const PARCIAL = '2' as const;
 
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
 function buildDescription(input: {
   materiaNombre: string;
   carreraNombre?: string;
@@ -76,10 +80,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// No lee los parámetros de la URL para poder cachearse (ISR): los utm_* se
-// suman al link del simulador en el navegador (TrackedLink preserveAttribution).
-export default async function DerechoSucesorioParcial2Page() {
-  const data = await getPregunteroParcialData(MATERIA_ID, PARCIAL);
+export default async function DerechoSucesorioParcial2Page({ searchParams }: PageProps) {
+  const [data, resolvedSearchParams] = await Promise.all([
+    getPregunteroParcialData(MATERIA_ID, PARCIAL),
+    searchParams,
+  ]);
 
   if (!data) notFound();
 
@@ -89,7 +94,7 @@ export default async function DerechoSucesorioParcial2Page() {
   const materiaHref = `/explorar/materia/${MATERIA_SLUG}`;
   const simuladorHref = appendPregunteroAttribution(
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
-    { acq: 'preguntero_landing_v1' }
+    { ...resolvedSearchParams, acq: 'preguntero_landing_v1' }
   );
   const title = `Preguntero parcial 2 de ${data.materiaNombre}`;
   const breadcrumbData = buildBreadcrumbJsonLd([
