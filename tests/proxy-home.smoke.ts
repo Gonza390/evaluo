@@ -47,40 +47,71 @@ try {
   const { proxy } = await import('../proxy.ts');
 
   // First-visit language: manual cookie > browser > geolocation. No Auth calls.
-  const englishBrowser = await proxy(new NextRequest('https://evaluo.com.ar/?ref=TEST123&utm_source=welcome', {
-    headers: { 'accept-language': 'en-US,en;q=0.9', 'x-vercel-ip-country': 'AR' },
-  }));
+  const englishBrowser = await proxy(
+    new NextRequest('https://evaluo.com.ar/?ref=TEST123&utm_source=welcome', {
+      headers: { 'accept-language': 'en-US,en;q=0.9', 'x-vercel-ip-country': 'AR' },
+    })
+  );
   assert.equal(englishBrowser.status, 307);
-  assert.equal(englishBrowser.headers.get('location'), 'https://evaluo.com.ar/en?ref=TEST123&utm_source=welcome');
+  assert.equal(
+    englishBrowser.headers.get('location'),
+    'https://evaluo.com.ar/en?ref=TEST123&utm_source=welcome'
+  );
   assert.equal(englishBrowser.cookies.get('evaluo_ref')?.value, 'TEST123');
   assert.equal(englishBrowser.headers.get('cache-control'), 'private, no-store');
-  const englishCountry = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { 'x-vercel-ip-country': 'US' },
-  }));
+  const englishCountry = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: { 'x-vercel-ip-country': 'US' },
+    })
+  );
   assert.equal(englishCountry.headers.get('location'), 'https://evaluo.com.ar/en');
-  const spanishCountry = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { 'x-vercel-ip-country': 'MX' },
-  }));
+  const spanishCountry = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: { 'x-vercel-ip-country': 'MX' },
+    })
+  );
   assert.equal(spanishCountry.headers.get('location'), null);
-  const spanishBrowser = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { 'accept-language': 'es-AR,es;q=0.9', 'x-vercel-ip-country': 'US' },
-  }));
+  const spanishBrowser = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: { 'accept-language': 'es-AR,es;q=0.9', 'x-vercel-ip-country': 'US' },
+    })
+  );
   assert.equal(spanishBrowser.headers.get('location'), null);
-  const manualSpanish = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { cookie: 'evaluo_ui_locale=es', 'accept-language': 'en-US', 'x-vercel-ip-country': 'US' },
-  }));
+  const manualSpanish = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: {
+        cookie: 'evaluo_ui_locale=es',
+        'accept-language': 'en-US',
+        'x-vercel-ip-country': 'US',
+      },
+    })
+  );
   assert.equal(manualSpanish.headers.get('location'), null);
-  const manualEnglish = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { cookie: 'evaluo_ui_locale=en', 'accept-language': 'es-AR', 'x-vercel-ip-country': 'AR' },
-  }));
+  const manualEnglish = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: {
+        cookie: 'evaluo_ui_locale=en',
+        'accept-language': 'es-AR',
+        'x-vercel-ip-country': 'AR',
+      },
+    })
+  );
   assert.equal(manualEnglish.headers.get('location'), 'https://evaluo.com.ar/en');
-  const crawler = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { 'user-agent': 'Googlebot', 'accept-language': 'en-US', 'x-vercel-ip-country': 'US' },
-  }));
+  const crawler = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: {
+        'user-agent': 'Googlebot',
+        'accept-language': 'en-US',
+        'x-vercel-ip-country': 'US',
+      },
+    })
+  );
   assert.equal(crawler.headers.get('location'), null);
-  const prefetch = await proxy(new NextRequest('https://evaluo.com.ar/', {
-    headers: { 'next-router-prefetch': '1', 'accept-language': 'en-US' },
-  }));
+  const prefetch = await proxy(
+    new NextRequest('https://evaluo.com.ar/', {
+      headers: { 'next-router-prefetch': '1', 'accept-language': 'en-US' },
+    })
+  );
   assert.equal(prefetch.headers.get('location'), null);
   assert.equal(authState.calls, 0, 'Locale detection must never call Auth.');
 
@@ -199,7 +230,11 @@ try {
     })
   );
   assert.equal(claimedNavigation.headers.get('location'), null);
-  assert.equal(authState.rpcCalls, rpcCallsBefore + 1, 'La atribución no se repite en cada navegación.');
+  assert.equal(
+    authState.rpcCalls,
+    rpcCallsBefore + 1,
+    'La atribución no se repite en cada navegación.'
+  );
 
   // Un código nuevo sí se vuelve a atribuir.
   await proxy(
@@ -241,7 +276,11 @@ try {
   // Una sesión renovada desde /login debe sobrevivir al redirect al dashboard.
   authState.user = { id: 'test-user' };
   authState.cookies = [
-    { name: 'sb-test-auth-token', value: 'new-session-token', options: { path: '/', maxAge: 3600 } },
+    {
+      name: 'sb-test-auth-token',
+      value: 'new-session-token',
+      options: { path: '/', maxAge: 3600 },
+    },
   ];
   const alreadyLoggedIn = await proxy(
     new NextRequest('https://evaluo.com.ar/login', {
@@ -250,11 +289,16 @@ try {
   );
   assert.equal(new URL(alreadyLoggedIn.headers.get('location')!).pathname, '/dashboard');
   assert.equal(alreadyLoggedIn.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
-  const authenticatedEnglishLogin = await proxy(new NextRequest('https://evaluo.com.ar/en/login', {
-    headers: { cookie: 'sb-test-auth-token=valid-session' },
-  }));
+  const authenticatedEnglishLogin = await proxy(
+    new NextRequest('https://evaluo.com.ar/en/login', {
+      headers: { cookie: 'sb-test-auth-token=valid-session' },
+    })
+  );
   assert.equal(new URL(authenticatedEnglishLogin.headers.get('location')!).pathname, '/dashboard');
-  assert.equal(authenticatedEnglishLogin.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
+  assert.equal(
+    authenticatedEnglishLogin.cookies.get('sb-test-auth-token')?.value,
+    'new-session-token'
+  );
 
   authState.user = null;
   authState.cookies = [];
@@ -269,7 +313,9 @@ try {
 
   // El enlace de un PDF de otro estudiante debe conservarse al pedir sesión.
   const sharedPdfGuest = await proxy(
-    new NextRequest('https://evaluo.com.ar/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555?tab=tarjetas')
+    new NextRequest(
+      'https://evaluo.com.ar/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555?tab=tarjetas'
+    )
   );
   const sharedLoginUrl = new URL(sharedPdfGuest.headers.get('location')!);
   assert.equal(sharedLoginUrl.pathname, '/login');
@@ -282,7 +328,9 @@ try {
 
   authState.user = { id: 'signed-in-student' };
   const sharedPdfMember = await proxy(
-    new NextRequest('https://evaluo.com.ar/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555')
+    new NextRequest(
+      'https://evaluo.com.ar/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555'
+    )
   );
   assert.equal(sharedPdfMember.headers.get('location'), null);
   authState.user = null;
@@ -291,6 +339,28 @@ try {
   const publicPage = await proxy(new NextRequest('https://evaluo.com.ar/pricing'));
   assert.equal(publicPage.headers.get('location'), null);
   assert.equal(authState.calls, callsBeforePublicPage, 'Las demás páginas públicas no cambian.');
+
+  // /explorar/materia/[id] sin parámetros: reescritura a la variante cacheada.
+  const materiaCached = await proxy(
+    new NextRequest('https://evaluo.com.ar/explorar/materia/derecho--abc?utm_source=google')
+  );
+  assert.equal(materiaCached.headers.get('location'), null);
+  assert.equal(
+    new URL(materiaCached.headers.get('x-middleware-rewrite')!).pathname,
+    '/explorar/materia-cache/derecho--abc'
+  );
+  const materiaDynamic = await proxy(
+    new NextRequest('https://evaluo.com.ar/explorar/materia/derecho--abc?creador=ana')
+  );
+  assert.equal(materiaDynamic.headers.get('x-middleware-rewrite'), null);
+  const materiaDirect = await proxy(
+    new NextRequest('https://evaluo.com.ar/explorar/materia-cache/derecho--abc')
+  );
+  assert.equal(
+    new URL(materiaDirect.headers.get('location')!).pathname,
+    '/explorar/materia/derecho--abc'
+  );
+  assert.equal(authState.calls, callsBeforePublicPage, 'Materia no valida sesión en el proxy.');
 } finally {
   hooks.deregister();
   Reflect.deleteProperty(globalThis, '__evaluoProxyAuthTest');
