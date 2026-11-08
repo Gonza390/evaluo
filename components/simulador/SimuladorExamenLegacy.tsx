@@ -492,10 +492,8 @@ export default function SimuladorExamen({
   const [loadingExplanations, setLoadingExplanations] = useState(false);
   const [explanationsError, setExplanationsError] = useState<string | null>(null);
   const [explanationsRetry, setExplanationsRetry] = useState(0);
-  const [explanationsMetrics, setExplanationsMetrics] = useState<{
-    cacheHits: number;
-    generatedCount: number;
-  } | null>(null);
+  // Enunciados de respuestas incorrectas que el plan gratis no explica.
+  const [lockedWrongQuestions, setLockedWrongQuestions] = useState<string[]>([]);
   const [feedbackLoading, setFeedbackLoading] = useState<Record<string, 1 | -1 | undefined>>({});
   const [feedbackVotes, setFeedbackVotes] = useState<Record<string, 1 | -1>>({});
   const [simulatorVote, setSimulatorVote] = useState<1 | -1 | null>(null);
@@ -1569,6 +1567,7 @@ export default function SimuladorExamen({
         .map(([index]) => preguntas[Number(index)]?.id)
         .filter((id): id is string => Boolean(id));
 
+      setLockedWrongQuestions([]);
       if (wrongQuestionIds.length === 0) {
         setWrongExplanations([]);
         setExplanationsError(null);
@@ -1622,7 +1621,15 @@ export default function SimuladorExamen({
         }
 
         setWrongExplanations(response.explanations ?? []);
-        setExplanationsMetrics(response.metrics ?? null);
+        if (!response.premium) {
+          const explainedIds = new Set(limitedWrongQuestionIds);
+          setLockedWrongQuestions(
+            wrongQuestionIds
+              .filter((id) => !explainedIds.has(id))
+              .map((id) => preguntas.find((pregunta) => pregunta.id === id)?.enunciado ?? '')
+              .filter(Boolean)
+          );
+        }
         if (!response.premium && wrongQuestionIds.length > 3) {
           trackMarketingEvent('limit_reached_explanations', {
             materia_id: materiaId,
@@ -2634,11 +2641,15 @@ export default function SimuladorExamen({
 
                   <div className="mt-6 rounded-[28px] border border-slate-200 bg-white p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
                     <h3 className="text-lg font-bold text-slate-900">
-                      Tutor Evaluo: por qué fallaste y cómo mejorarlo
+                      Por qué fallaste y cómo mejorarlo
                     </h3>
                     <p className="mt-1 text-xs text-slate-500">
                       {userId
-                        ? 'Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.'
+                        ? !isPremium && lockedWrongQuestions.length > 0 && !loadingExplanations
+                          ? `Viste ${wrongExplanations.length} de ${wrongExplanations.length + lockedWrongQuestions.length} explicaciones`
+                          : isPremium
+                            ? 'Explicaciones de todas tus respuestas incorrectas.'
+                            : 'Con tu plan gratuito ves 3 explicaciones por simulador.'
                         : 'Mostramos una explicación gratis de muestra. Creá tu cuenta para verlas todas.'}
                     </p>
                     {loadingExplanations ? (
@@ -2738,6 +2749,23 @@ export default function SimuladorExamen({
                             </div>
                           </div>
                         ))}
+                        {!isPremium && userId ? (
+                          <SimulatorPremiumUpsell
+                            lockedQuestions={lockedWrongQuestions}
+                            materiaId={materiaId}
+                            onUpgrade={() => {
+                              trackMarketingEvent('premium_cta_clicked', {
+                                source: 'simulator_explanations',
+                                materia_id: materiaId,
+                              });
+                              router.push(premiumDashboardHref({
+                                source: 'simulator_explanations',
+                                materiaId, parcial,
+                                returnTo: '/dashboard/explicaciones',
+                              }));
+                            }}
+                          />
+                        ) : null}
                       </div>
                     )}
                     {!userId && wrongExplanations.length > 0 ? (
@@ -2780,25 +2808,6 @@ export default function SimuladorExamen({
                           <ChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
-                    ) : null}
-                    {!isPremium && userId && wrongExplanations.length > 0 ? (
-                      explanationsMetrics ? (
-                        <SimulatorPremiumUpsell
-                          cacheHits={explanationsMetrics.cacheHits}
-                          generatedCount={explanationsMetrics.generatedCount}
-                          onUpgrade={() => {
-                            trackMarketingEvent('premium_cta_clicked', {
-                              source: 'simulator_explanations',
-                              materia_id: materiaId,
-                            });
-                            router.push(premiumDashboardHref({
-                              source:'simulator_explanations',
-                              materiaId, parcial,
-                              returnTo:'/dashboard/explicaciones',
-                            }));
-                          }}
-                        />
-                      ) : null
                     ) : null}
                     {userId ? (
                       <div className="mt-4">

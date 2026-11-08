@@ -66,7 +66,7 @@ import {
 import { getTopicQuestionCounts } from '@/lib/student-materials/topic-practice';
 
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
-import { PremiumUpsell } from '@/components/premium/premium-upsell';
+import { MindMapPremiumGate } from '@/components/premium/mind-map-premium-gate';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/processing-actions';
 import { getMaterialPendingStudyErrorTopicCountAction } from '@/lib/actions/study-errors';
 import { Button } from '@/components/ui/button';
@@ -2549,20 +2549,12 @@ export function MaterialStudyWorkspace({
             </div>
           </StudyDocumentShell>
         ) : (
-          <div className="border-border bg-card rounded-2xl border p-4 sm:p-5">
-            <PremiumUpsell
-              title={english ? "Mind maps are a Premium feature" : "El mapa mental es exclusivo Premium"}
-              description={english ? "See the key topics and concepts in your PDF at a glance to study faster and connect ideas." : "Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."}
-              source="material_mapa_mental"
-              materiaId={materiaId}
-              features={[
-                english ? 'A mind map for every PDF you upload' : 'Mapa mental de cada PDF que subas',
-                english ? 'Connected topics and key concepts' : 'Temas y conceptos clave conectados',
-                english ? 'Your study resources in one place' : 'Todo tu espacio de estudio en un solo lugar',
-              ]}
-              ctaLabel={english ? "Unlock mind maps with Premium" : "Desbloquear mapa mental con Premium"}
-            />
-          </div>
+          <MindMapPremiumGate
+            centerTitle={title}
+            topics={fullSummarySections.map((section) => section.title)}
+            materiaId={materiaId}
+            english={english}
+          />
         )}
       </TabsContent>
       {hasProgress ? (
