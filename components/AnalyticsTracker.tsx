@@ -12,6 +12,7 @@ import {
   getAnalyticsDeviceType,
   getAnalyticsPageType,
   getAnalyticsSessionKey,
+  enqueueAnalyticsPayload,
 } from '@/lib/analytics-client';
 import { useUser } from '@/hooks/useUser';
 
@@ -31,16 +32,13 @@ function getRouteContext() {
   };
 }
 
+// Encola en la tanda compartida (lib/analytics-client): un pedido cada 5 s o
+// cada 10 eventos, con sendBeacon al ocultar o cerrar la página.
 async function track(eventName: string, payload: Record<string, unknown>) {
   try {
-    await fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: eventName,
-        ...payload,
-      }),
-      keepalive: true,
+    enqueueAnalyticsPayload({
+      event_name: eventName,
+      ...(payload as Omit<Parameters<typeof enqueueAnalyticsPayload>[0], 'event_name'>),
     });
   } catch {
     // ignore tracking errors
@@ -64,11 +62,7 @@ export default function AnalyticsTracker() {
     const deviceType = getAnalyticsDeviceType();
     const referrer = document.referrer?.trim() || null;
     const sessionSource = detectAcquisitionSource(window.location.search, referrer);
-    captureAttributionFromLocation(
-      window.location.search,
-      window.location.pathname,
-      referrer
-    );
+    captureAttributionFromLocation(window.location.search, window.location.pathname, referrer);
     const attribution = getAttributionSnapshot();
     const routeContext = getRouteContext();
 
