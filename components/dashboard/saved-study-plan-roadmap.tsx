@@ -47,8 +47,8 @@ export function SavedStudyPlanRoadmap({
     <section data-saved-study-plan-roadmap aria-label={english ? "Your journey to exam day" : "Tu recorrido hasta el examen"}
       className="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
       <div className="mb-2 flex items-center justify-between gap-3 sm:mb-3">
-        <h2 className="text-[14px] font-normal text-[#0F1B3D]">{english ? "Your journey" : "Tu recorrido"}</h2>
-        <span className="text-[11px] text-[#7F8AA3]">{finished} {english ? "of" : "de"} {topics.length} {english ? "topics" : "temas"}</span>
+        <h2 className="text-cuerpo font-normal text-[#0F1B3D]">{english ? "Your journey" : "Tu recorrido"}</h2>
+        <span className="text-etiqueta text-[#7F8AA3]">{finished} {english ? "of" : "de"} {topics.length} {english ? "topics" : "temas"}</span>
       </div>
       <div className="flex min-w-0 items-start">
         <div ref={scrollRef} data-saved-roadmap-scroll tabIndex={0} role="region" aria-label={english ? "Topics: scroll horizontally" : "Temas del recorrido: desplazate horizontalmente"} className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -62,11 +62,11 @@ export function SavedStudyPlanRoadmap({
               <Link href={`/materiales/${topic.materialId}?tab=resumen&studyTopic=${topic.topicIndex}`}
                 aria-label={`${t('Tema')} ${index + 1}: ${topic.title}. ${english ? (done ? 'Read' : isCurrent ? 'You are here' : 'Pending') : (done ? 'Leído' : isCurrent ? 'Estás acá' : 'Pendiente')}`}
                 className="relative z-10 flex min-w-0 flex-col items-center gap-2 rounded-lg px-0.5 py-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
-                <span className={`flex size-[27px] shrink-0 items-center justify-center rounded-full border-2 text-[11px] font-medium ${done ? 'border-[#35816A] bg-[#E7F5EC] text-[#35816A]' : isCurrent ? 'border-[#456DBD] bg-[#EEF2FF] text-[#456DBD]' : 'border-[#E7EBF4] bg-white text-[#7F8AA3]'}`}>
+                <span className={`flex size-[27px] shrink-0 items-center justify-center rounded-full border-2 text-etiqueta font-medium ${done ? 'border-[#35816A] bg-[#E7F5EC] text-[#35816A]' : isCurrent ? 'border-[#456DBD] bg-[#EEF2FF] text-[#456DBD]' : 'border-[#E7EBF4] bg-white text-[#7F8AA3]'}`}>
                   {done ? <Check className="size-4" aria-hidden="true"/> : index + 1}
                 </span>
-                <span title={topic.title} className={`line-clamp-2 min-h-8 w-full break-words text-[10px] leading-4 sm:text-[11px] ${isCurrent ? 'font-semibold text-[#0F1B3D]' : 'font-medium text-[#42506A]'}`}>{topic.title}</span>
-                {isCurrent && <span className="text-[10px] font-medium text-[#456DBD]">{english ? "You are here" : "Estás acá"}</span>}
+                <span title={topic.title} className={`line-clamp-2 min-h-8 w-full break-words text-etiqueta leading-4 sm:text-etiqueta ${isCurrent ? 'font-semibold text-[#0F1B3D]' : 'font-medium text-[#42506A]'}`}>{topic.title}</span>
+                {isCurrent && <span className="text-etiqueta font-medium text-[#456DBD]">{english ? "You are here" : "Estás acá"}</span>}
               </Link>
             </div>
           );
@@ -79,8 +79,8 @@ export function SavedStudyPlanRoadmap({
             <span className="flex size-[27px] shrink-0 items-center justify-center rounded-full border-2 border-[#DAB781] bg-[#FCF4E9] text-[#B8792E]">
               <Flag className="size-4" aria-hidden="true"/>
             </span>
-            <span className="text-[11px] font-semibold text-[#0F1B3D]">{t("Examen")}</span>
-            <span className="text-[10px] capitalize text-[#7F8AA3]">{examLabel(examDate, locale)}</span>
+            <span className="text-etiqueta font-semibold text-[#0F1B3D]">{t("Examen")}</span>
+            <span className="text-etiqueta capitalize text-[#7F8AA3]">{examLabel(examDate, locale)}</span>
           </div>
         </div>
       </div>

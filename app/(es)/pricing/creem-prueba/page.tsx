@@ -40,10 +40,10 @@ export default function CreemTestResultPage() {
   },[]);
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-5 py-20 text-center">
-      <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Evaluo · Creem Test Mode</p>
-      <h1 className="mt-4 text-3xl font-bold text-slate-950">{status}</h1>
-      <p className="mt-4 text-sm leading-7 text-slate-600">{detail}</p>
-      <Link href="/pricing" className="mt-8 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+      <p className="text-chico font-semibold uppercase tracking-etiqueta text-blue-700">Evaluo · Creem Test Mode</p>
+      <h1 className="mt-4 text-destacado font-bold text-slate-950">{status}</h1>
+      <p className="mt-4 text-cuerpo leading-7 text-slate-600">{detail}</p>
+      <Link href="/pricing" className="mt-8 rounded-xl bg-blue-600 px-6 py-3 text-cuerpo font-semibold text-white hover:bg-blue-700">
         Volver a los planes
       </Link>
     </main>

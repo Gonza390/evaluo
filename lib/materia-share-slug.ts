@@ -1,10 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildSeoEntitySlug, slugifySeoSegment } from '@/lib/seo-intents';
-import {
-  buildMateriaShareSlug,
-  buildUniversityShareSegment,
-} from '@/lib/materia-share-path';
+import { buildMateriaShareSlug, buildUniversityShareSegment } from '@/lib/materia-share-path';
 
 type UniversityRow = { id: string; nombre: string };
 type MateriaRow = { id: string; nombre: string; carrera_id?: string | null };
@@ -14,9 +11,7 @@ const loadUniversities = unstable_cache(
     const client = createPublicClient();
     const { data, error } = await client.from('universidades').select('id, nombre');
     if (error) return [];
-    return (data ?? []).filter(
-      (row): row is UniversityRow => Boolean(row?.id && row?.nombre)
-    );
+    return (data ?? []).filter((row): row is UniversityRow => Boolean(row?.id && row?.nombre));
   },
   ['materia-share-universities'],
   { revalidate: 3600 }
@@ -30,9 +25,7 @@ async function findMateriaInUniversity(universityId: string, materiaSlug: string
     .eq('universidad_id', universityId);
 
   if (careersError) return null;
-  const careerIds = (careers ?? [])
-    .map((row) => row.id)
-    .filter((id): id is string => Boolean(id));
+  const careerIds = (careers ?? []).map((row) => row.id).filter((id): id is string => Boolean(id));
   if (careerIds.length === 0) return null;
 
   const [{ data: links }, { data: directMaterias }] = await Promise.all([
@@ -41,11 +34,7 @@ async function findMateriaInUniversity(universityId: string, materiaSlug: string
   ]);
 
   const linkedMateriaIds = Array.from(
-    new Set(
-      (links ?? [])
-        .map((row) => row.materia_id)
-        .filter((id): id is string => Boolean(id))
-    )
+    new Set((links ?? []).map((row) => row.materia_id).filter((id): id is string => Boolean(id)))
   );
 
   let linkedMaterias: MateriaRow[] = [];
@@ -69,12 +58,8 @@ async function findMateriaInUniversity(universityId: string, materiaSlug: string
   );
 }
 
-export async function resolveMateriaShareSlug(slug: string) {
-  const normalizedSlug = slugifySeoSegment(slug);
-  if (!normalizedSlug) return null;
-
-  const universities = await loadUniversities();
-  const candidates = universities
+function universityCandidates(universities: UniversityRow[], normalizedSlug: string) {
+  return universities
     .map((university) => ({
       ...university,
       shareSegment: buildUniversityShareSegment(university.nombre),
@@ -84,6 +69,29 @@ export async function resolveMateriaShareSlug(slug: string) {
         university.shareSegment && normalizedSlug.endsWith(`-${university.shareSegment}`)
     )
     .sort((a, b) => b.shareSegment.length - a.shareSegment.length);
+}
+
+// /[slug] recibe muchas visitas de bots probando rutas. Primero se descarta lo
+// que no termina en una universidad real (con la lista ya cacheada, sin
+// consultas). Lo demás se resuelve una vez por hora por slug: antes cada visita
+// hacía hasta 4 consultas a Supabase.
+export async function resolveMateriaShareSlug(slug: string) {
+  const normalizedSlug = slugifySeoSegment(slug);
+  if (!normalizedSlug) return null;
+  const universities = await loadUniversities();
+  if (universityCandidates(universities, normalizedSlug).length === 0) return null;
+  return cachedResolveMateriaShareSlug(normalizedSlug);
+}
+
+const cachedResolveMateriaShareSlug = unstable_cache(
+  async (normalizedSlug: string) => resolveMateriaShareSlugUncached(normalizedSlug),
+  ['materia-share-slug-v1'],
+  { revalidate: 3600 }
+);
+
+async function resolveMateriaShareSlugUncached(normalizedSlug: string) {
+  const universities = await loadUniversities();
+  const candidates = universityCandidates(universities, normalizedSlug);
 
   for (const university of candidates) {
     const materiaSlug = normalizedSlug.slice(0, -(university.shareSegment.length + 1));

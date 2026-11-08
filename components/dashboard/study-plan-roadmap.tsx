@@ -46,8 +46,8 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
  if(!topicActivities.length)return null;
  return <section aria-label={english ? "Your study journey" : "Tu recorrido de estudio"} className="min-w-0 rounded-2xl border border-slate-200/90 bg-white px-3 py-2.5 sm:px-4 sm:py-3.5 shadow-[0_3px_14px_rgba(15,23,42,0.025)]">
   <div className="mb-2 flex items-center justify-between gap-2 sm:mb-3">
-   <h2 className="text-[14px] font-normal">{english ? 'Your journey' : 'Tu recorrido'}</h2>
-   <span className="text-[11px] text-slate-500">{allComplete ? (english ? 'Journey completed' : 'Recorrido completado') : `${finished.filter(Boolean).length} ${english ? 'of' : 'de'} ${finished.length} ${english ? 'topics' : 'temas'}`}</span>
+   <h2 className="text-cuerpo font-normal">{english ? 'Your journey' : 'Tu recorrido'}</h2>
+   <span className="text-etiqueta text-slate-500">{allComplete ? (english ? 'Journey completed' : 'Recorrido completado') : `${finished.filter(Boolean).length} ${english ? 'of' : 'de'} ${finished.length} ${english ? 'topics' : 'temas'}`}</span>
   </div>
   <div className="relative min-w-0">
   <div ref={scrollerRef} className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><ol className="flex min-w-max items-start">
@@ -56,11 +56,11 @@ export function StudyPlanRoadmap({ materialId, topicActivities }: { materialId: 
     return <li key={i} data-roadmap-topic={i} className="relative w-[112px] shrink-0 text-center">
      {i>0?<span aria-hidden="true" className="absolute -left-1/2 top-[13px] h-px w-full bg-slate-200"/>:null}
      <Link href={'/materiales/'+materialId+'?tab=resumen&studyTopic='+i} aria-label={(english ? 'Topic ' : 'Tema ')+(i+1)+': '+(t.title||(english ? 'Topic ' : 'Tema ')+(i+1))+'. '+state} className="relative z-10 flex flex-col items-center gap-1.5 rounded-lg px-1 py-0.5 sm:gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-      <span className={'flex size-[27px] items-center justify-center rounded-full border-2 text-[11px] font-medium '+(complete?'border-[#35816A] bg-[#E9F5EE] text-[#35816A]':actual?'border-[#376CAD] bg-[#E8F2FF] text-[#376CAD]':'border-slate-200 bg-white text-slate-400')}>
+      <span className={'flex size-[27px] items-center justify-center rounded-full border-2 text-etiqueta font-medium '+(complete?'border-[#35816A] bg-[#E9F5EE] text-[#35816A]':actual?'border-[#376CAD] bg-[#E8F2FF] text-[#376CAD]':'border-slate-200 bg-white text-slate-400')}>
        {complete?<Check className="size-4" aria-hidden="true"/>:i+1}
       </span>
-      <span title={t.title} className={'line-clamp-2 min-h-[28px] max-w-[108px] text-[11px] leading-[14px] sm:min-h-8 sm:leading-4 font-medium '+(actual?'text-slate-900':'text-slate-600')}>{t.title||(english ? 'Topic ' : 'Tema ')+(i+1)}</span>
-      {actual ? <span className="text-[10px] font-medium text-slate-500">{english ? 'You are here' : 'Estás acá'}</span> : null}
+      <span title={t.title} className={'line-clamp-2 min-h-[28px] max-w-[108px] text-etiqueta leading-[14px] sm:min-h-8 sm:leading-4 font-medium '+(actual?'text-slate-900':'text-slate-600')}>{t.title||(english ? 'Topic ' : 'Tema ')+(i+1)}</span>
+      {actual ? <span className="text-etiqueta font-medium text-slate-500">{english ? 'You are here' : 'Estás acá'}</span> : null}
      </Link>
     </li>;
    })}

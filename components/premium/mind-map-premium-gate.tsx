@@ -60,7 +60,7 @@ export function MindMapPremiumGate({ centerTitle, topics, materiaId, english = f
   const node = (label: string) => (
     <span
       key={label}
-      className="block truncate rounded-xl border-2 border-[#cfdcf5] bg-white px-3 py-2 text-center text-[13px] font-semibold text-[#2a5193]"
+      className="block truncate rounded-xl border-2 border-[#cfdcf5] bg-white px-3 py-2 text-center text-ui font-semibold text-[#2a5193]"
     >
       {label}
     </span>
@@ -78,10 +78,10 @@ export function MindMapPremiumGate({ centerTitle, topics, materiaId, english = f
         height={72}
         className="size-16 object-contain sm:size-[72px]"
       />
-      <h2 className="max-w-[420px] text-xl leading-tight font-extrabold tracking-[-0.01em] text-[#14213d] sm:text-[22px]">
+      <h2 className="max-w-[420px] text-titulo-sm leading-tight font-semibold tracking-[-0.01em] text-[#14213d] sm:text-titulo">
         {t('El mapa mental se desbloquea con Premium', 'Mind maps unlock with Premium')}
       </h2>
-      <p className="max-w-[400px] text-sm leading-normal text-[#4f5b6e] sm:text-[15px]">
+      <p className="max-w-[400px] text-cuerpo leading-normal text-[#4f5b6e] sm:text-cuerpo">
         {t(
           'Mirá todos los temas de tu apunte conectados en un solo vistazo.',
           'See every topic in your notes connected at a glance.'
@@ -93,14 +93,14 @@ export function MindMapPremiumGate({ centerTitle, topics, materiaId, english = f
           aria-hidden="true"
           className="pointer-events-none grid grid-cols-2 items-center gap-2.5 p-4 opacity-85 blur-[3px] select-none sm:grid-cols-[1fr_auto_1fr] sm:gap-4 sm:px-6 sm:py-5"
         >
-          <div className="col-span-2 mx-auto max-w-[220px] truncate rounded-[14px] bg-[#3c6cba] px-4 py-3 text-sm font-bold text-white sm:order-2 sm:col-span-1">
+          <div className="col-span-2 mx-auto max-w-[220px] truncate rounded-[14px] bg-[#3c6cba] px-4 py-3 text-cuerpo font-semibold text-white sm:order-2 sm:col-span-1">
             {centerTitle}
           </div>
           <div className="flex min-w-0 flex-col gap-2.5 sm:order-1">{left.map(node)}</div>
           <div className="flex min-w-0 flex-col gap-2.5 sm:order-3">{right.map(node)}</div>
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="inline-flex items-center gap-[7px] rounded-full border border-[#cfdcf5] bg-white px-3.5 py-2 text-[13px] font-bold text-[#2a5193] shadow-[0_4px_14px_rgba(42,81,147,0.14)]">
+          <span className="inline-flex items-center gap-[7px] rounded-full border border-[#cfdcf5] bg-white px-3.5 py-2 text-ui font-semibold text-[#2a5193] shadow-[0_4px_14px_rgba(42,81,147,0.14)]">
             <LockKeyhole className="size-[13px]" aria-hidden="true" />
             {t('Se desbloquea con Premium', 'Unlocks with Premium')}
           </span>
@@ -110,7 +110,7 @@ export function MindMapPremiumGate({ centerTitle, topics, materiaId, english = f
       <button
         type="button"
         onClick={handleUpgrade}
-        className="mt-1 flex min-h-12 w-full max-w-[300px] items-center justify-center rounded-xl bg-[#3c6cba] text-[15px] font-bold text-white transition hover:bg-[#2a5193] focus-visible:ring-2 focus-visible:ring-[#3c6cba] focus-visible:ring-offset-2 focus-visible:outline-none sm:min-h-11 sm:max-w-[280px]"
+        className="mt-1 flex min-h-12 w-full max-w-[300px] items-center justify-center rounded-xl bg-[#3c6cba] text-cuerpo font-semibold text-white transition hover:bg-[#2a5193] focus-visible:ring-2 focus-visible:ring-[#3c6cba] focus-visible:ring-offset-2 focus-visible:outline-none sm:min-h-11 sm:max-w-[280px]"
       >
         {t('Pasar a Premium', 'Go Premium')}
       </button>

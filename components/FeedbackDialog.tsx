@@ -92,21 +92,21 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
       <DialogContent className="gap-0 rounded-2xl border-slate-200 p-0 sm:max-w-[520px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="px-6 pb-4 pt-6 pr-12">
-            <DialogTitle className="text-xl font-bold tracking-tight text-slate-950">
+            <DialogTitle className="text-titulo-sm font-semibold tracking-titulo text-slate-950">
               {english ? 'Send feedback' : 'Enviar comentarios'}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 px-6">
             <div>
-              <label htmlFor="feedback-category" className="text-sm font-semibold text-slate-900">
+              <label htmlFor="feedback-category" className="text-cuerpo font-semibold text-slate-900">
                 {english ? 'Category' : 'Categoría'}
               </label>
               <select
                 id="feedback-category"
                 value={category}
                 onChange={(event) => setCategory(event.target.value as FeedbackCategory)}
-                className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
+                className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-cuerpo text-slate-800 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               >
                 {feedbackCategories.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -117,7 +117,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
             </div>
 
             <div>
-              <label htmlFor="feedback-message" className="text-sm font-semibold text-slate-900">
+              <label htmlFor="feedback-message" className="text-cuerpo font-semibold text-slate-900">
                 {english ? 'Your feedback' : 'Tus comentarios'}
               </label>
               <textarea
@@ -127,12 +127,12 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 rows={6}
                 autoFocus
                 placeholder={english ? "Tell us what you think..." : "Contanos qué pensás..."}
-                className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
+                className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-cuerpo leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               />
             </div>
 
             <div>
-              <label htmlFor="feedback-phone" className="text-sm font-semibold text-slate-900">
+              <label htmlFor="feedback-phone" className="text-cuerpo font-semibold text-slate-900">
                 {english ? 'Phone number' : 'Número de teléfono'} <span className="font-normal text-slate-500">{english ? '(optional)' : '(opcional)'}</span>
               </label>
               <input
@@ -143,14 +143,14 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 value={phone}
                 onChange={(event) => setPhone(event.target.value.slice(0, 40))}
                 placeholder={english ? "e.g., +1 415 555 0123" : "Ej. +54 9 11 1234 5678"}
-                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
+                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-cuerpo text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               />
-              <p className="mt-1.5 text-xs leading-5 text-slate-500">
+              <p className="mt-1.5 text-chico leading-5 text-slate-500">
                 {english ? 'Leave your number if you would like us to contact you sooner.' : 'Dejá tu número si querés que podamos responderte más rápido.'}
               </p>
             </div>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? <p className="text-cuerpo text-red-600">{error}</p> : null}
           </div>
 
           <DialogFooter className="grid grid-cols-2 gap-3 px-6 pb-6 pt-5 sm:grid-cols-2 sm:justify-stretch">

@@ -209,7 +209,7 @@ function BottomNav() {
               }
             >
               <Icon className="h-4.5 w-4.5" />
-              <span aria-hidden={compactNav && studentNav} className={`overflow-hidden text-center text-[12px] font-medium transition-[max-height,opacity] duration-200 motion-reduce:transition-none ${compactNav && studentNav ? 'max-h-0 opacity-0' : 'max-h-5 opacity-100'}`}>{item.label}</span>
+              <span aria-hidden={compactNav && studentNav} className={`overflow-hidden text-center text-chico font-medium transition-[max-height,opacity] duration-200 motion-reduce:transition-none ${compactNav && studentNav ? 'max-h-0 opacity-0' : 'max-h-5 opacity-100'}`}>{item.label}</span>
             </Link>
           );
         })}
@@ -356,7 +356,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             }`}
           >
             {userLoading && privateRoute ? (
-              <div aria-hidden="true" className="flex h-9 items-center gap-2"><Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} className="h-8 w-8" /><span className="hidden text-[15px] font-bold text-slate-950 md:block">Evaluo</span></div>
+              <div aria-hidden="true" className="flex h-9 items-center gap-2"><Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} className="h-8 w-8" /><span className="hidden text-cuerpo font-semibold text-slate-950 md:block">Evaluo</span></div>
             ) : !user ? (
               <PublicBrandLink />
             ) : (
@@ -374,7 +374,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   className={`h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] ${isCompactAppRoute ? 'sm:h-6 sm:w-6' : 'sm:h-9 sm:w-9'}`}
                 />
                 <div className="hidden min-w-0 md:block">
-                  <div className={`truncate font-bold tracking-[-0.025em] text-slate-950 ${isCompactAppRoute ? 'text-[14px] sm:text-[15px]' : 'text-[1.05rem] sm:text-lg'}`}>
+                  <div className={`truncate font-semibold tracking-titulo text-slate-950 ${isCompactAppRoute ? 'text-cuerpo sm:text-cuerpo' : 'text-subtitulo sm:text-subtitulo'}`}>
                     Evaluo
                   </div>
                 </div>
@@ -424,7 +424,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     className="order-3 inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:hidden"
                   >
                     <Flame className="h-4 w-4" aria-hidden="true" />
-                    <span className="text-xs font-semibold">{streakDays}</span>
+                    <span className="text-chico font-semibold">{streakDays}</span>
                   </button>
                   <button
                     type="button"
@@ -433,7 +433,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     className="hidden min-h-10 items-center gap-1 rounded-lg px-1 text-blue-600 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:inline-flex"
                   >
                     <Flame className="h-4 w-4" aria-hidden="true" />
-                    <span className="text-xs font-semibold">{streakDays}</span>
+                    <span className="text-chico font-semibold">{streakDays}</span>
                   </button>
                 </div>
 
@@ -451,7 +451,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           className="border-border bg-card/90 text-muted-foreground hover:border-input hover:text-foreground absolute top-2 right-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border p-2 shadow-sm transition"
                           aria-label={locale === 'en' ? 'Close study streak summary' : 'Cerrar resumen de racha'}
                         >
-                          <span className="text-lg leading-none">×</span>
+                          <span className="text-subtitulo leading-none">×</span>
                         </button>
 
                         <DialogHeader className="items-center text-center">
@@ -460,13 +460,13 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                               <Flame className="h-5 w-5" />
                             </div>
                           </div>
-                          <DialogTitle className="text-foreground mt-3 text-[3.2rem] leading-none font-bold tracking-[-0.08em]">
+                          <DialogTitle className="text-foreground mt-3 text-[3.2rem] leading-none font-semibold tracking-titulo">
                             {streakDays}
                           </DialogTitle>
-                          <DialogDescription className="text-brand mt-1 text-sm font-semibold">
+                          <DialogDescription className="text-brand mt-1 text-cuerpo font-semibold">
                             {streakLabel}
                           </DialogDescription>
-                          <p className="text-muted-foreground mt-2 max-w-[250px] text-xs leading-5">
+                          <p className="text-muted-foreground mt-2 max-w-[250px] text-chico leading-5">
                             {locale === 'en'
                               ? 'Keep building momentum. You can return to your study materials whenever you are ready.'
                               : 'Seguí entrando cada día para mantener tu impulso y volver más rápido a estudiar.'}
@@ -475,10 +475,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
 
                         <div className="border-border bg-card/90 mt-5 rounded-[22px] border p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                           <div className="flex items-center justify-between">
-                            <p className="text-foreground text-xs font-semibold tracking-[-0.02em]">
+                            <p className="text-foreground text-chico font-semibold tracking-titulo">
                               {locale === 'en' ? 'This week' : 'Esta semana'}
                             </p>
-                            <p className="text-brand text-xs font-semibold">
+                            <p className="text-brand text-chico font-semibold">
                               {Math.min(streakDays, 7)} {locale === 'en' ? 'of' : 'de'} 7
                             </p>
                           </div>
@@ -488,7 +488,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                               {weekDayEntries.map((day) => (
                                 <div key={`${day.label}-label`} className="w-8 shrink-0">
                                   <span
-                                    className={`block text-[12px] font-bold tracking-[0.06em] ${
+                                    className={`block text-chico font-semibold tracking-[0.06em] ${
                                       day.isToday ? 'text-brand' : 'text-muted-foreground'
                                     }`}
                                   >
@@ -520,10 +520,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         <div className="border-border bg-card/90 mt-3 rounded-[22px] border p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="text-foreground text-xs font-semibold tracking-[-0.02em]">
+                              <p className="text-foreground text-chico font-semibold tracking-titulo">
                                 {locale === 'en' ? 'Next milestone' : 'Próximo hito'} {streakMilestone.nextMilestone}
                               </p>
-                              <p className="text-muted-foreground mt-1 text-[12px]">
+                              <p className="text-muted-foreground mt-1 text-chico">
                                 {streakMilestone.remainingDays === 0
                                   ? (locale === 'en' ? 'You have reached this milestone.' : 'Ya alcanzaste este objetivo.')
                                   : locale === 'en'
@@ -531,7 +531,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                                     : `Te faltan ${streakMilestone.remainingDays} ${streakMilestone.remainingDays === 1 ? 'día' : 'días'}.`}
                               </p>
                             </div>
-                            <span className="bg-brand/10 text-brand rounded-full px-2.5 py-1 text-[12px] font-semibold">
+                            <span className="bg-brand/10 text-brand rounded-full px-2.5 py-1 text-chico font-semibold">
                               {locale === 'en' ? 'Active streak' : 'Racha activa'}
                             </span>
                           </div>
@@ -546,7 +546,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                         <button
                           type="button"
                           onClick={() => setShowStreakDialog(false)}
-                          className="from-brand to-brand-2 mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-gradient-to-br text-sm font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.24)] transition hover:opacity-95"
+                          className="from-brand to-brand-2 mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-gradient-to-br text-cuerpo font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.24)] transition hover:opacity-95"
                         >
                           {locale === 'en' ? 'Keep studying' : 'Seguí estudiando'}
                         </button>
@@ -555,14 +555,14 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           <Link
                             href="/configuracion"
                             onClick={() => setShowStreakDialog(false)}
-                            className="border-border bg-card text-foreground hover:border-input inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition hover:bg-white"
+                            className="border-border bg-card text-foreground hover:border-input inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-chico font-semibold transition hover:bg-white"
                           >
                             <Settings className="h-3.5 w-3.5" />
                             {locale === 'en' ? 'Settings' : 'Configuración'}
                           </Link>
                           <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[12px] font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-100"
+                            className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-chico font-semibold text-rose-600 transition hover:border-rose-300 hover:bg-rose-100"
                             onClick={async () => {
                               const { error } = await supabase.auth.signOut();
                               if (error) {

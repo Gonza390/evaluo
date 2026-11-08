@@ -1,263 +1,27 @@
 import type { Metadata } from 'next';
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
-import { getCanonicalMateriaId } from '@/lib/materia-aliases';
-import { isUuid } from '@/lib/uuid';
-import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
-import { JsonLd } from '@/components/seo/JsonLd';
-import { MateriaPracticeLinks } from '@/components/seo/materia-practice-links';
-import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
-import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
-import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
-import { buildMateriaSearchTitle } from '@/lib/seo-search-copy';
-import { buildShareCardPath } from '@/lib/share-card';
-import {
-  buildMateriaSharePath,
-  getApprovedShareCreatorLabel,
-} from '@/lib/materia-share-path';
-import { createPublicClient } from '@/lib/supabase-public';
-import { getPregunteroMateriaStats } from '@/lib/data/preguntero';
-import { fetchSharedStudentMaterialsByMateria } from '@/lib/data/student-materials';
-import MateriaStudyHome from './materia-study-home';
+import { buildMateriaMetadata, renderMateriaPage, type MateriaQuery } from './materia-page';
 
+// Ruta dinámica: solo atiende visitas con carreraId, tab, modulo o creador.
+// Las demás las reescribe proxy.ts a /explorar/materia-cache/[id] (ISR).
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{
-    carreraId?: string;
-    tab?: string;
-    modulo?: string;
-    creador?: string;
-  }>;
+  searchParams?: Promise<MateriaQuery>;
 }
 
 export const revalidate = 600;
 
-function resolveMateriaId(routeValue: string) {
-  return getCanonicalMateriaId(parseSeoEntitySlug(routeValue).id);
-}
-
-function buildMateriaQuery(searchParams: {
-  carreraId?: string;
-  tab?: string;
-  modulo?: string;
-  creador?: string;
-}) {
-  const params = new URLSearchParams();
-  const carreraId = searchParams.carreraId?.trim();
-  const tab = searchParams.tab?.trim();
-  const modulo = searchParams.modulo?.trim();
-  const creador = searchParams.creador?.trim();
-
-  if (carreraId) params.set('carreraId', carreraId);
-  if (tab) params.set('tab', tab);
-  if (modulo) params.set('modulo', modulo);
-  if (creador) params.set('creador', creador);
-
-  const query = params.toString();
-  return query ? `?${query}` : '';
-}
-
-async function getMateriaStudyHomeData(materiaId: string) {
-  const client = createPublicClient();
-
-  // Reusar el RPC publico cacheado en lugar de hacer dos COUNT por visita.
-  // La lista de PDF compartidos sigue siendo independiente y fresca.
-  const [stats, sharedStudentMaterials] = await Promise.all([
-    getPregunteroMateriaStats(materiaId).catch(() => null),
-    fetchSharedStudentMaterialsByMateria(client, materiaId, 6).catch(() => []),
-  ]);
-
-  const partial1Count = stats?.preguntasPorParcial.find((item) => item.parcial === 1)?.count ?? 0;
-  const partial2Count = stats?.preguntasPorParcial.find((item) => item.parcial === 2)?.count ?? 0;
-
-  return {
-    questionCounts: {
-      1: partial1Count,
-      2: partial2Count,
-      3: partial1Count + partial2Count,
-    } as Record<1 | 2 | 3, number>,
-    sharedStudentMaterials,
-  };
-}
-
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const [resolvedParams, resolvedSearchParams] = await Promise.all([
     params,
-    searchParams ?? Promise.resolve({} as { creador?: string }),
+    searchParams ?? Promise.resolve({} as MateriaQuery),
   ]);
-  const canonicalMateriaId = resolveMateriaId(resolvedParams.id);
-  const [bootstrap, contentSignals] = await Promise.all([
-    getMateriaBootstrap({
-      materiaId: canonicalMateriaId,
-      requestedCarreraId: '',
-    }),
-    getMateriaSeoContentSignals(canonicalMateriaId),
-  ]);
-  const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
-  const universidadNombre = bootstrap.universidadNombre?.trim();
-  const creatorLabel = getApprovedShareCreatorLabel(resolvedSearchParams.creador);
-  const canonicalHref = `/explorar/materia/${buildSeoEntitySlug(materiaNombre, canonicalMateriaId)}`;
-  const socialHref = universidadNombre
-    ? buildMateriaSharePath(materiaNombre, universidadNombre)
-    : canonicalHref;
-  const hasStudyMaterial =
-    contentSignals.summaryCount +
-      contentSignals.summaryResourceCount +
-      contentSignals.resourceCount >
-    0;
-
-  let description: string;
-  if (contentSignals.questionCount > 0) {
-    description = `Parciales y preguntas de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''}. Practicá modelos de examen con respuestas explicadas${hasStudyMaterial ? ' y repasá con resúmenes y material de estudio' : ''}.`;
-  } else if (hasStudyMaterial) {
-    description = `Resúmenes y material de estudio de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} para preparar parciales y repasar en Evaluo.`;
-  } else {
-    description = `Material de estudio y práctica de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} para preparar tus parciales en Evaluo.`;
-  }
-
-  if (creatorLabel) {
-    description = `${description} Contenido compartido con ${creatorLabel}.`;
-  }
-
-  const seoTitle = buildMateriaSearchTitle(materiaNombre, universidadNombre);
-  const socialTitle = creatorLabel
-    ? `${materiaNombre} — con ${creatorLabel} | Evaluo`
-    : `${seoTitle} | Evaluo`;
-  const socialImage = buildShareCardPath({
-    kind: 'materia',
-    title: materiaNombre,
-    subtitle: universidadNombre || 'Recursos de estudio',
-    detail:
-      contentSignals.questionCount > 0
-        ? 'Modelos de examen con explicación de cada respuesta'
-        : 'Recursos, práctica y material de estudio en un solo lugar',
-  });
-
-  return {
-    title: seoTitle,
-    description,
-    alternates: {
-      canonical: canonicalHref,
-    },
-    openGraph: {
-      title: socialTitle,
-      description,
-      url: socialHref,
-      images: [
-        { url: socialImage, width: 1200, height: 630, alt: `${materiaNombre} en Evaluo` },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: socialTitle,
-      description,
-      images: [socialImage],
-    },
-    robots: {
-      index: bootstrap.materiaFound !== false && contentSignals.hasAcademicContent,
-      follow: true,
-    },
-  };
+  return buildMateriaMetadata(resolvedParams, resolvedSearchParams);
 }
 
 export default async function MateriaPage({ params, searchParams }: PageProps) {
   const [resolvedParams, resolvedSearchParams] = await Promise.all([
     params,
-    searchParams ??
-      Promise.resolve({} as {
-        carreraId?: string;
-        tab?: string;
-        modulo?: string;
-        creador?: string;
-      }),
+    searchParams ?? Promise.resolve({} as MateriaQuery),
   ]);
-  const parsedMateriaId = parseSeoEntitySlug(resolvedParams.id).id;
-  const canonicalMateriaId = getCanonicalMateriaId(parsedMateriaId);
-
-  if (canonicalMateriaId !== parsedMateriaId) {
-    redirect(`/explorar/materia/${canonicalMateriaId}${buildMateriaQuery(resolvedSearchParams)}`);
-  }
-
-  const materiaId = canonicalMateriaId;
-  if (!isUuid(materiaId)) {
-    return notFound();
-  }
-
-  const requestedCarreraId = resolvedSearchParams.carreraId?.trim() ?? '';
-  const [bootstrap, studyHomeData] = await Promise.all([
-    getMateriaBootstrap({
-      materiaId,
-      requestedCarreraId,
-    }),
-    getMateriaStudyHomeData(materiaId),
-  ]);
-
-  if (bootstrap.materiaFound === false) {
-    return notFound();
-  }
-
-  const canonicalSegment = buildSeoEntitySlug(bootstrap.materiaNombre, materiaId);
-  const pregunteroHref = `/pregunteros/${canonicalSegment}`;
-
-  if (
-    resolvedSearchParams.tab?.trim().toLowerCase() === 'pregunteros' &&
-    studyHomeData.questionCounts[3] > 0
-  ) {
-    permanentRedirect(pregunteroHref);
-  }
-
-  if (
-    resolvedSearchParams.tab?.trim().toLowerCase() === 'resumenes' &&
-    bootstrap.initialResumenes.length > 0
-  ) {
-    permanentRedirect(`/resumenes/${canonicalSegment}`);
-  }
-
-  if (resolvedParams.id !== canonicalSegment) {
-    const canonicalQuery = buildMateriaQuery({
-      carreraId: resolvedSearchParams.carreraId,
-      modulo: resolvedSearchParams.modulo,
-      creador: resolvedSearchParams.creador,
-    });
-    permanentRedirect(`/explorar/materia/${canonicalSegment}${canonicalQuery}`);
-  }
-
-  const canonicalHref = `/explorar/materia/${canonicalSegment}`;
-
-  return (
-    <>
-      <JsonLd
-        data={[
-          buildBreadcrumbJsonLd([
-            { name: 'Inicio', path: '/' },
-            { name: 'Explorar', path: '/explorar' },
-            { name: bootstrap.materiaNombre, path: canonicalHref },
-          ]),
-          buildLearningResourceJsonLd({
-            name: bootstrap.materiaNombre,
-            universityName: bootstrap.universidadNombre,
-            careerName: bootstrap.carreraNombre,
-            url: canonicalHref,
-          }),
-        ]}
-      />
-      <MateriaStudyHome
-        materiaId={materiaId}
-        materiaNombre={bootstrap.materiaNombre}
-        carreraId={bootstrap.carreraId || requestedCarreraId || undefined}
-        carreraNombre={bootstrap.carreraNombre}
-        universidadId={bootstrap.universidadId}
-        universidadNombre={bootstrap.universidadNombre}
-        contextError={bootstrap.contextError}
-        initialResumenes={bootstrap.initialResumenes}
-        initialResumenesError={bootstrap.initialResumenesError}
-        sharedStudentMaterials={studyHomeData.sharedStudentMaterials}
-        questionCounts={studyHomeData.questionCounts}
-      />
-      <MateriaPracticeLinks
-        materiaId={materiaId}
-        materiaNombre={bootstrap.materiaNombre}
-        questionCounts={studyHomeData.questionCounts}
-      />
-    </>
-  );
+  return renderMateriaPage(resolvedParams, resolvedSearchParams);
 }

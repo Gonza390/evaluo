@@ -123,11 +123,11 @@ export function StudyStatePanel({
   const shouldSpin = iconSpin || tone === 'loading' || iconName === 'loader';
 
   const primaryClassName = cn(
-    'inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+    'inline-flex min-h-11 items-center justify-center rounded-xl px-5 text-cuerpo font-semibold text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
     styles.primary
   );
   const secondaryClassName =
-    'inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50';
+    'inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-cuerpo font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50';
 
   return (
     <section
@@ -144,16 +144,16 @@ export function StudyStatePanel({
 
       <div className="mt-4 max-w-lg">
         {eyebrow ? (
-          <p className={cn('text-[10.5px] font-bold tracking-[0.16em] uppercase', styles.eyebrow)}>
+          <p className={cn('text-etiqueta font-semibold tracking-etiqueta uppercase', styles.eyebrow)}>
             {eyebrow}
           </p>
         ) : null}
-        <h3 className={cn('text-lg font-bold tracking-[-0.035em] text-slate-950', eyebrow && 'mt-1.5')}>
+        <h3 className={cn('text-subtitulo font-semibold tracking-titulo text-slate-950', eyebrow && 'mt-1.5')}>
           {title}
         </h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+        <p className="mt-2 text-cuerpo leading-6 text-slate-600">{description}</p>
         {secondaryText ? (
-          <p className="mt-3 text-xs leading-5 text-slate-500">{secondaryText}</p>
+          <p className="mt-3 text-chico leading-5 text-slate-500">{secondaryText}</p>
         ) : null}
       </div>
 

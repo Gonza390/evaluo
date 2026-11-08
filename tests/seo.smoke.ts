@@ -221,7 +221,7 @@ assertIncludesAll('app/sitemap.ts', [
   '/funciones/crear-mapa-mental-desde-pdf',
 ]);
 
-assertIncludesAll('app/(es)/explorar/materia/[id]/page.tsx', [
+assertIncludesAll('app/(es)/explorar/materia/[id]/materia-page.tsx', [
   'buildSeoEntitySlug',
   'parseSeoEntitySlug',
   'canonicalHref',
@@ -234,7 +234,7 @@ assertIncludesAll('app/(es)/explorar/materia/[id]/page.tsx', [
   'MateriaPracticeLinks',
 ]);
 
-const materiaPage = source('app/(es)/explorar/materia/[id]/page.tsx');
+const materiaPage = source('app/(es)/explorar/materia/[id]/materia-page.tsx');
 assert.ok(
   !materiaPage.includes('SeoBreadcrumbs'),
   'materia page must not render the redundant visual SEO breadcrumb'
@@ -696,9 +696,9 @@ const acquisitionSeoTitles: Array<[string, string]> = [
   ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de un PDF con IA, gratis'],
   ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA gratis desde tus apuntes'],
   ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde tu PDF, gratis'],
-  ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar PDF'],
-  ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar PDF y practicar'],
-  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet: flashcards y exámenes desde PDF'],
+  ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar tus PDF, gratis'],
+  ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar tus PDF, gratis'],
+  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet gratis: flashcards y exámenes desde PDF'],
 ];
 assert.equal(new Set(acquisitionSeoTitles.map(([, title]) => title.toLowerCase())).size, acquisitionSeoTitles.length, 'Each acquisition page needs its own distinct title');
 for (const [path, expectedTitle] of acquisitionSeoTitles) {

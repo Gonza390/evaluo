@@ -2,7 +2,7 @@ import type { User } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { resolveAdminActor } from '@/lib/access-control';
 
-export async function isAdminActor(user: User | null | undefined) {
+export async function isAdminActor(user: Pick<User, 'id' | 'app_metadata'> | null | undefined) {
   return resolveAdminActor(user);
 }
 

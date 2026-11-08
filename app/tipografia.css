@@ -1,0 +1,40 @@
+/*
+ * Escala tipográfica Evaluo. Usar estas clases en vez de tamaños sueltos (text-[13px], text-sm…).
+ *
+ *   text-etiqueta   11px  solo etiquetas cortas (mayúsculas, badges). Nada más chico que esto.
+ *   text-chico      12px  texto secundario, metadatos
+ *   text-ui         13px  texto de interfaz (botones, listas, menús)
+ *   text-cuerpo     15px  texto principal y párrafos
+ *   text-subtitulo  17px  títulos de tarjeta
+ *   text-titulo-sm  20px  títulos de sección
+ *   text-titulo     24px  título de pantalla (h1 del dashboard)
+ *   text-destacado  30px  números y títulos destacados
+ *   text-saludo     40px  solo el saludo de la home (uno por pantalla; en teléfono usar text-destacado)
+ *
+ * Pesos: font-normal (texto corrido), font-medium (interfaz), font-semibold (títulos).
+ * Espaciado: tracking-titulo (títulos ≥ 20px), tracking-saludo (text-saludo), tracking-etiqueta (etiquetas en mayúsculas).
+ */
+@theme {
+  --text-etiqueta: 11px;
+  --text-etiqueta--line-height: 1.4;
+  --text-chico: 12px;
+  --text-chico--line-height: 1.45;
+  --text-ui: 13px;
+  --text-ui--line-height: 1.45;
+  --text-cuerpo: 15px;
+  --text-cuerpo--line-height: 1.55;
+  --text-subtitulo: 17px;
+  --text-subtitulo--line-height: 1.4;
+  --text-titulo-sm: 20px;
+  --text-titulo-sm--line-height: 1.3;
+  --text-titulo: 24px;
+  --text-titulo--line-height: 1.2;
+  --text-destacado: 30px;
+  --text-destacado--line-height: 1.15;
+  --text-saludo: 40px;
+  --text-saludo--line-height: 1.08;
+
+  --tracking-titulo: -0.03em;
+  --tracking-etiqueta: 0.12em;
+  --tracking-saludo: -0.04em;
+}

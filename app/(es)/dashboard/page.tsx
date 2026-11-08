@@ -17,6 +17,7 @@ import { logError } from '@/lib/observability';
 import { accountAppLocale, parseAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 import { getSessionUser } from '@/lib/auth-session';
+import { argentinaToday, getDashboardHomeView } from '@/lib/dashboard-home';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -102,6 +103,14 @@ export default async function DashboardPage({
     // Preguntar los datos académicos sólo después de tener un PDF listo.
     // El formulario de carga inicial y la guía del primer PDF no se interrumpen.
     const hasReadyMaterial = materials.some((material) => material.processing_status === 'ready');
+    const firstName = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.nombre]
+      .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      ?.trim().split(/\s+/)[0];
+    // Home con Agenda (ES y EN) cuando hay un PDF listo; si no, sigue la home anterior.
+    const today = argentinaToday();
+    const homeViewPromise = hasReadyMaterial && openUpload !== '1'
+      ? getDashboardHomeView(supabase, user.id, materials, firstName, locale)
+      : Promise.resolve(null);
     const profileContext = locale !== 'en' && hasReadyMaterial && openUpload !== '1'
       ? await supabase
           .from('profiles')
@@ -109,6 +118,7 @@ export default async function DashboardPage({
           .eq('id', user.id)
           .maybeSingle()
       : null;
+    const homeView = await homeViewPromise;
     const needsAcademicContext = Boolean(
       profileContext && !profileContext.error &&
       (!profileContext.data?.universidad_id || !profileContext.data?.carrera_id)
@@ -142,9 +152,9 @@ export default async function DashboardPage({
           ? 'mx-auto flex min-h-0 w-full max-w-[1240px] flex-1 flex-col'
           : 'mx-auto w-full max-w-[1240px]'}>
           {isQaAccount(user) ? (
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[12.5px]">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-chico">
               <span className="font-semibold text-indigo-900">{t("Cuenta de pruebas de Evaluo")}</span>
-              <Link href="/qa" className="font-bold text-indigo-700 underline underline-offset-2">
+              <Link href="/qa" className="font-semibold text-indigo-700 underline underline-offset-2">
                 {t("Reiniciar onboarding")}
               </Link>
             </div>
@@ -156,16 +166,16 @@ export default async function DashboardPage({
                   <Sparkles className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black tracking-[0.13em] text-blue-700 uppercase">
+                  <p className="text-etiqueta font-semibold tracking-etiqueta text-blue-700 uppercase">
                     {t("Plan de estudio · Derecho Sucesorio · Parcial 2")}
                   </p>
-                  <h1 className="mt-1 text-[16px] font-bold tracking-[-0.035em] text-slate-950">
+                  <h1 className="mt-1 text-cuerpo font-semibold tracking-titulo text-slate-950">
                     {t("Subí tus apuntes para empezar con el plan que armaste")}
                   </h1>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                  <p className="mt-1 text-ui leading-5 text-slate-600">
                     {t("La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, tarjetas y práctica.")}
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
+                  <div className="mt-3 flex flex-wrap gap-2 text-etiqueta font-semibold text-slate-600">
                     {formattedExamDate ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-blue-100">
                         <CalendarDays className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
@@ -186,11 +196,7 @@ export default async function DashboardPage({
 
           <LazyMaeveStudySpace
             materials={materials}
-            firstName={(() => {
-              const candidate = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.nombre]
-                .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
-              return candidate?.trim().split(/\s+/)[0];
-            })()}
+            firstName={firstName}
             initialUniversidadId={resolvedUniversidadId}
             initialCarreraId={resolvedCarreraId}
             initialMateriaId={uploadMateriaId}
@@ -200,6 +206,8 @@ export default async function DashboardPage({
             initialOpen={openUpload === '1' && source !== 'signup-direct'}
             pendingReinforcementCount={pendingReinforcementCount}
             nextStudyAction={nextStudyAction}
+            homeView={homeView}
+            today={today}
           />
           {needsAcademicContext ? (
             <LazyAcademicProfileReminder

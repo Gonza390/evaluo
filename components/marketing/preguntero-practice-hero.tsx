@@ -75,6 +75,7 @@ export function PregunteroPracticeHero({
                 <TrackedLink
                   href={simuladorHref}
                   eventName="preguntero_landing_cta_clicked"
+                  preserveAttribution
                   payload={payload('preguntero_practice_hero')}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl px-7 text-base font-bold shadow-lg transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
@@ -130,6 +131,7 @@ export function PregunteroPracticeHero({
                             option
                           )}
                           eventName="preguntero_landing_cta_clicked"
+                          preserveAttribution
                           payload={{
                             ...payload('preguntero_option'),
                             cta_name: 'seleccionar_opcion',
@@ -166,6 +168,7 @@ export function PregunteroPracticeHero({
                   <TrackedLink
                     href={simuladorHref}
                     eventName="preguntero_landing_cta_clicked"
+                    preserveAttribution
                     payload={payload('preguntero_question_preview')}
                     className="text-primary hover:bg-primary/5 focus-visible:ring-ring border-primary/30 mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition focus-visible:ring-2 focus-visible:outline-none"
                   >

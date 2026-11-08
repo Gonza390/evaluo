@@ -94,9 +94,9 @@ const sameDesktopSizing=['xl:h-[calc(100dvh-52px)] xl:overflow-hidden','xl:grid-
 for(const token of sameDesktopSizing) {
   assert.ok(filled.includes(token) && setup.includes(token), 'Ambas pantallas comparten las mismas dimensiones de escritorio: '+token);
 }
-assert.match(setup,/lg:text-\[24px\]">(?:\{t\(")?Plan de estudio/, 'El título del plan guardado respeta la escala original.');
-assert.match(normalRoadmap,/text-\[14px\] font-normal/, 'La tarjeta original define el tamaño de título.');
-assert.match(savedRoadmap,/text-\[14px\] font-normal/, 'El recorrido guardado respeta el tamaño original.');
+assert.match(setup,/lg:text-titulo">(?:\{t\(")?Plan de estudio/, 'El título del plan guardado respeta la escala original.');
+assert.match(normalRoadmap,/text-cuerpo font-normal/, 'La tarjeta original define el tamaño de título.');
+assert.match(savedRoadmap,/text-cuerpo font-normal/, 'El recorrido guardado respeta el tamaño original.');
 assert.match(savedRoadmap,/border-slate-200\/90 bg-white px-3 py-2\.5 sm:px-4 sm:py-3\.5/, 'Ambos recorridos comparten borde y padding.');
 assert.match(setup,/h-\[210px\] overflow-hidden rounded-\[18px\] bg-\[#EAF1FF\]/, 'La tarjeta del examen guardado utiliza el tamaño de referencia.');
 assert.match(savedRoadmap,/data-saved-roadmap-scroll/, 'Solo la fila central de temas tiene scroll horizontal.');

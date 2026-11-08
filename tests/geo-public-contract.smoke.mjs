@@ -10,7 +10,8 @@ const home = read('app/(es)/page.tsx');
 const seo = read('lib/seo.ts');
 assert.match(about, /alternates: \{ canonical: toAbsoluteUrl\(path\) \}/);
 assert.match(about, /'@type': 'AboutPage'/);
-assert.match(about, /'@type': 'SoftwareApplication'/);
+assert.match(about, /buildSoftwareApplicationJsonLd\(\)/);
+assert.match(seo, /'@type': 'SoftwareApplication'/);
 assert.match(about, /buildFaqJsonLd\(questions\)/);
 assert.match(about, /<h1\b/);
 assert.match(about, /<FooterHome \/>/);
@@ -27,3 +28,10 @@ for (const content of [about, llms, pricing, home]) {
   assert.doesNotMatch(content, /2 PDFs?\s+cada\s+15\s+d[ií]as/i);
 }
 console.log('GEO public contract: about page, metadata, sitemap, llms.txt, pricing and links OK');
+
+// llms.txt debe reflejar el plan gratuito vigente (1 material por mes) y listar las páginas EN y las comparativas.
+assert.match(llms, /1 study material \(PDF or Word\) per month/);
+assert.doesNotMatch(llms, /lifetime/i);
+for (const path of ['/en/pdf-to-flashcards', '/en/ai-test-prep', '/en/compare/evaluo-vs-notebooklm', '/es/generador-de-examenes-con-ia']) {
+  assert.ok(llms.includes('https://evaluoapp.com' + path), 'llms.txt must list ' + path);
+}

@@ -6,13 +6,13 @@ import { HomeFunnelTracker } from '@/components/marketing/home-funnel-tracker';
 import { HomeRedesign } from '@/components/marketing/home-redesign';
 import { HOME_REDESIGN_FAQS } from '@/components/marketing/home-redesign-faqs';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
+import { buildFaqJsonLd, buildOrganizationJsonLd, buildSoftwareApplicationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 import './home-redesign.css';
 
 export const metadata: Metadata = {
   title: { absolute: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen' },
   description:
-    'Subí tus apuntes en PDF o Word y estudiá con IA: resúmenes, flashcards, práctica por tema y seguimiento de errores para preparar tus exámenes.',
+    'Evaluo es una plataforma de estudio con IA: subí tus apuntes en PDF o Word y obtené resúmenes, flashcards y práctica por tema para preparar tus exámenes. Gratis.',
   alternates: hreflangAlternates('home', 'es'),
   other: {
     'geo.region': 'AR',
@@ -52,7 +52,7 @@ export default function Home() {
       <MarketingAnalyticsSlot />
       <HomeFunnelTracker />
       <JsonLd
-        data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(HOME_REDESIGN_FAQS)]}
+        data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildSoftwareApplicationJsonLd(), buildFaqJsonLd(HOME_REDESIGN_FAQS)]}
       />
       <main id="contenido">
         <HomeRedesign primaryHref={primaryHref} />

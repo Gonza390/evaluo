@@ -41,7 +41,7 @@ assert.match(mobileMenu,/id: 'settings'[\s\S]*?id: 'feedback'/,
 // "Mejorar mi plan" (7/11): una columna, precio por semana y cobro mensual visible.
 assert.match(screen,/mx-auto flex max-w-\[420px\] flex-col items-center/,'Single centered column inside the app.');
 assert.match(screen,/grid w-full grid-cols-4/,'Four comparison columns fit mobile widths.');
-assert.match(screen,/text-\[30px\][^"]*sm:text-\[38px\]/,'Headline scale from the approved design.');
+assert.match(screen,/text-destacado[^"]*sm:text-\[38px\]/,'Headline scale from the approved design.');
 for(const text of [
   'Llegá a tu parcial', 'sabiendo que estás listo', 'Get to your exam',
   'Seguir con Premium', 'Pago seguro con', '/semana', '/week', 'Volver',

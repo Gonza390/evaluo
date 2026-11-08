@@ -45,7 +45,7 @@ assert.match(page, /className="pricing-v2 /);
 
 // Color aprobado en el diseño. "Mejorar mi plan" (/dashboard/premium) tiene su propia
 // pantalla con precio por semana (7/11), con el mismo acento y la misma lógica de cobro.
-assert.match(css, /--pv-accent: #4a63e7;/);
+assert.match(css, /--pv-accent: #576dc1;/);
 assert.match(content, /import '\.\/pricing-v2\.css'/);
 assert.match(premiumPage, /<UpgradeScreen locale=\{uiLocale\} source=\{source\}/);
 const upgrade = read('components/pricing/UpgradeScreen.tsx');

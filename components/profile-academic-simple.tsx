@@ -176,8 +176,8 @@ export function AcademicProfileSimpleForm({
           <GraduationCap className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-950">{onlyMissingFields && savedUniversity ? t("¿Qué carrera estudiás?") : t("¿Dónde estudiás?")}</h1>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
+          <h1 className="text-titulo-sm font-semibold tracking-titulo text-slate-950">{onlyMissingFields && savedUniversity ? t("¿Qué carrera estudiás?") : t("¿Dónde estudiás?")}</h1>
+          <p className="mt-1 text-cuerpo leading-6 text-slate-500">
             {t("Contanos tu universidad y carrera. Son dos datos, y podés completarlos más adelante.")}
           </p>
         </div>
@@ -185,11 +185,11 @@ export function AcademicProfileSimpleForm({
 
       <div className="space-y-5">
         {onlyMissingFields && savedUniversity && universityId ? (
-          <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700">
+          <p className="rounded-xl bg-slate-50 px-3 py-3 text-cuerpo text-slate-700">
             Universidad: <strong>{universitySearch}</strong>
           </p>
         ) : <div>
-          <label htmlFor="academic-university" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <label htmlFor="academic-university" className="mb-2 flex items-center gap-2 text-cuerpo font-semibold text-slate-800">
             <School className="h-4 w-4 text-slate-500" /> {t("Universidad")}
           </label>
           <Input
@@ -211,13 +211,13 @@ export function AcademicProfileSimpleForm({
             <div className="mt-2 max-h-44 overflow-auto rounded-xl border border-slate-200 bg-white p-1">
               {universityMatches.map((item) => (
                 <button type="button" key={item.id} onClick={() => selectUniversity(item)}
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-blue-50">
+                  className="block w-full rounded-lg px-3 py-2 text-left text-cuerpo text-slate-700 hover:bg-blue-50">
                   {item.nombre}
                 </button>
               ))}
               {universitySearch.trim().length >= 3 ? (
                 <button type="button" onClick={() => void createUniversity()} disabled={busy}
-                  className="block w-full rounded-lg border-t border-slate-100 px-3 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                  className="block w-full rounded-lg border-t border-slate-100 px-3 py-2 text-left text-cuerpo font-semibold text-blue-700 hover:bg-blue-50">
                   {t("Mi universidad no aparece · Agregarla")}
                 </button>
               ) : null}
@@ -227,7 +227,7 @@ export function AcademicProfileSimpleForm({
 
         {universityId ? (
           <div>
-            <label htmlFor="academic-career" className="mb-2 block text-sm font-semibold text-slate-800">{t("Carrera")}</label>
+            <label htmlFor="academic-career" className="mb-2 block text-cuerpo font-semibold text-slate-800">{t("Carrera")}</label>
             <Input
               id="academic-career"
               autoComplete="off"
@@ -249,13 +249,13 @@ export function AcademicProfileSimpleForm({
                     setCareerSearch(item.nombre);
                     setCareerSuggestions(false);
                     setError('');
-                  }} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-700 hover:bg-blue-50">
+                  }} className="block w-full rounded-lg px-3 py-2 text-left text-cuerpo text-slate-700 hover:bg-blue-50">
                     {item.nombre}
                   </button>
                 ))}
                 {careerSearch.trim().length >= 3 ? (
                   <button type="button" onClick={() => void createCareer()} disabled={busy}
-                    className="block w-full rounded-lg border-t border-slate-100 px-3 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                    className="block w-full rounded-lg border-t border-slate-100 px-3 py-2 text-left text-cuerpo font-semibold text-blue-700 hover:bg-blue-50">
                     {t("Mi carrera no aparece · Agregarla")}
                   </button>
                 ) : null}
@@ -265,8 +265,8 @@ export function AcademicProfileSimpleForm({
         ) : null}
       </div>
 
-      {loading ? <p className="mt-4 text-sm text-slate-500">{t("Cargando universidades y carreras…")}</p> : null}
-      {error ? <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {loading ? <p className="mt-4 text-cuerpo text-slate-500">{t("Cargando universidades y carreras…")}</p> : null}
+      {error ? <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-cuerpo text-red-700">{error}</p> : null}
 
       <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" onClick={() => { if (onLater) onLater(); else router.replace(nextPath); }} disabled={busy}>

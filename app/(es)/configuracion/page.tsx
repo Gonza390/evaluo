@@ -345,7 +345,7 @@ export default function ConfiguracionPage() {
       <div className="flex min-h-[70vh] items-center justify-center rounded-[var(--radius-panel)] border border-slate-200/85 bg-white shadow-[var(--shadow-panel)]">
         <div className="flex items-center gap-3 text-slate-600">
           <Spinner size="sm" />
-          <span className="text-sm font-medium">{tr("Cargando tu configuración...","Loading settings...")}</span>
+          <span className="text-cuerpo font-medium">{tr("Cargando tu configuración...","Loading settings...")}</span>
         </div>
       </div>
     );
@@ -354,7 +354,7 @@ export default function ConfiguracionPage() {
   if (!user) return null;
 
   const settingRow = (label: string, value: string) => (
-    <div className="flex min-h-12 items-center justify-between gap-4 border-b border-slate-100 py-3 text-[13px] last:border-b-0">
+    <div className="flex min-h-12 items-center justify-between gap-4 border-b border-slate-100 py-3 text-ui last:border-b-0">
       <span className="font-medium text-slate-800">{label}</span>
       <span className="max-w-[55%] truncate text-right text-slate-500">{value || tr("Sin especificar","Not specified")}</span>
     </div>
@@ -363,23 +363,23 @@ export default function ConfiguracionPage() {
   return (
     <div className="mx-auto w-full max-w-[760px] space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header className="space-y-1">
-        <h1 className="text-[20px] font-semibold tracking-[-0.035em] text-slate-950 sm:text-[22px] lg:text-[24px]">{settingsCopy.title}</h1>
-        <p className="text-[13px] text-slate-500">{settingsCopy.subtitle}</p>
+        <h1 className="text-titulo-sm font-semibold tracking-titulo text-slate-950 sm:text-titulo lg:text-titulo">{settingsCopy.title}</h1>
+        <p className="text-ui text-slate-500">{settingsCopy.subtitle}</p>
       </header>
 
       <section aria-labelledby="settings-general" className="space-y-1">
-        <h2 id="settings-general" className="text-xs font-normal text-slate-500">{settingsCopy.general}</h2>
+        <h2 id="settings-general" className="text-chico font-normal text-slate-500">{settingsCopy.general}</h2>
         <LanguagePicker />
         {settingRow(settingsCopy.appearance, settingsCopy.light)}
-        <p className="pt-1 text-xs text-slate-400">{settingsCopy.themeUnavailable}</p>
-        <p className="pt-1 text-xs text-slate-400">{settingsCopy.languageHelp}</p>
+        <p className="pt-1 text-chico text-slate-400">{settingsCopy.themeUnavailable}</p>
+        <p className="pt-1 text-chico text-slate-400">{settingsCopy.languageHelp}</p>
       </section>
 
       <section aria-labelledby="settings-account" className="space-y-1">
-        <h2 id="settings-account" className="text-xs font-normal text-slate-500">{tr("Cuenta","Account")}</h2>
+        <h2 id="settings-account" className="text-chico font-normal text-slate-500">{tr("Cuenta","Account")}</h2>
         {settingRow(tr("Correo electrónico","Email address"), user.email ?? '')}
         <details className="group border-b border-slate-100">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-[13px] font-medium text-slate-800 [&::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 py-3 text-ui font-medium text-slate-800 [&::-webkit-details-marker]:hidden">
             {tr("Mi plan y suscripción","My plan and subscription")} <ChevronDown className="size-4 text-slate-400 transition-transform group-open:rotate-180" />
           </summary>
           <div className="pb-4"><SubscriptionSettings /></div>
@@ -388,8 +388,8 @@ export default function ConfiguracionPage() {
 
       <section aria-labelledby="settings-personal" className="space-y-1">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="settings-personal" className="text-xs font-normal text-slate-500">{tr("Información personal","Personal information")}</h2>
-          <button type="button" onClick={() => setEditingProfile((value) => !value)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600">
+          <h2 id="settings-personal" className="text-chico font-normal text-slate-500">{tr("Información personal","Personal information")}</h2>
+          <button type="button" onClick={() => setEditingProfile((value) => !value)} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-chico font-medium text-blue-600 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600">
             <Pencil className="size-3.5" /> {editingProfile ? tr("Cerrar edición","Close editor") : tr("Editar datos","Edit details")}
           </button>
         </div>
@@ -399,7 +399,7 @@ export default function ConfiguracionPage() {
       </section>
 
       <section aria-labelledby="settings-academic" className="space-y-1">
-        <h2 id="settings-academic" className="text-xs font-normal text-slate-500">{tr("Información académica","Academic information")}</h2>
+        <h2 id="settings-academic" className="text-chico font-normal text-slate-500">{tr("Información académica","Academic information")}</h2>
         {settingRow(tr("Universidad","University"), universidadSearch)}
         {settingRow(tr("Carrera","Degree program"), carreraSearch)}
         {settingRow(tr("Año de cursado","Year of study"), anioCarrera ? (english ? `Year ${anioCarrera}` : anioCarrera + '° año') : '')}
@@ -407,7 +407,7 @@ export default function ConfiguracionPage() {
 
       {editingProfile ? (
         <section className="space-y-2" aria-label={tr("Editar información personal y académica","Edit personal and academic details")}>
-          <p className="text-xs text-slate-500">{tr("Modificá los campos necesarios y guardá los cambios.","Edit the fields you need and save your changes.")}</p>
+          <p className="text-chico text-slate-500">{tr("Modificá los campos necesarios y guardá los cambios.","Edit the fields you need and save your changes.")}</p>
           <ProfileSettingsForm
             nombre={nombre}
             pais={pais}
@@ -440,7 +440,7 @@ export default function ConfiguracionPage() {
       ) : null}
 
       <section aria-labelledby="settings-session" className="space-y-1">
-        <h2 id="settings-session" className="text-xs font-normal text-slate-500">{tr("Sesión y privacidad","Session and privacy")}</h2>
+        <h2 id="settings-session" className="text-chico font-normal text-slate-500">{tr("Sesión y privacidad","Session and privacy")}</h2>
         <button type="button" disabled={signingOut} onClick={async () => {
           setSigningOut(true);
           try {
@@ -452,7 +452,7 @@ export default function ConfiguracionPage() {
             toast({ title: tr("No pudimos cerrar tu sesión","Could not sign you out"), variant: 'destructive' });
             setSigningOut(false);
           }
-        }} className="flex min-h-12 w-full items-center gap-2 border-b border-slate-100 py-3 text-left text-[13px] font-medium text-slate-700 hover:text-blue-600 disabled:opacity-50">
+        }} className="flex min-h-12 w-full items-center gap-2 border-b border-slate-100 py-3 text-left text-ui font-medium text-slate-700 hover:text-blue-600 disabled:opacity-50">
           <LogOut className="size-4 text-slate-400" />
           {signingOut ? tr("Cerrando sesión…","Signing out…") : tr("Cerrar sesión","Sign out")}
         </button>

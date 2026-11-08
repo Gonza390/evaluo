@@ -6,13 +6,14 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/comparar/evaluo-vs-chatgpt';
 
 export const metadata: Metadata = {
-  title: "Alternativa a ChatGPT para estudiar PDF y practicar",
-  description: "¿Buscás una alternativa a ChatGPT para estudiar PDFs? Compará el Modo de estudio con preguntas por tema, resultados y refuerzo en Evaluo.",
+  title: 'Alternativa a ChatGPT para estudiar tus PDF, gratis',
+  description:
+    "¿Usás ChatGPT para estudiar? Compará su Modo de estudio con la práctica por tema de Evaluo y probalo gratis: elegís tu PDF sin registrarte.",
   alternates: hreflangAlternates('compare-chatgpt', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: "Alternativa a ChatGPT para estudiar PDF y practicar | Evaluo",
+    title: 'Alternativa a ChatGPT para estudiar tus PDF, gratis | Evaluo',
     description: 'Una comparación equilibrada entre el Modo de estudio de ChatGPT y la práctica por temas de Evaluo.',
     url: toAbsoluteUrl(path),
   },

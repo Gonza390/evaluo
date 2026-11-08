@@ -138,8 +138,8 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
       <div className="w-full max-w-[650px] text-center">
         <img src="/evi-pensando.svg" alt={english ? "Evi thinking" : "Evi pensando"}
           className="mx-auto mb-1.5 h-[56px] w-[56px] motion-safe:animate-[bounce_3s_ease-in-out_infinite] sm:mb-2 sm:h-[76px] sm:w-[76px]" />
-        <h1 className="text-[21px] font-semibold leading-[1.2] tracking-[-.045em] text-[#0F1B3D] sm:text-[23px]">{english ? "How would you like to review?" : "¿Cómo querés repasar?"}</h1>
-        <p className="mx-auto mt-1 max-w-[370px] text-[11px] leading-[1.4] text-slate-500 sm:text-[12px]">
+        <h1 className="text-titulo-sm font-semibold leading-[1.2] tracking-titulo text-[#0F1B3D] sm:text-titulo">{english ? "How would you like to review?" : "¿Cómo querés repasar?"}</h1>
+        <p className="mx-auto mt-1 max-w-[370px] text-etiqueta leading-[1.4] text-slate-500 sm:text-chico">
           {english ? "Choose how much time to spend. You can change this later." : "Elegí cuánto tiempo querés dedicarle. Después podés cambiarlo."}
         </p>
         <div role="radiogroup" aria-label={english ? "Review duration" : "Tipo de repaso"} className="mt-3 grid gap-2 text-left sm:mt-4 sm:grid-cols-2 sm:gap-3">
@@ -153,19 +153,19 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
               className={`relative flex h-full min-w-0 flex-col rounded-xl border px-3 py-2.5 text-left transition-colors sm:rounded-2xl sm:p-3.5 ${chosen?'border-[#456DBD] bg-[#F7FAFF] ring-2 ring-[#DBE8FF]':'border-[#E7EBF4] bg-white hover:border-blue-200'}`}>
               <span className="flex items-center gap-2.5 pr-7">
                 <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${option.iconClass}`}><option.Icon className="size-[16px]"/></span>
-                <span className="text-[14px] font-semibold tracking-tight text-[#0F1B3D]">{t(option.title)}</span>
+                <span className="text-cuerpo font-semibold tracking-titulo text-[#0F1B3D]">{t(option.title)}</span>
               </span>
               <span aria-hidden="true" className={`absolute right-3 top-3 flex size-[18px] items-center justify-center rounded-full border ${chosen?'border-[#456DBD] bg-[#456DBD]':'border-slate-300'}`}>{chosen&&<Check className="size-3 text-white"/>}</span>
-              <span className="mt-2 block text-[11px] leading-[1.4] text-slate-600 sm:min-h-[32px]">{t(option.description)}</span>
-              <span className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-2 text-[10px] font-medium leading-[1.35] text-slate-700 sm:text-[11px]">
+              <span className="mt-2 block text-etiqueta leading-[1.4] text-slate-600 sm:min-h-[32px]">{t(option.description)}</span>
+              <span className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-2 text-etiqueta font-medium leading-[1.35] text-slate-700 sm:text-etiqueta">
                 <Clock3 className="size-3.5 shrink-0 text-slate-500"/>{option.time}
               </span>
             </button>;
           })}
         </div>
         <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
-          <button type="button" onClick={backToPicker} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-[12px] font-medium text-slate-600 hover:bg-slate-50">{t("Volver")}</button>
-          <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-[12px] font-medium text-white hover:bg-blue-700">
+          <button type="button" onClick={backToPicker} disabled={leavingReview} className="min-h-10 rounded-xl px-4 text-chico font-medium text-slate-600 hover:bg-slate-50">{t("Volver")}</button>
+          <button type="button" onClick={()=>void startPractice()} disabled={leavingReview} className="inline-flex min-h-10 min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-4 text-chico font-medium text-white hover:bg-blue-700">
             {english ? "Continue" : "Continuar"} <ArrowRight className="size-4"/>
           </button>
         </div>
@@ -177,10 +177,10 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
     <main data-practice-dual-pane className={`${leavingPicker ? "practice-screen-leave" : "practice-screen-enter"} mx-auto w-full max-w-[1190px] px-3 pb-24 pt-5 sm:px-5 sm:pt-7 lg:flex lg:min-h-0 lg:flex-col lg:px-7 lg:pb-5 lg:pt-6 lg:h-full lg:min-h-0 lg:overflow-hidden`}>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6 lg:shrink-0">
         <div className="min-w-0">
-          <h1 id="practice-heading" className="text-[25px] font-semibold tracking-[-0.045em] text-[#0F1B3D] sm:text-[27px]">
+          <h1 id="practice-heading" className="text-titulo font-semibold tracking-titulo text-[#0F1B3D] sm:text-destacado">
             {english ? "Practice" : "Practicar"}
           </h1>
-          <p className="mt-1 text-[12px] text-[#66758D]">{english ? "Choose how to test what you have learned." : "Elegí cómo querés poner a prueba lo que aprendiste."}</p>
+          <p className="mt-1 text-chico text-[#66758D]">{english ? "Choose how to test what you have learned." : "Elegí cómo querés poner a prueba lo que aprendiste."}</p>
         </div>
         {material && (
           <div className="relative w-full min-w-0 sm:max-w-[340px]">
@@ -189,7 +189,7 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
             <select id="practice-material" value={materialId} onChange={event => {
               setMaterialId(event.target.value); setSelectedMode(null); setActiveHistoryId(null); setPrepareError('');
             }}
-              className="min-h-11 w-full appearance-none truncate border-0 bg-transparent py-2.5 pl-10 pr-9 text-[12px] font-medium text-[#0F1B3D] shadow-none outline-none transition-colors hover:text-[#456DBD] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[#456DBD]/25 sm:text-[13px]">
+              className="min-h-11 w-full appearance-none truncate border-0 bg-transparent py-2.5 pl-10 pr-9 text-chico font-medium text-[#0F1B3D] shadow-none outline-none transition-colors hover:text-[#456DBD] focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[#456DBD]/25 sm:text-ui">
               {materials.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
             </select>
             <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -202,19 +202,19 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
           <div className="flex min-w-0 items-center gap-3">
             <img src="/evi-bienvenida.svg" alt={english ? "Evi welcomes you" : "Evi te da la bienvenida"} className="size-16 shrink-0 object-contain sm:size-20"/>
             <div className="min-w-0">
-              <h2 className="text-[15px] font-semibold tracking-tight text-[#0F1B3D]">{english ? "Start practicing with your first material" : "Tus prácticas empiezan con tu primer material"}</h2>
-              <p className="mt-1 text-[12px] leading-5 text-[#526079]">{english ? "Upload your notes to unlock all practice modes." : "Subí tu material y desbloqueá las modalidades para practicar."}</p>
+              <h2 className="text-cuerpo font-semibold tracking-titulo text-[#0F1B3D]">{english ? "Start practicing with your first material" : "Tus prácticas empiezan con tu primer material"}</h2>
+              <p className="mt-1 text-chico leading-5 text-[#526079]">{english ? "Upload your notes to unlock all practice modes." : "Subí tu material y desbloqueá las modalidades para practicar."}</p>
             </div>
           </div>
-          <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#456DBD] px-4 text-[12px] font-semibold text-white hover:bg-[#3A5CA8] sm:self-auto">
+          <Link href="/dashboard/materiales/subir" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-[#456DBD] px-4 text-chico font-semibold text-white hover:bg-[#3A5CA8] sm:self-auto">
             {english ? "Upload material" : "Subir mi material"} <ArrowRight className="size-4"/>
           </Link>
         </section>
       )}
       {!material && (
         <div className="mt-5 flex items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold text-[#0F1B3D] sm:text-[16px]">{english ? "Ways to practice" : "Así vas a poder practicar"}</h2>
-          <p className="text-right text-[11px] text-[#66758D]">{english ? "Available after you upload your first document" : "Se habilitan cuando subas tu primer material"}</p>
+          <h2 className="text-cuerpo font-semibold text-[#0F1B3D] sm:text-cuerpo">{english ? "Ways to practice" : "Así vas a poder practicar"}</h2>
+          <p className="text-right text-etiqueta text-[#66758D]">{english ? "Available after you upload your first document" : "Se habilitan cuando subas tu primer material"}</p>
         </div>
       )}
       <div data-practice-columns className={`mt-5 grid items-start gap-7 lg:min-h-0 lg:flex-1 lg:items-stretch lg:gap-6 xl:gap-9 ${material ? "lg:grid-cols-[minmax(0,1.22fr)_minmax(310px,0.86fr)]" : "lg:grid-cols-1"}`}>
@@ -232,17 +232,17 @@ export function PracticeModePicker({ materials, initialMaterialId, advancedPract
                     {!material && <LockKeyhole className="size-[13px] opacity-75" aria-hidden="true" />}
                     {selected ? <Check className="size-[16px] text-blue-600" aria-hidden="true" /> : null}
                   </span>
-                  <span className="mt-auto pt-4 text-[13px] font-medium leading-4">{t(displayTitle)}</span>
-                  <span className="mt-1 max-w-[31ch] text-[11px] leading-[1.4] opacity-85">{t(description)}</span>
-                  {material && !supported ? <span className="mt-1.5 text-[10px] font-medium opacity-65">{english ? "Coming soon" : "Próximamente"}</span> : null}
+                  <span className="mt-auto pt-4 text-ui font-medium leading-4">{t(displayTitle)}</span>
+                  <span className="mt-1 max-w-[31ch] text-etiqueta leading-[1.4] opacity-85">{t(description)}</span>
+                  {material && !supported ? <span className="mt-1.5 text-etiqueta font-medium opacity-65">{english ? "Coming soon" : "Próximamente"}</span> : null}
                 </button>
               );
             })}
           </div>
-          {prepareError && <p role="alert" className="mt-2 text-[11px] text-amber-800">{prepareError}</p>}
+          {prepareError && <p role="alert" className="mt-2 text-etiqueta text-amber-800">{prepareError}</p>}
         </section>
         {material && (historyLoading
-          ? <aside role="status" aria-live="polite" className="min-h-[220px] rounded-[18px] border border-[#E7EBF4] bg-white p-5 text-[12px] text-[#66758D]">
+          ? <aside role="status" aria-live="polite" className="min-h-[220px] rounded-[18px] border border-[#E7EBF4] bg-white p-5 text-chico text-[#66758D]">
               {english ? 'Loading your practice history…' : 'Cargando tus prácticas realizadas…'}
             </aside>
           : <PracticeHistoryPanel key={materialId} materialId={materialId} history={history}

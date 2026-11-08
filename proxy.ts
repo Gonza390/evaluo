@@ -3,7 +3,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { detectLandingLocale } from '@/lib/i18n/landing-locale-detection';
+import {
+  getMateriaCacheDirectRedirectPath,
+  getMateriaCacheRewritePath,
+} from '@/lib/explorar-materia-cache';
 import { isTerminalAuthSessionError } from '@/lib/auth-session-errors';
+import { previewLoginCanonicalUrl } from '@/lib/auth/preview-login-origin';
 import {
   checkProxyRateLimit,
   getClientIpFromRequest,
@@ -162,6 +167,22 @@ export async function proxy(request: NextRequest) {
   const isLoginRoute = pathname.startsWith('/login') || pathname === '/en/login';
   const isHomeRoute = pathname === '/';
 
+  if (pathname === '/login' || pathname === '/en/login') {
+    // Previews de master: el login de Google tiene que empezar en el host
+    // canónico del Preview (las cookies no pasan entre hosts vercel.app). Antes
+    // lo hacía la página con headers(), lo que la volvía dinámica.
+    const previewDestination = previewLoginCanonicalUrl({
+      host: request.headers.get('host') ?? request.nextUrl.host,
+      vercelEnvironment: process.env.VERCEL_ENV,
+      branch: process.env.VERCEL_GIT_COMMIT_REF,
+      pathname,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
+    if (previewDestination) {
+      return persistReferralCookie(request, NextResponse.redirect(previewDestination));
+    }
+  }
+
   if (isLoginRoute) {
     const requestedNext =
       request.nextUrl.searchParams.get('next') ?? request.nextUrl.searchParams.get('redirectTo');
@@ -188,6 +209,21 @@ export async function proxy(request: NextRequest) {
     signupUrl.searchParams.set('next', '/dashboard?openUpload=1');
     signupUrl.searchParams.set('reason', 'prepare-material');
     return persistReferralCookie(request, NextResponse.redirect(signupUrl));
+  }
+
+  // /explorar/materia/[id] sin carreraId/tab/modulo/creador se sirve desde la
+  // variante cacheada (ISR) sin cambiar la URL. Ver lib/explorar-materia-cache.ts.
+  const cachedMateriaPath = getMateriaCacheRewritePath(pathname, request.nextUrl.searchParams);
+  if (cachedMateriaPath) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = cachedMateriaPath;
+    return persistReferralCookie(request, NextResponse.rewrite(rewriteUrl));
+  }
+  const publicMateriaPath = getMateriaCacheDirectRedirectPath(pathname);
+  if (publicMateriaPath) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = publicMateriaPath;
+    return persistReferralCookie(request, NextResponse.redirect(redirectUrl, 308));
   }
 
   if (!isProtectedRoute && !isLoginRoute && !isHomeRoute) {
