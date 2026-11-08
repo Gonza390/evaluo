@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase-client';
+// Supabase se carga solo al sincronizar: el visor no lo necesita para pintar (LCP).
+const loadSupabase = () => import('@/lib/supabase-client').then((module) => module.supabase);
 export type Activity = 'reading' | 'questions' | 'flashcards' | 'glossary';
 export const progressKey = (id: string) => `evaluo_study_plan_progress_v1:${id}`;
 export function markActivity(id: string, topic: number, activity: Activity) {
@@ -28,6 +29,7 @@ export function getProgress(id: string, topics: TopicActivities[]) {
 /** Progress is user-scoped in Supabase; browser storage is an offline cache. */
 async function persistActivity(materialId: string, topicIndex: number, activity: Activity) {
  try {
+  const supabase = await loadSupabase();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from('student_material_topic_activity_progress' as never).upsert({
@@ -38,6 +40,7 @@ async function persistActivity(materialId: string, topicIndex: number, activity:
 export async function syncStudyPlanProgress(materialId: string) {
  if (typeof window === 'undefined') return;
  try {
+  const supabase = await loadSupabase();
   const {data:{user}} = await supabase.auth.getUser();
   if (!user) return;
   const key=progressKey(materialId);
