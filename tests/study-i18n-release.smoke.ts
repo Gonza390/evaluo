@@ -95,7 +95,8 @@ assert.ok(calendar.includes('localizeExamEventTitle(event.title, locale)'));
 assert.ok(calendar.includes('selectedMateria: selectedCareerMateria'));
 assert.ok(reminderBell.includes('localizeExamEventTitle(reminder.title, locale)'));
 assert.match(calendar, /english\s*\?\s*['"]Study plan exam['"]/);
-assert.ok(calendar.includes("english ? 'Unlimited exams'") || calendar.includes("features={english ? ['Unlimited exams'"));
+// El calendario no tiene límite de parciales: no debe quedar el upsell de Premium.
+assert.ok(!calendar.includes('PremiumUpsell'));
 assert.ok(planPage.includes("accountAppLocale(user.user_metadata)"));
 assert.ok(planPage.includes('<EmptyStudyPlan locale={locale} />'));
 assert.ok(planEmpty.includes("english ? 'Your plan preview'"));
