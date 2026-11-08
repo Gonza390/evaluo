@@ -37,7 +37,7 @@ function TutorAnswer({ text }: Pick<StudyErrorHelpMessage, 'text'>) {
       {paragraphs.map((paragraph, index) => (
         <p
           key={index}
-          className="!text-foreground !text-base !leading-7 break-words whitespace-pre-line"
+          className="!text-foreground !text-cuerpo !leading-7 break-words whitespace-pre-line"
         >
           {paragraph}
         </p>
@@ -93,11 +93,11 @@ export function StudyErrorHelpChat({
       <header className="border-border bg-muted/20 flex items-start gap-3 border-b px-4 py-4">
         <StudyErrorTutorAvatar prominent />
         <div className="min-w-0 flex-1">
-          <p className="!text-primary !text-xs !leading-5 font-semibold">Evaluo</p>
-          <h3 className="mt-0.5 text-base leading-6 font-semibold break-words sm:text-lg">
+          <p className="!text-primary !text-chico !leading-5 font-semibold">Evaluo</p>
+          <h3 className="mt-0.5 text-cuerpo leading-6 font-semibold break-words sm:text-subtitulo">
             {english ? (compact ? 'Let’s understand the mistake' : `Let’s understand ${topic}`) : (compact ? 'Entendamos el error' : `Entendamos ${topic}`)}
           </h3>
-          <p className="!text-muted-foreground mt-1.5 flex items-start gap-2 !text-sm !leading-5">
+          <p className="!text-muted-foreground mt-1.5 flex items-start gap-2 !text-cuerpo !leading-5">
             <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="min-w-0 break-words">
               {pdfTitle ?? (english ? 'This mistake is not yet linked to a PDF' : 'Este error todavía no tiene un PDF asociado')}
@@ -119,8 +119,8 @@ export function StudyErrorHelpChat({
           <div className="flex items-start gap-2.5 sm:gap-3">
             <StudyErrorTutorAvatar />
             <div className="min-w-0 flex-1">
-              <p className="!text-foreground mb-2 !text-sm font-semibold">Evaluo</p>
-              <p className="!text-foreground max-w-[60ch] !text-base !leading-7 break-words">
+              <p className="!text-foreground mb-2 !text-cuerpo font-semibold">Evaluo</p>
+              <p className="!text-foreground max-w-[60ch] !text-cuerpo !leading-7 break-words">
                 {resolved
                   ? (english ? 'You have already resolved this mistake. You can review your previous answer or move to another topic.' : 'Este error ya quedó resuelto. Podés consultar tu respuesta anterior o seguir con otro tema.')
                   : hasPdf
@@ -129,7 +129,7 @@ export function StudyErrorHelpChat({
               </p>
               {!resolved && (
                 <button
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-3 text-cuerpo font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
                   disabled={busy}
                   onClick={() => onRequest('why_wrong')}
                 >
@@ -146,8 +146,8 @@ export function StudyErrorHelpChat({
               {!(compact && turn.kind === 'why_wrong') && (
                 <div className="mb-5 flex justify-end">
                   <div className="bg-primary/7 max-w-[90%] rounded-2xl rounded-br-md px-4 py-3 sm:max-w-[80%]">
-                    <p className="!text-muted-foreground mb-1 !text-[11px] font-medium">{english ? 'You' : 'Vos'}</p>
-                    <p className="!text-foreground !text-sm !leading-6">{english ? ({why_wrong: 'Help me understand', simpler: 'Can you explain more simply?', example: 'Give me an example'} as const)[turn.kind] : requests[turn.kind]}</p>
+                    <p className="!text-muted-foreground mb-1 !text-etiqueta font-medium">{english ? 'You' : 'Vos'}</p>
+                    <p className="!text-foreground !text-cuerpo !leading-6">{english ? ({why_wrong: 'Help me understand', simpler: 'Can you explain more simply?', example: 'Give me an example'} as const)[turn.kind] : requests[turn.kind]}</p>
                   </div>
                 </div>
               )}
@@ -155,16 +155,16 @@ export function StudyErrorHelpChat({
                 <StudyErrorTutorAvatar state={turn.pending ? 'thinking' : 'answering'} />
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-sm font-semibold">Evaluo</span>
+                    <span className="text-cuerpo font-semibold">Evaluo</span>
                     {index === 0 && (
-                      <span className="text-muted-foreground text-xs">
+                      <span className="text-muted-foreground text-chico">
                         {english ? (hasPdf ? 'Using your PDF' : 'About this concept') : (hasPdf ? 'Con tu PDF' : 'Sobre este concepto')}
                       </span>
                     )}
                   </div>
                   {turn.pending ? (
                     <p
-                      className="!text-muted-foreground flex items-center gap-2 !text-sm"
+                      className="!text-muted-foreground flex items-center gap-2 !text-cuerpo"
                       role="status"
                     >
                       {english ? (hasPdf ? 'I’m reviewing your PDF…' : 'Preparing an explanation…') : (hasPdf ? 'Estoy revisando tu PDF…' : 'Estoy preparando la explicación…')}
@@ -181,7 +181,7 @@ export function StudyErrorHelpChat({
           <div className="flex items-start gap-2.5 sm:gap-3">
             <StudyErrorTutorAvatar />
             <div className="min-w-0 flex-1 space-y-3">
-              <p className="!text-muted-foreground !text-xs font-semibold">
+              <p className="!text-muted-foreground !text-chico font-semibold">
                 {english ? 'Activity explanation' : 'Explicación de la actividad'}
               </p>
               <TutorAnswer text={savedExplanation} />
@@ -192,14 +192,14 @@ export function StudyErrorHelpChat({
       {notice && (
         <p
           role="alert"
-          className="border-destructive/40 !text-foreground mx-4 mb-4 border-l-2 pl-3 !text-sm"
+          className="border-destructive/40 !text-foreground mx-4 mb-4 border-l-2 pl-3 !text-cuerpo"
         >
           {notice}
         </p>
       )}
       {messages.length > 0 && (
         <details className="border-border bg-muted/20 border-t px-4 py-2">
-          <summary className="text-muted-foreground focus-visible:outline-ring flex min-h-10 cursor-pointer items-center text-xs font-medium focus-visible:outline-2">
+          <summary className="text-muted-foreground focus-visible:outline-ring flex min-h-10 cursor-pointer items-center text-chico font-medium focus-visible:outline-2">
             {english ? 'I need another explanation' : 'Necesito otra explicación'}
           </summary>
           <div
@@ -210,7 +210,7 @@ export function StudyErrorHelpChat({
             {(['simpler', 'example'] as const).map((kind) => (
               <button
                 key={kind}
-                className="focus-visible:outline-ring border-border bg-background text-foreground hover:bg-muted inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border px-2.5 py-2 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:px-4 sm:text-sm"
+                className="focus-visible:outline-ring border-border bg-background text-foreground hover:bg-muted inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border px-2.5 py-2 text-chico font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:px-4 sm:text-cuerpo"
                 disabled={busy || (resolved && !messages.some((message) => message.kind === kind))}
                 onClick={() => onRequest(kind)}
               >
@@ -219,7 +219,7 @@ export function StudyErrorHelpChat({
             ))}
             {turns.some((turn) => turn.kind === 'why_wrong') && (
               <button
-                className="text-muted-foreground hover:text-foreground focus-visible:outline-ring col-span-2 inline-flex min-h-11 w-fit items-center px-1 text-xs underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-ring col-span-2 inline-flex min-h-11 w-fit items-center px-1 text-chico underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
                 disabled={busy}
                 onClick={() => onRequest('why_wrong')}
               >

@@ -62,6 +62,6 @@ const academic = source('components/profile-academic-simple.tsx');
 assert.match(academic, /flex-col-reverse gap-3 sm:flex-row/);
 assert.match(academic, /min-h-11 w-full whitespace-normal/);
 const hero = source('components/dashboard/maeve-study-hero.tsx');
-assert.match(hero, /text-xs font-semibold text-slate-700/);
-assert.match(hero, /text-\[13px\] leading-\[1\.5\] text-\[#5a6481\]/);
+assert.match(hero, /text-chico font-semibold text-slate-700/);
+assert.match(hero, /text-ui leading-\[1\.5\] text-\[#5a6481\]/);
 console.log('ux-a11y-priorities.smoke passed');

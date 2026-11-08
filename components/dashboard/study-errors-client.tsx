@@ -258,7 +258,7 @@ export function StudyErrorsClient({
   return (
     <>
       <div
-        className="text-foreground mx-auto w-full max-w-[1240px] min-w-0 px-3 py-3 text-[13px] sm:px-4 sm:py-4 lg:px-6 lg:py-5"
+        className="text-foreground mx-auto w-full max-w-[1240px] min-w-0 px-3 py-3 text-ui sm:px-4 sm:py-4 lg:px-6 lg:py-5"
         style={!materialId ? { maxWidth: '960px' } : undefined}
       >
         <div ref={pageIntro} tabIndex={-1} className="scroll-mt-24 outline-none">
@@ -272,7 +272,7 @@ export function StudyErrorsClient({
         {notice && (
           <p
             role="status"
-            className="border-primary !text-foreground mt-4 border-l-2 pl-4 !text-sm"
+            className="border-primary !text-foreground mt-4 border-l-2 pl-4 !text-cuerpo"
           >
             {notice}
           </p>
@@ -303,12 +303,12 @@ export function StudyErrorsClient({
                     <span className="grid min-w-0 flex-1 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-6">
                       <span className="min-w-0">
                         <span
-                          className={`block break-words ${count ? 'font-bold' : 'font-medium'}`}
+                          className={`block break-words ${count ? 'font-semibold' : 'font-medium'}`}
                         >
                           {pdf.title}
                         </span>
                         {pdf.materiaNombre && (
-                          <span className="text-muted-foreground mt-1 block text-xs">
+                          <span className="text-muted-foreground mt-1 block text-chico">
                             {pdf.materiaNombre}
                           </span>
                         )}
@@ -316,21 +316,21 @@ export function StudyErrorsClient({
                       <span className="sm:text-right">
                         {count ? (
                           <>
-                            <span className="text-primary block text-sm font-semibold">
+                            <span className="text-primary block text-cuerpo font-semibold">
                               {count} {english ? `${count === 1 ? 'topic' : 'topics'} to review` : `${count === 1 ? 'tema' : 'temas'} para reforzar`}
                             </span>
                             {errors.length > count && (
-                              <span className="text-muted-foreground mt-1 block text-xs">
+                              <span className="text-muted-foreground mt-1 block text-chico">
                                 {resolvedLabel(errors.length - count)}
                               </span>
                             )}
                           </>
                         ) : (
-                          <span className="text-muted-foreground inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                          <span className="text-muted-foreground inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-cuerpo">
                             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                             {t("Al día")}
                             {errors.length > 0 && (
-                              <span className="text-xs">
+                              <span className="text-chico">
                                 · {errors.length}{' '}
                                 {english ? (errors.length === 1 ? 'resolved topic' : 'resolved topics') : (errors.length === 1 ? 'tema resuelto' : 'temas resueltos')}
                               </span>
@@ -339,7 +339,7 @@ export function StudyErrorsClient({
                         )}
                       </span>
                       {topics.length > 0 && (
-                        <span className="text-muted-foreground block text-sm break-words sm:col-span-2">
+                        <span className="text-muted-foreground block text-cuerpo break-words sm:col-span-2">
                           {topics.join(' · ')}
                         </span>
                       )}
@@ -364,11 +364,11 @@ export function StudyErrorsClient({
                     <span className="block font-semibold break-words">
                       {t("Simulador y otros conceptos")}
                     </span>
-                    <span className="text-muted-foreground mt-2 block text-sm">
+                    <span className="text-muted-foreground mt-2 block text-cuerpo">
                       {pendingLabel(unlinkedPending)} · {t("Repasá el error y comprobá lo aprendido.")}
                     </span>
                     {unlinked.length > unlinkedPending && (
-                      <span className="text-muted-foreground mt-1 block text-xs">
+                      <span className="text-muted-foreground mt-1 block text-chico">
                         {resolvedLabel(unlinked.length - unlinkedPending)}
                       </span>
                     )}
@@ -387,7 +387,7 @@ export function StudyErrorsClient({
             )}
             <Link
               href="/dashboard/materiales?openUpload=1"
-              className="text-muted-foreground hover:text-foreground focus-visible:outline-ring mt-4 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium underline underline-offset-4 transition focus-visible:outline-2"
+              className="text-muted-foreground hover:text-foreground focus-visible:outline-ring mt-4 inline-flex min-h-11 items-center rounded-lg px-2 text-cuerpo font-medium underline underline-offset-4 transition focus-visible:outline-2"
             >
               {t("Subir mi PDF")}
             </Link>
@@ -396,7 +396,7 @@ export function StudyErrorsClient({
           <>
             <div className="border-border mt-3 flex min-w-0 flex-wrap items-center gap-2 border-b pb-3 sm:flex-nowrap sm:gap-4">
               <button
-                className="text-muted-foreground hover:text-foreground focus-visible:outline-ring inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-sm font-medium transition focus-visible:outline-2"
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-ring inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-cuerpo font-medium transition focus-visible:outline-2"
                 onClick={() => {
                   returnToMaterials();
                   setNotice('');
@@ -412,10 +412,10 @@ export function StudyErrorsClient({
                   className="hover:bg-muted/50 h-auto w-full min-w-0 flex-1 basis-full rounded-lg border-transparent px-3 py-2 text-left whitespace-normal shadow-none data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:block *:data-[slot=select-value]:min-w-0 sm:basis-0"
                 >
                   <SelectValue>
-                    <span className="text-muted-foreground block text-xs font-normal">
+                    <span className="text-muted-foreground block text-chico font-normal">
                       {t("Cambiar material")}
                     </span>
-                    <span className="text-foreground mt-0.5 block text-sm font-semibold [overflow-wrap:anywhere] sm:text-base">
+                    <span className="text-foreground mt-0.5 block text-cuerpo font-semibold [overflow-wrap:anywhere] sm:text-cuerpo">
                       {selectedPdf?.title ?? t("Simulador y otros conceptos")}
                     </span>
                   </SelectValue>
@@ -425,7 +425,7 @@ export function StudyErrorsClient({
                     <SelectItem key={pdf.id} value={pdf.id} className="min-h-11 whitespace-normal">
                       <span className="block min-w-0 [overflow-wrap:anywhere]">
                         <span className="block font-medium">{pdf.title}</span>
-                        <span className="text-muted-foreground mt-0.5 block text-xs">
+                        <span className="text-muted-foreground mt-0.5 block text-chico">
                           {pendingLabel(
                             views.filter(
                               (item) =>
@@ -452,13 +452,13 @@ export function StudyErrorsClient({
                 aria-controls="mobile-errors"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold">
+                  <span className="block truncate text-cuerpo font-semibold">
                     {selected?.topic ?? t("Elegí un error")}
                     {selected && selected.status === 'pending'
                       ? (english ? ` · Mistake ${Math.max(1, pending.findIndex((item) => item.id === selected.id) + 1)} of ${pending.length}` : ` · Error ${Math.max(1, pending.findIndex((item) => item.id === selected.id) + 1)} de ${pending.length}`)
                       : ''}
                   </span>
-                  <span className="text-primary block text-xs">{t("Cambiar error")}</span>
+                  <span className="text-primary block text-chico">{t("Cambiar error")}</span>
                 </span>
                 <ChevronDown className={`h-4 w-4 shrink-0 ${mobileListOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -474,7 +474,7 @@ export function StudyErrorsClient({
                     <button
                       key={value}
                       aria-pressed={tab === value}
-                      className={`min-h-11 flex-1 border-b-2 px-2 text-xs font-semibold ${tab === value ? 'border-primary text-primary' : 'text-muted-foreground border-transparent'}`}
+                      className={`min-h-11 flex-1 border-b-2 px-2 text-chico font-semibold ${tab === value ? 'border-primary text-primary' : 'text-muted-foreground border-transparent'}`}
                       onClick={() => {
                         setTab(value);
                         setSelectedId((value === 'pending' ? pending : resolved)[0]?.id ?? null);
@@ -495,7 +495,7 @@ export function StudyErrorsClient({
                     placeholder={t("Buscar tema")}
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    className="w-full min-w-0 bg-transparent text-sm outline-none"
+                    className="w-full min-w-0 bg-transparent text-cuerpo outline-none"
                   />
                 </label>
                 <nav className="mt-3 max-h-[52vh] overflow-y-auto lg:max-h-none">
@@ -508,8 +508,8 @@ export function StudyErrorsClient({
                         setMobileListOpen(false);
                       }}
                     >
-                      <span className="block text-sm font-semibold break-words">{item.topic}</span>
-                      <span className="text-muted-foreground mt-1 block text-xs">
+                      <span className="block text-cuerpo font-semibold break-words">{item.topic}</span>
+                      <span className="text-muted-foreground mt-1 block text-chico">
                         {english ? sourceLabelsEn[item.sourceType] : studyErrorSourceLabels[item.sourceType]} ·{' '}
                         {item.status === 'resolved'
                           ? t("Resuelto")
@@ -519,7 +519,7 @@ export function StudyErrorsClient({
                   ))}
                 </nav>
                 {!visible.length && (
-                  <p className="!text-muted-foreground mt-4 !text-xs">
+                  <p className="!text-muted-foreground mt-4 !text-chico">
                     {query
                       ? t("No encontramos ese tema.")
                       : tab === 'pending'
@@ -586,12 +586,12 @@ export function StudyErrorsClient({
                 ) : (
                   <div className="py-8">
                     <CheckCircle2 className="text-primary h-7 w-7" />
-                    <h3 className="mt-3 text-xl font-bold">
+                    <h3 className="mt-3 text-titulo-sm font-semibold">
                       {tab === 'resolved'
                         ? t("Todavía no hay errores resueltos")
                         : t("Todo al día en este PDF")}
                     </h3>
-                    <p className="!text-muted-foreground mt-2 !text-sm">
+                    <p className="!text-muted-foreground mt-2 !text-cuerpo">
                       {tab === 'resolved'
                         ? t("Los errores que compruebes después del repaso van a aparecer acá.")
                         : t("Podés seguir estudiando tu material o revisar tus conceptos resueltos.")}

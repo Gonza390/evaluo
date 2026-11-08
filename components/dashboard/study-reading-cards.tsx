@@ -47,8 +47,8 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
           <FileText aria-hidden="true" className="size-5 text-[#456DBD]" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block line-clamp-2 break-words text-[12px] font-medium leading-5 text-slate-900 sm:text-[13px]">{material.title}</span>
-          <span className="mt-1 block text-[10px] text-slate-500">
+          <span className="block line-clamp-2 break-words text-chico font-medium leading-5 text-slate-900 sm:text-ui">{material.title}</span>
+          <span className="mt-1 block text-etiqueta text-slate-500">
             {english ? 'Reading' : 'Lectura'} · <span className={percent === 100 ? 'font-medium text-emerald-600' : 'font-medium text-slate-700'}>{percent}%</span>
           </span>
           <span role="progressbar" aria-label={english ? `Reading progress for ${material.title}` : `Lectura de ${material.title}`}
@@ -67,17 +67,17 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
       className="mx-auto w-full max-w-[1240px] px-3 py-4 sm:px-5 lg:px-6">
       <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-7">
         <div className="min-w-0">
-          <h1 className="mb-5 text-[20px] font-semibold tracking-[-0.035em] text-slate-900 sm:text-[22px] lg:text-[24px]">{english ? 'Study' : 'Estudiar'}</h1>
+          <h1 className="mb-5 text-titulo-sm font-semibold tracking-titulo text-slate-900 sm:text-titulo lg:text-titulo">{english ? 'Study' : 'Estudiar'}</h1>
           {activeMaterial ? (
             <div>
-              <h2 className="mb-2 text-[12px] font-medium text-slate-500">{english ? 'Your files' : 'Tus archivos'}</h2>
+              <h2 className="mb-2 text-chico font-medium text-slate-500">{english ? 'Your files' : 'Tus archivos'}</h2>
               <div className="space-y-2.5">
                 {renderMaterial(activeMaterial)}
                 {otherMaterials.map(renderMaterial)}
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 p-5 text-[12px] text-slate-600">
+            <div className="rounded-xl border border-slate-200 p-5 text-chico text-slate-600">
               {english ? 'No PDFs are ready to study yet. Upload one from My space.' : 'Todavía no tenés PDFs listos para estudiar. Subí uno desde Mi espacio.'}
             </div>
           )}
@@ -92,9 +92,9 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
               const content = (
                 <>
                   <Icon className="h-5 w-5" aria-hidden="true" />
-                  <span className="mt-auto pt-4 text-[13px] font-medium">{tool.title}</span>
-                  <span className="mt-1 text-xs leading-4 opacity-85">{tool.description}</span>
-                  <span className="mt-1.5 text-xs font-medium">{activeMaterial ? english ? 'Open →' : 'Abrir →' : english ? 'Choose a PDF' : 'Elegí un PDF'}</span>
+                  <span className="mt-auto pt-4 text-ui font-medium">{tool.title}</span>
+                  <span className="mt-1 text-chico leading-4 opacity-85">{tool.description}</span>
+                  <span className="mt-1.5 text-chico font-medium">{activeMaterial ? english ? 'Open →' : 'Abrir →' : english ? 'Choose a PDF' : 'Elegí un PDF'}</span>
                 </>
               );
               return activeMaterial ? (

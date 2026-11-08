@@ -178,10 +178,10 @@ export function SubscriptionSettings() {
           </div>
           <div>
             <p className="eyebrow-label text-brand">{t("Plan y suscripción")}</p>
-            <h2 className="text-heading mt-1 text-2xl font-bold tracking-tight">
+            <h2 className="text-heading mt-1 text-titulo font-semibold tracking-titulo">
               {loading ? t("Cargando tu plan…") : premium ? 'Evaluo Premium' : t("Evaluo Free")}
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-cuerpo leading-6 text-muted-foreground">
               {loading
                 ? t("Verificando tu suscripción.")
                 : premium
@@ -196,7 +196,7 @@ export function SubscriptionSettings() {
         </div>
         {!loading ? (
           <span
-            className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
+            className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-chico font-semibold ${
               premium
                 ? 'bg-emerald-50 text-emerald-700'
                 : paymentProblem
@@ -218,7 +218,7 @@ export function SubscriptionSettings() {
       </div>
 
       {loading ? (
-        <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-6 flex items-center gap-2 text-cuerpo text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("Verificando suscripción")}
         </div>
       ) : premium ? (
@@ -226,11 +226,11 @@ export function SubscriptionSettings() {
           <div className="border-border bg-muted/40 mt-6 rounded-2xl border p-5">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-brand" />
-              <h3 className="text-sm font-bold text-foreground">{t("Tu plan ya está activo")}</h3>
+              <h3 className="text-cuerpo font-semibold text-foreground">{t("Tu plan ya está activo")}</h3>
             </div>
             <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
               {PREMIUM_BENEFITS.map((benefit) => (
-                <li key={benefit} className="flex items-start gap-2.5 text-sm leading-5 text-muted-foreground">
+                <li key={benefit} className="flex items-start gap-2.5 text-cuerpo leading-5 text-muted-foreground">
                   <Check className="text-primary mt-0.5 h-4 w-4 shrink-0" />
                   {t(benefit)}
                 </li>
@@ -257,8 +257,8 @@ export function SubscriptionSettings() {
                 <Crown className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-foreground">{t("¿Querés activar Premium?")}</p>
-                <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
+                <p className="text-cuerpo font-semibold text-foreground">{t("¿Querés activar Premium?")}</p>
+                <p className="mt-1 text-ui leading-5 text-muted-foreground">
                   {t("Entrá directo al plan Premium y continuá con el checkout seguro según tu país.")}
                 </p>
               </div>
@@ -272,7 +272,7 @@ export function SubscriptionSettings() {
           </div>
 
           <div className="border-border mt-5 overflow-hidden rounded-2xl border">
-            <div className="grid grid-cols-[1fr_68px_82px] items-center border-b bg-muted/40 px-4 py-3.5 text-xs font-bold sm:grid-cols-[1fr_120px_120px] sm:px-5 sm:text-sm">
+            <div className="grid grid-cols-[1fr_68px_82px] items-center border-b bg-muted/40 px-4 py-3.5 text-chico font-semibold sm:grid-cols-[1fr_120px_120px] sm:px-5 sm:text-cuerpo">
               <span className="text-muted-foreground">{t("Comparación de planes")}</span>
               <span className="text-center text-muted-foreground">{t("Gratis")}</span>
               <span className="text-brand text-center">Premium</span>
@@ -280,7 +280,7 @@ export function SubscriptionSettings() {
             {COMPARISON.map(([feature, free, isPremium]) => (
               <div
                 key={feature}
-                className="border-border grid grid-cols-[1fr_68px_82px] items-center border-b px-4 py-3.5 text-sm last:border-0 sm:grid-cols-[1fr_120px_120px] sm:px-5"
+                className="border-border grid grid-cols-[1fr_68px_82px] items-center border-b px-4 py-3.5 text-cuerpo last:border-0 sm:grid-cols-[1fr_120px_120px] sm:px-5"
               >
                 <span className="pr-3 leading-5 text-foreground">{t(feature)}</span>
                 <span className="flex justify-center">
@@ -306,8 +306,8 @@ export function SubscriptionSettings() {
                   <Crown className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">{t("Desbloqueá Evaluo Premium")}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                  <p className="text-cuerpo font-semibold text-foreground">{t("Desbloqueá Evaluo Premium")}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-ui text-muted-foreground">
                     <ShieldCheck className="h-4 w-4" /> {t("Pago seguro según tu país · Cancelá futuras renovaciones")}
                   </p>
                 </div>
@@ -324,7 +324,7 @@ export function SubscriptionSettings() {
       )}
 
       {error ? (
-        <p className="mt-4 text-sm text-red-600" role="alert">
+        <p className="mt-4 text-cuerpo text-red-600" role="alert">
           {error}
         </p>
       ) : null}

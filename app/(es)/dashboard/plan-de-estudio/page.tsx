@@ -143,7 +143,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
       <div className="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,0.85fr)] xl:min-h-0 xl:flex-1 xl:overflow-hidden">
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">
-            <h1 className="mb-4 shrink-0 text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px] lg:text-[24px]">{english ? 'Study plan' : 'Plan de estudio'}</h1>
+            <h1 className="mb-4 shrink-0 text-titulo-sm font-semibold tracking-titulo sm:text-titulo lg:text-titulo">{english ? 'Study plan' : 'Plan de estudio'}</h1>
             <div className="min-w-0 space-y-3 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:scroll-smooth xl:overscroll-contain xl:pr-2 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden xl:[mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-18px),transparent)]">
 
 
@@ -151,10 +151,10 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
             <section>
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-[15px] font-normal tracking-tight">{english ? 'Keep making progress' : 'Seguí avanzando'}</h2>
+                <h2 className="text-cuerpo font-normal tracking-titulo">{english ? 'Keep making progress' : 'Seguí avanzando'}</h2>
               </div>
               {first ? <StudyPlanNext materialId={first.id} topicCount={topicCount} topicActivities={topicActivities} /> : (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500">{english ? 'Upload a PDF to start topic 1.' : 'Subí un PDF para comenzar con el tema 1.'}</div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-chico text-slate-500">{english ? 'Upload a PDF to start topic 1.' : 'Subí un PDF para comenzar con el tema 1.'}</div>
               )}
             </section>
             </div>
@@ -165,11 +165,11 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
 
             <section className="rounded-2xl bg-white p-3.5">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-[14px] font-normal">{english ? 'Your next step' : 'Tu próximo paso'}</h2>
+                <h2 className="text-cuerpo font-normal">{english ? 'Your next step' : 'Tu próximo paso'}</h2>
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
               {first ? <StudyPlanNextStep materialId={first.id} topicActivities={topicActivities} /> : (
-                <p className="text-[12px] text-slate-500">{english ? 'Upload a PDF to get started.' : 'Subí un PDF para empezar.'}</p>
+                <p className="text-chico text-slate-500">{english ? 'Upload a PDF to get started.' : 'Subí un PDF para empezar.'}</p>
               )}
             </section>
 

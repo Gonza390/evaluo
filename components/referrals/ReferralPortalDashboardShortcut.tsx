@@ -33,7 +33,7 @@ export function ReferralPortalDashboardShortcut() {
     <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-6">
       <Link
         href="/referidos"
-        className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 text-sm transition hover:text-blue-700"
+        className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 text-cuerpo transition hover:text-blue-700"
       >
         <span className="flex min-w-0 items-center gap-3">
           <BarChart3 className="h-4 w-4 shrink-0 text-blue-600" />

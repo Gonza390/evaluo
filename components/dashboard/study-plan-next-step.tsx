@@ -50,19 +50,19 @@ export function StudyPlanNextStep({ materialId, topicActivities }: { materialId:
    const topic=topicActivities[selection.topic];
    const mode=modes[selection.activity];
    return <>
-    <h3 className="text-[14px] font-medium leading-snug tracking-tight text-slate-900">{topic.title || (english ? 'Topic ' : 'Tema ')+(selection.topic+1)}</h3>
-    <p className="text-[11px] leading-4 text-slate-500">{english ? ({reading:'Read this topic to move forward in your plan.',questions:'Check what you have learned with practice questions.',flashcards:'Review key concepts with flashcards.',glossary:'Review key concepts before moving on.'} as Record<Activity,string>)[selection.activity] : mode.description}</p>
-    <Link href={'/materiales/'+materialId+'?tab='+mode.tab+'&studyTopic='+selection.topic} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#D7E3FB] bg-[#EEF2FF] px-4 text-[13px] font-semibold text-[#315DAB] transition-colors hover:border-[#BBCDF4] hover:bg-[#E2EAFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4]">
+    <h3 className="text-cuerpo font-medium leading-snug tracking-titulo text-slate-900">{topic.title || (english ? 'Topic ' : 'Tema ')+(selection.topic+1)}</h3>
+    <p className="text-etiqueta leading-4 text-slate-500">{english ? ({reading:'Read this topic to move forward in your plan.',questions:'Check what you have learned with practice questions.',flashcards:'Review key concepts with flashcards.',glossary:'Review key concepts before moving on.'} as Record<Activity,string>)[selection.activity] : mode.description}</p>
+    <Link href={'/materiales/'+materialId+'?tab='+mode.tab+'&studyTopic='+selection.topic} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-[#D7E3FB] bg-[#EEF2FF] px-4 text-ui font-semibold text-[#315DAB] transition-colors hover:border-[#BBCDF4] hover:bg-[#E2EAFF] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5D70C4]">
       {english ? (progress.done===0 ? 'Start studying' : 'Continue now') : (progress.done===0 ? 'Comenzar a estudiar' : 'Continuar ahora')} <ArrowRight className="size-4"/>
     </Link>
    </>;
   })() : topicActivities.length ? (
-   <div className="flex items-center gap-2 text-[13px] font-medium text-slate-700"><CheckCircle2 className="size-5 text-emerald-600"/>{english ? 'You completed all activities for this PDF!' : '¡Completaste las actividades de este PDF!'}</div>
-  ) : <p className="text-[12px] text-slate-500">{english ? 'No topics are available to study yet.' : 'Todavía no hay temas disponibles para estudiar.'}</p>}
+   <div className="flex items-center gap-2 text-ui font-medium text-slate-700"><CheckCircle2 className="size-5 text-emerald-600"/>{english ? 'You completed all activities for this PDF!' : '¡Completaste las actividades de este PDF!'}</div>
+  ) : <p className="text-chico text-slate-500">{english ? 'No topics are available to study yet.' : 'Todavía no hay temas disponibles para estudiar.'}</p>}
   <div className="border-t border-slate-100 pt-2.5">
-   <div className="mb-2 flex items-center justify-between text-[11px] text-slate-500"><span>{english ? 'Your progress' : 'Tu progreso'}</span><span>{progress.percent}%</span></div>
+   <div className="mb-2 flex items-center justify-between text-etiqueta text-slate-500"><span>{english ? 'Your progress' : 'Tu progreso'}</span><span>{progress.percent}%</span></div>
    <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={progress.percent} aria-valuemin={0} aria-valuemax={100} aria-label={english ? "Material progress" : "Avance del material"}><div className={`h-full rounded-full bg-slate-500 motion-reduce:transition-none ${animateProgress ? 'transition-[width] duration-500 ease-out' : ''}`} style={{width:progress.percent+'%'}}/></div>
-   <p className="mt-2 text-[11px] text-slate-500">{progress.done} {english ? 'of' : 'de'} {progress.total} {english ? 'activities completed' : 'actividades completadas'}</p>
+   <p className="mt-2 text-etiqueta text-slate-500">{progress.done} {english ? 'of' : 'de'} {progress.total} {english ? 'activities completed' : 'actividades completadas'}</p>
   </div>
  </div>;
 }

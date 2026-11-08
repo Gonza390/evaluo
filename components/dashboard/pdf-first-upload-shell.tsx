@@ -892,7 +892,7 @@ export function PdfFirstUploadShell({
                 <div>
                   <h2
                     id="pdf-first-modal-title"
-                    className="text-xl font-bold tracking-[-0.035em] text-slate-950"
+                    className="text-titulo-sm font-semibold tracking-titulo text-slate-950"
                   >
                     {processing
                       ? failed
@@ -902,7 +902,7 @@ export function PdfFirstUploadShell({
                           : t("Estamos procesando tu PDF")
                       : t("Subir PDF o Word")}
                   </h2>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                  <p className="mt-1 text-cuerpo leading-6 text-slate-500">
                     {processing
                       ? ready
                         ? t("Terminamos de preparar tu material.")
@@ -921,10 +921,10 @@ export function PdfFirstUploadShell({
                 {!file && restoringDraft ? (
                   <div className="mt-6 flex min-h-44 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center">
                     <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-hidden="true" />
-                    <span className="mt-3 text-sm font-semibold text-slate-950">
+                    <span className="mt-3 text-cuerpo font-semibold text-slate-950">
                       {t("Recuperando tu PDF…")}
                     </span>
-                    <span className="mt-1 text-xs text-slate-400">
+                    <span className="mt-1 text-chico text-slate-400">
                       {t("No hace falta elegirlo de nuevo.")}
                     </span>
                   </div>
@@ -937,10 +937,10 @@ export function PdfFirstUploadShell({
                     <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white">
                       <Upload className="h-5 w-5" />
                     </span>
-                    <span className="mt-3 text-sm font-semibold text-slate-950">
+                    <span className="mt-3 text-cuerpo font-semibold text-slate-950">
                       {t("Elegir PDF o Word")}
                     </span>
-                    <span className="mt-1 text-xs text-slate-400">{t("Máximo 20 MB")}</span>
+                    <span className="mt-1 text-chico text-slate-400">{t("Máximo 20 MB")}</span>
                   </button>
                 ) : (
                   <div className="mt-6">
@@ -953,10 +953,10 @@ export function PdfFirstUploadShell({
                         <FileText className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-slate-900">
+                        <span className="block truncate text-cuerpo font-semibold text-slate-900">
                           {file.name}
                         </span>
-                        <span className="mt-0.5 block text-xs text-slate-400">
+                        <span className="mt-0.5 block text-chico text-slate-400">
                           {t("Tocá para cambiar archivo")}
                         </span>
                       </span>
@@ -965,7 +965,7 @@ export function PdfFirstUploadShell({
                     <div className="mt-4">
                       <label
                         htmlFor="pdf-first-title"
-                        className="mb-1.5 block text-xs font-semibold text-slate-700"
+                        className="mb-1.5 block text-chico font-semibold text-slate-700"
                       >
                         {t("Nombre del material")}
                       </label>
@@ -985,7 +985,7 @@ export function PdfFirstUploadShell({
                       <div className="animate-in fade-in slide-in-from-top-1 mt-4 duration-200">
                         <label
                           htmlFor="pdf-first-exam-date"
-                          className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700"
+                          className="mb-1.5 flex items-center gap-1.5 text-chico font-semibold text-slate-700"
                         >
                           <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
                           {t("Fecha de examen")}
@@ -1051,10 +1051,10 @@ export function PdfFirstUploadShell({
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">
+                    <p className="truncate text-cuerpo font-semibold text-slate-900">
                       {processing.title}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-chico text-slate-500">
                       {failed
                         ? firstUploadErrorMessage(processing.error ?? t("El procesamiento se interrumpió."), locale)
                         : ready
@@ -1062,7 +1062,7 @@ export function PdfFirstUploadShell({
                           : processing.message}
                     </p>
                   </div>
-                  <span className="text-xs font-semibold text-slate-500 tabular-nums">
+                  <span className="text-chico font-semibold text-slate-500 tabular-nums">
                     {progress}%
                   </span>
                 </div>
@@ -1079,13 +1079,13 @@ export function PdfFirstUploadShell({
                       <div className="mt-5 space-y-3" role="status">
                         {academicChoicesStatus === 'failed' ? (
                           <>
-                            <p className="text-sm text-red-700">{academicChoicesError}</p>
+                            <p className="text-cuerpo text-red-700">{academicChoicesError}</p>
                             <Button type="button" variant="outline" onClick={() => setAcademicChoicesStatus('idle')}>
                               {t("Reintentar carga de universidades")}
                             </Button>
                           </>
                         ) : (
-                          <p className="flex items-center gap-2 text-sm text-slate-500">
+                          <p className="flex items-center gap-2 text-cuerpo text-slate-500">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             {t("Cargando universidades y carreras...")}
                           </p>
@@ -1093,19 +1093,19 @@ export function PdfFirstUploadShell({
                       </div>
                     ) : !contextSaved ? (
                       <div className="mt-5 space-y-4">
-                        <p className="text-xs leading-5 text-slate-500">
+                        <p className="text-chico leading-5 text-slate-500">
                           {t("Universidad y carrera se guardan en tu perfil una sola vez. No te las volvemos a pedir en cada PDF.")}
                         </p>
 
                         <div>
                           <label
                             htmlFor="pdf-first-university"
-                            className="mb-1.5 block text-xs font-semibold text-slate-700"
+                            className="mb-1.5 block text-chico font-semibold text-slate-700"
                           >
                             {t("Universidad")}
                           </label>
                           {profileUniversitySaved ? (
-                            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-700">
+                            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-cuerpo font-semibold text-emerald-700">
                               Guardada en tu perfil · {profileUniversityName}
                             </div>
                           ) : !requestingUniversity ? (
@@ -1130,7 +1130,7 @@ export function PdfFirstUploadShell({
                                   setAddingCareer(false);
                                   setNewCareer('');
                                 }}
-                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-cuerpo text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                               >
                                 <option value="">{t("Seleccionar universidad")}</option>
                                 {universidades.map((uni) => (
@@ -1151,7 +1151,7 @@ export function PdfFirstUploadShell({
                                   setAddingCareer(false);
                                   setNewCareer('');
                                 }}
-                                className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                                className="mt-2 text-chico font-semibold text-blue-600 hover:text-blue-700"
                               >
                                 {t("Mi universidad no aparece")}
                               </button>
@@ -1164,7 +1164,7 @@ export function PdfFirstUploadShell({
                                 placeholder={t("Nombre de tu universidad")}
                                 autoFocus
                               />
-                              <p className="text-[11px] leading-4 text-slate-400">
+                              <p className="text-etiqueta leading-4 text-slate-400">
                                 {t("La universidad se habilita automáticamente y queda guardada en tu perfil.")}
                               </p>
                               <Button
@@ -1187,7 +1187,7 @@ export function PdfFirstUploadShell({
                           <div className="animate-in fade-in slide-in-from-top-1 duration-200">
                             <label
                               htmlFor="pdf-first-career"
-                              className="mb-1.5 block text-xs font-semibold text-slate-700"
+                              className="mb-1.5 block text-chico font-semibold text-slate-700"
                             >
                               {t("Carrera")}
                             </label>
@@ -1197,7 +1197,7 @@ export function PdfFirstUploadShell({
                                   id="pdf-first-career"
                                   value={careerId}
                                   onChange={(event) => setCareerId(event.target.value)}
-                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-cuerpo text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                                   disabled={requestingUniversity}
                                 >
                                   <option value="">{t("Seleccionar carrera")}</option>
@@ -1213,7 +1213,7 @@ export function PdfFirstUploadShell({
                                     setAddingCareer(true);
                                     setCareerId('');
                                   }}
-                                  className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                                  className="mt-2 text-chico font-semibold text-blue-600 hover:text-blue-700"
                                 >
                                   {requestingUniversity || availableCareers.length === 0
                                     ? t("Solicitar carrera")
@@ -1239,7 +1239,7 @@ export function PdfFirstUploadShell({
                                     {t("Cancelar")}
                                   </Button>
                                 </div>
-                                <p className="text-[11px] leading-4 text-slate-400">
+                                <p className="text-etiqueta leading-4 text-slate-400">
                                   {t("Si no está en el listado, la pedimos para tu uso privado.")}
                                 </p>
                               </div>
@@ -1248,7 +1248,7 @@ export function PdfFirstUploadShell({
                         ) : null}
                       </div>
                     ) : (
-                      <p className="mt-4 text-sm font-medium text-emerald-700">
+                      <p className="mt-4 text-cuerpo font-medium text-emerald-700">
                         {t("Guardado ·")} {savedContextLabel}
                       </p>
                     )}

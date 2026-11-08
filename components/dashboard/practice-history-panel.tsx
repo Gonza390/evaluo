@@ -86,22 +86,22 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
         className="flex h-[min(72dvh,680px)] min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:max-h-full">
         <div className="shrink-0 border-b border-[#EFF2F7] px-4 pb-3 pt-3 sm:px-5 sm:pt-4">
           <button type="button" onClick={onBackToHistory}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-[11px] font-semibold text-[#456DBD] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg text-etiqueta font-semibold text-[#456DBD] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
             <ArrowLeft className="size-3.5" aria-hidden="true"/> {tr("Volver a prácticas realizadas","Back to completed practice")}
           </button>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <div className="min-w-0 flex-1">
-              <h2 id="practice-history-detail-title" className="text-[17px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[18px]">
+              <h2 id="practice-history-detail-title" className="text-subtitulo font-semibold tracking-titulo text-[#0F1B3D] sm:text-subtitulo">
                 {labels[selectedSession.mode] ?? selectedSession.mode}
               </h2>
-              <p className="mt-0.5 text-[10px] text-[#66758D]">{dateLabel(selectedSession.completedAt,now,english)} · {timeLabel(selectedSession.completedAt,english)}</p>
+              <p className="mt-0.5 text-etiqueta text-[#66758D]">{dateLabel(selectedSession.completedAt,now,english)} · {timeLabel(selectedSession.completedAt,english)}</p>
             </div>
             <div aria-label={tr("Resultado de la práctica","Practice result")} className="flex shrink-0 items-center gap-2.5 sm:gap-3">
-              <div className="text-center"><p className="text-[9px] text-[#66758D]">{tr("Resultado","Result")}</p><p className="text-[15px] font-semibold leading-5 text-[#0F1B3D]">{percent}%</p></div>
+              <div className="text-center"><p className="text-etiqueta text-[#66758D]">{tr("Resultado","Result")}</p><p className="text-cuerpo font-semibold leading-5 text-[#0F1B3D]">{percent}%</p></div>
               <span className="h-7 w-px bg-[#E7EBF4]" aria-hidden="true"/>
-              <div className="text-center"><p className="text-[9px] text-[#66758D]">{tr("Correctas","Correct")}</p><p className="text-[15px] font-semibold leading-5 text-[#0F1B3D]">{selectedSession.correct}/{selectedSession.total}</p></div>
+              <div className="text-center"><p className="text-etiqueta text-[#66758D]">{tr("Correctas","Correct")}</p><p className="text-cuerpo font-semibold leading-5 text-[#0F1B3D]">{selectedSession.correct}/{selectedSession.total}</p></div>
               <span className="h-7 w-px bg-[#E7EBF4]" aria-hidden="true"/>
-              <div className="text-center"><p className="text-[9px] text-[#66758D]">{tr("Revisar","Review")}</p><p className="text-[15px] font-semibold leading-5 text-[#0F1B3D]">{incorrect}</p></div>
+              <div className="text-center"><p className="text-etiqueta text-[#66758D]">{tr("Revisar","Review")}</p><p className="text-cuerpo font-semibold leading-5 text-[#0F1B3D]">{incorrect}</p></div>
             </div>
           </div>
           <div className="mt-3 h-1 overflow-hidden rounded-full bg-[#EDF1F6]" role="progressbar" aria-label={tr("Porcentaje de respuestas correctas","Percentage of correct answers")} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
@@ -113,14 +113,14 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
             <article key={index} className="rounded-xl border border-[#E7EBF4] bg-white p-3">
               <div className="flex items-center gap-2">
                 {answer.correct ? <CheckCircle2 className="size-4 shrink-0 text-[#358458]"/> : <CircleAlert className="size-4 shrink-0 text-[#B86A36]"/>}
-                <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#66758D]">{tr('Pregunta','Question')} {index+1} · {answer.correct?tr('Correcta','Correct'):tr('Para repasar','To review')}</span>
+                <span className="text-etiqueta font-semibold uppercase tracking-[0.06em] text-[#66758D]">{tr('Pregunta','Question')} {index+1} · {answer.correct?tr('Correcta','Correct'):tr('Para repasar','To review')}</span>
               </div>
-              <p className="mt-2 break-words text-[12px] font-semibold leading-5 text-[#0F1B3D]">{answer.prompt}</p>
-              {selectedSession.mode!=='flashcards'&&<p className="mt-2 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">{tr("Tu respuesta:","Your answer:")}</span> {answer.selectedAnswer||tr('Sin responder','Not answered')}</p>}
-              {(selectedSession.mode !== 'casos' || !answer.correct) && <p className="mt-1 break-words text-[11px] leading-5 text-[#42506A]"><span className="font-semibold">{tr("Respuesta esperada:","Expected answer:")}</span> {answer.correctAnswer}</p>}
+              <p className="mt-2 break-words text-chico font-semibold leading-5 text-[#0F1B3D]">{answer.prompt}</p>
+              {selectedSession.mode!=='flashcards'&&<p className="mt-2 break-words text-etiqueta leading-5 text-[#42506A]"><span className="font-semibold">{tr("Tu respuesta:","Your answer:")}</span> {answer.selectedAnswer||tr('Sin responder','Not answered')}</p>}
+              {(selectedSession.mode !== 'casos' || !answer.correct) && <p className="mt-1 break-words text-etiqueta leading-5 text-[#42506A]"><span className="font-semibold">{tr("Respuesta esperada:","Expected answer:")}</span> {answer.correctAnswer}</p>}
             </article>
           )) : (
-            <p className="rounded-xl bg-[#F5F7FB] p-3 text-[12px] leading-5 text-[#42506A]">
+            <p className="rounded-xl bg-[#F5F7FB] p-3 text-chico leading-5 text-[#42506A]">
               {tr("Esta práctica se guardó con su puntuación, pero sin el detalle individual de las respuestas.","This practice was saved with a score but without individual answer details.")}
             </p>
           )}
@@ -134,16 +134,16 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
     return (
       <aside aria-labelledby="practice-history-title"
         className={`${scrollbarStyles.scrollArea} min-w-0 rounded-[18px] border border-[#E7EBF4] bg-white px-5 py-5 shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0 lg:overflow-hidden`}>
-        <h2 id="practice-history-title" className="text-[18px] font-semibold text-[#0F1B3D]">
+        <h2 id="practice-history-title" className="text-subtitulo font-semibold text-[#0F1B3D]">
           {tr("Prácticas realizadas","Completed practice")}
         </h2>
         <div role="alert" className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-5 text-center">
-          <p className="text-[13px] font-medium text-amber-900">{tr("No pudimos cargar tus prácticas.","We could not load your practice history.")}</p>
-          <p className="mt-1 text-[12px] leading-5 text-amber-800">
+          <p className="text-ui font-medium text-amber-900">{tr("No pudimos cargar tus prácticas.","We could not load your practice history.")}</p>
+          <p className="mt-1 text-chico leading-5 text-amber-800">
             {tr("Podés seguir practicando. Reintentá para consultar tus resultados anteriores.","You can keep practicing. Retry to review earlier results.")}
           </p>
           <button type="button" onClick={() => router.refresh()}
-            className="mt-3 min-h-10 rounded-lg bg-[#456DBD] px-4 text-[12px] font-semibold text-white hover:bg-[#3A5CA8]">
+            className="mt-3 min-h-10 rounded-lg bg-[#456DBD] px-4 text-chico font-semibold text-white hover:bg-[#3A5CA8]">
             {tr("Reintentar","Try again")}
           </button>
         </div>
@@ -158,21 +158,21 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
       <aside aria-labelledby="practice-history-title"
         className={`${scrollbarStyles.scrollArea} flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0 lg:overflow-hidden`}>
         <div className="shrink-0 px-4 pb-4 pt-4 sm:px-5 sm:pt-5">
-          <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
+          <h2 id="practice-history-title" className="text-subtitulo font-semibold tracking-titulo text-[#0F1B3D] sm:text-titulo-sm">
             {tr("Prácticas realizadas","Completed practice")}
           </h2>
           <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4] pb-2">
             <div className="min-w-0 pr-2">
-              <p className="text-[10px] text-slate-500">{tr("Prácticas","Practice sessions")}</p>
-              <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
+              <p className="text-etiqueta text-slate-500">{tr("Prácticas","Practice sessions")}</p>
+              <p className="mt-1 text-titulo-sm font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
             </div>
             <div className="min-w-0 px-3">
-              <p className="text-[10px] text-slate-500">{tr("Promedio","Average")}</p>
-              <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">—</p>
+              <p className="text-etiqueta text-slate-500">{tr("Promedio","Average")}</p>
+              <p className="mt-1 text-titulo-sm font-semibold leading-none tabular-nums text-[#8590A2]">—</p>
             </div>
             <div className="min-w-0 pl-3">
-              <p className="text-[10px] text-slate-500">{tr("Para repasar","To review")}</p>
-              <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
+              <p className="text-etiqueta text-slate-500">{tr("Para repasar","To review")}</p>
+              <p className="mt-1 text-titulo-sm font-semibold leading-none tabular-nums text-[#8590A2]">0</p>
             </div>
           </div>
         </div>
@@ -180,22 +180,22 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
         <div className="flex min-h-[270px] flex-1 flex-col items-center justify-center border-t border-[#EEF1F5] px-5 py-6 text-center sm:px-7 sm:py-7">
           <Image src="/evi/evi-animo.svg" alt={tr("Evi dando ánimo para empezar a practicar","Evi encouraging you to start practicing")}
             width={136} height={136} className="h-[116px] w-[116px] shrink-0 object-contain sm:h-[136px] sm:w-[136px]"/>
-          <h3 className="mt-2 text-[16px] font-semibold tracking-[-0.03em] text-[#0F1B3D] sm:text-[17px]">
+          <h3 className="mt-2 text-cuerpo font-semibold tracking-titulo text-[#0F1B3D] sm:text-subtitulo">
             {tr("Todavía no practicaste","You have not practiced yet")}
           </h3>
-          <p className="mt-2 max-w-[290px] text-[12px] leading-[1.55] text-[#526079]">
+          <p className="mt-2 max-w-[290px] text-chico leading-[1.55] text-[#526079]">
             {tr("Hacé tu primera práctica y acá vas a ver cómo te fue y qué te conviene repasar.","Complete your first practice to see your results and what to review.")}
           </p>
           {onStartFlashcards && (
             <button type="button" onClick={onStartFlashcards}
-              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#456DBD] px-4 py-2 text-[12px] font-semibold text-white shadow-[0_5px_15px_rgba(37,99,235,0.16)] transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[#456DBD] px-4 py-2 text-chico font-semibold text-white shadow-[0_5px_15px_rgba(37,99,235,0.16)] transition-colors hover:bg-[#3A5CA8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#456DBD]">
               {tr("Empezar con Flashcards","Start with flashcards")} <ArrowRight className="size-3.5" aria-hidden="true"/>
             </button>
           )}
         </div>
 
         <div className="shrink-0 border-t border-[#EEF1F5] px-4 py-4 sm:px-5">
-          <h3 className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#344054]">
+          <h3 className="text-etiqueta font-semibold uppercase tracking-etiqueta text-[#344054]">
             {tr("Qué vas a ver acá","What you will see here")}
           </h3>
           <div className="mt-3 space-y-3">
@@ -203,19 +203,19 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
               <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E8F0FD] text-[#456DBD]">
                 <ChartNoAxesColumnIncreasing className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
-              <p className="text-[11px] leading-4 text-[#344054]">{tr("Tu porcentaje de aciertos en cada práctica","Your score for each practice")}</p>
+              <p className="text-etiqueta leading-4 text-[#344054]">{tr("Tu porcentaje de aciertos en cada práctica","Your score for each practice")}</p>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#E4F8EE] text-[#389D66]">
                 <History className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
-              <p className="text-[11px] leading-4 text-[#344054]">{tr("Tus resultados, ordenados por fecha","Your results, sorted by date")}</p>
+              <p className="text-etiqueta leading-4 text-[#344054]">{tr("Tus resultados, ordenados por fecha","Your results, sorted by date")}</p>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-[10px] bg-[#F0E9FD] text-[#725AB2]">
                 <RotateCcw className="size-[16px]" strokeWidth={1.8} aria-hidden="true"/>
               </span>
-              <p className="text-[11px] leading-4 text-[#344054]">{tr("Tus errores, para repasarlos con un clic","Your mistakes, ready for review")}</p>
+              <p className="text-etiqueta leading-4 text-[#344054]">{tr("Tus errores, para repasarlos con un clic","Your mistakes, ready for review")}</p>
             </div>
           </div>
         </div>
@@ -227,21 +227,21 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
     <aside aria-labelledby="practice-history-title"
       className="flex min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#E7EBF4] bg-white shadow-[0_5px_22px_rgba(15,27,61,0.035)] lg:h-full lg:min-h-0">
       <div className="shrink-0 px-4 pt-4 sm:px-5 sm:pt-5">
-        <h2 id="practice-history-title" className="text-[18px] font-semibold tracking-[-0.035em] text-[#0F1B3D] sm:text-[19px]">
+        <h2 id="practice-history-title" className="text-subtitulo font-semibold tracking-titulo text-[#0F1B3D] sm:text-titulo-sm">
           {tr("Prácticas realizadas","Completed practice")}
         </h2>
         <div className="mt-4 grid grid-cols-3 divide-x divide-[#E7EBF4] pb-2">
           <div className="min-w-0 pr-2">
-            <p className="text-[10px] text-slate-500">{tr("Prácticas","Practice sessions")}</p>
-            <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#0F1B3D]">{sessions.length}</p>
+            <p className="text-etiqueta text-slate-500">{tr("Prácticas","Practice sessions")}</p>
+            <p className="mt-1 text-titulo-sm font-semibold leading-none tabular-nums text-[#0F1B3D]">{sessions.length}</p>
           </div>
           <div className="min-w-0 px-3">
-            <p className="text-[10px] text-slate-500">{tr("Promedio","Average")}</p>
-            <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#0F1B3D]">{sessions.length ? `${averageScore}%` : '—'}</p>
+            <p className="text-etiqueta text-slate-500">{tr("Promedio","Average")}</p>
+            <p className="mt-1 text-titulo-sm font-semibold leading-none tabular-nums text-[#0F1B3D]">{sessions.length ? `${averageScore}%` : '—'}</p>
           </div>
           <div className="min-w-0 pl-3">
-            <p className="text-[10px] text-slate-500">{tr("Para revisar","To review")}</p>
-            <p className="mt-1 text-[20px] font-semibold leading-none tabular-nums text-[#0F1B3D]">{totalToReview}</p>
+            <p className="text-etiqueta text-slate-500">{tr("Para revisar","To review")}</p>
+            <p className="mt-1 text-titulo-sm font-semibold leading-none tabular-nums text-[#0F1B3D]">{totalToReview}</p>
           </div>
         </div>
       </div>
@@ -262,16 +262,16 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
                             <Icon className="size-[17px]" strokeWidth={1.8} aria-hidden="true"/>
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[12px] font-semibold text-[#0F1B3D]">
+                            <span className="block truncate text-chico font-semibold text-[#0F1B3D]">
                               {labels[item.mode] ?? item.mode}
                             </span>
-                            <span className="mt-0.5 block text-[10px] text-slate-500">
+                            <span className="mt-0.5 block text-etiqueta text-slate-500">
                               {timeLabel(item.completedAt,english)} · {item.total} {item.mode === 'flashcards' ? tr('tarjetas','cards') : tr('preguntas','questions')}
                             </span>
                           </span>
                           <span className="shrink-0 text-right">
-                            <span className="block text-[13px] font-semibold tabular-nums text-[#0F1B3D]">{percent}%</span>
-                            <span className="block text-[10px] text-slate-500">{item.correct} {tr('de','of')} {item.total}</span>
+                            <span className="block text-ui font-semibold tabular-nums text-[#0F1B3D]">{percent}%</span>
+                            <span className="block text-etiqueta text-slate-500">{item.correct} {tr('de','of')} {item.total}</span>
                           </span>
                           <ChevronRight className="size-3.5 text-slate-400" aria-hidden="true"/>
                         </button>
@@ -281,7 +281,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
                               style={{ width: `${percent}%` }}/>
                           </div>
                           <button type="button" onClick={() => onSelectSession(item)}
-                            className="shrink-0 text-[10px] font-semibold text-[#456DBD] hover:underline">
+                            className="shrink-0 text-etiqueta font-semibold text-[#456DBD] hover:underline">
                             {item.answers?.length && incorrect ? (english ? `Review ${incorrect}` : `Revisar ${incorrect}`) : tr('Ver detalle','View details')}
                           </button>
                         </div>
@@ -294,7 +294,7 @@ export function PracticeHistoryPanel({ history, materialId, onStartFlashcards, o
             ))}
       </div>
       {sessions.length >= 500 && (
-        <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 text-[10px] text-slate-500">
+        <div className="shrink-0 border-t border-[#EFF2F7] px-4 py-2 text-etiqueta text-slate-500">
           {tr("Se muestran hasta 500 registros recientes.","Showing up to 500 recent records.")}
         </div>
       )}

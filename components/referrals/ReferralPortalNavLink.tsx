@@ -45,7 +45,7 @@ export function ReferralPortalNavLink({
     <Link
       href="/referidos"
       title={collapsed ? (english ? 'Referrals' : 'Referidos') : undefined}
-      className={`group flex items-center rounded-lg ${compact ? 'text-[12px]' : 'text-[13px]'} font-medium transition-colors duration-150 ${
+      className={`group flex items-center rounded-lg ${compact ? 'text-chico' : 'text-ui'} font-medium transition-colors duration-150 ${
         active
           ? 'bg-blue-50/80 text-blue-700'
           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'

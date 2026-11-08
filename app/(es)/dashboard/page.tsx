@@ -142,9 +142,9 @@ export default async function DashboardPage({
           ? 'mx-auto flex min-h-0 w-full max-w-[1240px] flex-1 flex-col'
           : 'mx-auto w-full max-w-[1240px]'}>
           {isQaAccount(user) ? (
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[12.5px]">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-chico">
               <span className="font-semibold text-indigo-900">{t("Cuenta de pruebas de Evaluo")}</span>
-              <Link href="/qa" className="font-bold text-indigo-700 underline underline-offset-2">
+              <Link href="/qa" className="font-semibold text-indigo-700 underline underline-offset-2">
                 {t("Reiniciar onboarding")}
               </Link>
             </div>
@@ -156,16 +156,16 @@ export default async function DashboardPage({
                   <Sparkles className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black tracking-[0.13em] text-blue-700 uppercase">
+                  <p className="text-etiqueta font-semibold tracking-etiqueta text-blue-700 uppercase">
                     {t("Plan de estudio · Derecho Sucesorio · Parcial 2")}
                   </p>
-                  <h1 className="mt-1 text-[16px] font-bold tracking-[-0.035em] text-slate-950">
+                  <h1 className="mt-1 text-cuerpo font-semibold tracking-titulo text-slate-950">
                     {t("Subí tus apuntes para empezar con el plan que armaste")}
                   </h1>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                  <p className="mt-1 text-ui leading-5 text-slate-600">
                     {t("La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, tarjetas y práctica.")}
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
+                  <div className="mt-3 flex flex-wrap gap-2 text-etiqueta font-semibold text-slate-600">
                     {formattedExamDate ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-blue-100">
                         <CalendarDays className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
