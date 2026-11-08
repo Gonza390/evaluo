@@ -7,6 +7,8 @@ import { EmptyStudySpace } from '@/components/dashboard/empty-study-space';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { getStudentMaterialRoute } from '@/lib/routes';
+import { HomeSpace } from '@/components/dashboard/home-space';
+import type { HomeView } from '@/lib/dashboard-home-model';
 
 export type MaeveStudySpaceProps = {
   materials: StudentMaterial[];
@@ -20,6 +22,9 @@ export type MaeveStudySpaceProps = {
   initialOpen?: boolean;
   pendingReinforcementCount?: Promise<number>;
   nextStudyAction?: Promise<DashboardNextStudyAction | null>;
+  /** Home con Agenda; si falta, se muestra la home anterior. */
+  homeView?: HomeView | null;
+  today?: string;
 };
 
 /**
@@ -38,6 +43,8 @@ export function MaeveStudySpace({
   initialOpen = false,
   pendingReinforcementCount,
   nextStudyAction,
+  homeView = null,
+  today = '',
 }: MaeveStudySpaceProps) {
   const primaryMaterial =
     materials.find((material) => material.processing_status === 'ready') ?? materials[0] ?? null;
@@ -58,6 +65,15 @@ export function MaeveStudySpace({
     >
       {materials.length === 0 ? (
         <EmptyStudySpace firstName={firstName} />
+      ) : homeView && primaryMaterial && primaryMaterialReady && today ? (
+        <HomeSpace
+          view={homeView}
+          today={today}
+          materialId={primaryMaterial.id}
+          materialTitle={primaryMaterial.title?.trim() || primaryMaterial.file_name || 'tu apunte'}
+        >
+          <StudentMaterialsWorkspace initialMaterials={materials} />
+        </HomeSpace>
       ) : (
       <MaeveDashboardChrome
         materialsCount={materials.length}

@@ -17,6 +17,7 @@ import { logError } from '@/lib/observability';
 import { accountAppLocale, parseAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 import { getSessionUser } from '@/lib/auth-session';
+import { argentinaToday, getDashboardHomeView } from '@/lib/dashboard-home';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -102,6 +103,14 @@ export default async function DashboardPage({
     // Preguntar los datos académicos sólo después de tener un PDF listo.
     // El formulario de carga inicial y la guía del primer PDF no se interrumpen.
     const hasReadyMaterial = materials.some((material) => material.processing_status === 'ready');
+    const firstName = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.nombre]
+      .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      ?.trim().split(/\s+/)[0];
+    // Home con Agenda: por ahora solo en español; en inglés y sin PDF listo sigue la home anterior.
+    const today = argentinaToday();
+    const homeViewPromise = locale !== 'en' && hasReadyMaterial && openUpload !== '1'
+      ? getDashboardHomeView(supabase, user.id, materials, firstName)
+      : Promise.resolve(null);
     const profileContext = locale !== 'en' && hasReadyMaterial && openUpload !== '1'
       ? await supabase
           .from('profiles')
@@ -109,6 +118,7 @@ export default async function DashboardPage({
           .eq('id', user.id)
           .maybeSingle()
       : null;
+    const homeView = await homeViewPromise;
     const needsAcademicContext = Boolean(
       profileContext && !profileContext.error &&
       (!profileContext.data?.universidad_id || !profileContext.data?.carrera_id)
@@ -186,11 +196,7 @@ export default async function DashboardPage({
 
           <LazyMaeveStudySpace
             materials={materials}
-            firstName={(() => {
-              const candidate = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.nombre]
-                .find((value): value is string => typeof value === 'string' && value.trim().length > 0);
-              return candidate?.trim().split(/\s+/)[0];
-            })()}
+            firstName={firstName}
             initialUniversidadId={resolvedUniversidadId}
             initialCarreraId={resolvedCarreraId}
             initialMateriaId={uploadMateriaId}
@@ -200,6 +206,8 @@ export default async function DashboardPage({
             initialOpen={openUpload === '1' && source !== 'signup-direct'}
             pendingReinforcementCount={pendingReinforcementCount}
             nextStudyAction={nextStudyAction}
+            homeView={homeView}
+            today={today}
           />
           {needsAcademicContext ? (
             <LazyAcademicProfileReminder
