@@ -221,7 +221,7 @@ assertIncludesAll('app/sitemap.ts', [
   '/funciones/crear-mapa-mental-desde-pdf',
 ]);
 
-assertIncludesAll('app/(es)/explorar/materia/[id]/page.tsx', [
+assertIncludesAll('app/(es)/explorar/materia/[id]/materia-page.tsx', [
   'buildSeoEntitySlug',
   'parseSeoEntitySlug',
   'canonicalHref',
@@ -234,7 +234,7 @@ assertIncludesAll('app/(es)/explorar/materia/[id]/page.tsx', [
   'MateriaPracticeLinks',
 ]);
 
-const materiaPage = source('app/(es)/explorar/materia/[id]/page.tsx');
+const materiaPage = source('app/(es)/explorar/materia/[id]/materia-page.tsx');
 assert.ok(
   !materiaPage.includes('SeoBreadcrumbs'),
   'materia page must not render the redundant visual SEO breadcrumb'

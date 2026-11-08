@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { isTransientSimulatorCatalogError } from '../lib/simulator-catalog-retry.ts';
 
 const preguntero = readFileSync('lib/data/preguntero.ts', 'utf8');
-const explorer = readFileSync('app/(es)/explorar/materia/[id]/page.tsx', 'utf8');
+const explorer = readFileSync('app/(es)/explorar/materia/[id]/materia-page.tsx', 'utf8');
 assert.ok(preguntero.includes("['preguntero-materia-stats-v1']"));
 assert.ok(preguntero.includes('revalidate: 600'));
 assert.ok(preguntero.includes('return cachedPregunteroMateriaStats(materiaId)'));
