@@ -8,6 +8,7 @@ import {
   getMateriaCacheRewritePath,
 } from '@/lib/explorar-materia-cache';
 import { isTerminalAuthSessionError } from '@/lib/auth-session-errors';
+import { previewLoginCanonicalUrl } from '@/lib/auth/preview-login-origin';
 import {
   checkProxyRateLimit,
   getClientIpFromRequest,
@@ -165,6 +166,22 @@ export async function proxy(request: NextRequest) {
 
   const isLoginRoute = pathname.startsWith('/login') || pathname === '/en/login';
   const isHomeRoute = pathname === '/';
+
+  if (pathname === '/login' || pathname === '/en/login') {
+    // Previews de master: el login de Google tiene que empezar en el host
+    // canónico del Preview (las cookies no pasan entre hosts vercel.app). Antes
+    // lo hacía la página con headers(), lo que la volvía dinámica.
+    const previewDestination = previewLoginCanonicalUrl({
+      host: request.headers.get('host') ?? request.nextUrl.host,
+      vercelEnvironment: process.env.VERCEL_ENV,
+      branch: process.env.VERCEL_GIT_COMMIT_REF,
+      pathname,
+      searchParams: Object.fromEntries(request.nextUrl.searchParams),
+    });
+    if (previewDestination) {
+      return persistReferralCookie(request, NextResponse.redirect(previewDestination));
+    }
+  }
 
   if (isLoginRoute) {
     const requestedNext =
