@@ -16,6 +16,13 @@ import { createPublicClient } from '@/lib/supabase-public';
 
 export const revalidate = 600;
 
+// Sin rutas prearmadas en el build: cada página se genera en la primera visita
+// y queda en la caché de Vercel (ISR). Sin esto, la ruta dinámica se renderiza
+// en cada pedido aunque declare revalidate.
+export function generateStaticParams() {
+  return [];
+}
+
 type PublicCareerPracticeRow = {
   carrera_id: string | null;
   question_count: number | null;

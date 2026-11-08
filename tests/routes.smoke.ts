@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { appendPregunteroAttribution } from '../lib/preguntero-attribution.ts';
+import {
+  appendPregunteroAttribution,
+  mergeAttributionFromSearch,
+} from '../lib/preguntero-attribution.ts';
 import {
   INVALID_SEO_ENTITY_ID,
   buildSeoEntitySlug,
@@ -141,9 +144,15 @@ const dashboardChromeSource = readFileSync(
 );
 const exploreClientSource = readFileSync(resolve('app/(es)/explorar/explorar-client.tsx'), 'utf8');
 const loginSource = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
-const simulatorLegacySource = readFileSync(resolve('components/simulador/SimuladorExamenLegacy.tsx'), 'utf8');
+const simulatorLegacySource = readFileSync(
+  resolve('components/simulador/SimuladorExamenLegacy.tsx'),
+  'utf8'
+);
 const profileCompletionSource = readFileSync(resolve('app/(es)/completar-perfil/page.tsx'), 'utf8');
-const pdfUploadShellSource = readFileSync(resolve('components/dashboard/pdf-first-upload-shell.tsx'), 'utf8');
+const pdfUploadShellSource = readFileSync(
+  resolve('components/dashboard/pdf-first-upload-shell.tsx'),
+  'utf8'
+);
 const vercelConfigSource = readFileSync(resolve('vercel.json'), 'utf8');
 const visionExtractSource = readFileSync(
   resolve('lib/student-materials/vision-extract.ts'),
@@ -199,11 +208,20 @@ assert.doesNotMatch(clientLayoutSource, /getAppShellBootstrap/);
 const performanceBudget = readFileSync(resolve('performance-budget.json'), 'utf8');
 const performanceScript = readFileSync(resolve('scripts/check-performance-budget.mjs'), 'utf8');
 const ciSource = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
-const adminHomeActionsSource = readFileSync(resolve('app/(es)/administrador/admin-home-actions.ts'), 'utf8');
-const adminMonetizationActionsSource = readFileSync(resolve('app/(es)/administrador/monetization-dashboard-actions.ts'), 'utf8');
+const adminHomeActionsSource = readFileSync(
+  resolve('app/(es)/administrador/admin-home-actions.ts'),
+  'utf8'
+);
+const adminMonetizationActionsSource = readFileSync(
+  resolve('app/(es)/administrador/monetization-dashboard-actions.ts'),
+  'utf8'
+);
 const adminLoadingSource = readFileSync(resolve('app/(es)/administrador/loading.tsx'), 'utf8');
 const rootLayoutSource = readFileSync(resolve('app/(es)/layout.tsx'), 'utf8');
-const seoLandingSource = readFileSync(resolve('app/(es)/landings/estudiar/[materia]/page.tsx'), 'utf8');
+const seoLandingSource = readFileSync(
+  resolve('app/(es)/landings/estudiar/[materia]/page.tsx'),
+  'utf8'
+);
 assert.match(performanceBudget, /"\/dashboard"/);
 assert.match(performanceBudget, /"\/administrador"/);
 assert.match(performanceScript, /gzipSync/);
@@ -227,7 +245,10 @@ assert.match(rootLayoutSource, /@vercel\/speed-insights\/next/);
 assert.match(rootLayoutSource, /<SpeedInsights\s*\/>/);
 assert.match(seoLandingSource, /generateStaticParams\(\)[\s\S]*return \[\]/);
 assert.match(seoLandingSource, /loadStudyLandingData/);
-assert.match(clientLayoutUiSource, /\{ label: messages.navigation.home, href: locale === 'en' \? '\/en' : '\/', icon: Home \}/);
+assert.match(
+  clientLayoutUiSource,
+  /\{ label: messages.navigation.home, href: locale === 'en' \? '\/en' : '\/', icon: Home \}/
+);
 assert.match(
   clientLayoutUiSource,
   /\{ label: messages.navigation.questionBanks, href: locale === 'en' \? '\/en\/pdf-to-quiz' : '\/pregunteros', icon: GraduationCap \}/
@@ -284,10 +305,7 @@ for (const source of [universityPageSource, universityCareerListSource, materiaL
   assert.doesNotMatch(source, /#7C879C/i);
 }
 assert.match(materiaLoadingSource, /bg-slate-100/);
-assert.doesNotMatch(
-  materiaLoadingSource,
-  /animate-pulse rounded-full bg-white(?:["\s]|$)/
-);
+assert.doesNotMatch(materiaLoadingSource, /animate-pulse rounded-full bg-white(?:["\s]|$)/);
 assert.match(materiaStudyHomeSource, /bg-primary hover:bg-primary\/90/);
 assert.match(materiaStudyHomeSource, /border border-blue-200 bg-white/);
 
@@ -309,7 +327,9 @@ const sharedPdfThumbnail = readFileSync(resolve('app/api/pdf-thumbnail/route.ts'
 const materialLoginForm = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
 const oauthCallback = readFileSync(resolve('app/(es)/auth/callback/route.ts'), 'utf8');
 const securedStudyRls = readFileSync(
-  resolve('supabase/migrations/20261021091000_require_auth_for_shared_student_material_content.sql'),
+  resolve(
+    'supabase/migrations/20261021091000_require_auth_for_shared_student_material_content.sql'
+  ),
   'utf8'
 );
 const authGuardPosition = protectedPdfPage.indexOf('if (!user) {');
@@ -341,7 +361,11 @@ assert.match(materialLoginForm, /emailRedirectTo/);
 // OAuth conserva el enlace al material a través de nextPath validado.
 assert.match(oauthCallback, /requestUrl\.searchParams\.get\('next'\)/);
 assert.match(oauthCallback, /NextResponse\.redirect/);
-for (const table of ['student_material_summaries', 'student_material_glossaries', 'student_material_chunks']) {
+for (const table of [
+  'student_material_summaries',
+  'student_material_glossaries',
+  'student_material_chunks',
+]) {
   assert.match(securedStudyRls, new RegExp(`on public\\.${table}\\nfor select\\nto authenticated`));
 }
 assert.equal((securedStudyRls.match(/to authenticated/g) ?? []).length, 3);
@@ -350,12 +374,64 @@ console.log('Route smoke tests passed.');
 
 // Las páginas con PublicLayout (/landings/*, /resumenes/*) deben poder cachearse:
 // el header público no puede leer cookies ni llamar a Auth en el servidor.
-const publicHeaderActionsSource = readFileSync(resolve('components/public-header-actions.tsx'), 'utf8');
+const publicHeaderActionsSource = readFileSync(
+  resolve('components/public-header-actions.tsx'),
+  'utf8'
+);
 assert.match(publicHeaderActionsSource, /^'use client';/);
-assert.doesNotMatch(publicHeaderActionsSource, /from '@\/lib\/supabase-server'|await [a-z]+\.auth\./);
+assert.doesNotMatch(
+  publicHeaderActionsSource,
+  /from '@\/lib\/supabase-server'|await [a-z]+\.auth\./
+);
 assert.doesNotMatch(seoLandingSource, /force-dynamic/);
 assert.equal(
   existsSync(resolve('app/(es)/landings/estudiar/[materia]/layout.tsx')),
   false,
   'La landing SEO usa ISR (revalidate = 600); no volver a forzarla dinámica desde un layout.'
+);
+
+// Atribución en el navegador: la página cacheada no lee searchParams.
+assert.equal(
+  mergeAttributionFromSearch(
+    '/simulador/m/1?acq=preguntero_landing_v1',
+    '?utm_source=google&utm_campaign=seo&acq=otro&foo=1'
+  ),
+  '/simulador/m/1?acq=preguntero_landing_v1&utm_source=google&utm_campaign=seo'
+);
+assert.equal(mergeAttributionFromSearch('/simulador/m/1?acq=x', ''), '/simulador/m/1?acq=x');
+assert.equal(
+  mergeAttributionFromSearch('/simulador/m/1?utm_source=own', '?utm_source=google'),
+  '/simulador/m/1?utm_source=own'
+);
+
+// Rutas SEO con ISR: generateStaticParams y sin searchParams en el servidor.
+for (const route of [
+  'app/(es)/pregunteros/[materia]/page.tsx',
+  'app/(es)/pregunteros/[materia]/parcial/[parcial]/page.tsx',
+  'app/(es)/resumenes/[materia]/page.tsx',
+  'app/(es)/estudiar/[universidad]/[carrera]/page.tsx',
+  'app/(es)/simulador-parcial/[carrera]/page.tsx',
+]) {
+  const source = readFileSync(resolve(route), 'utf8');
+  assert.match(
+    source,
+    /export function generateStaticParams\(\)/,
+    `${route} necesita generateStaticParams para ISR`
+  );
+  assert.doesNotMatch(
+    source,
+    /searchParams\s*[:}]/,
+    `${route} no debe leer searchParams (la vuelve dinámica)`
+  );
+}
+const sucesorioParcial2 = readFileSync(
+  resolve(
+    'app/(es)/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/2/page.tsx'
+  ),
+  'utf8'
+);
+assert.doesNotMatch(sucesorioParcial2, /searchParams\s*[:}]/);
+assert.match(
+  readFileSync(resolve('components/marketing/preguntero-practice-hero.tsx'), 'utf8'),
+  /preserveAttribution/
 );
