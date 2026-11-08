@@ -5,14 +5,15 @@ import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 const alternates = hreflangAlternates('compare-chatgpt', 'en');
 
 export const metadata: Metadata = {
-  title: 'ChatGPT Alternative for Studying: Evaluo vs ChatGPT for Exams',
-  description: "Using ChatGPT to study? Compare Study mode with Evaluo's topic-by-topic practice, results and review built from your own PDF notes.",
+  title: 'Free ChatGPT Alternative for Studying Your PDFs',
+  description:
+    "Using ChatGPT to study? Compare Study mode with Evaluo's topic-by-topic practice built from your own PDF notes, and try it free. No sign-up to choose a file.",
   alternates,
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    title: 'ChatGPT Alternative for Studying: Evaluo vs ChatGPT for Exams | Evaluo',
+    title: 'Free ChatGPT Alternative for Studying Your PDFs | Evaluo',
     description: 'Compare ChatGPT and Evaluo for studying a PDF and preparing for exams.',
     url: alternates.canonical,
   },

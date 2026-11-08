@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, BookOpen, CheckCircle2, FileText, Layers3, Scale, Target, UploadCloud } from 'lucide-react';
+import { ArrowRight, BookOpen, FileText, Layers3, Scale, Target, UploadCloud } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
@@ -8,7 +8,6 @@ import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { SeoComparisonProductDemo } from '@/components/marketing/seo-comparison-product-demo';
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
-import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { COMPARISONS_EN } from '@/components/marketing/seo-comparison-content-en';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -292,23 +291,15 @@ export function SeoComparisonLanding({ comparison, locale = 'es' }: { comparison
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600">{c.intro}</p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <TrackedLink href={uploaderAnchor} eventName="cta_click" payload={{ location: tracking + '_hero', cta_name: 'elegir_pdf', destination: uploaderAnchor }} className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                <TrackedLink href={uploaderAnchor} eventName="cta_click" payload={{ location: tracking + '_hero', cta_name: 'elegir_pdf', destination: uploaderAnchor }} className="lg:hidden from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
                   <UploadCloud className="h-4 w-4" aria-hidden="true" />{t.tryCta}<ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </TrackedLink>
                 <Link href={'#' + t.tableId} className="inline-flex min-h-12 items-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:border-blue-300 hover:text-blue-700">{t.seeComparison}</Link>
               </div>
               <p className="mt-6 text-xs leading-6 text-slate-500">{t.byline(c.name)}</p>
             </div>
-            <div className="rounded-[28px] border border-blue-100 bg-white p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] sm:p-8">
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><BookOpen className="h-5 w-5" aria-hidden="true" /></span>
-                <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">{t.decisionKicker}</p><h2 className="text-lg font-bold text-slate-950">{t.decisionTitle}</h2></div>
-              </div>
-              <div className="mt-6 space-y-5">
-                <div className="flex gap-3"><FileText className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" /><div><p className="font-bold text-slate-950">{t.exploreTitle}</p><p className="mt-1 text-sm leading-7 text-slate-600">{t.exploreText(c.name)}</p></div></div>
-                <div className="flex gap-3"><Target className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" /><div><p className="font-bold text-slate-950">{t.practiceTitle}</p><p className="mt-1 text-sm leading-7 text-slate-600">{t.practiceText}</p></div></div>
-              </div>
-              <p className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-sm leading-6 text-slate-700">{c.fact}</p>
+            <div id={t.uploaderId} className="scroll-mt-24">
+              <PdfFirstLandingUploader trackingLocation={tracking + '_hero'} sourceKey={'compare-' + comparison} locale={english ? 'en' : undefined} market={english ? 'en' : undefined} />
             </div>
           </div>
         </section>
@@ -377,19 +368,24 @@ export function SeoComparisonLanding({ comparison, locale = 'es' }: { comparison
           </div>
         </section>
 
-        <section id={t.uploaderId} className="scroll-mt-24 border-b border-slate-100 py-16 sm:py-20">
+        <section className="border-b border-slate-100 py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[0.8fr_1.2fr]">
-            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.upload, t.uploadKicker)}</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.uploadTitle}</h2><p className="mt-4 text-sm leading-7 text-slate-600">{t.uploadText}</p><p className="mt-5 flex items-center gap-2 text-xs text-slate-600"><CheckCircle2 className="h-4 w-4 text-blue-600" aria-hidden="true" />{t.uploadNote}</p></div>
-            {english ? (
-              <div className="rounded-[24px] border border-blue-100 bg-blue-50/40 p-8 text-center">
-                <UploadCloud className="mx-auto h-8 w-8 text-blue-700" aria-hidden="true" />
-                <HomePdfPickerButton locale="en" location={tracking} ctaName="choose_pdf" className="from-brand to-brand-2 mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white">
-                  {t.uploadButton}
-                </HomePdfPickerButton>
+            <div><p className="text-xs font-bold uppercase tracking-[0.15em] text-blue-700">{kicker(n.upload, t.uploadKicker)}</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{t.uploadTitle}</h2><p className="mt-4 text-sm leading-7 text-slate-600">{t.uploadText}</p>
+              <TrackedLink href={uploaderAnchor} eventName="cta_click" payload={{ location: tracking + '_decision', cta_name: 'elegir_pdf', destination: uploaderAnchor }} className="from-brand to-brand-2 mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white">
+                <UploadCloud className="h-4 w-4" aria-hidden="true" />{t.uploadButton}
+              </TrackedLink>
+            </div>
+            <div className="rounded-[28px] border border-blue-100 bg-white p-6 shadow-[0_25px_65px_rgba(15,23,42,0.08)] sm:p-8">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><BookOpen className="h-5 w-5" aria-hidden="true" /></span>
+                <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-blue-700">{t.decisionKicker}</p><h2 className="text-lg font-bold text-slate-950">{t.decisionTitle}</h2></div>
               </div>
-            ) : (
-              <PdfFirstLandingUploader trackingLocation={tracking} sourceKey={'compare-' + comparison} />
-            )}
+              <div className="mt-6 space-y-5">
+                <div className="flex gap-3"><FileText className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" /><div><p className="font-bold text-slate-950">{t.exploreTitle}</p><p className="mt-1 text-sm leading-7 text-slate-600">{t.exploreText(c.name)}</p></div></div>
+                <div className="flex gap-3"><Target className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" /><div><p className="font-bold text-slate-950">{t.practiceTitle}</p><p className="mt-1 text-sm leading-7 text-slate-600">{t.practiceText}</p></div></div>
+              </div>
+              <p className="mt-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-sm leading-6 text-slate-700">{c.fact}</p>
+            </div>
           </div>
         </section>
 

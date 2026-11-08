@@ -6,13 +6,14 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/comparar/evaluo-vs-notebooklm';
 
 export const metadata: Metadata = {
-  title: "Alternativa a NotebookLM para estudiar PDF",
-  description: "¿Buscás una alternativa a NotebookLM para estudiar? Compará fuentes, flashcards, cuestionarios y práctica por tema con PDFs en Evaluo.",
+  title: 'Alternativa a NotebookLM para estudiar tus PDF, gratis',
+  description:
+    "¿Buscás una alternativa a NotebookLM para estudiar? Compará cuestionarios, flashcards y práctica por tema, y probá Evaluo gratis: elegís tu PDF sin registrarte.",
   alternates: hreflangAlternates('compare-notebooklm', 'es'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: "Alternativa a NotebookLM para estudiar PDF | Evaluo",
+    title: 'Alternativa a NotebookLM para estudiar tus PDF, gratis | Evaluo',
     description: 'Comparación actualizada: ambos permiten practicar; elegí según tu necesidad de explorar fuentes o estudiar tema por tema.',
     url: toAbsoluteUrl(path),
   },

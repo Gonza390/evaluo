@@ -6,6 +6,10 @@ export function buildOrganizationJsonLd() {
     '@type': 'Organization',
     '@id': toAbsoluteUrl('/#organization'),
     name: SITE_NAME,
+    // Hay otras empresas llamadas "Evaluo" (plataformas de tests, startups europeas): los nombres
+    // alternativos y el eslogan ayudan a Google a distinguir esta marca en la búsqueda "evaluo".
+    alternateName: ['Evaluo App', 'evaluoapp'],
+    slogan: 'Estudiá tus apuntes con IA y prepará tus exámenes',
     url: toAbsoluteUrl('/'),
     logo: toAbsoluteUrl('/icon.png'),
     address: {
@@ -33,11 +37,30 @@ export function buildWebsiteJsonLd() {
     '@type': 'WebSite',
     '@id': toAbsoluteUrl('/#website'),
     name: SITE_NAME,
-    alternateName: 'Evaluo Argentina',
+    alternateName: ['Evaluo App', 'evaluoapp.com'],
+    inLanguage: ['es', 'en'],
     url: toAbsoluteUrl('/'),
     publisher: {
       '@id': toAbsoluteUrl('/#organization'),
     },
+  };
+}
+
+/** La plataforma como aplicación web educativa, con su plan gratuito. Sin valoraciones: solo datos verificables. */
+export function buildSoftwareApplicationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    '@id': toAbsoluteUrl('/#application'),
+    name: SITE_NAME,
+    url: toAbsoluteUrl('/'),
+    description:
+      'Plataforma educativa web para estudiar PDF y Word con IA, crear resúmenes por temas, practicar, revisar errores y planificar exámenes.',
+    applicationCategory: 'EducationalApplication',
+    operatingSystem: 'Web',
+    inLanguage: ['es', 'en'],
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Plan gratuito' },
+    publisher: { '@id': toAbsoluteUrl('/#organization') },
   };
 }
 

@@ -6,14 +6,14 @@ import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { HomeFunnelTracker } from '@/components/marketing/home-funnel-tracker';
 import { HOME_REDESIGN_FAQS_EN } from '@/components/marketing/home-redesign-faqs';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
+import { buildFaqJsonLd, buildOrganizationJsonLd, buildSoftwareApplicationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 import '../../(es)/home-redesign.css';
 
 export const metadata: Metadata = {
   // Keyword principal del mercado EN: "AI study assistant".
   title: { absolute: 'AI Study Assistant: Study Your Notes and Prep for Exams | Evaluo' },
   description:
-    'Upload your PDF or Word notes and study with AI: topic summaries, flashcards, practice questions and progress tracking to prepare for your exams.',
+    'Evaluo is an AI study assistant: upload your PDF or Word notes and get topic summaries, flashcards and practice questions to prepare for exams. Free to start.',
   alternates: hreflangAlternates('home', 'en'),
   robots: { index: true, follow: true },
   openGraph: {
@@ -35,7 +35,7 @@ export default function EnglishHome() {
       <a href="#contenido" className="reference-skip-link">Skip to content</a>
       <MarketingAnalyticsSlot />
       <HomeFunnelTracker />
-      <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(HOME_REDESIGN_FAQS_EN)]} />
+      <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildSoftwareApplicationJsonLd(), buildFaqJsonLd(HOME_REDESIGN_FAQS_EN)]} />
       <main id="contenido">
         <HomeRedesign primaryHref={signupHref} locale="en" />
       </main>
