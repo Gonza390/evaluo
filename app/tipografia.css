@@ -9,9 +9,10 @@
  *   text-titulo-sm  20px  títulos de sección
  *   text-titulo     24px  título de pantalla (h1 del dashboard)
  *   text-destacado  30px  números y títulos destacados
+ *   text-saludo     40px  solo el saludo de la home (uno por pantalla; en teléfono usar text-destacado)
  *
  * Pesos: font-normal (texto corrido), font-medium (interfaz), font-semibold (títulos).
- * Espaciado: tracking-titulo (títulos ≥ 20px), tracking-etiqueta (etiquetas en mayúsculas).
+ * Espaciado: tracking-titulo (títulos ≥ 20px), tracking-saludo (text-saludo), tracking-etiqueta (etiquetas en mayúsculas).
  */
 @theme {
   --text-etiqueta: 11px;
@@ -30,7 +31,10 @@
   --text-titulo--line-height: 1.2;
   --text-destacado: 30px;
   --text-destacado--line-height: 1.15;
+  --text-saludo: 40px;
+  --text-saludo--line-height: 1.08;
 
   --tracking-titulo: -0.03em;
   --tracking-etiqueta: 0.12em;
+  --tracking-saludo: -0.04em;
 }
