@@ -67,7 +67,10 @@ assert.deepEqual(parseSeoEntitySlug('aprender-en-el-siglo-21--a37a41c2'), {
   labelSlug: 'aprender-en-el-siglo-21',
 });
 
-const materiaPageSource = readFileSync(resolve('app/(es)/explorar/materia/[id]/page.tsx'), 'utf8');
+const materiaPageSource = readFileSync(
+  resolve('app/(es)/explorar/materia/[id]/materia-page.tsx'),
+  'utf8'
+);
 const contentSignalsSource = readFileSync(resolve('lib/seo-content-signals.ts'), 'utf8');
 const notFoundSource = readFileSync(resolve('app/(es)/not-found.tsx'), 'utf8');
 const pregunteroSource = readFileSync(resolve('app/(es)/pregunteros/[materia]/page.tsx'), 'utf8');
@@ -431,3 +434,39 @@ assert.match(
   readFileSync(resolve('components/marketing/preguntero-practice-hero.tsx'), 'utf8'),
   /preserveAttribution/
 );
+
+// /explorar/materia/[id]: sin carreraId/tab/modulo/creador va a la variante cacheada.
+{
+  const { getMateriaCacheRewritePath, getMateriaCacheDirectRedirectPath } =
+    await import('../lib/explorar-materia-cache.ts');
+  const q = (s: string) => new URLSearchParams(s);
+  assert.equal(
+    getMateriaCacheRewritePath('/explorar/materia/derecho--abc', q('')),
+    '/explorar/materia-cache/derecho--abc'
+  );
+  assert.equal(
+    getMateriaCacheRewritePath('/explorar/materia/derecho--abc/', q('utm_source=google&ref=X1')),
+    '/explorar/materia-cache/derecho--abc'
+  );
+  for (const key of ['carreraId', 'tab', 'modulo', 'creador']) {
+    assert.equal(getMateriaCacheRewritePath('/explorar/materia/derecho--abc', q(`${key}=x`)), null);
+  }
+  assert.equal(
+    getMateriaCacheRewritePath('/explorar/materia/derecho--abc', q('tab=')),
+    '/explorar/materia-cache/derecho--abc'
+  );
+  assert.equal(getMateriaCacheRewritePath('/explorar/materia/a/b', q('')), null);
+  assert.equal(getMateriaCacheRewritePath('/explorar', q('')), null);
+  assert.equal(
+    getMateriaCacheDirectRedirectPath('/explorar/materia-cache/derecho--abc'),
+    '/explorar/materia/derecho--abc'
+  );
+  assert.equal(getMateriaCacheDirectRedirectPath('/explorar/materia/derecho--abc'), null);
+
+  const cachedMateriaRoute = readFileSync(
+    resolve('app/(es)/explorar/materia-cache/[id]/page.tsx'),
+    'utf8'
+  );
+  assert.match(cachedMateriaRoute, /export function generateStaticParams\(\)/);
+  assert.doesNotMatch(cachedMateriaRoute, /searchParams\s*[?:}]/);
+}
