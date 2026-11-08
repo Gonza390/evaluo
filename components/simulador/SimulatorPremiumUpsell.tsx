@@ -46,7 +46,7 @@ export function SimulatorPremiumUpsell({
                 : 'rounded-[14px] border border-[#e3e8f1] bg-white p-3.5 sm:px-[18px] sm:py-4'
             }
           >
-            <p className="line-clamp-2 text-sm leading-snug font-semibold text-[#14213d] sm:text-[15px]">
+            <p className="line-clamp-2 text-cuerpo leading-snug font-semibold text-[#14213d] sm:text-cuerpo">
               {question}
             </p>
             <div className="mt-1 blur-[2.5px]">
@@ -71,20 +71,20 @@ export function SimulatorPremiumUpsell({
           height={64}
           className="size-14 object-contain sm:size-16"
         />
-        <span className="inline-flex items-center gap-[7px] rounded-full border border-[#cfdcf5] bg-white px-3 py-1.5 text-xs font-bold text-[#2a5193]">
+        <span className="inline-flex items-center gap-[7px] rounded-full border border-[#cfdcf5] bg-white px-3 py-1.5 text-chico font-semibold text-[#2a5193]">
           <LockKeyhole className="size-[13px]" aria-hidden="true" />
           Se desbloquea con Premium
         </span>
-        <h4 className="mt-0.5 text-[19px] leading-tight font-extrabold tracking-[-0.01em] text-[#14213d] sm:text-[21px]">
+        <h4 className="mt-0.5 text-titulo-sm leading-tight font-semibold tracking-[-0.01em] text-[#14213d] sm:text-titulo-sm">
           {remaining === 1 ? 'Te falta 1 explicación' : `Te faltan ${remaining} explicaciones`}
         </h4>
-        <p className="max-w-[380px] text-sm leading-normal text-[#4f5b6e]">
+        <p className="max-w-[380px] text-cuerpo leading-normal text-[#4f5b6e]">
           Mirá por qué fallaste cada respuesta y cómo hacerlo bien en el parcial.
         </p>
         <button
           type="button"
           onClick={onUpgrade}
-          className="mt-1 flex min-h-12 w-full max-w-[320px] items-center justify-center rounded-xl bg-[#3c6cba] text-[15px] font-bold text-white transition hover:bg-[#2a5193] focus-visible:ring-2 focus-visible:ring-[#3c6cba] focus-visible:ring-offset-2 focus-visible:outline-none sm:min-h-11 sm:max-w-[280px]"
+          className="mt-1 flex min-h-12 w-full max-w-[320px] items-center justify-center rounded-xl bg-[#3c6cba] text-cuerpo font-semibold text-white transition hover:bg-[#2a5193] focus-visible:ring-2 focus-visible:ring-[#3c6cba] focus-visible:ring-offset-2 focus-visible:outline-none sm:min-h-11 sm:max-w-[280px]"
         >
           Pasar a Premium
         </button>

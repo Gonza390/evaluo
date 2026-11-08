@@ -1,10 +1,10 @@
 /* ── Pricing (rediseño nov-2026) ─────────────────────────────────────────
    Se usa en /pricing y en /dashboard/premium ("Mejorar mi plan").
-   Acento índigo aprobado en el diseño (#4A63E7) con tintes derivados.
+   Acento índigo aprobado en el diseño (#576DC1) con tintes derivados.
    Excepción deliberada a la tonalidad general (claude/tonalidad-colores):
    el usuario pidió conservar el color que aprobó para esta pantalla. */
 .pricing-v2 {
-  --pv-accent: #4a63e7;
+  --pv-accent: #576dc1;
   --pv-tint: color-mix(in srgb, var(--pv-accent) 8%, white);
   --pv-card: color-mix(in srgb, var(--pv-accent) 4%, white);
   --pv-border: color-mix(in srgb, var(--pv-accent) 35%, white);

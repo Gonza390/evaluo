@@ -78,19 +78,19 @@ export function EnglishCreemPaymentResult({ attemptId }: { attemptId: string | n
     {state === 'active' ? <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" aria-hidden="true" />
       : state === 'failed' || state === 'error' ? <XCircle className="mx-auto h-12 w-12 text-amber-600" aria-hidden="true" />
       : <Clock3 className="mx-auto h-12 w-12 text-[#456DBD]" aria-hidden="true" />}
-    <h1 className="mt-5 text-2xl font-bold tracking-tight sm:text-3xl">{title[state]}</h1>
-    <p className="mt-4 text-sm leading-7 text-[#42506A]" role="status">{description[state]}</p>
+    <h1 className="mt-5 text-titulo font-bold tracking-titulo sm:text-destacado">{title[state]}</h1>
+    <p className="mt-4 text-cuerpo leading-7 text-[#42506A]" role="status">{description[state]}</p>
     <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
       {state === 'active' ? (
-        <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-sm font-bold text-white">Continue studying</Link>
+        <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-cuerpo font-semibold text-white">Continue studying</Link>
       ) : state === 'signin' ? (
-        <Link href={'/en/login?mode=login&next=' + encodeURIComponent('/en/pricing/result?attemptId=' + attemptId)} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-sm font-bold text-white">Sign in</Link>
+        <Link href={'/en/login?mode=login&next=' + encodeURIComponent('/en/pricing/result?attemptId=' + attemptId)} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-cuerpo font-semibold text-white">Sign in</Link>
       ) : (
-        <Link href="/en/pricing" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-sm font-bold text-white">Back to plans</Link>
+        <Link href="/en/pricing" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-5 py-3 text-cuerpo font-semibold text-white">Back to plans</Link>
       )}
       {checking ? <button type="button" onClick={() => { setState('checking'); setRefresh(n => n + 1); }}
-        className="min-h-11 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-[#0F1B3D]">Check again</button> : null}
+        className="min-h-11 rounded-xl border border-slate-300 px-5 py-3 text-cuerpo font-semibold text-[#0F1B3D]">Check again</button> : null}
     </div>
-    <p className="mt-7 flex items-center justify-center gap-2 text-xs text-[#7F8AA3]"><ShieldCheck className="h-4 w-4" aria-hidden="true" />Access is granted only after verified payment.</p>
+    <p className="mt-7 flex items-center justify-center gap-2 text-chico text-[#7F8AA3]"><ShieldCheck className="h-4 w-4" aria-hidden="true" />Access is granted only after verified payment.</p>
   </section>;
 }

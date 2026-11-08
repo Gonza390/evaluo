@@ -60,11 +60,11 @@ const legalLinkClass = 'font-semibold text-blue-700 underline';
 /** Links legales junto al precio: requisito de compliance del checkout (Creem MoR / Mercado Pago). */
 function LegalPolicyLinks({ english }: { english: boolean }) {
   if (english) {
-    return <p className="mt-3 text-xs text-slate-600">
+    return <p className="mt-3 text-chico text-slate-600">
       Monthly renewal; cancel before the next charge. Read our <Link href="/en/terms" className={legalLinkClass}>terms</Link>, <Link href="/en/privacy" className={legalLinkClass}>privacy policy</Link> and <Link href="/en/refunds" className={legalLinkClass}>refund policy</Link>.
     </p>;
   }
-  return <p className="mt-3 text-xs text-slate-600">
+  return <p className="mt-3 text-chico text-slate-600">
     Renovación automática mensual y cancelación antes del siguiente cobro. Consultá los <Link href="/terminos" className={legalLinkClass}>términos</Link>, la <Link href="/privacidad" className={legalLinkClass}>política de privacidad</Link>, la <Link href="/reembolsos" className={legalLinkClass}>política de reembolsos</Link> y los <Link href="/facturacion" className={legalLinkClass}>términos de facturación</Link>.
   </p>;
 }
@@ -89,32 +89,32 @@ export function RegionalPricingMessage({ placement, locale = 'es' }: Props) {
     return <>{content}</>;
   }
   if (placement === 'hero') {
-    return <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600" aria-live="polite">
+    return <p className="mt-5 flex items-center justify-center gap-2 text-chico text-slate-600" aria-live="polite">
       <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />{content}
     </p>;
   }
   if (placement === 'featured') {
     return <section aria-label={english ? 'Premium billing for your region' : 'Pago Premium para tu país'} className="border-b border-blue-100 bg-blue-50/50 px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-4xl rounded-2xl border border-blue-100 bg-white px-5 py-6 text-center shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-widest text-blue-700">
+        <p className="text-chico font-semibold uppercase tracking-etiqueta text-blue-700">
           {market === 'international' ? (english ? 'International Premium' : 'Premium internacional')
             : market === 'argentina' ? (english ? 'Premium in Argentina' : 'Premium en Argentina')
               : (english ? 'Premium by region' : 'Premium según tu país')}
         </p>
         {market === 'argentina' ? (
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-            ARS {new Intl.NumberFormat('es-AR').format(PREMIUM_MONTHLY_PRICE_ARS)} <span className="text-base font-medium text-slate-500">{english ? '/ month' : '/ mes'}</span>
+          <p className="mt-2 text-destacado font-bold tracking-titulo text-slate-950">
+            ARS {new Intl.NumberFormat('es-AR').format(PREMIUM_MONTHLY_PRICE_ARS)} <span className="text-cuerpo font-medium text-slate-500">{english ? '/ month' : '/ mes'}</span>
           </p>
         ) : null}
         {market === 'international' ? (
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">
-            {english ? 'US$ 9.99' : 'US$ 9,99'} <span className="text-base font-medium text-slate-500">{english ? '/ month' : '/ mes'}</span>
+          <p className="mt-2 text-destacado font-bold tracking-titulo text-slate-950">
+            {english ? 'US$ 9.99' : 'US$ 9,99'} <span className="text-cuerpo font-medium text-slate-500">{english ? '/ month' : '/ mes'}</span>
           </p>
         ) : null}
-        <p className="mt-3 text-sm leading-6 text-slate-600" aria-live="polite">{content}</p>
+        <p className="mt-3 text-cuerpo leading-6 text-slate-600" aria-live="polite">{content}</p>
         <LegalPolicyLinks english={english} />
       </div>
     </section>;
   }
-  return <p className="mt-2 text-sm leading-7 text-slate-600" aria-live="polite">{content}</p>;
+  return <p className="mt-2 text-cuerpo leading-7 text-slate-600" aria-live="polite">{content}</p>;
 }
