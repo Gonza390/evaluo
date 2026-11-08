@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, FileText, Sparkles, T
 import { FooterHome } from '@/components/footer-home';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd, buildFaqJsonLd, buildOrganizationJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd, buildOrganizationJsonLd, buildSoftwareApplicationJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/sobre-evaluo';
@@ -124,18 +124,7 @@ export default function SobreEvaluoPage() {
           isPartOf: { '@id': toAbsoluteUrl('/#website') },
           mainEntity: { '@id': toAbsoluteUrl('/#organization') },
         },
-        {
-          '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
-          '@id': toAbsoluteUrl('/#application'),
-          name: 'Evaluo',
-          url: toAbsoluteUrl('/'),
-          description: 'Plataforma educativa web para estudiar PDF y Word con IA, crear resúmenes por temas, practicar, revisar errores y planificar exámenes.',
-          applicationCategory: 'EducationalApplication',
-          operatingSystem: 'Web',
-          inLanguage: ['es', 'en'],
-          publisher: { '@id': toAbsoluteUrl('/#organization') },
-        },
+        buildSoftwareApplicationJsonLd(),
       ]} />
       <main id="contenido">
         <section className="border-b border-slate-200 bg-gradient-to-b from-blue-50/70 via-white to-white">
