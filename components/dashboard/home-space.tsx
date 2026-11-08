@@ -34,10 +34,10 @@ export function HomeSpace({
       <div className="min-w-0 lg:col-start-1 lg:row-start-1">
         <HomeHero view={view} onUploadClick={() => openUploadPicker('dashboard_hero')} />
       </div>
-      <aside className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:gap-12 lg:pt-2" aria-label="Agenda y sugerencias">
-        <HomeAgenda agenda={view.agenda} today={today} />
+      <aside className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:gap-12 lg:pt-2" aria-label={view.locale === 'en' ? 'Agenda and suggestions' : 'Agenda y sugerencias'}>
+        <HomeAgenda agenda={view.agenda} today={today} locale={view.locale} />
         <div className="border-t border-slate-100 pt-5">
-          <HomeDiscover materialId={materialId} materialTitle={materialTitle} />
+          <HomeDiscover materialId={materialId} materialTitle={materialTitle} locale={view.locale} />
         </div>
       </aside>
       <div className="min-w-0 lg:col-start-1 lg:row-start-2 [&_button]:shadow-none">{children}</div>
