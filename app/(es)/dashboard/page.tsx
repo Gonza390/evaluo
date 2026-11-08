@@ -106,10 +106,10 @@ export default async function DashboardPage({
     const firstName = [user.user_metadata?.full_name, user.user_metadata?.name, user.user_metadata?.nombre]
       .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
       ?.trim().split(/\s+/)[0];
-    // Home con Agenda: por ahora solo en español; en inglés y sin PDF listo sigue la home anterior.
+    // Home con Agenda (ES y EN) cuando hay un PDF listo; si no, sigue la home anterior.
     const today = argentinaToday();
-    const homeViewPromise = locale !== 'en' && hasReadyMaterial && openUpload !== '1'
-      ? getDashboardHomeView(supabase, user.id, materials, firstName)
+    const homeViewPromise = hasReadyMaterial && openUpload !== '1'
+      ? getDashboardHomeView(supabase, user.id, materials, firstName, locale)
       : Promise.resolve(null);
     const profileContext = locale !== 'en' && hasReadyMaterial && openUpload !== '1'
       ? await supabase

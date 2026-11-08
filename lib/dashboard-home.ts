@@ -35,6 +35,7 @@ export async function getDashboardHomeView(
   userId: string,
   materials: StudentMaterial[],
   firstName?: string,
+  locale: 'es' | 'en' = 'es',
 ): Promise<HomeView | null> {
   const ready = materials.filter((material) => material.processing_status === 'ready');
   const primary = ready[0];
@@ -71,7 +72,7 @@ export async function getDashboardHomeView(
     const primaryExam = examRows.find((row) => row.id === primary.id)?.exam_date ?? null;
     const exams: HomeExam[] = examRows
       .filter((row) => typeof row.exam_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(row.exam_date))
-      .map((row) => ({ materialId: row.id, title: row.title?.trim() || 'Tu apunte', examDate: row.exam_date! }));
+      .map((row) => ({ materialId: row.id, title: row.title?.trim() || (locale === 'en' ? 'Your notes' : 'Tu apunte'), examDate: row.exam_date! }));
 
     const sections = Array.isArray(summaryResult.data?.summary_sections) ? summaryResult.data.summary_sections : [];
     const topics = sections.map((section: unknown, index: number) => {
@@ -106,9 +107,10 @@ export async function getDashboardHomeView(
         : null;
 
     return buildHomeView({
+      locale,
       firstName,
       today: argentinaToday(),
-      material: { id: primary.id, title: primary.title?.trim() || primary.file_name || 'tu apunte', examDate: primaryExam },
+      material: { id: primary.id, title: primary.title?.trim() || primary.file_name || (locale === 'en' ? 'your notes' : 'tu apunte'), examDate: primaryExam },
       topics,
       readTopics,
       touchedTopics,

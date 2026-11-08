@@ -70,7 +70,7 @@ export function MaeveStudySpace({
           view={homeView}
           today={today}
           materialId={primaryMaterial.id}
-          materialTitle={primaryMaterial.title?.trim() || primaryMaterial.file_name || 'tu apunte'}
+          materialTitle={primaryMaterial.title?.trim() || primaryMaterial.file_name || (homeView.locale === 'en' ? 'your notes' : 'tu apunte')}
         >
           <StudentMaterialsWorkspace initialMaterials={materials} />
         </HomeSpace>

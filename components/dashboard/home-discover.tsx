@@ -6,34 +6,34 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 const eyebrow = 'text-[10px] font-semibold uppercase tracking-etiqueta text-slate-500';
 const headline = 'mt-1 mb-2.5 text-[14px] font-semibold tracking-[-0.02em] text-slate-950';
 
-function QuizPreview({ materialTitle }: { materialTitle: string }) {
+function QuizPreview({ materialTitle, en }: { materialTitle: string; en: boolean }) {
   return (
     <>
-      <p className={eyebrow}>Simulacro · {materialTitle}</p>
-      <p className={headline}>Con reloj, como el examen</p>
+      <div className={eyebrow}>{en ? 'Practice exam' : 'Simulacro'} · {materialTitle}</div>
+      <div className={headline}>{en ? 'Timed, like the real exam' : 'Con reloj, como el examen'}</div>
       <div className="flex flex-col gap-1.5" aria-hidden="true">
-        <span className="h-6 rounded-[7px] border border-slate-200 px-2.5 text-[11px] leading-6 text-slate-500">Opción A</span>
-        <span className="h-6 rounded-[7px] border-[1.5px] border-blue-400 bg-blue-50/60 px-2.5 text-[11px] leading-[22px] font-medium text-slate-900">Opción B</span>
+        <span className="h-6 rounded-[7px] border border-slate-200 px-2.5 text-[11px] leading-6 text-slate-500">{en ? 'Option A' : 'Opción A'}</span>
+        <span className="h-6 rounded-[7px] border-[1.5px] border-blue-400 bg-blue-50/60 px-2.5 text-[11px] leading-[22px] font-medium text-slate-900">{en ? 'Option B' : 'Opción B'}</span>
       </div>
       <div className="mt-2.5 flex justify-between text-[10px] text-slate-500" aria-hidden="true">
-        <span>Pregunta 4 de 20</span>
+        <span>{en ? 'Question 4 of 20' : 'Pregunta 4 de 20'}</span>
         <span>12:40</span>
       </div>
     </>
   );
 }
 
-function ErrorsPreview() {
+function ErrorsPreview({ en }: { en: boolean }) {
   return (
     <>
-      <p className={eyebrow}>Para reforzar</p>
-      <p className={headline}>Tus temas flojos</p>
+      <div className={eyebrow}>{en ? 'To review' : 'Para reforzar'}</div>
+      <div className={headline}>{en ? 'Your weak topics' : 'Tus temas flojos'}</div>
       <div aria-hidden="true">
         {[3, 2, 1].map((count, index) => (
           <div key={count} className={`flex items-center justify-between py-1.5 text-[12px] font-medium ${index < 2 ? 'border-b border-slate-100' : ''}`}>
             <span className="h-2 w-24 rounded-full bg-slate-200" />
             <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] text-red-700">
-              {count} {count === 1 ? 'error' : 'errores'}
+              {count} {en ? (count === 1 ? 'mistake' : 'mistakes') : count === 1 ? 'error' : 'errores'}
             </span>
           </div>
         ))}
@@ -42,12 +42,12 @@ function ErrorsPreview() {
   );
 }
 
-function MapPreview({ materialTitle }: { materialTitle: string }) {
+function MapPreview({ materialTitle, en }: { materialTitle: string; en: boolean }) {
   const node = 'absolute flex h-[22px] items-center rounded-[7px] border border-slate-200 bg-white px-2';
   return (
     <>
-      <p className={eyebrow}>Mapa mental</p>
-      <p className={headline}>Todo el apunte en una vista</p>
+      <div className={eyebrow}>{en ? 'Mind map' : 'Mapa mental'}</div>
+      <div className={headline}>{en ? 'All your notes at a glance' : 'Todo el apunte en una vista'}</div>
       <div className="relative h-[84px]" aria-hidden="true">
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 240 84" preserveAspectRatio="none">
           <path d="M120 42 L40 12 M120 42 L200 12 M120 42 L40 72 M120 42 L200 72" stroke="#c4cde0" strokeWidth="1.5" fill="none" />
@@ -65,31 +65,33 @@ function MapPreview({ materialTitle }: { materialTitle: string }) {
 }
 
 /** "Descubrí": funciones de Evaluo aplicadas al apunte principal. */
-export function HomeDiscover({ materialId, materialTitle }: { materialId: string; materialTitle: string }) {
+export function HomeDiscover({ materialId, materialTitle, locale = 'es' }: { materialId: string; materialTitle: string; locale?: 'es' | 'en' }) {
+  const en = locale === 'en';
+  const tryIt = en ? 'Try it' : 'Probarlo';
   const track = (slide: string, href: string) => () =>
     trackMarketingEvent('cta_click', { location: 'dashboard_discover', cta_name: slide, destination: href });
   const slides: Diapositiva[] = [
     {
       id: 'simulacro',
-      title: 'Simulacro del parcial',
-      description: `Rendí ${materialTitle} con tiempo, como si fuera el examen.`,
-      preview: <QuizPreview materialTitle={materialTitle} />,
-      cta: { label: 'Probarlo', href: `/materiales/${materialId}?tab=ejercicios`, onClick: track('simulacro', `/materiales/${materialId}?tab=ejercicios`) },
+      title: en ? 'Practice exam' : 'Simulacro del parcial',
+      description: en ? `Take ${materialTitle} under time pressure, just like the real exam.` : `Rendí ${materialTitle} con tiempo, como si fuera el examen.`,
+      preview: <QuizPreview materialTitle={materialTitle} en={en} />,
+      cta: { label: tryIt, href: `/materiales/${materialId}?tab=ejercicios`, onClick: track('simulacro', `/materiales/${materialId}?tab=ejercicios`) },
     },
     {
       id: 'errores',
-      title: 'Repaso de errores',
-      description: 'Practicá solo los temas donde te equivocaste.',
-      preview: <ErrorsPreview />,
-      cta: { label: 'Probarlo', href: '/dashboard/explicaciones', onClick: track('repaso_errores', '/dashboard/explicaciones') },
+      title: en ? 'Mistake review' : 'Repaso de errores',
+      description: en ? 'Practice only the topics you got wrong.' : 'Practicá solo los temas donde te equivocaste.',
+      preview: <ErrorsPreview en={en} />,
+      cta: { label: tryIt, href: '/dashboard/explicaciones', onClick: track('repaso_errores', '/dashboard/explicaciones') },
     },
     {
       id: 'mapa',
-      title: 'Mapa mental',
-      description: `Todos los temas de ${materialTitle} en una sola vista.`,
-      preview: <MapPreview materialTitle={materialTitle} />,
-      cta: { label: 'Probarlo', href: `/materiales/${materialId}?tab=mapa`, onClick: track('mapa_mental', `/materiales/${materialId}?tab=mapa`) },
+      title: en ? 'Mind map' : 'Mapa mental',
+      description: en ? `Every topic in ${materialTitle} in a single view.` : `Todos los temas de ${materialTitle} en una sola vista.`,
+      preview: <MapPreview materialTitle={materialTitle} en={en} />,
+      cta: { label: tryIt, href: `/materiales/${materialId}?tab=mapa`, onClick: track('mapa_mental', `/materiales/${materialId}?tab=mapa`) },
     },
   ];
-  return <Diapositivas titulo="Descubrí" slides={slides} />;
+  return <Diapositivas titulo={en ? 'Discover' : 'Descubrí'} slides={slides} locale={locale} />;
 }

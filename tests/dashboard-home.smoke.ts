@@ -102,10 +102,31 @@ assert.equal(daysBetween('2026-12-31', '2027-01-01'), 1);
 // Sin nombre no queda una coma suelta.
 assert.equal(buildHomeView({ ...base, firstName: undefined }).greeting, 'Tu apunte de Marketing I está listo.');
 
-// La página usa la home nueva solo en español y con un PDF listo; si falla, queda la anterior.
+// Inglés: mismos estados, textos en inglés.
+{
+  const en: HomeInput = { ...base, locale: 'en' };
+  assert.equal(buildHomeView(en).greeting, 'Your Marketing I notes are ready, Gonza.');
+  assert.equal(buildHomeView(en).card.text, 'Start with Tema 1. It’s topic 1 of 8 and takes about 10 minutes.');
+  const progress = buildHomeView({ ...en, readTopics: [0, 1, 2, 3, 4], touchedTopics: [0, 1, 2, 3, 4, 5] });
+  assert.equal(progress.greeting, 'Gonza, you have 3 topics left in Marketing I.');
+  assert.equal(progress.card.text, 'You’re halfway through Tema 6. Finish it in about 15 minutes.');
+  if (progress.card.kind === 'retomar') assert.equal(progress.card.progressLabel, '5 of 8 topics read');
+  const exam = buildHomeView({ ...en, material: { ...base.material, examDate: '2026-11-26' }, readTopics: [0, 1, 2, 3, 4], weakTopicCount: 2 });
+  assert.equal(exam.greeting, '18 days until Marketing I, Gonza.');
+  assert.equal(exam.card.text, 'You’re 38% ready. To feel confident, you still need Tema 6, Tema 7 and Tema 8.');
+  assert.equal(buildHomeView({ ...en, material: { ...base.material, examDate: '2026-11-09' } }).greeting, '1 day until Marketing I, Gonza.');
+  assert.equal(buildHomeView({ ...en, firstName: undefined }).greeting, 'Your Marketing I notes are ready.');
+  assert.equal(buildHomeView(en).locale, 'en');
+  assert.equal(buildHomeView(base).locale, 'es');
+}
+
+// La página usa la home nueva (ES y EN) con un PDF listo; si falla, queda la anterior.
 const page = file('app/(es)/dashboard/page.tsx');
-assert.match(page, /getDashboardHomeView/);
-assert.match(page, /locale !== 'en' && hasReadyMaterial/);
+assert.match(page, /getDashboardHomeView\(supabase, user\.id, materials, firstName, locale\)/);
+assert.match(page, /hasReadyMaterial && openUpload !== '1'/);
+for (const component of ['home-hero', 'home-agenda', 'home-discover']) {
+  assert.match(file(`components/dashboard/${component}.tsx`), /en \?|locale === 'en'|TEXT\[locale\]/, `${component} tiene textos en inglés`);
+}
 const space = file('components/dashboard/maeve-study-space.tsx');
 assert.match(space, /<HomeSpace/);
 assert.match(space, /<MaeveDashboardChrome/, 'La home anterior sigue como respaldo.');
