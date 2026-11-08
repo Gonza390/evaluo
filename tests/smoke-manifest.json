@@ -454,5 +454,9 @@
   {
     "file": "tests/personaje-hoja.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/dashboard-home.smoke.ts",
+    "alias": false
   }
 ]
