@@ -5,6 +5,7 @@ import { registerHooks } from 'node:module';
 const authState = {
   user: null as { id: string } | null,
   calls: 0,
+  rpcCalls: 0,
   clients: 0,
   cookies: [] as Array<{ name: string; value: string; options: Record<string, unknown> }>,
 };
@@ -21,7 +22,10 @@ const mockAuthModule = `
           return { data: state.user ? { claims: { sub: state.user.id } } : null, error: null };
         }
       },
-      async rpc() { return { data: null, error: null }; }
+      async rpc() {
+        Reflect.get(globalThis, '__evaluoProxyAuthTest').rpcCalls += 1;
+        return { data: null, error: null };
+      }
     };
   }
 `;
@@ -174,6 +178,38 @@ try {
   );
   assert.equal(referral.headers.get('location'), 'https://evaluo.com.ar/dashboard');
   assert.equal(referral.cookies.get('evaluo_ref')?.value, 'TEST123');
+
+  // La primera navegación con sesión atribuye el código y lo recuerda.
+  const rpcCallsBefore = authState.rpcCalls;
+  const firstClaim = await proxy(
+    new NextRequest('https://evaluo.com.ar/dashboard?ref=TEST123', {
+      headers: { cookie: 'sb-test-auth-token=valid-session' },
+    })
+  );
+  assert.equal(authState.rpcCalls, rpcCallsBefore + 1, 'El código se atribuye una vez.');
+  const claimedMarker = firstClaim.cookies.get('evaluo_ref_claimed')?.value;
+  assert.equal(claimedMarker, `TEST123:${authState.user!.id}`);
+
+  // Con el código ya atribuido a este usuario, navegar no repite la RPC.
+  const claimedNavigation = await proxy(
+    new NextRequest('https://evaluo.com.ar/dashboard', {
+      headers: {
+        cookie: `sb-test-auth-token=valid-session; evaluo_ref=TEST123; evaluo_ref_claimed=${claimedMarker}`,
+      },
+    })
+  );
+  assert.equal(claimedNavigation.headers.get('location'), null);
+  assert.equal(authState.rpcCalls, rpcCallsBefore + 1, 'La atribución no se repite en cada navegación.');
+
+  // Un código nuevo sí se vuelve a atribuir.
+  await proxy(
+    new NextRequest('https://evaluo.com.ar/dashboard?ref=OTRO123', {
+      headers: {
+        cookie: `sb-test-auth-token=valid-session; evaluo_ref_claimed=${claimedMarker}`,
+      },
+    })
+  );
+  assert.equal(authState.rpcCalls, rpcCallsBefore + 2, 'Un código nuevo se atribuye.');
 
   const dashboard = await proxy(new NextRequest('https://evaluo.com.ar/dashboard'));
   assert.equal(dashboard.headers.get('location'), null, 'Mi espacio no debe redirigir a sí mismo.');
