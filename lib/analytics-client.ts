@@ -180,14 +180,15 @@ export async function trackClientAnalyticsEvent(input: {
 
   const pathname = input.path ?? window.location.pathname;
   const pageType = getAnalyticsPageType(pathname);
-  const metadata = input.eventName === 'product_web_vital'
-    ? { ...input.metadata }
-    : {
-        attribution: getAttributionSnapshot(),
-        anonymous_id: getAnalyticsAnonymousId(),
-        page_type: pageType,
-        ...input.metadata,
-      };
+  const metadata =
+    input.eventName === 'product_web_vital'
+      ? { ...input.metadata }
+      : {
+          attribution: getAttributionSnapshot(),
+          anonymous_id: getAnalyticsAnonymousId(),
+          page_type: pageType,
+          ...input.metadata,
+        };
 
   analyticsQueue.push({
     event_name: input.eventName,
@@ -196,6 +197,37 @@ export async function trackClientAnalyticsEvent(input: {
     path: pathname,
     device_type: getAnalyticsDeviceType(),
     metadata,
+  });
+
+  installAnalyticsLifecycleListeners();
+
+  if (analyticsQueue.length >= ANALYTICS_BATCH_SIZE) {
+    void flushAnalyticsQueue(false);
+  } else {
+    scheduleAnalyticsFlush();
+  }
+}
+
+/**
+ * Encola un evento ya armado (session_key, path, metadata propios) en la misma
+ * tanda que trackClientAnalyticsEvent: un pedido cada 5 s o cada 10 eventos, y
+ * sendBeacon al ocultar o cerrar la página. Antes cada evento era un pedido.
+ */
+export function enqueueAnalyticsPayload(payload: {
+  event_name: string;
+  session_key?: string;
+  user_id?: string | null;
+  path?: string;
+  device_type?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  analyticsQueue.push({
+    event_name: payload.event_name,
+    user_id: payload.user_id ?? null,
+    session_key: payload.session_key || getAnalyticsSessionKey(),
+    path: payload.path ?? window.location.pathname,
+    device_type: payload.device_type ?? getAnalyticsDeviceType(),
+    metadata: (payload.metadata ?? {}) as Record<string, Json | undefined>,
   });
 
   installAnalyticsLifecycleListeners();

@@ -1,3 +1,4 @@
+import { enqueueAnalyticsPayload } from '@/lib/analytics-client';
 import { getAttributionSnapshot } from '@/lib/attribution';
 import { trackSimulatorMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -55,15 +56,8 @@ export async function trackSimulatorAnalyticsEvent(
   payload: SimulatorAnalyticsPayload
 ) {
   try {
-    await fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: eventName,
-        ...payload,
-      }),
-      keepalive: true,
-    });
+    // Tanda compartida (lib/analytics-client): no un pedido por evento.
+    enqueueAnalyticsPayload({ event_name: eventName, ...payload });
   } catch {
     // ignore tracking failures
   }

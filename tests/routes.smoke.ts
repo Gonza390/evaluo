@@ -470,3 +470,30 @@ assert.match(
   assert.match(cachedMateriaRoute, /export function generateStaticParams\(\)/);
   assert.doesNotMatch(cachedMateriaRoute, /searchParams\s*[?:}]/);
 }
+
+// Analytics: todos los eventos van por la tanda de lib/analytics-client
+// (excepto el primer toque de adquisición, que se manda al instante a propósito).
+{
+  const directSenders = [
+    'components/AnalyticsTracker.tsx',
+    'lib/simulator-analytics.ts',
+    'lib/materia-analytics.ts',
+  ];
+  for (const file of directSenders) {
+    const source = readFileSync(resolve(file), 'utf8');
+    assert.doesNotMatch(
+      source,
+      /fetch\('\/api\/analytics\/track'/,
+      `${file} debe encolar, no hacer fetch`
+    );
+    assert.match(source, /enqueueAnalyticsPayload\(/);
+  }
+  const trackRoute = readFileSync(resolve('app/api/analytics/track/route.ts'), 'utf8');
+  assert.match(trackRoute, /auth\.getClaims\(\)/);
+  assert.doesNotMatch(trackRoute, /auth\.getUser\(\)/);
+  assert.match(
+    trackRoute,
+    /skipped \+= 1;\n\s+continue;/,
+    'un evento inválido no debe tirar la tanda'
+  );
+}

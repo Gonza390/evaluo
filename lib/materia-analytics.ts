@@ -1,3 +1,4 @@
+import { enqueueAnalyticsPayload } from '@/lib/analytics-client';
 import { getAttributionSnapshot } from '@/lib/attribution';
 
 function getAnalyticsSessionKey() {
@@ -26,24 +27,20 @@ export async function trackMateriaAnalyticsEvent(
   }
 ) {
   try {
-    await fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: eventName,
-        session_key: getAnalyticsSessionKey(),
-        user_id: payload.userId ?? null,
-        path: window.location.pathname,
-        device_type: getAnalyticsDeviceType(),
-        metadata: {
-          attribution: getAttributionSnapshot(),
-          materia_id: payload.materiaId,
-          carrera_id: payload.carreraId,
-          universidad_id: payload.universidadId,
-          ...(payload.metadata ?? {}),
-        },
-      }),
-      keepalive: true,
+    // Tanda compartida (lib/analytics-client): no un pedido por evento.
+    enqueueAnalyticsPayload({
+      event_name: eventName,
+      session_key: getAnalyticsSessionKey(),
+      user_id: payload.userId ?? null,
+      path: window.location.pathname,
+      device_type: getAnalyticsDeviceType(),
+      metadata: {
+        attribution: getAttributionSnapshot(),
+        materia_id: payload.materiaId,
+        carrera_id: payload.carreraId,
+        universidad_id: payload.universidadId,
+        ...(payload.metadata ?? {}),
+      },
     });
   } catch {
     // ignore tracking failures
