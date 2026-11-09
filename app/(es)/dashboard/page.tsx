@@ -95,11 +95,6 @@ export default async function DashboardPage({
     const pendingReinforcementCount = getPendingStudyErrorTopicCount(user.id);
     const materials = await fetchStudentMaterialsByUser(supabase, user.id);
 
-    const nextStudyAction = getDashboardNextStudyAction(user.id, materials).catch((error) => {
-      logError('dashboard.nextStudyAction', error, { userId: user.id });
-      return null;
-    });
-
     // Preguntar los datos académicos sólo después de tener un PDF listo.
     // El formulario de carga inicial y la guía del primer PDF no se interrumpen.
     const hasReadyMaterial = materials.some((material) => material.processing_status === 'ready');
@@ -119,6 +114,13 @@ export default async function DashboardPage({
           .maybeSingle()
       : null;
     const homeView = await homeViewPromise;
+    // La acción sugerida solo la usa la home anterior: si se muestra la home con Agenda, no se consulta.
+    const nextStudyAction = homeView
+      ? Promise.resolve(null)
+      : getDashboardNextStudyAction(user.id, materials).catch((error) => {
+          logError('dashboard.nextStudyAction', error, { userId: user.id });
+          return null;
+        });
     const needsAcademicContext = Boolean(
       profileContext && !profileContext.error &&
       (!profileContext.data?.universidad_id || !profileContext.data?.carrera_id)

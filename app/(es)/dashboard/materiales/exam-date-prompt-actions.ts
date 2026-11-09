@@ -209,23 +209,43 @@ export async function dismissExamDatePromptAction(materialId: string) {
   }
 }
 
+const SAVE_EXAM_DATE_MESSAGES = {
+  es: {
+    invalid: 'Elegí una fecha válida.',
+    past: 'La fecha del examen tiene que ser posterior a hoy.',
+    notSaved: 'No pudimos guardar la fecha.',
+    saved: 'Fecha guardada.',
+    retry: 'No pudimos guardar la fecha. Probá de nuevo.',
+  },
+  en: {
+    invalid: 'Choose a valid date.',
+    past: 'The exam date has to be after today.',
+    notSaved: 'We couldn’t save the date.',
+    saved: 'Date saved.',
+    retry: 'We couldn’t save the date. Please try again.',
+  },
+} as const;
+
 export async function saveStudentMaterialExamDateAction(input: {
   materialId: string;
   examDate: string;
+  /** Idioma de los mensajes (por defecto español). */
+  locale?: 'es' | 'en';
 }) {
+  const messages = SAVE_EXAM_DATE_MESSAGES[input.locale === 'en' ? 'en' : 'es'];
   try {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.examDate)) {
-      return { success: false, message: 'Elegí una fecha válida.' };
+      return { success: false, message: messages.invalid };
     }
 
     const today = argentinaTodayKey();
     if (input.examDate <= today) {
-      return { success: false, message: 'La fecha del examen tiene que ser posterior a hoy.' };
+      return { success: false, message: messages.past };
     }
 
     const owned = await requireOwnedMaterial(input.materialId);
     if (!owned.ok) {
-      return { success: false, message: 'No pudimos guardar la fecha.' };
+      return { success: false, message: messages.notSaved };
     }
 
     const supabase = await createClientServer();
@@ -258,9 +278,9 @@ export async function saveStudentMaterialExamDateAction(input: {
       });
     }
 
-    return { success: true, message: 'Fecha guardada.' };
+    return { success: true, message: messages.saved };
   } catch (error) {
     logError('examDatePrompt.save', error, { materialId: input.materialId });
-    return { success: false, message: 'No pudimos guardar la fecha. Probá de nuevo.' };
+    return { success: false, message: messages.retry };
   }
 }
