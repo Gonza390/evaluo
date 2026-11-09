@@ -144,7 +144,7 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                   href={uploadHref}
                   className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8]"
                 >
-                  Subir mi PDF
+                  Subir mi material
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>

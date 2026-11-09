@@ -284,7 +284,7 @@ export function ContextualPdfNudge() {
               onClick={onCtaClick}
               className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-bold text-white transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              Subir mi primer PDF
+              Subir mi primer material
             </Link>
           </>
         )}

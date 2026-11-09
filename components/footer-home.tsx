@@ -309,7 +309,7 @@ function EnglishHomeFooter() {
             </Link>
             <p className="mt-2 max-w-xs text-chico text-white/70">Study smarter with your own notes.</p>
             <p className="mt-2 max-w-sm text-etiqueta leading-5 text-white/55">
-              Turn PDF or Word documents into topic summaries, flashcards, glossaries and practice questions.
+              Turn your study materials into topic summaries, flashcards, glossaries and practice questions.
             </p>
             <div className="mt-4 flex gap-3">
               <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Evaluo on Instagram"

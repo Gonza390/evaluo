@@ -44,7 +44,7 @@ export default async function PdfProgressPage({
       <div className="mx-auto w-full max-w-[1240px] px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
         <h1 className="text-[20px] font-bold leading-[1.3] tracking-[-0.04em] sm:text-[22px]">{english ? 'Your progress' : 'Tu progreso'}</h1>
         <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-          {english ? 'Choose a PDF to review its topics and recorded mistakes.' : 'Elegí un PDF para ver sus temas y los errores que registraste.'}
+          {english ? 'Choose a material to review its topics and recorded mistakes.' : 'Elegí un material para ver sus temas y los errores que registraste.'}
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {materials?.map((item) => (
@@ -66,7 +66,7 @@ export default async function PdfProgressPage({
               href="/dashboard/materiales?openUpload=1"
               className="text-primary mt-4 inline-flex text-sm font-semibold"
             >
-              {english ? 'Upload a PDF or Word document' : 'Subir un PDF'}
+              {english ? 'Upload material' : 'Subir material'}
               <ArrowRight size={17} className="ml-2" />
             </Link>
           </div>

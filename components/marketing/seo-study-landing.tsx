@@ -377,7 +377,7 @@ export function SeoStudyLanding({
                   Probalo con el material que ya estás estudiando.
                 </h2>
                 <p className="mt-4 max-w-xl text-xs leading-6 text-white/80 sm:text-sm">
-                  Subí tu PDF y usá el mismo contenido para estudiar, repasar y practicar dentro de Evaluo.
+                  Subí tu material y usá el mismo contenido para estudiar, repasar y practicar dentro de Evaluo.
                 </p>
                 <TrackedLink
                   href={uploadHref}

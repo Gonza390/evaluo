@@ -154,7 +154,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
                 <h2 className="text-cuerpo font-normal tracking-titulo">{english ? 'Keep making progress' : 'Seguí avanzando'}</h2>
               </div>
               {first ? <StudyPlanNext materialId={first.id} topicCount={topicCount} topicActivities={topicActivities} /> : (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 text-chico text-slate-500">{english ? 'Upload a PDF to start topic 1.' : 'Subí un PDF para comenzar con el tema 1.'}</div>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 text-chico text-slate-500">{english ? 'Upload your material to start topic 1.' : 'Subí tu material para comenzar con el tema 1.'}</div>
               )}
             </section>
             </div>
@@ -169,7 +169,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
                 {materials.length > 1 ? <StudyPlanMaterialSelector selectedId={first?.id ?? ""} materials={materials.map(material => ({ id: material.id, title: material.title }))} /> : null}
               </div>
               {first ? <StudyPlanNextStep materialId={first.id} topicActivities={topicActivities} /> : (
-                <p className="text-chico text-slate-500">{english ? 'Upload a PDF to get started.' : 'Subí un PDF para empezar.'}</p>
+                <p className="text-chico text-slate-500">{english ? 'Upload your material to get started.' : 'Subí tu material para empezar.'}</p>
               )}
             </section>
 

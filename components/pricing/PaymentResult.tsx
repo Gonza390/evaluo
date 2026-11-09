@@ -75,11 +75,10 @@ const PAYMENT_RESULT_EN: Record<string,string> = {
   "Ir a Mi espacio": "Go to My space",
   "Qué sigue": "Next steps",
   "Explorar": "Explore",
-  "Subir PDF": "Upload PDF",
-  "Subir mi PDF": "Upload my PDF",
+  "Subir material": "Upload material",
+  "Subir mi material": "Upload my material",
   "Preparar otra materia": "Prepare another subject",
-  "Activar Premium": "Activate Premium",
-  "Cargar mi PDF": "Upload my PDF"
+  "Activar Premium": "Activate Premium"
 };
 
 const unlockedFeatures = [

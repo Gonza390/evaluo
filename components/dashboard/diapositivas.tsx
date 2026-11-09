@@ -83,9 +83,11 @@ export function Diapositivas({ titulo, icono: Icono = Sparkles, slides, classNam
         {titulo}
       </h2>
 
-      <div aria-live="polite" aria-atomic="true" className="evaluo-enter" key={current.id}>
-        <div className="mt-3 text-ui font-semibold text-slate-950">{current.title}</div>
-        <div className="mt-0.5 min-h-[36px] text-chico leading-normal text-slate-500">{current.description}</div>
+      {/* Alto fijo: título 1 línea y descripción 2 líneas, para que el avance automático no mueva la columna.
+          Solo se anuncia al lector de pantalla cuando el avance automático está en pausa. */}
+      <div aria-live={paused || total < 2 ? 'polite' : 'off'} aria-atomic="true" className="evaluo-enter" key={current.id}>
+        <div className="mt-3 truncate text-ui font-semibold text-slate-950" title={current.title}>{current.title}</div>
+        <div className="mt-0.5 line-clamp-2 h-[36px] text-chico leading-[18px] text-slate-500">{current.description}</div>
         <div className="mt-3 flex h-[168px] items-center justify-center overflow-hidden rounded-[14px] bg-slate-100/80 px-3.5">
           <div className="w-full rounded-xl border border-slate-200/70 bg-white px-3.5 py-3">{current.preview}</div>
         </div>

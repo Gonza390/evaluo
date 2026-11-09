@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  alternates: hreflangAlternates('pricing', 'en'),
 };
 const freeFeatures = [
- '1 PDF or Word upload per month',
+ '1 upload per month',
  'Topic summaries and glossary',
  '12 multiple-choice and 10 true-or-false questions',
  '25 flashcards, 2 practical cases and 1 matching round',
@@ -19,7 +19,7 @@ const freeFeatures = [
 ];
 const premiumFeatures = [
  'Everything in Free: practice, results and progress by topic',
- 'Upload up to 3 new PDF or Word materials per day',
+ 'Upload up to 3 new materials per day',
  'More AI explanations and exercises to review mistakes',
  'Mind maps to connect ideas from your notes',
  'Premium mock exam modes and more detailed explanations',
@@ -35,7 +35,7 @@ export default function EnglishPricingPage() {
    <header className="mx-auto mb-10 mt-12 max-w-3xl text-center sm:mt-16">
     <p className="text-xs font-bold uppercase tracking-widest text-[#5D70C4]">Free and Premium</p>
     <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-5xl">Study better with your own notes</h1>
-    <p className="mt-4 text-base leading-7 text-[#42506A]">Start free with your PDF or Word documents. Upgrade to Premium when you need more materials, practice and study tools.</p>
+    <p className="mt-4 text-base leading-7 text-[#42506A]">Start free with your study materials. Upgrade to Premium when you need more materials, practice and study tools.</p>
    </header>
    <PricingPlanSelector locale="en" freeFeatures={freeFeatures} premiumFeatures={premiumFeatures} source="english_pricing" />
    <section className="mx-auto mt-12 max-w-3xl border-t border-[#E7EBF4] py-8 text-sm leading-7 text-[#42506A]">

@@ -60,7 +60,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </span>
 
               <h1 className="text-foreground mt-5 max-w-[680px] break-words text-[2.1rem] leading-[1.03] font-bold tracking-[-0.05em] min-[360px]:text-[2.35rem] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
-                Subí tu PDF y en minutos estudiás.
+                Subí tu material y en minutos estudiás.
               </h1>
 
               <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">

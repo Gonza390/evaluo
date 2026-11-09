@@ -53,7 +53,7 @@ export async function recoverStaleStudentMaterialJobs(
   try {
     const staleBefore = getStaleJobCutoffIso();
     const recoveryMessage =
-      'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el PDF.';
+      'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el archivo.';
     const payload = {
       status: 'failed',
       completed_at: new Date().toISOString(),

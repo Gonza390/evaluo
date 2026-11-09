@@ -293,7 +293,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       isOwner &&
       material.processing_status === 'failed' &&
       material.processing_error ===
-        'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el PDF.'
+        'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el archivo.'
     ) {
       const { data: failedJob, error: jobError } = await admin
         .from('student_material_jobs')
@@ -618,7 +618,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                         ¿Tenés tus propios apuntes de {materia?.nombre ?? 'esta materia'}?
                       </h2>
                       <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-slate-600">
-                        Subí tu PDF y convertí tus apuntes en un espacio de estudio como este:
+                        Subí tu material y convertí tus apuntes en un espacio de estudio como este:
                         resumen, glosario, tarjetas y práctica sobre tu propio material.
                       </p>
                     </div>
@@ -637,7 +637,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                     }}
                     className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8]"
                   >
-                    Subir mi PDF
+                    Subir mi material
                     <ArrowRight className="h-4 w-4" />
                   </TrackedLink>
                 </div>

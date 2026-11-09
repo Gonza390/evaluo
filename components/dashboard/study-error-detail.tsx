@@ -736,7 +736,7 @@ export function StudyErrorDetail({
                       onChange={(event) => setAssociateId(event.target.value)}
                       className="border-border bg-background min-h-11 min-w-0 flex-1 rounded-xl border px-3 text-cuerpo"
                     >
-                      <option value="">{t("Elegir mi PDF")}</option>
+                      <option value="">{t("Elegir mi material")}</option>
                       {materials.map((material) => (
                         <option key={material.id} value={material.id}>
                           {material.title}

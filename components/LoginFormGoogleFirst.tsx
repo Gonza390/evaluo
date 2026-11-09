@@ -76,8 +76,8 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean,
   }
   if (nextPath.startsWith('/dashboard/materiales')) {
     return isSignUp
-      ? 'Creá tu cuenta para subir tu PDF y convertirlo en resumen, glosario, tarjetas y práctica.'
-      : 'Ingresá para subir tu PDF o continuar trabajando con tus materiales.';
+      ? 'Creá tu cuenta para subir tu material y convertirlo en resumen, glosario, tarjetas y práctica.'
+      : 'Ingresá para subir tu material o continuar trabajando con tus materiales.';
   }
   if (nextPath.startsWith('/simulador')) {
     return isSignUp
