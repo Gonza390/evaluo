@@ -40,6 +40,8 @@ import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
 import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { CLIENT_VISION_MAX_PAGES } from '@/lib/student-materials/client-vision-cache';
+import { countPdfPagesInBrowser } from '@/lib/student-materials/pdf-page-count-client';
+import { trackUploadFailure, type UploadFailureStage } from '@/lib/student-materials/upload-failure';
 import {
   inspectPdfForClientVision,
   renderPdfPagesForClientVision,
@@ -127,6 +129,12 @@ export function PdfFirstUploadShell({
   const { toast } = useToast();
   const { locale } = useAppLocale();
   const t = (value: string) => studentEntryText(locale, value);
+  const pageLimitMessage = (pageCount: number | null | undefined, maxPages: number) => {
+    const pages = typeof pageCount === 'number' && pageCount > 0 ? pageCount : null;
+    return locale === 'en'
+      ? `${pages ? `This PDF has ${pages} pages. ` : ''}The free plan accepts up to ${maxPages} pages per document. Upload only the chapters for your exam, or try a sample material first.`
+      : `${pages ? `Tu PDF tiene ${pages} páginas. ` : ''}En el plan gratis se pueden subir hasta ${maxPages} páginas por documento. Subí solo los capítulos de tu examen o probá primero con un apunte de ejemplo.`;
+  };
   const isPreAuthPdfResume =
     initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
   // El catálogo y el perfil académico se solicitan sólo si el estudiante
@@ -167,6 +175,9 @@ export function PdfFirstUploadShell({
   const [savedContextLabel, setSavedContextLabel] = useState('');
   const [showReadyContext, setShowReadyContext] = useState(false);
   const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPreAuthPdfResume);
+  // Error de la última subida, visible dentro del diálogo (antes solo era un aviso que se iba).
+  // blocking: reintentar con el mismo archivo va a fallar igual (por ejemplo, límite de páginas).
+  const [uploadError, setUploadError] = useState<{ message: string; blocking: boolean } | null>(null);
 
   useEffect(() => {
     if (!showReadyContext || academicChoicesStatus !== 'idle' || academicFetchInFlightRef.current) return;
@@ -357,6 +368,7 @@ export function PdfFirstUploadShell({
 
   const reset = useCallback(() => {
     setFile(null);
+    setUploadError(null);
     setTitle('');
     setExamDate(initialExamDate);
     setUploading(false);
@@ -420,6 +432,12 @@ export function PdfFirstUploadShell({
       return;
     }
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
+      trackUploadFailure({
+        stage: 'too_large',
+        source: initialSource || 'dashboard',
+        flow: 'manual',
+        fileSizeBytes: selected.size,
+      });
       toast({
         description: t("El PDF supera el tamaño máximo permitido de 20 MB."),
         variant: 'destructive',
@@ -431,6 +449,7 @@ export function PdfFirstUploadShell({
       source: initialSource || 'dashboard',
       file_size_bytes: selected.size,
     });
+    setUploadError(null);
     setFile(selected);
     setTitle(titleFromFile(selected.name));
     setExamDate(initialExamDate);
@@ -456,14 +475,36 @@ export function PdfFirstUploadShell({
     if (!activeFile || activeTitle.length < 3 || uploading) return;
 
     setUploading(true);
+    setUploadError(null);
     let preparedPath: string | null = null;
-
-    if (isPreAuthPdfResume) {
-      trackMarketingEvent('pdf_upload_started', {
-        source: initialSource,
-        file_size_bytes: activeFile.size,
+    let stage: UploadFailureStage = 'prepare';
+    const uploadSource = initialSource || 'dashboard';
+    const flow = isPreAuthPdfResume ? 'draft_resume' as const : 'manual' as const;
+    // Contar páginas antes de transferir: un PDF de 15 MB no debería subirse entero
+    // para enterarse al final de que supera el límite del plan.
+    const declaredPageCount = await countPdfPagesInBrowser(activeFile);
+    const failWith = (
+      failedStage: UploadFailureStage,
+      message: string | null | undefined,
+      extra: { maxPages?: number | null; pageCount?: number | null } = {}
+    ) => {
+      trackUploadFailure({
+        stage: failedStage,
+        source: uploadSource,
+        flow,
+        fileSizeBytes: activeFile.size,
+        pageCount: extra.pageCount ?? declaredPageCount,
+        maxPages: extra.maxPages ?? null,
+        message,
       });
-    }
+    };
+
+    trackMarketingEvent('pdf_upload_started', {
+      source: uploadSource,
+      file_size_bytes: activeFile.size,
+      flow,
+      page_count: declaredPageCount,
+    });
 
     try {
       const metadata = {
@@ -477,11 +518,20 @@ export function PdfFirstUploadShell({
         mimeType: studentMaterialFileKind(activeFile.name) === 'docx' ? STUDENT_MATERIAL_DOCX_MIME : 'application/pdf',
         size: activeFile.size,
       };
-      const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata });
-      if (!prepared.success && showUploadLimit(prepared.upgrade, activeFile)) return;
+      const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata, declaredPageCount });
+      if (!prepared.success && showUploadLimit(prepared.upgrade, activeFile)) {
+        failWith('plan_limit', prepared.message);
+        return;
+      }
+      if (!prepared.success && prepared.errorCode === 'page_limit' && prepared.maxPages) {
+        failWith('page_limit', prepared.message, { maxPages: prepared.maxPages, pageCount: prepared.pageCount });
+        setUploadError({ message: pageLimitMessage(prepared.pageCount ?? declaredPageCount, prepared.maxPages), blocking: true });
+        return;
+      }
       if (!prepared.success || !prepared.filePath || !prepared.token) {
         throw new Error(prepared.message);
       }
+      stage = 'transfer';
       const preparedFilePath = prepared.filePath;
       const preparedToken = prepared.token;
       preparedPath = preparedFilePath;
@@ -562,6 +612,7 @@ export function PdfFirstUploadShell({
       if (pdfUploadResult.error) {
         throw new Error('No pudimos transferir tu material. Intentá nuevamente.');
       }
+      stage = 'finalize';
 
       const result = await finalizePdfFirstUploadAction({
         metadata,
@@ -570,11 +621,16 @@ export function PdfFirstUploadShell({
       });
       if (!result.success || !result.materialId) {
         if (!result.success && showUploadLimit(result.upgrade, activeFile)) {
+          failWith('plan_limit', result.message);
           await cancelPdfFirstUploadAction(preparedFilePath).catch(() => undefined);
           return;
         }
         if (result.errorCode === 'page_limit' && result.maxPages) {
-          throw new Error(`Este PDF supera el límite de ${result.maxPages} páginas de tu plan.`);
+          // El servidor ya borró el archivo subido.
+          preparedPath = null;
+          failWith('page_limit', result.message, { maxPages: result.maxPages, pageCount: result.pageCount });
+          setUploadError({ message: pageLimitMessage(result.pageCount ?? declaredPageCount, result.maxPages), blocking: true });
+          return;
         }
         throw new Error(result.message);
       }
@@ -645,10 +701,9 @@ export function PdfFirstUploadShell({
       if (preparedPath) {
         await cancelPdfFirstUploadAction(preparedPath).catch(() => undefined);
       }
-      toast({
-        description: firstUploadErrorMessage(error instanceof Error ? error.message : null, locale),
-        variant: 'destructive',
-      });
+      const rawMessage = error instanceof Error ? error.message : null;
+      failWith(stage, rawMessage);
+      setUploadError({ message: firstUploadErrorMessage(rawMessage, locale), blocking: false });
     } finally {
       setUploading(false);
     }
@@ -674,10 +729,16 @@ export function PdfFirstUploadShell({
         });
         await startProcessing(draft.file, restoredTitle);
       })
-      .catch(() => {
-        toast({
-          description: t("No pudimos recuperar el PDF seleccionado. Elegilo nuevamente."),
-          variant: 'destructive',
+      .catch((error: unknown) => {
+        trackUploadFailure({
+          stage: 'draft_restore',
+          source: initialSource,
+          flow: 'draft_resume',
+          message: error instanceof Error ? error.message : null,
+        });
+        setUploadError({
+          message: t("No pudimos recuperar el PDF seleccionado. Elegilo nuevamente."),
+          blocking: true,
         });
       })
       .finally(() => setRestoringDraft(false));
@@ -1001,13 +1062,40 @@ export function PdfFirstUploadShell({
                   </div>
                 )}
 
+                {uploadError ? (
+                  <div
+                    role="alert"
+                    data-upload-error
+                    className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-ui leading-5 text-rose-900"
+                  >
+                    <p>{uploadError.message}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <button
+                        type="button"
+                        onClick={() => pickerRef.current?.click()}
+                        className="font-semibold text-rose-900 underline underline-offset-2"
+                      >
+                        {t("Elegir otro archivo")}
+                      </button>
+                      {uploadError.blocking ? (
+                        <a
+                          href="/demo/material-estudio"
+                          className="font-semibold text-rose-900 underline underline-offset-2"
+                        >
+                          {t("Probar con un apunte de ejemplo")}
+                        </a>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
                     {t("Cancelar")}
                   </Button>
                   <Button
                     type="button"
-                    disabled={!file || !hasValidTitle || uploading}
+                    disabled={!file || !hasValidTitle || uploading || Boolean(uploadError?.blocking)}
                     onClick={() => void startProcessing()}
                   >
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

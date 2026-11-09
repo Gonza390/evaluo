@@ -13,6 +13,7 @@ import { freeStudyMaterialIdsThisMonth } from '@/lib/free-study-v2-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import {
+  assertDeclaredPdfPageCountWithinLimit,
   assertStudentMaterialPdfPageLimit,
   StudentMaterialPdfPageLimitError,
 } from '@/lib/student-materials/pdf-validation';
@@ -52,6 +53,8 @@ type PdfFirstMetadata = z.infer<typeof pdfFirstMetadataSchema>;
 type PdfFirstUploadInput = {
   metadata: PdfFirstMetadata;
   file: StudentMaterialUploadFileMetadata;
+  /** Páginas contadas en el navegador (opcional). Solo sirve para avisar antes de transferir. */
+  declaredPageCount?: number | null;
 };
 
 type PdfFirstFinalizeInput = PdfFirstUploadInput & { filePath: string };
@@ -61,6 +64,9 @@ type ActionResult = { success: boolean; message: string; upgrade?: PremiumUpgrad
 export type PreparePdfFirstUploadResult = ActionResult & {
   filePath?: string;
   token?: string;
+  errorCode?: 'page_limit';
+  pageCount?: number;
+  maxPages?: number;
 };
 
 export type PreparePdfClientVisionUploadsResult = ActionResult & {
@@ -306,6 +312,9 @@ export async function preparePdfFirstUploadAction(
 
     const user = await requireAuthenticatedUser();
     await assertStudentMaterialQuota(user.id);
+    if (studentMaterialFileKind(parsed.file.name) === 'pdf' && typeof input.declaredPageCount === 'number') {
+      await assertDeclaredPdfPageCountWithinLimit(input.declaredPageCount);
+    }
 
     const admin = createAdminClient();
     const filePath = buildStudentMaterialStoragePath(user.id, randomUUID(), parsed.file.name);
@@ -317,6 +326,15 @@ export async function preparePdfFirstUploadAction(
 
     return { success: true, filePath, token: data.token, message: 'Subida preparada.' };
   } catch (error) {
+    if (error instanceof StudentMaterialPdfPageLimitError) {
+      return {
+        success: false,
+        message: error.message,
+        errorCode: 'page_limit',
+        pageCount: error.pageCount,
+        maxPages: error.maxPages,
+      };
+    }
     logError('studentMaterials.pdfFirst.prepareUpload', error);
     return {
       success: false,
