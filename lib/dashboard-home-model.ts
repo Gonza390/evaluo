@@ -88,6 +88,8 @@ export type HomeCard =
       dayNumber: number;
       totalDays: number;
       behind: number;
+      /** El último día del plan ya pasó (el examen todavía no). */
+      finished: boolean;
       primary: { label: string; href: string };
       secondary: { label: string; href: string };
     };
@@ -138,6 +140,9 @@ const COPY = {
     planNext: (t: string, m: number) => `Ahora sigue ${t}: leelo y hacé las preguntas. Unos ${m} minutos.`,
     planDoneBehind: (b: number) => `Terminaste lo de hoy. Te ${plural(b, 'quedó 1 tema', `quedaron ${b} temas`)} de días anteriores.`,
     planDone: 'Terminaste lo de hoy. Mañana seguís con el plan.',
+    catchUpGreeting: (n: number, name?: string) =>
+      COPY.es.withName(`Te ${plural(n, 'queda 1 tema atrasado', `quedan ${n} temas atrasados`)}`, name),
+    planOverDone: 'Terminaste el plan. Repasá con un simulacro antes del examen.',
     start: 'Empezar',
     keepStudying: 'Seguir estudiando',
     seePlan: 'Ver plan',
@@ -186,6 +191,9 @@ const COPY = {
     planNext: (t: string, m: number) => `Next up: ${t}. Read it and answer the questions. About ${m} minutes.`,
     planDoneBehind: (b: number) => `You’re done for today. ${plural(b, '1 topic', `${b} topics`)} from earlier days ${b === 1 ? 'is' : 'are'} still pending.`,
     planDone: 'You’re done for today. Pick up the plan tomorrow.',
+    catchUpGreeting: (n: number, name?: string) =>
+      COPY.en.withName(`You have ${plural(n, '1 topic', `${n} topics`)} to catch up on`, name),
+    planOverDone: 'You finished the plan. Take a practice exam before the real one.',
     start: 'Start',
     keepStudying: 'Keep studying',
     seePlan: 'See plan',
@@ -254,16 +262,26 @@ export function buildHomeView(input: HomeInput): HomeView {
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
   const examRow = hasFutureExam ? { daysLeft: daysLeft!, date: examDate!, materialTitle: title } : null;
+  // El examen del plan cuenta aunque el apunte no tenga exam_date guardada.
+  if (hasFutureExam && !exams.some((exam) => exam.materialId === material.id)) {
+    exams.push({ materialId: material.id, title, examDate: examDate!, daysLeft: daysLeft! });
+    exams.sort((a, b) => a.daysLeft - b.daysLeft);
+  }
   const practiceTask = (): HomeTask => ({ id: 'practice', title: c.practiceTask(title), meta: c.practiceMeta, href: practiceHref(material.id), done: null });
 
   if (mode === 'con-plan' && input.plan) {
     const days = input.plan.days;
     const todayIndex = days.findIndex((day) => day.date === today);
     const pastDays = days.filter((day) => day.date < today);
-    const todayTopics = todayIndex >= 0 ? days[todayIndex].topics : [];
+    const finished = days.length > 0 && days[days.length - 1].date < today;
     const isRead = (topic: HomePlanTopic) => topic.materialId === material.id && read.has(topic.topicIndex);
-    const behind = pastDays.flatMap((day) => day.topics).filter((topic) => topic.materialId === material.id && !read.has(topic.topicIndex)).length;
-    const tasks: HomeTask[] = todayTopics.map((topic) => ({
+    const overdue = pastDays.flatMap((day) => day.topics).filter((topic) => topic.materialId === material.id && !read.has(topic.topicIndex));
+    const behind = overdue.length;
+    const todayTopics = todayIndex >= 0 ? days[todayIndex].topics : [];
+    // Sin tareas para hoy (día libre o plan terminado): hoy toca ponerse al día con lo atrasado.
+    const catchUp = todayTopics.length === 0 && behind > 0;
+    const agendaTopics = catchUp ? overdue.slice(0, 3) : todayTopics;
+    const tasks: HomeTask[] = agendaTopics.map((topic) => ({
       id: `${topic.materialId}:${topic.topicIndex}`,
       title: c.readTask(topic.title),
       meta: c.summaryMeta(topic.estimatedMinutes),
@@ -271,13 +289,15 @@ export function buildHomeView(input: HomeInput): HomeView {
       done: isRead(topic),
     }));
     const pending = tasks.filter((task) => !task.done);
-    const firstPending = todayTopics.find((topic) => !isRead(topic)) ?? null;
+    const firstPending = agendaTopics.find((topic) => !isRead(topic)) ?? null;
     const dayNumber = todayIndex >= 0 ? todayIndex + 1 : Math.min(days.length, pastDays.length + 1);
     const text = firstPending
       ? c.planNext(firstPending.title, firstPending.estimatedMinutes)
       : behind > 0
         ? c.planDoneBehind(behind)
-        : c.planDone;
+        : finished
+          ? c.planOverDone
+          : c.planDone;
     const nextHref = firstPending
       ? readHref(firstPending.materialId, firstPending.topicIndex)
       : next
@@ -287,13 +307,14 @@ export function buildHomeView(input: HomeInput): HomeView {
       locale,
       mode,
       personaje: daysLeft! <= 2 ? 'birrete' : pending.length === 0 ? 'feliz' : 'concentrado',
-      greeting: c.planGreeting(pending.length, name),
+      greeting: catchUp ? c.catchUpGreeting(behind, name) : c.planGreeting(pending.length, name),
       card: {
         kind: 'plan',
         text,
         dayNumber,
         totalDays: days.length,
         behind,
+        finished,
         primary: { label: firstPending ? c.start : c.keepStudying, href: nextHref },
         secondary: { label: c.seePlan, href: '/dashboard/plan-de-estudio' },
       },
