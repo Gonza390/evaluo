@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
+import { requestAppLocale } from '@/lib/i18n/request-app-locale';
 import { cookies } from 'next/headers';
-import { accountAppLocale } from '@/lib/i18n/app-locale';
 import Link from 'next/link';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -77,7 +77,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
     const entryLocale = (await cookies()).get('evaluo_ui_locale')?.value;
     redirect((entryLocale === 'en' ? '/en/login' : '/login') + '?next=' + encodeURIComponent('/dashboard/practicar/' + id + '/' + mode));
   }
-  const english = accountAppLocale(user.user_metadata) === 'en';
+  const english = (await requestAppLocale(user.user_metadata)) === 'en';
   const { data: material } = await supabase.from('student_materials')
     .select('id,title,file_name,file_path,processing_status,content_fingerprint,pedagogical_artifacts_version')
     .eq('id', id).eq('user_id', user.id).maybeSingle();

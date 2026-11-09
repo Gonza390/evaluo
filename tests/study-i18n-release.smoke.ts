@@ -97,7 +97,8 @@ assert.ok(reminderBell.includes('localizeExamEventTitle(reminder.title, locale)'
 assert.match(calendar, /english\s*\?\s*['"]Study plan exam['"]/);
 // El calendario no tiene límite de parciales: no debe quedar el upsell de Premium.
 assert.ok(!calendar.includes('PremiumUpsell'));
-assert.ok(planPage.includes("accountAppLocale(user.user_metadata)"));
+// Idioma desde la cookie sincronizada (con respaldo en la cuenta), ver lib/i18n/request-app-locale.ts.
+assert.ok(planPage.includes("requestAppLocale(user.user_metadata)"));
 assert.ok(planPage.includes('<EmptyStudyPlan locale={locale} />'));
 assert.ok(planEmpty.includes("english ? 'Your plan preview'"));
 assert.ok(planCard.includes("english ? 'Prepare for your exam'"));

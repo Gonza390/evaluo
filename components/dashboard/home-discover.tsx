@@ -3,15 +3,15 @@
 import { Diapositivas, type Diapositiva } from '@/components/dashboard/diapositivas';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
-const eyebrow = 'text-[10px] font-semibold uppercase tracking-etiqueta text-slate-500';
-const headline = 'mt-1 mb-2.5 text-[14px] font-semibold tracking-[-0.02em] text-slate-950';
+const eyebrow = 'truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500';
+const headline = 'mt-0.5 mb-2 text-[13px] font-semibold tracking-[-0.01em] text-slate-950';
 
 function QuizPreview({ materialTitle, en }: { materialTitle: string; en: boolean }) {
   return (
     <>
       <div className={eyebrow}>{en ? 'Practice exam' : 'Simulacro'} · {materialTitle}</div>
       <div className={headline}>{en ? 'Timed, like the real exam' : 'Con reloj, como el examen'}</div>
-      <div className="flex flex-col gap-1.5" aria-hidden="true">
+      <div className="flex flex-col gap-1" aria-hidden="true">
         <span className="h-6 rounded-[7px] border border-slate-200 px-2.5 text-[11px] leading-6 text-slate-500">{en ? 'Option A' : 'Opción A'}</span>
         <span className="h-6 rounded-[7px] border-[1.5px] border-blue-400 bg-blue-50/60 px-2.5 text-[11px] leading-[22px] font-medium text-slate-900">{en ? 'Option B' : 'Opción B'}</span>
       </div>
@@ -48,11 +48,11 @@ function MapPreview({ materialTitle, en }: { materialTitle: string; en: boolean 
     <>
       <div className={eyebrow}>{en ? 'Mind map' : 'Mapa mental'}</div>
       <div className={headline}>{en ? 'All your notes at a glance' : 'Todo el apunte en una vista'}</div>
-      <div className="relative h-[84px]" aria-hidden="true">
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 240 84" preserveAspectRatio="none">
-          <path d="M120 42 L40 12 M120 42 L200 12 M120 42 L40 72 M120 42 L200 72" stroke="#c4cde0" strokeWidth="1.5" fill="none" />
+      <div className="relative h-[72px]" aria-hidden="true">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 240 72" preserveAspectRatio="none">
+          <path d="M120 36 L40 11 M120 36 L200 11 M120 36 L40 61 M120 36 L200 61" stroke="#c4cde0" strokeWidth="1.5" fill="none" />
         </svg>
-        <span className="absolute top-[29px] left-1/2 flex h-[26px] max-w-[60%] -translate-x-1/2 items-center truncate rounded-lg bg-blue-600 px-2.5 text-[11px] font-semibold text-white">
+        <span className="absolute top-[23px] left-1/2 flex h-[26px] max-w-[60%] -translate-x-1/2 items-center truncate rounded-lg bg-blue-600 px-2.5 text-[11px] font-semibold text-white">
           {materialTitle}
         </span>
         <span className={`${node} top-0 left-0 w-16`}><span className="h-1.5 w-full rounded-full bg-slate-200" /></span>
