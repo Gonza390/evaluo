@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
+import { requestAppLocale } from '@/lib/i18n/request-app-locale';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { FileText, ArrowRight } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { isUuid } from '@/lib/uuid';
-import { accountAppLocale } from '@/lib/i18n/app-locale';
 import { getSessionUser } from '@/lib/auth-session';
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ export default async function PdfProgressPage({
       `/login?next=${encodeURIComponent(`/dashboard/progreso${materialId ? `?material=${materialId}` : ''}`)}`
     );
 
-  const english = accountAppLocale(user.user_metadata) === 'en';
+  const english = (await requestAppLocale(user.user_metadata)) === 'en';
   // Verificar pertenencia antes de consultar el resumen y los errores del material.
   let query = supabase
     .from('student_materials')

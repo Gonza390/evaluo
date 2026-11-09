@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { accountAppLocale } from '@/lib/i18n/app-locale';
+import { requestAppLocale } from '@/lib/i18n/request-app-locale';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { MaterialCatalogSeed } from '@/components/materials/material-catalog-provider';
@@ -24,7 +24,7 @@ export default async function StudyPlanPage({ searchParams }: { searchParams?: P
   const supabase = await createClientServer();
   const user = await getSessionUser();
   if (!user) redirect('/login?next=/dashboard/plan-de-estudio');
-  const locale = accountAppLocale(user.user_metadata) ?? 'es';
+  const locale = await requestAppLocale(user.user_metadata);
   const english = locale === 'en';
 
   // El tipo de vista y los PDFs son independientes: consultarlos en paralelo.

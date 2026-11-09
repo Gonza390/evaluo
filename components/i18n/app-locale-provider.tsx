@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 // Supabase se carga solo al guardar preferencias: este proveedor está en casi
 // todas las pantallas y no debe sumar el cliente al JavaScript inicial (LCP).
@@ -23,6 +24,27 @@ type AppLocaleContextValue = {
 };
 const AppLocaleContext = createContext<AppLocaleContextValue | null>(null);
 
+/**
+ * Las páginas del servidor leen el idioma de esta cookie (lib/i18n/request-app-locale.ts):
+ * los metadatos de la sesión tardan hasta una hora en actualizarse.
+ */
+function writeLocaleCookie(locale: AppLocale) {
+  try {
+    document.cookie = `${APP_LOCALE_STORAGE_KEY}=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+  } catch {
+    // Sin cookies, el servidor usa el idioma de la cuenta.
+  }
+}
+
+function readLocaleCookie(): AppLocale | null {
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${APP_LOCALE_STORAGE_KEY}=([^;]*)`));
+    return parseAppLocale(match?.[1]);
+  } catch {
+    return null;
+  }
+}
+
 function storedLocale(): AppLocale | null {
   try {
     return parseAppLocale(window.localStorage.getItem(APP_LOCALE_STORAGE_KEY));
@@ -33,6 +55,8 @@ function storedLocale(): AppLocale | null {
 
 export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
+  const router = useRouter();
+  const refreshedForCookie = useRef(false);
   const [locale, setLocale] = useState<AppLocale>('es');
   const [initialized, setInitialized] = useState(false);
   const [savingLocale, setSavingLocale] = useState(false);
@@ -80,8 +104,19 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Auth metadata remains the persisted preference when storage is unavailable.
     }
+    // Solo con sesión: sin cuenta, la cookie la decide el selector de idioma de la landing
+    // (y el registro la usa para elegir el idioma de la cuenta nueva).
+    if (user?.id) {
+      // Si el servidor armó la página con otro idioma (cookie vieja), se vuelve a pedir una vez.
+      const cookieLocale = readLocaleCookie();
+      writeLocaleCookie(locale);
+      if (cookieLocale && cookieLocale !== locale && !refreshedForCookie.current) {
+        refreshedForCookie.current = true;
+        router.refresh();
+      }
+    }
     return () => { document.documentElement.lang = previous; };
-  }, [initialized, locale]);
+  }, [initialized, locale, router, user?.id]);
 
   const changeLocale = useCallback(async (next: AppLocale) => {
     if (next === locale) return;
@@ -94,10 +129,13 @@ export function AppLocaleProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
       }
       setLocale(next);
+      // Que las partes armadas en el servidor (home, plan, progreso…) también cambien de idioma.
+      writeLocaleCookie(next);
+      router.refresh();
     } finally {
       setSavingLocale(false);
     }
-  }, [locale, user]);
+  }, [locale, user, router]);
 
   const changeStudyLocale = useCallback(async (next: AppLocale) => {
     if (next === studyLocale) return;

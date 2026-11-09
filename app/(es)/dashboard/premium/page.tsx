@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { requestAppLocale } from '@/lib/i18n/request-app-locale';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClientServer } from '@/lib/supabase-server';
@@ -38,7 +39,7 @@ export default async function DashboardPremiumPage({
 
   // "Mejorar mi plan" y los upsells de la app: pantalla propia con precio por
   // semana (diseño 7/11), en español e inglés. /pricing queda para visitantes.
-  const uiLocale = (await cookies()).get('evaluo_ui_locale')?.value === 'en' ? 'en' : 'es';
+  const uiLocale = await requestAppLocale(user.user_metadata);
   const nextExam = await getUpgradeNextExam(supabase, user.id);
   return (
     <main className="w-full min-w-0 bg-white">
