@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, X } from 'lucide-react';
 import { saveStudentMaterialExamDateAction } from '@/app/dashboard/materiales/exam-date-prompt-actions';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { HomeView } from '@/lib/dashboard-home-model';
@@ -31,6 +31,7 @@ const TEXT = {
     addDate: 'Agregar fecha', close: 'Cerrar', agenda: 'Agenda', tabToday: 'Hoy', tabExams: 'Exámenes', done: 'Hecha:',
     planTitle: 'Armá tu plan hasta el examen', planText: 'Te decimos qué estudiar cada día para llegar listo. Te lleva 2 minutos.',
     planCta: 'Armar mi plan', noExams: 'Todavía no cargaste fechas de examen.',
+    more: (n: number) => `Ver ${n} más en tu plan`,
   },
   en: {
     prevMonth: 'Previous month', nextMonth: 'Next month', today: 'today', day: 'day', days: 'days', todayExam: 'Today',
@@ -38,6 +39,7 @@ const TEXT = {
     addDate: 'Add date', close: 'Close', agenda: 'Agenda', tabToday: 'Today', tabExams: 'Exams', done: 'Done:',
     planTitle: 'Build your plan until the exam', planText: 'We tell you what to study each day so you get there ready. It takes 2 minutes.',
     planCta: 'Build my plan', noExams: 'You haven’t added any exam dates yet.',
+    more: (n: number) => `See ${n} more in your plan`,
   },
 };
 
@@ -119,13 +121,13 @@ function ExamRow({ daysLeft, title, date, compact = false, locale }: { daysLeft:
   const t = TEXT[locale];
   return (
     <div className="flex items-center gap-3">
-      <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-[10px] bg-slate-100 leading-none">
+      <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-[10px] bg-amber-50 leading-none ring-1 ring-amber-100">
         {daysLeft === 0 ? (
-          <span className="text-chico font-bold text-slate-950">{t.todayExam}</span>
+          <span className="text-chico font-bold text-amber-900">{t.todayExam}</span>
         ) : (
           <>
-            <span className="text-ui font-bold text-slate-950">{daysLeft}</span>
-            <span className="mt-0.5 text-[10px] text-slate-500">{daysLeft === 1 ? t.day : t.days}</span>
+            <span className="text-ui font-bold text-amber-900">{daysLeft}</span>
+            <span className="mt-0.5 text-[10px] text-amber-700">{daysLeft === 1 ? t.day : t.days}</span>
           </>
         )}
       </span>
@@ -164,6 +166,12 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
       });
     });
   };
+
+  // Hoy muestra como máximo 2 tareas (primero las pendientes); el resto queda en el plan.
+  const MAX_TASKS = 2;
+  const orderedTasks = [...agenda.tasks.filter((task) => !task.done), ...agenda.tasks.filter((task) => task.done)];
+  const visibleTasks = orderedTasks.slice(0, MAX_TASKS);
+  const hiddenTasks = orderedTasks.length - visibleTasks.length;
 
   const tabClass = (active: boolean) =>
     `h-8 rounded-full text-ui font-medium transition-colors ${active ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:text-slate-800'}`;
@@ -240,28 +248,60 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
           inert={tab !== 'hoy'}
           className={`[grid-area:1/1] ${tab === 'hoy' ? 'evaluo-enter' : 'invisible'}`}
         >
-          <ul className="mt-2">
-            {agenda.tasks.map((task) => (
+          <ul className="mt-3 space-y-1.5">
+            {visibleTasks.map((task) => (
               <li key={task.id}>
-                <Link href={task.href} className="group flex items-start gap-2.5 py-1.5">
-                  {task.done === null ? (
-                    <span className="w-[3px] self-stretch rounded-full bg-blue-500" aria-hidden="true" />
-                  ) : task.done ? (
-                    <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
-                      <Check className="size-3" strokeWidth={3} aria-hidden="true" />
-                      <span className="sr-only">{t.done}</span>
-                    </span>
-                  ) : (
-                    <span className="mt-px size-[18px] shrink-0 rounded-full border-2 border-slate-300" aria-hidden="true" />
-                  )}
-                  <span className="min-w-0">
-                    <span className={`block text-ui leading-snug font-medium ${task.done ? 'text-slate-400 line-through' : 'text-slate-950 group-hover:text-blue-800'}`}>{task.title}</span>
-                    <span className="mt-0.5 block text-chico text-slate-400">{task.meta}</span>
+                <Link
+                  href={task.href}
+                  className={`group flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-colors ${
+                    task.done
+                      ? 'border-transparent bg-slate-50'
+                      : 'border-blue-100/80 bg-gradient-to-r from-blue-50/80 to-white hover:border-blue-200 hover:from-blue-50'
+                  }`}
+                >
+                  <span
+                    className={`relative flex size-8 shrink-0 items-center justify-center rounded-[9px] ${
+                      task.done ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {task.done ? (
+                      <>
+                        <Check className="size-4" strokeWidth={2.75} aria-hidden="true" />
+                        <span className="sr-only">{t.done}</span>
+                      </>
+                    ) : (
+                      <BookOpen className="size-4" aria-hidden="true" />
+                    )}
                   </span>
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={`line-clamp-2 text-ui leading-snug font-medium ${
+                        task.done ? 'text-slate-400 line-through' : 'text-slate-900 group-hover:text-blue-800'
+                      }`}
+                    >
+                      {task.title}
+                    </span>
+                    <span
+                      className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-medium ${
+                        task.done ? 'text-slate-400' : 'bg-white text-blue-700 ring-1 ring-blue-100'
+                      }`}
+                    >
+                      <Clock3 className="size-3" aria-hidden="true" />
+                      {task.meta}
+                    </span>
+                  </span>
+                  {task.done ? null : (
+                    <ChevronRight className="size-4 shrink-0 text-blue-300 transition-transform group-hover:translate-x-0.5 group-hover:text-blue-500" aria-hidden="true" />
+                  )}
                 </Link>
               </li>
             ))}
           </ul>
+          {hiddenTasks > 0 ? (
+            <Link href="/dashboard/plan-de-estudio" className="mt-1 inline-flex min-h-8 items-center px-1 text-chico font-semibold text-blue-700 hover:text-blue-800">
+              {t.more(hiddenTasks)}
+            </Link>
+          ) : null}
           {tab === 'hoy' ? askRow : null}
           {agenda.exam ? (
             <Link href="/calendario" className="mt-2.5 block border-t border-slate-100 pt-3">
