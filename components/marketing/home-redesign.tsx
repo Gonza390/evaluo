@@ -566,7 +566,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
               </p>
               <p style={{ color: 'var(--t)', fontWeight: '700' }}>{t("$0 · sin tarjeta")}</p>
               <ul className="home-plan-features">
-                <li>{t("1 material PDF o Word gratis por mes")}</li>
+                <li>{t("1 material gratis por mes")}</li>
                 <li>{t("Hasta 100 páginas y 20 MB por archivo")}</li>
                 <li>{t("Resumen, glosario, flashcards y práctica básica")}</li>
               </ul>
@@ -590,7 +590,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
               </p>
               <RegionalPricingMessage placement="home-plan" locale={locale} />
               <ul className="home-plan-features">
-                <li>{t("Hasta 3 materiales PDF o Word por día")}</li>
+                <li>{t("Hasta 3 materiales por día")}</li>
                 <li>{t("Simuladores completos y más explicaciones")}</li>
                 <li>{t("Práctica personalizada según tus errores")}</li>
               </ul>

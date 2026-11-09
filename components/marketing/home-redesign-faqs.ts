@@ -27,12 +27,12 @@ export const HOME_REDESIGN_FAQS = [
   {
     question: '¿Qué puedo probar gratis?',
     answer:
-      'Podés empezar sin tarjeta con 1 archivo PDF o Word gratis por mes. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo se renueva el día 1 de cada mes. También podés probar la demo sin crear una cuenta.',
+      'Podés empezar sin tarjeta con 1 material gratis por mes. Los PDFs admiten hasta 100 páginas, los documentos Word hasta 150.000 caracteres extraídos y cada archivo hasta 20 MB. El cupo se renueva el día 1 de cada mes. También podés probar la demo sin crear una cuenta.',
   },
   {
     question: '¿Qué cambia con Premium?',
     answer:
-      'Podés subir hasta 3 materiales PDF o Word por día, con un máximo de 20 MB por archivo. Además, tenés simuladores completos, más explicaciones y práctica personalizada a partir de tus errores para seguir trabajando lo que más te cuesta.',
+      'Podés subir hasta 3 materiales por día, con un máximo de 20 MB por archivo. Además, tenés simuladores completos, más explicaciones y práctica personalizada a partir de tus errores para seguir trabajando lo que más te cuesta.',
   },
   {
     question: '¿Cómo se paga Premium? ¿Puedo cancelar?',
@@ -65,11 +65,11 @@ export const HOME_REDESIGN_FAQS_EN = [
   },
   {
     "question": "What can I do for free?",
-    "answer": "You can upload one PDF or Word document for free each month. PDFs support up to 100 pages, Word documents up to 150,000 extracted characters, and files up to 20 MB. The free allowance renews on the 1st of each month. You can also explore a demo without signing up."
+    "answer": "You can upload one material for free each month. PDFs support up to 100 pages, Word documents up to 150,000 extracted characters, and files up to 20 MB. The free allowance renews on the 1st of each month. You can also explore a demo without signing up."
   },
   {
     "question": "What does Premium include?",
-    "answer": "Premium allows up to three PDF or Word materials a day, up to 20 MB per file, as well as full practice exams, more explanations and personalized practice based on mistakes."
+    "answer": "Premium allows up to three materials a day, up to 20 MB per file, as well as full practice exams, more explanations and personalized practice based on mistakes."
   },
   {
     "question": "How do I pay for Premium? Can I cancel?",
