@@ -133,6 +133,18 @@ assert.match(space, /<MaeveDashboardChrome/, 'La home anterior sigue como respal
 const loader = file('lib/dashboard-home.ts');
 assert.match(loader, /return null;\s*\}\s*\}\s*$/, 'Ante un error devuelve null y se usa la home anterior.');
 
+// Con la home nueva no se consulta la acción sugerida de la home anterior.
+assert.match(page, /const nextStudyAction = homeView\s*\? Promise\.resolve\(null\)/);
+assert.ok(page.indexOf('const homeView = await homeViewPromise') < page.indexOf('getDashboardNextStudyAction(user.id'));
+
+// El error al guardar la fecha llega en el idioma de la app.
+const examDateActions = file('app/(es)/dashboard/materiales/exam-date-prompt-actions.ts');
+assert.match(examDateActions, /retry: 'We couldn’t save the date\. Please try again\.'/);
+assert.match(examDateActions, /locale\?: 'es' \| 'en'/);
+const agenda = file('components/dashboard/home-agenda.tsx');
+assert.match(agenda, /saveStudentMaterialExamDateAction\(\{ materialId, examDate: dateKey, locale \}\)/);
+assert.match(agenda, /setError\(result\.message\)/);
+
 // El componente de diapositivas es genérico.
 const slides = file('components/dashboard/diapositivas.tsx');
 assert.match(slides, /export function Diapositivas/);

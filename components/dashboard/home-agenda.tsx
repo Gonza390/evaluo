@@ -150,9 +150,9 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
     const materialId = agenda.askDate.materialId;
     setError(null);
     startTransition(async () => {
-      const result = await saveStudentMaterialExamDateAction({ materialId, examDate: dateKey });
+      const result = await saveStudentMaterialExamDateAction({ materialId, examDate: dateKey, locale });
       if (!result.success) {
-        setError(locale === 'en' ? 'We couldn’t save the date. Please try again.' : result.message);
+        setError(result.message);
         return;
       }
       trackMarketingEvent('exam_date_selected', { location: 'dashboard_agenda', material_id: materialId });
