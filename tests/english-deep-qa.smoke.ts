@@ -23,10 +23,10 @@ check('components/study/pdf-study-start-guide.tsx', ['useOptionalAppLocale', 'Yo
 check('components/material-study-workspace.tsx', ['Summary contents', "'chapter' : 'chapters'", "english ? 'Contents'"]);
 check('components/student-material-author.tsx', ['useOptionalAppLocale', 'Share this PDF', 'Study material shared on Evaluo.']);
 check('components/SessionIdleGuard.tsx', ["APP_LOCALE_STORAGE_KEY", "english ? '/en/login' : '/login'"]);
-check('app/(es)/dashboard/progreso/page.tsx', ['accountAppLocale', 'Your progress', 'You have no processed documents yet']);
+check('app/(es)/dashboard/progreso/page.tsx', ['requestAppLocale', 'Your progress', 'You have no processed documents yet']);
 check('components/referrals/ReferralPortalNavLink.tsx', ['useOptionalAppLocale', 'Referrals']);
 check('components/referrals/PartnerReferralActions.tsx', ['useOptionalAppLocale', 'Code copied', 'Copy link']);
-check('app/(es)/referidos/page.tsx', ['accountAppLocale', 'Referral program', 'Attributed revenue', 'Performance by code']);
+check('app/(es)/referidos/page.tsx', ['requestAppLocale', 'Referral program', 'Attributed revenue', 'Performance by code']);
 // La actividad estimada se muestra en ambos idiomas y se traduce sola (43bc483).
 check('components/ClientLayoutClient.tsx', ['<EstimatedStudyActivity', 'Settings', 'Close study streak summary']);
 check('components/estimated-study-activity.tsx', ['useOptionalAppLocale', 'Studying', 'estimated students studying']);
