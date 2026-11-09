@@ -68,7 +68,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{page.intro}</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href={showUploader ? '#choose-file' : '/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1'} className={'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800' + (showUploader ? ' lg:hidden' : '')}>
-                Study with my PDF or Word <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Study with my material <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <a href="#worked-example" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:border-blue-200">
                 Explore the worked example
@@ -249,7 +249,7 @@ export function EnglishStudyPage({ pageKey }: { pageKey: EnglishPageKey }) {
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-blue-200"><Globe2 className="h-4 w-4" aria-hidden="true"/> Your own course material</div>
               <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">Turn the next study session into progress you can check.</h2>
               <p className="mt-4 text-sm leading-7 text-slate-200">
-                Start with your PDF or Word notes, practice by topic, then check answers against the source.
+                Start with your notes, practice by topic, then check answers against the source.
                 These guides are free to read, and you can start using Evaluo in English for free with one PDF or Word document.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">

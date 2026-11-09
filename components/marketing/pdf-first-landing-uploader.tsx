@@ -63,7 +63,7 @@ const COPY = {
     lead: 'Pick your material first. Create your account after.',
     notUploaded: 'Not uploaded yet',
     choose: 'Choose your study material',
-    chooseHint: 'PDF or Word · up to 20 MB',
+    chooseHint: 'Up to 20 MB',
     ready: 'ready to continue',
     remove: 'Remove file',
     saving: 'Saving your selection…',
