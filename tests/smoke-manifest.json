@@ -458,5 +458,9 @@
   {
     "file": "tests/dashboard-home.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/onboarding-upload-failures.smoke.ts",
+    "alias": true
   }
 ]
