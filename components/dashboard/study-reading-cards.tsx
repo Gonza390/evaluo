@@ -84,7 +84,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
         </div>
         <div className="min-w-0 lg:pt-2">
           <h2 className="sr-only">{english ? 'Study tools' : 'Herramientas de estudio'}</h2>
-          <p className="sr-only">{activeMaterial ? english ? `Tools for ${activeMaterial.title}` : `Herramientas para ${activeMaterial.title}` : english ? 'Upload a PDF from My space to get started.' : 'Subí un PDF desde Mi espacio para empezar.'}</p>
+          <p className="sr-only">{activeMaterial ? english ? `Tools for ${activeMaterial.title}` : `Herramientas para ${activeMaterial.title}` : english ? 'Upload your material from My space to get started.' : 'Subí tu material desde Mi espacio para empezar.'}</p>
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {tools.map((tool) => {
               const Icon = tool.icon;
@@ -94,7 +94,7 @@ export function StudyReadingCards({ materials, lastOpenedMaterialId }: { materia
                   <Icon className="h-5 w-5" aria-hidden="true" />
                   <span className="mt-auto pt-4 text-ui font-medium">{tool.title}</span>
                   <span className="mt-1 text-chico leading-4 opacity-85">{tool.description}</span>
-                  <span className="mt-1.5 text-chico font-medium">{activeMaterial ? english ? 'Open →' : 'Abrir →' : english ? 'Choose a PDF' : 'Elegí un PDF'}</span>
+                  <span className="mt-1.5 text-chico font-medium">{activeMaterial ? english ? 'Open →' : 'Abrir →' : english ? 'Choose a material' : 'Elegí un material'}</span>
                 </>
               );
               return activeMaterial ? (

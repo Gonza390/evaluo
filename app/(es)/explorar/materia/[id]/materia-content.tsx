@@ -1513,7 +1513,7 @@ export default function MateriaContent({
                   href="/dashboard/materiales"
                   className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#456DBD] to-[#6972C8] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#3A5CA8] hover:to-[#555CB1]"
                 >
-                  Subir mi PDF
+                  Subir mi material
                 </Link>
               </div>
 

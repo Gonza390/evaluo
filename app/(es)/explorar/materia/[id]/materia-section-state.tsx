@@ -53,7 +53,7 @@ export function MateriaSectionState({
       };
     } else if (normalizedTitle.includes('trabajos prácticos')) {
       primaryEmptyAction = {
-        label: 'Subir un PDF',
+        label: 'Subir material',
         href: uploadHref,
       };
       secondaryEmptyAction = {

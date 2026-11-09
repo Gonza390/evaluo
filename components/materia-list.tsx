@@ -799,7 +799,7 @@ export default function MateriaList({
                   href="/dashboard/materiales"
                   className="inline-flex items-center justify-center rounded-2xl bg-[#456DBD] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#3A5CA8]"
                 >
-                  Subir mi PDF
+                  Subir mi material
                 </Link>
               </div>
             </div>

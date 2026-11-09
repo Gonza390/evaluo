@@ -387,7 +387,7 @@ export default function MateriaStudyHome({
 
             <div className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition sm:w-auto">
               <UploadCloud className="h-4 w-4" />
-              Subir mi PDF
+              Subir mi material
             </div>
           </Link>
 

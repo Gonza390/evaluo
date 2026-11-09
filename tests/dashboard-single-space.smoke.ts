@@ -112,11 +112,11 @@ assert.match(navbarSource, /pathname\.startsWith\('\/materiales\/'\)/,
 
 assert.doesNotMatch(dashboardMaterialsSource, /dashboard_materials_header/,
   'Tus PDFs must not display a redundant upload CTA in the section header.');
-assert.match(dashboardMaterialsSource, /primaryActionLabel=(?:"Subí tu PDF"|\{t\("Subí tu PDF"\)\})/,
+assert.match(dashboardMaterialsSource, /primaryActionLabel=(?:"Subí tu material"|\{t\("Subí tu material"\)\})/,
   'The empty materials state must keep the PDF upload CTA.');
 assert.match(dashboardMaterialsSource, /onPrimaryAction=\{\(\) => openUploadPicker\('dashboard_empty_materials'\)\}/,
   'The empty-state upload CTA must still explicitly open the picker.');
-assert.match(dashboardHeroSource, /Subir otro PDF/,
+assert.match(dashboardHeroSource, /Subir otro material/,
   'The dashboard hero must keep its upload action for students with existing PDFs.');
 assert.match(dashboardMaterialsSource, /flex h-10 w-10 shrink-0/);
 assert.match(appChromeSource, /const isCompactAppRoute =/);

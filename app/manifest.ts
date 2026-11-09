@@ -39,7 +39,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       {
         name: 'Estudiar un PDF',
-        short_name: 'Subir PDF',
+        short_name: 'Subir material',
         description: 'Subí tus apuntes y empezá a estudiar con Evaluo.',
         url: '/dashboard/materiales?openUpload=1',
       },

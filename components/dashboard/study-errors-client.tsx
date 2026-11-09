@@ -40,7 +40,7 @@ const STUDY_ERROR_EN: Record<string,string> = {
   "Al día": "Up to date",
   "Simulador y otros conceptos": "Question bank and other concepts",
   "Repasá el error y comprobá lo aprendido.": "Review the mistake and check what you learned.",
-  "Subir mi PDF": "Upload my PDF",
+  "Subir mi material": "Upload my material",
   "Mis PDFs": "My PDFs",
   "Cambiar material": "Change material",
   "Elegí un error": "Choose a mistake",
@@ -164,7 +164,7 @@ export function StudyErrorsClient({
     <>
       {english ? 'You have ' : 'Tenés '}<strong className="text-foreground font-semibold">{headerPendingCount} {english ? (headerPendingCount === 1 ? 'concept' : 'concepts') : (headerPendingCount === 1 ? 'concepto' : 'conceptos')}</strong>{' '}
       {english ? 'to review' : 'para reforzar'}{selectedPdf ? (english ? ' in this PDF' : ' en este PDF') : ''}.
-      {!materialId ? (english ? ' Choose a PDF.' : ' Elegí un PDF.') : materialId === unlinkedId ? (english ? ' Review each concept while keeping its source.' : ' Repasá cada concepto conservando su origen.') : ''}
+      {!materialId ? (english ? ' Choose a material.' : ' Elegí un material.') : materialId === unlinkedId ? (english ? ' Review each concept while keeping its source.' : ' Repasá cada concepto conservando su origen.') : ''}
     </>
   ) : selectedPdf ? (english ? 'No pending concepts in this PDF.' : 'No te quedan conceptos pendientes en este PDF.') :
     views.length ? (english ? 'No concepts left to review. Your progress was saved.' : 'No tenés conceptos pendientes. Tu progreso de repaso está guardado.') :
@@ -382,14 +382,14 @@ export function StudyErrorsClient({
             </div>
             {!pdfs.length && !views.length && (
               <p className="!text-foreground mt-5">
-                {english ? 'No saved mistakes yet. Upload a PDF and practice; difficult topics will appear here.' : 'Todavía no tenés errores guardados. Subí un PDF y practicá: lo que te cueste quedará listo para repasar.'}
+                {english ? 'No saved mistakes yet. Upload your material and practice; difficult topics will appear here.' : 'Todavía no tenés errores guardados. Subí tu material y practicá: lo que te cueste quedará listo para repasar.'}
               </p>
             )}
             <Link
               href="/dashboard/materiales?openUpload=1"
               className="text-muted-foreground hover:text-foreground focus-visible:outline-ring mt-4 inline-flex min-h-11 items-center rounded-lg px-2 text-cuerpo font-medium underline underline-offset-4 transition focus-visible:outline-2"
             >
-              {t("Subir mi PDF")}
+              {t("Subir mi material")}
             </Link>
           </section>
         ) : (

@@ -163,7 +163,7 @@ export default function ParcialesUbaXxiPage() {
                 }}
                 className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#31549A] px-3 text-xs font-bold text-white transition hover:bg-[#213763] sm:px-4"
               >
-                Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Subí tu material <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
             </div>
           }
@@ -485,7 +485,7 @@ export default function ParcialesUbaXxiPage() {
                 y revisar qué temas necesitás reforzar antes de rendir.
               </p>
               <div className="mt-7">
-                <PrimaryCta location="seo_uba_xxi_parciales_study" label="Elegir mi PDF y empezar" />
+                <PrimaryCta location="seo_uba_xxi_parciales_study" label="Subí tu material y empezá" />
               </div>
               <p className="mt-3 text-xs text-slate-300">Primero seleccionás el PDF; después creás tu cuenta.</p>
               <p className="mt-4 max-w-xl text-sm leading-6 text-slate-200">
