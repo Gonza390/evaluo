@@ -156,8 +156,12 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
         return;
       }
       trackMarketingEvent('exam_date_selected', { location: 'dashboard_agenda', material_id: materialId });
-      setPicking(false);
-      router.refresh();
+      // En la misma transición: el calendario se cierra recién cuando llegan los datos nuevos,
+      // sin mostrar "Agregar fecha" un instante.
+      startTransition(() => {
+        router.refresh();
+        setPicking(false);
+      });
     });
   };
 
@@ -226,8 +230,16 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
         </button>
       </div>
 
-      {tab === 'hoy' ? (
-        <div role="tabpanel" className="evaluo-enter">
+      {/* Las dos pestañas ocupan la misma celda: el bloque toma el alto de la más alta
+          y cambiar de pestaña no mueve lo que está debajo (Descubrí). */}
+      <div className="grid">
+        <div
+          key={tab === 'hoy' ? 'hoy-activa' : 'hoy'}
+          role="tabpanel"
+          aria-hidden={tab !== 'hoy'}
+          inert={tab !== 'hoy'}
+          className={`[grid-area:1/1] ${tab === 'hoy' ? 'evaluo-enter' : 'invisible'}`}
+        >
           <ul className="mt-2">
             {agenda.tasks.map((task) => (
               <li key={task.id}>
@@ -250,7 +262,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
               </li>
             ))}
           </ul>
-          {askRow}
+          {tab === 'hoy' ? askRow : null}
           {agenda.exam ? (
             <Link href="/calendario" className="mt-2.5 block border-t border-slate-100 pt-3">
               <ExamRow daysLeft={agenda.exam.daysLeft} title={agenda.exam.materialTitle} date={agenda.exam.date} compact locale={locale} />
@@ -266,8 +278,13 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
             </div>
           ) : null}
         </div>
-      ) : (
-        <div role="tabpanel" className="evaluo-enter">
+        <div
+          key={tab === 'examenes' ? 'examenes-activa' : 'examenes'}
+          role="tabpanel"
+          aria-hidden={tab !== 'examenes'}
+          inert={tab !== 'examenes'}
+          className={`[grid-area:1/1] ${tab === 'examenes' ? 'evaluo-enter' : 'invisible'}`}
+        >
           {agenda.exams.length > 0 ? (
             <ul className="mt-3 space-y-2.5">
               {agenda.exams.map((exam) => (
@@ -281,9 +298,9 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
           ) : (
             <div className="mt-3 text-ui text-slate-500">{t.noExams}</div>
           )}
-          {askRow}
+          {tab === 'examenes' ? askRow : null}
         </div>
-      )}
+      </div>
     </section>
   );
 }
