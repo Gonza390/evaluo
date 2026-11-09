@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildHomeView, daysBetween, type HomeInput } from '../lib/dashboard-home-model.ts';
+import { buildHomeView, cleanTopicTitle, daysBetween, type HomeInput } from '../lib/dashboard-home-model.ts';
 
 const file = (path: string) => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 
@@ -18,6 +18,10 @@ const base: HomeInput = {
 };
 
 assert.equal(daysBetween('2026-11-08', '2026-11-26'), 18);
+assert.equal(cleanTopicTitle('1. Fundamentos del Emprendimiento'), 'Fundamentos del Emprendimiento');
+assert.equal(cleanTopicTitle('II) Estructura y ventas'), 'Estructura y ventas');
+assert.equal(cleanTopicTitle('3 - Equipos de trabajo'), 'Equipos de trabajo');
+assert.equal(cleanTopicTitle('2024 en números'), '2024 en números');
 assert.equal(daysBetween('2026-12-31', '2027-01-01'), 1);
 
 // 2 · Sin fecha, todavía no empezó.
@@ -165,6 +169,9 @@ assert.match(examDateActions, /locale\?: 'es' \| 'en'/);
 const agenda = file('components/dashboard/home-agenda.tsx');
 assert.match(agenda, /saveStudentMaterialExamDateAction\(\{ materialId, examDate: dateKey, locale \}\)/);
 assert.match(agenda, /setError\(result\.message\)/);
+assert.match(agenda, /const MAX_TASKS = 2;/, 'Hoy muestra como máximo 2 tareas.');
+assert.match(agenda, /visibleTasks\.map/);
+assert.match(agenda, /t\.more\(hiddenTasks\)/);
 
 // Idioma: las páginas del servidor leen la cookie que el proveedor mantiene al día y refresca al cambiar.
 const requestLocale = file('lib/i18n/request-app-locale.ts');
