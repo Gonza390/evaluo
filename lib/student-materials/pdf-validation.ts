@@ -72,3 +72,16 @@ export async function assertStudentMaterialPdfPageLimit(
 
   return pageCount;
 }
+
+/**
+ * Chequeo anticipado con la cantidad de páginas que contó el navegador, antes de
+ * transferir el archivo. No reemplaza la validación del archivo real al finalizar.
+ * Se tolera una página extra porque una portada de Studocu se quita antes de contar.
+ */
+export async function assertDeclaredPdfPageCountWithinLimit(pageCount: number) {
+  if (!Number.isInteger(pageCount) || pageCount < 1) return;
+  const { maxPages } = await getStudentMaterialPdfPageLimit();
+  if (maxPages !== null && pageCount > maxPages + 1) {
+    throw new StudentMaterialPdfPageLimitError(pageCount, maxPages);
+  }
+}

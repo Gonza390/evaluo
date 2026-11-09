@@ -2,25 +2,24 @@
 
 import Image from 'next/image';
 import styles from './empty-study-space.module.css';
-import { useState, type DragEvent } from 'react';
-import { AudioLines, BookOpen, Upload } from 'lucide-react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { Upload } from 'lucide-react';
 import { usePdfDropUpload, usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 
-type Format = { title: string; label: string; color: string; icon?: 'book' | 'audio' };
-const illustratedFormats: Format[] = [
+type Format = { title: string; label: string; color: string };
+// Solo los formatos que hoy se pueden subir. Antes se mostraban también
+// presentaciones, libros y grabaciones, que no se aceptan (onboarding etapa 1).
+const acceptedFormats: Format[] = [
   { title: 'PDF', label: 'PDF', color: 'bg-[#bb5654]' },
-  { title: 'PPTX', label: 'Presentaciones', color: 'bg-[#b85f2d]' },
-  { title: 'DOCX', label: 'Documentos', color: 'bg-[#3865b3]' },
-  { title: 'Libros', label: 'Libros', color: 'bg-[#6652a7]', icon: 'book' },
-  { title: 'Grabaciones', label: 'Grabaciones', color: 'bg-[#08976b]', icon: 'audio' },
+  { title: 'DOCX', label: 'Word', color: 'bg-[#3865b3]' },
 ];
 
 /**
- * First-material screen. The format pictograms reproduce the supplied visual
- * reference; they are illustrations, not a statement of accepted upload types.
- * The existing uploader validates PDF files and owns the processing lifecycle.
+ * First-material screen. The uploader validates the file and owns the
+ * processing lifecycle.
  */
 export function EmptyStudySpace({ firstName }: { firstName?: string }) {
   const { locale } = useAppLocale();
@@ -28,6 +27,15 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
   const openUploadPicker = usePdfUploadTrigger();
   const dropUpload = usePdfDropUpload();
   const [isDragging, setIsDragging] = useState(false);
+  const viewTrackedRef = useRef(false);
+
+  // Esta pantalla reemplazó al hero anterior el 1/11 y el evento de vista quedó
+  // solo en el hero: desde entonces no se registraba quién la veía.
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    viewTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_cta_viewed', { location: 'dashboard_empty' });
+  }, []);
 
   const openPicker = () => openUploadPicker('dashboard_empty');
   const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
@@ -78,18 +86,16 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
           <span className="hidden sm:inline">{t("o hacé clic para elegirlo")}</span>
         </span>
         <span className="mt-3 flex w-full flex-wrap items-start justify-center gap-x-3 gap-y-1.5 sm:mt-4 sm:gap-x-5">
-          {illustratedFormats.map((format, index) => (
-            <span key={format.title} className="flex min-w-[42px] flex-col items-center gap-1" title={t(format.title === 'PDF' ? 'PDF disponible' : 'Otros formatos: próximamente')}>
+          {acceptedFormats.map((format, index) => (
+            <span key={format.title} className="flex min-w-[42px] flex-col items-center gap-1" aria-hidden="true">
               <span className={`${styles.fileFormatIcon} flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`} style={{ animationDelay: `${index * 140}ms` }}>
-                {format.icon === 'book' ? <BookOpen className="size-[18px]" aria-hidden="true" />
-                  : format.icon === 'audio' ? <AudioLines className="size-[18px]" aria-hidden="true" />
-                    : <span className="text-etiqueta font-semibold">{format.title}</span>}
+                <span className="text-etiqueta font-semibold">{format.title}</span>
               </span>
-              <span className="text-etiqueta text-[#667085] sm:text-etiqueta">{t(format.label)}</span>
+              <span className="text-etiqueta text-[#667085] sm:text-etiqueta">{format.label}</span>
             </span>
           ))}
         </span>
-        <span className="sr-only">{locale === 'en' ? "PDF and Word (.docx) uploads are supported. Other illustrated formats are not yet available." : "Actualmente podés cargar archivos PDF y Word (.docx). Los demás formatos ilustrados todavía no están disponibles."}</span>
+        <span className="mt-2 text-etiqueta text-[#667085]">{t("Solo PDF y Word (.docx) · máximo 20 MB")}</span>
       </button>
     </section>
   );
