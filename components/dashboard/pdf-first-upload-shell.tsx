@@ -560,7 +560,7 @@ export function PdfFirstUploadShell({
         clearTimeout(visionTimeout!);
       }
       if (pdfUploadResult.error) {
-        throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
+        throw new Error('No pudimos transferir tu material. Intentá nuevamente.');
       }
 
       const result = await finalizePdfFirstUploadAction({
@@ -882,7 +882,7 @@ export function PdfFirstUploadShell({
                   : ready
                     ? t("Tu PDF está listo")
                     : t("Preparación de tu PDF")
-                : t("Subir PDF o Word")}
+                : t("Subir material")}
             </DialogTitle>
             <DialogDescription className="sr-only">
               {t("Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.")}
@@ -900,7 +900,7 @@ export function PdfFirstUploadShell({
                         : ready
                           ? t("Tu PDF está listo")
                           : t("Estamos procesando tu PDF")
-                      : t("Subir PDF o Word")}
+                      : t("Subir material")}
                   </h2>
                   <p className="mt-1 text-cuerpo leading-6 text-slate-500">
                     {processing
@@ -938,7 +938,7 @@ export function PdfFirstUploadShell({
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-cuerpo font-semibold text-slate-950">
-                      {t("Elegir PDF o Word")}
+                      {t("Elegir archivo")}
                     </span>
                     <span className="mt-1 text-chico text-slate-400">{t("Máximo 20 MB")}</span>
                   </button>

@@ -146,8 +146,8 @@ export function StudentMaterialsWorkspace({
               icon={FileText}
               eyebrow={t("Primer material")}
               title={t("Todavía no subiste un PDF")}
-              description={t("Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá.")}
-              primaryActionLabel={t("Subí tu PDF")}
+              description={t("Cuando subas tu primer material, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá.")}
+              primaryActionLabel={t("Subí tu material")}
               onPrimaryAction={() => openUploadPicker('dashboard_empty_materials')}
               secondaryActionLabel={t("Ver cómo funciona con un PDF de ejemplo")}
               secondaryActionHref="/preview/primer-pdf?source=dashboard_empty"

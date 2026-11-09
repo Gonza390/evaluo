@@ -56,7 +56,7 @@ export const REVIEW_UI_ENGLISH: Record<string, string> = {
   "Abrir PDF completo": "Open full PDF",
   "Este error todavía no tiene un PDF asociado": "This mistake is not linked to a PDF yet",
   "Elegí tus apuntes. Evaluo verificará si contienen información para repasar este concepto.": "Choose your notes. Evaluo will check whether they contain information to review this concept.",
-  "Elegir mi PDF": "Choose my PDF",
+  "Elegir mi material": "Choose my material",
   "Asociar PDF": "Link PDF",
   "Subir mis apuntes": "Upload my notes",
   "Este error quedó resuelto después de tu repaso.": "This mistake was resolved after review.",

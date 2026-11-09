@@ -85,7 +85,7 @@ async function requireAuthenticatedUser() {
     error,
   } = await supabase.auth.getUser();
 
-  if (error || !user) throw new Error('Iniciá sesión para subir tu PDF.');
+  if (error || !user) throw new Error('Iniciá sesión para subir tu material.');
   return user;
 }
 

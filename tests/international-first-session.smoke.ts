@@ -53,6 +53,6 @@ assert.equal(firstUploadErrorMessage(original, 'es'), original);
 assert.match(firstUploadErrorMessage('El archivo supera el límite de 20 MB.', 'en'), /20 MB/);
 assert.match(firstUploadErrorMessage('Escribí un nombre válido para tu PDF.', 'en'), /valid title/);
 assert.match(firstUploadErrorMessage('No pudimos guardar la subida.', 'en'), /could not upload your file/);
-assert.match(firstUploadErrorMessage('Iniciá sesión para subir tu PDF.', 'en'), /session has expired/);
+assert.match(firstUploadErrorMessage('Iniciá sesión para subir tu material.', 'en'), /session has expired/);
 assert.match(firstUploadErrorMessage('La materia seleccionada no corresponde a la carrera indicada.', 'en'), /course selection/);
 console.log('[international-first-session] English PDF/DOCX first upload, no forced academic form or tour, localized processing and errors verified.');

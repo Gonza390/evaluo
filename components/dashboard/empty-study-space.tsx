@@ -66,13 +66,13 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
         onDragLeave={(event) => { event.preventDefault(); setIsDragging(false); }}
         onDrop={handleDrop}
-        aria-label={t("Arrastrá un archivo PDF o presioná para elegirlo")}
+        aria-label={t("Arrastrá tu material o presioná para elegirlo")}
         className={`mt-3 flex w-full max-w-[620px] cursor-pointer flex-col items-center rounded-[18px] border-2 border-dashed px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-4 sm:rounded-[22px] sm:px-5 sm:py-4 ${isDragging ? 'border-[#456dbd] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6f96dd] hover:bg-[#f0f6ff]'}`}
       >
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#3c6cba] sm:size-10">
           <Upload className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
         </span>
-        <span className="mt-2 text-cuerpo font-medium tracking-titulo text-[#0f1623] sm:text-subtitulo">{t("Arrastrá tu PDF acá")}</span>
+        <span className="mt-2 text-cuerpo font-medium tracking-titulo text-[#0f1623] sm:text-subtitulo">{t("Arrastrá tu material acá")}</span>
         <span className="mt-1 text-chico text-[#526079]">
           <span className="sm:hidden">{t("o tocá acá para elegirlo")}</span>
           <span className="hidden sm:inline">{t("o hacé clic para elegirlo")}</span>

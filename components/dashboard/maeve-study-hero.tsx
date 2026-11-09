@@ -21,7 +21,7 @@ type Props = {
   heroRef?: RefObject<HTMLElement | null>;
 };
 
-const FIRST_PDF_STEPS = ['Subí tu PDF', 'Entendé', 'Practicá', 'Reforzá'];
+const FIRST_PDF_STEPS = ['Subí tu material', 'Entendé', 'Practicá', 'Reforzá'];
 
 export function MaeveStudyHero({
   materialsCount,
@@ -132,13 +132,13 @@ export function MaeveStudyHero({
               <button type="button" onClick={onUploadClick}
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-cuerpo font-semibold text-[#526582] transition-colors hover:text-[#0f1b3d] sm:w-auto">
                 <Upload className="h-4 w-4" />
-                {t('Subir otro PDF')}
+                {t('Subir otro material')}
               </button>
             </>
           ) : (
             <Button type="button" data-first-pdf-cta="dashboard_empty" onClick={onUploadClick}
               className="h-11 w-full max-w-xs rounded-xl bg-[#4070be] px-5 text-cuerpo font-semibold text-white hover:bg-[#3361ac] sm:w-auto">
-              {t('Subir mi PDF')} <Upload className="ml-2 h-4 w-4" />
+              {t('Subir mi material')} <Upload className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>

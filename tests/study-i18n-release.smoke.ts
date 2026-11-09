@@ -102,7 +102,7 @@ assert.ok(planPage.includes("requestAppLocale(user.user_metadata)"));
 assert.ok(planPage.includes('<EmptyStudyPlan locale={locale} />'));
 assert.ok(planEmpty.includes("english ? 'Your plan preview'"));
 assert.ok(planCard.includes("english ? 'Prepare for your exam'"));
-assert.ok(planSelector.includes("Choose PDF for study plan"));
+assert.ok(planSelector.includes("Choose material for study plan"));
 assert.ok(planNext.includes("english ? 'Topic' : 'Tema'"));
 assert.match(planNextStep, /english\s*\?\s*['"]Material progress['"]/);
 assert.ok(planRoadmap.includes("english ? 'Your journey'"));

@@ -136,7 +136,7 @@ export function HomeHero({ view, onUploadClick }: { view: HomeView; onUploadClic
         className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-[10px] px-2.5 text-chico font-semibold text-slate-500 transition-colors hover:text-slate-900"
       >
         <Upload className="size-3.5" aria-hidden="true" />
-        {en ? 'Upload another PDF' : 'Subir otro PDF'}
+        {en ? 'Upload more material' : 'Subir otro material'}
       </button>
     </section>
   );

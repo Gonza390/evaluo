@@ -200,7 +200,7 @@ export default async function GuiaDeEstudio({ params }: Props) {
                 }}
                 className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl bg-blue-700 px-5 text-sm font-bold text-white transition hover:bg-blue-800"
               >
-                Elegir mi material <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Subí tu material <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
               <p className="mt-3 text-xs text-slate-500">Primero eliges el PDF; para procesarlo necesitas crear una cuenta.</p>
             </section>

@@ -64,7 +64,7 @@ const reactivation = buildReactivationMessage({
 });
 assert.match(reactivation.subject,/What are you studying after Biology/);
 assert.match(reactivation.html,/<html lang="en">/);
-assert.match(reactivation.html,/Upload my PDF/);
+assert.match(reactivation.html,/Upload my material/);
 assert.doesNotMatch(reactivation.html,/Equipo Evaluo|Te enviamos este mensaje|Hola/);
 
 const campaignSources = [

@@ -72,8 +72,8 @@ export function buildReactivationMessage(input: {
                 <div style="margin-bottom:28px;"><img src="${toAbsoluteUrl('/evaluo-logo-landing-email.png')}" width="40" height="40" alt="" style="display:inline-block;width:40px;height:40px;vertical-align:middle;border:0;" /><span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:22px;line-height:40px;font-weight:800;letter-spacing:-0.04em;color:#0F1B3D;">Evaluo</span></div>
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${english ? 'Hi' : 'Hola'} ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${english ? `What are you studying after ${safeMateria}?` : `¿Qué materia sigue después de ${safeMateria}?`}</h1>
-                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${english ? `You practiced ${safeMateria} in Evaluo a while ago. Ready for your next subject? Upload a PDF and create your study summary, glossary, flashcards and exercises from your own notes.` : `Hace un tiempo practicaste ${safeMateria} en Evaluo. Si ya estás con la próxima materia, subí tu PDF y prepará resumen, glosario, flashcards y práctica desde el mismo material.`}</p>
-                <a href="${safeUploadUrl}" style="display:inline-block;background:#456DBD;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${english ? 'Upload my PDF' : 'Subir mi PDF'}</a>
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${english ? `You practiced ${safeMateria} in Evaluo a while ago. Ready for your next subject? Upload your material and create your study summary, glossary, flashcards and exercises from your own notes.` : `Hace un tiempo practicaste ${safeMateria} en Evaluo. Si ya estás con la próxima materia, subí tu material y prepará resumen, glosario, flashcards y práctica desde el mismo material.`}</p>
+                <a href="${safeUploadUrl}" style="display:inline-block;background:#456DBD;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${english ? 'Upload my material' : 'Subir mi material'}</a>
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">${english ? 'You received this message because you used an Evaluo mock exam and have not returned for a while.' : 'Te enviamos este mensaje porque usaste el simulador de Evaluo y hace un tiempo que no volvés.'}</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 
@@ -89,7 +89,7 @@ export function buildReactivationMessage(input: {
   </body>
 </html>`;
 
-  const text = english ? `Hi ${input.firstname}. You previously practiced ${input.materia} in Evaluo. Ready for your next subject? Upload your PDF: ${input.uploadUrl}` : `Hola ${input.firstname}. Hace un tiempo practicaste ${input.materia} en Evaluo. Si ya estás con la próxima materia, subí tu PDF acá: ${input.uploadUrl}`;
+  const text = english ? `Hi ${input.firstname}. You previously practiced ${input.materia} in Evaluo. Ready for your next subject? Upload your material: ${input.uploadUrl}` : `Hola ${input.firstname}. Hace un tiempo practicaste ${input.materia} en Evaluo. Si ya estás con la próxima materia, subí tu material acá: ${input.uploadUrl}`;
 
   return { subject, html, text };
 }

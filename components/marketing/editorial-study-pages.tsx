@@ -71,7 +71,7 @@ export function NotebookComparisonPage(){
  </main><Footer/></div>;
 }
 const steps=[['01','Delimitá un tema','Elegí un capítulo o apartado concreto. Practicar un documento entero de una vez puede ocultar qué parte todavía te cuesta.'],['02','Comprendé antes de responder','Leé el resumen y contrastá las ideas importantes con el PDF original.'],['03','Intentá recordar sin mirar','Respondé preguntas sobre el tema. Equivocarte te da información sobre qué revisar.'],['04','Revisá el error y volvé','Leé la explicación, reforzá el concepto y repetí la práctica para comprobar si lo entendiste.']];
-function QuestionsCta({ children = 'Elegir PDF para generar preguntas' }: { children?: string }) {
+function QuestionsCta({ children = 'Subí tu material para generar preguntas' }: { children?: string }) {
   return (
     <TrackedLink
       href="#elegir-pdf-preguntas"

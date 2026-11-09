@@ -5,8 +5,8 @@ export function StudyPlanMaterialSelector({selectedId,materials}:{selectedId:str
  const router=useRouter();
  const english = useOptionalAppLocale() === 'en';
  return <label className="flex items-center gap-2 text-etiqueta text-slate-500">
-  <span className="sr-only">{english ? 'Choose PDF' : 'Elegir PDF'}</span>
-  <select aria-label={english ? "Choose PDF for study plan" : "Elegir PDF para el plan"} value={selectedId} onChange={event=>router.push(`/dashboard/plan-de-estudio?material=${encodeURIComponent(event.target.value)}`)} className="min-w-0 max-w-[min(58vw,230px)] border-0 bg-transparent px-0 py-1 text-chico font-medium text-[#42506A] shadow-none outline-none hover:text-[#456DBD] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[#456DBD]/30">
+  <span className="sr-only">{english ? 'Choose material' : 'Elegir material'}</span>
+  <select aria-label={english ? "Choose material for study plan" : "Elegir material para el plan"} value={selectedId} onChange={event=>router.push(`/dashboard/plan-de-estudio?material=${encodeURIComponent(event.target.value)}`)} className="min-w-0 max-w-[min(58vw,230px)] border-0 bg-transparent px-0 py-1 text-chico font-medium text-[#42506A] shadow-none outline-none hover:text-[#456DBD] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[#456DBD]/30">
    {materials.map(material=><option key={material.id} value={material.id}>{material.title}</option>)}
   </select>
  </label>;

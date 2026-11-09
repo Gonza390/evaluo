@@ -71,7 +71,7 @@ export function UnlamEditorialGuide() {
                 <TrackedLink href={uploadHref} eventName="cta_click"
                   payload={{ location: 'seo_ingreso_unlam_2027_header', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
                   className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#31549A] px-3 text-xs font-bold text-white transition hover:bg-[#213763] sm:px-4">
-                  Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Subí tu material <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </TrackedLink>
               </div>
             }
@@ -232,7 +232,7 @@ export function UnlamEditorialGuide() {
               <TrackedLink href={uploadHref} eventName="cta_click"
                 payload={{ location: 'seo_ingreso_unlam_2027_final', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
                 className="mt-5 inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#213763] hover:bg-blue-50 sm:mt-0">
-                <UploadCloud className="h-4 w-4" aria-hidden="true" /> Elegir mi PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                <UploadCloud className="h-4 w-4" aria-hidden="true" /> Subí tu material <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
             </div>
             <p className="mt-6 text-xs leading-6 text-slate-500">

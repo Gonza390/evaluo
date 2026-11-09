@@ -42,8 +42,8 @@ assert.match(read('components/dashboard/study-reading-cards.tsx'), /english \? '
 assert.match(read('app/(es)/completar-perfil/page.tsx'), /Preparing your academic details/);
 
 assert.equal(HOME_ENGLISH_TEXT['Sabé qué tan preparado estás para tu examen.'], 'Know how ready you are for your exam.');
-assert.equal(studentEntryText('en', 'Subir mi PDF'), 'Upload my PDF');
-assert.equal(studentEntryText('es', 'Subir mi PDF'), 'Subir mi PDF');
+assert.equal(studentEntryText('en', 'Subir mi material'), 'Upload my material');
+assert.equal(studentEntryText('es', 'Subir mi material'), 'Subir mi material');
 assert.ok(Object.keys(STUDENT_ENTRY_ENGLISH).length >= 100);
 assert.ok(Object.keys(HOME_ENGLISH_TEXT).length >= 100);
 console.log('[english-entry] Shared homepage, language persistence, first upload and onboarding contracts passed.');
