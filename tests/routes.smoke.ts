@@ -390,7 +390,7 @@ assert.doesNotMatch(seoLandingSource, /force-dynamic/);
 assert.equal(
   existsSync(resolve('app/(es)/landings/estudiar/[materia]/layout.tsx')),
   false,
-  'La landing SEO usa ISR (revalidate = 600); no volver a forzarla dinámica desde un layout.'
+  'La landing SEO usa ISR; no volver a forzarla dinámica desde un layout.'
 );
 
 // Atribución en el navegador: la página cacheada no lee searchParams.
@@ -496,4 +496,19 @@ assert.match(
     /skipped \+= 1;\n\s+continue;/,
     'un evento inválido no debe tirar la tanda'
   );
+}
+
+// robots.txt: los buscadores no recorren variantes con parámetros ni el simulador
+// (cada una es una función por pedido y no aporta al índice).
+{
+  const robotsSource = readFileSync(resolve('app/robots.ts'), 'utf8');
+  for (const route of [
+    "'/*?*carreraId='",
+    "'/*?*tab='",
+    "'/explorar/materia-cache/'",
+    "'/simulador/'",
+  ]) {
+    assert.ok(robotsSource.includes(route), `robots.txt debe excluir ${route}`);
+  }
+  assert.doesNotMatch(robotsSource, /'\/simulador-parcial/, 'simulador-parcial es SEO: no excluir');
 }

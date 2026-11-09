@@ -11,7 +11,9 @@ import { isSiglo21University } from '@/lib/seo-search-copy';
 import { PregunteroHubClient } from './preguntero-hub-client';
 import { loadPregunteroHubData, summarizePregunteroHubData } from './data';
 
-export const revalidate = 600;
+// 6 h: la mayoría de las visitas son buscadores que vuelven a pasar por la
+// misma URL; con 10 min la página se regeneraba casi en cada pasada.
+export const revalidate = 21600;
 /** Materias con visibilidad orgánica en Search Console (28/09–25/10/2026).
  * Ordenar solo materias del catálogo público con preguntas; no crear URLs ficticias.
  */
