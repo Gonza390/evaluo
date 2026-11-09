@@ -29,14 +29,14 @@ export function HomeSpace({
   return (
     <div
       data-dashboard-home="agenda"
-      className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:gap-y-9"
+      className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:gap-x-8 lg:gap-y-7 xl:grid-cols-[minmax(0,1fr)_320px] xl:gap-x-10"
     >
       <div className="min-w-0 lg:col-start-1 lg:row-start-1">
         <HomeHero view={view} onUploadClick={() => openUploadPicker('dashboard_hero')} />
       </div>
-      <aside className="flex min-w-0 flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:gap-12 lg:pt-2" aria-label={view.locale === 'en' ? 'Agenda and suggestions' : 'Agenda y sugerencias'}>
+      <aside className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:gap-7 lg:pt-1" aria-label={view.locale === 'en' ? 'Agenda and suggestions' : 'Agenda y sugerencias'}>
         <HomeAgenda agenda={view.agenda} today={today} locale={view.locale} />
-        <div className="border-t border-slate-100 pt-5">
+        <div className="border-t border-slate-100 pt-4">
           <HomeDiscover materialId={materialId} materialTitle={materialTitle} locale={view.locale} />
         </div>
       </aside>

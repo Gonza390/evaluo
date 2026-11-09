@@ -119,18 +119,18 @@ function ExamRow({ daysLeft, title, date, compact = false, locale }: { daysLeft:
   const t = TEXT[locale];
   return (
     <div className="flex items-center gap-3">
-      <span className="flex size-11 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-100 leading-none">
+      <span className="flex size-10 shrink-0 flex-col items-center justify-center rounded-[10px] bg-slate-100 leading-none">
         {daysLeft === 0 ? (
           <span className="text-chico font-bold text-slate-950">{t.todayExam}</span>
         ) : (
           <>
-            <span className="text-cuerpo font-bold text-slate-950">{daysLeft}</span>
+            <span className="text-ui font-bold text-slate-950">{daysLeft}</span>
             <span className="mt-0.5 text-[10px] text-slate-500">{daysLeft === 1 ? t.day : t.days}</span>
           </>
         )}
       </span>
       <span className="min-w-0">
-        <span className={`block truncate font-semibold text-slate-950 ${compact ? 'text-ui' : 'text-cuerpo'}`}>{t.examOf(title)}</span>
+        <span className={`block truncate font-semibold text-slate-950 ${compact ? 'text-ui' : 'text-ui'}`}>{t.examOf(title)}</span>
         <span className="mt-0.5 block text-chico text-slate-400">{formatLong(date, locale)}</span>
       </span>
     </div>
@@ -150,9 +150,9 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
     const materialId = agenda.askDate.materialId;
     setError(null);
     startTransition(async () => {
-      const result = await saveStudentMaterialExamDateAction({ materialId, examDate: dateKey });
+      const result = await saveStudentMaterialExamDateAction({ materialId, examDate: dateKey, locale });
       if (!result.success) {
-        setError(locale === 'en' ? 'We couldn’t save the date. Please try again.' : result.message);
+        setError(result.message);
         return;
       }
       trackMarketingEvent('exam_date_selected', { location: 'dashboard_agenda', material_id: materialId });
@@ -162,10 +162,10 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
   };
 
   const tabClass = (active: boolean) =>
-    `h-9 rounded-full text-ui font-medium transition-colors sm:text-cuerpo ${active ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:text-slate-800'}`;
+    `h-8 rounded-full text-ui font-medium transition-colors ${active ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:text-slate-800'}`;
 
   const askRow = agenda.askDate ? (
-    <div className="mt-3 border-t border-slate-100 pt-3.5">
+    <div className="mt-2.5 border-t border-slate-100 pt-3">
       <div className="flex items-center justify-between gap-2.5">
         <span className="text-ui text-slate-600">{t.when(agenda.askDate.materialTitle)}</span>
         {picking ? (
@@ -173,7 +173,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
             {t.cancel}
           </button>
         ) : (
-          <button type="button" onClick={() => setPicking(true)} className="h-10 shrink-0 px-1 text-ui font-semibold text-blue-700 hover:text-blue-800">
+          <button type="button" onClick={() => setPicking(true)} className="h-9 shrink-0 px-1 text-ui font-semibold text-blue-700 hover:text-blue-800">
             {t.addDate}
           </button>
         )}
@@ -210,14 +210,14 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
   return (
     <section aria-labelledby="home-agenda-title">
       <div className="flex items-center justify-between">
-        <h2 id="home-agenda-title" className="flex items-center gap-2 text-subtitulo font-semibold tracking-titulo text-slate-950 lg:text-titulo-sm">
-          <CalendarDays className="size-[18px] lg:size-5" aria-hidden="true" />
+        <h2 id="home-agenda-title" className="flex items-center gap-2 text-subtitulo font-semibold tracking-titulo text-slate-950">
+          <CalendarDays className="size-[17px]" aria-hidden="true" />
           {t.agenda}
         </h2>
-        <Link href="/calendario" className="text-chico text-slate-500 hover:text-slate-700 lg:text-ui">{formatShort(today, locale)}</Link>
+        <Link href="/calendario" className="text-chico text-slate-500 hover:text-slate-700">{formatShort(today, locale)}</Link>
       </div>
 
-      <div role="tablist" aria-label={t.agenda} className="mt-3.5 grid grid-cols-2 gap-1 rounded-full border border-slate-200 bg-white p-1">
+      <div role="tablist" aria-label={t.agenda} className="mt-3 grid grid-cols-2 gap-1 rounded-full border border-slate-200 bg-white p-1">
         <button type="button" role="tab" aria-selected={tab === 'hoy'} onClick={() => setTab('hoy')} className={tabClass(tab === 'hoy')}>
           {t.tabToday} <span className="font-normal text-slate-400">{agenda.tasks.length}</span>
         </button>
@@ -228,23 +228,23 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
 
       {tab === 'hoy' ? (
         <div role="tabpanel" className="evaluo-enter">
-          <ul className="mt-2.5">
+          <ul className="mt-2">
             {agenda.tasks.map((task) => (
               <li key={task.id}>
-                <Link href={task.href} className="group flex items-start gap-3 py-2">
+                <Link href={task.href} className="group flex items-start gap-2.5 py-1.5">
                   {task.done === null ? (
                     <span className="w-[3px] self-stretch rounded-full bg-blue-500" aria-hidden="true" />
                   ) : task.done ? (
-                    <span className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                    <span className="mt-px flex size-[18px] shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
                       <Check className="size-3" strokeWidth={3} aria-hidden="true" />
                       <span className="sr-only">{t.done}</span>
                     </span>
                   ) : (
-                    <span className="mt-px size-5 shrink-0 rounded-full border-2 border-slate-300" aria-hidden="true" />
+                    <span className="mt-px size-[18px] shrink-0 rounded-full border-2 border-slate-300" aria-hidden="true" />
                   )}
                   <span className="min-w-0">
-                    <span className={`block text-cuerpo leading-snug font-medium ${task.done ? 'text-slate-400 line-through' : 'text-slate-950 group-hover:text-blue-800'}`}>{task.title}</span>
-                    <span className="mt-0.5 block text-chico text-slate-400 lg:text-ui">{task.meta}</span>
+                    <span className={`block text-ui leading-snug font-medium ${task.done ? 'text-slate-400 line-through' : 'text-slate-950 group-hover:text-blue-800'}`}>{task.title}</span>
+                    <span className="mt-0.5 block text-chico text-slate-400">{task.meta}</span>
                   </span>
                 </Link>
               </li>
@@ -252,15 +252,15 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
           </ul>
           {askRow}
           {agenda.exam ? (
-            <Link href="/calendario" className="mt-3 block border-t border-slate-100 pt-3.5">
+            <Link href="/calendario" className="mt-2.5 block border-t border-slate-100 pt-3">
               <ExamRow daysLeft={agenda.exam.daysLeft} title={agenda.exam.materialTitle} date={agenda.exam.date} compact locale={locale} />
             </Link>
           ) : null}
           {agenda.planCta ? (
-            <div className="mt-3.5 rounded-2xl bg-slate-100/80 px-4 py-3.5">
+            <div className="mt-3 rounded-xl bg-slate-100/80 px-3.5 py-3">
               <div className="text-ui font-semibold text-slate-950">{t.planTitle}</div>
               <div className="mt-1 text-chico leading-[1.45] text-slate-500">{t.planText}</div>
-              <Link href={agenda.planCta.href} className="mt-2.5 inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#4070be] px-3.5 text-ui font-semibold text-white hover:bg-[#3361ac] lg:h-9 lg:w-auto">
+              <Link href={agenda.planCta.href} className="mt-2.5 inline-flex h-10 w-full items-center justify-center rounded-[10px] bg-[#4070be] px-3.5 text-chico font-semibold text-white hover:bg-[#3361ac] lg:h-8 lg:w-auto">
                 {t.planCta}
               </Link>
             </div>
@@ -269,7 +269,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
       ) : (
         <div role="tabpanel" className="evaluo-enter">
           {agenda.exams.length > 0 ? (
-            <ul className="mt-3.5 space-y-3">
+            <ul className="mt-3 space-y-2.5">
               {agenda.exams.map((exam) => (
                 <li key={exam.materialId}>
                   <Link href={`/materiales/${exam.materialId}`}>
@@ -279,7 +279,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
               ))}
             </ul>
           ) : (
-            <div className="mt-3.5 text-ui text-slate-500">{t.noExams}</div>
+            <div className="mt-3 text-ui text-slate-500">{t.noExams}</div>
           )}
           {askRow}
         </div>

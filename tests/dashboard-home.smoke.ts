@@ -99,6 +99,27 @@ assert.equal(daysBetween('2026-12-31', '2027-01-01'), 1);
   if (behind.card.kind === 'plan') assert.equal(behind.card.behind, 2);
 }
 
+// Plan terminado con temas atrasados (caso real 9/11): no dice "terminaste lo de hoy",
+// muestra los atrasados como tareas y el examen del plan cuenta en "Exámenes".
+{
+  const day = (date: string, indexes: number[]) => ({
+    date,
+    topics: indexes.map((i) => ({ materialId: 'm1', topicIndex: i, title: `Tema ${i + 1}`, estimatedMinutes: 12 })),
+  });
+  const plan = { examDate: '2026-11-11', days: [day('2026-11-04', [0, 1]), day('2026-11-05', [2, 3]), day('2026-11-06', [4, 5])] };
+  const view = buildHomeView({ ...base, today: '2026-11-09', readTopics: [0], plan });
+  assert.equal(view.mode, 'con-plan');
+  assert.equal(view.greeting, 'Te quedan 5 temas atrasados, Gonza.');
+  assert.equal(view.card.text, 'Ahora sigue Tema 2: leelo y hacé las preguntas. Unos 12 minutos.');
+  if (view.card.kind === 'plan') assert.equal(view.card.finished, true);
+  assert.equal(view.agenda.tasks.length, 3);
+  assert.equal(view.agenda.exams.length, 1, 'El examen del plan aparece en Exámenes.');
+  assert.equal(view.agenda.exams[0].daysLeft, 2);
+  assert.equal(view.personaje, 'birrete');
+  const en = buildHomeView({ ...base, locale: 'en', today: '2026-11-09', readTopics: [0], plan });
+  assert.equal(en.greeting, 'You have 5 topics to catch up on, Gonza.');
+}
+
 // Sin nombre no queda una coma suelta.
 assert.equal(buildHomeView({ ...base, firstName: undefined }).greeting, 'Tu apunte de Marketing I está listo.');
 
@@ -133,9 +154,32 @@ assert.match(space, /<MaeveDashboardChrome/, 'La home anterior sigue como respal
 const loader = file('lib/dashboard-home.ts');
 assert.match(loader, /return null;\s*\}\s*\}\s*$/, 'Ante un error devuelve null y se usa la home anterior.');
 
+// Con la home nueva no se consulta la acción sugerida de la home anterior.
+assert.match(page, /const nextStudyAction = homeView\s*\? Promise\.resolve\(null\)/);
+assert.ok(page.indexOf('const homeView = await homeViewPromise') < page.indexOf('getDashboardNextStudyAction(user.id'));
+
+// El error al guardar la fecha llega en el idioma de la app.
+const examDateActions = file('app/(es)/dashboard/materiales/exam-date-prompt-actions.ts');
+assert.match(examDateActions, /retry: 'We couldn’t save the date\. Please try again\.'/);
+assert.match(examDateActions, /locale\?: 'es' \| 'en'/);
+const agenda = file('components/dashboard/home-agenda.tsx');
+assert.match(agenda, /saveStudentMaterialExamDateAction\(\{ materialId, examDate: dateKey, locale \}\)/);
+assert.match(agenda, /setError\(result\.message\)/);
+
+// Idioma: las páginas del servidor leen la cookie que el proveedor mantiene al día y refresca al cambiar.
+const requestLocale = file('lib/i18n/request-app-locale.ts');
+assert.match(requestLocale, /cookieLocale \?\? accountAppLocale\(userMetadata\) \?\? 'es'/);
+assert.match(page, /const locale = await requestAppLocale\(user\.user_metadata\)/);
+const provider = file('components/i18n/app-locale-provider.tsx');
+assert.match(provider, /writeLocaleCookie\(next\);\s*router\.refresh\(\);/);
+assert.match(provider, /if \(user\?\.id\) \{/, 'Sin sesión no se pisa la cookie de la landing.');
+
 // El componente de diapositivas es genérico.
 const slides = file('components/dashboard/diapositivas.tsx');
 assert.match(slides, /export function Diapositivas/);
 assert.match(slides, /total > 1/, 'Con una sola diapositiva no hay flechas.');
+assert.match(slides, /setInterval/, 'Avanza sola.');
+assert.match(slides, /prefers-reduced-motion: reduce/, 'Respeta reducir movimiento.');
+assert.match(slides, /onMouseEnter=\{\(\) => setPaused\(true\)\}/, 'Se pausa con el mouse encima.');
 
 console.log('dashboard-home smoke ok');

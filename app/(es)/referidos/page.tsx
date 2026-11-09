@@ -1,10 +1,10 @@
 import Link from 'next/link';
+import { requestAppLocale } from '@/lib/i18n/request-app-locale';
 import { redirect } from 'next/navigation';
 import { BadgePercent, CreditCard, MousePointerClick, UsersRound } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { getReferralPortalData } from '@/lib/referral-portal';
 import { SITE_URL } from '@/lib/site';
-import { accountAppLocale } from '@/lib/i18n/app-locale';
 import { PartnerReferralActions } from '@/components/referrals/PartnerReferralActions';
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -41,7 +41,7 @@ export default async function ReferidosPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect('/login?mode=login&next=/referidos');
-  const english = accountAppLocale(user.user_metadata) === 'en';
+  const english = (await requestAppLocale(user.user_metadata)) === 'en';
   const tr = (es: string, en: string) => english ? en : es;
 
   const portal = await getReferralPortalData(user).catch(() => null);

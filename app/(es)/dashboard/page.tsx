@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requestAppLocale } from '@/lib/i18n/request-app-locale';
 import Link from 'next/link';
 import { isQaAccount } from '@/lib/qa-account';
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react';
@@ -14,7 +14,7 @@ import { getDashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { createClientServer } from '@/lib/supabase-server';
 import { isUuid } from '@/lib/uuid';
 import { logError } from '@/lib/observability';
-import { accountAppLocale, parseAppLocale, type AppLocale } from '@/lib/i18n/app-locale';
+import type { AppLocale } from '@/lib/i18n/app-locale';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 import { getSessionUser } from '@/lib/auth-session';
 import { argentinaToday, getDashboardHomeView } from '@/lib/dashboard-home';
@@ -85,8 +85,7 @@ export default async function DashboardPage({
   }
 
   // Server copy follows the account preference, then the first-visit cookie.
-  const locale = accountAppLocale(user.user_metadata) ??
-    parseAppLocale((await cookies()).get('evaluo_ui_locale')?.value) ?? 'es';
+  const locale = await requestAppLocale(user.user_metadata);
   const t = (value: string) => studentEntryText(locale, value);
 
   try {
@@ -94,11 +93,6 @@ export default async function DashboardPage({
     // Los datos de universidad/carrera se cargan solamente si se abre el formulario opcional.
     const pendingReinforcementCount = getPendingStudyErrorTopicCount(user.id);
     const materials = await fetchStudentMaterialsByUser(supabase, user.id);
-
-    const nextStudyAction = getDashboardNextStudyAction(user.id, materials).catch((error) => {
-      logError('dashboard.nextStudyAction', error, { userId: user.id });
-      return null;
-    });
 
     // Preguntar los datos académicos sólo después de tener un PDF listo.
     // El formulario de carga inicial y la guía del primer PDF no se interrumpen.
@@ -119,6 +113,13 @@ export default async function DashboardPage({
           .maybeSingle()
       : null;
     const homeView = await homeViewPromise;
+    // La acción sugerida solo la usa la home anterior: si se muestra la home con Agenda, no se consulta.
+    const nextStudyAction = homeView
+      ? Promise.resolve(null)
+      : getDashboardNextStudyAction(user.id, materials).catch((error) => {
+          logError('dashboard.nextStudyAction', error, { userId: user.id });
+          return null;
+        });
     const needsAcademicContext = Boolean(
       profileContext && !profileContext.error &&
       (!profileContext.data?.universidad_id || !profileContext.data?.carrera_id)
