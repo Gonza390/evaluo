@@ -42,7 +42,7 @@ assert.match(material, /initialStudyStartGuideRequested=\{!isEnglishStudyEntry/)
 assert.match(material, /locale=\{isEnglishStudyEntry \? 'en' : 'es'\}/);
 assert.match(study, /data-reopen-first-pdf-guide/,
   'Optional help must remain available after suppressing the automatic tutorial');
-assert.match(seo, /Study with my PDF or Word/);
+assert.match(seo, /Study with my material/);
 assert.match(seo, /next=%2Fdashboard%3FopenUpload%3D1/);
 
 const original = 'Ya utilizaste tu material gratuito. Podés seguir estudiándolo o usar Premium para agregar otro.';
