@@ -1357,3 +1357,7 @@ for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-
   assert.ok(content.includes("name: 'Gonzalo Olmos'"), 'Best AI guide must have a named author');
   assert.ok(source('components/marketing/best-ai-study-page.tsx').includes("'@type': 'Person'"), 'Article author must be a Person');
 }
+
+// Ahrefs (11/11/2026): the USAC guide was an orphan page; the ES guides hub links it.
+assert.ok(source('app/(es)/es/guias/page.tsx').includes('href="/es/paises/guatemala-pruebas-basicas-usac"'),
+  'The /es/guias hub must link the USAC PCB guide so it is not an orphan page');
