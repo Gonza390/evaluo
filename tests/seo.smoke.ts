@@ -688,17 +688,17 @@ assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', ['index: false', 'f
 
 /* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
 const acquisitionSeoTitles: Array<[string, string]> = [
-  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes gratis: resumí PDFs y prepará exámenes'],
-  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA gratis: resumen, preguntas y flashcards'],
-  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA gratis: resumen por temas en minutos'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes gratis: resumí y practicá tus PDF'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA gratis: resumen y preguntas'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA gratis: resumen por temas y glosario'],
   ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de un PDF con IA, gratis'],
   ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde un PDF con IA'],
   ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de un PDF con IA, gratis'],
   ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA gratis desde tus apuntes'],
-  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde tu PDF, gratis'],
+  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA desde tu PDF, gratis'],
   ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar tus PDF, gratis'],
   ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar tus PDF, gratis'],
-  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet gratis: flashcards y exámenes desde PDF'],
+  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet gratis: flashcards desde tu PDF'],
 ];
 assert.equal(new Set(acquisitionSeoTitles.map(([, title]) => title.toLowerCase())).size, acquisitionSeoTitles.length, 'Each acquisition page needs its own distinct title');
 for (const [path, expectedTitle] of acquisitionSeoTitles) {

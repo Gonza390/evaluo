@@ -5,7 +5,7 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/recursos/verificar-preguntas-ia';
-const title = 'Cómo comprobar si las preguntas generadas con IA son correctas';
+const title = 'Cómo verificar si las preguntas de IA son correctas';
 const description = 'Guía de Evaluo para revisar preguntas de IA: siete controles, ejemplos de errores, una rúbrica práctica y referencias académicas.';
 export const metadata = studyMetadata(path, title, description);
 

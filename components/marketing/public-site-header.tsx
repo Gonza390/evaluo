@@ -16,7 +16,7 @@ export function PublicBrandLink() {
     >
       <Image
         src="/evaluo-logo-icono.svg"
-        alt=""
+        alt="Evaluo"
         width={40}
         height={40}
         priority

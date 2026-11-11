@@ -10,10 +10,10 @@ import { PricingContent } from '@/components/pricing/PricingContent';
 // Datos factuales para buscadores y asistentes (contrato GEO): Gratis incluye
 // 1 material PDF o Word gratis por mes; Premium, hasta 3 materiales PDF o Word por día.
 const pricingDescription =
-  'Planes Gratis y Premium de Evaluo: 1 material PDF o Word gratis por mes, y con Premium hasta 3 materiales PDF o Word por día, práctica según tus errores y simulacros sin cupo.';
+  'Evaluo Gratis: 1 material PDF o Word por mes. Premium: hasta 3 materiales por día, práctica según tus errores y simulacros sin cupo.';
 
 export const metadata: Metadata = {
-  title: 'Planes y precios',
+  title: 'Planes y precios: Evaluo gratis y Premium',
   description: pricingDescription,
   alternates: hreflangAlternates('pricing', 'es'),
   openGraph: {
