@@ -89,6 +89,7 @@ export type SeoHub = {
   intro:string; benefitTitle:string;benefit:string;
   cards:{title:string;description:string;href:string;label?:string}[];
   steps:{title:string;detail:string}[];
+  faq?:{question:string;answer:string}[];
 };
 export const SEO_HUBS:Record<string,SeoHub>={
  examenes:{
@@ -152,6 +153,12 @@ export const SEO_HUBS:Record<string,SeoHub>={
   {title:'Convertir PDF en preguntas',description:'Transformá apuntes en ejercicios de práctica.',href:'/convertir-pdf-en-preguntas'},
   {title:'Verdadero o falso con IA',description:'Comprobá afirmaciones con explicaciones y repasá conceptos de tus apuntes.',href:'/funciones/verdadero-falso-con-ia'},
   {title:'Unir conceptos con IA',description:'Relacioná términos y definiciones para detectar confusiones.',href:'/funciones/unir-conceptos-con-ia'}],
+  faq:[
+   {question:'¿Qué funciones de Evaluo son gratis?',answer:'Con el plan Gratis subís 1 material por mes (PDF o Word) y tenés resumen por temas, glosario, flashcards y práctica de prueba con preguntas, verdadero o falso y unir conceptos. Premium suma hasta 3 materiales nuevos por día, práctica enfocada en tus errores, simulacros sin cupo y mapas mentales.'},
+   {question:'¿Qué archivos puedo usar?',answer:'PDF o Word de hasta 20 MB. En el plan Gratis, cada PDF puede tener hasta 100 páginas. Funcionan mejor los archivos con texto legible; en un PDF escaneado la calidad depende de que el texto se lea bien.'},
+   {question:'¿Por qué función conviene empezar?',answer:'Empezá por el resumen y el glosario del tema para entenderlo. Después practicá ese tema con preguntas o verdadero o falso, repasá con flashcards lo que te cuesta y, cerca del examen, hacé un simulacro para ver qué temas te faltan.'},
+   {question:'¿Puedo confiar en lo que genera la IA?',answer:'Úsalo para practicar, no como única fuente. Evaluo trabaja sobre tu propio material, pero la IA puede equivocarse en datos, fórmulas o matices: contrastá lo importante con tus apuntes y con lo que pide tu docente.'},
+  ],
   steps:[{title:'Seleccioná un documento',detail:'Usá el material de tu clase.'},{title:'Elegí cómo estudiar',detail:'Alterná lectura, tarjetas y preguntas según el tipo de contenido.'},{title:'Reforzá errores',detail:'Volvé a los temas difíciles y comprobá tu progreso.'}]
  },
  comparar:{
@@ -164,6 +171,12 @@ export const SEO_HUBS:Record<string,SeoHub>={
   {title:'Evaluo vs ChatGPT',description:'Estudio conversacional frente a un recorrido de práctica por temas.',href:'/comparar/evaluo-vs-chatgpt'},
   {title:'Evaluo vs NotebookLM',description:'Investigación con fuentes frente a práctica a partir de material de estudio.',href:'/comparar/evaluo-vs-notebooklm'},
   {title:'Evaluo vs Quizlet',description:'Tarjetas y herramientas de repaso comparadas con el flujo de Evaluo.',href:'/comparar/evaluo-vs-quizlet'}],
+  faq:[
+   {question:'¿Cuál es la mejor app para estudiar con IA?',answer:'Depende de cómo estudiás. Para investigar varias fuentes conviene Gemini Notebook (antes NotebookLM); para que te expliquen paso a paso, ChatGPT o Gemini con su modo de estudio; para memorizar, apps de flashcards como Anki o Quizlet; y para preparar un examen a partir de tu PDF, Evaluo. En la guía de mejores IA para estudiar comparamos once herramientas.'},
+   {question:'¿Evaluo reemplaza a ChatGPT o NotebookLM?',answer:'No necesariamente: se complementan. Podés investigar o resolver dudas con un asistente general y usar Evaluo para estudiar tu material por temas, practicar con preguntas y ver qué te falta repasar antes del examen.'},
+   {question:'¿Estas comparativas son imparciales?',answer:'Evaluo es nuestro producto, y lo decimos. Por eso cada comparativa se basa en la documentación oficial de la otra herramienta, muestra la fecha de revisión y explica en qué casos te conviene más la otra opción.'},
+   {question:'¿Evaluo es gratis?',answer:'Sí, tiene un plan Gratis con 1 material por mes (PDF o Word), con resumen, flashcards y práctica de prueba. El plan Premium amplía la cantidad de materiales y de práctica.'},
+  ],
   steps:[{title:'Elegí tu objetivo',detail:'¿Necesitás comprender, sintetizar o responder preguntas?'},{title:'Compará el flujo',detail:'Analizá qué trabajo requiere cada herramienta.'},{title:'Probá con un material',detail:'Comprobá cuál se adapta a tu forma de estudiar.'}]
  }
 };
