@@ -7,7 +7,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 export const metadata: Metadata = {
   title: 'Política de Uso Aceptable',
   description:
-    'Conocé las reglas de uso de Evaluo para cargar PDF y Word, generar contenidos con IA, respetar los derechos de terceros y practicar de forma académicamente responsable.',
+    'Reglas de uso de Evaluo para cargar material, generar contenidos con IA, respetar derechos de terceros y estudiar de forma responsable.',
   alternates: { canonical: '/politica-de-uso-aceptable' },
   robots: { index: true, follow: true },
 };

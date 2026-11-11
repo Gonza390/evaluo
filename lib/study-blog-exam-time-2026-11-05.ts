@@ -8,7 +8,7 @@ export const EXAM_STUDY_TIME_EN_BLOG: StudyBlogArticle[] = [
     "slug": "how-long-should-i-study-for-an-exam",
     "title": "How Long Should I Study for an Exam? Calculate Your Hours and Build a Plan",
     "seoTitle": "How Long Should I Study for an Exam? Hours & Study Plan",
-    "description": "How many hours should you study for an exam? Estimate time from your topics and available days, see a worked seven-day plan, and learn how to review effectively.",
+    "description": "How many hours should you study for an exam? Estimate time from your topics and days left, with a worked seven-day plan and review tips.",
     "category": "Exam preparation",
     "lead": "There is no universal number of study hours that guarantees an exam result. The time you need depends on what the exam covers, how well you already know it, the kinds of questions you will face and the time you can sustain. Instead of copying someone else's daily target, build a workload estimate and then test whether you can actually answer exam-style questions.",
     "takeaway": "Plan for tasks, not just hours: learn each topic, retrieve it later without notes, try mixed exam questions, and correct your mistakes. The calculator below produces an adjustable estimate, not a scientifically established number of hours for every student.",

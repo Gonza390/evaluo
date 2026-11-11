@@ -12,7 +12,7 @@ import './home-redesign.css';
 export const metadata: Metadata = {
   title: { absolute: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen' },
   description:
-    'Evaluo es una plataforma de estudio con IA: subí tu material de estudio y obtené resúmenes, flashcards y práctica por tema para preparar tus exámenes. Gratis.',
+    'Evaluo es una plataforma de estudio con IA: subí tu material de estudio y obtené resúmenes, flashcards y práctica por tema para tus exámenes.',
   alternates: hreflangAlternates('home', 'es'),
   other: {
     'geo.region': 'AR',

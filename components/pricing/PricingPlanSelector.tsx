@@ -70,7 +70,7 @@ export function PricingPlanSelector({
 
           <div className="mt-8">
             <Link
-              href={english ? "/en/login?mode=signup" : "/estudiar-pdf-con-ia"}
+              href={english ? "/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1" : "/estudiar-pdf-con-ia"}
               className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               {tr("Empezá gratis con tu PDF","Start free with your PDF")}

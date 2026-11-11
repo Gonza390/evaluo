@@ -15,7 +15,7 @@ const uploadHref = '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1';
 export const metadata: Metadata = {
   title: 'Técnicas de estudio efectivas para preparar un examen',
   description:
-    'Conocé técnicas de estudio con respaldo en investigación: active recall, repetición espaciada, intercalado, elaboración y más. Cómo aplicarlas antes de un examen.',
+    'Técnicas de estudio con respaldo en investigación: active recall, repetición espaciada, intercalado y elaboración. Cómo aplicarlas.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
