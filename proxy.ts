@@ -348,6 +348,14 @@ export async function proxy(request: NextRequest) {
   return persistReferralCookie(request, response);
 }
 
+// Las landings de marketing (/funciones, /comparar, /es/*, /en/* salvo /en/login)
+// son estáticas y el proxy no hace nada con ellas salvo guardar ?ref=. Sacarlas
+// del matcher evita un salto de Routing Middleware antes de la CDN (mejor TTFB).
+// La segunda entrada vuelve a incluir cualquier URL con ?ref= para no perder
+// referidos. "/" sigue pasando por el proxy (redirección por idioma y sesión).
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|funciones(?:/|$)|comparar(?:/|$)|es(?:/|$)|en(?:$|/(?!login(?:/|$)))|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    { source: '/:path*', has: [{ type: 'query', key: 'ref' }] },
+  ],
 };
