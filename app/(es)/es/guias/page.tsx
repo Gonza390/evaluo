@@ -97,6 +97,26 @@ export default function GuiasDeEstudioPage() {
               </section>
             );
           })}
+          <section className="mb-14" aria-labelledby="guias-ingreso">
+            <h2 id="guias-ingreso" className="text-2xl font-bold tracking-tight">Exámenes de ingreso</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Guías para pruebas de admisión universitaria, con temario y práctica.</p>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <article className="flex flex-col rounded-[22px] border border-slate-200 bg-white p-6 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Guatemala · USAC</p>
+                <h3 className="mt-3 text-lg font-bold leading-snug text-slate-950">
+                  <Link href="/es/paises/guatemala-pruebas-basicas-usac" className="hover:text-blue-700">
+                    Pruebas Básicas USAC: temario y cómo practicar
+                  </Link>
+                </h3>
+                <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">
+                  Qué evalúan las Pruebas de Conocimientos Básicos de la USAC y cómo preparar cada área con tu material de estudio.
+                </p>
+                <Link href="/es/paises/guatemala-pruebas-basicas-usac" className="mt-5 inline-flex min-h-11 items-center gap-2 self-start text-sm font-bold text-blue-700 hover:underline">
+                  Leer la guía<span className="sr-only">: Pruebas Básicas USAC</span> <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </article>
+            </div>
+          </section>
           <section className="rounded-[26px] border border-blue-100 bg-blue-50/60 p-6 sm:p-8">
             <div className="flex items-center gap-2 text-blue-700"><FileText className="h-5 w-5" aria-hidden="true" /><span className="text-xs font-bold uppercase tracking-wide">Del consejo a la práctica</span></div>
             <h2 className="mt-3 text-2xl font-bold tracking-tight">El siguiente paso está en tus apuntes</h2>
