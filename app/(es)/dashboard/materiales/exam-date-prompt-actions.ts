@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
+import { ensureAutoStudyPlan } from '@/lib/student-materials/auto-study-plan';
 import { studentMaterialIdSchema } from '@/lib/student-materials/validation';
 
 const MAX_PROMPT_VIEWS = 2;
@@ -278,7 +279,11 @@ export async function saveStudentMaterialExamDateAction(input: {
       });
     }
 
-    return { success: true, message: messages.saved };
+    // Con apunte listo y sin plan previo, el plan se arma solo (onboarding etapa 2).
+    // Si el apunte todavía se procesa, lo arma el procesamiento al terminar.
+    const plan = await ensureAutoStudyPlan({ userId: owned.user.id, materialId: input.materialId });
+
+    return { success: true, message: messages.saved, plan };
   } catch (error) {
     logError('examDatePrompt.save', error, { materialId: input.materialId });
     return { success: false, message: messages.retry };

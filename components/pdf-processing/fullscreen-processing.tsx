@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, Check, CheckCircle2, Lightbulb, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowRight, BookOpen, CalendarDays, Check, CheckCircle2, Lightbulb, Loader2, RotateCcw } from 'lucide-react';
 import type { StudentMaterialProcessingState } from '@/app/dashboard/materiales/actions';
 import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
 import { fetchStudentMaterialProcessingState } from '@/lib/student-materials/processing-state-client';
@@ -13,10 +13,17 @@ import { getStudentMaterialRoute } from '@/lib/routes';
 import './fullscreen-processing.css';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { EnglishProcessingScene } from './english-processing-scene';
+import { ExamDateQuestion, formatExamDateShort, type ExamDateAnswer } from './exam-date-question';
+import { saveStudentMaterialExamDateAction } from '@/app/dashboard/materiales/exam-date-prompt-actions';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const STEPS = ['Organizar', 'Entender', 'Memorizar', 'Practicar'] as const;
 const ENGLISH_STEPS = ['Organize', 'Understand', 'Remember', 'Practice'] as const;
 const SCENE_MS = 6500;
+/** Si no responde la fecha en este tiempo, la pregunta se va y empiezan las escenas. */
+const EXAM_QUESTION_MS = 15000;
+/** Pasado este tiempo sin terminar, avisamos que está tardando más de lo normal. */
+const SLOW_PROCESSING_MS = 120000;
 
 const titles = [
   'Estamos organizando tu material',
@@ -193,6 +200,14 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   const router=useRouter();
   const english = useOptionalAppLocale() === 'en';
   const [state,setState]=useState(initialState);
+  // Onboarding etapa 2: primero se pregunta la fecha del examen y después rotan las escenas.
+  const [questionDone,setQuestionDone]=useState(()=>preview||Boolean(initialState.examDate)||initialState.status==='ready');
+  const [questionManual,setQuestionManual]=useState(false);
+  const [questionEndedAt,setQuestionEndedAt]=useState(0);
+  const [savingDate,setSavingDate]=useState(false);
+  const [dateError,setDateError]=useState<string|null>(null);
+  const [planPicking,setPlanPicking]=useState(false);
+  const questionViewedRef=useRef(false);
   const [elapsed,setElapsed]=useState(0);
   const [previewScene,setPreviewScene]=useState(0);
   const [visibleScene,setVisibleScene]=useState(0);
@@ -205,7 +220,44 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
   const ready=preview ? previewScene===4 : state.status==='ready';
   const failed=!preview && state.status==='failed';
   const progress=preview ? [18,41,68,92,100][previewScene] : ready?100:Math.min(96,Math.max(0,state.progress));
-  const scene=preview ? Math.min(3,previewScene) : Math.min(3,Math.floor(elapsed/SCENE_MS));
+  const scene=preview ? Math.min(3,previewScene) : Math.min(3,Math.floor(Math.max(0,elapsed-questionEndedAt)/SCENE_MS));
+  const asking=!preview&&!ready&&!failed&&!questionDone;
+  const slow=!preview&&!ready&&!failed&&elapsed>=SLOW_PROCESSING_MS;
+  const finishQuestion=useCallback((answer:ExamDateAnswer|'skip'|'timeout')=>{
+    setQuestionDone(true);
+    setQuestionManual(false);
+    setQuestionEndedAt(elapsed);
+    setDateError(null);
+    trackMarketingEvent('processing_exam_date_answered',{material_id:materialId,answer,location:'processing'});
+  },[elapsed,materialId]);
+  useEffect(()=>{
+    if(!asking||questionViewedRef.current)return;
+    questionViewedRef.current=true;
+    trackMarketingEvent('processing_exam_date_viewed',{material_id:materialId,location:'processing'});
+  },[asking,materialId]);
+  useEffect(()=>{
+    if(asking&&!questionManual&&!savingDate&&elapsed>=EXAM_QUESTION_MS)finishQuestion('timeout');
+  },[asking,questionManual,savingDate,elapsed,finishQuestion]);
+  const saveExamDate=useCallback(async(dateKey:string,answer:ExamDateAnswer,location:'processing'|'ready')=>{
+    if(preview||savingDate)return;
+    setSavingDate(true);
+    setDateError(null);
+    try{
+      const result=await saveStudentMaterialExamDateAction({materialId,examDate:dateKey,locale:english?'en':'es'});
+      if(!result.success){setDateError(result.message);return;}
+      setState(current=>({...current,examDate:dateKey}));
+      if(location==='processing')finishQuestion(answer);
+      else{
+        trackMarketingEvent('processing_exam_date_answered',{material_id:materialId,answer,location:'ready'});
+        setPlanPicking(false);
+        // El plan se arma en el servidor al guardar la fecha: traemos el resumen.
+        const refreshed=await fetchStudentMaterialProcessingState(materialId).catch(()=>null);
+        if(refreshed)setState(refreshed);
+      }
+    }catch{
+      setDateError(english?'We couldn’t save the date. Please try again.':'No pudimos guardar la fecha. Probá de nuevo.');
+    }finally{setSavingDate(false)}
+  },[preview,savingDate,materialId,english,finishQuestion]);
   useEffect(()=>{
     if(!preview||previewScene>=4)return;
     const timer=window.setTimeout(()=>setPreviewScene(current=>Math.min(4,current+1)),SCENE_MS);
@@ -280,38 +332,70 @@ export function FullscreenProcessing({ initialState, preview = false }: {initial
       </div>
     </header>
     <div data-processing-content className="flex min-h-0 min-w-0 flex-1 flex-col px-3 py-2 sm:px-5 sm:py-3 lg:px-8">
-      <ProcessingFit sceneKey={ready?'ready':failed?'failed':visibleScene}>
+      <ProcessingFit sceneKey={ready?'ready':failed?'failed':asking?'question':visibleScene}>
       {failed? <section data-processing-final-motion role="alert" className="mx-auto w-full max-w-[600px] space-y-5 rounded-[22px] border border-[#e3eaf5] bg-[#f8faff] p-5 text-center">
         <h1 className="text-[22px] font-bold">{english ? "We couldn't process your document" : 'No pudimos procesar tu material'}</h1>
         <p className="text-[13px] text-[#4b5565]">{english ? 'Processing was interrupted. Try again or return later.' : state.error||state.message}</p>
         <div className="flex flex-wrap justify-center gap-3"><button type="button" disabled={retrying} onClick={()=>void retry()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#3c6cba] px-5 text-sm font-semibold text-white disabled:opacity-50"><RotateCcw size={16}/> {english ? 'Try again' : 'Reintentar'}</button><Link href="/dashboard" className="inline-flex min-h-11 items-center rounded-full border border-[#dbe6f8] px-5 text-sm font-semibold">{english ? 'Back to my study space' : 'Volver a Mi espacio'}</Link></div>
-      </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[660px] flex-col items-center rounded-[20px] border border-[#e3eaf5] bg-gradient-to-b from-[#f3f7ff] to-white px-4 py-5 text-center sm:px-6 sm:py-6">
+      </section> : ready? <section data-processing-ready data-processing-final-motion className="mx-auto flex w-full max-w-[520px] flex-col items-center px-2 py-4 text-center">
         <Image src="/evi-procesamiento-listo.svg" alt="" width={96} height={96} className="mx-auto size-20 object-contain sm:size-24"/>
-        <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#c3e7d0] bg-[#f1fbf5] px-3.5 py-1.5 text-[12px] font-semibold text-[#067647]"><CheckCircle2 size={15}/> {english ? 'Processing complete' : 'Procesamiento completo'}</span>
-        <h1 className="mt-4 text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[27px]">{english ? 'Your document is ready to study' : 'Tu material está listo para estudiar'}</h1>
-        <p className="mt-3 max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">{english ? 'Start with your first topic, then learn at your own pace.' : 'Ya podés comenzar por el primer tema y avanzar a tu ritmo.'}</p>
-        <div className="mt-5 flex w-full max-w-[520px] flex-wrap items-center gap-3 rounded-[17px] border border-[#dbe6f8] bg-white p-3.5 text-left">
-          <span className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg bg-[#bb5654] text-[12px] font-bold text-white">{state.fileName.toLowerCase().endsWith('.docx')?'DOC':'PDF'}</span>
-          <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-semibold">{state.fileName}</p><p className="mt-2 text-[12px] text-[#667085]">{english ? 'Topic summaries · Flashcards and glossary · Practice' : 'Resúmenes por tema · Tarjetas y glosario · Práctica'}</p></div>
+        <h1 className="mt-4 text-[24px] font-semibold leading-tight tracking-[-.03em] sm:text-[30px]">{english ? 'Your notes are ready' : 'Tu apunte está listo'}</h1>
+        <p className="mt-2 max-w-[440px] truncate text-[15px] leading-6 text-[#4b5565]" title={state.title||state.fileName}>{state.title||state.fileName}</p>
+        <span className="sr-only">{english ? 'Your document is ready to study' : 'Tu material está listo para estudiar'}</span>
+        {planPicking ? <div className="mt-6 w-full">
+          <ExamDateQuestion english={english} saving={savingDate} error={dateError} headingId="ready-exam-date-question"
+            onPick={(dateKey,answer)=>void saveExamDate(dateKey,answer,'ready')}
+            onSkip={()=>{setPlanPicking(false);setDateError(null)}} skipLabel={english?'Not now':'Ahora no'}/>
+        </div> : <>
+        {state.plan&&state.plan.includesMaterial ? <div data-ready-plan className="mt-6 w-full rounded-[18px] border border-[#e3eaf5] p-4 text-left">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-semibold tracking-[.12em] text-[#667085]">{english ? 'YOUR PLAN IS READY' : 'TU PLAN YA ESTÁ ARMADO'}</span>
+            <span className="rounded-full bg-[#f1fbf5] px-2.5 py-0.5 text-[12px] font-semibold text-[#054f31]">{english ? 'Exam' : 'Examen'} {formatExamDateShort(state.plan.examDate,english)}</span>
+          </div>
+          <p className="mt-3 text-[15px] leading-6 text-[#344054]"><strong className="font-semibold text-[#0f1623]">{english ? `${state.plan.topicCount} topics over ${state.plan.studyDays} days` : `${state.plan.topicCount} temas en ${state.plan.studyDays} días`}</strong> · {english ? `about ${state.plan.dailyMinutes} min a day` : `unos ${state.plan.dailyMinutes} min por día`}</p>
+          {state.plan.todayTopicTitle ? <div className="mt-3 flex items-center gap-2.5 border-t border-[#e8ecf2] pt-3">
+            <span className="rounded-lg bg-[#eef4ff] px-2 py-1 text-[12px] font-semibold text-[#3c6cba]">{english ? 'Today' : 'Hoy'}</span>
+            <span className="min-w-0 truncate text-[14px] font-medium">{state.plan.todayTopicTitle}</span>
+          </div> : null}
+        </div> : state.examDate ? <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#f1fbf5] px-3.5 py-2 text-[13px] text-[#054f31]"><CheckCircle2 size={15} className="text-[#067647]"/>{english ? 'Exam' : 'Examen'} {formatExamDateShort(state.examDate,english)}</p> : null}
+        <div className="mt-7 flex w-full flex-col gap-2.5">
+          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#3c6cba] px-5 text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)] hover:bg-[#2a5193]" >{english ? 'Start topic 1' : 'Empezar el tema 1'} <ArrowRight size={17}/></Link>
+          {state.plan&&state.plan.includesMaterial
+            ? <Link href="/dashboard/plan-de-estudio" className="flex min-h-12 items-center justify-center rounded-full px-4 text-[14px] font-semibold text-[#3c6cba] hover:bg-[#eef4ff]">{english ? 'View or adjust my plan' : 'Ver o ajustar mi plan'}</Link>
+            : state.examDate
+              ? <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-12 items-center justify-center rounded-full border border-[#dbe6f8] bg-white px-4 text-[14px] font-semibold text-[#3c6cba] hover:bg-[#eef4ff]" >{english ? 'Create my study plan' : 'Preparar mi plan de estudios'}</Link>
+              : <><button type="button" disabled={preview} onClick={()=>setPlanPicking(true)} className="flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-4 text-[15px] font-semibold text-[#3c6cba] hover:bg-[#eef4ff]"><CalendarDays size={18} aria-hidden="true"/>{english ? 'Build my study plan' : 'Armar mi plan de estudio'}</button>
+                <p className="text-[12px] text-[#667085]">{english ? 'We only need your exam date.' : 'Solo te pedimos la fecha del examen.'}</p></>}
         </div>
-        <div className="mt-5 flex w-full max-w-[290px] flex-col gap-3">
-          <Link href={readHref} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#3c6cba] px-5 text-[14px] font-semibold text-white hover:bg-[#2a5193]" >{english ? 'Start studying' : 'Empezar a estudiar'} <ArrowRight size={17}/></Link>
-          <Link href={`/dashboard/plan-de-estudio/preparar?material=${encodeURIComponent(materialId)}`} aria-disabled={preview||undefined} onClick={preview?(event)=>event.preventDefault():undefined} tabIndex={preview?-1:undefined} className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#dbe6f8] bg-white px-4 text-[13px] font-semibold text-[#3c6cba] hover:bg-[#eef4ff]" >{english ? 'Create my study plan' : 'Preparar mi plan de estudios'}</Link>
-        </div>
+        </>}
       </section> : <div data-processing-scene-stage className="mx-auto flex w-full max-w-[850px] flex-1 flex-col items-center justify-center gap-4 sm:gap-5">
-        <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-4 sm:gap-5">
+        {asking ? <div data-processing-scene-motion data-phase="enter" key="question" className="mx-auto w-full max-w-[440px]">
+          <ExamDateQuestion english={english} saving={savingDate} error={dateError}
+            onPick={(dateKey,answer)=>void saveExamDate(dateKey,answer,'processing')}
+            onSkip={()=>finishQuestion('skip')}/>
+        </div> : <div data-processing-scene-motion data-phase={sceneExiting?'exit':'enter'} key={visibleScene} className="flex w-full flex-col items-center gap-4 sm:gap-5">
+        {!preview ? (state.examDate
+          ? <div data-processing-exam-date className="flex w-full max-w-[440px] items-center justify-between gap-2 rounded-xl bg-[#f1fbf5] py-0.5 pl-3 pr-1 text-[13px] font-semibold text-[#054f31]">
+              <span className="flex items-center gap-2"><Check size={16} className="text-[#067647]" aria-hidden="true"/>{english ? `Exam ${formatExamDateShort(state.examDate,true)} · building your plan` : `Examen el ${formatExamDateShort(state.examDate,false)} · armando tu plan`}</span>
+              <button type="button" onClick={()=>{setQuestionDone(false);setQuestionManual(true)}} className="min-h-11 px-2 underline underline-offset-2">{english ? 'Change' : 'Cambiar'}</button>
+            </div>
+          : <button type="button" data-processing-add-exam-date onClick={()=>{setQuestionDone(false);setQuestionManual(true)}} className="min-h-11 self-center text-[13px] font-semibold text-[#3c6cba]">{english ? '+ Add exam date and build my plan' : '+ Agregar fecha y armar mi plan'}</button>) : null}
         <div className="w-full space-y-2 text-center">
           <h1 className="text-[21px] font-bold leading-tight tracking-[-.03em] sm:text-[25px] lg:text-[27px]">{english ? englishTitles[visibleScene] : titles[visibleScene]}</h1>
           <p className="mx-auto max-w-[480px] text-[13px] leading-6 text-[#4b5565] sm:text-[14px]">{english ? englishDescriptions[visibleScene] : descriptions[visibleScene]}</p>
         </div>
         {english ? <EnglishProcessingScene scene={visibleScene} fileName={state.fileName}/> : <ProcessingScene scene={visibleScene} fileName={state.fileName}/>}
-        </div>
+        </div>}
+        {slow ? <div role="status" data-processing-slow className="mx-auto w-full max-w-[440px] rounded-2xl border border-[#e3eaf5] bg-[#f8faff] px-4 py-3 text-left text-[13px] leading-5 text-[#344054]">
+          {english ? 'This is taking longer than usual. You can close this screen: your notes keep processing and you’ll find them in your study space.' : 'Está tardando más de lo normal. Podés cerrar esta pantalla: tu apunte se sigue preparando y lo vas a encontrar en Mi espacio.'}
+          <Link href="/dashboard" className="mt-1 block min-h-11 py-2 font-semibold text-[#3c6cba]">{english ? 'Go to my study space' : 'Ir a Mi espacio'}</Link>
+        </div> : null}
         <span className="sr-only" role="status">{english ? (connectionIssues ? 'Still preparing your study materials. Reconnecting…' : 'Preparing your study materials…') : connectionIssues?'Seguimos preparando tu material. Estamos restableciendo la conexión.':state.message}</span>
       </div>}
       </ProcessingFit>
     </div>
     <footer className="flex min-w-0 shrink-0 flex-col items-start justify-between gap-1.5 border-t border-[#e8ecf2] px-3.5 py-2.5 sm:px-6 sm:py-3 lg:flex-row lg:items-center lg:px-8">
-      <ol className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3" aria-label={english ? 'Study workflow' : 'Recorrido de estudio'}>
+      <ol className="hidden min-w-0 flex-wrap items-center gap-2 sm:flex sm:gap-3" aria-label={english ? 'Study workflow' : 'Recorrido de estudio'}>
         {(english ? ENGLISH_STEPS : STEPS).map((step,index)=><li key={step} className="flex items-center gap-2">
           {index>0?<span aria-hidden="true" className="mr-1 h-0.5 w-3 bg-[#e8ecf2] sm:w-6"/>:null}
           <span className={`flex size-3 items-center justify-center rounded-full ${ready?'bg-[#067647]':index===visibleScene?'bg-[#3c6cba] ring-4 ring-[#dbe6f8]':index<visibleScene?'bg-[#3c6cba]':'bg-[#d0d5dd]'}`}>{ready||index<visibleScene?<Check className="size-2.5 text-white"/>:null}</span>

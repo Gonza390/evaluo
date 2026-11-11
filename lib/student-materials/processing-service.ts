@@ -42,6 +42,7 @@ import {
 import { buildClientVisionPagePaths } from '@/lib/student-materials/client-vision-cache';
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
+import { ensureAutoStudyPlan } from '@/lib/student-materials/auto-study-plan';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import { sendStudentMaterialReadyEmailIfInactive } from '@/lib/email/student-material-ready';
 import type {
@@ -772,6 +773,10 @@ export async function processStudentMaterial(input: {
       pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     },
   });
+
+  // Si el apunte ya tiene fecha de examen (se pide durante el procesamiento),
+  // el plan se arma solo. Nunca pisa un plan existente y no frena el "listo".
+  await ensureAutoStudyPlan({ userId: material.user_id, materialId: material.id });
 
   try {
     await sendStudentMaterialReadyEmailIfInactive({

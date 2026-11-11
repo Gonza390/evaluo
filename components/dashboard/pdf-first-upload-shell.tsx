@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
+import { CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
 import {
     type StudentMaterialProcessingState,
 } from '@/app/dashboard/materiales/actions';
@@ -458,7 +458,10 @@ export function PdfFirstUploadShell({
 
   const uploadDroppedFile = (selected: File) => {
     if (uploading) return;
-    if (selectFile(selected)) setOpen(true);
+    if (selectFile(selected)) {
+      setOpen(true);
+      void startProcessing(selected, titleFromFile(selected.name));
+    }
   };
 
   const showUploadLimit = (upgrade: PremiumUpgrade | undefined, activeFile: File) => {
@@ -649,11 +652,12 @@ export function PdfFirstUploadShell({
         // Analytics nunca debe convertir una carga exitosa en un error de interfaz.
       }
 
-      if (examDate) {
+      const activeExamDate = examDate || initialExamDate;
+      if (activeExamDate) {
         const examResult = await saveStudentMaterialExamContextAction({
           materialId: result.materialId,
           examInstance: null,
-          examDate,
+          examDate: activeExamDate,
         });
         if (!examResult.success) {
           toast({ description: firstUploadErrorMessage(examResult.message, locale), variant: 'destructive' });
@@ -664,7 +668,7 @@ export function PdfFirstUploadShell({
         trackMarketingEvent('preguntero_exam_pdf_uploaded', {
           source: initialSource,
           materia_id: trackingMateriaId || initialMateriaId || null,
-          exam_date: examDate || null,
+          exam_date: activeExamDate || null,
           material_id: result.materialId,
         });
       }
@@ -897,8 +901,13 @@ export function PdfFirstUploadShell({
         className="sr-only"
         onChange={(event) => {
           const selected = event.currentTarget.files?.[0] ?? null;
-          if (selectFile(selected)) setOpen(true);
           event.currentTarget.value = '';
+          // Subida en un paso (onboarding etapa 2): elegir el archivo ya lo sube.
+          // El nombre sale del archivo y la fecha del examen se pide mientras se procesa.
+          if (selected && selectFile(selected)) {
+            setOpen(true);
+            void startProcessing(selected, titleFromFile(selected.name));
+          }
         }}
       />
       <div
@@ -961,7 +970,9 @@ export function PdfFirstUploadShell({
                         : ready
                           ? t("Tu PDF está listo")
                           : t("Estamos procesando tu PDF")
-                      : t("Subir material")}
+                      : file
+                        ? t("Subiendo tu apunte")
+                        : t("Subir material")}
                   </h2>
                   <p className="mt-1 text-cuerpo leading-6 text-slate-500">
                     {processing
@@ -972,7 +983,9 @@ export function PdfFirstUploadShell({
                           : t("Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.")
                       : restoringDraft
                         ? t("Recuperando el PDF que elegiste antes del registro.")
-                        : t("Elegí el archivo y poné un nombre.")}
+                        : uploadError
+                          ? t("No pudimos subir tu apunte.")
+                          : t("En unos segundos empezamos a prepararlo.")}
                   </p>
                 </div>
               </div>
@@ -1004,61 +1017,20 @@ export function PdfFirstUploadShell({
                     <span className="mt-1 text-chico text-slate-400">{t("Máximo 20 MB")}</span>
                   </button>
                 ) : (
-                  <div className="mt-6">
-                    <button
-                      type="button"
-                      onClick={() => pickerRef.current?.click()}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-300"
-                    >
+                  <div className="mt-6" data-upload-status>
+                    <div className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
-                        <FileText className="h-5 w-5" />
+                        {uploading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <FileText className="h-5 w-5" aria-hidden="true" />}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-cuerpo font-semibold text-slate-900">
                           {file.name}
                         </span>
-                        <span className="mt-0.5 block text-chico text-slate-400">
-                          {t("Tocá para cambiar archivo")}
+                        <span className="mt-0.5 block text-chico text-slate-500" role="status">
+                          {uploading ? t("Subiendo…") : uploadError ? t("No se subió") : t("Listo para subir")}
                         </span>
                       </span>
-                    </button>
-
-                    <div className="mt-4">
-                      <label
-                        htmlFor="pdf-first-title"
-                        className="mb-1.5 block text-chico font-semibold text-slate-700"
-                      >
-                        {t("Nombre del material")}
-                      </label>
-                      <Input
-                        id="pdf-first-title"
-                        value={title}
-                        onChange={(event) => {
-                          const next = event.target.value;
-                          setTitle(next);
-                          if (next.trim().length < 3) setExamDate('');
-                        }}
-                        placeholder={titleFromFile(file.name)}
-                      />
                     </div>
-
-                    {hasValidTitle ? (
-                      <div className="animate-in fade-in slide-in-from-top-1 mt-4 duration-200">
-                        <label
-                          htmlFor="pdf-first-exam-date"
-                          className="mb-1.5 flex items-center gap-1.5 text-chico font-semibold text-slate-700"
-                        >
-                          <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
-                          {t("Fecha de examen")}
-                        </label>
-                        <Input
-                          id="pdf-first-exam-date"
-                          type="date"
-                          value={examDate}
-                          onChange={(event) => setExamDate(event.target.value)}
-                        />
-                      </div>
-                    ) : null}
                   </div>
                 )}
 
@@ -1089,19 +1061,18 @@ export function PdfFirstUploadShell({
                   </div>
                 ) : null}
 
-                <div className="mt-6 flex items-center justify-end gap-2">
-                  <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
-                    {t("Cancelar")}
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={!file || !hasValidTitle || uploading || Boolean(uploadError?.blocking)}
-                    onClick={() => void startProcessing()}
-                  >
-                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {t("Procesar este PDF")}
-                  </Button>
-                </div>
+                {!uploading && (uploadError || !file) ? (
+                  <div className="mt-6 flex items-center justify-end gap-2">
+                    <Button type="button" variant="ghost" onClick={close}>
+                      {t("Cancelar")}
+                    </Button>
+                    {file && uploadError && !uploadError.blocking ? (
+                      <Button type="button" disabled={!hasValidTitle} onClick={() => void startProcessing()}>
+                        {t("Reintentar")}
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
               </>
             ) : !failed && !showReadyContext ? (
               <>
