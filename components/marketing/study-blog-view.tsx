@@ -214,7 +214,7 @@ export function StudyBlogArticlePage({ locale, article }: { locale: StudyBlogLoc
     datePublished: articleDate,
     dateModified: articleDate,
     inLanguage: locale,
-    author: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
+    author: { '@type': 'Person', name: 'Gonzalo Olmos', jobTitle: locale === 'en' ? 'Founder of Evaluo' : 'Fundador de Evaluo', worksFor: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') } },
     publisher: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
     mainEntityOfPage: toAbsoluteUrl(path),
     isAccessibleForFree: true,
