@@ -466,5 +466,9 @@
   {
     "file": "tests/onboarding-auto-plan.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/seo-orphan-hub.smoke.ts",
+    "alias": false
   }
 ]
