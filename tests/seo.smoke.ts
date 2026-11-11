@@ -1337,3 +1337,13 @@ for (const [path, marker] of [
 for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-preguntas', '/funciones/simulacro-examen-con-ia', '/funciones/resumir-pdf-con-ia', '/en/pdf-to-flashcards', '/en/ai-test-prep']) {
   assert.ok(source('components/marketing/home-redesign.tsx').includes(`href: '${href}'`), 'Home must link to ' + href);
 }
+
+/* Guía "Mejores IA para estudiar": ES neutro + EN, hreflang, sitemap, declara que Evaluo es propio. */
+{
+  const content = source('lib/best-ai-study-tools.ts');
+  assert.ok(source('lib/seo/hreflang-clusters.ts').includes("'best-ai-study': { es: '/es/mejores-ia-para-estudiar', en: '/en/best-ai-for-studying' }"));
+  assert.ok(source('app/sitemap.ts').includes('/es/mejores-ia-para-estudiar') && source('app/sitemap.ts').includes('/en/best-ai-for-studying'));
+  assert.ok(content.includes('Evaluo es nuestro producto') && content.includes('Evaluo is our product'), 'Must disclose Evaluo is ours');
+  assert.ok(content.includes('1 material por mes') && content.includes('1 study material per month'), 'Free plan must match pricing');
+  for (const voseo of ['estudiás', 'necesitás', 'podés', 'elegí ']) assert.ok(!content.includes(voseo), 'Neutral Spanish: ' + voseo);
+}

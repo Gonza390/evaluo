@@ -160,6 +160,7 @@ export const SEO_HUBS:Record<string,SeoHub>={
   intro:'No existe una única herramienta ideal para todo. Revisá qué ofrece cada alternativa, cuándo puede resultar útil y qué limitaciones deberías considerar.',
   benefitTitle:'Comparativas basadas en usos concretos',benefit:'Las prestaciones de terceros cambian. Consultá sus sitios oficiales para confirmar precios, disponibilidad y límites actuales.',
   cards:[
+  {title:'Las mejores IA para estudiar en 2026',description:'Ocho herramientas comparadas: para qué sirve cada una, sus límites y cuáles son gratis.',href:'/es/mejores-ia-para-estudiar'},
   {title:'Evaluo vs ChatGPT',description:'Estudio conversacional frente a un recorrido de práctica por temas.',href:'/comparar/evaluo-vs-chatgpt'},
   {title:'Evaluo vs NotebookLM',description:'Investigación con fuentes frente a práctica a partir de material de estudio.',href:'/comparar/evaluo-vs-notebooklm'},
   {title:'Evaluo vs Quizlet',description:'Tarjetas y herramientas de repaso comparadas con el flujo de Evaluo.',href:'/comparar/evaluo-vs-quizlet'}],
