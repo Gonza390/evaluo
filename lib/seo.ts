@@ -29,6 +29,7 @@ export function buildOrganizationJsonLd() {
       'https://www.linkedin.com/company/evaluo-ar/',
       'https://alternativeto.net/software/evaluo-ai-study/',
       'https://www.crunchbase.com/organization/gonzalo',
+      'https://appgentina.com.ar/producto/evaluo',
     ],
   };
 }
