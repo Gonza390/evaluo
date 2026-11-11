@@ -154,7 +154,7 @@ export function StudyBlogHub({ locale }: { locale: StudyBlogLocale }) {
                 </h2>
                 <p className="mt-3 max-w-2xl flex-1 text-sm leading-7 text-slate-600 sm:text-base">{article.description}</p>
                 <Link href={getStudyBlogPath(locale, article)} className="mt-5 inline-flex min-h-11 items-center gap-2 self-start text-sm font-bold text-blue-700 hover:underline">
-                  {copy.read} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  {copy.read}<span className="sr-only">: {article.title}</span> <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </article>
             ))}

@@ -6,7 +6,7 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/comparar/evaluo-vs-quizlet';
 
 export const metadata: Metadata = {
-  title: 'Alternativa a Quizlet gratis: flashcards y exámenes desde PDF',
+  title: 'Alternativa a Quizlet gratis: flashcards desde tu PDF',
   description:
     "¿Buscás una alternativa a Quizlet? Evaluo crea flashcards y preguntas desde tus apuntes PDF con IA. Probalo gratis: elegís el archivo sin registrarte.",
   alternates: hreflangAlternates('compare-quizlet', 'es'),

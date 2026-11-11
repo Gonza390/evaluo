@@ -398,7 +398,7 @@ export const STUDY_GUIDES: StudyGuide[] = [
     "slug": "como-estudiar-con-ia",
     "category": "Practicar y reforzar",
     "title": "Cómo estudiar con IA para aprender más (y sin hacer trampa)",
-    "seoTitle": "Cómo estudiar con IA: método para aprender sin hacer trampa",
+    "seoTitle": "Cómo estudiar con IA: método para aprender de verdad",
     "description": "Cómo estudiar con inteligencia artificial: qué hace bien, dónde se equivoca, reglas de honestidad académica y un ejemplo para verificar respuestas.",
     "audience": "Estudiantes de secundaria, universidad y formación profesional que quieren usar IA para preparar exámenes respetando las normas de su institución",
     "question": "¿Cómo usar la IA para entender y recordar mejor, en lugar de que piense por ti?",

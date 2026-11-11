@@ -28,7 +28,7 @@ export function FooterHome({
               aria-label="Ir al inicio de Evaluo"
               className="inline-flex items-center gap-2 font-semibold text-slate-950 transition hover:text-blue-700"
             >
-              <Image src="/evaluo-logo-icono.svg" alt="" width={28} height={28} className="h-7 w-7" />
+              <Image src="/evaluo-logo-icono.svg" alt="Evaluo" width={28} height={28} className="h-7 w-7" />
               Evaluo
             </Link>
             <p className="mt-1 text-chico text-slate-500">Tu plataforma de estudio</p>
@@ -69,7 +69,7 @@ export function FooterHome({
               href="/"
               className="inline-flex items-center gap-2 text-titulo-sm font-semibold tracking-titulo"
             >
-              <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} className="h-8 w-8" />
+              <Image src="/evaluo-logo-icono.svg" alt="Evaluo" width={32} height={32} className="h-8 w-8" />
               <span>Evaluo</span>
             </Link>
             <p className="mt-2 max-w-xs text-chico text-white/70">
@@ -304,7 +304,7 @@ function EnglishHomeFooter() {
         <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <Link href="/en" className="inline-flex items-center gap-2 text-titulo-sm font-semibold tracking-titulo">
-              <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} />
+              <Image src="/evaluo-logo-icono.svg" alt="Evaluo" width={32} height={32} />
               <span>Evaluo</span>
             </Link>
             <p className="mt-2 max-w-xs text-chico text-white/70">Study smarter with your own notes.</p>

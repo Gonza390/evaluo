@@ -6,14 +6,14 @@ import { STUDY_HREFLANG } from '@/lib/international-study-landings';
 const path = '/estudiar-pdf-con-ia';
 
 export const metadata: Metadata = {
-  title: 'Estudiar PDF con IA gratis: resumen, preguntas y flashcards',
+  title: 'Estudiar PDF con IA gratis: resumen y preguntas',
   description:
     'Estudiá un PDF con IA gratis: elegís el archivo sin registrarte y obtenés resumen por temas, flashcards y preguntas de práctica basadas en tus apuntes.',
   alternates: { canonical: toAbsoluteUrl(path), languages: STUDY_HREFLANG },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Estudiar PDF con IA gratis: resumen, preguntas y flashcards | Evaluo',
+    title: 'Estudiar PDF con IA gratis: resumen y preguntas | Evaluo',
     description:
       'Usá un mismo PDF como fuente para resumir, organizar conceptos, repasar con flashcards y practicar sin perder el contexto.',
     url: toAbsoluteUrl(path),

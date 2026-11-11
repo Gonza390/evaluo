@@ -11,7 +11,7 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/es/paises/guatemala-pruebas-basicas-usac';
 const title = 'Pruebas Básicas USAC 2027: temario, guías y simulador';
 const description =
-  'Prepárate para las Pruebas de Conocimientos Básicos (PCB) del SUN USAC: materias por carrera, temario, guías oficiales, simulador y ejercicios resueltos. Practica gratis.';
+  'Prepárate para las Pruebas Básicas (PCB) del SUN USAC: materias por carrera, temario, guías oficiales, simulador y ejercicios resueltos.';
 
 export const metadata: Metadata = {
   title,
@@ -160,7 +160,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
               Pruebas Básicas USAC: qué estudiar y cómo prepararte
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#42506A] sm:text-lg">
-              Antes de estudiar todo el temario, identifica las pruebas que realmente solicita tu carrera.
+              Antes de estudiar todo el temario, identifica qué Pruebas Básicas solicita realmente tu carrera.
               Esta guía te explica el recorrido oficial de las PCB, cómo usar los materiales de la USAC
               y cómo practicar con ejemplos resueltos sin confundirlos con el examen institucional.
             </p>

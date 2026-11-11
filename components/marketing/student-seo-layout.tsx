@@ -68,7 +68,7 @@ export function StudentSeoCards({cards}:{cards:{title:string;description:string;
           </h3>
           <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{card.description}</p>
           <Link href={card.href} className="mt-5 inline-flex min-h-11 items-center gap-2 self-start text-sm font-bold text-blue-700 hover:underline">
-            Explorar <ArrowRight className="h-4 w-4" aria-hidden="true"/>
+            Explorar<span className="sr-only">: {card.title}</span> <ArrowRight className="h-4 w-4" aria-hidden="true"/>
           </Link>
         </article>
       ))}
