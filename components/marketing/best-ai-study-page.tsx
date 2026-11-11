@@ -36,7 +36,13 @@ export function BestAiStudyPage({ locale }: { locale: BestAiLocale }) {
     datePublished: ISO_DATE,
     dateModified: ISO_DATE,
     mainEntityOfPage: toAbsoluteUrl(c.path),
-    author: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
+    author: {
+      '@type': 'Person',
+      name: c.author.name,
+      jobTitle: c.author.role,
+      worksFor: { '@id': toAbsoluteUrl('/#organization') },
+      sameAs: ['https://www.crunchbase.com/organization/gonzalo'],
+    },
     publisher: { '@id': toAbsoluteUrl('/#organization') },
   };
   const itemListJsonLd = {
@@ -80,8 +86,9 @@ export function BestAiStudyPage({ locale }: { locale: BestAiLocale }) {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">{c.eyebrow}</p>
             <h1 className="mt-5 max-w-4xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">{c.title}</h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">{c.intro}</p>
-            <p className="mt-4 text-xs text-slate-500">
-              {c.updatedLabel} <time dateTime={ISO_DATE}>{c.updatedDate}</time>
+            <p className="mt-5 text-sm text-slate-600">
+              {c.author.byline} <strong className="text-slate-900">{c.author.name}</strong>, {c.author.role} · {c.updatedLabel}{' '}
+              <time dateTime={ISO_DATE}>{c.updatedDate}</time>
             </p>
             <p className="mt-6 flex max-w-3xl gap-3 rounded-2xl border border-blue-100 bg-white p-4 text-sm leading-7 text-slate-700">
               <Info className="mt-1 h-4 w-4 shrink-0 text-blue-700" aria-hidden="true" />
@@ -235,6 +242,11 @@ export function BestAiStudyPage({ locale }: { locale: BestAiLocale }) {
         </section>
 
         <section aria-labelledby="faq" className="mx-auto max-w-5xl px-5 pb-14 sm:px-8">
+          <aside aria-label={c.author.byline + ' ' + c.author.name} className="mb-12 rounded-2xl border border-slate-200 bg-slate-50/60 p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">{c.author.byline}</p>
+            <p className="mt-2 text-lg font-bold">{c.author.name} · <span className="font-normal text-slate-600">{c.author.role}</span></p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">{c.author.bio}</p>
+          </aside>
           <h2 id="faq" className="text-3xl font-bold tracking-tight">{c.faqTitle}</h2>
           <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white px-6">
             {c.faq.map((item) => (

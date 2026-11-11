@@ -31,6 +31,7 @@ export type BestAiContent = {
   title: string;
   intro: string;
   disclosure: string;
+  author: { name: string; role: string; bio: string; byline: string };
   updatedLabel: string;
   updatedDate: string;
   quickTitle: string;
@@ -60,7 +61,13 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
     eyebrow: 'Guía comparativa · 2026',
     title: 'Las mejores IA para estudiar en 2026: cuál conviene según cómo estudias',
     intro:
-      'No hay una única "mejor IA para estudiar": depende de si necesitas investigar varias fuentes, que te expliquen un tema paso a paso, memorizar con tarjetas o prepararte para un examen a partir de tus apuntes. Comparamos ocho herramientas por lo que hacen bien, sus límites y si tienen plan gratuito.',
+      'No hay una única "mejor IA para estudiar": depende de si necesitas investigar varias fuentes, que te expliquen un tema paso a paso, memorizar con tarjetas o prepararte para un examen a partir de tus apuntes. Comparamos once herramientas por lo que hacen bien, sus límites y si tienen plan gratuito.',
+    author: {
+      name: 'Gonzalo Olmos',
+      role: 'Fundador de Evaluo',
+      byline: 'Escrito por',
+      bio: 'Gonzalo creó Evaluo en Córdoba, Argentina, para que estudiar con IA signifique practicar y entender, no solo leer resúmenes. Desarrolla la plataforma y sigue de cerca cómo estudian sus usuarios.',
+    },
     disclosure:
       'Transparencia: Evaluo es nuestro producto y está incluido en la lista. Por eso también te decimos en qué casos te conviene más otra herramienta. No tenemos acuerdos comerciales con las demás.',
     updatedLabel: 'Revisado el',
@@ -68,8 +75,10 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
     quickTitle: 'Respuesta rápida: qué IA usar para cada necesidad',
     quick: [
       { need: 'Investigar y cruzar varias fuentes (apuntes, artículos, videos)', pick: 'Gemini Notebook (antes NotebookLM)', anchor: 'gemini-notebook' },
-      { need: 'Que te expliquen un tema paso a paso, con preguntas', pick: 'ChatGPT (Modo de estudio) o Gemini (Aprendizaje guiado)', anchor: 'chatgpt' },
+      { need: 'Que te expliquen un tema paso a paso, con preguntas', pick: 'ChatGPT (Modo de estudio), Gemini (Aprendizaje guiado) o Claude', anchor: 'chatgpt' },
       { need: 'Memorizar con flashcards y repetición espaciada', pick: 'Anki (gratis) o Knowt; Quizlet si ya usas sus mazos', anchor: 'anki' },
+      { need: 'Buscar información con fuentes para un trabajo', pick: 'Perplexity', anchor: 'perplexity' },
+      { need: 'Resolver ejercicios de matemática paso a paso', pick: 'Photomath', anchor: 'photomath' },
       { need: 'Estudiar un PDF por temas y practicar para un examen', pick: 'Evaluo', anchor: 'evaluo' },
     ],
     tableTitle: 'Comparación rápida',
@@ -256,6 +265,77 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
         sources: [{ title: 'Anki: sitio oficial', href: 'https://apps.ankiweb.net/' }],
       },
       {
+        id: 'perplexity',
+        name: 'Perplexity',
+        bestFor: 'Buscar información con fuentes',
+        summary:
+          'Un buscador con IA que responde citando las páginas de donde saca cada dato. Es muy útil para investigar un tema o preparar un trabajo, y tiene un modo de búsqueda académica centrado en publicaciones científicas.',
+        strengths: [
+          'Cada respuesta enlaza sus fuentes, así que es fácil verificar.',
+          'Búsqueda académica para trabajar con artículos y publicaciones.',
+          'Con la verificación de estudiante se habilitan funciones de estudio como flashcards y cuestionarios sobre tu material.',
+        ],
+        watchOut: [
+          'Está pensado para encontrar información, no para organizar tu estudio ni seguir tu progreso.',
+          'El análisis de archivos en el plan gratuito es limitado.',
+        ],
+        fromYourFiles: 'Sí, con límites',
+        flashcards: 'Con verificación de estudiante',
+        practice: 'Con verificación de estudiante',
+        freePlan: 'Sí',
+        spanish: 'Sí',
+        pricing: 'Plan gratuito; Pro pago, con descuento para estudiantes verificados.',
+        officialHref: 'https://www.perplexity.ai/',
+        sources: [{ title: 'Perplexity: sitio oficial', href: 'https://www.perplexity.ai/' }],
+      },
+      {
+        id: 'claude',
+        name: 'Claude (modo de aprendizaje)',
+        bestFor: 'Razonar un tema con un tutor',
+        summary:
+          'El asistente de Anthropic. Su modo de aprendizaje responde con preguntas en lugar de darte la solución: te pide que expliques tu razonamiento y te marca los conceptos clave. Destaca para leer y discutir textos largos.',
+        strengths: [
+          'Modo de aprendizaje con preguntas socráticas, pensado para que razones tú.',
+          'Trabaja bien con documentos largos y explicaciones detalladas.',
+          'Puede generar flashcards, guías o ejercicios cuando se lo pides.',
+        ],
+        watchOut: [
+          'Como todo asistente general, no organiza tu material por temas ni sigue tu progreso hacia el examen.',
+          'Algunas funciones educativas llegan a través de acuerdos con universidades; revisa qué incluye tu plan.',
+        ],
+        fromYourFiles: 'Sí',
+        flashcards: 'Si se lo pides',
+        practice: 'Sí, en la conversación',
+        freePlan: 'Sí',
+        spanish: 'Sí',
+        pricing: 'Plan gratuito con límites; planes pagos con más uso.',
+        officialHref: 'https://claude.ai/',
+        sources: [{ title: 'Anthropic: Claude para educación', href: 'https://www.anthropic.com/education' }],
+      },
+      {
+        id: 'photomath',
+        name: 'Photomath',
+        bestFor: 'Matemática paso a paso',
+        summary:
+          'App de Google para matemática: le sacas una foto a un ejercicio y te muestra la solución explicada paso a paso, desde aritmética hasta cálculo.',
+        strengths: [
+          'Las explicaciones paso a paso están incluidas en la versión gratuita.',
+          'Muy rápida para revisar cómo se resuelve un ejercicio.',
+        ],
+        watchOut: [
+          'Sirve para matemática, no para estudiar teoría ni otras materias.',
+          'Si solo copias la solución no aprendes: úsala para revisar después de intentarlo tú.',
+        ],
+        fromYourFiles: 'Foto del ejercicio',
+        flashcards: 'No',
+        practice: 'Ejercicios de matemática',
+        freePlan: 'Sí',
+        spanish: 'Sí',
+        pricing: 'Gratis con explicaciones paso a paso; Photomath Plus es pago.',
+        officialHref: 'https://photomath.com/',
+        sources: [{ title: 'Photomath: sitio oficial', href: 'https://photomath.com/' }],
+      },
+      {
         id: 'evaluo',
         name: 'Evaluo',
         bestFor: 'Preparar un examen desde tu PDF',
@@ -302,6 +382,7 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       { question: '¿Cuál es la mejor IA para estudiar gratis?', answer: 'Depende de cómo estudias. Gemini Notebook (antes NotebookLM) es gratis y muy completa para investigar fuentes; ChatGPT y Gemini tienen modos de estudio gratuitos para explicaciones paso a paso; Anki es gratis para memorizar; y Evaluo tiene un plan gratuito para estudiar un PDF por temas y practicar para el examen.' },
       { question: '¿Qué IA es mejor para estudiar un PDF?', answer: 'Si quieres consultar y cruzar varios documentos, Gemini Notebook. Si quieres convertir un PDF en un recorrido de estudio con preguntas, resultados por tema y repaso de errores, Evaluo. ChatGPT también lee PDF, pero tienes que guiar la conversación.' },
       { question: '¿NotebookLM cambió de nombre?', answer: 'Sí. El 16 de julio de 2026 Google renombró NotebookLM a Gemini Notebook. Es el mismo producto y la dirección notebooklm.google sigue funcionando.' },
+      { question: '¿Qué IA sirve para estudiar matemática?', answer: 'Para ver cómo se resuelve un ejercicio paso a paso, Photomath (gratis). Para entender el razonamiento detrás, un asistente con modo de estudio como ChatGPT, Gemini o Claude, que te hace preguntas en lugar de darte la respuesta. Intenta resolver primero y usa la IA para revisar.' },
       { question: '¿Puedo usar varias IA a la vez?', answer: 'Sí, y suele ser lo mejor: por ejemplo, investigar fuentes en Gemini Notebook, resolver dudas en ChatGPT y practicar para el examen en Evaluo o memorizar con Anki.' },
       { question: '¿La IA puede equivocarse al estudiar?', answer: 'Sí. Todas pueden cometer errores en datos, fórmulas o matices. Usa la IA para practicar y entender, y verifica lo importante con tu material y tus docentes.' },
     ],
@@ -320,7 +401,13 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
     eyebrow: 'Comparison guide · 2026',
     title: 'The best AI for studying in 2026: which one fits how you study',
     intro:
-      'There is no single "best AI for studying": it depends on whether you need to research several sources, get a topic explained step by step, memorize with flashcards or prepare for an exam from your own notes. We compared eight tools by what they do well, their limits and whether they have a free plan.',
+      'There is no single "best AI for studying": it depends on whether you need to research several sources, get a topic explained step by step, memorize with flashcards or prepare for an exam from your own notes. We compared eleven tools by what they do well, their limits and whether they have a free plan.',
+    author: {
+      name: 'Gonzalo Olmos',
+      role: 'Founder of Evaluo',
+      byline: 'Written by',
+      bio: 'Gonzalo built Evaluo in Córdoba, Argentina, so that studying with AI means practicing and understanding, not just reading summaries. He develops the platform and follows closely how its users study.',
+    },
     disclosure:
       'Disclosure: Evaluo is our product and it is on this list. That is why we also tell you when another tool is a better fit. We have no commercial agreements with the others.',
     updatedLabel: 'Reviewed on',
@@ -328,8 +415,10 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
     quickTitle: 'Quick answer: which AI to use for each need',
     quick: [
       { need: 'Research and cross-check several sources (notes, articles, videos)', pick: 'Gemini Notebook (formerly NotebookLM)', anchor: 'gemini-notebook' },
-      { need: 'Get a topic explained step by step, with questions', pick: 'ChatGPT (Study mode) or Gemini (Guided Learning)', anchor: 'chatgpt' },
+      { need: 'Get a topic explained step by step, with questions', pick: 'ChatGPT (Study mode), Gemini (Guided Learning) or Claude', anchor: 'chatgpt' },
       { need: 'Memorize with flashcards and spaced repetition', pick: 'Anki (free) or Knowt; Quizlet if you already use its decks', anchor: 'anki' },
+      { need: 'Research a paper with sources', pick: 'Perplexity', anchor: 'perplexity' },
+      { need: 'Work through math problems step by step', pick: 'Photomath', anchor: 'photomath' },
       { need: 'Study a PDF by topic and practice for an exam', pick: 'Evaluo', anchor: 'evaluo' },
     ],
     tableTitle: 'Quick comparison',
@@ -516,6 +605,77 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
         sources: [{ title: 'Anki: official site', href: 'https://apps.ankiweb.net/' }],
       },
       {
+        id: 'perplexity',
+        name: 'Perplexity',
+        bestFor: 'Research with sources',
+        summary:
+          'An AI search engine that answers by citing the pages each fact comes from. It is very useful for researching a topic or a paper, and it has an academic search mode focused on scholarly publications.',
+        strengths: [
+          'Every answer links its sources, so checking is easy.',
+          'Academic search for working with papers and publications.',
+          'With student verification you get study features such as flashcards and quizzes on your material.',
+        ],
+        watchOut: [
+          'It is built to find information, not to organize your studying or track your progress.',
+          'File analysis on the free plan is limited.',
+        ],
+        fromYourFiles: 'Yes, with limits',
+        flashcards: 'With student verification',
+        practice: 'With student verification',
+        freePlan: 'Yes',
+        spanish: 'Yes',
+        pricing: 'Free plan; paid Pro, with a discount for verified students.',
+        officialHref: 'https://www.perplexity.ai/',
+        sources: [{ title: 'Perplexity: official site', href: 'https://www.perplexity.ai/' }],
+      },
+      {
+        id: 'claude',
+        name: 'Claude (learning mode)',
+        bestFor: 'Reasoning through a topic with a tutor',
+        summary:
+          "Anthropic's assistant. Its learning mode answers with questions instead of giving you the solution: it asks you to explain your reasoning and points out the key concepts. It is strong at reading and discussing long texts.",
+        strengths: [
+          'Learning mode with Socratic questions, designed so you do the thinking.',
+          'Works well with long documents and detailed explanations.',
+          'Can create flashcards, study guides or exercises when you ask.',
+        ],
+        watchOut: [
+          'Like any general assistant, it does not organize your material by topic or track your progress toward the exam.',
+          'Some education features come through university agreements; check what your plan includes.',
+        ],
+        fromYourFiles: 'Yes',
+        flashcards: 'If you ask',
+        practice: 'Yes, in the chat',
+        freePlan: 'Yes',
+        spanish: 'Yes',
+        pricing: 'Free plan with limits; paid plans for more usage.',
+        officialHref: 'https://claude.ai/',
+        sources: [{ title: 'Anthropic: Claude for Education', href: 'https://www.anthropic.com/education' }],
+      },
+      {
+        id: 'photomath',
+        name: 'Photomath',
+        bestFor: 'Step-by-step math',
+        summary:
+          "Google's math app: snap a photo of a problem and it shows the solution explained step by step, from arithmetic to calculus.",
+        strengths: [
+          'Step-by-step explanations are included in the free version.',
+          'Very fast for checking how a problem is solved.',
+        ],
+        watchOut: [
+          'It is for math only, not for theory or other subjects.',
+          'Copying the solution does not teach you: use it to check after you try.',
+        ],
+        fromYourFiles: 'Photo of the problem',
+        flashcards: 'No',
+        practice: 'Math problems',
+        freePlan: 'Yes',
+        spanish: 'Yes',
+        pricing: 'Free with step-by-step explanations; Photomath Plus is paid.',
+        officialHref: 'https://photomath.com/',
+        sources: [{ title: 'Photomath: official site', href: 'https://photomath.com/' }],
+      },
+      {
         id: 'evaluo',
         name: 'Evaluo',
         bestFor: 'Exam prep from your PDF',
@@ -562,6 +722,7 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       { question: 'What is the best free AI for studying?', answer: 'It depends on how you study. Gemini Notebook (formerly NotebookLM) is free and very complete for researching sources; ChatGPT and Gemini have free study modes for step-by-step explanations; Anki is free for memorizing; and Evaluo has a free plan to study a PDF by topic and practice for the exam.' },
       { question: 'Which AI is best for studying a PDF?', answer: 'To query and cross-check several documents, Gemini Notebook. To turn one PDF into a study path with questions, results by topic and mistake review, Evaluo. ChatGPT also reads PDFs, but you have to steer the conversation.' },
       { question: 'Did NotebookLM change its name?', answer: 'Yes. On July 16, 2026 Google renamed NotebookLM to Gemini Notebook. It is the same product and notebooklm.google still works.' },
+      { question: 'Which AI is best for studying math?', answer: 'To see how a problem is solved step by step, Photomath (free). To understand the reasoning behind it, an assistant with a study mode such as ChatGPT, Gemini or Claude, which asks you questions instead of giving the answer. Try first and use AI to check.' },
       { question: 'Can I use several AI tools together?', answer: 'Yes, and it often works best: for example, research sources in Gemini Notebook, ask questions in ChatGPT and practice for the exam in Evaluo or memorize with Anki.' },
       { question: 'Can AI make mistakes when studying?', answer: 'Yes. Every tool can get facts, formulas or nuances wrong. Use AI to practice and understand, and check what matters against your material and your teachers.' },
     ],

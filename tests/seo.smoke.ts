@@ -1347,3 +1347,9 @@ for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-
   assert.ok(content.includes('1 material por mes') && content.includes('1 study material per month'), 'Free plan must match pricing');
   for (const voseo of ['estudiás', 'necesitás', 'podés', 'elegí ']) assert.ok(!content.includes(voseo), 'Neutral Spanish: ' + voseo);
 }
+{
+  const content = source('lib/best-ai-study-tools.ts');
+  for (const id of ['perplexity', 'claude', 'photomath']) assert.ok(content.includes(`id: '${id}'`), 'Best AI guide must include ' + id);
+  assert.ok(content.includes("name: 'Gonzalo Olmos'"), 'Best AI guide must have a named author');
+  assert.ok(source('components/marketing/best-ai-study-page.tsx').includes("'@type': 'Person'"), 'Article author must be a Person');
+}
