@@ -7,7 +7,7 @@ const alternates = hreflangAlternates('mock-exam', 'es');
 export const metadata: Metadata = {
   title: 'Generador de exámenes con IA gratis: desde tu PDF',
   description:
-    'Generador de exámenes con IA gratis: sube tu PDF o Word y practica con preguntas de tu propio material. Eliges el archivo sin registrarte y ves qué temas repasar.',
+    'Generador de exámenes con IA gratis: sube tu material y practica con preguntas sobre él. Eliges el archivo sin registrarte y ves qué repasar.',
   alternates,
   robots: { index: true, follow: true },
   openGraph: {

@@ -7,7 +7,7 @@ const alternates = hreflangAlternates('pdf-summary', 'es');
 export const metadata: Metadata = {
   title: 'Resumidor de textos con IA gratis por temas',
   description:
-    'Haz resúmenes con IA gratis a partir de tu PDF o Word: un resumen y un glosario por tema. Eliges el archivo sin registrarte y luego practicas con el mismo material.',
+    'Resumidor de textos con IA gratis: un resumen y un glosario por tema de tu material. Eliges el archivo sin registrarte y luego practicas.',
   alternates,
   robots: { index: true, follow: true },
   openGraph: {

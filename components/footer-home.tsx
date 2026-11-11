@@ -216,7 +216,7 @@ export function FooterHome({
                 Cómo funciona
               </Link>
               <Link
-                href="/login?mode=signup"
+                href="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1"
                 className="text-chico text-white/80 transition hover:text-white"
               >
                 Crear cuenta gratis
@@ -312,7 +312,7 @@ function EnglishHomeFooter() {
             <Link href="/en/compare">Compare study tools</Link>
             <Link href="/en/resources">English study guides</Link>
             <Link href="/en/blog">Study blog</Link>
-            <Link href="/en/login?mode=signup">Create a free account</Link>
+            <Link href="/en/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1">Create a free account</Link>
             <Link href="/">Español</Link>
           </div>
           <div className="flex flex-col gap-2 text-chico text-white/80">

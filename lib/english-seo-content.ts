@@ -184,7 +184,7 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
   'ai-for-students': {
     path: '/en/ai-for-students',
     title: 'Study with AI, Free: An AI Study Assistant for Students',
-    description: 'Study with AI without letting it think for you: upload your PDF notes free and get topic summaries, flashcards and practice questions. No sign-up to pick a file.',
+    description: 'Study with AI without letting it think for you: upload your notes free and get topic summaries, flashcards and practice questions.',
     eyebrow: 'AI for students • Study with AI',
     headline: 'How to study with AI so you learn more, not less.',
     intro: 'AI can explain a concept five different ways, quiz you at midnight and turn a long PDF into a study plan. It can also hand you a confident wrong answer or do the thinking you were supposed to practice. This guide shows how to use an AI study assistant to strengthen your own recall and reasoning, and where to draw the line.',
@@ -229,7 +229,7 @@ export const ENGLISH_PAGES: Record<EnglishPageKey, EnglishPage> = {
   'ai-pdf-summarizer': {
     path: '/en/ai-pdf-summarizer',
     title: 'Free AI PDF Summarizer for Studying: Summaries by Topic',
-    description: 'Summarize a PDF with AI for free: choose your file without signing up and get a summary and glossary by topic, plus flashcards and questions from the same notes.',
+    description: 'Summarize a PDF with AI for free: get a summary and glossary by topic, plus flashcards and questions from the same notes. No sign-up to start.',
     eyebrow: 'AI PDF summarizer • Study notes',
     headline: 'Summarize a PDF with AI, and keep what your exam will actually test.',
     intro: 'A summary that is short but drops the conditions, exceptions and definitions your instructor cares about can be worse than no summary at all. A good study summary is organized by topic, keeps precise wording for key terms, and points back to the page it came from. Here is how to get that from an AI PDF summarizer, and how to check it.',
