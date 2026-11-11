@@ -6,6 +6,8 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildFaqJsonLd } from '@/lib/seo';
 
 export type PracticeLandingKind = 'true-false' | 'match-concepts';
 export type PracticeLandingLocale = 'es' | 'en';
@@ -46,7 +48,9 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    faq:[
     {q:'¿Para qué materias sirve el verdadero o falso?',a:'Puede ayudar a repasar definiciones, procesos y relaciones en distintas materias. La utilidad depende de que las afirmaciones sean inequívocas y se ajusten al material.'},
     {q:'¿Sirve para preparar un examen de opción múltiple?',a:'Sí como práctica complementaria. Sumá ejercicios que exijan elegir entre alternativas plausibles y justificar la selección.'},
-    {q:'¿Necesito memorizar el enunciado?',a:'No. Intentá explicar el concepto con tus palabras y responder otra afirmación sobre la misma idea.'}
+    {q:'¿Necesito memorizar el enunciado?',a:'No. Intentá explicar el concepto con tus palabras y responder otra afirmación sobre la misma idea.'},
+    {q:'¿Cómo hago preguntas de verdadero o falso con IA desde mi PDF?',a:'Elegí tu PDF o Word en el selector de esta página, creá tu cuenta cuando se genere el material y abrí la práctica del tema que estás estudiando. Cada respuesta incluye una explicación para que veas por qué la afirmación es verdadera o qué matiz la vuelve falsa.'},
+    {q:'¿Es gratis?',a:'Sí, el plan gratuito incluye 1 material por mes con resumen, flashcards y práctica de prueba, entre ellas preguntas de verdadero o falso. Premium amplía la cantidad de materiales y de práctica.'}
    ],
    cta:'Subir mi material',secondary:'Ver simulacros de examen'
   },
@@ -110,7 +114,9 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    faq:[
     {q:'What subjects work with true-or-false practice?',a:'It can support definitions, processes, and conceptual distinctions in many subjects. Statements must be clear and aligned with the original content.'},
     {q:'Will this prepare me for multiple-choice tests?',a:'It can help, but you should also practice comparing plausible alternatives and explaining your choices.'},
-    {q:'Should I memorize the sentence?',a:'No. Explain the principle and answer another formulation of the same idea.'}
+    {q:'Should I memorize the sentence?',a:'No. Explain the principle and answer another formulation of the same idea.'},
+    {q:'How do I make true or false questions with AI from my PDF?',a:'Choose your PDF or Word file with the picker on this page, create your account when the material is generated and open practice for the topic you are studying. Every answer comes with an explanation of why the statement is true or what makes it false.'},
+    {q:'Is it free?',a:'Yes. The Free plan includes 1 study material per month with a summary, flashcards and trial practice, including true or false questions. Premium adds more materials and more practice.'}
    ],cta:'Study my material',secondary:'Explore exam practice'
   },
   'match-concepts':{
@@ -160,6 +166,7 @@ export function BilingualPracticeLanding({kind,locale}:{kind:PracticeLandingKind
  const secondaryHref=english?'/en/pdf-to-quiz':kind==='true-false'?'/funciones/simulacro-examen-con-ia':'/funciones/practicar-por-tema';
  return <div lang={locale} className="min-h-screen bg-white text-slate-950">
   <InternationalDocumentLanguage lang={locale} />
+  <JsonLd data={buildFaqJsonLd(copy.faq.map((item)=>({question:item.q,answer:item.a})))} />
   <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
     {english ? <EnglishSeoHeader alternateHref={paths.es[kind]} /> : <PublicSiteHeader variant="landing" trackingLocation={'seo-'+kind+'-'+locale} alternateHref={paths.en[kind]} />}
    </div>
