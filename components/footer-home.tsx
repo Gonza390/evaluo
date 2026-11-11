@@ -164,6 +164,9 @@ export function FooterHome({
               <Link href="/blog" className="text-chico text-white/80 transition hover:text-white">
                 Blog de estudio
               </Link>
+              <Link href="/landings/estudiar" className="text-chico text-white/80 transition hover:text-white">
+                Guías por materia
+              </Link>
               <Link
                 href="/es/estudiar-pdf-con-ia"
                 className="text-chico text-white/80 transition hover:text-white"

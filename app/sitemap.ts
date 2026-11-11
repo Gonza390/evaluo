@@ -129,6 +129,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/landings/resumenes`,
     },
+    {
+      // Índice de guías por materia/carrera/universidad: da enlace interno a cada una.
+      url: `${baseUrl}/landings/estudiar`,
+    },
   ];
 
   // Original bilingual educational articles and localized index hubs.
