@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { SeoComparisonLanding } from '@/components/marketing/seo-comparison-landings';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const path = '/comparar/evaluo-vs-notebooklm';
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     "¿Buscás una alternativa a NotebookLM para estudiar? Compará cuestionarios, flashcards y práctica por tema, y probá Evaluo gratis: elegís tu PDF sin registrarte.",
   alternates: hreflangAlternates('compare-notebooklm', 'es'),
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     title: 'Alternativa a NotebookLM para estudiar tus PDF, gratis | Evaluo',
     description: 'Comparación actualizada: ambos permiten practicar; elegí según tu necesidad de explorar fuentes o estudiar tema por tema.',

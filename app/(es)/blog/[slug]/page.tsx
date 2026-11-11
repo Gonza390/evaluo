@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { StudyBlogArticlePage } from '@/components/marketing/study-blog-view';
 import { STUDY_BLOG_ARTICLES, getStudyBlogArticle, getStudyBlogPath, getTranslation } from '@/lib/study-blog-articles';
 import { toAbsoluteUrl } from '@/lib/site';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 type Props = { params: Promise<{ slug: string }> };
 export const dynamicParams = false;
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       languages: { es: toAbsoluteUrl(path), ...(translation ? { en: toAbsoluteUrl(getStudyBlogPath('en', translation)) } : {}), 'x-default': toAbsoluteUrl(path) },
     },
     robots: { index: true, follow: true },
-    openGraph: { type: 'article', title: article.seoTitle + ' | Evaluo', description: article.description, url: toAbsoluteUrl(path), locale: 'es_AR' },
+    openGraph: { images: DEFAULT_OG_IMAGES, type: 'article', title: article.seoTitle + ' | Evaluo', description: article.description, url: toAbsoluteUrl(path), locale: 'es_AR' },
   };
 }
 export default async function StudyBlogPage({ params }: Props) {

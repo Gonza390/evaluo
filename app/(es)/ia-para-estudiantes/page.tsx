@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { IaParaEstudiantesExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const path = '/ia-para-estudiantes';
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     'IA para estudiantes, gratis: subí tu PDF sin registrarte para elegirlo y obtené resumen por temas, flashcards y preguntas de examen basadas en tus apuntes.',
   alternates: hreflangAlternates('ai-for-students', 'es-AR'),
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     title: 'IA para estudiantes gratis: resumí y practicá tus PDF | Evaluo',
     description:

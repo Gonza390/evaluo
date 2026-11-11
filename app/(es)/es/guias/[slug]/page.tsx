@@ -7,7 +7,7 @@ import { TrackedLink } from '@/components/marketing/tracked-link';
 import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { EditorialMethodology } from '@/components/seo/editorial-methodology';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, DEFAULT_OG_IMAGES } from '@/lib/seo';
 import { hreflangAlternatePath, hreflangAlternates, hreflangClusterForPath } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 import { STUDY_GUIDES, getStudyGuide } from '@/lib/es-study-guides';
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       return cluster ? hreflangAlternates(cluster, 'es') : { canonical: toAbsoluteUrl(path) };
     })(),
     robots: { index: true, follow: true },
-    openGraph: {
+    openGraph: { images: DEFAULT_OG_IMAGES,
       type: 'article',
       title: guide.seoTitle + ' | Evaluo',
       description: guide.description,

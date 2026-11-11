@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { HowItWorksPage } from '@/components/marketing/how-it-works-page';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('how-it-works', 'en');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     'Upload a PDF or Word file and Evaluo organizes it by topic, creates practice questions, shows your results and builds a plan until exam day. Plans and limits.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'en_US',
     title: 'How Evaluo Works: AI Study Assistant for Your Notes | Evaluo',

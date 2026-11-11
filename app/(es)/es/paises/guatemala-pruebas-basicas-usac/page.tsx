@@ -5,7 +5,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd, DEFAULT_OG_IMAGES } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/es/paises/guatemala-pruebas-basicas-usac';
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'article',
     title: title + ' | Evaluo',
     description,

@@ -15,7 +15,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, DEFAULT_OG_IMAGES } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/funciones/crear-mapa-mental-desde-pdf';
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   description: "Mapa mental desde PDF con IA: mirá un ejemplo, aprendé a organizar conceptos y repasá el mismo material. La función de mapa mental es Premium en Evaluo.",
   alternates: hreflangAlternates('mind-map', 'es'),
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     title: 'Crear mapa mental desde un PDF con IA: pasos y ejemplo | Evaluo',
     description:

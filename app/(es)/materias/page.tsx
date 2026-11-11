@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { getCarreraById, getUniversidadById } from '@/services/api-server';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, DEFAULT_OG_IMAGES } from '@/lib/seo';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { CareerHeroServer } from '@/components/career-hero-server';
 import { MateriaCatalogServer } from './materia-catalog-server';
@@ -80,7 +80,7 @@ export async function generateMetadata({
       ...(canonicalHref
         ? {
             alternates: { canonical: canonicalHref },
-            openGraph: {
+            openGraph: { images: DEFAULT_OG_IMAGES,
               title: `${carreraData.nombre} | Evaluo`,
               description: `Materias, recursos y simuladores para ${carreraData.nombre}.`,
               url: canonicalHref,
