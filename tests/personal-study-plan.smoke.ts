@@ -216,11 +216,15 @@ assert.equal(estimateTopicSessionMinutes(10,['entender','practicar'],15),16,
   'Short plans must include one practice in the capacity estimate.');
 assert.equal(estimateTopicSessionMinutes(10,['casos'],60),22,
   'Long plans must budget the second recommended practice.');
-assert.match(api,/estimateTopicSessionMinutes\(/);
+// El armado se comparte con el plan automático (lib/student-materials/study-plan-builder.ts).
+const builder=code('lib/student-materials/study-plan-builder.ts');
+assert.match(api,/buildPlanTopics\(materials,byId,preferences as string\[\],minutes\)/);
+assert.match(api,/buildPlanSchedule\(topics,examDate,minutes,preferences as string\[\],start\)/);
+assert.match(builder,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/estimateTopicSessionMinutes\(/);
 assert.match(setup,/data-study-plan-time-warning/);
 assert.match(savedSchedule,/additionalPlanPractice\(days,preferences,dailyMinutes\)/);
-assert.match(api,/completeStudySchedule\(topics,examDate,minutes,start\)/);
-assert.match(api,/savePlanPracticeRecommendations\(days\.filter\(day=>day\.topics\.length>0\),preferences as string\[\],minutes\)/,
+assert.match(builder,/completeStudySchedule\(topics, examDate, minutesPerDay, start\)/);
+assert.match(builder,/savePlanPracticeRecommendations\(\s*days\.filter\(\(day\) => day\.topics\.length > 0\),\s*preferences,\s*minutesPerDay\s*\)/,
   'Only new plans freeze the recommended practice intensity.');
 console.log('Personal plan persistence, empty states and topic distribution OK');

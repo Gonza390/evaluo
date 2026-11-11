@@ -688,17 +688,17 @@ assertIncludesAll('app/(es)/demo/material-estudio/page.tsx', ['index: false', 'f
 
 /* Keyword intent: one dominant intent per landing, no duplicated site name in SEO titles. */
 const acquisitionSeoTitles: Array<[string, string]> = [
-  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes gratis: resumí PDFs y prepará exámenes'],
-  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA gratis: resumen, preguntas y flashcards'],
-  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA gratis: resumen por temas en minutos'],
+  ['app/(es)/ia-para-estudiantes/page.tsx', 'IA para estudiantes gratis: resumí y practicá tus PDF'],
+  ['app/(es)/estudiar-pdf-con-ia/page.tsx', 'Estudiar PDF con IA gratis: resumen y preguntas'],
+  ['app/(es)/funciones/resumir-pdf-con-ia/page.tsx', 'Resumir PDF con IA gratis: resumen por temas y glosario'],
   ['app/(es)/funciones/crear-flashcards-desde-pdf/page.tsx', 'Crear flashcards a partir de un PDF con IA, gratis'],
   ['app/(es)/funciones/crear-mapa-mental-desde-pdf/page.tsx', 'Crear mapa mental desde un PDF con IA'],
   ['app/(es)/convertir-pdf-en-preguntas/page.tsx', 'Generar preguntas a partir de un PDF con IA, gratis'],
   ['app/(es)/funciones/simulacro-examen-con-ia/page.tsx', 'Simulacro de examen con IA gratis desde tus apuntes'],
-  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA: preguntas desde tu PDF, gratis'],
+  ['app/(es)/funciones/practicar-por-tema/page.tsx', 'Practicar por tema con IA desde tu PDF, gratis'],
   ['app/(es)/comparar/evaluo-vs-notebooklm/page.tsx', 'Alternativa a NotebookLM para estudiar tus PDF, gratis'],
   ['app/(es)/comparar/evaluo-vs-chatgpt/page.tsx', 'Alternativa a ChatGPT para estudiar tus PDF, gratis'],
-  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet gratis: flashcards y exámenes desde PDF'],
+  ['app/(es)/comparar/evaluo-vs-quizlet/page.tsx', 'Alternativa a Quizlet gratis: flashcards desde tu PDF'],
 ];
 assert.equal(new Set(acquisitionSeoTitles.map(([, title]) => title.toLowerCase())).size, acquisitionSeoTitles.length, 'Each acquisition page needs its own distinct title');
 for (const [path, expectedTitle] of acquisitionSeoTitles) {
@@ -1336,4 +1336,20 @@ for (const [path, marker] of [
 /* La home enlaza desde el contenido (no solo el footer) a las landings de producto con más búsquedas. */
 for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-preguntas', '/funciones/simulacro-examen-con-ia', '/funciones/resumir-pdf-con-ia', '/en/pdf-to-flashcards', '/en/ai-test-prep']) {
   assert.ok(source('components/marketing/home-redesign.tsx').includes(`href: '${href}'`), 'Home must link to ' + href);
+}
+
+/* Guía "Mejores IA para estudiar": ES neutro + EN, hreflang, sitemap, declara que Evaluo es propio. */
+{
+  const content = source('lib/best-ai-study-tools.ts');
+  assert.ok(source('lib/seo/hreflang-clusters.ts').includes("'best-ai-study': { es: '/es/mejores-ia-para-estudiar', en: '/en/best-ai-for-studying' }"));
+  assert.ok(source('app/sitemap.ts').includes('/es/mejores-ia-para-estudiar') && source('app/sitemap.ts').includes('/en/best-ai-for-studying'));
+  assert.ok(content.includes('Evaluo es nuestro producto') && content.includes('Evaluo is our product'), 'Must disclose Evaluo is ours');
+  assert.ok(content.includes('1 material por mes') && content.includes('1 study material per month'), 'Free plan must match pricing');
+  for (const voseo of ['estudiás', 'necesitás', 'podés', 'elegí ']) assert.ok(!content.includes(voseo), 'Neutral Spanish: ' + voseo);
+}
+{
+  const content = source('lib/best-ai-study-tools.ts');
+  for (const id of ['perplexity', 'claude', 'photomath']) assert.ok(content.includes(`id: '${id}'`), 'Best AI guide must include ' + id);
+  assert.ok(content.includes("name: 'Gonzalo Olmos'"), 'Best AI guide must have a named author');
+  assert.ok(source('components/marketing/best-ai-study-page.tsx').includes("'@type': 'Person'"), 'Article author must be a Person');
 }

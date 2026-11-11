@@ -27,6 +27,8 @@ export function buildOrganizationJsonLd() {
     sameAs: [
       'https://www.instagram.com/evaluo.app/',
       'https://www.linkedin.com/company/evaluo-ar/',
+      'https://alternativeto.net/software/evaluo-ai-study/',
+      'https://www.crunchbase.com/organization/gonzalo',
     ],
   };
 }

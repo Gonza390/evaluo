@@ -28,12 +28,13 @@ assert.match(callback, /callback/); // OAuth callback itself must be retained.
 assert.match(callback, /ui_locale: entryLocale/, 'English OAuth signup should persist the selected language');
 assert.match(dashboard, /locale !== 'en' && hasReadyMaterial && openUpload !== '1'/,
   'A new English student should not see academic-profile interruption');
-assert.match(upload, /firstUploadErrorMessage\(error instanceof Error \? error\.message : null, locale\)/);
-assert.match(upload, /\{t\("Procesar este PDF"\)\}/);
+assert.match(upload, /const rawMessage = error instanceof Error \? error\.message : null;/);
+assert.match(upload, /firstUploadErrorMessage\(rawMessage, locale\)/);
+assert.match(upload, /t\("Subiendo tu apunte"\)/);
 assert.match(processing, /useOptionalAppLocale\(\) === 'en'/);
 assert.match(processing, /EnglishProcessingScene scene=\{visibleScene\}/);
 assert.match(processing, /english \? 'Your document is ready to study'/);
-assert.match(processing, /english \? 'Start studying'/);
+assert.match(processing, /english \? 'Start topic 1'/);
 assert.match(processingEnglish, /Illustrative example/);
 assert.match(status, /locale = 'es'/);
 assert.match(status, /english \? 'Preparing your study materials'/);

@@ -11,7 +11,7 @@ const path = '/sobre-evaluo';
 const startHref = '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
 
 export const metadata: Metadata = {
-  title: 'Qué es Evaluo: estudiá tus apuntes con IA y prepará tus exámenes',
+  title: 'Qué es Evaluo: estudiá tus apuntes con IA',
   description: 'Conocé Evaluo: convertí tus apuntes PDF o Word en resúmenes, preguntas y flashcards. Practicá por tema, revisá errores y organizá tu plan de estudio.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
@@ -236,7 +236,7 @@ export default function SobreEvaluoPage() {
                 <h3 className="mt-5 text-lg font-bold">{title}</h3>
                 <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{description}</p>
                 <Link href={href} className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline">
-                  Explorar herramienta <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Explorar herramienta<span className="sr-only">: {title}</span> <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </article>
             ))}

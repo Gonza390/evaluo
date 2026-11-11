@@ -14,7 +14,9 @@ import {
 import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
 import { createPublicClient } from '@/lib/supabase-public';
 
-export const revalidate = 600;
+// 6 h: la mayoría de las visitas son buscadores que vuelven a pasar por la
+// misma URL; con 10 min la página se regeneraba casi en cada pasada.
+export const revalidate = 21600;
 
 // Sin rutas prearmadas en el build: cada página se genera en la primera visita
 // y queda en la caché de Vercel (ISR). Sin esto, la ruta dinámica se renderiza

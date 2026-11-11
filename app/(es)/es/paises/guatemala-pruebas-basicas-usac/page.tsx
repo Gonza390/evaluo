@@ -3,14 +3,15 @@ import Link from 'next/link';
 import { ArrowRight, BookOpenCheck, ExternalLink, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
+import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/es/paises/guatemala-pruebas-basicas-usac';
-const title = 'Pruebas Básicas USAC 2027: cómo prepararse y practicar';
+const title = 'Pruebas Básicas USAC 2027: temario, guías y simulador';
 const description =
-  'Guía independiente de las Pruebas de Conocimientos Básicos de la USAC: materias según carrera, pasos oficiales, guías, simulador y seis ejercicios explicados.';
+  'Prepárate para las Pruebas Básicas (PCB) del SUN USAC: materias por carrera, temario, guías oficiales, simulador y ejercicios resueltos.';
 
 export const metadata: Metadata = {
   title,
@@ -40,7 +41,7 @@ const sources = [
   {
     title: 'SUN USAC: guías y recursos de estudio',
     url: 'https://sun.usac.edu.gt/index.php/herramientas/',
-    description: 'Revisá los materiales oficiales y verificá que sean del ciclo vigente',
+    description: 'Revisa los materiales oficiales y verifica que sean del ciclo vigente',
   },
   {
     title: 'USAC: simulador y apoyo para aspirantes',
@@ -68,19 +69,19 @@ const practice = [
     subject: 'Matemática',
     prompt: 'Un estudiante respondió correctamente el 40 % de 250 preguntas de práctica. ¿Cuántas respondió correctamente?',
     choices: ['A. 100', 'B. 90', 'C. 125'],
-    answer: 'A. 40 % = 0,40. Entonces 250 × 0,40 = 100. Comprobá que el resultado sea menor que 250.',
+    answer: 'A. 40 % = 0,40. Entonces 250 × 0,40 = 100. Comprueba que el resultado sea menor que 250.',
   },
   {
     subject: 'Matemática · ecuaciones',
-    prompt: 'Resolvé la ecuación x / 3 + 5 = 11.',
+    prompt: 'Resuelve la ecuación x / 3 + 5 = 11.',
     choices: ['A. 2', 'B. 18', 'C. 48'],
-    answer: 'B. Restá 5 de ambos lados: x / 3 = 6. Multiplicá por 3 y obtené x = 18. Verificación: 18 / 3 + 5 = 11.',
+    answer: 'B. Resta 5 de ambos lados: x / 3 = 6. Multiplica por 3 y obtén x = 18. Verificación: 18 / 3 + 5 = 11.',
   },
   {
     subject: 'Física',
     prompt: 'Un objeto recorre 120 metros en 15 segundos con rapidez media constante. ¿Cuál es su rapidez media?',
     choices: ['A. 8 m/s', 'B. 1.800 m/s', 'C. 0,125 m/s'],
-    answer: 'A. Rapidez media = distancia / tiempo = 120 m / 15 s = 8 m/s. En un problema real debés revisar el movimiento descrito.',
+    answer: 'A. Rapidez media = distancia / tiempo = 120 m / 15 s = 8 m/s. En un problema real debes revisar el movimiento descrito.',
   },
   {
     subject: 'Química',
@@ -92,22 +93,22 @@ const practice = [
     subject: 'Biología',
     prompt: '¿Qué orgánulo participa especialmente en la producción de ATP mediante la respiración celular aeróbica en células eucariotas?',
     choices: ['A. Mitocondria', 'B. Núcleo', 'C. Aparato de Golgi'],
-    answer: 'A. La mitocondria participa en procesos centrales de la respiración celular aeróbica. El ATP también puede producirse por otras vías: evitá interpretar la respuesta como una afirmación exclusiva.',
+    answer: 'A. La mitocondria participa en procesos centrales de la respiración celular aeróbica. El ATP también puede producirse por otras vías: evita interpretar la respuesta como una afirmación exclusiva.',
   },
 ] as const;
 
 const questions = [
   {
     question: '¿Las Pruebas de Conocimientos Básicos de la USAC son gratuitas?',
-    answer: 'Sí. El Sistema de Ubicación y Nivelación indica que las PCB no tienen costo. Verificá siempre las condiciones de otros trámites o programas de preparación directamente con la institución.',
+    answer: 'Sí. El Sistema de Ubicación y Nivelación indica que las PCB no tienen costo. Verifica siempre las condiciones de otros trámites o programas de preparación directamente con la institución.',
   },
   {
     question: '¿Todas las carreras exigen las cinco materias?',
-    answer: 'No. Las materias requeridas dependen de la carrera y de la unidad académica. Consultá el cuadro oficial del ciclo al que te postulás antes de preparar o asignarte a una prueba.',
+    answer: 'No. Las materias requeridas dependen de la carrera y de la unidad académica. Consulta el cuadro oficial del ciclo al que te postulás antes de preparar o asignarte a una prueba.',
   },
   {
     question: '¿Dónde me inscribo y consulto los resultados?',
-    answer: 'El SUN informa que la asignación y la consulta de resultados se realizan a través de los sistemas oficiales enlazados desde su sitio. Conservá la constancia y comprobá fecha y modalidad de evaluación.',
+    answer: 'El SUN informa que la asignación y la consulta de resultados se realizan a través de los sistemas oficiales enlazados desde su sitio. Conserva la constancia y comprueba fecha y modalidad de evaluación.',
   },
   {
     question: '¿Estos ejercicios son preguntas reales de la USAC?',
@@ -115,7 +116,7 @@ const questions = [
   },
   {
     question: '¿Qué sucede después de aprobar las PCB requeridas?',
-    answer: 'Según la carrera, el siguiente paso suele incluir las pruebas específicas de su unidad académica y posteriormente los trámites de inscripción. Consultá las instrucciones oficiales de esa facultad o escuela.',
+    answer: 'Según la carrera, el siguiente paso suele incluir las pruebas específicas de su unidad académica y posteriormente los trámites de inscripción. Consulta las instrucciones oficiales de esa facultad o escuela.',
   },
 ] as const;
 
@@ -135,12 +136,13 @@ export default function GuatemalaPruebasBasicasUSACPage() {
           description,
           mainEntityOfPage: toAbsoluteUrl(path),
           datePublished: '2026-10-29',
-          dateModified: '2026-11-05',
+          dateModified: '2026-11-11',
           inLanguage: 'es-GT',
           author: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
           publisher: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
           isAccessibleForFree: true,
         },
+        buildFaqJsonLd(questions.map((item) => ({ question: item.question, answer: item.answer }))),
       ]} />
 
       <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
@@ -158,14 +160,17 @@ export default function GuatemalaPruebasBasicasUSACPage() {
               Pruebas Básicas USAC: qué estudiar y cómo prepararte
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-[#42506A] sm:text-lg">
-              Antes de estudiar todo el temario, identificá las pruebas que realmente solicita tu carrera.
+              Antes de estudiar todo el temario, identifica qué Pruebas Básicas solicita realmente tu carrera.
               Esta guía te explica el recorrido oficial de las PCB, cómo usar los materiales de la USAC
               y cómo practicar con ejemplos resueltos sin confundirlos con el examen institucional.
             </p>
-            <p className="mt-4 text-sm text-[#7F8AA3]">Información revisada: 5 de noviembre de 2026 · Recurso independiente, no oficial de la USAC</p>
+            <p className="mt-4 text-sm text-[#7F8AA3]">Información revisada: 11 de noviembre de 2026 · Recurso independiente, no oficial de la USAC</p>
             <a href="https://sun.usac.edu.gt/index.php/proceso-de-ingreso/" target="_blank" rel="noopener noreferrer"
               className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#456DBD] px-5 text-sm font-bold text-white hover:bg-[#3a5ca8]">
               Consultar ingreso oficial de la USAC <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            </a>
+            <a href="#cta" className="mt-6 ml-0 inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#456DBD] px-5 text-sm font-bold text-[#456DBD] hover:bg-white sm:ml-3">
+              Practicar con mis guías <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
         </header>
@@ -174,18 +179,18 @@ export default function GuatemalaPruebasBasicasUSACPage() {
           <section aria-labelledby="etapas" className="max-w-3xl">
             <h2 id="etapas" className="text-2xl font-bold">1. ¿Cómo es el proceso de ingreso a la USAC?</h2>
             <p className="mt-3 leading-8 text-[#42506A]">
-              El Sistema de Ubicación y Nivelación (SUN) describe un proceso por etapas. Primero verificá
-              tu orientación vocacional y los requisitos para la carrera; luego asignate a las Pruebas
-              de Conocimientos Básicos (PCB) que correspondan. Si obtenés resultados satisfactorios,
-              consultá las pruebas específicas de tu unidad académica y los requisitos de inscripción.
+              El Sistema de Ubicación y Nivelación (SUN) describe un proceso por etapas. Primero verifica
+              tu orientación vocacional y los requisitos para la carrera; luego asígnate a las Pruebas
+              de Conocimientos Básicos (PCB) que correspondan. Si obtienes resultados satisfactorios,
+              consulta las pruebas específicas de tu unidad académica y los requisitos de inscripción.
               Las fechas, modalidades y requisitos pueden cambiar entre convocatorias.
             </p>
             <ol className="mt-5 space-y-3">
               {[
-                ['Orientación vocacional', 'Consultá la orientación y obtené tu documentación o número correspondiente.'],
-                ['Pruebas de Conocimientos Básicos', 'Confirmá las materias exigidas por tu carrera y realizá la asignación oficial.'],
-                ['Pruebas específicas', 'Si corresponden a tu carrera, revisá el procedimiento de la facultad o escuela.'],
-                ['Trámite de inscripción', 'Seguí las instrucciones del Departamento de Registro y Estadística de la USAC.'],
+                ['Orientación vocacional', 'Consulta la orientación y obtén tu documentación o número correspondiente.'],
+                ['Pruebas de Conocimientos Básicos', 'Confirma las materias exigidas por tu carrera y realiza la asignación oficial.'],
+                ['Pruebas específicas', 'Si corresponden a tu carrera, revisa el procedimiento de la facultad o escuela.'],
+                ['Trámite de inscripción', 'Sigue las instrucciones del Departamento de Registro y Estadística de la USAC.'],
               ].map(([heading, detail], index) => (
                 <li key={heading} className="flex gap-4 border-b border-[#E7EBF4] py-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEF2FF] text-sm font-bold text-blue-700">{index + 1}</span>
@@ -194,7 +199,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
               ))}
             </ol>
             <p className="mt-4 text-sm leading-7 text-[#42506A]">
-              Las PCB son gratuitas según el SUN. Si no aprobás alguna de las requeridas, el sitio oficial
+              Las PCB son gratuitas según el SUN. Si no apruebas alguna de las requeridas, el sitio oficial
               explica cómo consultar otras oportunidades; no confundas la inscripción al examen con cursos de apoyo opcionales.
             </p>
           </section>
@@ -203,7 +208,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
             <h2 id="materias" className="text-2xl font-bold">2. ¿Qué materias entran en las PCB?</h2>
             <p className="mt-3 max-w-3xl leading-8 text-[#42506A]">
               Las cinco áreas de conocimientos básicos que presenta el SUN son Lenguaje, Matemática, Biología,
-              Química y Física. <strong>No significa que debas rendir las cinco:</strong> confirmá el cuadro
+              Química y Física. <strong>No significa que debas rendir las cinco:</strong> confirma el cuadro
               actualizado para tu carrera, sede y ciclo.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -219,7 +224,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
           <section aria-labelledby="fuentes" className="mt-12">
             <h2 id="fuentes" className="text-2xl font-bold">3. Guías oficiales, inscripción y simulador</h2>
             <p className="mt-3 max-w-3xl leading-8 text-[#42506A]">
-              Empezá por las páginas oficiales. Usá el simulador de la USAC cuando esté disponible y tu
+              Empieza por las páginas oficiales. Usa el simulador de la USAC cuando esté disponible y tu
               convocatoria permita acceder; no presentamos ejercicios de Evaluo como reactivos de la universidad.
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -238,17 +243,17 @@ export default function GuatemalaPruebasBasicasUSACPage() {
           <section aria-labelledby="plan" className="mt-12 max-w-3xl">
             <h2 id="plan" className="text-2xl font-bold">4. Un plan de repaso adaptable de siete días</h2>
             <p className="mt-3 leading-8 text-[#42506A]">
-              Este ejemplo supone que ya conocés las materias asignadas y tenés acceso al temario.
-              Si necesitás preparar varias materias desde cero, una semana puede no ser suficiente.
+              Este ejemplo supone que ya conoces las materias asignadas y tienes acceso al temario.
+              Si necesitas preparar varias materias desde cero, una semana puede no ser suficiente.
             </p>
             <div className="mt-5 space-y-3">
               {[
-                ['Día 1', 'Leé el temario de tus PCB y resolvé preguntas de diagnóstico. Identificá temas débiles.'],
-                ['Días 2 y 3', 'Alterná comprensión de conceptos y ejercicios por tema; explicá cada respuesta.'],
-                ['Día 4', 'Reintentá preguntas anteriores sin consultar el material y trabajá los errores.'],
-                ['Día 5', 'Mezclá temas y resolvé problemas nuevos; comprobá unidades y lectura de consignas.'],
-                ['Día 6', 'Utilizá el simulador oficial si está disponible; registrá los temas pendientes.'],
-                ['Día 7', 'Repasá fallos relevantes, releé indicaciones oficiales y prepará tu documentación.'],
+                ['Día 1', 'Lee el temario de tus PCB y resuelve preguntas de diagnóstico. Identifica temas débiles.'],
+                ['Días 2 y 3', 'Alterna comprensión de conceptos y ejercicios por tema; explica cada respuesta.'],
+                ['Día 4', 'Reintenta preguntas anteriores sin consultar el material y trabaja los errores.'],
+                ['Día 5', 'Mezcla temas y resuelve problemas nuevos; comprueba unidades y lectura de consignas.'],
+                ['Día 6', 'Utiliza el simulador oficial si está disponible; registra los temas pendientes.'],
+                ['Día 7', 'Repasa fallos relevantes, relee indicaciones oficiales y prepara tu documentación.'],
               ].map(([day, instruction]) => (
                 <div key={day} className="flex gap-4 border-b border-[#E7EBF4] pb-3">
                   <span className="w-20 shrink-0 text-sm font-bold text-blue-700">{day}</span>
@@ -264,7 +269,7 @@ export default function GuatemalaPruebasBasicasUSACPage() {
             <p className="mt-3 max-w-3xl leading-8 text-[#42506A]">
               Estos ejemplos introductorios muestran cómo responder, justificar y corregir errores.
               <strong> No son preguntas oficiales de la USAC ni replican necesariamente la dificultad o el formato de las PCB.</strong>
-              Probá primero sin mirar la explicación.
+              Prueba primero sin mirar la explicación.
             </p>
             <div className="mt-6 space-y-4">
               {practice.map((item, index) => (
@@ -287,10 +292,10 @@ export default function GuatemalaPruebasBasicasUSACPage() {
             <h2 id="errores" className="text-2xl font-bold">6. Cómo mejorar después de una práctica</h2>
             <div className="mt-5 space-y-4">
               {[
-                ['Separá las materias', 'Anotá el tema exacto: comprensión lectora, porcentajes, movimiento, células o concentración.'],
-                ['Explicá el error', 'No basta con saber la opción correcta. Revisá por qué elegiste otra y qué evidencia faltaba.'],
-                ['Volvé al temario', 'Contrastá la explicación con los materiales oficiales y las guías de tu convocatoria.'],
-                ['Reintentá después', 'Respondé una variación sin mirar la solución para comprobar que aprendiste el procedimiento.'],
+                ['Separa las materias', 'Anota el tema exacto: comprensión lectora, porcentajes, movimiento, células o concentración.'],
+                ['Explica el error', 'No basta con saber la opción correcta. Revisa por qué elegiste otra y qué evidencia faltaba.'],
+                ['Vuelve al temario', 'Contrasta la explicación con los materiales oficiales y las guías de tu convocatoria.'],
+                ['Reintenta después', 'Responde una variación sin mirar la solución para comprobar que aprendiste el procedimiento.'],
               ].map(([heading, detail]) => (
                 <div key={heading} className="flex items-start gap-3">
                   <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" />
@@ -314,19 +319,19 @@ export default function GuatemalaPruebasBasicasUSACPage() {
 
           <section className="mt-14 rounded-2xl bg-[#EEF2FF] p-6 sm:p-8" aria-labelledby="cta">
             <div className="flex items-center gap-2"><GraduationCap className="h-5 w-5 text-blue-700" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Preparación con tus propios apuntes</p></div>
-            <h2 id="cta" className="mt-3 text-2xl font-bold">Convertí tus guías en preguntas de práctica</h2>
+            <h2 id="cta" className="mt-3 text-2xl font-bold">Convierte tus guías en preguntas de práctica</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[#42506A]">
               Evaluo puede ayudarte a estudiar PDFs o documentos Word con preguntas por tema y revisión de errores.
-              Empezá gratis con tu material; corroborá las respuestas generadas con las guías oficiales de la USAC.
+              Empieza gratis con tu material; corrobora las respuestas generadas con las guías oficiales de la USAC.
               Evaluo es independiente y no está afiliado ni respaldado por la universidad.
             </p>
-            <Link href="/estudiar-pdf-con-ia?source=usac_pcb_guide" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#456DBD] px-5 text-sm font-bold text-white hover:bg-[#3a5ca8]">
-              Estudiar con mis apuntes <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            <div className="mt-6 max-w-2xl">
+              <PdfFirstLandingUploader trackingLocation="usac_pcb_guide_cta" sourceKey="usac-pcb-guide" locale="neutral" market="gt" />
+            </div>
           </section>
         </div>
       </main>
-      <FooterHome variant="full" />
+      <FooterHome variant="full" register="neutral" />
     </div>
   );
 }

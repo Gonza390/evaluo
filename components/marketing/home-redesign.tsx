@@ -76,7 +76,7 @@ export function HomeRedesign({ primaryHref, locale = 'es' }: { primaryHref: stri
         <div className="w">
           <div className="nav">
             <a className="logo" href={english ? "/en" : "/"} aria-label={t("Evaluo, inicio")}>
-              <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} unoptimized />
+              <Image src="/evaluo-logo-icono.svg" alt="Evaluo" width={32} height={32} unoptimized />
               Evaluo
             </a>
             <nav className="pill" aria-label={english ? "Main navigation" : "Navegación principal"}>

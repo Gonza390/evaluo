@@ -39,7 +39,24 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'file_size_bytes',
     ...FIRST_PDF_DEMO_KEYS,
   ],
-  pdf_upload_started: ['attribution', 'anonymous_id', 'page_type', 'source', 'file_size_bytes'],
+  pdf_upload_started: ['attribution', 'anonymous_id', 'page_type', 'source', 'file_size_bytes', 'flow', 'page_count'],
+  // Onboarding etapa 2: fecha del examen durante el procesamiento.
+  processing_exam_date_viewed: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'location'],
+  processing_exam_date_answered: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'answer', 'location'],
+  // Onboarding etapa 1: dónde falla la subida (ver lib/student-materials/upload-failure.ts).
+  pdf_upload_failed: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'stage',
+    'source',
+    'flow',
+    'location',
+    'file_size_bytes',
+    'page_count',
+    'max_pages',
+    'error_message',
+  ],
   pdf_draft_restored: ['attribution', 'anonymous_id', 'page_type', 'source', 'file_size_bytes'],
   material_processing_started: [
     'attribution',

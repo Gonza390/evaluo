@@ -10,7 +10,7 @@ import { SeoComparisonProductDemo } from '@/components/marketing/seo-comparison-
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { COMPARISONS_EN } from '@/components/marketing/seo-comparison-content-en';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
@@ -76,6 +76,8 @@ const comparisons: Record<ComparisonId, Comparison> = {
       { question: '¿NotebookLM tiene mapas mentales y audio?', answer: 'Sí. Incluye mapas mentales y resúmenes de audio, entre otros formatos de estudio. La disponibilidad específica depende de tu cuenta y plan.' },
       { question: '¿Qué conviene para preparar un parcial desde un solo PDF?', answer: 'Si querés estudiar un documento por tema, practicar, ver resultados y reforzar los conceptos fallados, Evaluo está organizado alrededor de ese flujo. Si necesitás explorar fuentes diversas, NotebookLM es una alternativa sólida.' },
       { question: '¿Puedo usar NotebookLM y Evaluo juntos?', answer: 'Sí. Por ejemplo, podés consultar varias fuentes en NotebookLM y después practicar sobre tus apuntes de examen en Evaluo.' },
+      { question: '¿Qué alternativas a NotebookLM hay para estudiar?', answer: 'Depende de lo que necesites. Para conversar con tus apuntes o pedir explicaciones abiertas, un asistente general como ChatGPT (con su Modo de estudio). Para repasar con mazos de tarjetas, incluidos los que comparte la comunidad, Quizlet. Para estudiar un PDF por temas con preguntas, resultados y refuerzo de errores, Evaluo, que tiene plan gratuito.' },
+      { question: '¿Evaluo permite elegir el modelo de IA?', answer: 'No. Evaluo usa su propia configuración de IA para generar el material de estudio y no ofrece un selector de modelos. Si para vos es clave elegir el modelo, un asistente general te va a dar más control; Evaluo se enfoca en el recorrido de estudio sobre tu PDF.' },
     ],
     sources: [
       { title: 'Ayuda oficial de Gemini Notebook: tarjetas y cuestionarios', href: 'https://support.google.com/gemininotebook/answer/16958963?hl=es-419' },
@@ -273,7 +275,7 @@ export function SeoComparisonLanding({ comparison, locale = 'es' }: { comparison
     <div lang={english ? 'en' : undefined} className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       {english ? <InternationalDocumentLanguage lang="en" /> : null}
       <MarketingAnalyticsSlot />
-      <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Evaluo', path: t.home }, { name: 'Evaluo vs. ' + c.name, path: c.path }])} />
+      <JsonLd data={[buildBreadcrumbJsonLd([{ name: 'Evaluo', path: t.home }, { name: 'Evaluo vs. ' + c.name, path: c.path }]), buildFaqJsonLd(c.faqs)]} />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
         {english ? (
           <EnglishSeoHeader alternateHref={alternateHref} />

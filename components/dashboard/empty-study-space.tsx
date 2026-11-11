@@ -2,25 +2,16 @@
 
 import Image from 'next/image';
 import styles from './empty-study-space.module.css';
-import { useState, type DragEvent } from 'react';
-import { AudioLines, BookOpen, Upload } from 'lucide-react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { Upload } from 'lucide-react';
 import { usePdfDropUpload, usePdfUploadTrigger } from '@/components/dashboard/pdf-first-upload-shell';
 import { useAppLocale } from '@/components/i18n/app-locale-provider';
 import { studentEntryText } from '@/lib/i18n/student-entry-copy';
 
-type Format = { title: string; label: string; color: string; icon?: 'book' | 'audio' };
-const illustratedFormats: Format[] = [
-  { title: 'PDF', label: 'PDF', color: 'bg-[#bb5654]' },
-  { title: 'PPTX', label: 'Presentaciones', color: 'bg-[#b85f2d]' },
-  { title: 'DOCX', label: 'Documentos', color: 'bg-[#3865b3]' },
-  { title: 'Libros', label: 'Libros', color: 'bg-[#6652a7]', icon: 'book' },
-  { title: 'Grabaciones', label: 'Grabaciones', color: 'bg-[#08976b]', icon: 'audio' },
-];
-
 /**
- * First-material screen. The format pictograms reproduce the supplied visual
- * reference; they are illustrations, not a statement of accepted upload types.
- * The existing uploader validates PDF files and owns the processing lifecycle.
+ * First-material screen. The uploader validates the file and owns the
+ * processing lifecycle.
  */
 export function EmptyStudySpace({ firstName }: { firstName?: string }) {
   const { locale } = useAppLocale();
@@ -28,6 +19,15 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
   const openUploadPicker = usePdfUploadTrigger();
   const dropUpload = usePdfDropUpload();
   const [isDragging, setIsDragging] = useState(false);
+  const viewTrackedRef = useRef(false);
+
+  // Esta pantalla reemplazó al hero anterior el 1/11 y el evento de vista quedó
+  // solo en el hero: desde entonces no se registraba quién la veía.
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    viewTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_cta_viewed', { location: 'dashboard_empty' });
+  }, []);
 
   const openPicker = () => openUploadPicker('dashboard_empty');
   const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
@@ -41,8 +41,7 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
     <section
       data-empty-study-space
       aria-label={t("Empezá a estudiar con Evaluo")}
-      className={`${styles.mobileLowered} mx-auto flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden rounded-[22px] border border-[#e3eaf5] px-3 py-3 text-center shadow-[0_8px_30px_rgba(20,60,140,0.06)] sm:rounded-[28px] sm:px-6 sm:py-4`}
-      style={{ background: 'linear-gradient(180deg, #eef4ff 0%, #ffffff 85%)' }}
+      className={`${styles.mobileLowered} mx-auto flex h-full min-h-0 w-full flex-col items-center justify-center overflow-hidden px-6 py-8 text-center`}
     >
       <Image
         src="/evi-bienvenida.svg"
@@ -50,47 +49,32 @@ export function EmptyStudySpace({ firstName }: { firstName?: string }) {
         width={112}
         height={112}
         priority
-        className="h-[72px] w-[72px] shrink-0 object-contain sm:h-[92px] sm:w-[92px] lg:h-[106px] lg:w-[106px]"
+        className="h-24 w-24 shrink-0 object-contain lg:h-28 lg:w-28"
       />
-      <h1 className="mt-2 max-w-[800px] text-titulo font-semibold leading-[1.14] tracking-titulo text-[#0f1623] sm:text-destacado lg:text-destacado">
+      <h1 className="mt-4 max-w-[640px] text-titulo font-semibold leading-[1.18] tracking-titulo text-[#0f1623] lg:text-destacado">
         {locale === 'en' ? `What are we studying today${firstName ? `, ${firstName}` : ''}?` : `¿Qué estudiamos hoy${firstName ? `, ${firstName}` : ''}?`}
       </h1>
-      <p className="mt-1.5 max-w-[560px] text-chico leading-[1.45] text-[#526079] sm:text-ui">
-        {t("Subí tu primer material y Evaluo lo convierte en resumen, práctica y plan de estudio.")}
+      <p className="mt-2.5 max-w-[420px] text-cuerpo leading-[1.45] text-[#4b5565]">
+        {t("Subí el apunte de tu próximo examen y te armamos un plan de estudios.")}
       </p>
 
       <button
         type="button"
+        data-first-pdf-cta
         onClick={openPicker}
         onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
         onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
         onDragLeave={(event) => { event.preventDefault(); setIsDragging(false); }}
         onDrop={handleDrop}
-        aria-label={t("Arrastrá tu material o presioná para elegirlo")}
-        className={`mt-3 flex w-full max-w-[620px] cursor-pointer flex-col items-center rounded-[18px] border-2 border-dashed px-2 py-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:mt-4 sm:rounded-[22px] sm:px-5 sm:py-4 ${isDragging ? 'border-[#456dbd] bg-[#e6efff]' : 'border-[#b4c9ee] bg-[#f7faff] hover:border-[#6f96dd] hover:bg-[#f0f6ff]'}`}
+        className={`mt-8 flex min-h-[54px] w-full max-w-[360px] items-center justify-center gap-2.5 rounded-full px-6 text-cuerpo font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)] transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 ${isDragging ? 'bg-[#2a5193] ring-4 ring-[#c9d8f3]' : 'bg-[#3c6cba] hover:bg-[#2a5193]'}`}
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#dbe6f8] bg-white text-[#3c6cba] sm:size-10">
-          <Upload className="size-[19px]" strokeWidth={1.8} aria-hidden="true" />
-        </span>
-        <span className="mt-2 text-cuerpo font-medium tracking-titulo text-[#0f1623] sm:text-subtitulo">{t("Arrastrá tu material acá")}</span>
-        <span className="mt-1 text-chico text-[#526079]">
-          <span className="sm:hidden">{t("o tocá acá para elegirlo")}</span>
-          <span className="hidden sm:inline">{t("o hacé clic para elegirlo")}</span>
-        </span>
-        <span className="mt-3 flex w-full flex-wrap items-start justify-center gap-x-3 gap-y-1.5 sm:mt-4 sm:gap-x-5">
-          {illustratedFormats.map((format, index) => (
-            <span key={format.title} className="flex min-w-[42px] flex-col items-center gap-1" title={t(format.title === 'PDF' ? 'PDF disponible' : 'Otros formatos: próximamente')}>
-              <span className={`${styles.fileFormatIcon} flex h-[31px] w-[29px] items-center justify-center rounded-[6px] text-white sm:h-9 sm:w-8 ${format.color}`} style={{ animationDelay: `${index * 140}ms` }}>
-                {format.icon === 'book' ? <BookOpen className="size-[18px]" aria-hidden="true" />
-                  : format.icon === 'audio' ? <AudioLines className="size-[18px]" aria-hidden="true" />
-                    : <span className="text-etiqueta font-semibold">{format.title}</span>}
-              </span>
-              <span className="text-etiqueta text-[#667085] sm:text-etiqueta">{t(format.label)}</span>
-            </span>
-          ))}
-        </span>
-        <span className="sr-only">{locale === 'en' ? "PDF and Word (.docx) uploads are supported. Other illustrated formats are not yet available." : "Actualmente podés cargar archivos PDF y Word (.docx). Los demás formatos ilustrados todavía no están disponibles."}</span>
+        <Upload className="size-[19px]" strokeWidth={2} aria-hidden="true" />
+        {isDragging ? t("Soltalo para subirlo") : t("Elegir mi PDF")}
       </button>
+      <p className="mt-3 text-chico text-[#667085]">
+        {t("PDF o Word (.docx) · hasta 20 MB")}
+        <span className="hidden lg:inline"> · {t("también podés arrastrarlo")}</span>
+      </p>
     </section>
   );
 }

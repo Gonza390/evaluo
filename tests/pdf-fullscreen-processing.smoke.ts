@@ -110,10 +110,21 @@ assert.match(screen, /processStudentMaterialAction\(materialId\)/);
 assert.doesNotMatch(screen, /!ready&&!failed\?<Link href="\/dashboard"/,
   'No unrelated navigation should appear during PDF processing.');
 assert.match(screen, /Reintentar/);
-assert.match(screen, /Empezar a estudiar/);
+assert.match(screen, /Empezar el tema 1/);
+// Onboarding etapa 2: fecha del examen durante el procesamiento y plan automático.
+assert.match(screen, /<ExamDateQuestion english=\{english\}/, 'The exam date is asked while processing.');
+assert.match(screen, /EXAM_QUESTION_MS = 15000/, 'Without an answer the question gives way to the scenes after 15 s.');
+assert.match(screen, /finishQuestion\('timeout'\)/);
+assert.match(screen, /finishQuestion\('skip'\)/);
+assert.match(screen, /Math\.max\(0,elapsed-questionEndedAt\)\/SCENE_MS/, 'Scenes start counting after the question.');
+assert.match(screen, /initialState\.status==='ready'/, 'A material that is already ready never asks again.');
+assert.match(screen, /data-ready-plan/, 'The ready screen shows the automatic plan.');
+assert.match(screen, /Armar mi plan de estudio/, 'Without a date the ready screen offers to build the plan.');
+assert.match(screen, /SLOW_PROCESSING_MS = 120000/);
+assert.match(screen, /data-processing-slow/, 'Slow processing explains that the user can leave.');
 assert.match(screen, /Preparar mi plan de estudios/);
 assert.match(screen, /\/dashboard\/plan-de-estudio\/preparar\?material=/,
-  'Plan action must open the wizard, not the plan landing.');
+  'When the material has a date but no automatic plan, the action opens the wizard.');
 assert.match(planPage, /initialMaterialId=/);
 assert.match(planPage, /initialExamDate=/, 'The exam date given at upload must follow into plan setup.');
 assert.match(plan, /initialMaterialId && materials\.some/,

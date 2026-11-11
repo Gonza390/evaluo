@@ -4,7 +4,13 @@ import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/file-rules';
+import {
+  MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+  MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
+  isSupportedStudentMaterialFile,
+} from '@/lib/student-materials/file-rules';
+import { countPdfPagesInBrowser, exceedsFreePdfPageLimit } from '@/lib/student-materials/pdf-page-count-client';
+import { trackUploadFailure } from '@/lib/student-materials/upload-failure';
 
 type HomePdfPickerButtonProps = {
   className: string;
@@ -55,6 +61,7 @@ export function HomePdfPickerButton({
     }
 
     if (file.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
+      trackUploadFailure({ stage: 'too_large', source, flow: 'landing', location, fileSizeBytes: file.size });
       window.alert(locale === 'en' ? 'This file exceeds the 20 MB limit.' : 'El archivo supera el tamaño máximo permitido de 20 MB.');
       return;
     }
@@ -67,6 +74,26 @@ export function HomePdfPickerButton({
         source,
         file_size_bytes: file.size,
       });
+
+      // Antes de pedir el registro: si supera el límite de páginas del plan gratis,
+      // avisar ahora y no después de crear la cuenta y subirlo entero.
+      const pageCount = await countPdfPagesInBrowser(file);
+      if (exceedsFreePdfPageLimit(pageCount, MAX_FREE_STUDENT_MATERIAL_PDF_PAGES)) {
+        trackUploadFailure({
+          stage: 'pre_signup_page_limit',
+          source,
+          flow: 'landing',
+          location,
+          fileSizeBytes: file.size,
+          pageCount,
+          maxPages: MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+        });
+        setSaving(false);
+        window.alert(locale === 'en'
+          ? `Your PDF has ${pageCount} pages and the free plan accepts up to ${MAX_FREE_STUDENT_MATERIAL_PDF_PAGES}. Choose a file with just the chapters for your exam.`
+          : `Tu PDF tiene ${pageCount} páginas y en el plan gratis se pueden subir hasta ${MAX_FREE_STUDENT_MATERIAL_PDF_PAGES}. Elegí un archivo solo con los capítulos de tu examen.`);
+        return;
+      }
 
       await savePdfFirstDraft(file, source);
 

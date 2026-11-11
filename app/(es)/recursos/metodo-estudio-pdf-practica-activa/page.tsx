@@ -5,7 +5,7 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/recursos/metodo-estudio-pdf-practica-activa';
-const title = 'De leer un PDF a practicar: método de estudio activo con ejemplos';
+const title = 'De leer un PDF a practicar: método de estudio activo';
 const description = 'Guía práctica para convertir un PDF en aprendizaje activo: sesión de 40 minutos, preguntas de recuperación, corrección de errores y fuentes científicas.';
 
 export const metadata = studyMetadata(path, title, description);

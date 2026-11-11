@@ -6,6 +6,8 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildFaqJsonLd } from '@/lib/seo';
 
 export type PracticeLandingKind = 'true-false' | 'match-concepts';
 export type PracticeLandingLocale = 'es' | 'en';
@@ -46,7 +48,9 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    faq:[
     {q:'¿Para qué materias sirve el verdadero o falso?',a:'Puede ayudar a repasar definiciones, procesos y relaciones en distintas materias. La utilidad depende de que las afirmaciones sean inequívocas y se ajusten al material.'},
     {q:'¿Sirve para preparar un examen de opción múltiple?',a:'Sí como práctica complementaria. Sumá ejercicios que exijan elegir entre alternativas plausibles y justificar la selección.'},
-    {q:'¿Necesito memorizar el enunciado?',a:'No. Intentá explicar el concepto con tus palabras y responder otra afirmación sobre la misma idea.'}
+    {q:'¿Necesito memorizar el enunciado?',a:'No. Intentá explicar el concepto con tus palabras y responder otra afirmación sobre la misma idea.'},
+    {q:'¿Cómo hago preguntas de verdadero o falso con IA desde mi PDF?',a:'Elegí tu PDF o Word en el selector de esta página, creá tu cuenta cuando se genere el material y abrí la práctica del tema que estás estudiando. Cada respuesta incluye una explicación para que veas por qué la afirmación es verdadera o qué matiz la vuelve falsa.'},
+    {q:'¿Es gratis?',a:'Sí, el plan gratuito incluye 1 material por mes con resumen, flashcards y práctica de prueba, entre ellas preguntas de verdadero o falso. Premium amplía la cantidad de materiales y de práctica.'}
    ],
    cta:'Subir mi material',secondary:'Ver simulacros de examen'
   },
@@ -55,7 +59,7 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    title:'Unir conceptos con IA: estudiá relaciones, no solo definiciones',
    metaTitle:'Unir conceptos con IA gratis: ejercicios desde tu PDF',
    metaDescription:'Uní conceptos con IA a partir de tus apuntes en PDF, gratis: elegís el archivo sin registrarte y practicás relaciones entre términos, no solo definiciones.',
-   intro:'Los ejercicios de asociación pueden ayudarte a distinguir conceptos cercanos, vincular términos con funciones y recordar qué elemento corresponde a una descripción. En Evaluo podés estudiar tu material por temas y utilizar modalidades de práctica para reforzar lo que todavía confundís.',
+   intro:'Con Evaluo creás ejercicios para unir conceptos a partir de tu PDF o Word. Los ejercicios de asociación pueden ayudarte a distinguir conceptos cercanos, vincular términos con funciones y recordar qué elemento corresponde a una descripción. En Evaluo podés estudiar tu material por temas y utilizar modalidades de práctica para reforzar lo que todavía confundís.',
    exampleHeading:'Ejemplo de relación conceptual',
    examplePrompt:'¿Qué concepto describe el valor de la mejor alternativa a la que renunciás al elegir una opción?',
    exampleOptions:['Costo de oportunidad','Costo hundido'],
@@ -88,7 +92,7 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    title:'AI True-or-False Questions for Studying Your Notes',
    metaTitle:'AI True or False Question Generator from PDF, Free',
    metaDescription:'Generate true or false questions from your PDF with AI, free. Choose your file without signing up and practice with an explanation for every answer.',
-   intro:'A useful true-or-false question does more than ask you to guess. It makes you assess a claim and explain the evidence behind your decision. Practice with your own study material to distinguish related ideas and notice gaps you might miss while rereading.',
+   intro:'Use Evaluo as a true or false question generator for your own notes. A useful true-or-false question does more than ask you to guess. It makes you assess a claim and explain the evidence behind your decision. Practice with your own study material to distinguish related ideas and notice gaps you might miss while rereading.',
    exampleHeading:'A worked question that tests understanding',
    examplePrompt:'In a typical eukaryotic cell, all ATP production takes place in mitochondria.',
    exampleOptions:['True','False'],
@@ -110,7 +114,9 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    faq:[
     {q:'What subjects work with true-or-false practice?',a:'It can support definitions, processes, and conceptual distinctions in many subjects. Statements must be clear and aligned with the original content.'},
     {q:'Will this prepare me for multiple-choice tests?',a:'It can help, but you should also practice comparing plausible alternatives and explaining your choices.'},
-    {q:'Should I memorize the sentence?',a:'No. Explain the principle and answer another formulation of the same idea.'}
+    {q:'Should I memorize the sentence?',a:'No. Explain the principle and answer another formulation of the same idea.'},
+    {q:'How do I make true or false questions with AI from my PDF?',a:'Choose your PDF or Word file with the picker on this page, create your account when the material is generated and open practice for the topic you are studying. Every answer comes with an explanation of why the statement is true or what makes it false.'},
+    {q:'Is it free?',a:'Yes. The Free plan includes 1 study material per month with a summary, flashcards and trial practice, including true or false questions. Premium adds more materials and more practice.'}
    ],cta:'Study my material',secondary:'Explore exam practice'
   },
   'match-concepts':{
@@ -118,7 +124,7 @@ const COPY: Record<PracticeLandingLocale,Record<PracticeLandingKind,LandingCopy>
    title:'Match Concepts From Study Notes With AI',
    metaTitle:'Match Concepts with AI, Free: Exercises from Your PDF',
    metaDescription:'Match concepts with AI from your PDF notes, free: choose your file without signing up and practice how terms relate, not just their definitions.',
-   intro:'Matching exercises help you connect terms to their functions, distinguish similar concepts, and recall the correct relationship. When studying a topic in Evaluo, use practice as a check of understanding—not merely a game of recognizing familiar words.',
+   intro:'Evaluo builds matching exercises from your own PDF or Word notes. Matching exercises help you connect terms to their functions, distinguish similar concepts, and recall the correct relationship. When studying a topic in Evaluo, use practice as a check of understanding—not merely a game of recognizing familiar words.',
    exampleHeading:'Worked example: distinguish two economic ideas',
    examplePrompt:'Which term means the value of the best alternative you give up when choosing?',
    exampleOptions:['Opportunity cost','Sunk cost'],
@@ -160,6 +166,7 @@ export function BilingualPracticeLanding({kind,locale}:{kind:PracticeLandingKind
  const secondaryHref=english?'/en/pdf-to-quiz':kind==='true-false'?'/funciones/simulacro-examen-con-ia':'/funciones/practicar-por-tema';
  return <div lang={locale} className="min-h-screen bg-white text-slate-950">
   <InternationalDocumentLanguage lang={locale} />
+  <JsonLd data={buildFaqJsonLd(copy.faq.map((item)=>({question:item.q,answer:item.a})))} />
   <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
     {english ? <EnglishSeoHeader alternateHref={paths.es[kind]} /> : <PublicSiteHeader variant="landing" trackingLocation={'seo-'+kind+'-'+locale} alternateHref={paths.en[kind]} />}
    </div>

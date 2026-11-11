@@ -11,7 +11,7 @@ const path = '/es/paises/guatemala-pruebas-basicas-usac';
 assert.ok(page.includes("const path = '" + path + "'"), 'Exact URL must be restored as a static page');
 assert.ok(page.includes('canonical: toAbsoluteUrl(path)'), 'Self-referencing canonical');
 assert.ok(page.includes('robots: { index: true, follow: true }'), 'Public page indexable');
-assert.ok(page.includes("dateModified: '2026-11-05'"), 'Revision date');
+assert.ok(page.includes("dateModified: '2026-11-11'"), 'Revision date');
 assert.ok(page.includes('PublicSiteHeader'), 'Existing marketing header');
 assert.ok(page.includes('FooterHome'), 'Existing footer');
 assert.ok(page.includes('usac_pcb_guide'), 'Attribution on product CTA');
@@ -34,3 +34,6 @@ assert.equal(sitemap.split(path).length - 1, 1, 'Only one sitemap entry');
 assert.ok(retiredRoute.includes('status: 410'), 'Other retired country URLs remain gone');
 assert.ok(originalGuides.includes('"slug": "guatemala-pruebas-basicas-usac"'), 'Historic route matches original slug');
 console.log('PASS: Restored single USAC PCB URL with official references, practice, canonical and sitemap; other retired country routes unchanged.');
+// Público guatemalteco: tuteo, no voseo; la herramienta está en la propia guía.
+for (const voseo of ['Consultá', 'Verificá', 'Empezá', 'tenés', 'Probá']) assert.ok(!page.includes(voseo), 'No voseo: ' + voseo);
+assert.ok(page.includes('<PdfFirstLandingUploader') && page.includes('locale="neutral"'), 'Neutral file picker in the guide');

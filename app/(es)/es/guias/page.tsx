@@ -89,7 +89,7 @@ export default function GuiasDeEstudioPage() {
                       </h3>
                       <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{guide.description}</p>
                       <Link href={`/es/guias/${guide.slug}`} className="mt-5 inline-flex min-h-11 items-center gap-2 self-start text-sm font-bold text-blue-700 hover:underline">
-                        Leer la guía <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        Leer la guía<span className="sr-only">: {guide.title}</span> <ArrowRight className="h-4 w-4" aria-hidden="true" />
                       </Link>
                     </article>
                   ))}

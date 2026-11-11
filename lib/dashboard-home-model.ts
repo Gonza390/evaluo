@@ -231,6 +231,10 @@ const COPY = {
   },
 };
 
+/** "1. Fundamentos…" → "Fundamentos…": la numeración del resumen no aporta en una tarea. */
+export const cleanTopicTitle = (title: string) =>
+  title.replace(/^\s*(?:\d+|[IVXLC]+)\s*[.)\-–:]\s+/u, '').trim() || title.trim();
+
 const readHref = (materialId: string, index: number) =>
   `/materiales/${materialId}?tab=resumen&studyTopic=${index}`;
 const practiceHref = (materialId: string, index?: number) =>
@@ -283,7 +287,7 @@ export function buildHomeView(input: HomeInput): HomeView {
     const agendaTopics = catchUp ? overdue.slice(0, 3) : todayTopics;
     const tasks: HomeTask[] = agendaTopics.map((topic) => ({
       id: `${topic.materialId}:${topic.topicIndex}`,
-      title: c.readTask(topic.title),
+      title: c.readTask(cleanTopicTitle(topic.title)),
       meta: c.summaryMeta(topic.estimatedMinutes),
       href: readHref(topic.materialId, topic.topicIndex),
       done: isRead(topic),
@@ -338,7 +342,7 @@ export function buildHomeView(input: HomeInput): HomeView {
         ? c.readyMissing(percent, missing)
         : c.readyWeak(percent);
     const tasks: HomeTask[] = next
-      ? [{ id: `next:${nextIndex}`, title: c.readTask(next.title), meta: c.summaryMeta(next.minutes), href: readHref(material.id, nextIndex), done: null }]
+      ? [{ id: `next:${nextIndex}`, title: c.readTask(cleanTopicTitle(next.title)), meta: c.summaryMeta(next.minutes), href: readHref(material.id, nextIndex), done: null }]
       : [practiceTask()];
     return {
       locale,
@@ -429,7 +433,7 @@ export function buildHomeView(input: HomeInput): HomeView {
     },
     agenda: {
       tasks: next
-        ? [{ id: `next:${nextIndex}`, title: half ? c.finishTask(next.title) : c.readTask(next.title), meta: c.summaryMeta(next.minutes), href: readHref(material.id, nextIndex), done: null }]
+        ? [{ id: `next:${nextIndex}`, title: half ? c.finishTask(cleanTopicTitle(next.title)) : c.readTask(cleanTopicTitle(next.title)), meta: c.summaryMeta(next.minutes), href: readHref(material.id, nextIndex), done: null }]
         : [practiceTask()],
       askDate,
       exam: null,

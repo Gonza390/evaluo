@@ -7,7 +7,7 @@ export function EnglishSeoHeader({ alternateHref }: { alternateHref?: string }) 
   return (
     <header className="relative z-20 flex min-h-18 items-center justify-between gap-2 border-b border-slate-200/80 py-3 sm:min-h-20 sm:gap-4">
       <Link href="/en" aria-label="Evaluo English homepage" className="inline-flex min-w-0 items-center gap-2 text-xl font-black tracking-tight text-slate-950">
-        <Image src="/evaluo-logo-icono.svg" alt="" width={36} height={36} className="h-9 w-9 shrink-0 object-contain" />
+        <Image src="/evaluo-logo-icono.svg" alt="Evaluo" width={36} height={36} className="h-9 w-9 shrink-0 object-contain" />
         <span className="truncate">Evaluo</span>
       </Link>
       <nav aria-label="Study navigation" className="hidden items-center gap-5 text-sm font-semibold text-slate-700 md:flex">

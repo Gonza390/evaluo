@@ -4,7 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, ShieldCheck, UploadCloud, X } from 'lucide-react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
-import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, isSupportedStudentMaterialFile } from '@/lib/student-materials/file-rules';
+import {
+  MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+  MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
+  isSupportedStudentMaterialFile,
+} from '@/lib/student-materials/file-rules';
+import { countPdfPagesInBrowser, exceedsFreePdfPageLimit } from '@/lib/student-materials/pdf-page-count-client';
+import { trackUploadFailure } from '@/lib/student-materials/upload-failure';
 import { isUuid } from '@/lib/uuid';
 
 function formatBytes(bytes: number) {
@@ -40,6 +46,8 @@ const COPY = {
     unsupported: 'Este tipo de material no es compatible.',
     tooLarge: 'El material supera el tamaño máximo permitido de 20 MB.',
     saveError: 'No pudimos conservar el material para continuar. Probá nuevamente.',
+    pageLimit: (pages: number, max: number) =>
+      `Tu PDF tiene ${pages} páginas y en el plan gratis se pueden subir hasta ${max}. Elegí un archivo solo con los capítulos de tu examen.`,
   },
   neutral: {
     kicker: 'Empieza con tu archivo',
@@ -57,6 +65,8 @@ const COPY = {
     unsupported: 'Este tipo de material no es compatible.',
     tooLarge: 'El material supera el tamaño máximo permitido de 20 MB.',
     saveError: 'No pudimos guardar el material. Inténtalo de nuevo.',
+    pageLimit: (pages: number, max: number) =>
+      `Tu PDF tiene ${pages} páginas y en el plan gratis se pueden subir hasta ${max}. Elige un archivo solo con los capítulos de tu examen.`,
   },
   en: {
     kicker: 'Start with your file',
@@ -74,6 +84,8 @@ const COPY = {
     unsupported: 'This file type is not supported. Use a PDF or Word file.',
     tooLarge: 'The file is larger than the 20 MB limit.',
     saveError: 'We could not save your file. Please try again.',
+    pageLimit: (pages: number, max: number) =>
+      `Your PDF has ${pages} pages and the free plan accepts up to ${max}. Choose a file with just the chapters for your exam.`,
   },
 } as const;
 
@@ -126,6 +138,13 @@ export function PdfFirstLandingUploader({
     }
 
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
+      trackUploadFailure({
+        stage: 'too_large',
+        source,
+        flow: 'landing',
+        location: trackingLocation,
+        fileSizeBytes: selected.size,
+      });
       setFile(null);
       setError(t.tooLarge);
       return;
@@ -146,6 +165,24 @@ export function PdfFirstLandingUploader({
 
     setSaving(true);
     setError('');
+
+    // Antes de pedir el registro: si el PDF supera el límite de páginas del plan
+    // gratis, avisar ahora y no después de crear la cuenta y subirlo entero.
+    const pageCount = await countPdfPagesInBrowser(file);
+    if (exceedsFreePdfPageLimit(pageCount, MAX_FREE_STUDENT_MATERIAL_PDF_PAGES)) {
+      trackUploadFailure({
+        stage: 'pre_signup_page_limit',
+        source,
+        flow: 'landing',
+        location: trackingLocation,
+        fileSizeBytes: file.size,
+        pageCount,
+        maxPages: MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+      });
+      setError(t.pageLimit(pageCount!, MAX_FREE_STUDENT_MATERIAL_PDF_PAGES));
+      setSaving(false);
+      return;
+    }
 
     try {
       await savePdfFirstDraft(file, source);
