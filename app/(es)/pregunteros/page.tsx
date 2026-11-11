@@ -189,6 +189,12 @@ export default async function PregunteroHubPage() {
                     <Link href="/landings/parciales" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
                       Cómo preparar parciales Siglo 21
                     </Link>
+                    <Link href="/landings/estudiar" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
+                      Cómo estudiar cada materia
+                    </Link>
+                    <Link href="/landings/resumenes" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
+                      Resúmenes por materia
+                    </Link>
                     <Link href="/funciones/simulacro-examen-con-ia" className="text-blue-700 underline underline-offset-2 hover:text-blue-900">
                       Simulacro de examen desde tu PDF
                     </Link>
