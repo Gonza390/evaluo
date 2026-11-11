@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { EnglishHubPage } from '@/components/marketing/english-hub-page';
 import { ENGLISH_HUBS } from '@/lib/english-seo-hubs';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('features-hub', 'en');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   description: 'Summaries, mind maps, flashcards, topic practice and mock exams from your own PDF or Word notes. Find the right AI study tool for each goal.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'en_US',
     title: 'Evaluo Features: Study Your PDF Notes with AI | Evaluo',

@@ -1377,3 +1377,12 @@ assertIncludesAll('lib/english-seo-content.ts', [
   "title: 'Free PDF Quiz Maker: AI Questions from Your Notes'",
 ]);
 assertIncludesAll('app/(es)/es/resumenes-con-ia/page.tsx', ["title: 'Resumidor de textos con IA gratis por temas'"]);
+
+// Ahrefs (11/11/2026): Open Graph completo y datos estructurados para IA.
+assertIncludesAll('lib/seo.ts', ['export const DEFAULT_OG_IMAGES', 'export function buildItemListJsonLd', "founder: { '@type': 'Person'"]);
+assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', ['buildSoftwareApplicationJsonLd(']);
+assertIncludesAll('components/marketing/study-blog-view.tsx', ['buildItemListJsonLd(']);
+assertIncludesAll('app/(es)/es/guias/page.tsx', ['buildItemListJsonLd(']);
+for (const page of ['app/(es)/blog/[slug]/page.tsx', 'app/(en)/en/blog/[slug]/page.tsx', 'app/(es)/es/guias/[slug]/page.tsx']) {
+  assertIncludesAll(page, ['images: DEFAULT_OG_IMAGES']);
+}

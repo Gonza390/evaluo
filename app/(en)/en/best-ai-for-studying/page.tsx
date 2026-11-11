@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { BestAiStudyPage } from '@/components/marketing/best-ai-study-page';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('best-ai-study', 'en');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     'We compared 11 AI study tools: NotebookLM, ChatGPT, Gemini, Claude, Perplexity, Quizlet, Anki, Photomath and more. What each is best for and which are free.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'article',
     locale: 'en_US',
     title: 'Best AI Study Tools and Apps in 2026 | Evaluo',

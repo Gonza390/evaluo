@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { SimulacroExamenIaLanding } from '@/components/marketing/seo-practice-tools-landings';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const path = '/funciones/simulacro-examen-con-ia';
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     'Hacé un simulacro de examen con IA gratis desde tu material: elegís el archivo sin registrarte, practicás y ves qué temas reforzar.',
   alternates: hreflangAlternates('mock-exam', 'es-AR'),
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     title: 'Simulacro de examen con IA gratis desde tus apuntes | Evaluo',
     description: 'Practicá con tus apuntes, interpretá los resultados y reforzá los temas que todavía te cuestan.',

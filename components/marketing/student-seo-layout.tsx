@@ -1,5 +1,5 @@
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildFaqJsonLd } from '@/lib/seo';
+import { buildFaqJsonLd, DEFAULT_OG_IMAGES } from '@/lib/seo';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ export function studyMetadata(path:string,title:string,description:string):Metad
     description,
     alternates:{canonical:toAbsoluteUrl(path)},
     robots:{index:true,follow:true},
-    openGraph:{title:title+' | Evaluo',description,url:toAbsoluteUrl(path),locale:'es_AR',type:'website'}
+    openGraph:{ images: DEFAULT_OG_IMAGES,title:title+' | Evaluo',description,url:toAbsoluteUrl(path),locale:'es_AR',type:'website'}
   };
 }
 

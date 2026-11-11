@@ -5,7 +5,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildItemListJsonLd, DEFAULT_OG_IMAGES } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 import { STUDY_GUIDES } from '@/lib/es-study-guides';
 
@@ -21,7 +21,8 @@ export const metadata: Metadata = {
   description: 'Guías prácticas para estudiar anatomía, psicología, derecho y economía, preparar exámenes y aprender con preguntas de tus apuntes PDF.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
+    type: 'website',
     locale: 'es',
     title: 'Guías de estudio universitario | Evaluo',
     description: 'Métodos concretos para comprender tus apuntes, preparar exámenes y practicar por temas.',
@@ -33,6 +34,16 @@ export default function GuiasDeEstudioPage() {
   return (
     <div lang="es" className="min-h-screen bg-white text-slate-950">
       <JsonLd data={buildBreadcrumbJsonLd([{ name: 'Inicio', path: '/' }, { name: 'Guías de estudio', path }])} />
+      <JsonLd
+        data={buildItemListJsonLd({
+          name: 'Guías de estudio',
+          url: path,
+          items: [
+            ...STUDY_GUIDES.map((guide) => ({ name: guide.title, url: `/es/guias/${guide.slug}` })),
+            { name: 'Pruebas Básicas USAC: temario y cómo practicar', url: '/es/paises/guatemala-pruebas-basicas-usac' },
+          ],
+        })}
+      />
       <div className="mx-auto max-w-[1240px] px-4 sm:px-8 lg:px-10">
         <PublicSiteHeader variant="landing" trackingLocation="es_study_guides_header" />
       </div>

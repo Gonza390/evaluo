@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { hreflangLanguages } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 export type StudyMarket = 'es' | 'es-mx' | 'es-co' | 'es-es';
 
@@ -138,7 +139,7 @@ export function getStudyLandingMetadata(market: StudyMarket): Metadata {
       title: content.title + ' | Evaluo',
       description: content.description,
       locale: content.htmlLang.replace('-', '_'),
-      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Evaluo: estudiar con PDF y practicar preguntas' }],
+      images: DEFAULT_OG_IMAGES,
     },
   };
 }

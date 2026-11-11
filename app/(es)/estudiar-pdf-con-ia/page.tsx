@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { EstudiarPdfExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
 import { STUDY_HREFLANG } from '@/lib/international-study-landings';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const path = '/estudiar-pdf-con-ia';
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     'Estudiá un PDF con IA gratis: elegís el archivo sin registrarte y obtenés resumen por temas, flashcards y preguntas de práctica basadas en tus apuntes.',
   alternates: { canonical: toAbsoluteUrl(path), languages: STUDY_HREFLANG },
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     title: 'Estudiar PDF con IA gratis: resumen y preguntas | Evaluo',
     description:

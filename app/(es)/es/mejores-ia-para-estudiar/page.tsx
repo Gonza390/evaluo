@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { BestAiStudyPage } from '@/components/marketing/best-ai-study-page';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('best-ai-study', 'es');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     'Comparamos 11 IA para estudiar: NotebookLM, ChatGPT, Gemini, Claude, Perplexity, Quizlet, Anki, Photomath y más. Para qué sirve cada una y cuáles son gratis.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'article',
     locale: 'es_419',
     title: 'Las mejores IA para estudiar en 2026 | Evaluo',

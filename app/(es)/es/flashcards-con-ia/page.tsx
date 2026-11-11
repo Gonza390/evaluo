@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { FlashcardsNeutralLanding } from '@/components/marketing/seo-practice-tools-landings';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('pdf-to-flashcards', 'es');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     'Crea flashcards con IA gratis a partir de tu PDF o Word: tarjetas de pregunta y respuesta por tema. Eliges el archivo sin registrarte y repasas en minutos.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'es_419',
     title: 'Flashcards con IA gratis: crea tarjetas desde tu PDF | Evaluo',

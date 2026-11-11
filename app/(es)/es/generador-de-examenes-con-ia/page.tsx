@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { GeneradorExamenesNeutralLanding } from '@/components/marketing/seo-practice-tools-landings';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('mock-exam', 'es');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     'Generador de exámenes con IA gratis: sube tu material y practica con preguntas sobre él. Eliges el archivo sin registrarte y ves qué repasar.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'es_419',
     title: 'Generador de exámenes con IA gratis: desde tu PDF | Evaluo',

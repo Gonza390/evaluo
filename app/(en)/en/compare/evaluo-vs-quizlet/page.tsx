@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SeoComparisonLanding } from '@/components/marketing/seo-comparison-landings';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('compare-quizlet', 'en');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     "Looking for a Quizlet alternative? Evaluo turns your PDF notes into AI flashcards and practice questions. Compare features and try it free.",
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'en_US',
     title: 'Free Quizlet Alternative: AI Flashcards from PDF | Evaluo',

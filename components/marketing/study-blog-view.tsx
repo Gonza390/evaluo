@@ -9,7 +9,7 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildItemListJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 import {
   STUDY_BLOG_ARTICLES,
@@ -121,6 +121,11 @@ export function StudyBlogHub({ locale }: { locale: StudyBlogLocale }) {
         { name: locale === 'es' ? 'Inicio' : 'Home', path: locale === 'es' ? '/' : '/en' },
         { name: copy.index, path },
       ])} />
+      <JsonLd data={buildItemListJsonLd({
+        name: copy.index,
+        url: path,
+        items: articles.map((article) => ({ name: article.title, url: `${path}/${article.slug}` })),
+      })} />
       <BlogHeader locale={locale} alternateHref={locale === 'es' ? '/en/blog' : '/blog'} />
       <main>
         <header className="border-b border-slate-200 bg-[#F8FAFC]">
