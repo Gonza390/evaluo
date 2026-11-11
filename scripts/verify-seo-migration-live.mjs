@@ -16,9 +16,11 @@ const paths = [
   '/en/study-pdf-with-ai', '/funciones/crear-flashcards-desde-pdf',
   '/en/pdf-to-flashcards', '/convertir-pdf-en-preguntas', '/en/pdf-to-quiz',
 ];
+// [ruta en español, ruta en inglés, hreflang de la ruta en español]. Las flashcards de
+// /funciones son la variante argentina (es-AR); la neutra es /es/flashcards-con-ia.
 const pairs = [
-  ['/funciones/crear-flashcards-desde-pdf', '/en/pdf-to-flashcards'],
-  ['/convertir-pdf-en-preguntas', '/en/pdf-to-quiz'],
+  ['/funciones/crear-flashcards-desde-pdf', '/en/pdf-to-flashcards', 'es-AR'],
+  ['/convertir-pdf-en-preguntas', '/en/pdf-to-quiz', 'es'],
 ];
 const market = {
   'es-AR': '/estudiar-pdf-con-ia',
@@ -53,7 +55,7 @@ async function checkUrl(url, label, validate) {
   const timer = setTimeout(() => controller.abort(), 12000);
   try {
     const response = await fetch(url, { redirect: 'manual', signal: controller.signal,
-      headers: { 'User-Agent': 'Evaluo-SEOMigration-Audit/1.0' } });
+      headers: { 'User-Agent': 'Evaluo-SEOMigration-Audit-bot/1.0' } }); // "bot": la home redirige por país a visitantes humanos
     await validate(response);
   } catch (error) { record(label, 'UNVERIFIED', String(error?.message ?? error)); }
   finally { clearTimeout(timer); }
@@ -86,8 +88,8 @@ for (const host of oldHosts) {
     });
   }
 }
-for (const [es,en] of pairs) {
-  for (const [path,lang,otherLang,other] of [[es,'es','en',en],[en,'en','es',es]]) {
+for (const [es,en,esLang] of pairs) {
+  for (const [path,lang,otherLang,other] of [[es,esLang,'en',en],[en,'en',esLang,es]]) {
     const html=pages.get(path);
     const label='reciprocal hreflang ' + path;
     if (!html) { record(label,'UNVERIFIED','page unavailable'); continue; }
