@@ -6,7 +6,7 @@ export const ENGLISH_HUBS = {
     breadcrumb: 'Features',
     eyebrow: 'Evaluo features',
     headline: 'One set of notes, several ways to study it.',
-    intro: 'You do not need a different app for every study task. Upload a PDF or Word file once and use the tool that fits what you need to check right now: understand a topic, remember definitions, see how ideas connect or test yourself before the exam.',
+    intro: 'You do not need a different app for every study task. Upload your study material once and use the tool that fits what you need to check right now: understand a topic, remember definitions, see how ideas connect or test yourself before the exam.',
     decisionTitle: 'Which feature fits your goal',
     decisionIntro: 'Start from what you need to check, not from the tool. Each link opens a guide with a worked example you can try without an account.',
     decisions: [
@@ -28,6 +28,13 @@ export const ENGLISH_HUBS = {
       { href: '/en/ai-true-false-questions', title: 'True-or-false questions', text: 'Check claims and explanations against your own material.' },
       { href: '/en/match-concepts-with-ai', title: 'Match concepts', text: 'Practice telling related terms apart.' },
       { href: '/en/ai-for-students', title: 'AI for students', text: 'How to study with AI without cheating, and where it gets things wrong.' },
+    ],
+    faqTitle: 'Frequently asked questions',
+    faq: [
+      { question: 'Which Evaluo features are free?', answer: 'The Free plan includes 1 study material per month (PDF or Word) with topic summaries, a glossary, flashcards and trial practice with multiple-choice, true/false and matching questions. Premium adds up to 3 new materials per day, practice focused on your mistakes, unlimited mock exams and mind maps.' },
+      { question: 'What files can I use?', answer: 'PDF or Word files up to 20 MB. On the Free plan each PDF can have up to 100 pages. Files with readable text work best; for scanned PDFs, quality depends on how well the text can be read.' },
+      { question: 'Which feature should I start with?', answer: 'Start with the topic summary and glossary to understand the material. Then practice that topic with questions or true/false, review what you miss with flashcards and, close to the exam, take a mock exam to see which topics still need work.' },
+      { question: 'Can I trust what the AI generates?', answer: 'Use it to practice, not as your only source. Evaluo works from your own notes, but AI can get facts, formulas or nuances wrong: check what matters against your material and your teacher\'s instructions.' },
     ],
     note: 'AI-generated summaries, maps and questions can contain mistakes. Check explanations, formulas and technical data against your original material. Mind maps are a Premium feature; everything else can be tried on the Free plan with one document.',
   },
@@ -52,6 +59,13 @@ export const ENGLISH_HUBS = {
       { href: '/en/compare/evaluo-vs-notebooklm', title: 'Evaluo vs. NotebookLM', text: 'Researching many sources versus a topic-by-topic study path for one document.' },
       { href: '/en/compare/evaluo-vs-quizlet', title: 'Evaluo vs. Quizlet', text: 'Flashcard sets and tests versus exam preparation built from your own notes.' },
     ],
+    faqTitle: 'Frequently asked questions',
+    faq: [
+      { question: 'What is the best AI tool for studying?', answer: 'It depends on how you study. To research several sources, Gemini Notebook (formerly NotebookLM); for step-by-step explanations, ChatGPT or Gemini with their study modes; to memorize, flashcard apps such as Anki or Quizlet; and to prepare for an exam from your own study material, Evaluo. Our best AI for studying guide compares eleven tools.' },
+      { question: 'Does Evaluo replace ChatGPT or NotebookLM?', answer: 'Not necessarily: they work well together. You can research or ask questions with a general assistant and use Evaluo to study your material by topic, practice with questions and see what to review before the exam.' },
+      { question: 'Are these comparisons unbiased?', answer: 'Evaluo is our product, and we say so. That is why each comparison is based on the other tool\'s official documentation, shows its review date and explains when the other option is the better choice.' },
+      { question: 'Is Evaluo free?', answer: 'Yes. The Free plan includes 1 study material per month (PDF or Word) with a summary, flashcards and trial practice. Premium adds more materials and more practice.' },
+    ],
     note: 'Third-party features, limits and prices change. Each comparison links to the official documentation it was based on and shows its review date. Evaluo is not affiliated with OpenAI, Google or Quizlet.',
   },
 } satisfies Record<string, EnglishHub>;
@@ -65,7 +79,7 @@ export const ES_NEUTRAL_HUB: EnglishHub = {
   eyebrow: 'Plataforma de estudio con inteligencia artificial',
   headline: 'Estudia con inteligencia artificial a partir de tus propios apuntes.',
   intro:
-    'Evaluo convierte el PDF o el documento de Word con el que estudias en temas, resúmenes, flashcards, preguntas de práctica y simulacros, y te muestra qué repasar antes del examen. No necesitas aprender a escribir instrucciones para la IA: eliges tu material y empiezas a estudiar.',
+    'Evaluo convierte el material con el que estudias en temas, resúmenes, flashcards, preguntas de práctica y simulacros, y te muestra qué repasar antes del examen. No necesitas aprender a escribir instrucciones para la IA: eliges tu material y empiezas a estudiar.',
   decisionTitle: 'Qué herramienta usar según tu objetivo',
   decisionIntro: 'Empieza por lo que necesitas hoy. Todas trabajan sobre el mismo documento y se conectan entre sí.',
   decisions: [
@@ -85,6 +99,13 @@ export const ES_NEUTRAL_HUB: EnglishHub = {
     { href: '/es/como-funciona', title: 'Cómo funciona', text: 'Los cinco pasos, los formatos admitidos y los planes.' },
     { href: '/es/mejores-ia-para-estudiar', title: 'Mejores IA para estudiar', text: 'Once herramientas comparadas: para qué sirve cada una y cuáles son gratis.' },
     { href: '/es/guias', title: 'Guías de estudio', text: 'Métodos para estudiar materias, preparar parciales y repasar errores.' },
+  ],
+  faqTitle: 'Preguntas frecuentes',
+  faq: [
+    { question: '¿Qué es una plataforma de estudio con inteligencia artificial?', answer: 'Es una herramienta que usa IA para ayudarte a estudiar tu propio material: organiza tus apuntes por temas, genera resúmenes, flashcards y preguntas de práctica, y te muestra qué temas dominas y cuáles repasar. A diferencia de un chat general, te da un recorrido de estudio armado.' },
+    { question: '¿Evaluo es gratis?', answer: 'Sí. El plan Gratis incluye 1 material por mes (PDF o Word) con resumen por temas, glosario, flashcards y práctica de prueba. Premium suma hasta 3 materiales nuevos por día, práctica según tus errores, simulacros sin cupo y mapas mentales.' },
+    { question: '¿Qué archivos puedo subir?', answer: 'PDF o Word de hasta 20 MB. En el plan Gratis, cada PDF puede tener hasta 100 páginas. Puedes elegir el archivo sin registrarte; la cuenta se pide al crear el material.' },
+    { question: '¿Sirve para cualquier materia?', answer: 'Sirve para materias en las que estudias a partir de textos y apuntes: ciencias sociales, derecho, biología, economía, historia y más. Para resolver ejercicios de matemática paso a paso, una herramienta específica puede ayudarte más.' },
   ],
   note: 'Las preguntas, resúmenes y tarjetas generados con IA pueden contener errores: compruébalos con tu material. Puedes empezar gratis con un documento; el mapa mental y más documentos están en Premium.',
 };

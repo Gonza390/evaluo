@@ -22,7 +22,7 @@ assert.match(llms, /https:\/\/evaluoapp\.com\/sobre-evaluo/);
 assert.match(llms, /https:\/\/evaluoapp\.com\/pricing/);
 assert.match(pricing, /1 material PDF o Word gratis por mes/);
 assert.match(pricing, /3 materiales PDF o Word por día/);
-assert.match(home, /PDF o Word/);
+assert.match(home, /material de estudio/); // La home habla de 'tu material de estudio'; los formatos se detallan en precios y Sobre Evaluo.
 assert.match(seo, /sameAs:/);
 for (const content of [about, llms, pricing, home]) {
   assert.doesNotMatch(content, /2 PDFs?\s+cada\s+15\s+d[ií]as/i);

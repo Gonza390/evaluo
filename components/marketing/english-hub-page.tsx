@@ -5,7 +5,7 @@ import { EnglishSeoHeader } from '@/components/marketing/english-seo-header';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { hreflangAlternatePath } from '@/lib/seo/hreflang-clusters';
 import { toAbsoluteUrl } from '@/lib/site';
 
@@ -24,6 +24,8 @@ export type EnglishHub = {
   cardsTitle: string;
   cards: Array<{ href: string; title: string; text: string; badge?: string }>;
   note: string;
+  faqTitle?: string;
+  faq?: Array<{ question: string; answer: string }>;
 };
 
 /** Hub público en inglés: decisión rápida + enlaces internos a cada guía del cluster. */
@@ -132,6 +134,20 @@ export function EnglishHubPage({ hub }: { hub: EnglishHub }) {
             </p>
           </div>
         </section>
+        {hub.faq?.length ? (
+          <section aria-labelledby="hub-faq" className="mx-auto max-w-5xl px-5 py-14 sm:px-8">
+            <JsonLd data={buildFaqJsonLd(hub.faq)} />
+            <h2 id="hub-faq" className="text-3xl font-bold tracking-tight">{hub.faqTitle}</h2>
+            <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white px-6">
+              {hub.faq.map((item) => (
+                <details key={item.question} className="py-5">
+                  <summary className="cursor-pointer text-sm font-bold">{item.question}</summary>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
       <FooterHome locale={spanish ? 'es' : 'en'} register={spanish ? 'neutral' : undefined} />
     </div>

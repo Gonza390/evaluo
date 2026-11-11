@@ -1,3 +1,5 @@
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildFaqJsonLd } from '@/lib/seo';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
@@ -115,6 +117,20 @@ export function StudentSeoHub({hub}: {hub: SeoHub}) {
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{hub.benefit}</p>
           <div className="mt-6"><StudyCta source={'seo-hub-bottom-'+hub.path.slice(1)} label="Empezar con mi PDF"/></div>
         </section>
+        {hub.faq?.length ? (
+          <section className="mt-14" aria-labelledby="preguntas-hub">
+            <JsonLd data={buildFaqJsonLd(hub.faq)} />
+            <h2 id="preguntas-hub" className="text-2xl font-bold tracking-tight">Preguntas frecuentes</h2>
+            <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white px-6">
+              {hub.faq.map(item=>(
+                <details key={item.question} className="py-5">
+                  <summary className="cursor-pointer text-sm font-bold">{item.question}</summary>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <nav aria-label="Otras secciones de estudio" className="mt-12 border-t border-slate-200 pt-8">
           <h2 className="text-lg font-bold">También te puede servir</h2>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">

@@ -76,7 +76,7 @@ export default async function GuiaDeEstudio({ params }: Props) {
           inLanguage: 'es',
           datePublished: guide.published ?? '2026-10-29',
           dateModified: guide.updated ?? '2026-10-29',
-          author: { '@type': 'Organization', name: 'Evaluo' },
+          author: { '@type': 'Person', name: 'Gonzalo Olmos', jobTitle: 'Fundador de Evaluo', worksFor: { '@type': 'Organization', name: 'Evaluo' } },
           publisher: { '@type': 'Organization', name: 'Evaluo' },
           mainEntityOfPage: toAbsoluteUrl(path),
         },
@@ -206,7 +206,7 @@ export default async function GuiaDeEstudio({ params }: Props) {
             </section>
             <EditorialMethodology kind="study" />
             <p className="mt-8 text-xs leading-6 text-slate-500">
-              Recurso educativo de Evaluo · Actualizado el {formatGuideDate(guide.updated ?? '2026-10-29')}.
+              Escrito por Gonzalo Olmos, fundador de Evaluo · Actualizado el {formatGuideDate(guide.updated ?? '2026-10-29')}.
               La práctica de recuperación y el repaso distribuido tienen apoyo en investigación educativa.
               Puedes consultar <a href="https://www.aft.org/ae/fall2013/dunlosky" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline">esta revisión divulgativa de la evidencia</a>.
               Contrasta siempre los contenidos técnicos con tu programa y material original.
@@ -243,7 +243,7 @@ export default async function GuiaDeEstudio({ params }: Props) {
           </aside>
         </div>
       </main>
-      <FooterHome />
+      <FooterHome register="neutral" />
     </div>
   );
 }
