@@ -78,6 +78,8 @@ export const STUDY_UI_ENGLISH: Record<string, string> = {
   "La universidad se habilita automáticamente y queda guardada en tu perfil.": "Your selected university is enabled automatically and saved to your profile.",
   "Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.": "While we prepare your file, you can select your university and degree program, or skip this step.",
   "Máximo 20 MB": "Maximum 20 MB",
+  "Elegir otro archivo": "Choose another file",
+  "Probar con un apunte de ejemplo": "Try a sample material",
   "No pudimos cargar universidades y carreras. Intentá nuevamente.": "We could not load the universities and degree programs. Please try again.",
   "No pudimos iniciar el reintento. Podés volver a intentarlo.": "We could not restart processing. Please try again.",
   "Preparación de tu PDF": "Preparing your PDF",

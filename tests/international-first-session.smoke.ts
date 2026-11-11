@@ -28,7 +28,8 @@ assert.match(callback, /callback/); // OAuth callback itself must be retained.
 assert.match(callback, /ui_locale: entryLocale/, 'English OAuth signup should persist the selected language');
 assert.match(dashboard, /locale !== 'en' && hasReadyMaterial && openUpload !== '1'/,
   'A new English student should not see academic-profile interruption');
-assert.match(upload, /firstUploadErrorMessage\(error instanceof Error \? error\.message : null, locale\)/);
+assert.match(upload, /const rawMessage = error instanceof Error \? error\.message : null;/);
+assert.match(upload, /firstUploadErrorMessage\(rawMessage, locale\)/);
 assert.match(upload, /\{t\("Procesar este PDF"\)\}/);
 assert.match(processing, /useOptionalAppLocale\(\) === 'en'/);
 assert.match(processing, /EnglishProcessingScene scene=\{visibleScene\}/);
