@@ -48,6 +48,26 @@ Antes de registrar, mirar cómo lo hicieron los últimos commits (sitemap, índi
   cuenta `sc-domain:evaluoapp.com`): búsquedas con impresiones donde estamos entre la posición 8 y 40 y no hay
   una página dedicada.
 
+## Mapa de búsquedas → página que debe posicionar
+
+Datos de palabras clave de Bing Webmaster Tools (impresiones mensuales, 11/11/2026). Una búsqueda = una sola página
+dueña; las guías y artículos nuevos enlazan a esa página en lugar de competir con ella.
+
+| Búsqueda (impresiones) | Página dueña |
+|---|---|
+| flashcard maker (8K), flashcards maker (6K), flashcards online (2.8K), flashcards app (1.1K), flashcard ai (571) | /en/pdf-to-flashcards |
+| study tools (7.1K), study apps (4K), study app (2.4K), ai study tools (2.9K), ai for studying (1.5K), study ai free (2K) | /en/best-ai-for-studying |
+| practice test (2.9K) | /en/ai-test-prep |
+| quiz maker from pdf (658), ai question generator (479), pdf quiz (255) | /en/pdf-to-quiz |
+| resumidor de textos (9.4K), resumidor (3.6K), resumir textos (3.1K), resumen de textos (1.9K) | /es/resumenes-con-ia |
+| resumir pdf (985), resumen de pdf (1.1K), resumidor de pdf (639), ia para resumir pdf (467) | /funciones/resumir-pdf-con-ia |
+| ia para estudiar (6.6K), ia para estudiar gratis (1.1K), estudiar con ia (385) | /es/mejores-ia-para-estudiar |
+| aplicaciones para estudiar (1.3K), apps para estudiar (1.1K) | /es/mejores-ia-para-estudiar |
+| ia para estudiar para un examen (1.3K), generador de examenes (47) | /es/generador-de-examenes-con-ia |
+| flashcards ia (579), tarjetas de estudio (133) | /es/flashcards-con-ia |
+
+Búsquedas muy amplias (flashcards 48.6K, study ai 19.5K, test online 4.8K): no se atacan con una página propia.
+
 ## Backlog
 
 Estados: `pendiente` · `en curso` · `publicado` (con fecha y URL) · `descartado` (con motivo).
@@ -71,6 +91,14 @@ Prioridad: 1 = más alta.
 | 14 | en | how to use gemini to study | How to Use Gemini to Study: Guided Learning and Study Notebooks | How-to | /en/best-ai-for-studying | 2 | pendiente |
 | 15 | en | study for an exam in 3 days | How to Study for an Exam in 3 Days | How to study | /en/ai-test-prep | 2 | pendiente |
 | 16 | en | knowt alternatives | Knowt Alternatives for Studying | Alternatives | /en/pdf-to-flashcards | 3 | pendiente |
+| 17 | es | resumidor de textos / resumir textos | Cómo resumir un texto para estudiar (método y ejemplo) | Cómo hacer | /es/resumenes-con-ia | 1 | pendiente |
+| 18 | es | aplicaciones para estudiar / apps para estudiar | Aplicaciones para estudiar: cuál usar según tu examen | Alternativas | /es/mejores-ia-para-estudiar | 1 | pendiente |
+| 19 | es | ia para estudiar para un examen | Cómo usar IA para estudiar para un examen (paso a paso) | Cómo hacer | /es/generador-de-examenes-con-ia | 1 | pendiente |
+| 20 | es | tarjetas de estudio | Cómo hacer tarjetas de estudio que sí funcionan | Cómo hacer | /es/flashcards-con-ia | 2 | pendiente |
+| 21 | en | study apps / study tools | Study Apps That Actually Help You Pass Exams | Alternatives | /en/best-ai-for-studying | 1 | pendiente |
+| 22 | en | ai question generator | How to Generate Good Practice Questions with AI | How-to | /en/pdf-to-quiz | 1 | pendiente |
+| 23 | en | flashcard maker | How to Make Flashcards That Work (Manual vs AI) | How-to | /en/pdf-to-flashcards | 1 | pendiente |
+| 24 | en | practice test | How to Make a Practice Test from Your Notes | How-to | /en/ai-test-prep | 1 | pendiente |
 
 ## Resultados
 
