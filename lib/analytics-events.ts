@@ -37,6 +37,8 @@ const ANALYTICS_EVENT_NAMES = [
   'pdf_uploaded',
   'pdf_upload_started',
   'pdf_upload_failed',
+  'processing_exam_date_viewed',
+  'processing_exam_date_answered',
   'pdf_draft_restored',
   'material_processing_started',
   'material_ready',

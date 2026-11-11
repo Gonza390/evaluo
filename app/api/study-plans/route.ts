@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
 import { isFreeStudyV2Active } from '@/lib/free-study-v2';
 import { premiumUpgradeForLimit } from '@/lib/premium-flow';
-import { completeStudySchedule, estimateTopicSessionMinutes, savePlanPracticeRecommendations, type PlanDay, type PlanTopic } from '@/lib/student-materials/study-plan-distribution';
+import { type PlanDay } from '@/lib/student-materials/study-plan-distribution';
+import { buildPlanSchedule, buildPlanTopics } from '@/lib/student-materials/study-plan-builder';
 import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
 
 type SavedPlan = {
@@ -93,24 +94,13 @@ export async function POST(request:NextRequest) {
     .select('student_material_id,summary_sections').in('student_material_id',materialIds);
   if(summaryResult.error)return fail('No pudimos obtener los temas de tus archivos.',503);
   const byId=new Map((summaryResult.data??[]).map(s=>[s.student_material_id,s.summary_sections]));
-  const topics:PlanTopic[]=materials.flatMap(material=>{
-    const sections=byId.get(material.id);
-    if(!Array.isArray(sections))return [];
-    return sections.map((section,index)=>{
-      const info=section as {title?:unknown;body?:unknown};
-      const words=typeof info.body==='string'?info.body.trim().split(/\s+/u).filter(Boolean).length:0;
-      return {materialId:material.id,materialTitle:material.title,topicIndex:index,
-        title:typeof info.title==='string'&&info.title.trim()?info.title.trim():`Tema ${index+1}`,
-        estimatedMinutes:estimateTopicSessionMinutes(Math.max(10,Math.ceil(words/180)+10),preferences as string[],minutes)};
-    });
-  }).slice(0,400);
+  const topics=buildPlanTopics(materials,byId,preferences as string[],minutes);
   if(!topics.length)return fail('Los archivos seleccionados todavía no tienen temas disponibles.',422);
   const proposedDay=typeof body.startDate==='string'&&DATE.test(body.startDate)?body.startDate:'';
   const dateFromClient=new Date(`${proposedDay}T12:00:00Z`);
   const withinOneDay=Number.isFinite(dateFromClient.getTime())&&Math.abs(dateFromClient.getTime()-serverDay.getTime())<=86400000;
   const start=withinOneDay?dateFromClient:serverDay;
-  const {days,overloadedTopics}=completeStudySchedule(topics,examDate,minutes,start);
-  const schedule=savePlanPracticeRecommendations(days.filter(day=>day.topics.length>0),preferences as string[],minutes);
+  const {schedule,overloadedTopics}=buildPlanSchedule(topics,examDate,minutes,preferences as string[],start);
   if(!schedule.length)return fail('No hay días para estudiar antes del examen.');
   if (isFreeStudyV2Active() && !(await hasPremiumAccess(user.id))) {
     // Free v2: creación y consumo irreversible en una sola transacción.

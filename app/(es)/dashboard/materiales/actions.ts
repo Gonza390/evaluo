@@ -13,6 +13,7 @@ import {
   studentMaterialVisibilityInputSchema,
 } from '@/lib/student-materials/validation';
 import { buildStudentMaterialThumbnailPath } from '@/lib/student-materials/thumbnail-path';
+import { summarizeStudyPlan, type StudyPlanSummary } from '@/lib/student-materials/auto-study-plan';
 
 type ActionResult = {
   success: boolean;
@@ -31,6 +32,10 @@ export type StudentMaterialProcessingState = {
   message: string;
   error: string | null;
   isFirstReadyMaterial?: boolean;
+  /** Fecha de examen del apunte (AAAA-MM-DD), si la tiene. */
+  examDate?: string | null;
+  /** Plan del usuario, solo cuando el apunte está listo y existe un plan. */
+  plan?: StudyPlanSummary | null;
 };
 
 function isMissingStudentMaterialsTableError(error: unknown) {
@@ -107,9 +112,37 @@ export async function getStudentMaterialProcessingStateAction(
       }
     }
 
+    // exam_date y student_personal_study_plans existen en producción pero no en el
+    // tipo generado (igual que en app/api/study-plans).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const untyped = supabase as any;
+    const examDateResult = await untyped
+      .from('student_materials')
+      .select('exam_date')
+      .eq('id', data.id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const examDate: string | null = examDateResult.error ? null : examDateResult.data?.exam_date ?? null;
+    let plan: StudyPlanSummary | null = null;
+    if (data.processing_status === 'ready') {
+      const planResult = await untyped
+        .from('student_personal_study_plans')
+        .select('exam_date,daily_minutes,material_ids,schedule')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!planResult.error && planResult.data) {
+        plan = summarizeStudyPlan(
+          planResult.data as Parameters<typeof summarizeStudyPlan>[0],
+          data.id
+        );
+      }
+    }
+
     return {
       materialId: data.id,
       title: data.title,
+      examDate,
+      plan,
       fileName: data.file_name,
       status: data.processing_status,
       stage: (data.processing_stage as StudentMaterialProcessingStage) ?? 'uploaded',
