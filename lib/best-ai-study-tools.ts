@@ -79,7 +79,7 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       { need: 'Memorizar con flashcards y repetición espaciada', pick: 'Anki (gratis) o Knowt; Quizlet si ya usas sus mazos', anchor: 'anki' },
       { need: 'Buscar información con fuentes para un trabajo', pick: 'Perplexity', anchor: 'perplexity' },
       { need: 'Resolver ejercicios de matemática paso a paso', pick: 'Photomath', anchor: 'photomath' },
-      { need: 'Estudiar un PDF por temas y practicar para un examen', pick: 'Evaluo', anchor: 'evaluo' },
+      { need: 'Estudiar tus apuntes por temas y practicar para un examen', pick: 'Evaluo', anchor: 'evaluo' },
     ],
     tableTitle: 'Comparación rápida',
     tableHeaders: ['Herramienta', 'Mejor para', 'Desde tus archivos', 'Flashcards · Preguntas', 'Plan gratuito', 'En español'],
@@ -338,9 +338,9 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       {
         id: 'evaluo',
         name: 'Evaluo',
-        bestFor: 'Preparar un examen desde tu PDF',
+        bestFor: 'Preparar un examen desde tu material',
         summary:
-          'Nuestra plataforma. Subes tu PDF o Word y Evaluo lo organiza por temas: resumen y glosario de cada tema, flashcards, preguntas de opción múltiple y de verdadero o falso, simulacros y un plan de estudio, con tus resultados por tema.',
+          'Nuestra plataforma. Subes tu material de estudio y Evaluo lo organiza por temas: resumen y glosario de cada tema, flashcards, preguntas de opción múltiple y de verdadero o falso, simulacros y un plan de estudio, con tus resultados por tema.',
         strengths: [
           'Recorrido de estudio armado: no tienes que escribir instrucciones.',
           'Te muestra qué temas dominas y cuáles repasar antes del examen.',
@@ -376,7 +376,7 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       'Repasa lo que fallaste unos días después, no solo el día anterior al examen.',
     ],
     ctaTitle: 'Prueba Evaluo con tus apuntes',
-    ctaText: 'Si tu caso es preparar un examen a partir de un PDF o Word, elige tu archivo: no necesitas registrarte para elegirlo.',
+    ctaText: 'Si tu caso es preparar un examen a partir de tu material de estudio, elige tu archivo: no necesitas registrarte para elegirlo.',
     faqTitle: 'Preguntas frecuentes',
     faq: [
       { question: '¿Cuál es la mejor IA para estudiar gratis?', answer: 'Depende de cómo estudias. Gemini Notebook (antes NotebookLM) es gratis y muy completa para investigar fuentes; ChatGPT y Gemini tienen modos de estudio gratuitos para explicaciones paso a paso; Anki es gratis para memorizar; y Evaluo tiene un plan gratuito para estudiar un PDF por temas y practicar para el examen.' },
@@ -419,7 +419,7 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       { need: 'Memorize with flashcards and spaced repetition', pick: 'Anki (free) or Knowt; Quizlet if you already use its decks', anchor: 'anki' },
       { need: 'Research a paper with sources', pick: 'Perplexity', anchor: 'perplexity' },
       { need: 'Work through math problems step by step', pick: 'Photomath', anchor: 'photomath' },
-      { need: 'Study a PDF by topic and practice for an exam', pick: 'Evaluo', anchor: 'evaluo' },
+      { need: 'Study your notes by topic and practice for an exam', pick: 'Evaluo', anchor: 'evaluo' },
     ],
     tableTitle: 'Quick comparison',
     tableHeaders: ['Tool', 'Best for', 'From your files', 'Flashcards · Questions', 'Free plan', 'Spanish'],
@@ -678,9 +678,9 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       {
         id: 'evaluo',
         name: 'Evaluo',
-        bestFor: 'Exam prep from your PDF',
+        bestFor: 'Exam prep from your own material',
         summary:
-          'Our platform. Upload your PDF or Word file and Evaluo organizes it by topic: a summary and glossary for each topic, flashcards, multiple-choice and true/false questions, mock exams and a study plan, with your results by topic.',
+          'Our platform. Upload your study material and Evaluo organizes it by topic: a summary and glossary for each topic, flashcards, multiple-choice and true/false questions, mock exams and a study plan, with your results by topic.',
         strengths: [
           'A ready-made study path: no prompts to write.',
           'Shows which topics you know and which to review before the exam.',
@@ -716,7 +716,7 @@ export const BEST_AI_CONTENT: Record<BestAiLocale, BestAiContent> = {
       'Review what you got wrong a few days later, not only the night before the exam.',
     ],
     ctaTitle: 'Try Evaluo with your notes',
-    ctaText: 'If you are preparing for an exam from a PDF or Word file, choose your file: no sign-up needed to pick it.',
+    ctaText: 'If you are preparing for an exam from your own study material, choose your file: no sign-up needed to pick it.',
     faqTitle: 'Frequently asked questions',
     faq: [
       { question: 'What is the best free AI for studying?', answer: 'It depends on how you study. Gemini Notebook (formerly NotebookLM) is free and very complete for researching sources; ChatGPT and Gemini have free study modes for step-by-step explanations; Anki is free for memorizing; and Evaluo has a free plan to study a PDF by topic and practice for the exam.' },

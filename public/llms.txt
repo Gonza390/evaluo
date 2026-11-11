@@ -1,6 +1,6 @@
-# Evaluo — AI study platform for students' own PDF and Word notes
+# Evaluo — AI study platform for students' own study material
 
-> Evaluo (evaluoapp.com) is a web-based AI study platform. Students upload their own PDF or Word (DOCX) notes and get topic summaries, a glossary, flashcards, practice questions by topic, mock exams and a study plan. It focuses on practice and error review, not only on summaries. Available in Spanish and English, with a free plan.
+> Evaluo (evaluoapp.com) is a web-based AI study platform. Students upload their own study material (class notes, readings, course modules) and get topic summaries, a glossary, flashcards, practice questions by topic, mock exams and a study plan. It focuses on practice and error review, not only on summaries. Available in Spanish and English, with a free plan.
 
 - Canonical website: https://evaluoapp.com/
 - English home: https://evaluoapp.com/en

@@ -76,7 +76,7 @@ export function FooterHome({
               Te ayudamos a aprobar, te impulsamos a crecer.
             </p>
             <p className="mt-2 max-w-sm text-etiqueta leading-5 text-white/55">
-              Desde tus apuntes o PDFs {register === 'neutral' ? 'puedes' : 'podés'} crear resúmenes, mapas mentales, glosarios, flashcards
+              Desde tu material de estudio {register === 'neutral' ? 'puedes' : 'podés'} crear resúmenes, mapas mentales, glosarios, flashcards
               y práctica para estudiar el mismo material de distintas formas.
             </p>
             <div className="mt-4 flex gap-3">

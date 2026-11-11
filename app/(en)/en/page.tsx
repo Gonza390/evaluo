@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   // Keyword principal del mercado EN: "AI study assistant".
   title: { absolute: 'AI Study Assistant: Study Your Notes and Prep for Exams | Evaluo' },
   description:
-    'Evaluo is an AI study assistant: upload your PDF or Word notes and get topic summaries, flashcards and practice questions to prepare for exams. Free to start.',
+    'Evaluo is an AI study assistant: upload your study material and get topic summaries, flashcards and practice questions to prepare for exams. Free to start.',
   alternates: hreflangAlternates('home', 'en'),
   robots: { index: true, follow: true },
   openGraph: {

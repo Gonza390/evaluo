@@ -17,7 +17,7 @@ export function buildOrganizationJsonLd() {
       addressCountry: 'AR',
     },
     description:
-      'Plataforma educativa para estudiar PDF y Word con IA: resúmenes por temas, actividades de práctica, revisión de errores y planes de estudio.',
+      'Plataforma educativa para estudiar tu propio material con IA: resúmenes por temas, actividades de práctica, revisión de errores y planes de estudio.',
     areaServed: [
       { '@type': 'Country', name: 'Argentina' },
       { '@type': 'Country', name: 'México' },
@@ -58,7 +58,7 @@ export function buildSoftwareApplicationJsonLd() {
     name: SITE_NAME,
     url: toAbsoluteUrl('/'),
     description:
-      'Plataforma educativa web para estudiar PDF y Word con IA, crear resúmenes por temas, practicar, revisar errores y planificar exámenes.',
+      'Plataforma educativa web para estudiar tu material de estudio con IA, crear resúmenes por temas, practicar, revisar errores y planificar exámenes.',
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Web',
     inLanguage: ['es', 'en'],
