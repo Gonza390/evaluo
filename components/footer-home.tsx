@@ -112,18 +112,6 @@ export function FooterHome({
               tabIndex={0}
               className="focus-visible:outline-primary mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto overscroll-y-contain rounded-sm pr-4 [scrollbar-color:var(--muted-foreground)_transparent] [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-4 [&>a]:flex [&>a]:min-h-11 [&>a]:shrink-0 [&>a]:items-center"
             >
-              <Link href="/#producto" className="text-chico text-white/80 transition hover:text-white">
-                Producto
-              </Link>
-              <Link href="/comparar/evaluo-vs-notebooklm" className="text-chico text-white/80 transition hover:text-white">
-                Evaluo vs. NotebookLM
-              </Link>
-              <Link href="/comparar/evaluo-vs-chatgpt" className="text-chico text-white/80 transition hover:text-white">
-                Evaluo vs. ChatGPT
-              </Link>
-              <Link href="/comparar/evaluo-vs-quizlet" className="text-chico text-white/80 transition hover:text-white">
-                Evaluo vs. Quizlet
-              </Link>
               <Link
                 href="/ia-para-estudiantes"
                 className="text-chico text-white/80 transition hover:text-white"
@@ -161,6 +149,12 @@ export function FooterHome({
               <Link href="/comparar" className="text-chico text-white/80 transition hover:text-white">
                 Comparativas
               </Link>
+              <Link href="/es/mejores-ia-para-estudiar" className="text-chico text-white/80 transition hover:text-white">
+                Mejores IA para estudiar
+              </Link>
+              <Link href="/pricing" className="text-chico text-white/80 transition hover:text-white">
+                Planes y precios
+              </Link>
               <Link href="/docs" className="text-chico text-white/80 transition hover:text-white">
                 Cómo usar Evaluo
               </Link>
@@ -169,9 +163,6 @@ export function FooterHome({
               </Link>
               <Link href="/blog" className="text-chico text-white/80 transition hover:text-white">
                 Blog de estudio
-              </Link>
-              <Link href="/en/blog" lang="en" className="text-chico text-white/80 transition hover:text-white">
-                Study blog in English
               </Link>
               <Link
                 href="/es/estudiar-pdf-con-ia"
@@ -204,12 +195,6 @@ export function FooterHome({
                 Crear flashcards desde PDF
               </Link>
               <Link
-                href="/funciones/crear-mapa-mental-desde-pdf"
-                className="text-chico text-white/80 transition hover:text-white"
-              >
-                Mapas mentales con IA
-              </Link>
-              <Link
                 href="/uba-xxi/parciales"
                 className="text-chico text-white/80 transition hover:text-white"
               >
@@ -222,19 +207,10 @@ export function FooterHome({
                 Cómo estudiar para el Ingreso UNLaM 2027
               </Link>
               <Link
-                href="/blog/tecnicas-de-estudio-efectivas"
-                className="text-chico text-white/80 transition hover:text-white"
-              >
-                Técnicas de estudio efectivas
-              </Link>
-              <Link
-                href="/#como-funciona"
+                href="/es/como-funciona"
                 className="text-chico text-white/80 transition hover:text-white"
               >
                 Cómo funciona
-              </Link>
-              <Link href="/#faq" className="text-chico text-white/80 transition hover:text-white">
-                Preguntas frecuentes
               </Link>
               <Link
                 href="/login?mode=signup"

@@ -69,11 +69,13 @@ assertIncludesAll('app/sitemap.ts', [
   '/comparar/evaluo-vs-chatgpt',
   '/comparar/evaluo-vs-quizlet',
 ]);
-assertIncludesAll('components/footer-home.tsx', [
-  'href="/comparar/evaluo-vs-notebooklm"',
-  'href="/comparar/evaluo-vs-chatgpt"',
-  'href="/comparar/evaluo-vs-quizlet"',
+// Las comparativas se enlazan desde el hub /comparar (y el hub, la guía de mejores IA y precios desde el footer).
+assertIncludesAll('lib/student-seo-content.ts', [
+  "href:'/comparar/evaluo-vs-notebooklm'",
+  "href:'/comparar/evaluo-vs-chatgpt'",
+  "href:'/comparar/evaluo-vs-quizlet'",
 ]);
+assertIncludesAll('components/footer-home.tsx', ['href="/comparar"', 'href="/es/mejores-ia-para-estudiar"', 'href="/pricing"', 'href="/es/como-funciona"']);
 assertIncludesAll('lib/analytics-client.ts', [
   "return 'seo-comparison';",
 ]);
@@ -427,7 +429,6 @@ assertIncludesAll('components/footer-home.tsx', [
   'href="/estudiar-pdf-con-ia"',
   'href="/funciones/resumir-pdf-con-ia"',
   'href="/funciones/crear-flashcards-desde-pdf"',
-  'href="/funciones/crear-mapa-mental-desde-pdf"',
   'mapas mentales',
 ]);
 
