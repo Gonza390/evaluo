@@ -1361,3 +1361,19 @@ for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-
 // Ahrefs (11/11/2026): the USAC guide was an orphan page; the ES guides hub links it.
 assert.ok(source('app/(es)/es/guias/page.tsx').includes('href="/es/paises/guatemala-pruebas-basicas-usac"'),
   'The /es/guias hub must link the USAC PCB guide so it is not an orphan page');
+
+// IndexNow (11/11/2026): Spanish guides, dated blog files, ES landings/comparisons and the best-AI guide.
+assertIncludesAll('.github/workflows/seo-content-indexnow.yml', [
+  "'lib/es-study-guides.ts'",
+  "'lib/study-blog-*.ts'",
+  "'app/(es)/comparar/**'",
+  'node scripts/changed-seo-content-indexnow-urls.mjs',
+  'node scripts/submit-indexnow.mjs',
+]);
+// Bing keyword data (11/11/2026): owner pages use the searched terms in their titles.
+assertIncludesAll('lib/english-seo-content.ts', [
+  "title: 'Free AI Flashcard Maker: Flashcards from Your Notes'",
+  "title: 'Free Practice Test Maker: Mock Exams from Your Notes'",
+  "title: 'Free PDF Quiz Maker: AI Questions from Your Notes'",
+]);
+assertIncludesAll('app/(es)/es/resumenes-con-ia/page.tsx', ["title: 'Resumidor de textos con IA gratis por temas'"]);
