@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
 import { PracticarPorTemaLanding } from '@/components/marketing/seo-practice-tools-landings';
 import { toAbsoluteUrl } from '@/lib/site';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const path = '/funciones/practicar-por-tema';
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     'Practicá por tema con IA desde tu PDF, gratis: elegís el archivo sin registrarte, respondés preguntas de cada capítulo y revisás tus errores antes de avanzar.',
   alternates: hreflangAlternates('practice-by-topic', 'es'),
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     title: 'Practicar por tema con IA desde tu PDF, gratis | Evaluo',
     description: 'Estudiá tema por tema, resolvé preguntas y revisá qué conceptos necesitás reforzar.',

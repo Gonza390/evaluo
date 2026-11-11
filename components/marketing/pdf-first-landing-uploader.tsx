@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, FileText, Loader2, ShieldCheck, UploadCloud, X } from 'lucide-react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildSoftwareApplicationJsonLd } from '@/lib/seo';
 import { savePdfFirstDraft } from '@/lib/pdf-first-draft';
 import {
   MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
@@ -213,6 +215,8 @@ export function PdfFirstLandingUploader({
 
   return (
     <div className="relative">
+      {/* Cada landing con selector de archivo es una página de producto: la describe como aplicación. */}
+      <JsonLd data={buildSoftwareApplicationJsonLd(locale === 'en' ? 'en' : 'es')} />
       <div className="pointer-events-none absolute inset-x-0 -inset-y-6 rounded-[40px] bg-blue-100/50 blur-3xl" aria-hidden="true" />
       <div className="relative rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-6">
         <div className="flex items-center justify-between gap-3 px-1 pb-4">

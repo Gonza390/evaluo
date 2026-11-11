@@ -1,5 +1,18 @@
 import { SITE_NAME, toAbsoluteUrl } from '@/lib/site';
 
+/**
+ * Imagen Open Graph por defecto. Next combina la metadata de forma superficial: si una página
+ * define su propio `openGraph`, pierde la imagen del layout. Las páginas la reutilizan desde acá.
+ */
+export const DEFAULT_OG_IMAGES = [
+  {
+    url: '/evaluo-whatsapp-progreso.png',
+    width: 1200,
+    height: 630,
+    alt: 'Evaluo: estudia tu material con IA y practica por tema',
+  },
+];
+
 export function buildOrganizationJsonLd() {
   return {
     '@context': 'https://schema.org',
@@ -11,7 +24,10 @@ export function buildOrganizationJsonLd() {
     alternateName: ['Evaluo App', 'evaluoapp'],
     slogan: 'Estudiá tus apuntes con IA y prepará tus exámenes',
     url: toAbsoluteUrl('/'),
-    logo: toAbsoluteUrl('/icon.png'),
+    logo: { '@type': 'ImageObject', url: toAbsoluteUrl('/icon.png'), width: 128, height: 128 },
+    image: toAbsoluteUrl('/evaluo-whatsapp-progreso.png'),
+    founder: { '@type': 'Person', name: 'Gonzalo Olmos', jobTitle: 'Fundador' },
+    knowsAbout: ['Técnicas de estudio', 'Inteligencia artificial aplicada a la educación', 'Preparación de exámenes'],
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'AR',
@@ -50,19 +66,27 @@ export function buildWebsiteJsonLd() {
 }
 
 /** La plataforma como aplicación web educativa, con su plan gratuito. Sin valoraciones: solo datos verificables. */
-export function buildSoftwareApplicationJsonLd() {
+export function buildSoftwareApplicationJsonLd(locale: 'es' | 'en' = 'es') {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     '@id': toAbsoluteUrl('/#application'),
     name: SITE_NAME,
-    url: toAbsoluteUrl('/'),
+    url: toAbsoluteUrl(locale === 'en' ? '/en' : '/'),
     description:
-      'Plataforma educativa web para estudiar tu material de estudio con IA, crear resúmenes por temas, practicar, revisar errores y planificar exámenes.',
+      locale === 'en'
+        ? 'Web study platform that turns your study material into topic summaries, flashcards, practice questions and mock exams with AI, and tracks what to review.'
+        : 'Plataforma educativa web para estudiar tu material de estudio con IA, crear resúmenes por temas, practicar, revisar errores y planificar exámenes.',
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Web',
     inLanguage: ['es', 'en'],
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD', description: 'Plan gratuito' },
+    image: toAbsoluteUrl('/evaluo-whatsapp-progreso.png'),
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      description: locale === 'en' ? 'Free plan' : 'Plan gratuito',
+    },
     publisher: { '@id': toAbsoluteUrl('/#organization') },
   };
 }
@@ -197,5 +221,30 @@ export function buildLearningResourceJsonLd({
           },
         }
       : {}),
+  };
+}
+
+/** Lista de enlaces de una página índice (guías, artículos, comparativas). */
+export function buildItemListJsonLd({
+  name,
+  url,
+  items,
+}: {
+  name: string;
+  url: string;
+  items: Array<{ name: string; url: string }>;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name,
+    url: toAbsoluteUrl(url),
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      url: toAbsoluteUrl(item.url),
+    })),
   };
 }

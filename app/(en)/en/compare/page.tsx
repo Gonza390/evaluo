@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { EnglishHubPage } from '@/components/marketing/english-hub-page';
 import { ENGLISH_HUBS } from '@/lib/english-seo-hubs';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('compare-hub', 'en');
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   description: 'Compare ChatGPT, NotebookLM, Quizlet and Evaluo for studying: which fits each goal, where each is stronger, and their limits, with sources.',
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'en_US',
     title: 'AI Study Tools Compared: ChatGPT, NotebookLM, Quizlet | Evaluo',

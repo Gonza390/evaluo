@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 import { SeoComparisonLanding } from '@/components/marketing/seo-comparison-landings';
 import { hreflangAlternates } from '@/lib/seo/hreflang-clusters';
+import { DEFAULT_OG_IMAGES } from '@/lib/seo';
 
 const alternates = hreflangAlternates('compare-notebooklm', 'en');
 
 export const metadata: Metadata = {
   title: 'Free NotebookLM Alternative for Studying Your PDFs',
   description:
-    "Looking for a NotebookLM alternative to study your PDFs? Compare quizzes, flashcards and topic-by-topic practice, then try Evaluo free. No sign-up to choose a file.",
+    "Looking for a NotebookLM alternative for studying? Compare quizzes, flashcards and practice by topic, then try Evaluo free with your notes.",
   alternates,
   robots: { index: true, follow: true },
-  openGraph: {
+  openGraph: { images: DEFAULT_OG_IMAGES,
     type: 'website',
     locale: 'en_US',
     title: 'Free NotebookLM Alternative for Studying Your PDFs | Evaluo',

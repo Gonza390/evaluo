@@ -21,7 +21,7 @@ const add = (route, check, status, detail) => results.push({ route, check, statu
 const request = async (url, redirect = 'manual') =>
   fetch(url, {
     redirect,
-    headers: { 'user-agent': 'Evaluo-SEO-Migration-ReadOnly/1.0' },
+    headers: { 'user-agent': 'Evaluo-SEO-Migration-ReadOnly-bot/1.0' }, // "bot": evita la redirección por país de la home
     signal: AbortSignal.timeout(15000),
   });
 

@@ -879,6 +879,9 @@ if (!countryHubExists) {
     'Only the restored USAC PCB guide may appear in the sitemap, not the retired country hub or other pages');
   assert.ok(existsSync(new URL('../app/(es)/es/paises/guatemala-pruebas-basicas-usac/page.tsx', import.meta.url)),
     'The sole country URL in the sitemap must resolve to an actual reviewed page');
+  // The retired hub answers 410; Ahrefs found 13 internal links pointing at it.
+  assert.ok(!source('components/marketing/international-study-landing.tsx').includes('href="/es/paises"'),
+    'International landings must not link to the retired /es/paises hub (HTTP 410)');
 } else {
 // Hispanic-market expansion: do not weaken Argentina, rewrite established
 // international URLs, or generate 20 thin same-language country clones.
@@ -1353,4 +1356,33 @@ for (const href of ['/funciones/crear-flashcards-desde-pdf', '/convertir-pdf-en-
   for (const id of ['perplexity', 'claude', 'photomath']) assert.ok(content.includes(`id: '${id}'`), 'Best AI guide must include ' + id);
   assert.ok(content.includes("name: 'Gonzalo Olmos'"), 'Best AI guide must have a named author');
   assert.ok(source('components/marketing/best-ai-study-page.tsx').includes("'@type': 'Person'"), 'Article author must be a Person');
+}
+
+// Ahrefs (11/11/2026): the USAC guide was an orphan page; the ES guides hub links it.
+assert.ok(source('app/(es)/es/guias/page.tsx').includes('href="/es/paises/guatemala-pruebas-basicas-usac"'),
+  'The /es/guias hub must link the USAC PCB guide so it is not an orphan page');
+
+// IndexNow (11/11/2026): Spanish guides, dated blog files, ES landings/comparisons and the best-AI guide.
+assertIncludesAll('.github/workflows/seo-content-indexnow.yml', [
+  "'lib/es-study-guides.ts'",
+  "'lib/study-blog-*.ts'",
+  "'app/(es)/comparar/**'",
+  'node scripts/changed-seo-content-indexnow-urls.mjs',
+  'node scripts/submit-indexnow.mjs',
+]);
+// Bing keyword data (11/11/2026): owner pages use the searched terms in their titles.
+assertIncludesAll('lib/english-seo-content.ts', [
+  "title: 'Free AI Flashcard Maker: Flashcards from Your Notes'",
+  "title: 'Free Practice Test Maker: Mock Exams from Your Notes'",
+  "title: 'Free PDF Quiz Maker: AI Questions from Your Notes'",
+]);
+assertIncludesAll('app/(es)/es/resumenes-con-ia/page.tsx', ["title: 'Resumidor de textos con IA gratis por temas'"]);
+
+// Ahrefs (11/11/2026): Open Graph completo y datos estructurados para IA.
+assertIncludesAll('lib/seo.ts', ['export const DEFAULT_OG_IMAGES', 'export function buildItemListJsonLd', "founder: { '@type': 'Person'"]);
+assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', ['buildSoftwareApplicationJsonLd(']);
+assertIncludesAll('components/marketing/study-blog-view.tsx', ['buildItemListJsonLd(']);
+assertIncludesAll('app/(es)/es/guias/page.tsx', ['buildItemListJsonLd(']);
+for (const page of ['app/(es)/blog/[slug]/page.tsx', 'app/(en)/en/blog/[slug]/page.tsx', 'app/(es)/es/guias/[slug]/page.tsx']) {
+  assertIncludesAll(page, ['images: DEFAULT_OG_IMAGES']);
 }

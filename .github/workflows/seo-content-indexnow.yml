@@ -1,0 +1,57 @@
+name: Notify IndexNow of changed Spanish SEO pages and dated blog articles
+
+# Cubre lo que no avisan english-indexnow.yml ni study-blog-indexnow.yml:
+# guías en español, artículos del blog en archivos con fecha, landings y
+# comparativas en español y la guía de mejores IA.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/es-study-guides.ts'
+      - 'lib/study-blog-*.ts'
+      - 'lib/best-ai-study-tools.ts'
+      - 'components/marketing/best-ai-study-page.tsx'
+      - 'components/marketing/seo-comparison-landings.tsx'
+      - 'app/(es)/es/**'
+      - 'app/(es)/comparar/**'
+      - 'app/(en)/en/best-ai-for-studying/**'
+      - 'scripts/changed-seo-content-indexnow-urls.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-content-indexnow-main
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout with history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check selector and publisher syntax
+        run: |
+          node --check scripts/changed-seo-content-indexnow-urls.mjs
+          node --check scripts/submit-indexnow.mjs
+      - name: Determine changed SEO URLs
+        id: changed
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: node scripts/changed-seo-content-indexnow-urls.mjs
+      - name: Let production deploy settle
+        if: steps.changed.outputs.urls != ''
+        run: sleep 60
+      - name: Submit changed canonical URLs to IndexNow
+        if: steps.changed.outputs.urls != ''
+        env:
+          INDEXNOW_URLS: ${{ steps.changed.outputs.urls }}
+        run: node scripts/submit-indexnow.mjs
