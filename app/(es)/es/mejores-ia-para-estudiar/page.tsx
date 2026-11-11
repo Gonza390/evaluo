@@ -7,7 +7,7 @@ const alternates = hreflangAlternates('best-ai-study', 'es');
 export const metadata: Metadata = {
   title: 'Las mejores IA para estudiar en 2026: comparación honesta',
   description:
-    'Gemini Notebook (NotebookLM), ChatGPT, Gemini, Quizlet, Knowt, StudyFetch, Anki y Evaluo: para qué sirve cada IA para estudiar, sus límites y cuáles son gratis.',
+    'Comparamos 11 IA para estudiar: NotebookLM, ChatGPT, Gemini, Claude, Perplexity, Quizlet, Anki, Photomath y más. Para qué sirve cada una y cuáles son gratis.',
   alternates,
   robots: { index: true, follow: true },
   openGraph: {

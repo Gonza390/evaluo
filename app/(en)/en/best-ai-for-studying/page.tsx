@@ -7,7 +7,7 @@ const alternates = hreflangAlternates('best-ai-study', 'en');
 export const metadata: Metadata = {
   title: 'Best AI for Studying in 2026: An Honest Comparison',
   description:
-    'Gemini Notebook (NotebookLM), ChatGPT, Gemini, Quizlet, Knowt, StudyFetch, Anki and Evaluo: what each AI study tool is best for, its limits and which are free.',
+    'We compared 11 AI study tools: NotebookLM, ChatGPT, Gemini, Claude, Perplexity, Quizlet, Anki, Photomath and more. What each is best for and which are free.',
   alternates,
   robots: { index: true, follow: true },
   openGraph: {
