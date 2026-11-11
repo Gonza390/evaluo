@@ -34,7 +34,10 @@ for (const stage of ['plan_limit', 'page_limit', 'draft_restore', 'too_large']) 
 assert.match(shell, /stage = 'transfer';/);
 assert.match(shell, /stage = 'finalize';/);
 assert.match(shell, /data-upload-error/, 'el error se muestra dentro del diálogo');
-assert.match(shell, /Boolean\(uploadError\?\.blocking\)/, 'no se reintenta un archivo que va a fallar igual');
+assert.match(shell, /file && uploadError && !uploadError\.blocking \?/, 'no se reintenta un archivo que va a fallar igual');
+// Etapa 2: elegir el archivo ya lo sube (sin diálogo de título y fecha).
+assert.match(shell, /void startProcessing\(selected, titleFromFile\(selected\.name\)\)/);
+assert.doesNotMatch(shell, /id="pdf-first-title"/, 'ya no se pide el nombre del material');
 
 const actions = read('app/(es)/dashboard/materiales/pdf-first-upload-actions.ts');
 assert.match(actions, /assertDeclaredPdfPageCountWithinLimit\(input\.declaredPageCount\)/);
@@ -52,6 +55,6 @@ const empty = read('components/dashboard/empty-study-space.tsx');
 assert.doesNotMatch(empty, /Grabaciones|Presentaciones|'Libros'/, 'solo formatos aceptados');
 assert.match(empty, /trackMarketingEvent\('first_pdf_cta_viewed', \{ location: 'dashboard_empty' \}\)/,
   'la pantalla vacía registra su vista');
-assert.match(empty, /Solo PDF y Word \(\.docx\) · máximo 20 MB/);
+assert.match(empty, /PDF o Word \(\.docx\) · hasta 20 MB/);
 
 console.log('[onboarding-etapa1] errores de subida registrados, validación previa al registro y formatos reales.');
