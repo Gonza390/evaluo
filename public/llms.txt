@@ -86,6 +86,7 @@ Evaluo generates learning activities based on uploaded material. AI-generated an
 
 ## Product comparisons
 
+- [Best AI for studying in 2026: eight tools compared (Spanish)](https://evaluoapp.com/es/mejores-ia-para-estudiar) · [English](https://evaluoapp.com/en/best-ai-for-studying)
 - [Comparisons hub (Spanish)](https://evaluoapp.com/comparar) · [English](https://evaluoapp.com/en/compare)
 - [Evaluo vs NotebookLM — alternative to NotebookLM](https://evaluoapp.com/comparar/evaluo-vs-notebooklm) · [English](https://evaluoapp.com/en/compare/evaluo-vs-notebooklm)
 - [Evaluo vs ChatGPT — alternative to ChatGPT for studying](https://evaluoapp.com/comparar/evaluo-vs-chatgpt) · [English](https://evaluoapp.com/en/compare/evaluo-vs-chatgpt)

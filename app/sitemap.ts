@@ -100,6 +100,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/es/resumenes-con-ia`, lastModified: new Date('2026-11-07') },
     { url: `${baseUrl}/es/flashcards-con-ia`, lastModified: new Date('2026-11-07') },
     { url: `${baseUrl}/en/how-it-works`, lastModified: new Date('2026-11-07') },
+    { url: `${baseUrl}/es/mejores-ia-para-estudiar`, lastModified: new Date('2026-11-11') },
+    { url: `${baseUrl}/en/best-ai-for-studying`, lastModified: new Date('2026-11-11') },
     { url: `${baseUrl}/en/compare/evaluo-vs-notebooklm`, lastModified: new Date('2026-11-06') },
     { url: `${baseUrl}/en/compare/evaluo-vs-chatgpt`, lastModified: new Date('2026-11-06') },
     { url: `${baseUrl}/en/compare/evaluo-vs-quizlet`, lastModified: new Date('2026-11-06') },

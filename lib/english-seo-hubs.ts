@@ -47,6 +47,7 @@ export const ENGLISH_HUBS = {
     ],
     cardsTitle: 'Full comparisons',
     cards: [
+      { href: '/en/best-ai-for-studying', title: 'Best AI for studying in 2026', text: 'Eight AI study tools compared: what each one is best for, its limits and which are free.' },
       { href: '/en/compare/evaluo-vs-chatgpt', title: 'Evaluo vs. ChatGPT', text: 'Guided conversation and Study mode versus practice organized by the topics of your PDF.' },
       { href: '/en/compare/evaluo-vs-notebooklm', title: 'Evaluo vs. NotebookLM', text: 'Researching many sources versus a topic-by-topic study path for one document.' },
       { href: '/en/compare/evaluo-vs-quizlet', title: 'Evaluo vs. Quizlet', text: 'Flashcard sets and tests versus exam preparation built from your own notes.' },
@@ -82,6 +83,7 @@ export const ES_NEUTRAL_HUB: EnglishHub = {
     { href: '/es/flashcards-con-ia', title: 'Flashcards con IA', text: 'Tarjetas de estudio por tema para repasar con espacios.' },
     { href: '/es/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', text: 'De un documento largo a temas, preguntas y repasos.' },
     { href: '/es/como-funciona', title: 'Cómo funciona', text: 'Los cinco pasos, los formatos admitidos y los planes.' },
+    { href: '/es/mejores-ia-para-estudiar', title: 'Mejores IA para estudiar', text: 'Ocho herramientas comparadas: para qué sirve cada una y cuáles son gratis.' },
     { href: '/es/guias', title: 'Guías de estudio', text: 'Métodos para estudiar materias, preparar parciales y repasar errores.' },
   ],
   note: 'Las preguntas, resúmenes y tarjetas generados con IA pueden contener errores: compruébalos con tu material. Puedes empezar gratis con un documento; el mapa mental y más documentos están en Premium.',

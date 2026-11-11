@@ -47,6 +47,7 @@ export const HREFLANG_CLUSTERS = {
   'compare-notebooklm': { es: '/comparar/evaluo-vs-notebooklm', en: '/en/compare/evaluo-vs-notebooklm' },
   'compare-chatgpt': { es: '/comparar/evaluo-vs-chatgpt', en: '/en/compare/evaluo-vs-chatgpt' },
   'compare-quizlet': { es: '/comparar/evaluo-vs-quizlet', en: '/en/compare/evaluo-vs-quizlet' },
+  'best-ai-study': { es: '/es/mejores-ia-para-estudiar', en: '/en/best-ai-for-studying' },
   'ai-for-students': {
     es: '/es/guias/como-estudiar-con-ia',
     'es-AR': '/ia-para-estudiantes',
