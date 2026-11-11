@@ -879,6 +879,9 @@ if (!countryHubExists) {
     'Only the restored USAC PCB guide may appear in the sitemap, not the retired country hub or other pages');
   assert.ok(existsSync(new URL('../app/(es)/es/paises/guatemala-pruebas-basicas-usac/page.tsx', import.meta.url)),
     'The sole country URL in the sitemap must resolve to an actual reviewed page');
+  // The retired hub answers 410; Ahrefs found 13 internal links pointing at it.
+  assert.ok(!source('components/marketing/international-study-landing.tsx').includes('href="/es/paises"'),
+    'International landings must not link to the retired /es/paises hub (HTTP 410)');
 } else {
 // Hispanic-market expansion: do not weaken Argentina, rewrite established
 // international URLs, or generate 20 thin same-language country clones.

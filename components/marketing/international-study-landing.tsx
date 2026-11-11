@@ -281,12 +281,6 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
                 </p>
               </div>
               <Link
-                href="/es/paises"
-                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-blue-200 bg-white px-5 text-sm font-bold text-blue-700 transition hover:border-blue-400"
-              >
-                Estudiar por país <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <Link
                 href="/es/guias"
                 className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-blue-200 bg-white px-5 text-sm font-bold text-blue-700 transition hover:border-blue-400"
               >
@@ -337,7 +331,6 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
                 {STUDY_MARKETS[key].country}
               </Link>
             ))}
-            <Link href="/es/paises" className="hover:underline">Más países</Link>
             <Link href="/estudiar-pdf-con-ia" className="hover:underline">Argentina</Link>
           </nav>
         </div>
