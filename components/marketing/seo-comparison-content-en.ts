@@ -39,6 +39,8 @@ export const COMPARISONS_EN: Record<ComparisonId, Comparison> = {
       { question: 'Does NotebookLM have mind maps and audio?', answer: 'Yes. It includes mind maps and audio overviews, among other study formats. Availability depends on your account and plan.' },
       { question: 'Which is better for preparing an exam from a single PDF?', answer: 'If you want to study one document by topic, practice, see results and review the concepts you missed, Evaluo is built around that flow. If you need to explore many different sources, NotebookLM is a solid alternative.' },
       { question: 'Can I use NotebookLM and Evaluo together?', answer: 'Yes. For example, you can research several sources in NotebookLM and then practice on your exam notes in Evaluo.' },
+      { question: 'What are the alternatives to NotebookLM for studying?', answer: 'It depends on what you need. For open conversation with your notes, a general assistant such as ChatGPT (with Study mode). For reviewing with flashcard decks, including community decks, Quizlet. For studying one PDF by topic with questions, results and mistake review, Evaluo, which has a free plan.' },
+      { question: 'Can I choose the AI model in Evaluo?', answer: 'No. Evaluo uses its own AI setup to generate study material and does not offer a model picker. If choosing the model matters to you, a general assistant gives you more control; Evaluo focuses on the study path built from your PDF.' },
     ],
     sources: [
       { title: 'Gemini Notebook Help: flashcards and quizzes', href: 'https://support.google.com/gemininotebook/answer/16958963?hl=en' },
