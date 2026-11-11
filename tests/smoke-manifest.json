@@ -462,5 +462,9 @@
   {
     "file": "tests/onboarding-upload-failures.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/onboarding-auto-plan.smoke.ts",
+    "alias": true
   }
 ]
