@@ -1,6 +1,7 @@
 'use client';
 
-import { EviChatLauncher } from '@/components/study/evi-chat-panel';
+import { EviChatLauncher, EviChatPanel, type EviErrorCheck } from '@/components/study/evi-chat-panel';
+import type { EviChatContext } from '@/lib/evi-chat-contract';
 import {
   pdfStudyPrimaryButton as reviewPrimaryButton,
   pdfStudySecondaryButton as reviewSecondaryButton,
@@ -16,7 +17,9 @@ import {
   CheckCircle2,
   ChevronDown,
   CircleAlert,
+  FileText,
   Loader2,
+  X,
 } from 'lucide-react';
 import { markStudyErrorReviewedAction } from '@/lib/actions/study-errors';
 import {
@@ -69,6 +72,35 @@ export type StudyErrorConversation = {
 
 function pageLabel(start: number | null, end: number | null, english = false) {
   return start ? (end && end !== start ? `${english ? 'pp.' : 'págs.'} ${start}–${end}` : `${english ? 'p.' : 'pág.'} ${start}`) : null;
+}
+
+/** "A · B · C" o una lista con saltos de línea → un renglón por concepto. */
+function answerItems(text: string) {
+  const parts = text
+    .split(/\s+·\s+|\n+|;\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.length > 1 ? parts : [text.trim()];
+}
+
+function comparableText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+/** La explicación guardada a veces repite la respuesta correcta: no la mostramos dos veces. */
+function sameMeaning(explanation: string, answer: string) {
+  const a = comparableText(explanation);
+  const b = comparableText(answer);
+  if (!a || !b) return false;
+  return (
+    a === b ||
+    (a.includes(b) && a.length < b.length * 1.25) ||
+    (b.includes(a) && b.length < a.length * 1.25)
+  );
 }
 
 export function StudyErrorDetail({
@@ -162,6 +194,51 @@ export function StudyErrorDetail({
       : materialId
         ? `/materiales/${materialId}?studyError=${item.id}`
         : null);
+
+  const closeInlineEvi = () => undefined;
+  const explanationText =
+    groundedContrast ||
+    (originalExplanation && !sameMeaning(originalExplanation, item.correctAnswer ?? '')
+      ? originalExplanation
+      : '');
+  const eviContext: EviChatContext = {
+    kind: 'error',
+    errorId: item.id,
+    materialId,
+    label: [
+      english ? 'Mistake' : 'Error',
+      item.topic,
+      source?.pageStart ? (english ? 'p. ' : 'pág. ') + source.pageStart : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  };
+  const eviErrorCheck: EviErrorCheck | undefined =
+    materialId && !resolved
+      ? {
+          generate: async () => {
+            if (!reviewed) {
+              const marked = await reviewActions.markReviewed(item.id);
+              if (!marked.success)
+                return {
+                  message: t('No pudimos guardar el repaso. Reintentá antes de comprobarlo.'),
+                };
+              setReviewed(true);
+            }
+            const generated = await reviewActions.generateCheck(item.id, materialId);
+            return generated.success && generated.question
+              ? { question: generated.question }
+              : { message: generated.message ?? t('No pudimos preparar la pregunta.') };
+          },
+          submit: (checkId, index) => reviewActions.submitCheck(checkId, index),
+          onResolved: (resolvedAt) =>
+            onProgress({
+              status: 'resolved',
+              resolvedAt,
+              lastReviewedAt: new Date().toISOString(),
+            }),
+        }
+      : undefined;
 
   useEffect(() => {
     if (embedded && !question) return;
@@ -319,156 +396,203 @@ export function StudyErrorDetail({
   return (
     <div className="w-full min-w-0">
       {topicReinforcement && !question ? (
-        <div className="space-y-6" data-topic-reinforcement>
-          <section data-study-error-tour="error" className="border-border bg-card rounded-xl border p-3.5 sm:p-4" aria-labelledby="reinforcement-difficulty-heading">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id="reinforcement-difficulty-heading" className="text-primary text-chico font-semibold tracking-etiqueta uppercase">
-                {t("La pregunta que te costó")}
-              </h3>
-              <span className="text-muted-foreground text-chico">
-                {resolved ? (english ? 'Review completed' : 'Refuerzo completado') : `${item.failureCount} ${english ? (item.failureCount === 1 ? 'difficult attempt' : 'difficult attempts') : (item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad')}`}
-              </span>
+        <div
+          className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8"
+          data-topic-reinforcement
+        >
+          <article className="min-w-0 space-y-6">
+            <div data-study-error-tour="error">
+              <p className="text-muted-foreground text-chico">
+                {resolved
+                  ? english
+                    ? 'Review completed'
+                    : 'Refuerzo completado'
+                  : `${item.failureCount} ${english ? (item.failureCount === 1 ? 'difficult attempt' : 'difficult attempts') : item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad'}`}
+              </p>
+              <h2
+                ref={heading}
+                tabIndex={-1}
+                className="text-foreground text-titulo-sm tracking-titulo mt-2 font-semibold break-words outline-none"
+              >
+                {item.prompt}
+              </h2>
+              {item.selectedAnswer ? (
+                <p className="text-destructive text-ui mt-2 flex items-start gap-2">
+                  <X className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <span className="break-words">
+                    {english ? 'You answered: ' : 'Respondiste: '}
+                    {item.selectedAnswer}
+                  </span>
+                </p>
+              ) : null}
             </div>
-            <h2 ref={heading} tabIndex={-1} className="text-foreground mt-3 text-cuerpo font-semibold leading-6 break-words outline-none">
-              {item.prompt}
-            </h2>
-            {(item.selectedAnswer || item.correctAnswer) && (
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {item.selectedAnswer && (
-                  <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-3">
-                    <p className="text-destructive text-chico font-semibold">{t("Tu respuesta anterior")}</p>
-                    <p className="text-foreground mt-1.5 text-ui leading-5 break-words">{item.selectedAnswer}</p>
-                  </div>
-                )}
-                {item.correctAnswer && (
-                  <div className="border-primary/20 bg-primary/5 rounded-lg border p-3">
-                    <p className="text-primary text-chico font-semibold">{t("Respuesta correcta")}</p>
-                    <p className="text-foreground mt-1.5 text-ui leading-5 break-words">{item.correctAnswer}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-          <div ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
-            <div>
-              <h3 id="reinforcement-explanation-heading" className="text-cuerpo font-semibold">
-                {t("Entendamos por qué")}
-              </h3>
-              <p className="text-muted-foreground mt-1 text-cuerpo leading-6">
-                {t("Revisá la explicación de tu actividad antes de probar con otra pregunta.")}
-              </p>
-            </div>
-            {groundedContrast && (
-              <div className="border-primary/20 bg-primary/5 rounded-lg border p-3 sm:p-5">
-                <p className="text-primary mb-2 text-chico font-semibold">{t("Por qué tu elección era diferente")}</p>
-                <p className="text-foreground max-w-[72ch] text-ui leading-6 break-words">
-                  {groundedContrast}
-                </p>
-              </div>
-            )}
-            {originalExplanation ? (
-              <div className="border-border bg-muted/30 rounded-lg border p-3 sm:p-4">
-                <p className="text-foreground max-w-[72ch] text-ui leading-6 break-words whitespace-pre-line">
-                  {originalExplanation}
-                </p>
-              </div>
-            ) : (
-              <p className="text-muted-foreground rounded-xl border p-4 text-cuerpo leading-6">
-                {t("Esta respuesta no tiene una explicación guardada. Podés pedir una explicación basada en tu material.")}
-              </p>
-            )}
-            {messages.map((message) => (
-              <div key={message.kind} className="border-border rounded-lg border p-3 sm:p-4">
-                <p className="text-primary mb-2 text-chico font-semibold">
-                  {t(message.kind === 'simpler' ? 'Explicación más simple' : message.kind === 'example' ? 'Un ejemplo para entenderlo' : 'Explicación adicional')}
-                </p>
-                <p className="text-foreground max-w-[72ch] text-ui leading-6 break-words whitespace-pre-line">{message.text}</p>
-              </div>
-            ))}
-            {pendingHelp && (
-              <p role="status" className="text-muted-foreground text-cuerpo">
-                {t(materialId ? 'Revisando tus apuntes…' : 'Preparando explicación…')}
-              </p>
-            )}
-            {!resolved && (
-              <div className="flex flex-wrap gap-2" aria-label={t("Otras formas de entender la dificultad")}>
-                {!originalExplanation && (
-                  <button type="button" className={reviewSecondaryButton} onClick={() => help('why_wrong')} disabled={Boolean(busy)}>
-                    {t("Generar explicación")}
-                  </button>
-                )}
-                <button type="button" className={reviewSecondaryButton} onClick={() => help('simpler')} disabled={Boolean(busy)}>
-                  {t("Explicámelo más simple")}
-                </button>
-                <button type="button" className={reviewSecondaryButton} onClick={() => help('example')} disabled={Boolean(busy)}>
-                  {t("Dame un ejemplo")}
-                </button>
-              </div>
-            )}
-            {source && (
-              <div className="border-border border-t pt-2" data-study-error-tour="source">
-                <button type="button" onClick={openSource} disabled={Boolean(busy)} aria-expanded={sourceOpen} aria-controls={`topic-source-${item.id}`} className="text-primary inline-flex min-h-11 items-center gap-2 text-left text-cuerpo font-medium">
-                  <BookOpen className="h-4 w-4" aria-hidden="true" />
-                  {english ? 'Source:' : 'Fuente:'} {source.sectionTitle ?? source.materialTitle}
-                  {pageLabel(source.pageStart, source.pageEnd, english) ? ` · ${pageLabel(source.pageStart, source.pageEnd, english)}` : ''}
-                  <ChevronDown className={`h-4 w-4 transition-transform ${sourceOpen ? 'rotate-180' : ''}`} aria-hidden="true"/>
-                </button>
-                {sourceOpen && (
-                  <div id={`topic-source-${item.id}`} className="border-primary/30 mt-2 space-y-3 border-l-2 pl-4">
-                    <blockquote className="text-foreground text-cuerpo leading-7 break-words whitespace-pre-line">
-                      {source.excerpt}
-                    </blockquote>
-                    {source.materialId && (
-                      <Link
-                        href={documentHref ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}` : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`}
-                        className="text-primary inline-flex min-h-11 items-center text-cuerpo font-semibold underline"
-                      >
-                        {t("Consultar PDF original")}
-                      </Link>
+
+            {item.correctAnswer ? (
+              <section aria-labelledby={`correct-${item.id}`}>
+                <h3
+                  id={`correct-${item.id}`}
+                  className="text-chico tracking-etiqueta font-semibold text-emerald-700 uppercase"
+                >
+                  {english ? 'The correct answer' : 'La respuesta correcta'}
+                </h3>
+                <ul className="mt-3 space-y-2.5">
+                  {answerItems(item.correctAnswer).map((line, index) => {
+                    const colon = line.indexOf(':');
+                    return (
+                      <li key={index} className="text-cuerpo text-foreground leading-7 break-words">
+                        {colon > 0 && colon < 70 ? (
+                          <>
+                            <strong className="font-semibold">{line.slice(0, colon + 1)}</strong>
+                            {line.slice(colon + 1)}
+                          </>
+                        ) : (
+                          line
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+
+            <div
+              ref={response}
+              tabIndex={-1}
+              className="min-w-0 scroll-mt-24 space-y-4 outline-none"
+              data-study-error-tour="understand"
+            >
+              {explanationText ? (
+                <section>
+                  <h3 className="text-muted-foreground text-chico tracking-etiqueta font-semibold uppercase">
+                    {english ? 'Why' : 'Por qué'}
+                  </h3>
+                  <p className="text-foreground/80 text-cuerpo mt-2 max-w-[72ch] leading-7 break-words whitespace-pre-line">
+                    {explanationText}
+                  </p>
+                </section>
+              ) : null}
+              {messages.map((message) => (
+                <section key={message.kind}>
+                  <h3 className="text-muted-foreground text-chico tracking-etiqueta font-semibold uppercase">
+                    {t(
+                      message.kind === 'simpler'
+                        ? 'Explicación más simple'
+                        : message.kind === 'example'
+                          ? 'Un ejemplo para entenderlo'
+                          : 'Explicación adicional'
                     )}
-                  </div>
-                )}
-              </div>
-            )}
-            {helpNotice && inlineNotice}
-            {sourceNotice && inlineNotice}
-          </div>
-          {resolved ? (
-            <section className="border-primary/20 bg-primary/5 rounded-xl border p-5">
-              <h3 className="text-cuerpo font-semibold">{t("Esta dificultad ya fue reforzada")}</h3>
-              <p className="text-muted-foreground mt-2 text-cuerpo leading-6">
-                {t("Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.")}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button className={reviewPrimaryButton} onClick={onFinish}>
-                  {t(topicContext ? 'Volver al tema' : 'Terminar por hoy')}
-                </button>
-                {pendingCount > 0 && (
-                  <button className={reviewSecondaryButton} onClick={onNext}>
-                    {t(topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error')} <ArrowRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </section>
-          ) : (
-            <section className="border-border border-t pt-5" data-study-error-tour="practice">
-              <h3 className="text-cuerpo font-semibold">{t("¿Lo entendiste? Comprobémoslo.")}</h3>
-              <p className="text-muted-foreground mt-2 max-w-prose text-cuerpo leading-6">
-                {t("Respondé una situación distinta, sin consultar la explicación. Un acierto resuelve esta dificultad, pero no demuestra dominio de todo el tema.")}
-              </p>
-              {materialId ? (
-                <button type="button" className={reviewPrimaryButton + ' mt-4'} disabled={Boolean(busy)} onClick={checkUnderstanding}>
-                  {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Comprobar lo aprendido <ArrowRight className="h-4 w-4" />
-                </button>
-              ) : (
-                <p className="text-muted-foreground mt-3 text-cuerpo">
-                  {t("Necesitás asociar un PDF para comprobar esta dificultad con una nueva pregunta.")}
+                  </h3>
+                  <p className="text-foreground/80 text-cuerpo mt-2 max-w-[72ch] leading-7 break-words whitespace-pre-line">
+                    {message.text}
+                  </p>
+                </section>
+              ))}
+              {source ? (
+                <div
+                  className="text-ui text-foreground/80 flex flex-wrap items-center gap-x-3 gap-y-1"
+                  data-study-error-tour="source"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <FileText className="text-primary size-4" aria-hidden="true" />
+                    {pageLabel(source.pageStart, source.pageEnd, english)
+                      ? english
+                        ? `It is on ${pageLabel(source.pageStart, source.pageEnd, english)} of your notes`
+                        : `Está en la ${pageLabel(source.pageStart, source.pageEnd, english)} de tu apunte`
+                      : english
+                        ? `It is in ${source.materialTitle}`
+                        : `Está en ${source.materialTitle}`}
+                  </span>
+                  {source.materialId ? (
+                    <Link
+                      href={
+                        documentHref
+                          ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}`
+                          : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`
+                      }
+                      className="text-primary inline-flex min-h-10 items-center font-semibold hover:underline"
+                    >
+                      {english ? 'View in my PDF →' : 'Ver en mi PDF →'}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
+              {(helpNotice || sourceNotice) && inlineNotice}
+            </div>
+
+            {resolved ? (
+              <section className="rounded-2xl bg-emerald-50/70 p-5">
+                <h3 className="text-cuerpo font-semibold text-emerald-800">
+                  {english ? 'This mistake is resolved' : 'Este error quedó resuelto'}
+                </h3>
+                <p className="text-muted-foreground text-cuerpo mt-2 leading-6">
+                  {t(
+                    'Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.'
+                  )}
                 </p>
-              )}
-              {noticeAction === 'check' && inlineNotice}
-            </section>
-          )}
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {pendingCount > 0 && (
+                    <button className={reviewPrimaryButton} onClick={onNext}>
+                      {t(topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error')}{' '}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button
+                    className={pendingCount > 0 ? reviewSecondaryButton : reviewPrimaryButton}
+                    onClick={onFinish}
+                  >
+                    {t(topicContext ? 'Volver al tema' : 'Terminar por hoy')}
+                  </button>
+                </div>
+              </section>
+            ) : (
+              <section className="border-border border-t pt-5" data-study-error-tour="practice">
+                {materialId ? (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <button
+                      type="button"
+                      className={reviewPrimaryButton}
+                      disabled={Boolean(busy)}
+                      onClick={checkUnderstanding}
+                    >
+                      {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {english ? 'Try another question' : 'Probar con otra pregunta'}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                    <span className="text-muted-foreground text-ui">
+                      {english
+                        ? 'If you get it right, this mistake is resolved.'
+                        : 'Si la acertás, este error queda resuelto.'}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-cuerpo">
+                    {t(
+                      'Necesitás asociar un PDF para comprobar esta dificultad con una nueva pregunta.'
+                    )}
+                  </p>
+                )}
+                {noticeAction === 'check' && inlineNotice}
+                <EviChatLauncher
+                  className="mt-4 lg:hidden"
+                  chosen={item.selectedAnswer ?? null}
+                  context={eviContext}
+                  errorCheck={eviErrorCheck}
+                />
+              </section>
+            )}
+          </article>
+          {!resolved ? (
+            <div className="border-border hidden min-w-0 border-l pl-6 lg:block">
+              <EviChatPanel
+                inline
+                open
+                onClose={closeInlineEvi}
+                context={eviContext}
+                chosen={item.selectedAnswer ?? null}
+                errorCheck={eviErrorCheck}
+              />
+            </div>
+          ) : null}
         </div>
       ) : question ? (
         <>
@@ -673,18 +797,8 @@ export function StudyErrorDetail({
                 <EviChatLauncher
                   className="mt-3"
                   chosen={item.selectedAnswer ?? null}
-                  context={{
-                    kind: 'error',
-                    errorId: item.id,
-                    materialId,
-                    label: [
-                      english ? 'Mistake' : 'Error',
-                      item.topic,
-                      source?.pageStart ? (english ? 'p. ' : 'pág. ') + source.pageStart : '',
-                    ]
-                      .filter(Boolean)
-                      .join(' · '),
-                  }}
+                  context={eviContext}
+                  errorCheck={eviErrorCheck}
                 />
               ) : null}
             </div>

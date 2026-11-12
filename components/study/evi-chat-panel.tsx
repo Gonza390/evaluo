@@ -16,6 +16,8 @@ import './evi-chat.css';
 
 type QuizEntry = {
   role: 'quiz';
+  /** Comprobación guardada en el servidor (Mis errores): el acierto resuelve el error. */
+  checkId?: string;
   question: string;
   options: string[];
   correctIndex: number;
@@ -27,6 +29,26 @@ type ChatEntry =
   | { role: 'user'; text: string }
   | { role: 'assistant'; text: string; page?: number | null }
   | QuizEntry;
+
+/** En Mis errores, la pregunta parecida usa la comprobación verificada del servidor. */
+export type EviErrorCheck = {
+  generate: () => Promise<{
+    question?: { id: string; question: string; options: string[] };
+    message?: string;
+  }>;
+  submit: (
+    checkId: string,
+    index: number
+  ) => Promise<{
+    success: boolean;
+    correct?: boolean;
+    correctIndex?: number;
+    feedback?: string;
+    resolvedAt?: string | null;
+    message?: string;
+  }>;
+  onResolved: (resolvedAt: string) => void;
+};
 
 const QUIZ_SUGGESTION = { es: 'Haceme una pregunta parecida', en: 'Ask me a similar question' };
 
@@ -98,11 +120,16 @@ export function EviChatPanel({
   onClose,
   context,
   chosen,
+  inline = false,
+  errorCheck,
 }: {
   open: boolean;
   onClose: () => void;
   context: EviChatContext;
   chosen?: string | null;
+  /** Siempre visible dentro de la pantalla (Mis errores en compu), sin capa encima. */
+  inline?: boolean;
+  errorCheck?: EviErrorCheck;
 }) {
   const english = useOptionalAppLocale() === 'en';
   const [mounted, setMounted] = useState(false);
@@ -113,6 +140,7 @@ export function EviChatPanel({
   const [slow, setSlow] = useState(false);
   const [notice, setNotice] = useState('');
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [checking, setChecking] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputId = useId();
@@ -120,6 +148,12 @@ export function EviChatPanel({
   const quizSuggestion = english ? QUIZ_SUGGESTION.en : QUIZ_SUGGESTION.es;
 
   useEffect(() => {
+    if (inline) {
+      setMounted(true);
+      setVisible(true);
+      setEntries(readSaved(key));
+      return;
+    }
     if (open) {
       setMounted(true);
       setEntries(readSaved(key));
@@ -137,19 +171,19 @@ export function EviChatPanel({
     const timer = window.setTimeout(() => setMounted(false), 260);
     return () => window.clearTimeout(timer);
     // El contexto no cambia mientras el panel está abierto.
-  }, [open, key]);
+  }, [open, key, inline]);
 
   useEffect(() => () => document.documentElement.classList.remove('evi-chat-open'), []);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || inline) return;
     inputRef.current?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible, onClose]);
+  }, [visible, onClose, inline]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -187,6 +221,28 @@ export function EviChatPanel({
       setNotice('');
       setPending(true);
       try {
+        if (quiz && errorCheck) {
+          const generated = await errorCheck.generate();
+          if (!generated.question) {
+            fail(previous, generated.message ?? fallbackMessage, '');
+            return;
+          }
+          const done: ChatEntry[] = [
+            ...withQuestion,
+            {
+              role: 'quiz',
+              checkId: generated.question.id,
+              question: generated.question.question,
+              options: generated.question.options,
+              correctIndex: -1,
+              feedback: '',
+              answer: null,
+            },
+          ];
+          setEntries(done);
+          saveEntries(key, done);
+          return;
+        }
         const response = await fetch('/api/evi-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -252,15 +308,36 @@ export function EviChatPanel({
         setPending(false);
       }
     },
-    [context, english, entries, fail, key, pending, quizSuggestion]
+    [context, english, entries, errorCheck, fail, key, pending, quizSuggestion]
   );
 
-  const answerQuiz = (index: number, choice: number) => {
+  const answerQuiz = async (index: number, choice: number) => {
+    const entry = entries[index];
+    if (!entry || entry.role !== 'quiz' || entry.answer !== null || checking !== null) return;
+    let update: Partial<QuizEntry> = { answer: choice };
+    if (entry.checkId && errorCheck) {
+      setChecking(index);
+      const checked = await errorCheck.submit(entry.checkId, choice).catch(() => null);
+      setChecking(null);
+      if (!checked?.success || typeof checked.correctIndex !== 'number') {
+        setNotice(
+          checked?.message ??
+            (english
+              ? 'We could not save your answer. Try again.'
+              : 'No pudimos guardar tu respuesta. Reintentá.')
+        );
+        return;
+      }
+      update = {
+        answer: choice,
+        correctIndex: checked.correctIndex,
+        feedback: checked.feedback ?? '',
+      };
+      if (checked.correct) errorCheck.onResolved(checked.resolvedAt ?? new Date().toISOString());
+    }
     setEntries((current) => {
-      const next = current.map((entry, i) =>
-        i === index && entry.role === 'quiz' && entry.answer === null
-          ? { ...entry, answer: choice }
-          : entry
+      const next = current.map((item, i) =>
+        i === index && item.role === 'quiz' ? { ...item, ...update } : item
       );
       saveEntries(key, next);
       return next;
@@ -279,30 +356,36 @@ export function EviChatPanel({
     ? ['Another example', 'Explain it more simply']
     : ['Otro ejemplo', 'Más simple'];
 
-  return createPortal(
+  const panel = (
     <aside
-      role="dialog"
-      aria-modal="false"
+      role={inline ? 'complementary' : 'dialog'}
+      aria-modal={inline ? undefined : false}
       aria-label={english ? 'Ask Evi' : 'Preguntale a Evi'}
       data-evi-chat-panel
-      className={cn(
-        'bg-background fixed inset-0 z-[60] flex flex-col transition-transform duration-[250ms] ease-out motion-reduce:transition-none',
-        'lg:border-border lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[400px] lg:border-l lg:shadow-[-12px_0_32px_rgba(15,23,42,0.06)]',
-        visible
-          ? 'translate-x-0 translate-y-0'
-          : 'translate-y-full lg:translate-x-full lg:translate-y-0'
-      )}
+      className={
+        inline
+          ? 'bg-background flex min-h-[560px] flex-col'
+          : cn(
+              'bg-background fixed inset-0 z-[60] flex flex-col transition-transform duration-[250ms] ease-out motion-reduce:transition-none',
+              'lg:border-border lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[400px] lg:border-l lg:shadow-[-12px_0_32px_rgba(15,23,42,0.06)]',
+              visible
+                ? 'translate-x-0 translate-y-0'
+                : 'translate-y-full lg:translate-x-full lg:translate-y-0'
+            )
+      }
     >
-      <div className="flex justify-end px-2 pt-2">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={english ? 'Close chat' : 'Cerrar el chat'}
-          className="text-muted-foreground hover:text-foreground flex size-11 items-center justify-center rounded-full"
-        >
-          <X className="size-5" aria-hidden="true" />
-        </button>
-      </div>
+      {inline ? null : (
+        <div className="flex justify-end px-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={english ? 'Close chat' : 'Cerrar el chat'}
+            className="text-muted-foreground hover:text-foreground flex size-11 items-center justify-center rounded-full"
+          >
+            <X className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-5 pb-4" aria-live="polite">
         {entries.length === 0 ? (
@@ -315,9 +398,13 @@ export function EviChatPanel({
               )}
               style={{ '--evi-step': 0 } as CSSProperties}
             >
-              {english
-                ? 'Ask me anything about this question'
-                : 'Preguntame lo que quieras sobre esta pregunta'}
+              {context.kind === 'error'
+                ? english
+                  ? 'Ask me anything about this mistake'
+                  : 'Preguntame lo que quieras sobre este error'
+                : english
+                  ? 'Ask me anything about this question'
+                  : 'Preguntame lo que quieras sobre esta pregunta'}
             </h2>
             <p
               className={cn(
@@ -395,8 +482,8 @@ export function EviChatPanel({
                           <button
                             key={choice}
                             type="button"
-                            disabled={answered}
-                            onClick={() => answerQuiz(index, choice)}
+                            disabled={answered || checking !== null}
+                            onClick={() => void answerQuiz(index, choice)}
                             className={cn(
                               'text-ui flex min-h-11 items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition',
                               state === 'idle' && 'border-border hover:border-primary/40 bg-white',
@@ -425,8 +512,12 @@ export function EviChatPanel({
                         >
                           {entry.answer === entry.correctIndex
                             ? english
-                              ? 'Correct! You got it.'
-                              : '¡Bien! Lo entendiste.'
+                              ? entry.checkId
+                                ? 'Correct! This mistake is resolved.'
+                                : 'Correct! You got it.'
+                              : entry.checkId
+                                ? '¡Bien! Este error quedó resuelto.'
+                                : '¡Bien! Lo entendiste.'
                             : english
                               ? `Not quite: it was ${'ABC'[entry.correctIndex]}.`
                               : `No era esa: era la ${'ABC'[entry.correctIndex]}.`}
@@ -477,14 +568,16 @@ export function EviChatPanel({
                 {label}
               </button>
             ))}
-            <button
-              type="button"
-              onClick={onClose}
-              data-evi-understood
-              className="border-primary/30 text-chico text-primary hover:bg-primary/5 min-h-9 rounded-full border bg-white px-3 font-medium"
-            >
-              {english ? 'Got it →' : 'Ya entendí →'}
-            </button>
+            {inline ? null : (
+              <button
+                type="button"
+                onClick={onClose}
+                data-evi-understood
+                className="border-primary/30 text-chico text-primary hover:bg-primary/5 min-h-9 rounded-full border bg-white px-3 font-medium"
+              >
+                {english ? 'Got it →' : 'Ya entendí →'}
+              </button>
+            )}
           </div>
         ) : null}
       </div>
@@ -534,9 +627,9 @@ export function EviChatPanel({
           </button>
         </div>
       </form>
-    </aside>,
-    document.body
+    </aside>
   );
+  return inline ? panel : createPortal(panel, document.body);
 }
 
 /** Botón "Preguntale a Evi" con su panel. Desaparece mientras el chat está abierto. */
@@ -544,10 +637,12 @@ export function EviChatLauncher({
   context,
   chosen,
   className,
+  errorCheck,
 }: {
   context: EviChatContext;
   chosen?: string | null;
   className?: string;
+  errorCheck?: EviErrorCheck;
 }) {
   const english = useOptionalAppLocale() === 'en';
   const [open, setOpen] = useState(false);
@@ -573,7 +668,13 @@ export function EviChatLauncher({
           {english ? 'Ask Evi' : 'Preguntale a Evi'}
         </button>
       ) : null}
-      <EviChatPanel open={open} onClose={close} context={context} chosen={chosen} />
+      <EviChatPanel
+        open={open}
+        onClose={close}
+        context={context}
+        chosen={chosen}
+        errorCheck={errorCheck}
+      />
     </>
   );
 }

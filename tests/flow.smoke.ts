@@ -756,7 +756,7 @@ assert.ok(practiceView.includes('max-w-[640px] px-2 py-3'));
 assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-medium'));
 assert.ok(diagnosticView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(pdfProgressDetail.includes('text-[20px] sm:text-[22px]'));
-assert.ok(errorReviewView.includes('text-ui leading-6 break-words'));
+assert.ok(errorReviewView.includes('leading-7 break-words whitespace-pre-line'), 'Mis errores muestra la explicación con lectura cómoda.');
 assert.ok(chapterFinishView.includes('mt-3 min-h-11 w-full rounded-lg text-[13px]'));
 assert.ok(topicCheckView.includes('text-[20px] leading-6 font-bold'));
 assert.ok(summaryCompletionView.includes('text-[20px] leading-6 font-bold'));
