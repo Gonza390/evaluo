@@ -397,7 +397,7 @@ export function StudyErrorDetail({
     <div className="w-full min-w-0">
       {topicReinforcement && !question ? (
         <div
-          className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start lg:gap-10"
+          className="lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-6"
           data-topic-reinforcement
         >
           <article className="min-w-0 space-y-6">
@@ -584,7 +584,7 @@ export function StudyErrorDetail({
           {!resolved ? (
             <div
               data-evi-chat-docked
-              className="border-border hidden min-w-0 border-l pl-6 lg:sticky lg:top-2 lg:block lg:h-[calc(100dvh-11rem)] lg:min-h-[440px]"
+              className="border-border bg-background hidden min-w-0 border-l px-4 pt-4 pb-4 lg:fixed lg:top-[52px] lg:right-0 lg:bottom-0 lg:z-20 lg:block lg:w-[380px] lg:shadow-[-12px_0_32px_rgba(15,23,42,0.06)]"
             >
               <EviChatPanel
                 inline
