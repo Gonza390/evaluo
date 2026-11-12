@@ -34,7 +34,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
     done.includes(id) ? done : [...done, id];
 
   return (
-    <div className="mt-6">
+    <div className="mt-3">
       <ol className="flex gap-1 sm:flex-wrap sm:gap-2.5" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
         {steps.map((item, index) => {
           const current = index === view.current;
@@ -46,7 +46,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
                 aria-current={current ? 'step' : undefined}
                 onClick={() => set(index)}
                 className={
-                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-12 sm:flex-row sm:gap-2.5 sm:rounded-full sm:border sm:px-3 sm:text-[14px] ' +
+                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-10 sm:flex-row sm:gap-2 sm:rounded-full sm:border sm:px-3 sm:text-[13px] ' +
                   (current ? 'text-foreground sm:border-primary/30 sm:bg-primary/10' : 'text-muted-foreground sm:text-foreground sm:border-border sm:bg-card sm:hover:bg-muted/50')
                 }
               >
@@ -69,8 +69,8 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
           );
         })}
       </ol>
-      <div className="border-border mt-4 rounded-3xl border sm:mt-5">
-        <div className="p-5 sm:p-8" key={step.id}>
+      <div className="border-border mt-3 flex min-h-0 flex-col rounded-2xl border lg:max-h-[calc(100dvh-17rem)]">
+        <div className="p-4 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto" key={step.id}>
           {step.content({
             markDone: () => setState((prev) => {
               const base = prev.key === resetKey ? prev : { key: resetKey, current: 0, done: [] as string[] };
@@ -79,7 +79,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
           })}
         </div>
         {!last && next && (
-          <div className="border-border bg-muted/40 flex flex-col gap-3 rounded-b-3xl border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:sticky lg:bottom-0 lg:z-10 lg:shadow-[0_-10px_24px_rgba(15,25,30,0.06)]">
+          <div className="border-border bg-muted flex shrink-0 flex-col gap-2 rounded-b-2xl border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <span className="text-muted-foreground hidden text-xs sm:block">
               {english ? `Step ${view.current + 1} of ${steps.length}` : `Paso ${view.current + 1} de ${steps.length}`}
             </span>
@@ -94,7 +94,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
               <button
                 type="button"
                 onClick={() => set(view.current + 1, markDone(step.id)())}
-                className="bg-primary text-primary-foreground focus-visible:outline-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="bg-primary text-primary-foreground focus-visible:outline-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-[14px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 {(english ? 'Next: ' : 'Siguiente: ') + next.label.toLowerCase()} <ArrowRight size={18} />
               </button>

@@ -7,15 +7,15 @@ import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { buildTopicFlashcards } from '@/lib/student-materials/topic-flashcards';
 
 const optionClass =
-  'border-border focus-visible:outline-ring min-h-12 rounded-full border px-5 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2';
+  'border-border focus-visible:outline-ring min-h-11 rounded-full border px-5 text-[14px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2';
 const primaryClass =
-  'bg-primary text-primary-foreground focus-visible:outline-ring min-h-12 rounded-full px-6 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2';
+  'bg-primary text-primary-foreground focus-visible:outline-ring min-h-11 rounded-full px-5 text-[14px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2';
 
 export function TopicConcepts({ concepts }: { concepts: StudyGlossaryItem[] }) {
   const english = useOptionalAppLocale() === 'en';
   return (
     <section aria-label={english ? 'Key concepts for this topic' : 'Conceptos importantes de este tema'}>
-      <h3 className="text-[18px] font-semibold">
+      <h3 className="text-[15px] font-semibold">
         {english ? 'Review the concepts of this topic' : 'Repasá los conceptos de este tema'}
       </h3>
       <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
@@ -26,7 +26,7 @@ export function TopicConcepts({ concepts }: { concepts: StudyGlossaryItem[] }) {
       {concepts.length ? (
         <dl className="divide-border mt-3 divide-y">
           {concepts.map((concept, index) => (
-            <div key={`${concept.term}-${index}`} className="py-4">
+            <div key={`${concept.term}-${index}`} className="py-3">
               <dt className="text-foreground text-[15px] font-semibold">
                 {english && concept.englishTerm ? concept.englishTerm : concept.term}
               </dt>
@@ -83,7 +83,7 @@ export function TopicFlashcards({
   if (!card) {
     return (
       <section aria-label={title}>
-        <h3 className="text-[18px] font-semibold">{title}</h3>
+        <h3 className="text-[15px] font-semibold">{title}</h3>
         <p className="text-muted-foreground py-3 text-sm">
           {english
             ? 'No flashcards are clearly linked to this topic yet. You can review its summary or use the general flashcards.'
@@ -95,8 +95,8 @@ export function TopicFlashcards({
   if (finished) {
     return (
       <section aria-label={title}>
-        <h3 className="text-[18px] font-semibold">{title}</h3>
-        <div className="bg-muted/40 mt-4 rounded-3xl p-6">
+        <h3 className="text-[15px] font-semibold">{title}</h3>
+        <div className="bg-muted/40 mt-3 rounded-2xl p-5">
           <p className="text-[18px] font-semibold">
             {english ? `You reviewed the ${cards.length} cards` : `Repasaste las ${cards.length} tarjetas del tema`}
           </p>
@@ -124,15 +124,15 @@ export function TopicFlashcards({
   const hasPage = Number.isInteger(page) && Number(page) > 0 && Boolean(card.reference?.excerpt.trim());
   return (
     <section aria-label={title}>
-      <h3 className="text-[18px] font-semibold">{title}</h3>
+      <h3 className="text-[15px] font-semibold">{title}</h3>
       <div className="text-muted-foreground mt-4 flex justify-between text-xs">
         <span>
           {english ? `Card ${index + 1} of ${cards.length}` : `Tarjeta ${index + 1} de ${cards.length}`}
         </span>
         <span>{english ? 'Try to answer before looking.' : 'Intentá responder antes de mirar.'}</span>
       </div>
-      <div className="bg-muted/40 mt-3 rounded-3xl p-6 sm:p-8" aria-live="polite">
-        <p className="text-foreground max-w-prose text-[18px] leading-7 font-semibold">{card.front}</p>
+      <div className="bg-muted/40 mt-3 rounded-2xl p-5 sm:p-6" aria-live="polite">
+        <p className="text-foreground max-w-prose text-[16px] leading-6 font-semibold">{card.front}</p>
         {shown && (
           <div className="border-border mt-5 max-w-prose border-t pt-5">
             <p className="text-foreground text-[15px] leading-7 whitespace-pre-line">{card.back}</p>

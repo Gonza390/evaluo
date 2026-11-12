@@ -320,7 +320,7 @@ export function PdfProgressPanel({
       data-onboarding-topic-detail
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
-      className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
+      className="bg-card focus-visible:outline-ring min-w-0 w-full py-2 focus-visible:outline-2"
     >
       {!reviewOpen && currentTopic ? (
         <div>
@@ -332,7 +332,7 @@ export function PdfProgressPanel({
             <span>{tr("Tema","Topic")} {currentSectionIndex + 1}</span>
           </nav>
           <div className="mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
-            <h2 id={`real-detail-title-${panelId}`} className="text-[20px] leading-[1.25] font-semibold tracking-[-0.03em] break-words sm:text-[24px]">
+            <h2 id={`real-detail-title-${panelId}`} className="text-[18px] leading-[1.25] font-semibold tracking-[-0.03em] break-words sm:text-[20px]">
               {currentTopic.title}
             </h2>
             {(() => {
@@ -509,10 +509,10 @@ export function PdfProgressPanel({
             className="scroll-mt-4"
             aria-label={tr("Contenido de este tema","Topic content")}
           >
-            <h3 className="text-[16px] font-medium">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
+            <h3 className="text-[15px] font-semibold">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
             {summaryBody && focusConcepts.length > 0 && (
               <div
-                className="border-border bg-muted/30 mt-4 rounded-xl border p-4"
+                className="border-border bg-muted/30 mt-3 rounded-xl border p-3"
                 aria-label={tr("Guía de lectura del tema","Topic reading guide")}
               >
                 <h4 className="text-sm font-medium">{t("Antes de leer: en qué enfocarte")}</h4>
@@ -860,15 +860,13 @@ export function PdfProgressPanel({
       <h2
         id={`${panelId}-heading`}
         tabIndex={-1}
-        className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-semibold tracking-[-0.035em] ${reviewOpen ? 'sr-only' : ''}`}
+        className={`${embedded ? 'text-[19px] sm:text-[20px]' : 'text-[20px] sm:text-[22px]'} mt-2 font-semibold tracking-[-0.035em] sr-only`}
       >
         {t("Tu progreso")}
       </h2>
-      {!reviewOpen && (
+      {!reviewOpen && simulation && (
         <p className="text-muted-foreground mt-1 text-[13px]!">
-          {simulation
-            ? tr("Elegí qué estudiar y avanzá tema por tema. Resultados de ejemplo.","Choose what to study and progress topic by topic. Sample results.")
-            : tr("Elegí qué estudiar y avanzá tema por tema.","Choose what to study and progress topic by topic.")}
+          {tr("Resultados de ejemplo.","Sample results.")}
         </p>
       )}
       {summaryUnavailable && (
@@ -920,7 +918,7 @@ export function PdfProgressPanel({
           className={
             reviewOpen
               ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
-              : 'mt-5 grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px] xl:gap-10'
+              : 'mt-5 grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-6'
           }
         >
           <div className="min-w-0">{topicDetail}</div>
@@ -930,13 +928,13 @@ export function PdfProgressPanel({
               aria-label={tr("Aprendizaje y próxima actividad del tema","Learning and next topic activity")}
             >
               {(pdfPagesLabel || (sourcePdfHref ?? simulation?.pdfHref)) && (
-                <div className="bg-muted/40 mb-4 rounded-[22px] p-6">
+                <div className="bg-muted/40 mb-3 rounded-2xl p-4">
                   <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">{tr("En tu PDF","In your PDF")}</p>
-                  {pdfPagesLabel && <h3 className="mt-2.5 text-[17px] leading-6 font-semibold tracking-[-0.02em]">{pdfPagesLabel}</h3>}
-                  <p className="text-muted-foreground mt-3 text-[13px] leading-6">{tr("Podés comparar con el original mientras estudiás.","Compare with the original while you study.")}</p>
+                  {pdfPagesLabel && <h3 className="mt-1.5 text-[15px] leading-5 font-semibold tracking-[-0.02em]">{pdfPagesLabel}</h3>}
+                  <p className="text-muted-foreground mt-1.5 text-[12.5px] leading-5">{tr("Podés comparar con el original mientras estudiás.","Compare with the original while you study.")}</p>
                   {(sourcePdfHref ?? simulation?.pdfHref) && (
                     <a href={sourcePdfHref ?? simulation?.pdfHref} target="_blank" rel="noopener noreferrer"
-                      className="border-border bg-card focus-visible:outline-ring mt-4 flex min-h-12 items-center justify-center rounded-full border text-[15px] font-semibold focus-visible:outline-2">
+                      className="border-border bg-card focus-visible:outline-ring mt-3 flex min-h-10 items-center justify-center rounded-full border text-[14px] font-semibold focus-visible:outline-2">
                       {tr("Abrir el PDF","Open the PDF")}
                     </a>
                   )}
@@ -944,14 +942,14 @@ export function PdfProgressPanel({
               )}
               <div className="mb-4">
                 <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">{tr("Temas del material","Material topics")}</p>
-                <ul className="mt-3 flex flex-col gap-1">
+                <ul className="mt-2 flex flex-col gap-0.5">
                   {topics.map((topic, topicIndex) => (
                     <li key={topic.id}>
                       <button type="button" onClick={() => openTopic(topic.id)}
                         aria-current={topic.id === topicId ? 'true' : undefined}
-                        className={'focus-visible:outline-ring flex w-full items-start gap-3 rounded-2xl p-3 text-left text-[13px] leading-[1.45] focus-visible:outline-2 ' +
+                        className={'focus-visible:outline-ring flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-[12.5px] leading-[1.4] focus-visible:outline-2 ' +
                           (topic.id === topicId ? 'bg-primary/10 font-semibold' : 'hover:bg-muted/50 font-medium')}>
-                        <span aria-hidden="true" className={'mt-1.5 size-2.5 shrink-0 rounded-full border-2 ' + (topic.id === topicId ? 'border-primary' : 'border-muted-foreground/60')} />
+                        <span aria-hidden="true" className={'mt-1 size-2.5 shrink-0 rounded-full border-2 ' + (topic.id === topicId ? 'border-primary' : 'border-muted-foreground/60')} />
                         <span className="min-w-0 break-words">{topic.title}</span>
                         <span className="sr-only">{topicIndex + 1}</span>
                       </button>
