@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Bookmark, Check, FileText, X } from 'lucide-react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { cn } from '@/lib/utils';
@@ -46,6 +46,8 @@ export function AnswerFeedback({
   const text = explanation?.trim() ?? '';
   const chosenText = chosen?.trim() ?? '';
   const correctText = correctAnswer?.trim() ?? '';
+  const [expanded, setExpanded] = useState(false);
+  const showText = Boolean(text) && (!correct || expanded);
   const showEvi = Boolean(evi) && !correct;
   const eviTrigger =
     showEvi && evi ? <EviChatLauncher context={evi} chosen={chosenText || null} /> : null;
@@ -98,14 +100,23 @@ export function AnswerFeedback({
             </span>
           </p>
         ) : null}
-        {!correct && text ? (
+        {correct && text && !expanded ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="text-primary text-chico mt-1 inline-flex min-h-10 items-center font-medium hover:underline"
+          >
+            {english ? 'See the full explanation' : 'Ver la explicación completa'}
+          </button>
+        ) : null}
+        {showText ? (
           <p className="text-foreground/80 text-cuerpo mt-2 max-w-[75ch] leading-7 break-words whitespace-pre-line">
             {text}
           </p>
         ) : null}
         {(page || allActions) && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            {page && !correct ? (
+            {page && (!correct || expanded) ? (
               <div className="text-chico text-foreground/80 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="inline-flex items-center gap-2">
                   <FileText className="text-primary size-4" aria-hidden="true" />

@@ -12,7 +12,8 @@ assert.match(feedback, /No era «\$\{chosenText\}»/, 'El error dice qué eligi�
 assert.match(feedback, /de tu apunte/, 'Muestra la página del apunte.');
 assert.match(feedback, /Ver en mi PDF/, 'Permite abrir el PDF en esa página.');
 assert.match(feedback, /!correct && savedToErrors/, 'Mis errores solo se menciona cuando se guarda de verdad.');
-assert.match(feedback, /!correct && text \?/, 'Al acertar no se muestra la explicación larga.');
+assert.match(feedback, /showText = Boolean\(text\) && \(!correct \|\| expanded\)/, 'Al acertar, la explicación queda plegada.');
+assert.match(feedback, /Ver la explicación completa/);
 assert.doesNotMatch(feedback, /fetch\(|Action\(/, 'La corrección no genera texto nuevo con IA.');
 
 // Casos y Mixto usan la misma pieza y marcan rojo/verde en las opciones.
