@@ -8,8 +8,76 @@
   }
 }
 
+/* Al abrir: Evi aparece con un pequeño "pop" y el resto entra subiendo, uno tras otro. */
+@keyframes evi-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes evi-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Mientras piensa: Evi se mueve apenas y los tres puntitos laten. */
+@keyframes evi-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes evi-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.evi-pop {
+  animation: evi-pop 220ms ease-out both;
+}
+.evi-rise {
+  animation: evi-rise 260ms ease-out both;
+  animation-delay: calc(var(--evi-step, 0) * 50ms + 80ms);
+}
+.evi-bob {
+  animation: evi-bob 1.4s ease-in-out infinite;
+}
+.evi-dot {
+  animation: evi-dot 1.2s ease-in-out infinite;
+}
+.evi-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.evi-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   body {
     transition: none;
+  }
+  .evi-pop,
+  .evi-rise,
+  .evi-bob,
+  .evi-dot {
+    animation: none;
   }
 }

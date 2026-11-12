@@ -868,3 +868,79 @@ export async function requestGeminiImagesJson(input: {
     throw error;
   }
 }
+
+/**
+ * Groq con streaming (SSE). Entrega el texto a medida que llega. Devuelve null
+ * si no hay clave/modelo o si el proveedor falla antes del primer fragmento,
+ * para que quien llama use el camino sin streaming.
+ */
+export async function streamGroqText(
+  input: OpenAiCompatibleRequest & { timeoutMs?: number },
+  onDelta: (text: string) => void
+): Promise<{ model: string; content: string; finishReason?: string } | null> {
+  const apiKey = getGroqApiKeys(input.keyScope)[0];
+  const model = getGroqSummaryModels()[0];
+  if (!apiKey || !model || isProviderAttemptBlocked('groq', model, apiKey)) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), input.timeoutMs ?? 25_000);
+  let content = '';
+  let finishReason: string | undefined;
+  try {
+    const response = await fetch(GROQ_ENDPOINT, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        temperature: input.temperature,
+        max_tokens: input.maxTokens,
+        messages: [
+          { role: 'system', content: input.system },
+          { role: 'user', content: input.prompt },
+        ],
+      }),
+    });
+    if (!response.ok || !response.body) {
+      markProviderHttpFailure('groq', model, apiKey, response.status);
+      await response.body?.cancel().catch(() => undefined);
+      return null;
+    }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        const data = line.trim().replace(/^data:\s*/, '');
+        if (!data || data === '[DONE]' || !line.trim().startsWith('data:')) continue;
+        try {
+          const json = JSON.parse(data) as {
+            choices?: { delta?: { content?: unknown }; finish_reason?: unknown }[];
+          };
+          const choice = json.choices?.[0];
+          const delta = typeof choice?.delta?.content === 'string' ? choice.delta.content : '';
+          if (typeof choice?.finish_reason === 'string') finishReason = choice.finish_reason;
+          if (delta) {
+            content += delta;
+            onDelta(delta);
+          }
+        } catch {
+          // Un fragmento SSE incompleto se completa en la próxima lectura.
+        }
+      }
+    }
+    if (!content.trim()) return null;
+    clearProviderFailure('groq', model, apiKey);
+    return { model, content, finishReason };
+  } catch (error) {
+    logError('aiProviders.groq.stream', error);
+    return content.trim() ? { model, content, finishReason: 'aborted' } : null;
+  } finally {
+    clearTimeout(timer);
+  }
+}

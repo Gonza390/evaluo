@@ -851,7 +851,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'failure_count',
   ],
   evi_chat_opened: ['attribution', 'anonymous_id', 'page_type', 'context_kind', 'material_id', 'location'],
-  evi_chat_message_sent: ['attribution', 'anonymous_id', 'page_type', 'context_kind', 'material_id', 'study_error_id', 'suggestion', 'turn', 'premium'],
+  evi_chat_message_sent: ['attribution', 'anonymous_id', 'page_type', 'context_kind', 'material_id', 'study_error_id', 'suggestion', 'turn', 'premium', 'quiz'],
   study_error_explanation_reviewed: [
     'attribution',
     'anonymous_id',

@@ -33,15 +33,23 @@ assert.equal(eviChatSuggestions('Verdadero').length, 3, 'Verdadero/Falso no gene
 assert.equal(EVI_CHAT_FREE_DAILY_LIMIT, 5);
 
 // Servidor: sesión, límites, propiedad del material y protección contra inyección.
-const action = read('lib/actions/evi-chat.ts');
+const service = read('lib/evi-chat-service.ts');
+const route = read('app/api/evi-chat/route.ts');
 const context = read('lib/evi-chat-context.ts');
 const tutor = read('lib/ai-tutor.ts');
-assert.match(action, /auth\.getUser\(\)/);
-assert.match(action, /evi-chat:burst:/);
-assert.match(action, /evi-chat:daily:/);
-assert.match(action, /hasPremiumAccess/);
-assert.ok(action.indexOf('loadEviChatGrounding') < action.indexOf('evi-chat:daily:'),
+const providers = read('lib/ai/providers.ts');
+assert.match(service, /auth\.getUser\(\)/);
+assert.match(service, /evi-chat:burst:/);
+assert.match(service, /evi-chat:daily:/);
+assert.match(service, /hasPremiumAccess/);
+assert.ok(service.indexOf('loadEviChatGrounding(') < service.indexOf('evi-chat:daily:'),
   'Si la pregunta no existe, no se consume una pregunta del día.');
+assert.match(route, /prepareEviChat\(/, 'La ruta pasa siempre por las comprobaciones.');
+assert.match(route, /'Content-Type': 'text\/plain; charset=utf-8'/, 'La respuesta se escribe en vivo.');
+assert.match(route, /generateStudyErrorReviewQuestion\(/, 'La pregunta parecida reutiliza la comprobación verificada contra el apunte.');
+assert.match(route, /if \(!grounding\.excerpt\)/, 'Sin fragmento del apunte no se inventa una pregunta.');
+assert.match(providers, /stream: true/);
+assert.match(tutor, /const fallback = await generateEviChatReply\(input\)/, 'Si no hay streaming, responde igual.');
 assert.match(context, /\.eq\('user_id', userId\)/, 'Solo el dueño del material puede preguntar sobre él.');
 assert.match(context, /import 'server-only'/);
 const chatPrompt = tutor.slice(tutor.indexOf('function buildEviChatPrompt'));
@@ -59,6 +67,15 @@ assert.match(panel, /event\.key === 'Escape'/);
 assert.match(panel, /\{!open \? \(/, 'El botón desaparece mientras el chat está abierto.');
 assert.match(css, /html\.evi-chat-open body \{\s*padding-right: 400px;/, 'El contenido se corre a la izquierda.');
 assert.match(panel, /Te contesto con tu apunte/);
+const effects = read('components/study/evi-chat.css');
+assert.match(effects, /@keyframes evi-pop/, 'Evi aparece con un pop.');
+assert.match(effects, /@keyframes evi-dot/, 'Puntitos mientras piensa.');
+assert.match(effects, /prefers-reduced-motion: reduce\) \{[\s\S]*\.evi-pop,[\s\S]*animation: none/, 'Sin animaciones con movimiento reducido.');
+assert.match(panel, /Buscando en tu apunte/, 'Si tarda, cuenta qué está haciendo.');
+assert.match(panel, /reader\.read\(\)/, 'Lee la respuesta a medida que llega.');
+assert.match(panel, /data-evi-quiz/, 'La pregunta parecida se responde con botones.');
+assert.match(panel, /Ya entendí →/, 'Opción rápida para cerrar y seguir.');
+assert.match(panel, /'Otro ejemplo', 'Más simple'/);
 
 const feedback = read('components/study/answer-feedback.tsx');
 const session = read('components/dashboard/practice-session.tsx');
