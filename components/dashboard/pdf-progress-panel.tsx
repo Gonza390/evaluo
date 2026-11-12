@@ -29,7 +29,9 @@ import type { StudyErrorConversation, StudyErrorReviewActions } from './study-er
 import { getTopicStudyResources } from '@/lib/student-materials/topic-study-resources';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
-import { TopicStudySupport } from '@/components/study/topic-study-support';
+import { TopicConcepts, TopicFlashcards } from '@/components/study/topic-study-support';
+import { TopicStudySteps } from '@/components/study/topic-study-steps';
+import { buildTopicFlashcards } from '@/lib/student-materials/topic-flashcards';
 import { StudyRichText } from '@/components/study-rich-text';
 import {
   topicPracticeFeedback,
@@ -209,6 +211,10 @@ export function PdfProgressPanel({
         (first.importance === 'alta' ? 0 : 1) - (second.importance === 'alta' ? 0 : 1)
     )
     .slice(0, 3);
+  const topicDeckSize = useMemo(
+    () => buildTopicFlashcards(resources.concepts, resources.flashcards, english).length,
+    [resources.concepts, resources.flashcards, english]
+  );
   const currentAnswered = currentTopic ? topicAssessmentCount(currentTopic) : 0;
   const currentCorrect =
     currentTopic?.evidence.reduce((total, item) => total + item.correct, 0) ?? 0;
@@ -451,12 +457,20 @@ export function PdfProgressPanel({
               {tr('Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su comprensión.','You can study this topic. There are no linked questions yet to check your understanding.')}
             </p>
           )}
+          <TopicStudySteps
+            resetKey={currentTopic?.id ?? 'unmatched'}
+            steps={[
+              {
+                id: 'summary',
+                label: tr('Resumen', 'Summary'),
+                content: () => (
+                  <>
           <section
             id={panelId + '-topic-summary'}
-            className="border-border mt-6 scroll-mt-4 border-t pt-5"
+            className="scroll-mt-4"
             aria-label={tr("Contenido de este tema","Topic content")}
           >
-            <h3 className="text-[16px] font-medium">{t("1 · Leé el resumen del tema")}</h3>
+            <h3 className="text-[16px] font-medium">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
             {summaryBody && focusConcepts.length > 0 && (
               <div
                 className="border-border bg-muted/30 mt-4 rounded-xl border p-4"
@@ -501,18 +515,41 @@ export function PdfProgressPanel({
               <FileText size={16} /> {tr("Consultar el PDF original","View original PDF")}
             </a>
           )}
-          <TopicStudySupport
-            key={currentTopic?.id ?? 'unmatched'}
-            concepts={resources.concepts}
-            flashcards={resources.flashcards}
-            pdfHref={sourcePdfHref ?? simulation?.pdfHref}
-          />
-          {currentTopic && (
+                  </>
+                ),
+              },
+              {
+                id: 'concepts',
+                label: tr('Conceptos', 'Concepts'),
+                count: resources.concepts.length,
+                content: () => <TopicConcepts concepts={resources.concepts} />,
+              },
+              {
+                id: 'flashcards',
+                label: 'Flashcards',
+                count: topicDeckSize,
+                content: ({ markDone }) => (
+                  <TopicFlashcards
+                    key={currentTopic?.id ?? 'unmatched'}
+                    concepts={resources.concepts}
+                    flashcards={resources.flashcards}
+                    pdfHref={sourcePdfHref ?? simulation?.pdfHref}
+                    onFinished={markDone}
+                  />
+                ),
+              },
+              ...(currentTopic
+                ? [
+                    {
+                      id: 'practice' as const,
+                      label: tr('Practicar', 'Practice'),
+                      content: () => (
+                        <>
             <section
-              className="border-border border-t py-5"
+              className="py-1"
               aria-label={tr("Cómo continuar con tu estudio","How to continue studying")}
             >
-              <h3 className="text-[16px] font-medium">{t("3 · Tu próximo paso")}</h3>
+              <h3 className="text-[16px] font-medium">{tr("Tu próximo paso","Your next step")}</h3>
               <p className="text-muted-foreground mt-2 text-sm!">
                 {topicPending.length > 0
                   ? tr("Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.","Review incorrect answers first. Then you can practice again.")
@@ -595,7 +632,13 @@ export function PdfProgressPanel({
                 </p>
               )}
             </section>
-          )}
+                        </>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
           <details className="border-border border-t py-3 xl:hidden">
             <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
               {tr("Tu aprendizaje","Your learning")}
