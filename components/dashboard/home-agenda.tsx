@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, X } from 'lucide-react';
+import { BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { saveStudentMaterialExamDateAction } from '@/app/dashboard/materiales/exam-date-prompt-actions';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { HomeView } from '@/lib/dashboard-home-model';
@@ -281,11 +281,10 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
                       {task.title}
                     </span>
                     <span
-                      className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-medium ${
+                      className={`mt-1 block text-[11px] font-medium ${
                         task.done ? 'text-slate-400' : 'text-blue-700'
                       }`}
                     >
-                      <Clock3 className="size-3" aria-hidden="true" />
                       {task.meta}
                     </span>
                   </span>
