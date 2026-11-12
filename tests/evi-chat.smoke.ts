@@ -31,6 +31,7 @@ assert.equal(sanitizeEviChatInput({ context: { kind: 'error', errorId: 'nope', l
 assert.match(eviChatSuggestions('Segmentación')[0], /¿En qué se diferencia de «Segmentación»\?/);
 assert.equal(eviChatSuggestions('Verdadero').length, 3, 'Verdadero/Falso no genera una comparación sin sentido.');
 assert.equal(EVI_CHAT_FREE_DAILY_LIMIT, 5);
+assert.equal(eviChatSuggestions('No lo sabía').length, 3, '«No lo sabía» no genera una comparación.');
 
 // Servidor: sesión, límites, propiedad del material y protección contra inyección.
 const service = read('lib/evi-chat-service.ts');
@@ -95,6 +96,7 @@ assert.match(detail, /!sameMeaning\(originalExplanation/, 'La respuesta correcta
 assert.doesNotMatch(reinforcement, /Entendamos por qué|Explicámelo más simple/, 'Los botones fijos pasan al chat.');
 assert.match(reinforcement, /Probar con otra pregunta/);
 assert.match(reinforcement, /<EviChatPanel\s+inline/, 'En compu el chat queda abierto al costado.');
+assert.match(reinforcement, /lg:sticky lg:top-2 lg:block lg:h-\[calc\(100dvh-11rem\)\]/, 'El chat queda fijo a la derecha con su propio scroll.');
 assert.match(reinforcement, /className="mt-4 lg:hidden"/, 'En el celular, el botón abre el chat a pantalla completa.');
 assert.match(detail, /submit: \(checkId, index\) => reviewActions\.submitCheck/, 'La pregunta parecida de Evi se corrige en el servidor.');
 assert.match(panel, /errorCheck\.onResolved\(/, 'Acertarla resuelve el error.');
