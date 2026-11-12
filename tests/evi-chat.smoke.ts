@@ -96,7 +96,7 @@ assert.match(detail, /!sameMeaning\(originalExplanation/, 'La respuesta correcta
 assert.doesNotMatch(reinforcement, /Entendamos por qué|Explicámelo más simple/, 'Los botones fijos pasan al chat.');
 assert.match(reinforcement, /Probar con otra pregunta/);
 assert.match(reinforcement, /<EviChatPanel\s+inline/, 'En compu el chat queda abierto al costado.');
-assert.match(reinforcement, /lg:sticky lg:top-2 lg:block lg:h-\[calc\(100dvh-11rem\)\]/, 'El chat queda fijo a la derecha con su propio scroll.');
+assert.match(reinforcement, /lg:fixed lg:top-\[52px\] lg:right-0 lg:bottom-0/, 'El chat queda fijo al borde derecho, desde el header, con su propio scroll.');
 assert.match(reinforcement, /className="mt-4 lg:hidden"/, 'En el celular, el botón abre el chat a pantalla completa.');
 assert.match(detail, /submit: \(checkId, index\) => reviewActions\.submitCheck/, 'La pregunta parecida de Evi se corrige en el servidor.');
 assert.match(panel, /errorCheck\.onResolved\(/, 'Acertarla resuelve el error.');
