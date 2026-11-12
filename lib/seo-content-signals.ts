@@ -63,7 +63,7 @@ const loadMateriaSeoContentSignals = unstable_cache(
     };
   },
   ['materia-seo-content-signals'],
-  { revalidate: 600, tags: ['materia-bootstrap'] }
+  { revalidate: 21600, tags: ['materia-bootstrap'] }
 );
 
 export function getMateriaSeoContentSignals(materiaId: string) {

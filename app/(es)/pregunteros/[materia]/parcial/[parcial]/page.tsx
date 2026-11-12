@@ -17,6 +17,7 @@ import {
   parsePregunteroParcial,
   parcialToPreguntaFilter,
 } from '@/lib/data/preguntero';
+import { getPregunteroParcialPrebuildParams } from '@/lib/catalog-prebuild';
 
 // 6 h: la mayoría de las visitas son buscadores que vuelven a pasar por la
 // misma URL; con 10 min la página se regeneraba casi en cada pasada.
@@ -25,8 +26,12 @@ export const revalidate = 21600;
 // ISR: cada parcial se genera en la primera visita y queda en la caché de Vercel.
 // La página no lee los parámetros de la URL (eso la volvería dinámica): los utm_*
 // se suman al link del simulador en el navegador (TrackedLink preserveAttribution).
+// Producción: se prearman en el build (ver lib/catalog-prebuild.ts). Derecho
+// sucesorio parcial 2 tiene ruta fija propia.
 export function generateStaticParams() {
-  return [];
+  return getPregunteroParcialPrebuildParams(
+    (materiaId, parcial) => materiaId === DERECHO_SUCESORIO_MATERIA_ID && parcial === '2'
+  );
 }
 
 const PERSONAS_JURIDICAS_MATERIA_ID = '5a10b059-546d-41a1-8ed8-d9fb1dd7581d';
