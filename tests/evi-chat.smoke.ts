@@ -87,4 +87,17 @@ assert.match(session, /if \(previewResult\) return null;/, 'Sin Evi en la vista 
 assert.match(exam, /evi=\{isSimulation \|\|/, 'Sin Evi en la demo ni en simulaciones.');
 assert.match(detail, /kind: 'error',\s*errorId: item\.id/, 'Mis errores abre el chat del error.');
 
+// Mis errores: un error con la respuesta en lista, una sola explicación y el chat al costado.
+const reinforcement = detail.slice(detail.indexOf('data-topic-reinforcement'), detail.indexOf(') : question ? ('));
+assert.match(reinforcement, /'Respondiste: '/, 'Lo que respondió es una sola línea.');
+assert.match(reinforcement, /answerItems\(item\.correctAnswer\)\.map/, 'La respuesta correcta es una lista, un concepto por renglón.');
+assert.match(detail, /!sameMeaning\(originalExplanation/, 'La respuesta correcta no se repite como explicación.');
+assert.doesNotMatch(reinforcement, /Entendamos por qué|Explicámelo más simple/, 'Los botones fijos pasan al chat.');
+assert.match(reinforcement, /Probar con otra pregunta/);
+assert.match(reinforcement, /<EviChatPanel\s+inline/, 'En compu el chat queda abierto al costado.');
+assert.match(reinforcement, /className="mt-4 lg:hidden"/, 'En el celular, el botón abre el chat a pantalla completa.');
+assert.match(detail, /submit: \(checkId, index\) => reviewActions\.submitCheck/, 'La pregunta parecida de Evi se corrige en el servidor.');
+assert.match(panel, /errorCheck\.onResolved\(/, 'Acertarla resuelve el error.');
+assert.match(panel, /Este error quedó resuelto/);
+
 console.log('[evi-chat] contrato, límites, propiedad del material, panel deslizante y botones en práctica y Mis errores.');
