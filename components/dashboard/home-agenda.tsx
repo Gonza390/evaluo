@@ -253,11 +253,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
               <li key={task.id}>
                 <Link
                   href={task.href}
-                  className={`group flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-colors ${
-                    task.done
-                      ? 'border-transparent bg-slate-50'
-                      : 'border-blue-100/80 bg-gradient-to-r from-blue-50/80 to-white hover:border-blue-200 hover:from-blue-50'
-                  }`}
+                  className="group flex items-center gap-2.5 px-1 py-2 transition-colors"
                 >
                   <span
                     className={`relative flex size-8 shrink-0 items-center justify-center rounded-[9px] ${
@@ -283,7 +279,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
                     </span>
                     <span
                       className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-medium ${
-                        task.done ? 'text-slate-400' : 'bg-white text-blue-700 ring-1 ring-blue-100'
+                        task.done ? 'text-slate-400' : 'text-blue-700'
                       }`}
                     >
                       <Clock3 className="size-3" aria-hidden="true" />
