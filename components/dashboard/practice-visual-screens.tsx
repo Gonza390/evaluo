@@ -2,10 +2,13 @@
 import Link from 'next/link';
 import * as React from 'react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
-import { BookOpen, Check, Lightbulb, LogOut, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Check, Lightbulb, LogOut, RefreshCw, X } from 'lucide-react';
+import { AnswerFeedback, answeredOptionClass } from '@/components/study/answer-feedback';
 
 type Pair={term:string;definition:string};
-type CaseQuestion={prompt:string;options:string[];answer:string};
+type CaseQuestion={prompt:string;options:string[];answer:string;pageStart?:number|null};
+const sameAnswer=(a:string,b:string)=>a.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase()===b.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+const optionState=(option:string,value:string,answer:string):'correct'|'wrong'|'other'=>sameAnswer(option,answer)?'correct':option===value?'wrong':'other';
 function Header({title,materialTitle,icon,progress,total,accent}:{title:string;materialTitle:string;icon:'match'|'case';progress:number;total:number;accent:string}) {
  const english = useOptionalAppLocale() === 'en';
  return <header className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:items-end sm:justify-between">
@@ -90,8 +93,9 @@ export function MatchPracticeScreen({materialTitle,pairs,definitions,selectedTer
   </div>
  </main>;
 }
-export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,onSelect,onNext,onPrevious,onSkip}:{materialTitle:string;question:CaseQuestion;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void}){
+export function CasesPracticeScreen({materialTitle,question,index,total,value,checked,correct,explanation,pdfHref,onSelect,onNext,onPrevious,onSkip}:{materialTitle:string;question:CaseQuestion;pdfHref?:string|null;index:number;total:number;value:string;checked:boolean;correct:boolean;explanation:string;onSelect:(v:string)=>void;onNext:()=>void;onPrevious:()=>void;onSkip:()=>void}){
  const english = useOptionalAppLocale() === 'en';
+ const nextLabel = index===total-1 ? (english ? 'View results' : 'Ver resultados') : (english ? 'Next case' : 'Siguiente caso');
  const explanationRef = React.useRef<HTMLDivElement>(null);
  const previousChecked = React.useRef(checked);
  React.useEffect(() => {
@@ -104,22 +108,22 @@ export function CasesPracticeScreen({materialTitle,question,index,total,value,ch
  return <main className="practice-step-enter mx-auto w-full max-w-[1120px] px-3 py-4 pb-16 sm:px-5 sm:py-5 lg:px-6">
   <Header title={english ? "Cases" : "Casos"} materialTitle={materialTitle} icon="case" progress={index} total={total} accent="#835fb5"/>
   <div className="grid items-start gap-4 lg:grid-cols-[1.14fr_1fr] lg:gap-6">
-   <section className="rounded-2xl border border-violet-200 bg-[#f7f3fd] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-4"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold tracking-[.08em] text-violet-900">{english ? 'SCENARIO' : 'SITUACIÓN'}</span><span className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-medium text-violet-800"><Sparkles size={14}/> {english ? 'AI-generated' : 'Generado con IA'}</span></div><p className="whitespace-pre-line text-[13px] leading-[1.65] text-[#272238] sm:text-[14px]">{question.prompt}</p></section>
-   <section><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">{english ? 'WHICH CONCEPT APPLIES?' : '¿QUÉ CONCEPTO APLICA?'}</p><div className="space-y-2">{question.options.map((option,i)=><button key={i} type="button" disabled={checked} aria-pressed={value===option} onClick={()=>onSelect(option)} className={`flex min-h-[44px] w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-[13px] font-medium leading-5 transition sm:text-[13px] ${value===option?'border-blue-600 bg-blue-50 ring-1 ring-blue-600/20':'border-slate-200 bg-white text-slate-900 hover:border-blue-200'}`}><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${value===option?'bg-blue-600 text-white':'bg-slate-100 text-slate-600'}`}>{String.fromCharCode(65+i)}</span><span>{english && /^(verdadero|falso)$/i.test(option.trim()) ? (option.trim().toLowerCase()==='verdadero' ? 'True' : 'False') : option}</span></button>)}</div></section>
+   <section className="bg-muted/60 rounded-2xl p-4 sm:p-5"><p className="mb-3 text-[11px] font-semibold tracking-[.08em] text-muted-foreground">{english ? 'SCENARIO' : 'SITUACIÓN'}</p><p className="whitespace-pre-line text-[14px] leading-[1.7] text-foreground sm:text-[15px]">{question.prompt}</p></section>
+   <section><p className="mb-2 text-[10px] font-semibold tracking-[.08em] text-slate-500">{english ? 'WHICH CONCEPT APPLIES?' : '¿QUÉ CONCEPTO APLICA?'}</p><div className="space-y-2">{question.options.map((option,i)=>{const state=checked?optionState(option,value,question.answer):null;return <button key={i} type="button" disabled={checked} aria-pressed={value===option} onClick={()=>onSelect(option)} className={`flex min-h-[44px] w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-[13px] font-medium leading-5 transition sm:text-[13px] ${state?answeredOptionClass(state):value===option?'border-blue-600 bg-blue-50 ring-1 ring-blue-600/20':'border-slate-200 bg-white text-slate-900 hover:border-blue-200'}`}><span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${state==='correct'?'bg-emerald-600 text-white':state==='wrong'?'bg-destructive text-white':value===option&&!checked?'bg-blue-600 text-white':'bg-slate-100 text-slate-600'}`}>{state==='correct'?<Check size={13} aria-hidden="true"/>:state==='wrong'?<X size={13} aria-hidden="true"/>:String.fromCharCode(65+i)}</span><span>{state==='correct'?<span className="sr-only">{english?'Correct answer: ':'Respuesta correcta: '}</span>:state==='wrong'?<span className="sr-only">{english?'Your answer, incorrect: ':'Tu respuesta, incorrecta: '}</span>:null}{english && /^(verdadero|falso)$/i.test(option.trim()) ? (option.trim().toLowerCase()==='verdadero' ? 'True' : 'False') : option}</span></button>})}</div></section>
   </div>
-  {checked && <div ref={explanationRef} role="status" aria-live="polite" data-case-explanation
-    className="mt-4 scroll-mt-24 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-[13px] leading-6 text-[#42506A] shadow-[0_5px_18px_rgba(15,23,42,0.025)] sm:p-5">
-    <p className={correct ? 'font-semibold text-emerald-700' : 'font-semibold text-rose-700'}>{correct ? (english ? 'Correct' : 'Bien resuelto') : (english ? 'To review' : 'Para reforzar')}</p>
-    {!correct && <p className="mt-2 font-medium text-[#0F1B3D]">{english ? 'Correct answer' : 'Respuesta correcta'}: {question.answer}</p>}
-    {!correct && <p className="mt-2 whitespace-pre-line break-words text-[#42506A]">{explanation}</p>}
+  {checked && <div ref={explanationRef} role="status" data-case-explanation className="mt-5 scroll-mt-24">
+   <AnswerFeedback correct={correct} chosen={value} explanation={correct ? '' : explanation}
+    page={question.pageStart && pdfHref ? (english ? `Page ${question.pageStart}` : `Página ${question.pageStart}`) : null}
+    pdfHref={question.pageStart && pdfHref ? pdfHref : null}
+    actions={<button type="button" onClick={onNext} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-[14px] font-semibold text-white hover:bg-blue-700">{nextLabel}<ArrowRight size={16} aria-hidden="true"/></button>}/>
   </div>}
-  <div className="mt-4 flex w-full items-center justify-between gap-2 border-t border-slate-100 pt-3 sm:justify-end">
+  {!checked && <div className="mt-4 flex w-full items-center justify-between gap-2 border-t border-slate-100 pt-3 sm:justify-end">
    <button type="button" onClick={onPrevious} disabled={index===0} className="min-h-10 shrink-0 rounded-xl px-3 text-[13px] text-slate-600 disabled:opacity-30 sm:mr-0">{english ? 'Previous' : 'Anterior'}</button>
    <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
     <button type="button" onClick={onSkip} className="min-h-10 rounded-xl px-2 text-[13px] text-slate-600 sm:px-3">{english ? 'Skip' : 'Saltar'}</button>
-    <button type="button" disabled={!checked&&!value} onClick={onNext} className="min-h-10 rounded-xl bg-blue-600 px-4 text-[13px] font-medium text-white disabled:opacity-40 sm:px-5">{checked ? (index===total-1 ? (english ? 'View results' : 'Ver resultados') : (english ? 'Next' : 'Siguiente')) : (english ? 'Confirm' : 'Confirmar')}</button>
+    <button type="button" disabled={!value} onClick={onNext} className="min-h-10 rounded-xl bg-blue-600 px-4 text-[13px] font-medium text-white disabled:opacity-40 sm:px-5">{english ? 'Confirm' : 'Confirmar'}</button>
    </div>
-  </div>
+  </div>}
  </main>;
 }
 
@@ -145,7 +149,7 @@ export function CompletePracticeScreen({materialTitle,definition,index,total,val
  </main>;
 }
 
-export function MixedPracticeScreen({materialTitle,prompt,options,index,total,value,checked,correct,answer,explanation,onSelect,onConfirm,onSkip}:{materialTitle:string;prompt:string;options:string[];index:number;total:number;value:string;checked:boolean;correct:boolean;answer:string;explanation:string;onSelect:(s:string)=>void;onConfirm:()=>void;onSkip:()=>void}){
+export function MixedPracticeScreen({materialTitle,prompt,options,index,total,value,checked,correct,answer,explanation,page,pdfHref,onSelect,onConfirm,onSkip}:{materialTitle:string;prompt:string;options:string[];page?:number|null;pdfHref?:string|null;index:number;total:number;value:string;checked:boolean;correct:boolean;answer:string;explanation:string;onSelect:(s:string)=>void;onConfirm:()=>void;onSkip:()=>void}){
  const english = useOptionalAppLocale() === 'en';
  const isBoolean=options.length===2&&options.every(v=>/^(verdadero|falso)$/i.test(v.trim()));
  const subtype=isBoolean ? (english ? 'True or false' : 'Verdadero o falso') : (english ? 'Multiple choice' : 'Opción múltiple');
@@ -156,9 +160,11 @@ export function MixedPracticeScreen({materialTitle,prompt,options,index,total,va
   </header>
   <div className="mx-auto max-w-[620px] space-y-3">
    <section className="rounded-xl border border-[#cdeadb] bg-[#f1faf6] px-4 py-3 sm:px-5 sm:py-4"><p className="mb-2 text-[10px] font-semibold tracking-[.06em] text-[#14634a]">{isBoolean ? (english ? 'STATEMENT' : 'AFIRMACIÓN') : (english ? 'QUESTION' : 'PREGUNTA')}</p><p className="text-[14px] font-medium leading-[1.55] text-[#1e1b2e] sm:text-[15px]">{prompt}</p></section>
-   <div className={isBoolean?'grid grid-cols-2 gap-2 sm:gap-3':'grid grid-cols-1 gap-2 sm:grid-cols-2'}>{options.map((option,i)=>{const selected=value===option;return <button key={i} type="button" aria-pressed={selected} disabled={checked} onClick={()=>onSelect(option)} className={`relative flex min-h-[52px] items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-[13px] font-medium leading-[1.45] transition sm:text-[13px] ${selected?'border-blue-600 bg-blue-50/70 text-slate-900 ring-1 ring-blue-600/20':'border-slate-200 bg-white text-slate-900 hover:border-blue-300'}`}><span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${selected?'bg-blue-600 text-white':'bg-slate-100 text-slate-600'}`}>{isBoolean?(option.trim().toLowerCase()==='verdadero'?'✓':'×'):String.fromCharCode(65+i)}</span><span className="min-w-0 break-words">{english && /^(verdadero|falso)$/i.test(option.trim()) ? (option.trim().toLowerCase()==='verdadero' ? 'True' : 'False') : option}</span></button>})}</div>
-   {checked&&<div role="status" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] leading-5"><p className={correct?'font-medium text-emerald-700':'font-medium text-rose-700'}>{correct?'Bien resuelto':'Para reforzar'}</p>{!correct&&<p className="mt-1 text-slate-700">{english ? 'Answer' : 'Respuesta'}: {answer}</p>}<p className="mt-1 text-slate-600">{explanation}</p></div>}
-   <div className="flex items-center justify-between gap-3"><button type="button" onClick={onSkip} className="min-h-10 rounded-xl px-3 text-sm font-medium text-slate-600">{english ? 'Skip' : 'Saltar'}</button><button type="button" disabled={!checked&&!value} onClick={onConfirm} className="min-h-10 rounded-xl bg-blue-600 px-6 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-40">{checked ? (index===total-1 ? (english ? 'View results' : 'Ver resultados') : (english ? 'Next' : 'Siguiente')) : (english ? 'Confirm' : 'Confirmar')}</button></div>
+   <div className={isBoolean?'grid grid-cols-2 gap-2 sm:gap-3':'grid grid-cols-1 gap-2 sm:grid-cols-2'}>{options.map((option,i)=>{const selected=value===option;const state=checked?optionState(option,value,answer):null;return <button key={i} type="button" aria-pressed={selected} disabled={checked} onClick={()=>onSelect(option)} className={`relative flex min-h-[52px] items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-[13px] font-medium leading-[1.45] transition sm:text-[13px] ${state?answeredOptionClass(state):selected?'border-blue-600 bg-blue-50/70 text-slate-900 ring-1 ring-blue-600/20':'border-slate-200 bg-white text-slate-900 hover:border-blue-300'}`}><span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-semibold ${state==='correct'?'bg-emerald-600 text-white':state==='wrong'?'bg-destructive text-white':selected&&!checked?'bg-blue-600 text-white':'bg-slate-100 text-slate-600'}`}>{state==='correct'?<Check size={14} aria-hidden="true"/>:state==='wrong'?<X size={14} aria-hidden="true"/>:isBoolean?(option.trim().toLowerCase()==='verdadero'?'✓':'×'):String.fromCharCode(65+i)}</span><span className="min-w-0 break-words">{state==='correct'?<span className="sr-only">{english?'Correct answer: ':'Respuesta correcta: '}</span>:state==='wrong'?<span className="sr-only">{english?'Your answer, incorrect: ':'Tu respuesta, incorrecta: '}</span>:null}{english && /^(verdadero|falso)$/i.test(option.trim()) ? (option.trim().toLowerCase()==='verdadero' ? 'True' : 'False') : option}</span></button>})}</div>
+   {checked&&<div role="status"><AnswerFeedback correct={correct} chosen={english && /^(verdadero|falso)$/i.test(value.trim()) ? (value.trim().toLowerCase()==='verdadero' ? 'True' : 'False') : value} explanation={correct ? '' : explanation}
+    page={page ? (english ? `Page ${page}` : `Página ${page}`) : null} pdfHref={page ? pdfHref : null}
+    actions={<button type="button" onClick={onConfirm} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white hover:bg-blue-700">{(index===total-1 ? (english ? 'View results' : 'Ver resultados') : (english ? 'Next question' : 'Siguiente pregunta'))}<ArrowRight size={16} aria-hidden="true"/></button>}/></div>}
+   {!checked&&<div className="flex items-center justify-between gap-3"><button type="button" onClick={onSkip} className="min-h-10 rounded-xl px-3 text-sm font-medium text-slate-600">{english ? 'Skip' : 'Saltar'}</button><button type="button" disabled={!value} onClick={onConfirm} className="min-h-10 rounded-xl bg-blue-600 px-6 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-40">{english ? 'Confirm' : 'Confirmar'}</button></div>}
   </div>
  </main>;
 }

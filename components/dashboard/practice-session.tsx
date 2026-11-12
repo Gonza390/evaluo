@@ -204,6 +204,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const current = tasks[step];
   const checked = reviewed.includes(step);
   const explanationFor = (question:PracticeQuestion) => groundedPracticeExplanation(question,pairs);
+  const pdfPageHref = (page:number) => '/materiales/' + materialId + '?tab=resumen&page=' + page;
 
   useEffect(() => {
     if (mode !== 'simulacro' || !ready || finished || !examStarted) return;
@@ -615,6 +616,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.question.answer}
     explanation={groundedPracticeExplanation(current.question,pairs)}
+    page={isWord ? null : current.question.pageStart}
+    pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
     onSelect={setResponse} onConfirm={reviewOrNext}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
   if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <div className={leavingActivity?'practice-screen-leave':''}><CompletePracticeScreen key={step}
@@ -629,6 +632,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} explanation={correctAt(step) ? '' : explanationFor(current.question)}
+    pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}

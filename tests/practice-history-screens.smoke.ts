@@ -41,10 +41,12 @@ assert.match(caseScreen, /onClick=\{onSkip\}/);
 assert.match(caseScreen, /onClick=\{onNext\}/);
 assert.match(caseScreen, /max-w-\[1120px\]/, 'Casos usa un ancho mayor para la corrección.');
 assert.match(caseScreen, /data-case-explanation/, 'La explicación ocupa una fila completa bajo ambas columnas.');
-assert.match(caseScreen, /!correct && <p className="mt-2 whitespace-pre-line/,
+assert.match(caseScreen, /explanation=\{correct \? '' : explanation\}/,
   'Casos no muestra explicaciones cuando la respuesta es correcta.');
-assert.match(caseScreen, /!correct && <p className="mt-2 font-medium[^\n]*Respuesta correcta'?\}?:/,
-  'Casos mantiene la respuesta correcta cuando hay un error.');
+assert.match(caseScreen, /answeredOptionClass\(state\)/,
+  'Casos marca la opción elegida en rojo y la correcta en verde, sin repetir la respuesta en texto.');
+assert.doesNotMatch(caseScreen, /Generado con IA|Para reforzar/,
+  'Casos no muestra la etiqueta de IA ni el bloque Para reforzar.');
 assert.match(practiceResults, /entries\.filter\(\(entry\) => !entry\.correct\)/,
   'Las respuestas incorrectas se muestran primero, con su explicación.');
 assert.match(practiceResults, /entries\.filter\(\(entry\) => entry\.correct\)/,
