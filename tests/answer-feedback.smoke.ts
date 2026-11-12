@@ -44,4 +44,15 @@ assert.match(results, /<AnswerFeedback[\s\S]*correctAnswer=\{entry\.correctAnswe
 assert.match(results, /flashcards \?/, 'Flashcards conservan su resultado propio.');
 assert.match(exam, /correctAnswer=\{question\.answer\}/, 'El resultado de la práctica del PDF usa la misma pieza.');
 
-console.log('[answer-feedback] una sola explicación en práctica, casos, mixto, verdadero o falso y resultados.');
+// Completar: el blanco se completa en verde, lo escrito queda en rojo y solo se explica
+// con el glosario cuando escribió otro concepto del apunte.
+const complete = screens.slice(screens.indexOf('export function CompletePracticeScreen('), screens.indexOf('export function MixedPracticeScreen('));
+assert.match(complete, /<AnswerFeedback[^>]*correctAnswer=\{answer\}/, 'Completar usa la corrección compartida.');
+assert.match(complete, /bg-emerald-50 px-1\.5 font-semibold/, 'El espacio en blanco muestra la palabra correcta.');
+assert.match(complete, /\{!checked&&\s*<div className="flex flex-wrap/, 'Pista y Saltar desaparecen al responder.');
+assert.match(session, /writtenAnswerContrast\(responses\[step\]/, 'La diferencia sale del glosario del apunte.');
+assert.doesNotMatch(session, /Repasá el concepto y volvé a intentarlo en otra ronda/, 'Sin el texto genérico de antes.');
+const modes = read('lib/student-materials/practice-modes.ts');
+assert.match(modes, /if \(matches\.length !== 1\) return null;/, 'Si no es un concepto del apunte, no inventa una explicación.');
+
+console.log('[answer-feedback] una sola explicación en práctica, casos, mixto, verdadero o falso, completar y resultados.');
