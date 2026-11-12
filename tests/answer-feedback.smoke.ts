@@ -33,4 +33,15 @@ assert.match(exam, /<AnswerFeedback[\s\S]*explanation=\{groundedMistakeContrast 
 assert.doesNotMatch(exam, /Por qué esa opción no era la correcta/, 'Sin el bloque repetido.');
 assert.match(exam, /savedToErrors=\{!isCorrect\}/, 'La práctica guarda errores en Mis errores y lo avisa.');
 
-console.log('[answer-feedback] una sola explicación, página del apunte y rojo/verde en práctica, casos y mixto.');
+// Verdadero o falso, resultados de práctica/simulacro y resultados de la práctica del PDF.
+const results = read('components/dashboard/practice-results-screen.tsx');
+assert.match(feedback, /Era «\$\{correctText\}»/, 'En resultados se muestra la correcta en verde.');
+assert.match(session, /current\.type === 'question' && <div role="status" className="mt-4">\s*<AnswerFeedback/,
+  'Verdadero o falso usa la corrección compartida.');
+assert.match(session, /answeredOptionClass\(normalizedAnswer\(option\)/, 'Verdadero o falso marca rojo y verde.');
+assert.match(results, /<AnswerFeedback[\s\S]*correctAnswer=\{entry\.correctAnswer\}/,
+  'Los resultados (práctica y simulacro) usan la corrección compartida.');
+assert.match(results, /flashcards \?/, 'Flashcards conservan su resultado propio.');
+assert.match(exam, /correctAnswer=\{question\.answer\}/, 'El resultado de la práctica del PDF usa la misma pieza.');
+
+console.log('[answer-feedback] una sola explicación en práctica, casos, mixto, verdadero o falso y resultados.');

@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 export function AnswerFeedback({
   correct,
   chosen,
+  correctAnswer,
   explanation,
   page,
   pdfHref,
@@ -25,6 +26,8 @@ export function AnswerFeedback({
   correct: boolean;
   /** Lo que eligió el estudiante (solo se muestra si se equivocó). */
   chosen?: string | null;
+  /** Solo donde las opciones no están a la vista (resultados): muestra la correcta en verde. */
+  correctAnswer?: string | null;
   explanation?: string | null;
   /** Texto de la fuente: "Página 6", "Páginas 6–7" o el título de la sección. */
   page?: string | null;
@@ -37,6 +40,7 @@ export function AnswerFeedback({
   const english = useOptionalAppLocale() === 'en';
   const text = explanation?.trim() ?? '';
   const chosenText = chosen?.trim() ?? '';
+  const correctText = correctAnswer?.trim() ?? '';
 
   return (
     <div className={className}>
@@ -61,12 +65,24 @@ export function AnswerFeedback({
                 ? english
                   ? `It wasn't “${chosenText}”`
                   : `No era «${chosenText}»`
-                : english
-                  ? 'Not quite'
-                  : 'No era esa'}
+                : correctText
+                  ? english
+                    ? 'You left it unanswered'
+                    : 'No la respondiste'
+                  : english
+                    ? 'Not quite'
+                    : 'No era esa'}
             </span>
           </p>
         )}
+        {!correct && correctText ? (
+          <p className="text-ui mt-1 flex items-start gap-2 font-semibold text-emerald-700">
+            <Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span className="break-words">
+              {english ? `It was “${correctText}”` : `Era «${correctText}»`}
+            </span>
+          </p>
+        ) : null}
         {!correct && text ? (
           <p className="text-foreground/80 text-cuerpo mt-2 max-w-[75ch] leading-7 break-words whitespace-pre-line">
             {text}

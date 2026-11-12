@@ -5,6 +5,7 @@ import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import Link from 'next/link';
 import { ArrowRight, Check, ChevronDown, Lightbulb, X } from 'lucide-react';
+import { AnswerFeedback } from '@/components/study/answer-feedback';
 
 export type PracticeResultEntry = {
   index: number;
@@ -168,6 +169,7 @@ export function PracticeResultsScreen({
                       <ChevronDown className="size-4 shrink-0 text-[#7F8AA3] transition-transform group-open:rotate-180" aria-hidden="true" />
                     </summary>
 
+                    {flashcards ? (
                     <div className="flex flex-col gap-2.5 px-4 pb-4 sm:px-4 sm:pb-4">
                       <div className="flex items-start gap-2.5 rounded-xl border border-[#EDABA5] bg-[#FEF3F2] px-3 py-3">
                         <X className="mt-0.5 size-4 shrink-0 text-[#A04034]" strokeWidth={2.4} aria-hidden="true" />
@@ -203,6 +205,18 @@ export function PracticeResultsScreen({
                         </div>
                       )}
                     </div>
+                    ) : (
+                      <div className="px-4 pb-4">
+                        <AnswerFeedback
+                          correct={false}
+                          chosen={entry.selectedAnswer === 'Sin responder' ? null : entry.selectedAnswer}
+                          correctAnswer={entry.correctAnswer}
+                          explanation={entry.explanation}
+                          page={entry.pageStart ? (english ? `Page ${entry.pageStart}` : `Página ${entry.pageStart}`) : null}
+                          pdfHref={entry.pageStart && documentLabel === 'PDF' ? materialHref : null}
+                        />
+                      </div>
+                    )}
                   </details>
                 );
               })}

@@ -1277,16 +1277,29 @@ export function StudentMaterialExam({
                         <summary className="text-foreground cursor-pointer text-sm font-medium leading-6">
                           {question.prompt}
                         </summary>
+                        {question.type === 'multiple_choice' ? (
+                          <AnswerFeedback
+                            className="pt-3"
+                            correct={false}
+                            chosen={selectedAnswers[question.id] || null}
+                            correctAnswer={question.answer}
+                            explanation={question.explanation}
+                            page={sourceLabel(question)}
+                            pdfHref={
+                              question.reference.pageStart
+                                ? '/materiales/' + materialId + '?tab=resumen&page=' + question.reference.pageStart
+                                : null
+                            }
+                          />
+                        ) : (
                         <div className="text-muted-foreground space-y-3 pt-4 text-sm leading-6">
                           <p>
                             <span className="text-foreground font-semibold">{t("Tu respuesta:")} </span>
-                            {question.type === 'multiple_choice'
-                              ? selectedAnswers[question.id] || 'Sin respuesta'
-                              : openDrafts[question.id] || 'Sin respuesta escrita'}
+                            {openDrafts[question.id] || 'Sin respuesta escrita'}
                           </p>
                           <p>
                             <span className="text-foreground font-semibold">
-                              {question.type === 'multiple_choice' ? 'Respuesta correcta: ' : 'Respuesta esperada: '}
+                              {'Respuesta esperada: '}
                             </span>
                             {question.answer}
                           </p>
@@ -1298,6 +1311,7 @@ export function StudentMaterialExam({
                             <p className="text-xs">{t("La respuesta abierta fue autoevaluada, no corregida automáticamente.")}</p>
                           )}
                         </div>
+                        )}
                       </details>
                     ))}
                   </div>
