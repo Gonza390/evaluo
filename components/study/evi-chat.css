@@ -1,0 +1,15 @@
+/* En compu, el panel de Evi corre el contenido a la izquierda en vez de taparlo. */
+@media (min-width: 1024px) {
+  html.evi-chat-open body {
+    padding-right: 400px;
+  }
+  body {
+    transition: padding-right 250ms ease-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+}

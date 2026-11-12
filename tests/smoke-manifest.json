@@ -474,5 +474,9 @@
   {
     "file": "tests/answer-feedback.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/evi-chat.smoke.ts",
+    "alias": true
   }
 ]

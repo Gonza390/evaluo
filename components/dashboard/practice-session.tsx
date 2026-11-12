@@ -9,6 +9,7 @@ import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
 import { PracticeResultsScreen, type PracticeResultEntry } from '@/components/dashboard/practice-results-screen';
 import { AnswerFeedback, answeredOptionClass } from '@/components/study/answer-feedback';
+import type { EviChatContext } from '@/lib/evi-chat-contract';
 import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
@@ -206,6 +207,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const checked = reviewed.includes(step);
   const explanationFor = (question:PracticeQuestion) => groundedPracticeExplanation(question,pairs);
   const pdfPageHref = (page:number) => '/materiales/' + materialId + '?tab=resumen&page=' + page;
+  const eviFor = (question: string, correctAnswer: string, explanation: string, page: number | null | undefined, kindLabel: string): EviChatContext | null => {
+    if (previewResult) return null;
+    const usablePage = !isWord && page ? page : null;
+    return {
+      kind: 'practice', materialId, question, chosen: responses[step] ?? null, correctAnswer, explanation, page: usablePage,
+      label: [english ? ({ Caso: 'Case', 'Práctica mixta': 'Mixed practice', Completar: 'Fill in the blank', 'Verdadero o falso': 'True or false', Práctica: 'Practice' } as Record<string, string>)[kindLabel] ?? kindLabel : kindLabel, correctAnswer.slice(0, 48), usablePage ? (english ? 'p. ' : 'pág. ') + usablePage : ''].filter(Boolean).join(' · '),
+    };
+  };
 
   useEffect(() => {
     if (mode !== 'simulacro' || !ready || finished || !examStarted) return;
@@ -619,6 +628,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     explanation={groundedPracticeExplanation(current.question,pairs)}
     page={isWord ? null : current.question.pageStart}
     pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
+    evi={eviFor(current.question.prompt, current.question.answer, groundedPracticeExplanation(current.question,pairs), current.question.pageStart, 'Práctica mixta')}
     onSelect={setResponse} onConfirm={reviewOrNext}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
   if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <div className={leavingActivity?'practice-screen-leave':''}><CompletePracticeScreen key={step}
@@ -628,6 +638,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     explanation={checked && !correctAt(step) ? writtenAnswerContrast(responses[step] ?? '', current.pair.term, pairs, english) ?? '' : ''}
     page={isWord ? null : current.pair.pageStart ?? null}
     pdfHref={current.pair.pageStart && !isWord ? pdfPageHref(current.pair.pageStart) : null}
+    evi={eviFor('Completar: ____: ' + current.pair.definition, current.pair.term, '', current.pair.pageStart, 'Completar')}
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
@@ -636,6 +647,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} explanation={correctAt(step) ? '' : explanationFor(current.question)}
     pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
+    evi={eviFor(current.question.prompt, current.question.answer, explanationFor(current.question), current.question.pageStart, 'Caso')}
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
@@ -818,7 +830,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           <AnswerFeedback correct={correctAt(step)} chosen={responses[step]}
             explanation={correctAt(step) ? '' : [diagnosticFor(step), explanationFor(current.question)].filter(Boolean).join('\n\n')}
             page={!isWord && current.question.pageStart ? (english ? `Page ${current.question.pageStart}` : `Página ${current.question.pageStart}`) : null}
-            pdfHref={!isWord && current.question.pageStart ? pdfPageHref(current.question.pageStart) : null} />
+            pdfHref={!isWord && current.question.pageStart ? pdfPageHref(current.question.pageStart) : null}
+            evi={eviFor(current.question.prompt, current.question.answer, explanationFor(current.question), current.question.pageStart, mode === 'opciones' ? 'Verdadero o falso' : 'Práctica')} />
         </div>}
         {checked && mode !== 'simulacro' && current.type === 'recall' && <div role="status" className="mt-3 rounded-xl bg-slate-50 p-4 text-sm">
           <p className={correctAt(step) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
