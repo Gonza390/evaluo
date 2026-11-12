@@ -1804,6 +1804,24 @@ export function StudentMaterialExam({
                         : null
                     }
                     savedToErrors={!isCorrect}
+                    evi={isSimulation || !/^[0-9a-f-]{36}$/i.test(materialId) ? null : {
+                      kind: 'practice',
+                      materialId,
+                      question: current.prompt,
+                      chosen: selectedAnswer,
+                      correctAnswer: current.answer,
+                      explanation: groundedMistakeContrast || current.explanation,
+                      page: current.reference.pageStart ?? null,
+                      label: [
+                        tr('Práctica', 'Practice'),
+                        current.answer.slice(0, 48),
+                        current.reference.pageStart
+                          ? tr('pág. ', 'p. ') + current.reference.pageStart
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · '),
+                    }}
                   />
                 </section>
               ) : (

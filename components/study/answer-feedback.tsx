@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 import { Bookmark, Check, FileText, X } from 'lucide-react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { cn } from '@/lib/utils';
+import { EviChatLauncher } from '@/components/study/evi-chat-panel';
+import type { EviChatContext } from '@/lib/evi-chat-contract';
 
 /**
  * Corrección de una respuesta con una sola explicación (diseño "opción B").
@@ -21,6 +23,7 @@ export function AnswerFeedback({
   pdfHref,
   savedToErrors = false,
   actions,
+  evi,
   className,
 }: {
   correct: boolean;
@@ -35,12 +38,24 @@ export function AnswerFeedback({
   /** Mostrar "La guardamos en Mis errores" solo si el error se guarda de verdad. */
   savedToErrors?: boolean;
   actions?: ReactNode;
+  /** Si se pasa, muestra "Preguntale a Evi" y abre el chat sobre esta pregunta. */
+  evi?: EviChatContext | null;
   className?: string;
 }) {
   const english = useOptionalAppLocale() === 'en';
   const text = explanation?.trim() ?? '';
   const chosenText = chosen?.trim() ?? '';
   const correctText = correctAnswer?.trim() ?? '';
+  const showEvi = Boolean(evi) && !correct;
+  const eviTrigger =
+    showEvi && evi ? <EviChatLauncher context={evi} chosen={chosenText || null} /> : null;
+  const allActions =
+    eviTrigger || actions ? (
+      <>
+        {eviTrigger}
+        {actions}
+      </>
+    ) : null;
 
   return (
     <div className={className}>
@@ -88,7 +103,7 @@ export function AnswerFeedback({
             {text}
           </p>
         ) : null}
-        {(page || actions) && (
+        {(page || allActions) && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             {page && !correct ? (
               <div className="text-chico text-foreground/80 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -108,7 +123,9 @@ export function AnswerFeedback({
             ) : (
               <span />
             )}
-            {actions ? <div className="ml-auto flex items-center gap-2">{actions}</div> : null}
+            {allActions ? (
+              <div className="ml-auto flex flex-wrap items-center gap-2">{allActions}</div>
+            ) : null}
           </div>
         )}
       </section>

@@ -133,6 +133,8 @@ const ANALYTICS_EVENT_NAMES = [
   'study_error_created',
   'study_error_reviewed',
   'study_error_explanation_reviewed',
+  'evi_chat_opened',
+  'evi_chat_message_sent',
   'study_error_pdf_review_started',
   'study_error_repractice_started',
   'study_error_resolved',

@@ -1,5 +1,6 @@
 'use client';
 
+import { EviChatLauncher } from '@/components/study/evi-chat-panel';
 import {
   pdfStudyPrimaryButton as reviewPrimaryButton,
   pdfStudySecondaryButton as reviewSecondaryButton,
@@ -668,6 +669,24 @@ export function StudyErrorDetail({
                 pdfTitle={source?.materialTitle ?? null}
                 notice={helpNotice ? notice : undefined}
               />
+              {!resolved ? (
+                <EviChatLauncher
+                  className="mt-3"
+                  chosen={item.selectedAnswer ?? null}
+                  context={{
+                    kind: 'error',
+                    errorId: item.id,
+                    materialId,
+                    label: [
+                      english ? 'Mistake' : 'Error',
+                      item.topic,
+                      source?.pageStart ? (english ? 'p. ' : 'pág. ') + source.pageStart : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · '),
+                  }}
+                />
+              ) : null}
             </div>
           </section>
           <section data-study-error-tour="source" className="mt-3">
