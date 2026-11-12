@@ -5,7 +5,12 @@ import { isTransientSimulatorCatalogError } from '../lib/simulator-catalog-retry
 const preguntero = readFileSync('lib/data/preguntero.ts', 'utf8');
 const explorer = readFileSync('app/(es)/explorar/materia/[id]/materia-page.tsx', 'utf8');
 assert.ok(preguntero.includes("['preguntero-materia-stats-v1']"));
-assert.ok(preguntero.includes('revalidate: 600'));
+// 6 h: igual que el revalidate de las páginas públicas; un valor menor acá baja
+// el de toda la página (Next usa el mínimo).
+assert.ok(preguntero.includes('revalidate: 21600'));
+const prebuild = readFileSync('lib/catalog-prebuild.ts', 'utf8');
+assert.ok(prebuild.includes("process.env.VERCEL_ENV === 'production'"), 'Solo prearmar en el build de producción.');
+assert.ok(prebuild.includes('return [];'), 'Si falla la consulta, generar a pedido sin frenar el deploy.');
 assert.ok(preguntero.includes('return cachedPregunteroMateriaStats(materiaId)'));
 assert.ok(explorer.includes('getPregunteroMateriaStats(materiaId)'));
 assert.ok(!explorer.includes(".from('preguntas_banco_public')"), 'No repetir COUNT por parcial en cada visita.');

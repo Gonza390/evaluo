@@ -48,7 +48,7 @@ const getIndexableSimulatorCareerIds = unstable_cache(
     ));
   },
   ['simulator-indexable-careers-public-catalog-v1'],
-  { revalidate: 600, tags: ['materia-bootstrap', 'preguntero-stats'] }
+  { revalidate: 21600, tags: ['materia-bootstrap', 'preguntero-stats'] }
 );
 
 type PageProps = {

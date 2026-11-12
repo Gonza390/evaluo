@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { buildMateriaMetadata, renderMateriaPage } from '../../materia/[id]/materia-page';
+import { getMateriaCachePrebuildParams } from '@/lib/catalog-prebuild';
 
 // Versión cacheada (ISR) de /explorar/materia/[id] para visitas sin parámetros.
 // proxy.ts reescribe acá sin cambiar la URL; un acceso directo a esta ruta se
@@ -12,8 +13,9 @@ interface PageProps {
 // misma URL; con 10 min la página se regeneraba casi en cada pasada.
 export const revalidate = 21600;
 
+// Producción: las materias se prearman en el build (ver lib/catalog-prebuild.ts).
 export function generateStaticParams() {
-  return [];
+  return getMateriaCachePrebuildParams();
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {

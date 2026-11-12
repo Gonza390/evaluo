@@ -1138,13 +1138,13 @@ const loadRatedSimulatorMateriaIds = unstable_cache(
     return [...ids];
   },
   ['simulator-rated-materias-v1'],
-  { revalidate: 600, tags: ['simulator-ratings'] }
+  { revalidate: 21600, tags: ['simulator-ratings'] }
 );
 
 const loadSimulatorRatingsByMateria = unstable_cache(
   fetchSimulatorRatingsByMateria,
   ['simulator-ratings-v3'],
-  { revalidate: 600, tags: ['simulator-ratings'] }
+  { revalidate: 21600, tags: ['simulator-ratings'] }
 );
 
 export async function getSimulatorRatingsSummaryByMateria(
@@ -1220,7 +1220,7 @@ const loadSimulatorUsageByMateria = unstable_cache(
     }
   },
   ['simulator-usage'],
-  { revalidate: 600, tags: ['simulator-usage'] }
+  { revalidate: 21600, tags: ['simulator-usage'] }
 );
 
 export async function getSimulatorUsageSummaryByMateria(

@@ -261,7 +261,7 @@ const loadMateriaBootstrapBase = unstable_cache(
     };
   },
   ['materia-bootstrap-base-v2'],
-  { revalidate: 600, tags: ['materia-bootstrap'] }
+  { revalidate: 21600, tags: ['materia-bootstrap'] }
 );
 
 export async function getMateriaBootstrap(input: {

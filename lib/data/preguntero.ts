@@ -90,7 +90,7 @@ async function readPregunteroMateriaStats(
 const cachedPregunteroMateriaStats = unstable_cache(
   readPregunteroMateriaStats,
   ['preguntero-materia-stats-v1'],
-  { revalidate: 600, tags: ['materia-bootstrap', 'preguntero-stats'] }
+  { revalidate: 21600, tags: ['materia-bootstrap', 'preguntero-stats'] }
 );
 
 export function getPregunteroMateriaStats(materiaId: string): Promise<PregunteroMateriaStats> {
@@ -214,7 +214,7 @@ const loadParcialData = unstable_cache(
     }
   },
   ['preguntero-parcial-data-v4'],
-  { revalidate: 600, tags: ['materia-bootstrap'] }
+  { revalidate: 21600, tags: ['materia-bootstrap'] }
 );
 
 export async function getPregunteroParcialData(
