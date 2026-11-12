@@ -84,7 +84,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
 import { PdfMobileToolsMenu } from '@/components/study/pdf-mobile-tools-menu';
-import { PdfPracticeModes } from '@/components/study/pdf-practice-modes';
 import {
   pdfStudyTabClassName,
   pdfStudyControlsClassName,
@@ -2436,9 +2435,6 @@ export function MaterialStudyWorkspace({
                 onComplete={() => { if (!demo && practiceSectionIndex !== undefined) markActivity(materialId, practiceSectionIndex, 'questions'); else if (practiceSectionIndex === undefined) requestExamDatePrompt(); }}
               />
             )) : null}
-            {!demo && isOwner && !diagnosticMode && !recommendedActive && practiceSectionIndex === undefined ? (
-              <PdfPracticeModes materialId={materialId} />
-            ) : null}
           </div>
         </Activity>
       </TabsContent>
