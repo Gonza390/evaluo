@@ -13,6 +13,7 @@ import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-material
 import { cn } from '@/lib/utils';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { AnswerFeedback } from '@/components/study/answer-feedback';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import {
   saveNextStudyObjectiveAction,
@@ -1776,40 +1777,37 @@ export function StudentMaterialExam({
 
           {isRevealed ? (
             <div className="border-border mt-4 space-y-3 border-t pt-4">
-              <section
-                ref={correctionRef}
-                className={cn(
-                  'border-l-2 py-0.5 pl-4',
-                  current.type === 'multiple_choice' && isCorrect
-                    ? 'border-emerald-500'
-                    : current.type === 'multiple_choice'
-                      ? 'border-destructive'
-                      : 'border-primary'
-                )}
-              >
-                <p className="text-foreground text-sm font-medium">
-                  {current.type === 'multiple_choice'
-                    ? isCorrect
-                      ? tr('Correcto','Correct')
-                      : tr('Revisá este punto','Review this point')
-                    : tr('Respuesta esperada','Expected answer')}
-                </p>
-                <p className="text-foreground mt-2 text-[13.5px] leading-6">
-                  <span className="font-semibold">{t("Respuesta:")}</span> {current.answer}
-                </p>
-                {groundedMistakeContrast ? (
-                  <div className="border-primary/15 bg-primary/5 mt-3 rounded-lg border px-3 py-3">
-                    <p className="text-foreground text-[12px] font-semibold">{t("Por qué esa opción no era la correcta")}</p>
-                    <p className="text-foreground mt-1.5 text-[13px] leading-5">{groundedMistakeContrast}</p>
-                  </div>
-                ) : null}
-                <p className="text-muted-foreground mt-2 text-[13px] leading-5">
-                  {current.explanation}
-                </p>
-                <p className="text-muted-foreground mt-3 text-[11.5px] font-medium">
-                  Fuente: {sourceLabel(current)}
-                </p>
-              </section>
+              {current.type === 'multiple_choice' ? (
+                <section ref={correctionRef} aria-label={tr('Corrección','Feedback')}>
+                  <AnswerFeedback
+                    correct={isCorrect}
+                    chosen={selectedAnswer}
+                    explanation={groundedMistakeContrast || current.explanation}
+                    page={sourceLabel(current)}
+                    pdfHref={
+                      current.reference.pageStart
+                        ? '/materiales/' + materialId + '?tab=resumen&page=' + current.reference.pageStart
+                        : null
+                    }
+                    savedToErrors={!isCorrect}
+                  />
+                </section>
+              ) : (
+                <section ref={correctionRef} className="border-primary border-l-2 py-0.5 pl-4">
+                  <p className="text-foreground text-sm font-medium">
+                    {tr('Respuesta esperada','Expected answer')}
+                  </p>
+                  <p className="text-foreground mt-2 text-[13.5px] leading-6">
+                    <span className="font-semibold">{t("Respuesta:")}</span> {current.answer}
+                  </p>
+                  <p className="text-muted-foreground mt-2 text-[13px] leading-5">
+                    {current.explanation}
+                  </p>
+                  <p className="text-muted-foreground mt-3 text-[11.5px] font-medium">
+                    Fuente: {sourceLabel(current)}
+                  </p>
+                </section>
+              )}
 
               {current.type === 'open' ? (
                 <div className="border-t border-slate-100 pt-4">

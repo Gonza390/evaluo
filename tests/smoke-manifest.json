@@ -470,5 +470,9 @@
   {
     "file": "tests/seo-orphan-hub.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/answer-feedback.smoke.ts",
+    "alias": false
   }
 ]
