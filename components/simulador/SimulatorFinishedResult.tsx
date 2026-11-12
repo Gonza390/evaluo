@@ -2,17 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  CheckCircle2,
-  RotateCcw,
-  Sparkles,
-  TrendingUp,
-} from 'lucide-react';
+import { ArrowRight, BookOpen, RotateCcw, Upload, X } from 'lucide-react';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { supabase } from '@/lib/supabase-client';
 import { logError } from '@/lib/observability';
 import { findFutureSimulatorExamIntent } from '@/lib/simulator-exam-intent';
+import {
+  getSimulatorResultContextAction,
+  type SimulatorResultContext,
+} from '@/lib/actions/simulator-result';
 
 type PreviousAttempt = {
   correct_answers: number;
@@ -76,6 +74,17 @@ export function SimulatorFinishedResult({
   const [hasReadyOwnMaterial, setHasReadyOwnMaterial] = useState(false);
   const [examDate, setExamDate] = useState('');
   const [materialContextReady, setMaterialContextReady] = useState(!userId);
+  // Errores pendientes, enunciados y disponibilidad del repaso (onboarding etapa 3).
+  const [resultContext, setResultContext] = useState<SimulatorResultContext | null>(null);
+
+  useEffect(() => {
+    if (isFinishing || !userId) return;
+    let active = true;
+    void getSimulatorResultContextAction({ materiaId, parcial, attemptId, mode })
+      .then((context) => { if (active) setResultContext(context); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [attemptId, isFinishing, materiaId, mode, parcial, userId]);
 
   const safeTotal = Math.max(1, totalPreguntas);
   const percentage = Math.round((aciertos / safeTotal) * 100);
@@ -92,13 +101,6 @@ export function SimulatorFinishedResult({
     return (previousAttempt.correct_answers / previousAttempt.total_questions) * 10;
   }, [previousAttempt]);
 
-  const improvement = useMemo(() => {
-    if (!previousAttempt || previousAttempt.total_questions <= 0) return null;
-    const previousPercentage = Math.round(
-      (previousAttempt.correct_answers / previousAttempt.total_questions) * 100
-    );
-    return percentage - previousPercentage;
-  }, [percentage, previousAttempt]);
 
   useEffect(() => {
     let active = true;
@@ -183,222 +185,247 @@ export function SimulatorFinishedResult({
     };
   }, [attemptId, isFinishing, materiaId, mode, parcial, userId]);
 
-  const resultMessage =
-    wrong === 0
-      ? 'Completaste el simulador sin errores. Hacé otro intento para confirmar que podés sostener el resultado.'
-      : percentage >= 80
-        ? 'Muy buen resultado. Consolidalo con un repaso corto de los errores antes de volver al Simulador.'
-        : percentage >= 60
-          ? `Tenés una buena base. El mejor siguiente paso es recuperar los ${wrong} puntos que todavía podés reforzar.`
-          : `Este intento ya te mostró dónde enfocarte. Repasá los ${wrong} errores antes de volver al Simulador.`;
+  const isReview = mode === 'errores';
+  const reviewHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
+  // En el resultado normal, si todavía no llegó el conteo (o los errores eran de preguntas
+  // Premium, que no entran al repaso), se usa la cantidad de errores del intento.
+  const pendingCount = isReview
+    ? resultContext?.pendingCount ?? wrong
+    : resultContext && resultContext.pendingCount > 0
+      ? resultContext.pendingCount
+      : wrong;
+  const prompts = resultContext?.prompts ?? [];
+  const reviewAvailable = resultContext?.reviewAvailable ?? true;
+  const nextFreeReview = resultContext?.nextFreeReviewDate
+    ? formatReviewDate(resultContext.nextFreeReviewDate)
+    : null;
+  const subject = materiaNombre || 'tu materia';
+  const gradeLabel = grade.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  const gradeDelta =
+    previousGrade !== null ? Math.round((grade - previousGrade) * 10) / 10 : null;
+
+  const materialCard = hasReadyOwnMaterial ? (
+    <section data-simulator-result-material className="mt-6 rounded-[18px] border border-[#e3eaf5] p-[18px]">
+      <h2 className="text-subtitulo font-semibold leading-snug tracking-[-0.02em] text-[#0f1623]">
+        ¿Querés entender por qué te equivocaste?
+      </h2>
+      <p className="mt-1.5 text-ui leading-[1.45] text-[#4b5565] sm:text-cuerpo">
+        Ya tenemos tu apunte de {subject}: te mostramos dónde está cada tema que fallaste.
+      </p>
+      <Link href={misErroresHref} className="mt-3.5 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dbe6f8] px-[18px] text-ui font-semibold text-[#3c6cba] hover:bg-[#eef4ff]">
+        <BookOpen className="size-[17px]" aria-hidden="true" />
+        Ver mis errores en mi apunte
+      </Link>
+    </section>
+  ) : (
+    <section data-simulator-result-material className="mt-6 rounded-[18px] border border-[#e3eaf5] p-[18px]">
+      <h2 className="text-subtitulo font-semibold leading-snug tracking-[-0.02em] text-[#0f1623]">
+        {wrong > 0 || isReview ? '¿Querés entender por qué te equivocaste?' : '¿Querés llegar al examen con todo cubierto?'}
+      </h2>
+      <p className="mt-1.5 text-ui leading-[1.45] text-[#4b5565] sm:text-cuerpo">
+        {wrong > 0 || isReview
+          ? `Subí tu apunte de ${subject} y te mostramos dónde está cada tema en tu material.`
+          : `Subí tu apunte de ${subject} y te armamos un plan de estudios hasta el examen.`}
+      </p>
+      <TrackedLink
+        href={ownMaterialHref}
+        eventName="cta_click"
+        payload={{
+          location: wrong > 0 || isReview ? 'simulator_result_primary_pdf_activation' : 'simulator_result_pdf_activation',
+          cta_name: wrong > 0 || isReview ? 'upload_notes_to_study_detected_errors' : 'upload_own_pdf_after_simulator',
+          materia_id: materiaId,
+          materia_nombre: materiaNombre || null,
+          parcial,
+          exam_date: examDate || null,
+          source: 'preguntero-exam-intent',
+          destination: ownMaterialHref,
+        }}
+        className="mt-3.5 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#dbe6f8] px-[18px] text-ui font-semibold text-[#3c6cba] hover:bg-[#eef4ff]"
+      >
+        <Upload className="size-[17px]" aria-hidden="true" />
+        Subir mi apunte
+      </TrackedLink>
+    </section>
+  );
+
+  const promptList = (items: string[], total: number, tone: 'wrong' | 'pending') =>
+    items.length ? (
+      <ul aria-label={tone === 'wrong' ? 'Preguntas que fallaste' : 'Errores que quedan'} className="mt-4 flex flex-col gap-2">
+        {items.slice(0, tone === 'wrong' ? 2 : 3).map((prompt) => (
+          <li key={prompt} className="flex items-start gap-2.5 text-ui leading-[1.4] text-[#344054] sm:text-cuerpo">
+            {tone === 'wrong'
+              ? <X className="mt-0.5 size-4 shrink-0 text-[#b42318]" strokeWidth={2.4} aria-hidden="true" />
+              : <span aria-hidden="true" className="mt-1.5 size-2 shrink-0 rounded-full bg-[#c4320a]" />}
+            <span className="min-w-0 truncate">{prompt}</span>
+          </li>
+        ))}
+        {total > (tone === 'wrong' ? 2 : 3) ? (
+          <li className="pl-[26px] text-ui text-[#667085]">y {total - (tone === 'wrong' ? 2 : 3)} más</li>
+        ) : null}
+      </ul>
+    ) : null;
+
+  const primaryClass =
+    'mt-5 flex min-h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#3c6cba] px-6 text-cuerpo font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,.20)] transition-colors hover:bg-[#2a5193]';
 
   return (
-    <div className="min-h-[700px] bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_26%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mx-auto w-full max-w-5xl">
-        <div className="mb-5">
-          <p className="text-sm font-semibold text-[#6673C8]">Resultado del Simulador</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
-            {materiaNombre || 'Tu materia'} · {getParcialLabel(parcial)}
-          </h1>
-        </div>
-
-        <section className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.09)] sm:rounded-[32px]">
-          <div className="grid gap-0 lg:grid-cols-[0.82fr_1.18fr]">
-            <div className="border-b border-slate-200 p-6 sm:p-8 lg:border-r lg:border-b-0 lg:p-10">
-              <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Tu nota</p>
-              <div className="mt-4 flex items-end gap-3">
-                <span className="text-[4.7rem] leading-none font-bold tracking-[-0.08em] text-[#0F1B3D] sm:text-[5.5rem]">
-                  {grade.toFixed(1)}
+    <div data-simulator-result className="min-h-[700px] bg-white px-6 py-6 text-[#0f1623] sm:py-12">
+      <div className="mx-auto w-full max-w-[440px]">
+        {isReview ? (
+          <section>
+            <p className="text-ui text-[#667085]">{subject} · Repaso de errores</p>
+            <h1 className="mt-3 text-[30px] font-bold leading-[1.15] tracking-[-0.04em]">
+              {pendingCount === 0 && aciertos > 0
+                ? 'Resolviste todos tus errores'
+                : `Resolviste ${aciertos} de tus ${safeTotal} errores`}
+            </h1>
+            <div
+              className="mt-[18px] flex gap-1"
+              role="img"
+              aria-label={`${aciertos} resueltos, ${Math.max(0, safeTotal - aciertos)} pendientes`}
+            >
+              {safeTotal <= 20 ? (
+                Array.from({ length: safeTotal }, (_, index) => (
+                  <span key={index} className={`h-2 flex-1 rounded-full ${index < aciertos ? 'bg-[#067647]' : 'bg-[#e3e8ef]'}`} />
+                ))
+              ) : (
+                <span className="h-2 flex-1 overflow-hidden rounded-full bg-[#e3e8ef]">
+                  <span className="block h-full rounded-full bg-[#067647]" style={{ width: `${percentage}%` }} />
                 </span>
-                <span className="pb-2 text-lg font-semibold text-slate-400">/ 10</span>
-              </div>
-
-              <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span><strong className="text-slate-950">{aciertos} de {safeTotal}</strong> correctas</span>
-              </div>
-
-              <p className="mt-5 max-w-md text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">{resultMessage}</p>
-
-              <div className="mt-7 border-t border-slate-200 pt-6">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">Tu evolución</p>
-                {!comparisonReady ? (
-                  <p className="mt-3 text-sm text-slate-500">Comparando con tus intentos anteriores...</p>
-                ) : previousAttempt && improvement !== null && previousGrade !== null ? (
-                  <div className="mt-3 flex items-start gap-3">
-                    <TrendingUp className={`mt-0.5 h-5 w-5 shrink-0 ${improvement > 0 ? 'text-emerald-600' : 'text-[#6673C8]'}`} />
-                    <div>
-                      <p className="text-sm font-bold text-slate-950 sm:text-base">
-                        {improvement > 0 ? `Mejoraste ${improvement}% vs. tu intento anterior` : 'Ya tenés un intento anterior para comparar'}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">Tu nota anterior fue {previousGrade.toFixed(1)}.</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex items-start gap-3">
-                    <TrendingUp className="mt-0.5 h-5 w-5 shrink-0 text-[#6673C8]" />
-                    <div>
-                      <p className="text-sm font-bold text-slate-950 sm:text-base">Primer intento en esta materia</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-500">Este resultado queda como punto de partida para medir tu próxima mejora.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
+            <p className="mt-3 text-cuerpo text-[#344054]">
+              <strong className="font-semibold text-[#054f31]">{aciertos} {aciertos === 1 ? 'resuelto' : 'resueltos'}</strong>
+              {' · '}
+              {pendingCount === 0 ? 'no te queda ninguno' : `te ${pendingCount === 1 ? 'queda' : 'quedan'} ${pendingCount}`}
+            </p>
 
-            <div className="p-6 sm:p-8 lg:p-10">
-              <div className="rounded-[24px] border border-blue-200 bg-[linear-gradient(135deg,#F5F3FF_0%,#FFFFFF_58%,#EEF2FF_100%)] p-5 sm:p-6">
-                <p className="text-[12px] font-bold tracking-[0.18em] text-blue-700 uppercase">Siguiente paso recomendado</p>
+            <div className="my-6 h-px bg-[#e8ecf2]" />
 
-                {wrong > 0 ? (
-                  !materialContextReady && userId ? (
-                    <div className="py-3">
-                      <p className="text-sm font-semibold text-slate-700">
-                        Preparando el mejor próximo paso con tus apuntes...
-                      </p>
-                    </div>
-                  ) : hasReadyOwnMaterial ? (
-                    <>
-                      <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
-                        Ya sabemos qué necesitás reforzar
-                      </h2>
-                      <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
-                        Tus {wrong} {wrong === 1 ? 'error quedó guardado' : 'errores quedaron guardados'}.
-                        Evaluo los cruza con tus apuntes para mostrarte qué tema estudiar y dónde encontrarlo antes de volver a probarte.
-                      </p>
-                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#555CB1]">
-                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>De tus errores al lugar exacto de tus apuntes que necesitás reforzar.</span>
-                      </div>
-                      <Link
-                        href={misErroresHref}
-                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
-                      >
-                        Estudiar lo que fallé en mis apuntes
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
-                        Ya sabemos qué necesitás reforzar
-                      </h2>
-                      <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
-                        Detectamos {wrong} {wrong === 1 ? 'punto' : 'puntos'} que te conviene estudiar.
-                        Subí los apuntes que realmente entran en tu examen y Evaluo los procesa para encontrar dónde aparece cada tema.
-                      </p>
-                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#555CB1]">
-                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>Pasá de “qué me salió mal” a “qué tengo que estudiar en mis apuntes”.</span>
-                      </div>
-                      <TrackedLink
-                        href={ownMaterialHref}
-                        eventName="cta_click"
-                        payload={{
-                          location: 'simulator_result_primary_pdf_activation',
-                          cta_name: 'upload_notes_to_study_detected_errors',
-                          materia_id: materiaId,
-                          materia_nombre: materiaNombre || null,
-                          parcial,
-                          exam_date: examDate || null,
-                          source: 'preguntero-exam-intent',
-                          destination: ownMaterialHref,
-                        }}
-                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
-                      >
-                        Subir mis apuntes y saber qué estudiar
-                        <ArrowRight className="h-4 w-4" />
-                      </TrackedLink>
-                      {userId ? (
-                        <Link
-                          href={misErroresHref}
-                          className="mt-4 inline-flex text-sm font-semibold text-slate-500 transition hover:text-blue-700"
-                        >
-                          Ver qué fallé
-                        </Link>
-                      ) : null}
-                    </>
-                  )
-                ) : (
-                  <>
-                    <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">Confirmá el resultado</h2>
-                    <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">No tenés errores para repasar. Hacé otro Simulador para comprobar que podés sostener esta nota con preguntas distintas.</p>
-                    <button type="button" onClick={onNewExam} className="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#6673C8] to-[#6972C8] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95">
-                      Hacer otro Simulador
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </>
-                )}
+            {pendingCount > 0 ? (
+              <>
+                <p className="text-etiqueta font-semibold tracking-etiqueta text-[#667085]">LOS QUE QUEDAN</p>
+                {promptList(prompts, pendingCount, 'pending')}
+                <p className="mt-3.5 text-ui leading-[1.45] text-[#4b5565] sm:text-cuerpo">
+                  Estos te cuestan más: conviene entender por qué antes de volver a intentarlo.
+                </p>
+                <Link href={hasReadyOwnMaterial ? misErroresHref : ownMaterialHref} className={primaryClass}>
+                  {`Entender ${pendingCount === 1 ? 'el que queda' : `los ${pendingCount}`} con mi apunte`}
+                  <ArrowRight className="size-[18px]" aria-hidden="true" />
+                </Link>
+                {reviewAvailable ? (
+                  <Link href={reviewHref} className="mt-1.5 flex min-h-12 items-center justify-center text-ui font-semibold text-[#3c6cba]">
+                    Repasarlos de nuevo
+                  </Link>
+                ) : nextFreeReview ? (
+                  <p className="mt-3 text-center text-ui text-[#4b5565]">Podés volver a repasarlos el {nextFreeReview}.</p>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <p className="text-cuerpo leading-[1.45] text-[#4b5565]">
+                  Confirmá que lo sostenés con preguntas nuevas de {subject}.
+                </p>
+                <button type="button" onClick={onNewExam} className={primaryClass}>
+                  Hacer otro simulacro
+                  <ArrowRight className="size-[18px]" aria-hidden="true" />
+                </button>
+              </>
+            )}
+          </section>
+        ) : (
+          <>
+            <section>
+              <p className="text-ui text-[#667085]">{subject} · {getParcialLabel(parcial)}</p>
+              <div className="mt-2.5 flex items-baseline gap-2">
+                <span className="text-[56px] font-bold leading-none tracking-[-0.05em]">{gradeLabel}</span>
+                <span className="text-subtitulo font-medium text-[#667085]">/ 10</span>
               </div>
+              <p className="mt-2.5 text-cuerpo text-[#344054]">
+                <strong className="font-semibold text-[#0f1623]">{aciertos} de {safeTotal}</strong> correctas
+                {' · '}
+                {!comparisonReady ? '…' : gradeDelta === null ? 'primer intento' : gradeDelta > 0 ? (
+                  <span className="font-semibold text-[#067647]">+{gradeDelta.toLocaleString('es-AR')} vs. tu intento anterior</span>
+                ) : gradeDelta < 0 ? (
+                  `${gradeDelta.toLocaleString('es-AR')} vs. tu intento anterior`
+                ) : 'igual que tu intento anterior'}
+              </p>
+            </section>
 
-              {wrong > 0 ? (
-                <div className="mt-5">
-                  <button
-                    type="button"
-                    onClick={onNewExam}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-blue-700"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Hacer otro Simulador
-                  </button>
-                </div>
-              ) : null}
+            <div className="my-6 h-px bg-[#e8ecf2]" />
 
-              {wrong === 0 ? (
-                <div className="mt-7 border-t border-slate-200 pt-6">
-                  <p className="text-[12px] font-semibold tracking-[0.16em] text-[#456DBD] uppercase">
-                    Seguí preparando tu examen
+            {wrong > 0 ? (
+              <section>
+                <p className="text-etiqueta font-semibold tracking-etiqueta text-[#667085]">TU SIGUIENTE PASO</p>
+                <h1 className="mt-2 text-titulo font-semibold leading-tight tracking-titulo">
+                  {`Repasá ${pendingCount === 1 ? 'tu error' : `tus ${pendingCount} errores`} ahora`}
+                </h1>
+                <p className="mt-2 text-cuerpo leading-[1.45] text-[#4b5565]">
+                  Te volvemos a hacer las preguntas que fallaste, mientras las tenés frescas.
+                </p>
+                {promptList(prompts, wrong, 'wrong')}
+                <TrackedLink
+                  href={reviewHref}
+                  eventName="cta_click"
+                  payload={{
+                    location: 'simulator_result_review',
+                    cta_name: 'review_errors_now',
+                    materia_id: materiaId,
+                    parcial,
+                    pending_errors: pendingCount,
+                    review_available: reviewAvailable,
+                  }}
+                  className={primaryClass}
+                >
+                  {`Repasar ${pendingCount === 1 ? 'mi error' : `mis ${pendingCount} errores`}`}
+                  <span className="font-normal opacity-85">· unos {resultContext?.reviewMinutes ?? 1} min</span>
+                  <ArrowRight className="size-[18px]" aria-hidden="true" />
+                </TrackedLink>
+                {!reviewAvailable && nextFreeReview ? (
+                  <p className="mt-2 text-center text-chico text-[#667085]">
+                    Ya usaste tu repaso gratis de esta semana: vuelve el {nextFreeReview}.
                   </p>
-                  <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
-                    {hasReadyOwnMaterial
-                      ? `Seguí estudiando ${materiaNombre || 'esta materia'} con tus apuntes`
-                      : `Convertí tus apuntes de ${materiaNombre || 'esta materia'} en un plan de estudio`}
-                  </h3>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                    {hasReadyOwnMaterial
-                      ? 'Evaluo ya tiene tu material: podés seguir repasando, practicando y detectando qué te falta antes del examen.'
-                      : 'Subí el material que realmente entra en tu examen. Evaluo lo procesa para decirte qué estudiar, practicar y reforzar.'}
-                  </p>
+                ) : null}
+              </section>
+            ) : (
+              <section>
+                <p className="text-etiqueta font-semibold tracking-etiqueta text-[#667085]">TU SIGUIENTE PASO</p>
+                <h1 className="mt-2 text-titulo font-semibold leading-tight tracking-titulo">
+                  Sin errores. Confirmalo con otro intento
+                </h1>
+                <p className="mt-2 text-cuerpo leading-[1.45] text-[#4b5565]">
+                  Con preguntas distintas sabés si podés sostener esta nota.
+                </p>
+                <button type="button" onClick={onNewExam} className={primaryClass}>
+                  Hacer otro simulacro
+                  <ArrowRight className="size-[18px]" aria-hidden="true" />
+                </button>
+              </section>
+            )}
 
-                  {hasReadyOwnMaterial ? (
-                    <Link
-                      href="/dashboard"
-                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8] sm:w-auto"
-                    >
-                      Continuar estudiando
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  ) : (
-                    <TrackedLink
-                      href={ownMaterialHref}
-                      eventName="cta_click"
-                      payload={{
-                        location: 'simulator_result_pdf_activation',
-                        cta_name: 'upload_own_pdf_after_simulator',
-                        materia_id: materiaId,
-                        materia_nombre: materiaNombre || null,
-                        parcial,
-                        exam_date: examDate || null,
-                        source: 'preguntero-exam-intent',
-                        destination: ownMaterialHref,
-                      }}
-                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#456DBD] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#3A5CA8] sm:w-auto"
-                    >
-                      Subir mis apuntes
-                      <ArrowRight className="h-4 w-4" />
-                    </TrackedLink>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </section>
+            {materialContextReady ? materialCard : null}
 
-        <div className="mt-5 flex items-center justify-between gap-4 px-1 text-xs text-slate-500">
-          <span>{percentage}% de aciertos</span>
-          {isFinishing ? <span>Guardando resultado...</span> : null}
-        </div>
+            {wrong > 0 ? (
+              <button
+                type="button"
+                onClick={onNewExam}
+                className="mx-auto mt-6 flex min-h-11 items-center gap-2 text-ui font-medium text-[#4b5565] hover:text-[#0f1623]"
+              >
+                <RotateCcw className="size-4" aria-hidden="true" />
+                Hacer otro simulacro
+              </button>
+            ) : null}
+          </>
+        )}
+
+        {isFinishing ? <p className="mt-4 text-center text-chico text-[#667085]">Guardando resultado...</p> : null}
       </div>
     </div>
   );
+}
+
+function formatReviewDate(dateKey: string) {
+  const date = new Date(`${dateKey}T12:00:00Z`);
+  if (!Number.isFinite(date.getTime())) return dateKey;
+  return date.toLocaleDateString('es-AR', { weekday: 'long', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
 }

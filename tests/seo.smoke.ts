@@ -756,7 +756,7 @@ assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
 assertIncludesAll('components/simulador/SimulatorFinishedResult.tsx', [
   'simulator_result_primary_pdf_activation',
   'simulator_result_pdf_activation',
-  'Subir mis apuntes',
+  'Subir mi apunte',
 ]);
 
 // Regional optimization regression: substantial worked examples, distinct markets,

@@ -76,3 +76,31 @@ export async function countErroresAttemptsThisWeek(userId: string): Promise<numb
   }
   return count ?? 0;
 }
+
+/**
+ * Día (AAAA-MM-DD, UTC) en que vuelve a haber repaso de errores gratis.
+ * La ventana es la misma que `countErroresAttemptsThisWeek`: hoy y los 6 días anteriores.
+ * Devuelve null si hoy ya hay repaso disponible.
+ */
+export async function getNextFreeErrorsReviewDate(userId: string): Promise<string | null> {
+  const admin = createAdminClient();
+  const weekStart = new Date();
+  weekStart.setUTCHours(0, 0, 0, 0);
+  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+
+  const { data, error } = await admin
+    .from('simulator_attempts')
+    .select('created_at')
+    .eq('user_id', userId)
+    .eq('mode', 'errores')
+    .gte('created_at', weekStart.toISOString())
+    .order('created_at', { ascending: true });
+
+  if (error || !data || data.length < FREE_ERRORS_REVIEWS_PER_WEEK) return null;
+  // Cuando el intento más viejo de la ventana sale de ella, se libera un repaso.
+  const oldest = data[data.length - FREE_ERRORS_REVIEWS_PER_WEEK];
+  const next = new Date(oldest.created_at);
+  next.setUTCHours(0, 0, 0, 0);
+  next.setUTCDate(next.getUTCDate() + 7);
+  return next.toISOString().slice(0, 10);
+}

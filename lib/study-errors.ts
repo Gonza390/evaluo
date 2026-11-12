@@ -297,6 +297,11 @@ export async function recordStudyErrorCorrect(input: {
   userId: string;
   sourceType: StudyErrorSource;
   sourceKey: string;
+  /**
+   * El repaso de errores del simulador ya es la revisión: acertar ahí resuelve el
+   * error aunque no se haya abierto la explicación antes.
+   */
+  resolveWithoutReview?: boolean;
 }) {
   const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -314,14 +319,15 @@ export async function recordStudyErrorCorrect(input: {
       .maybeSingle();
 
     if (error) throw error;
-    if (!existing || existing.status !== 'pending' || !existing.last_reviewed_at) {
-      return false;
-    }
+    if (!existing || existing.status !== 'pending') return false;
 
-    const reviewedAt = new Date(existing.last_reviewed_at).getTime();
-    const failedAt = new Date(existing.last_failed_at).getTime();
-    if (!Number.isFinite(reviewedAt) || !Number.isFinite(failedAt) || reviewedAt < failedAt) {
-      return false;
+    if (!input.resolveWithoutReview) {
+      if (!existing.last_reviewed_at) return false;
+      const reviewedAt = new Date(existing.last_reviewed_at).getTime();
+      const failedAt = new Date(existing.last_failed_at).getTime();
+      if (!Number.isFinite(reviewedAt) || !Number.isFinite(failedAt) || reviewedAt < failedAt) {
+        return false;
+      }
     }
 
     const now = new Date().toISOString();

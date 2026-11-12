@@ -5,7 +5,10 @@ import {
   hasPremiumAccess,
   countErroresAttemptsThisWeek,
   FREE_ERRORS_REVIEWS_PER_WEEK,
+  getNextFreeErrorsReviewDate,
 } from '@/lib/premium';
+import { createAdminClient } from '@/lib/supabase-admin';
+import { getPendingSimulatorErrors } from '@/lib/simulator-error-review';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import { ErrorsReviewLimit } from '@/components/premium/errors-review-limit';
 import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
@@ -48,7 +51,29 @@ async function SimuladorErroresContent({
           limit: FREE_ERRORS_REVIEWS_PER_WEEK,
         },
       });
-      return <ErrorsReviewLimit materiaId={materia_id} parcial={parcial} />;
+      const admin = createAdminClient();
+      const [nextFreeReviewDate, pending, materia, material] = await Promise.all([
+        getNextFreeErrorsReviewDate(user.id),
+        getPendingSimulatorErrors(user.id, materia_id, parcial),
+        admin.from('materias').select('nombre').eq('id', materia_id).maybeSingle(),
+        admin
+          .from('student_materials')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('materia_id', materia_id)
+          .eq('processing_status', 'ready')
+          .limit(1),
+      ]);
+      return (
+        <ErrorsReviewLimit
+          materiaId={materia_id}
+          parcial={parcial}
+          materiaNombre={materia.data?.nombre ?? null}
+          pendingCount={pending.length}
+          nextFreeReviewDate={nextFreeReviewDate}
+          hasReadyMaterial={Boolean(material.data?.length)}
+        />
+      );
     }
   }
 
