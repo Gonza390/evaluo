@@ -470,5 +470,9 @@
   {
     "file": "tests/seo-orphan-hub.smoke.ts",
     "alias": false
+  },
+  {
+    "file": "tests/onboarding-simulator-result.smoke.ts",
+    "alias": true
   }
 ]

@@ -16,6 +16,7 @@ import { normalizeForCompare, parseCorrectAnswers } from '@/lib/simulator-core';
 import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
 import { preferSimulatorQuestion } from '@/lib/simulator-landing-entry';
 import { isUuid } from '@/lib/uuid';
+import { getPendingSimulatorErrorQuestionIds } from '@/lib/simulator-error-review';
 import { enforceServerActionRateLimit, getServerActionClientKey } from '@/lib/rate-limit';
 import {
   getSimulatorQuestionTopicLabels,
@@ -430,7 +431,12 @@ export async function getPreguntasSimuladorErrores(
       }
     }
 
-    const { data: wrongHistory, error: wrongError } = await supabase
+    // Primero los errores pendientes (los que se resuelven al acertar en el repaso).
+    // Si no hay, se usa el historial de respuestas incorrectas como antes.
+    const pendingIds = await getPendingSimulatorErrorQuestionIds(user.id, materiaId);
+    const { data: wrongHistory, error: wrongError } = pendingIds.length
+      ? { data: pendingIds.map((pregunta_id) => ({ pregunta_id })), error: null }
+      : await supabase
       .from('historial_respuestas')
       .select('pregunta_id')
       .eq('usuario_id', user.id)
@@ -463,7 +469,8 @@ export async function getPreguntasSimuladorErrores(
       .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
       .in('id', rankedIds);
 
-    if (parcial) {
+    // El parcial 3 es el mixto (1 + 2): no se filtra.
+    if (parcial === 1 || parcial === 2) {
       query = query.eq('parcial', parcial);
     }
 
@@ -822,6 +829,8 @@ export async function finalizarSimuladorAction(data: {
             userId: data.usuario_id,
             sourceType: 'simulator',
             sourceKey,
+            // En el repaso de errores, acertar resuelve el error (antes nunca se resolvían).
+            resolveWithoutReview: data.mode === 'errores',
           });
           return;
         }
