@@ -371,8 +371,6 @@ export default function ConfiguracionPage() {
         <h2 id="settings-general" className="text-chico font-normal text-slate-500">{settingsCopy.general}</h2>
         <LanguagePicker />
         {settingRow(settingsCopy.appearance, settingsCopy.light)}
-        <p className="pt-1 text-chico text-slate-400">{settingsCopy.themeUnavailable}</p>
-        <p className="pt-1 text-chico text-slate-400">{settingsCopy.languageHelp}</p>
       </section>
 
       <section aria-labelledby="settings-account" className="space-y-1">
