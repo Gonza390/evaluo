@@ -129,8 +129,7 @@ export function TopicFlashcards({
         <span>
           {english ? `Card ${index + 1} of ${cards.length}` : `Tarjeta ${index + 1} de ${cards.length}`}
         </span>
-        <span>{english ? 'Try to answer before looking.' : 'Intentá responder antes de mirar.'}</span>
-      </div>
+              </div>
       <div className="bg-muted/40 mt-3 rounded-2xl p-5 sm:p-6" aria-live="polite">
         <p className="text-foreground max-w-prose text-[16px] leading-6 font-semibold">{card.front}</p>
         {shown && (
@@ -174,11 +173,6 @@ export function TopicFlashcards({
           </button>
         )}
       </div>
-      <p className="text-muted-foreground mt-3 text-xs">
-        {english
-          ? 'Viewing flashcards does not change your topic assessment.'
-          : 'Consultar tarjetas no cambia tu evaluación del tema.'}
-      </p>
     </section>
   );
 }

@@ -684,7 +684,7 @@ for (const count of [7, 31]) {
 // Conservar la rama de refuerzo y el panel derecho mientras se elimina el índice.
 const pdfProgressDetail = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
 assert.doesNotMatch(pdfProgressDetail, /Navegación entre temas del PDF|Temas del PDF/);
-assert.match(pdfProgressDetail, /xl:grid-cols-\[minmax\(0,1fr\)_260px\]/);
+assert.match(pdfProgressDetail, /xl:grid-cols-\[minmax\(0,1fr\)_340px\]/);
 assert.match(pdfProgressDetail, /data-reinforcement-focus=\{reviewOpen/);
 assert.match(pdfProgressDetail, /Aprendizaje y próxima actividad del tema/);
 assert.match(pdfProgressDetail, /Volver a los temas/);

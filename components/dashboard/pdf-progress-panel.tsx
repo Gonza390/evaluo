@@ -33,10 +33,7 @@ import { TopicConcepts, TopicFlashcards } from '@/components/study/topic-study-s
 import { TopicStudySteps } from '@/components/study/topic-study-steps';
 import { buildTopicFlashcards } from '@/lib/student-materials/topic-flashcards';
 import { StudyRichText } from '@/components/study-rich-text';
-import {
-  topicPracticeFeedback,
-  type TopicPracticeOutcome,
-} from '@/lib/student-materials/topic-practice-feedback';
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 
 const emptyGlossary: StudyGlossaryItem[] = [];
 const emptyCards: StudyFlashcard[] = [];
@@ -216,8 +213,6 @@ export function PdfProgressPanel({
     [resources.concepts, resources.flashcards, english]
   );
   const currentAnswered = currentTopic ? topicAssessmentCount(currentTopic) : 0;
-  const currentCorrect =
-    currentTopic?.evidence.reduce((total, item) => total + item.correct, 0) ?? 0;
   const currentQuestionCount = questionCounts?.[currentSectionIndex];
   const canPracticeTopic = Boolean(
     onPracticeTopic && currentTopic && currentQuestionCount && currentQuestionCount > 0
@@ -243,13 +238,6 @@ export function PdfProgressPanel({
   const lastOutcome =
     lastPracticeOutcome?.sectionIndex === currentSectionIndex ? lastPracticeOutcome : undefined;
   const topicPending = currentErrors.filter((error) => error.status === 'pending');
-  const hasReinforced = currentErrors.some((error) => error.status === 'resolved');
-  const lastWasReinforced = lastOutcome
-    ? lastOutcome.incorrect > 0 &&
-      lastOutcome.incorrectPrompts.every((prompt) =>
-        currentErrors.some((error) => error.prompt === prompt && error.status === 'resolved')
-      )
-    : hasReinforced;
   // Coverage is based on actual study events, not a prediction of topic mastery.
   const topicStates = topics.map((topic) => {
     if (topic.errors.some((error) => error.status === 'pending')) return 'review' as const;
@@ -363,356 +351,114 @@ export function PdfProgressPanel({
       </div>
       )}
       {!reviewOpen && (
-        <div className="mt-5">
-          {(lastOutcome || topicPending.length > 0 || hasReinforced) && (
-            <section
-              className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
-              aria-label={tr("Tu próxima actividad","Your next activity")}
-            >
-              <h3 className="text-[16px] font-medium">{t("Tu próxima actividad")}</h3>
-              {lastOutcome && (
-                <p className="text-foreground mt-2 text-sm!">
-                  {tr('Última tanda:','Latest session:')} {lastOutcome.total}{' '}
-                  {lastOutcome.total === 1 ? tr('pregunta','question') : tr('preguntas','questions')} · {lastOutcome.correct}{' '}
-                  {lastOutcome.correct === 1 ? tr('correcta','correct') : tr('correctas','correct')} · {lastOutcome.incorrect}{' '}
-                  {lastOutcome.incorrect === 1 ? tr('incorrecta','incorrect') : tr('incorrectas','incorrect')}.
-                </p>
-              )}
-              <p className="text-muted-foreground mt-2 text-sm!">
-                {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced, locale)}
-              </p>
-              {topicPending.length > 0 && (
-                <>
-                  <p className="text-muted-foreground mt-2 text-xs!">
-                    {tr('Pendientes del tema:','Pending in this topic:')} {topicPending.length}{' '}
-                    {topicPending.length === 1 ? tr('pregunta','question') : tr('preguntas','questions')}{' '}
-                    {tr('de tus prácticas. Pueden incluir intentos anteriores.','from your practice sessions, including previous attempts.')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextError =
-                        topicPending.find((error) =>
-                          lastOutcome?.incorrectPrompts.includes(error.prompt)
-                        ) ?? topicPending[0];
-                      setErrorId(nextError.id);
-                      setReviewOpen(true);
-                    }}
-                    className={actionClass + ' bg-primary text-primary-foreground mt-4'}
-                  >
-                    {tr("Reforzar las dificultades","Review difficult questions")} <ArrowRight size={16} />
-                  </button>
-                </>
-              )}
-            </section>
-          )}
-          {!lastOutcome && topicPending.length === 0 && !hasReinforced && (
-            <p className="text-muted-foreground text-sm!">
-              {currentTopic?.errors.some((error) => error.status === 'pending')
-                ? tr("Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.","Your answers show something to review. Use your PDF to reinforce it or return to the topic.")
-                : currentTopic && topicAssessmentCount(currentTopic) > 0
-                  ? tr("Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.","You have practiced this topic. Return to the content or check your understanding again.")
-                  : currentQuestionCount === 0
-                    ? tr("Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.","Start with the content and use concepts and cards as study aids.")
-                    : tr("Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.","Start with the key concepts. Then test yourself with questions from your PDF.")}
-            </p>
-          )}
-          {!lastOutcome && topicPending.length === 0 && !hasReinforced && currentAnswered > 0 && (
-            <div className="mt-4 flex flex-wrap gap-3">
-              {selected?.status === 'pending' ? (
-                <button
-                  type="button"
-                  onClick={() => setReviewOpen(true)}
-                  className={actionClass + ' bg-primary text-primary-foreground'}
-                >
-                  {tr("Reforzar dificultades","Review difficulties")} <ArrowRight size={16} />
-                </button>
-              ) : summaryBody ? (
-                <a
-                  href={`#${panelId}-topic-summary`}
-                  className={
-                    actionClass +
-                    (currentTopic && topicAssessmentCount(currentTopic) > 0
-                      ? ' border-border border'
-                      : ' bg-primary text-primary-foreground')
-                  }
-                >
-                  {tr('Estudiar este tema','Study this topic')} <ArrowRight size={16} />
-                </a>
-              ) : null}
-              {canPracticeTopic ? (
-                <button
-                  type="button"
-                  onClick={() => onPracticeTopic?.(currentSectionIndex)}
-                  className={
-                    actionClass +
-                    (selected?.status === 'pending' ||
-                    !currentTopic ||
-                    topicAssessmentCount(currentTopic) === 0
-                      ? ' border-border border'
-                      : ' bg-primary text-primary-foreground')
-                  }
-                >
-                  {currentTopic?.errors.some((error) => error.status === 'resolved')
-                    ? tr('Volver a comprobar','Check again')
-                    : currentTopic && topicAssessmentCount(currentTopic) > 0
-                      ? tr('Comprobar lo aprendido','Check what you learned')
-                      : tr('Practicar este tema','Practice this topic')}
-                </button>
-              ) : onPractice ? (
-                <button
-                  type="button"
-                  onClick={onPractice}
-                  className={
-                    actionClass +
-                    (currentTopic &&
-                    topicAssessmentCount(currentTopic) > 0 &&
-                    selected?.status !== 'pending'
-                      ? ' bg-primary text-primary-foreground'
-                      : ' border-border border')
-                  }
-                >
-                  {tr("Practicar el PDF","Practice the PDF")}
-                </button>
-              ) : (
-                <Link
-                  href={simulation ? materialHref : materialHref + '?tab=ejercicios'}
-                  className={
-                    actionClass +
-                    (currentTopic &&
-                    topicAssessmentCount(currentTopic) > 0 &&
-                    selected?.status !== 'pending'
-                      ? ' bg-primary text-primary-foreground'
-                      : ' border-border border')
-                  }
-                >
-                  {tr("Practicar el PDF","Practice the PDF")}
-                </Link>
-              )}
-            </div>
-          )}
-          {currentQuestionCount === 0 && (
-            <p role="status" className="border-border mt-4 rounded-lg border p-3 text-sm!">
-              {tr('Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su comprensión.','You can study this topic. There are no linked questions yet to check your understanding.')}
-            </p>
-          )}
-          <TopicStudySteps
-            resetKey={currentTopic?.id ?? 'unmatched'}
-            steps={[
-              {
-                id: 'summary',
-                label: tr('Resumen', 'Summary'),
-                content: () => (
-                  <>
-          <section
-            id={panelId + '-topic-summary'}
-            className="scroll-mt-4"
-            aria-label={tr("Contenido de este tema","Topic content")}
-          >
-            <h3 className="text-[15px] font-semibold">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
-            {summaryBody && focusConcepts.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={tr("Guía de lectura del tema","Topic reading guide")}>
-                <span className="text-muted-foreground mr-1 text-[13px]">{tr("Fijate en:","Look for:")}</span>
-                <ul className="flex flex-wrap gap-2" aria-label={tr("Conceptos para orientar la lectura","Concepts to guide your reading")}>
-                  {focusConcepts.map((concept, index) => (
-                    <li key={`${concept.term}-${index}`} className="border-border rounded-full border px-3 py-1 text-xs font-medium break-words">
-                      {concept.term}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {summaryBody ? (
-              <div className="mt-5 min-w-0 max-w-[78ch] [&_p]:text-[14px]! sm:[&_p]:text-[13px]! [&_p]:leading-5!">
-                <StudyRichText body={summaryBody} />
-              </div>
-            ) : (
-              <p className="text-muted-foreground mt-3">
-                {tr("El contenido de este tema todavía no está disponible.","The content for this topic is not available yet.")}
-              </p>
-            )}
-          </section>
-          {(sourcePdfHref ?? simulation?.pdfHref) && (
-            <a
-              href={sourcePdfHref ?? simulation?.pdfHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary inline-flex min-h-11 items-center gap-2 text-sm underline underline-offset-4"
-            >
-              <FileText size={16} /> {tr("Consultar el PDF original","View original PDF")}
-            </a>
-          )}
-                  </>
-                ),
-              },
-              {
-                id: 'concepts',
-                label: tr('Conceptos', 'Concepts'),
-                count: resources.concepts.length,
-                content: () => <TopicConcepts concepts={resources.concepts} />,
-              },
-              {
-                id: 'flashcards',
-                label: 'Flashcards',
-                count: topicDeckSize,
-                content: ({ markDone }) => (
-                  <TopicFlashcards
-                    key={currentTopic?.id ?? 'unmatched'}
-                    concepts={resources.concepts}
-                    flashcards={resources.flashcards}
-                    pdfHref={sourcePdfHref ?? simulation?.pdfHref}
-                    onFinished={markDone}
-                  />
-                ),
-              },
-              ...(currentTopic
-                ? [
-                    {
-                      id: 'practice' as const,
-                      label: tr('Practicar', 'Practice'),
-                      content: () => (
-                        <>
-            <section
-              className="py-1"
-              aria-label={tr("Cómo continuar con tu estudio","How to continue studying")}
-            >
-              <h3 className="text-[16px] font-medium">{tr("Tu próximo paso","Your next step")}</h3>
-              <p className="text-muted-foreground mt-2 text-sm!">
-                {topicPending.length > 0
-                  ? tr("Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.","Review incorrect answers first. Then you can practice again.")
-                  : currentAnswered > 0 && nextStudyTopic
-                    ? tr("Ya practicaste este tema: seguí con el siguiente o elegí practicar de nuevo.","You have practiced this topic: move to the next one or practice again.")
-                    : canPracticeTopic
-                      ? tr("Comprobá lo que entendiste con preguntas de este tema.","Check what you learned with questions from this topic.")
-                      : nextStudyTopic
-                        ? tr("Podés continuar con el siguiente tema, aunque este todavía no tenga preguntas.","You can move to the next topic even though it does not have questions yet.")
-                        : tr("Volvé a la lista de temas para seguir estudiando.","Return to the topic list to continue studying.")}
-              </p>
-              <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                {topicPending.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const error =
-                        topicPending.find((item) =>
-                          lastOutcome?.incorrectPrompts.includes(item.prompt)
-                        ) ?? topicPending[0];
-                      setErrorId(error.id);
-                      setReviewOpen(true);
-                    }}
-                    className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
-                  >
-                    {tr('Entender mis errores','Understand my mistakes')} <ArrowRight size={16} />
-                  </button>
-                )}
-                {topicPending.length === 0 && nextStudyTopic && currentAnswered > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => openTopic(nextStudyTopic.id)}
-                    className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
-                  >
-                    {tr('Seguir con el tema','Continue with topic')} {topics.indexOf(nextStudyTopic) + 1}
-                    <ArrowRight size={16} />
-                  </button>
-                )}
-                {topicPending.length === 0 && canPracticeTopic && (
-                  <button
-                    type="button"
-                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
-                    className={
-                      actionClass +
-                      (nextStudyTopic && currentAnswered > 0
-                        ? ' border-border border'
-                        : ' bg-primary text-primary-foreground') +
-                      ' xl:hidden'
-                    }
-                  >
-                    {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : tr('Practicar este tema','Practice this topic')}
-                    <ArrowRight size={16} />
-                  </button>
-                )}
-                {topicPending.length === 0 &&
-                  nextStudyTopic &&
-                  currentAnswered === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => openTopic(nextStudyTopic.id)}
-                      className={
-                        actionClass +
-                        (canPracticeTopic
-                          ? ' border-border border'
-                          : ' bg-primary text-primary-foreground')
-                      }
-                    >
-                      {tr('Seguir con el tema','Continue with topic')} {topics.indexOf(nextStudyTopic) + 1}
-                      <ArrowRight size={16} />
-                    </button>
+        <TopicStudySteps
+          resetKey={currentTopic?.id ?? 'unmatched'}
+          steps={[
+            {
+              id: 'summary',
+              label: tr('Resumen', 'Summary'),
+              content: () => (
+                <section id={panelId + '-topic-summary'} className="scroll-mt-4" aria-label={tr("Contenido de este tema","Topic content")}>
+                  <h3 className="text-[15px] font-semibold">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
+                  {summaryBody && focusConcepts.length > 0 && (
+                    <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={tr("Guía de lectura del tema","Topic reading guide")}>
+                      <span className="text-muted-foreground mr-1 text-[13px]">{tr("Fijate en:","Look for:")}</span>
+                      <ul className="flex flex-wrap gap-2" aria-label={tr("Conceptos para orientar la lectura","Concepts to guide your reading")}>
+                        {focusConcepts.map((concept, index) => (
+                          <li key={`${concept.term}-${index}`} className="border-border rounded-full border px-3 py-1 text-xs font-medium break-words">
+                            {concept.term}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
-              </div>
-              {nextStudyTopic ? (
-                <p className="text-muted-foreground mt-3 text-sm! break-words">
-                  {tr('Siguiente:','Next:')} {nextStudyTopic.title}
-                </p>
-              ) : (
-                <p className="text-muted-foreground mt-3 text-sm!">
-                  {tr('Llegaste al último tema del PDF. Podés volver a cualquiera para estudiar o practicar.','You have reached the final topic. You can revisit any topic to study or practice.')}
-                </p>
-              )}
-            </section>
-                        </>
-                      ),
-                    },
-                  ]
-                : []),
-            ]}
-          />
-          <details className="border-border border-t py-3 xl:hidden">
-            <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
-              {tr("Tu aprendizaje","Your learning")}
-            </summary>
-            {assessmentData?.loadError && (
-              <p role="status" className="text-muted-foreground py-2 text-sm">
-                {tr("No pudimos cargar todas tus respuestas. Esto no significa que no hayas practicado.","We could not load all your answers. Your practice sessions have not been deleted.")}
-              </p>
-            )}
-            {currentAnswered > 0 && !assessmentData?.loadError && (
-              <p className="text-foreground py-2 text-sm">
-                {currentCorrect} {tr('de','of')} {currentAnswered} {tr('respuestas correctas registradas en prácticas y refuerzos.','correct answers recorded in practice and review.')}
-              </p>
-            )}
-            {currentErrors.length > 0 ? (
-              <div className="space-y-3 py-2">
-                <p className="text-muted-foreground text-sm">
-                  {currentErrors.filter((item) => item.status === 'pending').length} {tr('preguntas para repasar','questions to review')} · {currentErrors.filter((item) => item.status === 'resolved').length}{' '}
-                  {tr('refuerzos comprobados.','confirmed reviews.')}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {tr('Una comprobación después de una explicación no demuestra por sí sola el dominio de todo el tema.','One correct answer after an explanation does not demonstrate mastery of the topic.')}
-                </p>
-                {currentErrors
-                  .filter((item) => item.status === 'pending')
-                  .slice(0, 4)
-                  .map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setErrorId(item.id);
-                        setReviewOpen(true);
-                      }}
-                      className="text-primary focus-visible:outline-ring block min-h-11 w-full py-3 text-left text-sm underline underline-offset-4 focus-visible:outline-2"
-                    >
-                      {item.prompt}
-                    </button>
-                  ))}
-              </div>
-            ) : currentAnswered === 0 && !assessmentData?.loadError ? (
-              <p className="text-muted-foreground py-2 text-sm">
-                {tr('Acá aparecerán tus resultados cuando practiques. Podés empezar por el contenido sin tener historial.','Your results will appear here once you practice. You can start with the content without previous sessions.')}
-              </p>
-            ) : null}
-          </details>
-        </div>
+                  {summaryBody ? (
+                    <div className="mt-4 min-w-0 max-w-[78ch] [&_p]:text-[14px]! sm:[&_p]:text-[13px]! [&_p]:leading-5!">
+                      <StudyRichText body={summaryBody} />
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground mt-3">
+                      {tr("El contenido de este tema todavía no está disponible.","The content for this topic is not available yet.")}
+                    </p>
+                  )}
+                </section>
+              ),
+            },
+            {
+              id: 'concepts',
+              label: tr('Conceptos', 'Concepts'),
+              count: resources.concepts.length,
+              content: () => <TopicConcepts concepts={resources.concepts} />,
+            },
+            {
+              id: 'flashcards',
+              label: 'Flashcards',
+              count: topicDeckSize,
+              content: ({ markDone }) => (
+                <TopicFlashcards
+                  key={currentTopic?.id ?? 'unmatched'}
+                  concepts={resources.concepts}
+                  flashcards={resources.flashcards}
+                  pdfHref={sourcePdfHref ?? simulation?.pdfHref}
+                  onFinished={markDone}
+                />
+              ),
+            },
+            ...(currentTopic
+              ? [
+                  {
+                    id: 'practice' as const,
+                    label: tr('Practicar', 'Practice'),
+                    content: () => (
+                      <section aria-label={tr("Cómo continuar con tu estudio","How to continue studying")}>
+                        <h3 className="text-[15px] font-semibold">{tr("Ponete a prueba con tu PDF","Test yourself with your PDF")}</h3>
+                        <p className="text-muted-foreground mt-2 max-w-prose text-[14px]! leading-6!">
+                          {canPracticeTopic
+                            ? tr("Respondé preguntas que salen de tu material. Con tus respuestas vas a ver cuánto dominás este tema y qué conviene repasar.","Answer questions from your material to see how much you know and what to review.")
+                            : tr("Todavía no hay preguntas para evaluar este tema.","There are no questions to check this topic yet.")}
+                        </p>
+                        <div className="mt-5 flex flex-wrap items-center gap-3">
+                          {topicPending.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const error =
+                                  topicPending.find((item) => lastOutcome?.incorrectPrompts.includes(item.prompt)) ?? topicPending[0];
+                                setErrorId(error.id);
+                                setReviewOpen(true);
+                              }}
+                              className={actionClass + ' bg-primary text-primary-foreground'}
+                            >
+                              {tr('Entender mis errores','Understand my mistakes')} <ArrowRight size={16} />
+                            </button>
+                          )}
+                          {canPracticeTopic && (
+                            <button
+                              type="button"
+                              onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                              className={actionClass + (topicPending.length > 0 ? ' border-border border' : ' bg-primary text-primary-foreground')}
+                            >
+                              {currentAnswered > 0 ? tr("Practicar de nuevo","Practice again") : tr('Practicar este tema','Practice this topic')}
+                              <ArrowRight size={16} />
+                            </button>
+                          )}
+                          {nextStudyTopic && (
+                            <button
+                              type="button"
+                              onClick={() => openTopic(nextStudyTopic.id)}
+                              className="text-muted-foreground focus-visible:outline-ring min-h-11 text-[13px] underline underline-offset-4 focus-visible:outline-2"
+                            >
+                              {tr('Seguir con el tema','Continue with topic')} {topics.indexOf(nextStudyTopic) + 1}
+                            </button>
+                          )}
+                        </div>
+                      </section>
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
       )}
       {reviewOpen && selected ? (
         <StudyErrorDetail
@@ -944,96 +690,6 @@ export function PdfProgressPanel({
                     </li>
                   ))}
                 </ul>
-              </div>
-              <div className="border-border bg-card space-y-3 rounded-xl border p-3.5">
-                <div>
-                  <h3 className="text-[13px] font-medium">{reviewOpen ? tr("Refuerzo en curso","Review in progress") : tr("Tu aprendizaje","Your learning")}</h3>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {currentTopic?.title ?? tr("Conceptos pendientes","Pending concepts")}
-                  </p>
-                </div>
-                {!reviewOpen && lastOutcome && (
-                  <div className="border-border border-b pb-3">
-                    <p className="text-muted-foreground text-xs">{t("Última práctica")}</p>
-                    <p className="mt-1 text-[20px] font-semibold tabular-nums">
-                      {lastOutcome.correct}/{lastOutcome.total}
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {lastOutcome.incorrect}{' '}
-                      {lastOutcome.incorrect === 1 ? tr('respuesta incorrecta','incorrect answer') : tr('respuestas incorrectas','incorrect answers')}
-                    </p>
-                  </div>
-                )}
-                {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
-                  <div className="border-border border-b pb-3">
-                    <p className="text-muted-foreground text-xs">{t("Respuestas registradas")}</p>
-                    <p className="mt-1 text-[20px] font-semibold tabular-nums">
-                      {currentCorrect}/{currentAnswered}
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {tr("Acumuladas, no una medición de dominio.","Cumulative totals, not a mastery measure.")}
-                    </p>
-                  </div>
-                )}
-                {!reviewOpen && assessmentData?.loadError && (
-                  <p role="status" className="text-muted-foreground text-xs">
-                    {tr("No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.","We could not load your answers. Your practice history is still saved.")}
-                  </p>
-                )}
-                {topicPending.length > 0 && (
-                  <p className="text-sm font-medium">
-                    {topicPending.length}{' '}
-                    {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
-                  </p>
-                )}
-                {reviewOpen ? (
-                  <p className="border-border text-muted-foreground border-t pt-3 text-xs leading-5">
-                    {tr("Revisá la explicación y comprobá lo aprendido con una pregunta diferente.","Review the explanation, then test yourself with a different question.")}
-                  </p>
-                ) : (
-                <div className="border-border border-t pt-3">
-                  <h4 className="text-[13px] font-medium">{t("Tu próxima actividad")}</h4>
-                  <p className="text-muted-foreground mt-2 text-[13px] leading-5">
-                    {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
-                  </p>
-                  {topicPending.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const nextError =
-                          topicPending.find((error) =>
-                            lastOutcome?.incorrectPrompts.includes(error.prompt)
-                          ) ?? topicPending[0];
-                        setErrorId(nextError.id);
-                        setReviewOpen(true);
-                      }}
-                      className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
-                    >
-                      {tr("Reforzar dificultades","Review difficulties")} <ArrowRight size={16} />
-                    </button>
-                  ) : nextStudyTopic && currentAnswered > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => openTopic(nextStudyTopic.id)}
-                      className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
-                    >
-                      {tr("Seguir con el siguiente tema","Continue with next topic")} <ArrowRight size={16} />
-                    </button>
-                  ) : canPracticeTopic ? (
-                    <button
-                      type="button"
-                      onClick={() => onPracticeTopic?.(currentSectionIndex)}
-                      className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
-                    >
-                      {t("Practicar este tema")} <ArrowRight size={16} />
-                    </button>
-                  ) : (
-                    <p className="text-muted-foreground mt-3 text-xs">
-                      {tr("Podés continuar leyendo aunque no haya preguntas de este tema.","You can keep reading even if there are no questions for this topic.")}
-                    </p>
-                  )}
-                </div>
-                )}
               </div>
             </aside>
           )}
