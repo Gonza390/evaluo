@@ -511,23 +511,11 @@ export function PdfProgressPanel({
           >
             <h3 className="text-[15px] font-semibold">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
             {summaryBody && focusConcepts.length > 0 && (
-              <div
-                className="border-border bg-muted/30 mt-3 rounded-xl border p-3"
-                aria-label={tr("Guía de lectura del tema","Topic reading guide")}
-              >
-                <h4 className="text-sm font-medium">{t("Antes de leer: en qué enfocarte")}</h4>
-                <p className="text-muted-foreground mt-2 text-sm leading-6">
-                  {tr('Buscá cómo se explican estos conceptos en tu material. Después, intentá explicarlos con tus palabras y sin mirar.','Find how these concepts are explained in your material. Then try to explain them in your own words without looking.')}
-                </p>
-                <ul
-                  className="mt-3 flex flex-wrap gap-2"
-                  aria-label={tr("Conceptos para orientar la lectura","Concepts to guide your reading")}
-                >
+              <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={tr("Guía de lectura del tema","Topic reading guide")}>
+                <span className="text-muted-foreground mr-1 text-[13px]">{tr("Fijate en:","Look for:")}</span>
+                <ul className="flex flex-wrap gap-2" aria-label={tr("Conceptos para orientar la lectura","Concepts to guide your reading")}>
                   {focusConcepts.map((concept, index) => (
-                    <li
-                      key={`${concept.term}-${index}`}
-                      className="border-border bg-card rounded-full border px-3 py-1.5 text-xs font-medium break-words"
-                    >
+                    <li key={`${concept.term}-${index}`} className="border-border rounded-full border px-3 py-1 text-xs font-medium break-words">
                       {concept.term}
                     </li>
                   ))}
