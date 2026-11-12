@@ -397,7 +397,7 @@ export function StudyErrorDetail({
     <div className="w-full min-w-0">
       {topicReinforcement && !question ? (
         <div
-          className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8"
+          className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start lg:gap-10"
           data-topic-reinforcement
         >
           <article className="min-w-0 space-y-6">
@@ -582,7 +582,10 @@ export function StudyErrorDetail({
             )}
           </article>
           {!resolved ? (
-            <div className="border-border hidden min-w-0 border-l pl-6 lg:block">
+            <div
+              data-evi-chat-docked
+              className="border-border hidden min-w-0 border-l pl-6 lg:sticky lg:top-2 lg:block lg:h-[calc(100dvh-11rem)] lg:min-h-[440px]"
+            >
               <EviChatPanel
                 inline
                 open

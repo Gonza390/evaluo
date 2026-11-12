@@ -364,7 +364,7 @@ export function EviChatPanel({
       data-evi-chat-panel
       className={
         inline
-          ? 'bg-background flex min-h-[560px] flex-col'
+          ? 'bg-background flex h-full min-h-0 flex-col'
           : cn(
               'bg-background fixed inset-0 z-[60] flex flex-col transition-transform duration-[250ms] ease-out motion-reduce:transition-none',
               'lg:border-border lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[400px] lg:border-l lg:shadow-[-12px_0_32px_rgba(15,23,42,0.06)]',
@@ -387,13 +387,23 @@ export function EviChatPanel({
         </div>
       )}
 
-      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-5 pb-4" aria-live="polite">
+      <div
+        ref={listRef}
+        className={cn('min-h-0 flex-1 overflow-y-auto pb-4', inline ? 'px-1 pt-1' : 'px-5')}
+        aria-live="polite"
+      >
         {entries.length === 0 ? (
           <div className="flex flex-col items-center pt-2 text-center">
-            <img src="/evi-avatar.svg" alt="" className={cn('size-12', visible && 'evi-pop')} />
+            <img
+              src="/evi-avatar.svg"
+              alt=""
+              className={cn(inline ? 'size-10' : 'size-12', visible && 'evi-pop')}
+            />
             <h2
               className={cn(
-                'text-titulo-sm text-foreground tracking-titulo mt-3 font-semibold',
+                inline
+                  ? 'text-cuerpo text-foreground mt-3 font-semibold'
+                  : 'text-titulo-sm text-foreground tracking-titulo mt-3 font-semibold',
                 visible && 'evi-rise'
               )}
               style={{ '--evi-step': 0 } as CSSProperties}
@@ -408,7 +418,9 @@ export function EviChatPanel({
             </h2>
             <p
               className={cn(
-                'text-ui text-muted-foreground mt-2 max-w-[290px] leading-6',
+                inline
+                  ? 'text-chico text-muted-foreground mt-1.5 max-w-[280px] leading-5'
+                  : 'text-ui text-muted-foreground mt-2 max-w-[290px] leading-6',
                 visible && 'evi-rise'
               )}
               style={{ '--evi-step': 1 } as CSSProperties}
@@ -426,7 +438,9 @@ export function EviChatPanel({
                   onClick={() => void send(suggestion, true)}
                   style={{ '--evi-step': index + 2 } as CSSProperties}
                   className={cn(
-                    'border-border text-ui text-foreground/80 hover:bg-muted min-h-10 rounded-full border bg-white px-4 disabled:opacity-50',
+                    inline
+                      ? 'border-border text-chico text-foreground/80 hover:bg-muted min-h-9 rounded-full border bg-white px-3.5 disabled:opacity-50'
+                      : 'border-border text-ui text-foreground/80 hover:bg-muted min-h-10 rounded-full border bg-white px-4 disabled:opacity-50',
                     visible && 'evi-rise'
                   )}
                 >
@@ -583,7 +597,7 @@ export function EviChatPanel({
       </div>
 
       <form
-        className="px-4 pb-4"
+        className={inline ? 'pt-2' : 'px-4 pb-4'}
         onSubmit={(event) => {
           event.preventDefault();
           void send(draft);

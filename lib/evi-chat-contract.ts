@@ -93,7 +93,11 @@ export function sanitizeEviChatInput(input: {
 export function eviChatSuggestions(chosen: string | null | undefined, english = false) {
   const other = chosen?.trim();
   const first =
-    other && other.length <= 60 && !/^(verdadero|falso|true|false)$/i.test(other)
+    other &&
+    other.length <= 60 &&
+    !/^(verdadero|falso|true|false|no lo s[aá]b[ií]a|no s[eé]|sin respuesta|sin responder|no answer|i don.?t know)$/i.test(
+      other
+    )
       ? english
         ? `How is it different from “${other}”?`
         : `¿En qué se diferencia de «${other}»?`
