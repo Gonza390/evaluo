@@ -645,7 +645,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   if (ready && !finished && mode === 'casos' && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><CasesPracticeScreen key={step}
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
-    correct={correctAt(step)} explanation={correctAt(step) ? '' : explanationFor(current.question)}
+    correct={correctAt(step)} explanation={explanationFor(current.question)}
     pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
     evi={eviFor(current.question.prompt, current.question.answer, explanationFor(current.question), current.question.pageStart, 'Caso')}
     onSelect={setResponse} onNext={reviewOrNext}
@@ -828,7 +828,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         </div>
         {checked && mode !== 'simulacro' && current.type === 'question' && <div role="status" className="mt-4">
           <AnswerFeedback correct={correctAt(step)} chosen={responses[step]}
-            explanation={correctAt(step) ? '' : [diagnosticFor(step), explanationFor(current.question)].filter(Boolean).join('\n\n')}
+            explanation={[diagnosticFor(step), explanationFor(current.question)].filter(Boolean).join('\n\n')}
             page={!isWord && current.question.pageStart ? (english ? `Page ${current.question.pageStart}` : `Página ${current.question.pageStart}`) : null}
             pdfHref={!isWord && current.question.pageStart ? pdfPageHref(current.question.pageStart) : null}
             evi={eviFor(current.question.prompt, current.question.answer, explanationFor(current.question), current.question.pageStart, mode === 'opciones' ? 'Verdadero o falso' : 'Práctica')} />
