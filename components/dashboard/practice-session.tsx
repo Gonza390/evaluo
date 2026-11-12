@@ -14,7 +14,7 @@ import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, Mixed
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
-  groundedPracticeExplanation, normalizedAnswer,
+  groundedPracticeExplanation, normalizedAnswer, writtenAnswerContrast,
   distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, qualifiedQuestions, selectMixedQuestions,
   selectPracticePairs, shuffleMatchingDefinitions, shufflePracticeChoices, shufflePracticeItems,
   type PracticePair, type PracticeQuestion,
@@ -625,7 +625,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.pair.term}
-    explanation={t(checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.')}
+    explanation={checked && !correctAt(step) ? writtenAnswerContrast(responses[step] ?? '', current.pair.term, pairs, english) ?? '' : ''}
+    page={isWord ? null : current.pair.pageStart ?? null}
+    pdfHref={current.pair.pageStart && !isWord ? pdfPageHref(current.pair.pageStart) : null}
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;

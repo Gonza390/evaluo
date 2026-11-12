@@ -418,6 +418,26 @@ export function groundedPracticeContrast(
 }
 
 /**
+ * Completar: si el estudiante escribió OTRO concepto de su glosario, devuelve
+ * solo la definición de ese concepto (la correcta ya está a la vista).
+ * Si no coincide con un único concepto del apunte, no inventa nada.
+ */
+export function writtenAnswerContrast(
+  written: string, expected: string, pairs: readonly PracticePair[], english = false,
+): string | null {
+  if (!written.trim() || normalizedAnswer(written) === normalizedAnswer(expected)) return null;
+  const key = normalizedAnswer(written);
+  const matches = pairs.filter(p => normalizedAnswer(p.term) === key ||
+    (p.englishTerm ? normalizedAnswer(p.englishTerm) === key : false));
+  if (matches.length !== 1) return null;
+  const other = matches[0]!;
+  if (normalizedAnswer(other.term) === normalizedAnswer(expected)) return null;
+  return english
+    ? '“' + other.term + '” is a different concept in your notes: ' + other.definition.trim()
+    : '«' + other.term + '» es otro concepto de tu apunte: ' + other.definition.trim();
+}
+
+/**
  * Replace formulaic "other options are wrong" explanations only when the
  * correct answer and a competing alternative both map uniquely to the
  * student's own glossary. Never invent semantic equivalences or new facts.
