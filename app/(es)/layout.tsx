@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import { GlobalClientRuntime } from '@/components/GlobalClientRuntime';
 import { SharedPrivateShell } from '@/components/SharedPrivateShell';
 import { SITE_URL } from '@/lib/site';
@@ -112,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GlobalClientRuntime />
         <SharedPrivateShell>{children}</SharedPrivateShell>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
