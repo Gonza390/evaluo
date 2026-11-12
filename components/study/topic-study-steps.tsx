@@ -35,19 +35,19 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
 
   return (
     <div className="mt-6">
-      <ol className="flex flex-wrap gap-2" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
+      <ol className="flex gap-1 sm:flex-wrap sm:gap-2.5" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
         {steps.map((item, index) => {
           const current = index === view.current;
           const done = view.done.includes(item.id);
           return (
-            <li key={item.id} className="flex min-w-[8.5rem] flex-1">
+            <li key={item.id} className="flex min-w-0 flex-1">
               <button
                 type="button"
                 aria-current={current ? 'step' : undefined}
                 onClick={() => set(index)}
                 className={
-                  'focus-visible:outline-ring flex min-h-12 flex-1 items-center justify-center gap-2.5 rounded-full border px-3 text-[14px] font-semibold focus-visible:outline-2 ' +
-                  (current ? 'border-primary/30 bg-primary/10 text-foreground' : 'border-border bg-card hover:bg-muted/50')
+                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-12 sm:flex-row sm:gap-2.5 sm:rounded-full sm:border sm:px-3 sm:text-[14px] ' +
+                  (current ? 'text-foreground sm:border-primary/30 sm:bg-primary/10' : 'text-muted-foreground sm:text-foreground sm:border-border sm:bg-card sm:hover:bg-muted/50')
                 }
               >
                 <span
@@ -62,44 +62,46 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
                 >
                   {done && !current ? <Check size={13} strokeWidth={3} aria-label={english ? 'Done' : 'Hecho'} /> : index + 1}
                 </span>
-                <span>{item.label}</span>
-                {item.count ? <span className="text-muted-foreground text-xs font-medium">{item.count}</span> : null}
+                <span className="truncate">{item.label}</span>
+                {item.count ? <span className="text-muted-foreground hidden text-xs font-medium sm:inline">{item.count}</span> : null}
               </button>
             </li>
           );
         })}
       </ol>
-      <div className="mt-6" key={step.id}>
-        {step.content({
-          markDone: () => setState((prev) => {
-            const base = prev.key === resetKey ? prev : { key: resetKey, current: 0, done: [] as string[] };
-            return { ...base, done: markDone(step.id)(base.done) };
-          }),
-        })}
-      </div>
-      {!last && next && (
-        <div className="border-border mt-8 flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between lg:bg-background lg:sticky lg:bottom-0 lg:z-10 lg:pb-4">
-          <span className="text-muted-foreground hidden text-xs sm:block">
-            {english ? `Step ${view.current + 1} of ${steps.length}` : `Paso ${view.current + 1} de ${steps.length}`}
-          </span>
-          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-5">
-            <button
-              type="button"
-              onClick={() => set(steps.length - 1)}
-              className="text-muted-foreground focus-visible:outline-ring min-h-11 text-[13px] underline underline-offset-4 focus-visible:outline-2"
-            >
-              {english ? 'Go straight to practice' : 'Ir directo a practicar'}
-            </button>
-            <button
-              type="button"
-              onClick={() => set(view.current + 1, markDone(step.id)())}
-              className="bg-primary text-primary-foreground focus-visible:outline-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
-            >
-              {(english ? 'Next: ' : 'Siguiente: ') + next.label.toLowerCase()} <ArrowRight size={18} />
-            </button>
-          </div>
+      <div className="border-border mt-4 rounded-3xl border sm:mt-5">
+        <div className="p-5 sm:p-8" key={step.id}>
+          {step.content({
+            markDone: () => setState((prev) => {
+              const base = prev.key === resetKey ? prev : { key: resetKey, current: 0, done: [] as string[] };
+              return { ...base, done: markDone(step.id)(base.done) };
+            }),
+          })}
         </div>
-      )}
+        {!last && next && (
+          <div className="border-border bg-muted/40 flex flex-col gap-3 rounded-b-3xl border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:sticky lg:bottom-0 lg:z-10 lg:shadow-[0_-10px_24px_rgba(15,25,30,0.06)]">
+            <span className="text-muted-foreground hidden text-xs sm:block">
+              {english ? `Step ${view.current + 1} of ${steps.length}` : `Paso ${view.current + 1} de ${steps.length}`}
+            </span>
+            <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-5">
+              <button
+                type="button"
+                onClick={() => set(steps.length - 1)}
+                className="text-muted-foreground focus-visible:outline-ring min-h-11 text-[13px] underline underline-offset-4 focus-visible:outline-2"
+              >
+                {english ? 'Go straight to practice' : 'Ir directo a practicar'}
+              </button>
+              <button
+                type="button"
+                onClick={() => set(view.current + 1, markDone(step.id)())}
+                className="bg-primary text-primary-foreground focus-visible:outline-ring inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                {(english ? 'Next: ' : 'Siguiente: ') + next.label.toLowerCase()} <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

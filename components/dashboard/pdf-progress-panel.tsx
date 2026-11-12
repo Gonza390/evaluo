@@ -224,6 +224,19 @@ export function PdfProgressPanel({
   );
   const summaryBody =
     currentSection && typeof currentSection.body === 'string' ? currentSection.body.trim() : '';
+  const pdfPagesLabel = useMemo(() => {
+    const pages = [...summaryBody.matchAll(/Ver en PDF\s*·\s*p[aá]ginas?\s+([\d,\s]+(?:y\s*\d+)?)/giu)]
+      .flatMap((match) => (match[1] ?? '').match(/\d+/gu) ?? [])
+      .map(Number)
+      .filter((value) => Number.isInteger(value) && value > 0);
+    if (!pages.length) return '';
+    const first = Math.min(...pages);
+    const last = Math.max(...pages);
+    return first === last
+      ? tr(`Este tema sale de la página ${first}`, `This topic comes from page ${first}`)
+      : tr(`Este tema sale de las páginas ${first} a ${last}`, `This topic comes from pages ${first} to ${last}`);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [summaryBody, english]);
   const currentErrors = [
     ...(topicId === 'unmatched' ? unmatched : (currentTopic?.errors ?? [])),
   ].sort((first, second) => first.id.localeCompare(second.id));
@@ -309,6 +322,31 @@ export function PdfProgressPanel({
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
+      {!reviewOpen && currentTopic ? (
+        <div>
+          <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-2 text-[13px]">
+            <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-8 underline underline-offset-4 focus-visible:outline-2">
+              {tr("Progreso","Progress")}
+            </button>
+            <span aria-hidden="true">/</span>
+            <span>{tr("Tema","Topic")} {currentSectionIndex + 1}</span>
+          </nav>
+          <div className="mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
+            <h2 id={`real-detail-title-${panelId}`} className="text-[20px] leading-[1.25] font-semibold tracking-[-0.03em] break-words sm:text-[24px]">
+              {currentTopic.title}
+            </h2>
+            {(() => {
+              const status = topicStatus(currentTopic, english);
+              return (
+                <span className={'inline-flex items-center gap-2 rounded-full px-3 py-1 text-[13px] font-medium whitespace-nowrap ' + status.style}>
+                  <status.Icon className="size-3.5" aria-hidden="true" />
+                  {status.label}
+                </span>
+              );
+            })()}
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 id={`real-detail-title-${panelId}`} className="text-[16px] leading-[1.4] font-semibold break-words">
           {currentTopic?.title ?? tr("Otros conceptos","Other concepts")}
@@ -323,6 +361,7 @@ export function PdfProgressPanel({
           </button>
         ) : null}
       </div>
+      )}
       {!reviewOpen && (
         <div className="mt-5">
           {(lastOutcome || topicPending.length > 0 || hasReinforced) && (
@@ -773,7 +812,7 @@ export function PdfProgressPanel({
 
   return (
     <div
-      className={`${embedded ? 'mx-auto w-full max-w-[1000px] py-2 sm:py-3' : 'mx-auto w-full max-w-[1000px] px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
+      className={`${topicId && !reviewOpen ? 'mr-auto w-full max-w-[1400px]' : 'mx-auto w-full max-w-[1000px]'} ${embedded ? 'py-2 sm:py-3' : 'px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
     >
       {!embedded && !simulation && (
         <PdfMobileNavigation
@@ -881,7 +920,7 @@ export function PdfProgressPanel({
           className={
             reviewOpen
               ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
-              : 'mt-5 grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_260px] 2xl:grid-cols-[minmax(0,1fr)_288px] 2xl:gap-7'
+              : 'mt-5 grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px] xl:gap-10'
           }
         >
           <div className="min-w-0">{topicDetail}</div>
@@ -890,6 +929,36 @@ export function PdfProgressPanel({
               className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
               aria-label={tr("Aprendizaje y próxima actividad del tema","Learning and next topic activity")}
             >
+              {(pdfPagesLabel || (sourcePdfHref ?? simulation?.pdfHref)) && (
+                <div className="bg-muted/40 mb-4 rounded-[22px] p-6">
+                  <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">{tr("En tu PDF","In your PDF")}</p>
+                  {pdfPagesLabel && <h3 className="mt-2.5 text-[17px] leading-6 font-semibold tracking-[-0.02em]">{pdfPagesLabel}</h3>}
+                  <p className="text-muted-foreground mt-3 text-[13px] leading-6">{tr("Podés comparar con el original mientras estudiás.","Compare with the original while you study.")}</p>
+                  {(sourcePdfHref ?? simulation?.pdfHref) && (
+                    <a href={sourcePdfHref ?? simulation?.pdfHref} target="_blank" rel="noopener noreferrer"
+                      className="border-border bg-card focus-visible:outline-ring mt-4 flex min-h-12 items-center justify-center rounded-full border text-[15px] font-semibold focus-visible:outline-2">
+                      {tr("Abrir el PDF","Open the PDF")}
+                    </a>
+                  )}
+                </div>
+              )}
+              <div className="mb-4">
+                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.12em] uppercase">{tr("Temas del material","Material topics")}</p>
+                <ul className="mt-3 flex flex-col gap-1">
+                  {topics.map((topic, topicIndex) => (
+                    <li key={topic.id}>
+                      <button type="button" onClick={() => openTopic(topic.id)}
+                        aria-current={topic.id === topicId ? 'true' : undefined}
+                        className={'focus-visible:outline-ring flex w-full items-start gap-3 rounded-2xl p-3 text-left text-[13px] leading-[1.45] focus-visible:outline-2 ' +
+                          (topic.id === topicId ? 'bg-primary/10 font-semibold' : 'hover:bg-muted/50 font-medium')}>
+                        <span aria-hidden="true" className={'mt-1.5 size-2.5 shrink-0 rounded-full border-2 ' + (topic.id === topicId ? 'border-primary' : 'border-muted-foreground/60')} />
+                        <span className="min-w-0 break-words">{topic.title}</span>
+                        <span className="sr-only">{topicIndex + 1}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <div className="border-border bg-card space-y-3 rounded-xl border p-3.5">
                 <div>
                   <h3 className="text-[13px] font-medium">{reviewOpen ? tr("Refuerzo en curso","Review in progress") : tr("Tu aprendizaje","Your learning")}</h3>
