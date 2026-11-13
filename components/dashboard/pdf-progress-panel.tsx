@@ -32,7 +32,6 @@ import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { TopicConcepts, TopicFlashcards } from '@/components/study/topic-study-support';
 import { TopicStudySteps } from '@/components/study/topic-study-steps';
 import { autoHideScrollbarRef } from '@/components/study/auto-hide-scrollbar';
-import { buildTopicFlashcards } from '@/lib/student-materials/topic-flashcards';
 import { StudyRichText } from '@/components/study-rich-text';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 
@@ -209,10 +208,6 @@ export function PdfProgressPanel({
         (first.importance === 'alta' ? 0 : 1) - (second.importance === 'alta' ? 0 : 1)
     )
     .slice(0, 3);
-  const topicDeckSize = useMemo(
-    () => buildTopicFlashcards(resources.concepts, resources.flashcards, english).length,
-    [resources.concepts, resources.flashcards, english]
-  );
   const currentAnswered = currentTopic ? topicAssessmentCount(currentTopic) : 0;
   const currentQuestionCount = questionCounts?.[currentSectionIndex];
   const canPracticeTopic = Boolean(
@@ -460,20 +455,17 @@ export function PdfProgressPanel({
             {
               id: 'concepts',
               label: tr('Conceptos', 'Concepts'),
-              count: resources.concepts.length,
               content: () => <TopicConcepts concepts={resources.concepts} />,
             },
             {
               id: 'flashcards',
               label: 'Flashcards',
-              count: topicDeckSize,
-              content: ({ markDone }) => (
+              content: () => (
                 <TopicFlashcards
                   key={currentTopic?.id ?? 'unmatched'}
                   concepts={resources.concepts}
                   flashcards={resources.flashcards}
                   pdfHref={sourcePdfHref ?? simulation?.pdfHref}
-                  onFinished={markDone}
                 />
               ),
             },
