@@ -301,6 +301,39 @@ export function PdfProgressPanel({
     });
   }
 
+  const splitRef = useRef<HTMLDivElement>(null);
+  // En pantallas grandes la zona de estudio ocupa justo el alto visible: scrollean
+  // por separado el contenido central y el panel derecho, y la página no scrollea.
+  useEffect(() => {
+    const el = splitRef.current;
+    if (!el || !topicId || reviewOpen) return;
+    const query = window.matchMedia('(min-width: 1280px)');
+    const apply = () => {
+      if (!query.matches) {
+        el.style.removeProperty('--split-h');
+        return;
+      }
+      const top = Math.max(el.getBoundingClientRect().top, 0);
+      el.style.setProperty('--split-h', `${Math.max(360, window.innerHeight - top - 16)}px`);
+    };
+    apply();
+    // El layout de arriba (cabeceras, avisos, fuentes) puede cambiar después del primer
+    // render: se vuelve a medir al cambiar el tamaño del documento y unas veces al inicio.
+    const timers = [60, 200, 500, 1200, 2500].map((ms) => window.setTimeout(apply, ms));
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(apply);
+    observer?.observe(document.body);
+    if (el.parentElement) observer?.observe(el.parentElement);
+    window.addEventListener('resize', apply);
+    window.addEventListener('scroll', apply, true);
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      observer?.disconnect();
+      window.removeEventListener('resize', apply);
+      window.removeEventListener('scroll', apply, true);
+      el.style.removeProperty('--split-h');
+    };
+  }, [topicId, reviewOpen]);
+
   const topicDetail = topicId ? (
     <section
       id={`real-topic-detail-${panelId}`}
@@ -648,11 +681,12 @@ export function PdfProgressPanel({
       )}
       {topicId ? (
         <div
+          ref={splitRef}
           data-reinforcement-focus={reviewOpen ? 'true' : undefined}
           className={
             reviewOpen
               ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
-              : 'mt-5 grid min-w-0 items-start gap-5 xl:h-[calc(100dvh-19rem)] xl:grid-cols-[minmax(0,1fr)_340px] xl:items-stretch xl:gap-8'
+              : 'mt-5 grid min-w-0 items-start gap-5 xl:h-[var(--split-h,calc(100dvh-19rem))] xl:grid-cols-[minmax(0,1fr)_340px] xl:items-stretch xl:gap-8'
           }
         >
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">{topicDetail}</div>
