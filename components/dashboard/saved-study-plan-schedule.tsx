@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
 import { studyUiText } from '@/lib/i18n/study-ui-copy';
 import { ArrowRight, BookOpen, Check, ChevronDown, Flag, Layers3, ListChecks, Network, PencilLine, Zap } from 'lucide-react';
+import { overduePlanTopics } from '@/lib/student-materials/plan-reorganize';
 import { additionalPlanPractice, optionalPreviousTopicReviews, recommendTopicActivities, type PlanDay, type RecommendedStudyActivity } from '@/lib/student-materials/study-plan-distribution';
 
 type ActivityId = RecommendedStudyActivity['id'];
@@ -24,8 +25,10 @@ const weekday=(key:string,locale:'es'|'en')=>new Intl.DateTimeFormat(locale==='e
 const fullDate=(key:string,locale:'es'|'en')=>new Intl.DateTimeFormat(locale==='en'?'en-US':'es-AR',{weekday:'long',day:'numeric',month:'long'}).format(dateObj(key));
 const examDateLabel=(key:string,locale:'es'|'en')=>new Intl.DateTimeFormat(locale==='en'?'en-US':'es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(dateObj(key));
 
-export function SavedStudyPlanSchedule({days,examDate,completedKeys,planCompletedKeys=[],preferences,dailyMinutes}: {
+export function SavedStudyPlanSchedule({days,examDate,completedKeys,planCompletedKeys=[],preferences,dailyMinutes,onReorganized}: {
   days:PlanDay[]; examDate:string; completedKeys:string[]; planCompletedKeys?:string[]; preferences:string[]; dailyMinutes:number;
+  /** Se llama después de reorganizar el plan para que el padre lo vuelva a cargar. */
+  onReorganized?: () => Promise<void> | void;
 }) {
   const locale = useOptionalAppLocale();
   const english = locale === 'en';
@@ -36,6 +39,9 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
   const [selectedDate,setSelectedDate]=useState<string|null>(initial?.date??null);
   const [showAll,setShowAll]=useState(() => scheduled.findIndex(day=>day.date===initial?.date)>=3);
   const [expandedTopic,setExpandedTopic]=useState<{date:string;key:string}|null>(null);
+  const [confirmingReorganize,setConfirmingReorganize]=useState(false);
+  const [reorganizing,setReorganizing]=useState(false);
+  const [reorganizeError,setReorganizeError]=useState('');
   const bonusActivities=additionalPlanPractice(days,preferences,dailyMinutes);
   const optionalReviews=optionalPreviousTopicReviews(days,preferences,dailyMinutes);
   const completed=new Set(completedKeys);
@@ -45,9 +51,70 @@ export function SavedStudyPlanSchedule({days,examDate,completedKeys,planComplete
   const nextTopic=selected?.topics.find(topic=>!fullyCompleted.has(`${topic.materialId}:${topic.topicIndex}`))??selected?.topics[0];
   const activeTopicKey=expandedTopic?.date===selected?.date?expandedTopic.key:(nextTopic?`${nextTopic.materialId}:${nextTopic.topicIndex}`:null);
 
+  // Días anteriores a hoy con temas sin completar. Se le ofrece una decisión al
+  // alumno; las fechas del plan nunca se mueven sin que la confirme.
+  const overdue=overduePlanTopics(scheduled,planCompletedKeys,today);
+  const resumeOverdue=()=>{
+    const first=overdue.topics[0];
+    if(!first||!overdue.firstDate)return;
+    setShowAll(true);
+    setSelectedDate(overdue.firstDate);
+    setExpandedTopic({date:overdue.firstDate,key:`${first.materialId}:${first.topicIndex}`});
+  };
+  async function reorganizePlan() {
+    if(reorganizing)return;
+    setReorganizing(true);setReorganizeError('');
+    try {
+      const response=await fetch('/api/study-plans',{method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'reorganize',startDate:today})});
+      const result=await response.json().catch(()=>null) as {error?:string}|null;
+      if(!response.ok)throw new Error(result?.error||'No pudimos reorganizar tu plan.');
+      setConfirmingReorganize(false);
+      await onReorganized?.();
+    } catch(cause) {
+      setReorganizeError(cause instanceof Error ? cause.message : (english ? 'We could not reorganize your plan.' : 'No pudimos reorganizar tu plan.'));
+    } finally { setReorganizing(false); }
+  }
+
   if(!scheduled.length)return <section aria-label={english ? "Your study plan" : "Tu plan de estudios"} className="rounded-2xl border border-[#E7EBF4] bg-white p-3.5 text-chico text-[#66758D]">{english ? "No study days have been scheduled yet." : "Todavía no hay días de estudio asignados a este plan."}</section>;
 
   return <section data-saved-study-plan-schedule aria-labelledby="saved-study-plan-schedule-title" className="min-w-0">
+    {overdue.topics.length>0 && onReorganized && <div role="status" data-study-plan-overdue className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5">
+      <p className="text-chico font-medium text-amber-950">
+        {english
+          ? `You have ${overdue.topics.length} ${overdue.topics.length===1?'topic':'topics'} pending from earlier days.`
+          : `Tenés ${overdue.topics.length} ${overdue.topics.length===1?'tema pendiente':'temas pendientes'} de días anteriores.`}
+      </p>
+      <p className="mt-0.5 text-etiqueta leading-4 text-amber-900">
+        {confirmingReorganize
+          ? (english
+            ? 'We will spread what is pending between today and your exam. What you already completed stays as it is.'
+            : 'Vamos a repartir lo pendiente entre hoy y tu examen. Lo que ya completaste queda como está.')
+          : (english ? 'Pick up where you left off, or let us reorganize your plan.' : 'Retomá donde quedaste o dejá que reorganicemos tu plan.')}
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {confirmingReorganize ? <>
+          <button type="button" disabled={reorganizing} onClick={()=>void reorganizePlan()}
+            className="min-h-9 rounded-lg bg-[#456DBD] px-3 text-chico font-medium text-white disabled:opacity-60">
+            {reorganizing ? (english ? 'Reorganizing…' : 'Reorganizando…') : (english ? 'Yes, reorganize' : 'Sí, reorganizar')}
+          </button>
+          <button type="button" disabled={reorganizing} onClick={()=>{setConfirmingReorganize(false);setReorganizeError('');}}
+            className="min-h-9 rounded-lg border border-amber-300 bg-white px-3 text-chico font-medium text-amber-950 disabled:opacity-60">
+            {english ? 'Cancel' : 'Cancelar'}
+          </button>
+        </> : <>
+          <button type="button" onClick={resumeOverdue}
+            className="min-h-9 rounded-lg bg-[#456DBD] px-3 text-chico font-medium text-white">
+            {english ? 'Resume pending topics' : 'Retomar lo pendiente'}
+          </button>
+          <button type="button" onClick={()=>setConfirmingReorganize(true)}
+            className="min-h-9 rounded-lg border border-amber-300 bg-white px-3 text-chico font-medium text-amber-950">
+            {english ? 'Reorganize my plan' : 'Reorganizar mi plan'}
+          </button>
+        </>}
+      </div>
+      {reorganizeError && <p role="alert" className="mt-2 text-etiqueta text-red-700">{reorganizeError}</p>}
+    </div>}
     <div className="mb-3 flex items-center justify-between gap-2">
       <h2 id="saved-study-plan-schedule-title" className="text-cuerpo font-normal tracking-titulo text-[#0F1B3D]">{english ? "Your study plan" : "Tu plan de estudios"}</h2>
       <span className="text-etiqueta text-[#7F8AA3]">{scheduled.length} {scheduled.length===1 ? (english ? 'scheduled day' : 'día planificado') : (english ? 'scheduled days' : 'días planificados')}</span>

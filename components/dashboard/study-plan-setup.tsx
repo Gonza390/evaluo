@@ -67,6 +67,16 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
     }).finally(()=>{if(mounted)setLoading(false)});
     return ()=>{mounted=false};
   },[]);
+  // Tras reorganizar el plan se vuelve a pedir al servidor (fechas y progreso).
+  async function reloadPlan() {
+    const response=await fetch('/api/study-plans',{cache:'no-store'});
+    if(!response.ok)return;
+    const data=await response.json() as {plan:SavedPlan|null;completedKeys:string[];planCompletedKeys?:string[];preparationProgress?:{completed:number;total:number;percent:number}};
+    setSavedPlan(data.plan);
+    setCompletedKeys(data.completedKeys??[]);
+    setPlanCompletedKeys(data.planCompletedKeys??[]);
+    setPreparationPercent(data.preparationProgress?.percent??0);
+  }
   const selectable = step===0 ? !!exam : step===1 ? selected.length>0 : step===2 ? minutes!==null : preferences.length>0;
   const monthLabel = new Intl.DateTimeFormat(english ? 'en-US' : 'es-AR',{month:'long',year:'numeric'}).format(month);
   const daysInMonth = new Date(month.getFullYear(),month.getMonth()+1,0).getDate();
@@ -185,7 +195,7 @@ export function StudyPlanSetup({ materials, mode = 'setup', initialMaterialId, i
             {savedPlan && <SavedStudyPlanRoadmap key={savedPlan.updated_at} days={days} examDate={savedPlan.exam_date} completedKeys={planCompletedKeys}/>}
 
             {overloaded&&<p role="status" data-study-plan-time-warning className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-etiqueta leading-4 text-amber-900">{english ? `With ${minutes} minutes per day there isn't enough time for every topic before your exam. Your full plan is shown, but some days need extra study time. You can edit it.` : `Con ${minutes} minutos por día no alcanza para cubrir todos los temas antes del examen. Te mostramos el plan completo, pero algunos días necesitan más tiempo. Podés editarlo si querés.`}</p>}
-            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} planCompletedKeys={planCompletedKeys} preferences={preferences} dailyMinutes={minutes??15}/>
+            <SavedStudyPlanSchedule days={days} examDate={savedPlan?.exam_date??exam} completedKeys={completedKeys} planCompletedKeys={planCompletedKeys} preferences={preferences} dailyMinutes={minutes??15} onReorganized={reloadPlan}/>
             </div>
           </div>
           <aside className="min-w-0 space-y-3 xl:min-h-0 xl:overflow-hidden">

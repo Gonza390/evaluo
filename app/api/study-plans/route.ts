@@ -7,6 +7,7 @@ import { premiumUpgradeForLimit } from '@/lib/premium-flow';
 import { type PlanDay } from '@/lib/student-materials/study-plan-distribution';
 import { buildPlanSchedule, buildPlanTopics } from '@/lib/student-materials/study-plan-builder';
 import { completedPlanTopics, planPreparationProgress, type PlanPracticeCompletion } from '@/lib/student-materials/study-plan-completion';
+import { reorganizePlanSchedule } from '@/lib/student-materials/plan-reorganize';
 
 type SavedPlan = {
   exam_date: string;
@@ -148,4 +149,54 @@ export async function PATCH(request:NextRequest) {
   } as never,{onConflict:'user_id,material_id,topic_index,activity',ignoreDuplicates:true});
   if(saved.error)return fail('No se pudo registrar la actividad.',503);
   return NextResponse.json({ok:true,key:`${materialId}:${topicIndex}`});
+}
+
+/**
+ * Reorganizar: repartir lo pendiente entre hoy y el examen. Solo lo pide el
+ * alumno de forma explícita; conserva lo completado, la fecha y las preferencias,
+ * y no consume el cupo de planes (no crea un plan nuevo).
+ */
+export async function PUT(request:NextRequest) {
+  const {supabase,user}=await userDb();
+  if(!user)return fail('Iniciá sesión para reorganizar el plan.',401);
+  const body=await request.json().catch(()=>null) as {action?:unknown;startDate?:unknown}|null;
+  if(body?.action!=='reorganize')return fail('La acción no es válida.');
+  const {data,error}=await supabase.from('student_personal_study_plans' as never)
+    .select('exam_date,daily_minutes,material_ids,preferences,schedule,updated_at').eq('user_id',user.id).maybeSingle();
+  if(error)return fail('No pudimos recuperar tu plan. Probá nuevamente.',503);
+  if(!data)return fail('Primero creá un plan de estudio.',404);
+  const plan=data as SavedPlan;
+  const ids=Array.isArray(plan.material_ids)?plan.material_ids:[];
+  if(!Array.isArray(plan.schedule)||!ids.length)return fail('Tu plan no tiene actividades para reorganizar.',422);
+  const [reading,practiceResult]=await Promise.all([
+    supabase.from('student_material_topic_activity_progress' as never)
+      .select('material_id,topic_index').eq('user_id',user.id).eq('activity','reading').in('material_id',ids),
+    supabase.from('student_personal_study_plan_practice_progress' as never)
+      .select('material_id,topic_index,mode').eq('user_id',user.id).in('material_id',ids),
+  ]);
+  if(reading.error)return fail('No pudimos consultar el progreso de tu plan.',503);
+  if(practiceResult.error && !['42P01','PGRST205'].includes(practiceResult.error.code??''))
+    return fail('No pudimos consultar el progreso de las prácticas.',503);
+  const readingKeys=((reading.data??[]) as Array<{material_id:string;topic_index:number}>)
+    .map(row=>`${row.material_id}:${row.topic_index}`);
+  const completed=completedPlanTopics(plan.schedule,plan.preferences,plan.daily_minutes,readingKeys,
+    (practiceResult.data??[]) as PlanPracticeCompletion[]);
+  // Mismo criterio que al crear el plan: el día lo propone el cliente (zona del alumno)
+  // pero nunca se aleja más de un día del servidor.
+  const now=new Date();
+  const serverDay=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),12));
+  const proposed=typeof body.startDate==='string'&&DATE.test(body.startDate)?body.startDate:'';
+  const fromClient=new Date(`${proposed}T12:00:00Z`);
+  const start=Number.isFinite(fromClient.getTime())&&Math.abs(fromClient.getTime()-serverDay.getTime())<=86400000
+    ?fromClient:serverDay;
+  const result=reorganizePlanSchedule({days:plan.schedule,completedKeys:completed,examDate:plan.exam_date,
+    dailyMinutes:plan.daily_minutes,preferences:plan.preferences,start});
+  if(!result.ok) return fail(
+    result.error==='exam_passed'?'La fecha del examen ya pasó. Creá un plan nuevo con otra fecha.'
+    :result.error==='nothing_pending'?'No tenés actividades pendientes para reorganizar.'
+    :'No hay días para estudiar antes del examen.',422);
+  const {error:saveError}=await createAdminClient().from('student_personal_study_plans' as never)
+    .update({schedule:result.schedule,updated_at:new Date().toISOString()} as never).eq('user_id',user.id);
+  if(saveError)return fail('No pudimos guardar tu planificación. Intentá nuevamente.',503);
+  return NextResponse.json({ok:true,moved:result.moved,unassigned:result.overloadedTopics});
 }
