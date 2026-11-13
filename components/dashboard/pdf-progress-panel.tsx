@@ -261,10 +261,23 @@ export function PdfProgressPanel({
     source: selected?.recommendation ?? null,
     reviewed: Boolean(selected?.lastReviewedAt && selected.lastReviewedAt >= selected.lastFailedAt),
   };
+  // En pantallas grandes el estudio del tema ocupa el alto visible y no necesita
+  // desplazar la página (eso ocultaba las pestañas); sólo se vuelve arriba de todo.
+  function revealDetail(review: boolean, behavior: ScrollBehavior = 'auto') {
+    const el = detailRef.current;
+    if (!el) return;
+    if (!review && window.matchMedia('(min-width: 1280px)').matches) {
+      for (let node: HTMLElement | null = el.parentElement; node; node = node.parentElement) {
+        if (node.scrollTop) node.scrollTop = 0;
+      }
+      return;
+    }
+    el.scrollIntoView({ behavior, block: 'start' });
+  }
   useEffect(() => {
     if (!initialErrorId && initialTopicSectionIndex === undefined) return;
     const frame = requestAnimationFrame(() => {
-      detailRef.current?.scrollIntoView({ block: 'start' });
+      revealDetail(Boolean(initialErrorId));
       detailRef.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
@@ -288,7 +301,7 @@ export function PdfProgressPanel({
         null
     );
     requestAnimationFrame(() => {
-      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      revealDetail(Boolean(preferredErrorId), 'smooth');
       detailRef.current?.focus({ preventScroll: true });
     });
   }
