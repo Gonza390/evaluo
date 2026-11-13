@@ -339,7 +339,7 @@ export function PdfProgressPanel({
       el.style.marginBottom = `${-Math.floor(reserved)}px`;
       // Se parte del borde de la ventana y se recorta lo que haga scrollear a cualquier
       // contenedor: así la zona llega hasta donde realmente hay lugar, sin suposiciones.
-      let height = Math.max(360, Math.floor(window.innerHeight - top));
+      let height = Math.max(360, Math.floor(window.innerHeight - top + 8));
       for (let pass = 0; pass < 4; pass += 1) {
         el.style.setProperty('--split-h', `${height}px`);
         const overflow = Math.max(0, ...scrollers.map((node) => node.scrollHeight - node.clientHeight));
@@ -381,8 +381,8 @@ export function PdfProgressPanel({
     >
       {!reviewOpen && currentTopic ? (
         <div className="xl:shrink-0">
-          <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-2 text-[13px]">
-            <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-8 underline underline-offset-4 focus-visible:outline-2">
+          <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+            <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-6 underline underline-offset-4 focus-visible:outline-2">
               {tr("Progreso","Progress")}
             </button>
             <span aria-hidden="true">/</span>

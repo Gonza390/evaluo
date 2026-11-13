@@ -37,7 +37,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
         >
           {step.content()}
         </div>
-        <div className="border-border bg-background mt-6 flex shrink-0 items-center justify-between gap-3 border-t pt-2 pb-0 xl:mt-0">
+        <div className="border-border bg-background mt-6 flex shrink-0 items-center justify-between gap-3 border-t pt-1 pb-0 xl:mt-0">
           <span className="text-muted-foreground text-xs">
             {english ? `Step ${current + 1} of ${steps.length}` : `Paso ${current + 1} de ${steps.length}`}
           </span>
