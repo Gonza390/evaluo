@@ -494,5 +494,9 @@
   {
     "file": "tests/plan-reorganize.smoke.ts",
     "alias": true
+  },
+  {
+    "file": "tests/plan-limit-tracking.smoke.ts",
+    "alias": true
   }
 ]
