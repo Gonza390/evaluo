@@ -34,8 +34,8 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
     done.includes(id) ? done : [...done, id];
 
   return (
-    <div className="mt-3">
-      <ol className="flex gap-1 sm:flex-wrap sm:gap-2.5" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
+    <div className="mt-3 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
+      <ol className="flex shrink-0 gap-1 sm:flex-wrap sm:gap-2" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
         {steps.map((item, index) => {
           const current = index === view.current;
           const done = view.done.includes(item.id);
@@ -46,13 +46,13 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
                 aria-current={current ? 'step' : undefined}
                 onClick={() => set(index)}
                 className={
-                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-10 sm:flex-row sm:gap-2 sm:rounded-full sm:border sm:px-3 sm:text-[13px] ' +
+                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-9 sm:flex-row sm:gap-2 sm:rounded-full sm:border sm:px-3 sm:text-[13px] ' +
                   (current ? 'text-foreground sm:border-primary/30 sm:bg-primary/10' : 'text-muted-foreground sm:text-foreground sm:border-border sm:bg-card sm:hover:bg-muted/50')
                 }
               >
                 <span
                   className={
-                    'flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px] ' +
+                    'flex size-5 shrink-0 items-center justify-center rounded-full border text-[10px] ' +
                     (done && !current
                       ? 'border-emerald-700 bg-emerald-700 text-white'
                       : current
@@ -69,8 +69,8 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
           );
         })}
       </ol>
-      <div className="border-border mt-3 flex min-h-0 flex-col rounded-2xl border lg:max-h-[calc(100dvh-17rem)]">
-        <div className="p-4 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto" key={step.id}>
+      <div className="mt-4 flex min-h-0 flex-col xl:flex-1">
+        <div className="pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3" key={step.id}>
           {step.content({
             markDone: () => setState((prev) => {
               const base = prev.key === resetKey ? prev : { key: resetKey, current: 0, done: [] as string[] };
@@ -79,7 +79,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
           })}
         </div>
         {!last && next && (
-          <div className="border-border bg-muted flex shrink-0 flex-col gap-2 rounded-b-2xl border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="border-border bg-background mt-6 flex shrink-0 flex-col gap-2 border-t py-3 sm:flex-row sm:items-center sm:justify-between xl:mt-0">
             <span className="text-muted-foreground hidden text-xs sm:block">
               {english ? `Step ${view.current + 1} of ${steps.length}` : `Paso ${view.current + 1} de ${steps.length}`}
             </span>
