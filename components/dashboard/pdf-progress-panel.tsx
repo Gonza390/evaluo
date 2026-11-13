@@ -308,10 +308,10 @@ export function PdfProgressPanel({
       data-onboarding-topic-detail
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
-      className="bg-card focus-visible:outline-ring min-w-0 w-full py-2 focus-visible:outline-2 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
+      className="bg-card focus-visible:outline-ring min-w-0 w-full py-2 focus-visible:outline-2"
     >
       {!reviewOpen && currentTopic ? (
-        <div className="xl:shrink-0">
+        <div>
           <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-2 text-[13px]">
             <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-8 underline underline-offset-4 focus-visible:outline-2">
               {tr("Progreso","Progress")}
@@ -652,13 +652,13 @@ export function PdfProgressPanel({
           className={
             reviewOpen
               ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
-              : 'mt-5 grid min-w-0 items-start gap-5 xl:h-[calc(100dvh-19rem)] xl:grid-cols-[minmax(0,1fr)_340px] xl:items-stretch xl:gap-8'
+              : 'mt-5 grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-6'
           }
         >
-          <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">{topicDetail}</div>
+          <div className="min-w-0">{topicDetail}</div>
           {!reviewOpen && (
             <aside
-              className="hidden min-w-0 xl:block xl:min-h-0 xl:overflow-y-auto xl:pr-1"
+              className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
               aria-label={tr("Aprendizaje y próxima actividad del tema","Learning and next topic activity")}
             >
               {(pdfPagesLabel || (sourcePdfHref ?? simulation?.pdfHref)) && (
