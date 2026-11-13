@@ -251,7 +251,6 @@ export function PdfProgressPanel({
     return first === last
       ? tr(`Este tema sale de la página ${first}`, `This topic comes from page ${first}`)
       : tr(`Este tema sale de las páginas ${first} a ${last}`, `This topic comes from pages ${first} to ${last}`);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [summaryBody, english]);
   const currentErrors = [
     ...(topicId === 'unmatched' ? unmatched : (currentTopic?.errors ?? [])),
