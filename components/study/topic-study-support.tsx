@@ -128,7 +128,7 @@ export function TopicFlashcards({
       <p className="text-muted-foreground text-xs">
         {english ? `Card ${index + 1} of ${cards.length}` : `Tarjeta ${index + 1} de ${cards.length}`}
       </p>
-      <div className="bg-muted/40 mt-3 flex min-h-[320px] flex-col rounded-3xl p-6 sm:p-8 xl:min-h-[min(420px,calc(100dvh-26rem))]" aria-live="polite">
+      <div key={index} className="evaluo-enter bg-muted/40 mt-3 flex min-h-[320px] flex-col rounded-3xl p-6 sm:p-8 xl:min-h-[min(420px,calc(100dvh-26rem))]" aria-live="polite">
         <div className="my-auto">
           <p className="text-foreground max-w-prose text-[20px] leading-8 font-semibold tracking-[-0.02em]">{card.front}</p>
           {shown && (

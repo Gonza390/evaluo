@@ -32,7 +32,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
       <div className="flex min-h-0 flex-col xl:flex-1">
         <div
           ref={autoHideScrollbarRef}
-          className="scroll-auto-hide pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3"
+          className="evaluo-enter scroll-auto-hide pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3"
           key={step.id}
         >
           {step.content()}
