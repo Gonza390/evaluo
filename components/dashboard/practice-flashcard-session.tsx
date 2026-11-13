@@ -7,14 +7,23 @@ import { localizeAcademicPrompt } from '@/lib/student-materials/academic-prompt-
 import './practice-motion.css';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { auditPracticeFlashcard } from '@/lib/student-materials/practice-card-quality';
-import { MIN_CASES_PER_PRACTICE, normalizedAnswer, type PracticePair } from '@/lib/student-materials/practice-modes';
+import { MIN_CASES_PER_PRACTICE, MIN_PLAN_TOPIC_ITEMS, normalizedAnswer, type PracticePair } from '@/lib/student-materials/practice-modes';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
+import type { PlanNavigation } from '@/lib/student-materials/plan-navigation-server';
 
-export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo', planTopicIndex, freeV2 = false }: {
+export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'completo', planTopicIndex, topicScoped = false, planNav = null, freeV2 = false }: {
   materialId: string; cards: StudyFlashcard[]; reviewLength?: 'rapido' | 'completo'; planTopicIndex?: number; freeV2?: boolean;
+  /** Práctica del plan: tarjetas y generación acotadas a un solo tema. */
+  topicScoped?: boolean;
+  /** Salidas al plan (volver / siguiente actividad) cuando la práctica viene del plan. */
+  planNav?: PlanNavigation | null;
 }) {
+  const minCards = topicScoped ? MIN_PLAN_TOPIC_ITEMS : MIN_CASES_PER_PRACTICE;
+  const topicIndex = topicScoped ? planTopicIndex : undefined;
+  const backHref = planNav ? planNav.backHref : '/dashboard/practicar';
   const locale = useOptionalAppLocale();
   const english = locale === 'en';
+  const backLabel = planNav ? (english ? 'Back to my plan' : 'Volver a mi plan') : (english ? 'Back to practice' : 'Volver a Practicar');
   const [supplement, setSupplement] = useState<StudyFlashcard[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,7 +71,7 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
       const response = await fetch('/api/practice/supplement', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          materialId,mode:'flashcards',round:tries.current-1,
+          materialId,mode:'flashcards',round:tries.current-1,topicIndex,
           excludedTerms: combined.map(card => card.front.match(/[“"]([^”"]+)[”"]/)?.[1] ?? '').filter(Boolean),
         }), signal:AbortSignal.timeout(65000),
       });
@@ -88,21 +97,21 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
     } finally {
       busy.current=false;setLoading(false);
     }
-  },[materialId,combined]);
+  },[materialId,combined,topicIndex]);
   useEffect(()=>{
-    if ((freeV2 && approvedIndices.length >= 1) || approvedIndices.length >= MIN_CASES_PER_PRACTICE || error || loading ||
+    if ((freeV2 && approvedIndices.length >= 1) || approvedIndices.length >= minCards || error || loading ||
         busy.current || tries.current >= 6) return;
     void fetchMore();
   },[approvedIndices.length,error,loading,fetchMore]);
 
   // Free puede estudiar incluso su última tarjeta disponible. No bloquear
   // una práctica por exigir seis cuando ya se desbloqueó una tarjeta válida.
-  if (approvedIndices.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)) return (
+  if (approvedIndices.length < (freeV2 ? 1 : minCards)) return (
     <main className="practice-screen-enter mx-auto max-w-[780px] px-3 py-4 sm:px-5 sm:py-5">
-      <Link href="/dashboard/practicar" className="text-sm text-slate-500">← {english ? 'Back to practice' : 'Volver a Practicar'}</Link>
+      <Link href={backHref} className="text-sm text-slate-500">← {backLabel}</Link>
       <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
         <h1 className="text-lg font-medium text-slate-900">{english ? 'Preparing your flashcards' : 'Preparando tus flashcards'}</h1>
-        <p className="mt-2 text-sm text-slate-600">{freeV2 ? (english ? 'Finding verified flashcards for your study session.' : 'Buscando tarjetas verificadas para estudiar.') : approvedIndices.length + (english ? ' of ' : ' de ') + MIN_CASES_PER_PRACTICE + (english ? ' verified cards.' : ' tarjetas verificadas.')}</p>
+        <p className="mt-2 text-sm text-slate-600">{freeV2 ? (english ? 'Finding verified flashcards for your study session.' : 'Buscando tarjetas verificadas para estudiar.') : approvedIndices.length + (english ? ' of ' : ' de ') + minCards + (english ? ' verified cards.' : ' tarjetas verificadas.')}</p>
         {loading ? <p className="mt-2 text-sm text-slate-500" role="status">{english ? 'Finding concepts in your material…' : 'Buscando conceptos del material…'}</p> : null}
         {error ? <p role="status" className="mt-2 text-sm text-amber-800">{error}</p> : null}
         {!loading ? <button onClick={() => {tries.current=0;void fetchMore();}}
@@ -111,10 +120,10 @@ export function PracticeFlashcardSession({ materialId, cards, reviewLength = 'co
     </main>
   );
   return <main className="practice-screen-enter mx-auto max-w-[860px] px-3 py-4 sm:px-5 sm:py-5">
-    <Link href="/dashboard/practicar" className="text-sm text-slate-500">← {english ? 'Back to practice' : 'Volver a Practicar'}</Link>
+    <Link href={backHref} className="text-sm text-slate-500">← {backLabel}</Link>
     <StudentMaterialFlashcards key={combined.length} cards={combined}
       allowedCardIndices={reviewLength === 'rapido' ? approvedIndices.slice(0, 6) : freeV2 ? approvedIndices.slice(0, 25) : approvedIndices} persistentCardCount={cards.length}
-      materialId={materialId} onSessionComplete={onSessionComplete}/>
+      materialId={materialId} onSessionComplete={onSessionComplete} planNav={planNav}/>
     {saveError && <p role="alert" className="mt-3 text-sm text-amber-800">
       {english ? 'We could not save this session to your practice history.' : 'No pudimos guardar esta sesión en Tus prácticas.'}
       <button type="button" className="ml-2 font-medium underline"

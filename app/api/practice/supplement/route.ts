@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { fragmentInPlanTopic, practiceItemInPlanTopic, readTopicIndex } from '@/lib/student-materials/plan-topic-scope';
+import { loadPlanTopicScope } from '@/lib/student-materials/plan-topic-scope-server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { enforceStrictRateLimit, rateLimitHeaders } from '@/lib/rate-limit';
@@ -54,12 +56,28 @@ export async function POST(request: Request) {
     .eq('id', body.materialId).eq('user_id', user.id).maybeSingle();
   if (!material || material.processing_status !== 'ready')
     return NextResponse.json({ error: 'material_not_found' }, { status: 404 });
+  // Práctica lanzada desde el plan: SOLO fuentes de ese tema, nunca todo el material.
+  const topicIndex = readTopicIndex(body.topicIndex);
+  if (body.topicIndex !== undefined && topicIndex === undefined)
+    return NextResponse.json({ error: 'invalid_topic' }, { status: 400 });
+  const admin = createAdminClient();
+  const topicScope = topicIndex !== undefined ? await loadPlanTopicScope(admin, material.id, topicIndex) : null;
+  if (topicIndex !== undefined && !topicScope)
+    return NextResponse.json({ error: 'topic_material_unavailable' }, { status: 422 });
+  // Un banco acotado a un tema no debe convertirse en el banco gratis del material.
+  const saveBank = <T,>(input: { userId: string; materialId: string;
+    mode: Parameters<typeof saveFirstFreeStudyBank>[0]['mode']; items: T[] }): Promise<T[]> =>
+    topicScope ? Promise.resolve(input.items) : saveFirstFreeStudyBank(input);
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   const freeMode = body.mode === 'unir' ? 'matching' as const : 'flashcards' as const;
   if (freeV2) {
     if (body.mode !== 'unir' && body.mode !== 'flashcards')
       return NextResponse.json({error:'free_study_mode_unavailable'},{status:403});
-    const cached = await getFreeStudyBank<PracticePair>({userId:user.id,materialId:material.id,mode:freeMode});
+    const cachedAll = await getFreeStudyBank<PracticePair>({userId:user.id,materialId:material.id,mode:freeMode});
+    // El banco gratis es del material completo: acotarlo al tema sin gastar cupo.
+    const cached = cachedAll && topicScope ? cachedAll.filter(item => practiceItemInPlanTopic(topicScope, item)) : cachedAll;
+    if (cachedAll && cached && cached.length === 0)
+      return NextResponse.json({ error: 'topic_material_unavailable' }, { status: 422 });
     if (cached) {
       const allowed = await claimFreeStudyPairSample({
         userId:user.id,materialId:material.id,mode:freeMode,items:cached,
@@ -80,7 +98,6 @@ export async function POST(request: Request) {
           {materialId:material.id})}, {status:403,headers:{'Cache-Control':'private, no-store'}});
   }
 
-  const admin = createAdminClient();
   const { data: chunks, error } = await admin.from('student_material_chunks')
     .select('chunk_text,page_start,section_title,chunk_index')
     .eq('student_material_id', material.id)
@@ -94,8 +111,8 @@ export async function POST(request: Request) {
     text: c.chunk_text,
     pageStart: c.page_start,
     sectionTitle: c.section_title?.trim() || (c.page_start === null ? 'Fragmento ' + (c.chunk_index+1) : null),
-  }));
-  if (!source.length) return NextResponse.json({ error: 'insufficient_source' }, { status: 422 });
+  })).filter(fragment => !topicScope || fragmentInPlanTopic(topicScope, fragment));
+  if (!source.length) return NextResponse.json({ error: topicScope ? 'topic_material_unavailable' : 'insufficient_source' }, { status: 422 });
   const model = material.pedagogical_model as CanonicalPedagogicalModel | null;
   // Reuse concepts already extracted during upload BEFORE spending an AI call;
   // this is a read of previous artifacts, not new processing.
@@ -112,7 +129,7 @@ export async function POST(request: Request) {
   const local = selectPracticePairs(fromModel, 18);
   const minimumPairs = body.mode === 'mixto' ? 2 : 6;
   if (local.length >= minimumPairs) {
-    const pairs = freeV2 ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:freeMode,
+    const pairs = freeV2 ? await saveBank({userId:user.id,materialId:material.id,mode:freeMode,
       items:local.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)}) : local;
     const allowed = freeV2 ? await claimFreeStudyPairSample({
       userId:user.id,materialId:material.id,mode:freeMode,items:pairs,
@@ -152,7 +169,7 @@ export async function POST(request: Request) {
     if (!response?.content) {
       if (!freeV2) return NextResponse.json({pairs:local,source:'canonical_only'});
       const bank = local.length
-        ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,
+        ? await saveBank({userId:user.id,materialId:material.id,
           mode:freeMode,items:local.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)})
         : [];
       const allowed = await claimFreeStudyPairSample({userId:user.id,materialId:material.id,mode:freeMode,items:bank});
@@ -164,7 +181,7 @@ export async function POST(request: Request) {
     const verified = sourceVerifiedPairs(raw, fragments, [...excludedTerms,...local.map(p=>p.term)]);
     const selected=selectPracticePairs([...local,...verified],24);
     const pairs=freeV2 && selected.length
-      ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:freeMode,
+      ? await saveBank({userId:user.id,materialId:material.id,mode:freeMode,
           items:selected.slice(0,body.mode==='unir'?FREE_STUDY_V2.matchingPairs:FREE_STUDY_V2.flashcards)})
       : selected;
     const allowed = freeV2 ? await claimFreeStudyPairSample({

@@ -12,11 +12,12 @@ import { AnswerFeedback, answeredOptionClass } from '@/components/study/answer-f
 import type { EviChatContext } from '@/lib/evi-chat-contract';
 import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
+import type { PlanNavigation } from '@/lib/student-materials/plan-navigation-server';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
   groundedPracticeExplanation, normalizedAnswer, writtenAnswerContrast,
-  distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, qualifiedQuestions, selectMixedQuestions,
+  distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, MIN_PLAN_TOPIC_ITEMS, qualifiedQuestions, selectMixedQuestions,
   selectPracticePairs, shuffleMatchingDefinitions, shufflePracticeChoices, shufflePracticeItems,
   type PracticePair, type PracticeQuestion,
 } from '@/lib/student-materials/practice-modes';
@@ -38,10 +39,14 @@ const FREE_SESSION_CLAIMS: Partial<Record<string, { kind: string; itemKey: strin
   mixto: { kind: 'mixed_round', itemKey: 'mixed:first' },
 };
 
-export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, freeV2 = false, quotaPremiumHref, quotaBackHref, quotaBackLabel, previewResult }: {
+export function PracticeSession({ mode, materialId, materialTitle, glossary, questions, cases, reviewLength = 'completo', aiAvailable = false, isWord = false, planTopicIndex, topicScoped = false, planNav = null, freeV2 = false, quotaPremiumHref, quotaBackHref, quotaBackLabel, previewResult }: {
   mode: Mode; materialId: string; materialTitle: string; reviewLength?: 'rapido' | 'completo';
   glossary: PracticePair[]; questions: PracticeQuestion[]; cases: PracticeQuestion[];
   aiAvailable?: boolean; isWord?: boolean; planTopicIndex?: number; freeV2?: boolean;
+  /** Práctica del plan: ejercicios y generación IA acotados a un solo tema. */
+  topicScoped?: boolean;
+  /** Salidas al plan (volver / siguiente actividad) cuando la práctica viene del plan. */
+  planNav?: PlanNavigation | null;
   quotaPremiumHref?: string; quotaBackHref?: string; quotaBackLabel?: string;
   /** Vista local sin lectura/escritura de intentos, IA ni cuotas. */
   previewResult?: { correct: number };
@@ -49,6 +54,8 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const locale = useOptionalAppLocale();
   const english = locale === 'en';
   const t = (value: string) => studyUiText(locale, value);
+  const minItems = topicScoped ? MIN_PLAN_TOPIC_ITEMS : MIN_CASES_PER_PRACTICE;
+  const topicIndex = topicScoped ? planTopicIndex : undefined;
   const [addedPairs, setAddedPairs] = useState<PracticePair[]>([]);
   const [generatedOptions, setGeneratedOptions] = useState<PracticeQuestion[]>([]);
   const [generatedTrueFalse, setGeneratedTrueFalse] = useState<PracticeQuestion[]>([]);
@@ -135,14 +142,14 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }, [mode, pairs, options, contexts, trueFalsePool, round, reviewLength, freeV2, questions, previewResult]);
 
   const total = mode === 'unir' ? exercisePairs.length : tasks.length;
-  const ready = previewResult !== undefined ? true : mode === 'unir' ? exercisePairs.length >= MIN_CASES_PER_PRACTICE :
-    mode === 'casos' ? contexts.length >= (freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
-    mode === 'completar' ? tasks.length >= MIN_CASES_PER_PRACTICE :
+  const ready = previewResult !== undefined ? true : mode === 'unir' ? exercisePairs.length >= minItems :
+    mode === 'casos' ? contexts.length >= (freeV2 ? 1 : minItems) :
+    mode === 'completar' ? tasks.length >= minItems :
     // La ronda gratis de Mixto no genera casos nuevos: usa la aplicación sólo si ya existe.
-    mode === 'mixto' ? tasks.length >= MIN_CASES_PER_PRACTICE && options.length >= 4 && pairs.length >= 2 && (freeV2 || distinctApplicationCases(contexts).length >= 1) :
-    mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) :
-    mode === 'simulacro' && freeV2 ? tasks.length >= 20 :
-    tasks.length >= MIN_CASES_PER_PRACTICE;
+    mode === 'mixto' ? tasks.length >= minItems && options.length >= 4 && pairs.length >= 2 && (freeV2 || distinctApplicationCases(contexts).length >= 1) :
+    mode === 'opciones' ? sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : minItems) :
+    mode === 'simulacro' && freeV2 && !topicScoped ? tasks.length >= 20 :
+    tasks.length >= minItems;
   // La ruta puede preparar contenido sin gastar el único uso. La ronda
   // se reclama al estar verificada y lista; el simulacro al pulsar Comenzar.
   const claimSessionQuota = useCallback(async (): Promise<boolean> => {
@@ -276,7 +283,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       const response = await fetch('/api/practice/cases', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          materialId, round: attempts.current - 1,
+          materialId, round: attempts.current - 1, topicIndex,
           existingScenarios: contexts.map(q => q.prompt.split(/\n\s*\n/)[0]).slice(0, 24),
         }),
         signal: AbortSignal.timeout(65000),
@@ -321,15 +328,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       generatingRequest.current = false;
       setGenerating(false);
     }
-  }, [materialId, contexts, options, mode, freeV2, freeSessionGate]);
+  }, [materialId, contexts, options, mode, freeV2, freeSessionGate, topicIndex]);
   // The student enters an actual six-case session only when enough verified
   // applications exist. Try again with fresh source snippets if QA rejects any.
   useEffect(() => {
     const needsMore = mode === 'casos'
-      ? contexts.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)
+      ? contexts.length < (freeV2 ? 1 : minItems)
       : mode === 'mixto' ? options.length < 4 || (!freeV2 && contexts.length < 1)
       : mode === 'simulacro'
-        ? options.length < (freeV2 ? 20 : MIN_CASES_PER_PRACTICE) : false;
+        ? options.length < (freeV2 && !topicScoped ? 20 : minItems) : false;
     const automaticLimit = mode === 'casos' ? 3 : 6;
     if (!aiAvailable || !needsMore || generating || generationError || freeSessionGate === 'denied' ||
         attempts.current >= automaticLimit || generatingRequest.current) return;
@@ -337,7 +344,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   }, [mode, aiAvailable, contexts.length, options.length, generating, generationError, generateNewCases, freeV2, freeSessionGate]);
   useEffect(() => {
     if (mode === 'casos' && !generating && !generationError &&
-        attempts.current >= 3 && contexts.length < (freeV2 ? 1 : MIN_CASES_PER_PRACTICE)) {
+        attempts.current >= 3 && contexts.length < (freeV2 ? 1 : minItems)) {
       setGenerationError(freeV2
         ? 'No pudimos preparar un caso gratuito con evidencia suficiente. Podés reintentar.'
         : 'No pudimos reunir seis casos distintos con respuestas verificadas. Podés reintentar con otras fuentes.');
@@ -359,7 +366,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({
-            materialId,round,
+            materialId,round,topicIndex,
             previous:accumulated.map(q => q.prompt),
           }),
           signal:AbortSignal.timeout(65000),
@@ -401,10 +408,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         }
         const incoming=verifiedTrueFalsePool(data.questions as PracticeQuestion[]);
         accumulated=verifiedTrueFalsePool([...accumulated,...incoming]);
-        if (sufficientTrueFalse(accumulated,freeV2 ? 1 : MIN_CASES_PER_PRACTICE)) break;
+        if (sufficientTrueFalse(accumulated,freeV2 ? 1 : minItems)) break;
       }
       if (accumulated.length> trueFalsePool.length) setGeneratedTrueFalse(accumulated);
-      if (!sufficientTrueFalse(accumulated,freeV2 ? 1 : MIN_CASES_PER_PRACTICE) &&
+      if (!sufficientTrueFalse(accumulated,freeV2 ? 1 : minItems) &&
           trueFalseAttempts.current>=6) {
         setTrueFalseError((english ? 'We could not verify six statements across the material. Please try again later.' : 'No conseguimos seis afirmaciones verificadas después de revisar distintos apartados. Podés reintentar más tarde.'));
       }
@@ -415,10 +422,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       trueFalseBusy.current=false;
       setTrueFalseLoading(false);
     }
-  },[materialId,trueFalsePool,freeV2,freeSessionGate]);
+  },[materialId,trueFalsePool,freeV2,freeSessionGate,topicIndex,minItems]);
   useEffect(() => {
     if (mode !== 'opciones' || !aiAvailable ||
-        sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : MIN_CASES_PER_PRACTICE) ||
+        sufficientTrueFalse(trueFalsePool, freeV2 ? 1 : minItems) ||
         trueFalseBusy.current || trueFalseLoading || trueFalseError || freeSessionGate === 'denied' ||
         trueFalseAttempts.current >= 6) return;
     void generateTrueFalse();
@@ -435,7 +442,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     try {
       const response = await fetch('/api/practice/supplement', {
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({materialId,mode,round:pairAttempts.current-1,
+        body:JSON.stringify({materialId,mode,round:pairAttempts.current-1,topicIndex,
           excludedTerms:pairs.map(p=>p.term)}),signal:AbortSignal.timeout(65000),
       });
       const body:unknown = await response.json();
@@ -447,9 +454,9 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       else setAddedPairs(previous=>[...previous,...fresh]);
     } catch {setPairError((english ? 'We could not prepare six reliable concepts. Please try again.' : 'No pudimos completar seis conceptos confiables. Podés reintentar.'));}
     finally {pairBusy.current=false;setPairLoading(false);}
-  },[materialId,mode,pairs]);
+  },[materialId,mode,pairs,topicIndex]);
   useEffect(()=>{
-    const neededPairs = mode === 'mixto' ? 2 : MIN_CASES_PER_PRACTICE;
+    const neededPairs = mode === 'mixto' ? 2 : minItems;
     if (!['unir','completar','mixto'].includes(mode) || pairs.length >= neededPairs ||
         pairLoading || pairBusy.current || pairError || pairAttempts.current >= 6) return;
     void generatePairs();
@@ -547,19 +554,29 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
       modeLabel={t(mode === 'opciones' ? 'Verdadero o falso' : title[mode])}
       entries={resultEntries}
       preview={Boolean(previewResult)}
-      closeHref={previewResult ? undefined : '/dashboard/practicar'}
-      primaryAction={{
+      closeHref={previewResult ? undefined : planNav ? planNav.backHref : '/dashboard/practicar'}
+      primaryAction={planNav && !previewResult
+        ? planNav.next
+          ? { label: 'Continuar con mi siguiente actividad', href: planNav.next.href }
+          : { label: 'Volver a mi plan', href: planNav.backHref }
+        : {
         label: english ? (mode === 'simulacro' ? (freeV2 ? 'Repeat mock exam' : 'New mock exam') : 'Practice again') : (mode === 'simulacro' ? (freeV2 ? 'Repetir simulacro' : 'Nuevo simulacro') : 'Practicar otra vez'),
         onClick: anotherRound,
         disabled: Boolean(previewResult),
       }}
-      secondaryAction={previewResult ? undefined : {
+      secondaryAction={previewResult ? undefined : planNav
+        ? planNav.next
+          ? { label: 'Volver a mi plan', href: planNav.backHref }
+          : { label: english ? 'Practice again' : 'Practicar otra vez', onClick: anotherRound }
+        : {
         label: t(mode === 'casos' ? 'Volver a Practicar' : 'Volver al resumen'),
         href: mode === 'casos' ? '/dashboard/practicar' : '/materiales/' + materialId + '?tab=resumen',
       }}
       extraAction={historySaveFailed && !previewResult
         ? { label: t('Reintentar guardado'), onClick: saveCompletedSession }
-        : undefined}
+        : planNav?.next && !previewResult
+          ? { label: english ? 'Practice again' : 'Practicar otra vez', onClick: anotherRound }
+          : undefined}
       note={historySaveFailed && !previewResult
         ? (english ? 'We could not save this practice to your history.' : 'No pudimos guardar esta práctica en el historial.')
         : undefined}
@@ -654,7 +671,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     /></div>;
 
   return <main className="mx-auto w-full max-w-[780px] px-3 py-4 pb-16 sm:px-5 sm:py-6">
-    <Link href="/dashboard/practicar" className="text-xs text-slate-500 hover:text-blue-600">← {t('Volver a Practicar')}</Link>
+    <Link href={planNav ? planNav.backHref : '/dashboard/practicar'} className="text-xs text-slate-500 hover:text-blue-600">← {t(planNav ? 'Volver a mi plan' : 'Volver a Practicar')}</Link>
     {mode === 'opciones' ? (
       <div className="mt-3 flex min-w-0 items-center gap-2.5">
         <h1 className="shrink-0 text-[20px] font-semibold tracking-tight text-slate-900">{t(title[mode])}</h1>
@@ -677,11 +694,11 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             : (english ? 'Not enough reliable exercises' : 'No hay suficientes ejercicios confiables')}</h2>
       {mode === 'mixto' && contexts.length === 0 ? <p className="mt-2">{english ? 'At least one applied case is needed alongside the questions and concepts. We are trying to create one from your document.' : 'Falta al menos un caso real de aplicación, además de las preguntas y conceptos. Estamos intentando generar uno a partir del documento.'}</p> : null}
       {mode === 'opciones' ? <p className="mt-2">
-        {trueFalsePool.length} {english ? 'of' : 'de'} {MIN_CASES_PER_PRACTICE} {english ? 'verified statements.' : 'afirmaciones verificadas.'}
+        {trueFalsePool.length} {english ? 'of' : 'de'} {minItems} {english ? 'verified statements.' : 'afirmaciones verificadas.'}
         {trueFalseLoading ? (english ? ' We are checking statements and explanations against your document.' : ' Estamos comprobando afirmaciones y sus correcciones contra el documento.') :
           (english ? ' We need at least six statements, including true and false answers.' : ' Para comenzar necesitamos al menos seis afirmaciones, con respuestas verdaderas y falsas.')}
       </p> : mode === 'casos' ? <p className="mt-2">
-        {contexts.length} {english ? 'of' : 'de'} {MIN_CASES_PER_PRACTICE} {english ? 'verified practice cases.' : 'casos de aplicación verificados.'}
+        {contexts.length} {english ? 'of' : 'de'} {minItems} {english ? 'verified practice cases.' : 'casos de aplicación verificados.'}
         {generating ? (english ? ' We are creating new cases from your material.' : ' Estamos creando situaciones nuevas a partir de tu material.') :
           (english ? ' We need six distinct cases with verifiable answers to begin.' : ' Necesitamos seis casos distintos y con respuestas comprobables antes de comenzar.')}
       </p> : <p className="mt-2">{english ? 'This material does not yet contain enough verified content for this activity. We will not invent questions or assess you using ambiguous answers.' : <>Este material todavía no tiene contenido verificable suficiente para {title[mode].toLowerCase()}. No vamos a inventar preguntas ni evaluarte con respuestas ambiguas.</>}</p>}
@@ -738,7 +755,7 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
             }} className="min-h-12 w-full rounded-full bg-[#456DBD] px-6 text-[15px] font-bold text-white transition hover:bg-[#3A5CA8] disabled:opacity-60">
               {t(freeSessionGate === 'pending' ? 'Verificando cupo…' : 'Comenzar simulacro')}
             </button>
-            <Link href="/dashboard/practicar" className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#456DBD]">{english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar'}</Link>
+            <Link href={planNav ? planNav.backHref : '/dashboard/practicar'} className="inline-flex min-h-11 items-center justify-center text-[13px] font-semibold text-slate-600 hover:text-[#456DBD]">{planNav ? (english ? 'Not now, back to my plan' : 'Ahora no, volver a mi plan') : (english ? 'Not now, back to practice' : 'Ahora no, volver a Practicar')}</Link>
           </div>
         </div>
       </section>

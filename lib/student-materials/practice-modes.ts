@@ -191,6 +191,8 @@ export function qualifiedQuestions(questions: PracticeQuestion[]): PracticeQuest
   });
 }
 export const MIN_CASES_PER_PRACTICE = 6;
+/** Mínimo de ejercicios de una práctica acotada a un solo tema del plan. */
+export const MIN_PLAN_TOPIC_ITEMS = 3;
 
 /** A case session must be grounded in a new situation, not a classification
  * lookup or a question upgraded to "aplicar" by its metadata alone. */

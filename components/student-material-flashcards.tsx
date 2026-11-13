@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PracticeResultsScreen, type PracticeResultEntry } from '@/components/dashboard/practice-results-screen';
+import type { PlanNavigation } from '@/lib/student-materials/plan-navigation-server';
 import advanceStyles from './student-material-flashcards.module.css';
 import { cn } from '@/lib/utils';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
@@ -92,6 +93,7 @@ export function StudentMaterialFlashcards({
   topicTitle,
   onPracticeTopic,
   onReturnToTopic,
+  planNav,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
@@ -108,6 +110,8 @@ export function StudentMaterialFlashcards({
   topicTitle?: string;
   onPracticeTopic?: () => void;
   onReturnToTopic?: () => void;
+  /** Práctica lanzada desde el plan: cierre hacia el plan y la siguiente actividad. */
+  planNav?: PlanNavigation | null;
 }) {
   const locale = useOptionalAppLocale();
   const english = locale === 'en';
@@ -553,7 +557,12 @@ export function StudentMaterialFlashcards({
           materialId={materialId}
           preview={demoMode}
           onClose={topicSession ? onReturnToTopic ?? finishSession : finishSession}
-          primaryAction={topicSession
+          closeHref={planNav && !demoMode ? planNav.backHref : undefined}
+          primaryAction={planNav && !demoMode
+            ? planNav.next
+              ? { label: 'Continuar con mi siguiente actividad', href: planNav.next.href }
+              : { label: 'Volver a mi plan', href: planNav.backHref }
+            : topicSession
             ? {
                 label: onPracticeTopic ? 'Practicar este tema' : 'Volver al tema',
                 onClick: onPracticeTopic ?? onReturnToTopic,
@@ -563,7 +572,11 @@ export function StudentMaterialFlashcards({
             : unknownCount > 0
               ? { label: 'Repasar ahora', onClick: reviewDifficult }
               : { label: 'Finalizar sesión', onClick: finishSession }}
-          secondaryAction={topicSession
+          secondaryAction={planNav && !demoMode
+            ? unknownCount > 0
+              ? { label: 'Repasar ahora', onClick: reviewDifficult }
+              : planNav.next ? { label: 'Volver a mi plan', href: planNav.backHref } : undefined
+            : topicSession
             ? unknownCount > 0 ? { label: 'Repasar tarjetas (' + unknownCount + ')', onClick: reviewDifficult, qaId: 'topic-review' } : undefined
             : unknownCount > 0 ? { label: 'Finalizar sesión', onClick: finishSession } : undefined}
           extraAction={!topicSession && !demoMode && unknownCount > 0

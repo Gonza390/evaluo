@@ -144,6 +144,8 @@ export const STUDY_UI_ENGLISH: Record<string, string> = {
   "Practicar este tema": "Practice this topic",
   "Volver al resumen": "Back to summary",
   "Volver a Practicar": "Back to practice",
+  "Volver a mi plan": "Back to my plan",
+  "Continuar con mi siguiente actividad": "Continue with my next activity",
   "Ver menos": "Show less",
   "Leer introducción completa": "Read full introduction",
   "Abrir": "Open",

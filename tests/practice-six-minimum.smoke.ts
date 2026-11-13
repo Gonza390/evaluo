@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  MIN_CASES_PER_PRACTICE, balancedQuestions, qualifiedQuestions,
+  MIN_CASES_PER_PRACTICE, MIN_PLAN_TOPIC_ITEMS, balancedQuestions, qualifiedQuestions,
   selectPracticePairs, type PracticePair, type PracticeQuestion,
 } from '../lib/student-materials/practice-modes.ts';
 import { sourceVerifiedPairs } from '../lib/student-materials/practice-source-pairs.ts';
@@ -10,6 +10,7 @@ const read = (path: string) =>
   readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 
 assert.equal(MIN_CASES_PER_PRACTICE, 6);
+assert.equal(MIN_PLAN_TOPIC_ITEMS, 3, 'una práctica de un solo tema pide 3 ejercicios');
 const pairs:PracticePair[] = Array.from({length:6},(_,i)=>({
   term:'Término académico '+(i+1),
   definition:['Identifica la secuencia de observaciones y permite clasificar tareas.',
@@ -64,18 +65,20 @@ assert.match(session,/shufflePracticeChoices\(/,
   'Multiple choice, cases and simulacros must randomize answer positions.');
 assert.match(session,/shufflePracticeItems\(/,
   'Rounds must vary question order without losing answer mappings.');
-assert.match(session,/mode === 'unir' \? exercisePairs\.length >= MIN_CASES_PER_PRACTICE/);
-assert.match(session,/mode === 'completar' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
-assert.match(session,/mode === 'mixto' \? tasks\.length >= MIN_CASES_PER_PRACTICE/);
+assert.match(session,/const minItems = topicScoped \? MIN_PLAN_TOPIC_ITEMS : MIN_CASES_PER_PRACTICE;/,
+  'solo una práctica acotada a un tema baja el mínimo; la general conserva seis');
+assert.match(session,/mode === 'unir' \? exercisePairs\.length >= minItems/);
+assert.match(session,/mode === 'completar' \? tasks\.length >= minItems/);
+assert.match(session,/mode === 'mixto' \? tasks\.length >= minItems/);
 assert.match(session,/mode === 'opciones'/);
 assert.match(session,/selectBalancedTrueFalse\(trueFalsePool, freeV2 \? 10 : reviewLength === 'rapido' \? 6 : 8, round\)/);
-assert.match(session,/sufficientTrueFalse\(trueFalsePool, freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(session,/sufficientTrueFalse\(trueFalsePool, freeV2 \? 1 : minItems\)/);
 assert.match(session,/balancedQuestions\(options, freeV2 \? 20 : reviewLength === 'rapido' \? 6 : 10, round\)/);
 assert.match(session,/fetch\('\/api\/practice\/supplement'/);
 assert.match(session,/fetch\('\/api\/practice\/cases'/);
-assert.match(session,/contexts\.length >= \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(session,/contexts\.length >= \(freeV2 \? 1 : minItems\)/);
 const flashcards=read('components/dashboard/practice-flashcard-session.tsx');
-assert.match(flashcards,/approvedIndices\.length < \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(flashcards,/approvedIndices\.length < \(freeV2 \? 1 : minCards\)/);
 assert.match(flashcards,/StudentMaterialFlashcards/);
 assert.match(flashcards,/approvedIndices\.length >= 1/,
   'Free should not spend IA automatically once one usable flashcard is available.');

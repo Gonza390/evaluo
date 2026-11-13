@@ -22,6 +22,11 @@ import {
 } from '@/lib/student-materials/practice-on-demand';
 import type { CanonicalPedagogicalModel } from '@/lib/student-materials/types';
 import { getSessionUser } from '@/lib/auth-session';
+import { loadPlanNavigation } from '@/lib/student-materials/plan-navigation-server';
+import type { PlanPracticeMode } from '@/lib/student-materials/study-plan-completion';
+import {
+  practiceItemInPlanTopic, questionsForPlanTopic, resolvePlanTopicScope, resourcesForPlanTopic,
+} from '@/lib/student-materials/plan-topic-scope';
 
 /**
  * Server-only source-backed unlock. Only verified material items become reusable.
@@ -67,7 +72,7 @@ async function firstFreeItems<T>(args: {
 export default async function PracticeModePage({ params, searchParams }: { params: Promise<{ id: string; mode: string }>; searchParams: Promise<{ repaso?: string; planTopic?: string; returnTo?: string }> }) {
   const { id, mode } = await params;
   const { repaso, planTopic, returnTo } = await searchParams;
-  const planTopicIndex = planTopic !== undefined && /^\d{1,3}$/.test(planTopic) ? Number(planTopic) : undefined;
+  const requestedPlanTopic = planTopic !== undefined && /^\d{1,3}$/.test(planTopic) ? Number(planTopic) : undefined;
   const reviewLength = repaso === 'rapido' ? 'rapido' : 'completo';
   const supported = ['unir', 'completar', 'casos', 'mixto', 'simulacro', 'opciones', 'flashcards'];
   if (!supported.includes(mode) || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
@@ -92,11 +97,21 @@ export default async function PracticeModePage({ params, searchParams }: { param
     return <main className="mx-auto max-w-3xl p-6"><p>{english ? 'Your study material is still being prepared.' : 'El material todavía se está preparando.'}</p><Link className="text-blue-600 underline" href="/dashboard/practicar">{english ? 'Back to practice' : 'Volver a Practicar'}</Link></main>;
   }
   const glossary = tagGlossaryChapters(studyGlossary, studySummary.sections);
+  // Una práctica lanzada desde el plan se registra como hecha para ESE tema:
+  // sus ejercicios salen solo de él. Un índice inexistente se ignora.
+  const planScope = resolvePlanTopicScope(studySummary.sections, requestedPlanTopic);
+  const planTopicIndex = planScope?.index;
+  // Salidas hacia el plan (volver / siguiente actividad) solo si hay un plan guardado.
+  const planNav = planTopicIndex !== undefined
+    ? await loadPlanNavigation({ supabase, userId: user.id, materialId: material.id,
+      topicIndex: planTopicIndex, mode: mode as PlanPracticeMode })
+    : null;
   const requestedBack = safePremiumReturnTo(returnTo);
   // Do not send a student back to the blocked exercise or an external origin.
   const backHref = requestedBack && !requestedBack.startsWith('/dashboard/premium') &&
     !requestedBack.startsWith('/dashboard/practicar/' + id + '/')
     ? requestedBack
+    : planNav ? planNav.backHref
     : planTopicIndex !== undefined
       ? '/materiales/' + id + '?tab=resumen&studyTopic=' + planTopicIndex
       : '/dashboard/practicar?materialId=' + id;
@@ -124,13 +139,38 @@ export default async function PracticeModePage({ params, searchParams }: { param
       topicLabel={topicLabel} backHref={backHref} backLabel={backLabel}
       premiumHref={premiumUpgradeForLimit(kind, {materialId:material.id, returnTo:practiceHref}).href}/>;
 
+  // Sin material suficiente de ESE tema no se completa con otros capítulos: se
+  // explica y se ofrece practicar todo el material sin que cuente para el plan.
+  const topicUnavailable = () => <main className="mx-auto max-w-xl p-6">
+    <h1 className="text-subtitulo font-semibold text-[#0F1B3D]">
+      {english ? 'Not enough material in this topic yet' : 'Este tema todavía no tiene suficiente material'}
+    </h1>
+    <p className="mt-2 text-cuerpo text-[#42506A]">
+      {english
+        ? `We could not build this activity only from “${topicLabel ?? ''}”, and we will not fill it with other chapters.`
+        : `No pudimos armar esta actividad solo con “${topicLabel ?? ''}” y no la vamos a completar con otros capítulos.`}
+    </p>
+    <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+      <Link href={backHref} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#456DBD] px-4 text-ui font-semibold text-white">{backLabel}</Link>
+      <Link href={'/dashboard/practicar/' + id + '/' + mode + '?repaso=' + reviewLength}
+        className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#E7EBF4] px-4 text-ui font-semibold text-[#42506A]">
+        {english ? 'Practice the whole material (does not count for this topic)' : 'Practicar todo el material (no cuenta para este tema)'}
+      </Link>
+    </div>
+  </main>;
+
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   const artifacts = await loadOrBuildPedagogicalArtifacts({
     admin, materialId: material.id, summary: studySummary, glossary,
   });
+  const topicResources = planScope
+    ? resourcesForPlanTopic(studySummary.sections, glossary, artifacts.flashcards, planScope) : null;
+  const topicFlashcardSet = topicResources ? new Set(topicResources.flashcards) : null;
+  const sourceFlashcards = topicResources ? topicResources.flashcards : artifacts.flashcards;
   // No consumir flashcards al abrir Casos, Simulacro, Opciones o Unir.
   // El estudiante gasta el cupo sólo si entra efectivamente a Flashcards.
   if (mode === 'flashcards') {
+    if (planScope && sourceFlashcards.length === 0) return topicUnavailable();
     // La cuota es por cuenta: no intentar generar tarjetas nuevas ni gastar IA
     // si las 25 están usadas en otros materiales.
     if (freeV2) {
@@ -147,6 +187,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
         userId: user.id, materialId: material.id, kind: 'flashcard',
         items: artifacts.flashcards, limit: FREE_STUDY_V2.flashcards, keyPrefix: 'flashcard',
         valid: card => {
+          if (topicFlashcardSet && !topicFlashcardSet.has(card)) return false;
           if (!auditPracticeFlashcard(card).approved) return false;
           const prompt = normalizedAnswer(card.front), answer = normalizedAnswer(card.back);
           if (seenPrompts.has(prompt) || seenAnswers.has(answer)) return false;
@@ -155,18 +196,21 @@ export default async function PracticeModePage({ params, searchParams }: { param
           return true;
         },
       })
-      : artifacts.flashcards;
-    if (freeV2 && artifacts.flashcards.length > 0 && freeFlashcards.length === 0)
+      : sourceFlashcards;
+    if (freeV2 && sourceFlashcards.length > 0 && freeFlashcards.length === 0)
       return exhausted('flashcard');
     return <PracticeFlashcardSession
       materialId={material.id} cards={freeFlashcards} reviewLength={reviewLength}
-      freeV2={freeV2} planTopicIndex={planTopicIndex} />;
+      freeV2={freeV2} planTopicIndex={planTopicIndex} topicScoped={planScope !== null}
+      planNav={planNav} />;
   }
 
   const { data: modelRow } = mode === 'casos' || mode === 'mixto'
     ? await admin.from('student_materials').select('pedagogical_model').eq('id', material.id).maybeSingle()
     : { data: null };
-  const sourceCases = buildSourceBackedCases((modelRow?.pedagogical_model ?? null) as CanonicalPedagogicalModel | null);
+  const allSourceCases = buildSourceBackedCases((modelRow?.pedagogical_model ?? null) as CanonicalPedagogicalModel | null);
+  const sourceCases = planScope
+    ? allSourceCases.filter(item => practiceItemInPlanTopic(planScope, item)) : allSourceCases;
   const cases = freeV2 && (mode === 'casos' || mode === 'mixto')
     ? await firstFreeItems({
       userId:user.id, materialId:material.id, kind:'case',
@@ -185,7 +229,10 @@ export default async function PracticeModePage({ params, searchParams }: { param
         !Array.from(keys).some(key => key.startsWith(material.id + ':')))
       return exhausted('true_false');
   }
-  const sourceQuestions = artifacts.questions.filter(q =>
+  const topicQuestions = planScope
+    ? questionsForPlanTopic(artifacts.questions, studySummary.sections, planScope)
+    : artifacts.questions;
+  const sourceQuestions = topicQuestions.filter(q =>
     q.type === 'multiple_choice' && q.options.length >= 2
   ).map(q => ({
     id: q.id, prompt: q.prompt, options: q.options, answer: q.answer,
@@ -213,7 +260,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
   // A missing bank table during rollout is safe: keep the original source-backed practice.
   // Never modify the source model or the existing study artifacts.
   let savedBank = null as ReturnType<typeof safePracticeBank>;
-  if (process.env.PRACTICE_BANK_ENABLED === '1') {
+  if (process.env.PRACTICE_BANK_ENABLED === '1' && !planScope) {
     const practiceDb = admin as unknown as {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- optional additive practice table, not yet in generated Supabase types
       from: (table: string) => any;
@@ -231,6 +278,7 @@ export default async function PracticeModePage({ params, searchParams }: { param
       savedBank = safePracticeBank(bankRow.payload);
     }
   }
+  const practiceGlossary = topicResources ? topicResources.concepts : glossary;
   return <PracticeSession key={mode + ':' + id} mode={mode as 'unir' | 'completar' | 'casos' | 'mixto' | 'simulacro' | 'opciones'}
     freeV2={freeV2}
     quotaBackHref={backHref} quotaBackLabel={backLabel}
@@ -242,7 +290,8 @@ export default async function PracticeModePage({ params, searchParams }: { param
     materialId={material.id} materialTitle={material.title} reviewLength={reviewLength} planTopicIndex={planTopicIndex} cases={freeV2 ? cases : savedBank?.cases.length ? savedBank.cases : cases}
     aiAvailable={true}
     isWord={material.file_name.toLowerCase().endsWith('.docx')}
-    glossary={(freeV2 ? glossary.slice(0, FREE_STUDY_V2.matchingPairs) : glossary)
+    topicScoped={planScope !== null} planNav={planNav}
+    glossary={(freeV2 ? practiceGlossary.slice(0, FREE_STUDY_V2.matchingPairs) : practiceGlossary)
       .map(item => ({ term: item.term, definition: item.definition,
         chapterTitle: item.chapterTitle ?? null, englishTerm: item.englishTerm ?? null }))}
     questions={freeV2 && mode !== 'simulacro'

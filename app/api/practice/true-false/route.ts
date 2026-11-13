@@ -1,4 +1,6 @@
 import type { PracticeQuestion } from '@/lib/student-materials/practice-modes';
+import { fragmentInPlanTopic, practiceItemInPlanTopic, readTopicIndex } from '@/lib/student-materials/plan-topic-scope';
+import { loadPlanTopicScope } from '@/lib/student-materials/plan-topic-scope-server';
 import { NextResponse } from 'next/server';
 import { isPracticeUuid } from '@/lib/student-materials/practice-request-validation';
 import { createClientServer } from '@/lib/supabase-server';
@@ -80,10 +82,22 @@ async function handleVerifiedTrueFalse(request: Request) {
     .select('id,processing_status').eq('id',input.materialId).eq('user_id',user.id).maybeSingle();
   if (!material||material.processing_status!=='ready')
     return NextResponse.json({error:'material_not_found'},{status:404});
+  // Práctica lanzada desde el plan: SOLO fuentes de ese tema, nunca todo el material.
+  const topicIndex = readTopicIndex(input.topicIndex);
+  if (input.topicIndex !== undefined && topicIndex === undefined)
+    return NextResponse.json({error:'invalid_topic'},{status:400});
+  const admin=createAdminClient();
+  const topicScope = topicIndex !== undefined ? await loadPlanTopicScope(admin, material.id, topicIndex) : null;
+  if (topicIndex !== undefined && !topicScope)
+    return NextResponse.json({error:'topic_material_unavailable'},{status:422});
   const freeV2 = appliesFreeStudyV2(await hasPremiumAccess(user.id));
   const bankMode = studyLocale === 'en' ? 'true_false:en' as const : 'true_false' as const;
   if (freeV2) {
-    const saved = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:bankMode });
+    const savedAll = await getFreeStudyBank<PracticeQuestion>({ userId:user.id, materialId:material.id, mode:bankMode });
+    // El banco gratis es del material completo: acotarlo al tema sin gastar cupo.
+    const saved = savedAll && topicScope ? savedAll.filter(item => practiceItemInPlanTopic(topicScope, item)) : savedAll;
+    if (savedAll && saved && saved.length === 0)
+      return NextResponse.json({error:'topic_material_unavailable'},{status:422});
     if (saved) {
       const allowed = await claimVerifiedFreeStudySample({ userId:user.id, materialId:material.id, kind:'true_false', items:saved });
       if (!allowed.length) {
@@ -113,7 +127,6 @@ async function handleVerifiedTrueFalse(request: Request) {
   });
   if(!limit.allowed) return NextResponse.json({error:'rate_limited'},
     {status:429,headers:rateLimitHeaders(limit)});
-  const admin=createAdminClient();
   const {data:chunks,error}=await admin.from('student_material_chunks')
     .select('chunk_text,page_start,section_title,chunk_index')
     .eq('student_material_id',material.id)
@@ -128,8 +141,8 @@ async function handleVerifiedTrueFalse(request: Request) {
     pageStart:chunk.page_start,
     sectionTitle:chunk.page_start===null
       ?(chunk.section_title?.trim()||'Fragmento '+(chunk.chunk_index+1)):null,
-  }));
-  if(!all.length) return NextResponse.json({error:'insufficient_source'},{status:422});
+  })).filter(fragment=>!topicScope||fragmentInPlanTopic(topicScope,fragment));
+  if(!all.length) return NextResponse.json({error:topicScope?'topic_material_unavailable':'insufficient_source'},{status:422});
   const isWord=all[0]!.pageStart===null;
   const sourceRows=all.filter(s=>(s.pageStart===null)===isWord);
   const fragments=selectTrueFalseFragments(sourceRows,round)
@@ -219,7 +232,9 @@ async function handleVerifiedTrueFalse(request: Request) {
     });
     if(!reviewed?.content) return NextResponse.json({error:'verification_unavailable'},{status:503});
     const judgments:unknown=JSON.parse(reviewed.content);
-    const questions=applyIndependentTrueFalseReview(candidates,judgments,fragments);
+    const reviewedQuestions=applyIndependentTrueFalseReview(candidates,judgments,fragments);
+    // Defensa en profundidad: nada fuera del tema llega a una práctica del plan.
+    const questions=topicScope?reviewedQuestions.filter(item=>practiceItemInPlanTopic(topicScope,item)):reviewedQuestions;
     if(!questions.length) {
       console.warn('[practice.true-false] review_gate_rejected', {
         round, fragments:fragments.length,candidates:candidates.length,verified:0,
@@ -230,9 +245,11 @@ async function handleVerifiedTrueFalse(request: Request) {
       round,fragments:fragments.length,candidates:candidates.length,
       verified:questions.length,
     });
+    // Un banco acotado a un tema no debe convertirse en el banco gratis del material.
     const bounded = freeV2
-      ? await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:bankMode,
-          items:questions.slice(0,FREE_STUDY_V2.trueFalse)})
+      ? (topicScope?questions.slice(0,FREE_STUDY_V2.trueFalse)
+        :await saveFirstFreeStudyBank({userId:user.id,materialId:material.id,mode:bankMode,
+          items:questions.slice(0,FREE_STUDY_V2.trueFalse)}))
       : questions;
     const accessible = freeV2
       ? await claimVerifiedFreeStudySample({userId:user.id,materialId:material.id,kind:'true_false',items:bounded})

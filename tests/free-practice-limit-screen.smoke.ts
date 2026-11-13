@@ -84,7 +84,7 @@ assert.match(materialExam, /onReturnToTopic\(false\)/);
 assert.match(materialWorkspace, /materialTitle=\{title\}/, 'Display the actual material title');
 
 // Existing unlocked items must remain reusable, exhausted account quotas only.
-assert.match(modePage, /if \(freeV2 && artifacts\.flashcards\.length > 0 && freeFlashcards\.length === 0\)/);
+assert.match(modePage, /if \(freeV2 && sourceFlashcards\.length > 0 && freeFlashcards\.length === 0\)/);
 assert.match(modePage, /if \(freeV2 && mode === 'casos' && sourceCases\.length > 0 && cases\.length === 0\)/);
 assert.match(modePage, /listFreeStudyUnlockedKeys/);
 assert.match(modePage, /!Array\.from\(keys\)\.some\(key => key\.startsWith\(material\.id \+ ':'\)\)/);
@@ -103,7 +103,7 @@ assert.match(session, /sessionRound && mode !== 'simulacro' && ready && freeSess
 assert.match(session, /freeV2 && response\.status === 403 && code === 'free_quota_exhausted'/);
 assert.match(session, /freeV2 && response\.status === 403 && errorCode === 'free_quota_exhausted'/);
 assert.match(session, /kind=\{mode === 'unir' \? 'matching_round' : mode === 'casos' \? 'case'/);
-assert.match(session, /contexts\.length >= \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(session, /contexts\.length >= \(freeV2 \? 1 : minItems\)/);
 assert.match(session, /Comenzar simulacro/);
 assert.match(session, /claimSessionQuota\(\)\.then\(allowed/);
 assert.match(modePage, /keys\.size >= FREE_STUDY_V2\.flashcards/);
@@ -123,7 +123,7 @@ assert.match(supplemental, /alreadyOwnMatching/);
 assert.match(supplemental, /error:'free_quota_exhausted'/);
 
 const flashcards = read('components/dashboard/practice-flashcard-session.tsx');
-assert.match(flashcards, /approvedIndices\.length < \(freeV2 \? 1 : MIN_CASES_PER_PRACTICE\)/);
+assert.match(flashcards, /approvedIndices\.length < \(freeV2 \? 1 : minCards\)/);
 for (const route of ['app/api/practice/cases/route.ts', 'app/api/practice/true-false/route.ts']) {
   const text = read(route);
   assert.match(text, /free_quota_exhausted/);
