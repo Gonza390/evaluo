@@ -598,7 +598,10 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
         : mode === 'opciones' ? 'true_false' : mode === 'completar' ? 'complete'
         : mode === 'mixto' ? 'mixed' : 'simulator'}
       premiumHref={quotaPremiumHref} backHref={quotaBackHref}
-      backLabel={quotaBackLabel} materialTitle={materialTitle}/>;
+      backLabel={quotaBackLabel} materialTitle={materialTitle}
+      plan={planNav && planTopicIndex !== undefined
+        ? { materialId, topicIndex: planTopicIndex, next: planNav.next ? { href: planNav.next.href } : null }
+        : undefined}/>;
   }
   if (sessionRound && freeSessionGate === 'error') {
     return <main className="mx-auto max-w-[780px] px-4 py-8">

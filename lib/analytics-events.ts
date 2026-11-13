@@ -151,6 +151,8 @@ const ANALYTICS_EVENT_NAMES = [
   'limit_reached_errores_review',
   'limit_reached_calendar_exam',
   'limit_reached_material_upload',
+  'plan_limit_reached',
+  'plan_limit_action',
   'explanation_history_viewed',
   'reminder_created',
   'reminder_dismissed',

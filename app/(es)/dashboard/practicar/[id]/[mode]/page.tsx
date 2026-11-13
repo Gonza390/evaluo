@@ -137,6 +137,9 @@ export default async function PracticeModePage({ params, searchParams }: { param
   const exhausted = (kind: FreePracticeLimitKind) =>
     <FreePracticeLimitScreen kind={kind} materialTitle={material.title}
       topicLabel={topicLabel} backHref={backHref} backLabel={backLabel}
+      plan={planNav && planTopicIndex !== undefined
+        ? { materialId: material.id, topicIndex: planTopicIndex, next: planNav.next ? { href: planNav.next.href } : null }
+        : undefined}
       premiumHref={premiumUpgradeForLimit(kind, {materialId:material.id, returnTo:practiceHref}).href}/>;
 
   // Sin material suficiente de ESE tema no se completa con otros capítulos: se

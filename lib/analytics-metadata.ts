@@ -921,6 +921,10 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   limit_reached_errores_review: ['materia_id', 'parcial', 'weekly_reviews', 'limit'],
   limit_reached_calendar_exam: ['exam_event_count', 'limit'],
   limit_reached_material_upload: ['materia_id'],
+  // Límite Free alcanzado dentro del plan de estudio: cuántas veces aparece y qué
+  // hace el alumno después (premium | next_activity | back). Sin texto libre.
+  plan_limit_reached: ['attribution', 'anonymous_id', 'page_type', 'source', 'limit_kind', 'material_id', 'topic_index', 'has_next'],
+  plan_limit_action: ['attribution', 'anonymous_id', 'page_type', 'source', 'limit_kind', 'material_id', 'topic_index', 'has_next', 'action'],
   explanation_history_viewed: ['explanation_count'],
   reminder_created: ['event_id', 'days_before', 'materia_id'],
   reminder_dismissed: ['event_id', 'days_before'],

@@ -9,6 +9,7 @@ import './practice-motion.css';
 import { ArrowLeft, LockKeyhole, X } from 'lucide-react';
 import type { PremiumGateReason } from '@/lib/premium-flow';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 export type FreePracticeLimitKind = Extract<PremiumGateReason,
   'multiple_choice' | 'true_false' | 'matching_round' | 'case' | 'flashcard' | 'simulator' | 'complete' | 'mixed'>;
@@ -35,6 +36,14 @@ const modesEnglish: typeof modes = {
   mixed: { label: 'Mixed', noun: 'mixed practice sessions', preview: 'PRACTICE 1' },
 };
 
+/** Contexto del plan de estudio: habilita la salida «siguiente actividad» y la medición. */
+export type FreePracticeLimitPlan = {
+  materialId: string;
+  topicIndex: number;
+  next: { href: string } | null;
+};
+export type FreePracticeLimitAction = 'premium' | 'next_activity' | 'back';
+
 type Props = {
   kind: FreePracticeLimitKind;
   premiumHref: string;
@@ -44,6 +53,8 @@ type Props = {
   topicLabel?: string;
   /** For limits reached while studying within a tab, go back without losing the page. */
   onBack?: () => void;
+  /** Solo cuando el límite se alcanza desde el plan de estudio. */
+  plan?: FreePracticeLimitPlan;
 };
 
 /** Exact centered composition of the supplied "Práctica lista · base" HTML.
@@ -51,7 +62,7 @@ type Props = {
  * Must be shown only after a verified denial, never for AI/content/network errors.
  */
 export function FreePracticeLimitScreen({
-  kind, premiumHref, backHref, backLabel = 'Volver', materialTitle, topicLabel, onBack,
+  kind, premiumHref, backHref, backLabel = 'Volver', materialTitle, topicLabel, onBack, plan,
 }: Props) {
   const router = useRouter();
   const english = useOptionalAppLocale() === 'en';
@@ -63,12 +74,31 @@ export function FreePracticeLimitScreen({
   const fitViewport = useRef<HTMLDivElement>(null);
   const fitContent = useRef<HTMLDivElement>(null);
   const [fitScale, setFitScale] = useState(1);
+  const planMaterialId = plan?.materialId;
+  const planTopicIndex = plan?.topicIndex;
+  const planHasNext = Boolean(plan?.next);
+  const trackPlanLimit = (event: 'plan_limit_reached' | 'plan_limit_action', action?: FreePracticeLimitAction) => {
+    if (planMaterialId === undefined || planTopicIndex === undefined) return;
+    try {
+      trackMarketingEvent(event, {
+        source: 'study_plan', limit_kind: kind, material_id: planMaterialId,
+        topic_index: planTopicIndex, has_next: planHasNext, ...(action ? { action } : {}),
+      });
+    } catch {
+      // La medición nunca bloquea la salida del alumno.
+    }
+  };
   useEffect(() => {
     setMounted(true);
     return () => {
       if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (mounted) trackPlanLimit('plan_limit_reached');
+    // Una vez por pantalla mostrada, no por cada render.
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -123,9 +153,9 @@ export function FreePracticeLimitScreen({
   };
   const backControl = (className: string, children: ReactNode, ariaLabel?: string) =>
     onBack
-      ? <button type="button" onClick={() => transitionOut(onBack)} disabled={leaving}
+      ? <button type="button" onClick={() => transitionOut(onBack)} onClickCapture={() => trackPlanLimit('plan_limit_action', 'back')} disabled={leaving}
           className={className} aria-label={ariaLabel}>{children}</button>
-      : <Link href={backHref} onClick={event => onLinkClick(event, backHref)}
+      : <Link href={backHref} onClick={event => onLinkClick(event, backHref)} onClickCapture={() => trackPlanLimit('plan_limit_action', 'back')}
           className={className} aria-label={ariaLabel} aria-disabled={leaving}>{children}</Link>;
 
   if (!mounted) return null;
@@ -200,9 +230,16 @@ export function FreePracticeLimitScreen({
 
           <div className="mt-3 flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
             <Link href={premiumHref} onClick={event => onLinkClick(event, premiumHref)} aria-disabled={leaving}
+              onClickCapture={() => trackPlanLimit('plan_limit_action', 'premium')}
               className="inline-flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3c6cba] px-5 text-ui font-semibold text-white shadow-[0_8px_20px_rgba(11,99,229,0.28)] sm:w-auto hover:bg-[#2a5193] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3c6cba]">
               {t('Practicar con ', 'Practice with ')}<span className="rounded-full bg-white px-2.5 py-[3px] text-etiqueta font-semibold tracking-[.04em] text-[#2a5193]">PREMIUM</span>
             </Link>
+            {plan?.next && <Link href={plan.next.href} aria-disabled={leaving}
+              onClick={event => onLinkClick(event, plan.next!.href)}
+              onClickCapture={() => trackPlanLimit('plan_limit_action', 'next_activity')}
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#3c6cba] bg-white px-5 text-ui font-semibold text-[#2a5193] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3c6cba] sm:w-auto sm:text-cuerpo">
+              {t('Seguir con mi siguiente actividad', 'Continue with my next activity')}
+            </Link>}
             {backControl(
               'inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-[#d0d5dd] bg-white px-5 text-ui font-semibold text-[#0f1623] hover:bg-[#f7faff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3c6cba] sm:w-auto sm:text-cuerpo',
               <><ArrowLeft className="size-[18px]" aria-hidden="true"/>{localizedBackLabel}</>,
