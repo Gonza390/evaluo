@@ -120,7 +120,7 @@ assert.match(styles, /bg-card mt-4 flex justify-end border-t py-3/);
 assert.doesNotMatch(styles, /sticky bottom-0/, 'Evitar un CTA flotante sobre las respuestas.');
 const exam = readFileSync('components/student-material-exam.tsx', 'utf8');
 assert.match(exam, /data-pdf-question-actions/);
-assert.match(exam, /text-\[13px\] font-medium">{topicTitle}/);
+assert.doesNotMatch(exam, /text-\[13px\] font-medium">{topicTitle}/);
 assert.doesNotMatch(exam, /Práctica basada en este PDF/,
   'La práctica general dentro del PDF no muestra el subtítulo redundante.');
 assert.match(exam, /data-onboarding-practice-options className="grid w-full max-w-\[720px\] grid-cols-3/,

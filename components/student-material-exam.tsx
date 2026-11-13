@@ -658,9 +658,6 @@ export function StudentMaterialExam({
           <p className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">
             {t("Práctica de este tema")}
           </p>
-          <h2 className="text-foreground mt-2 text-xl font-semibold">
-            {topicTitle}
-          </h2>
         </div>
         {topicGenerationUnavailable && topicSectionIndex !== undefined && (
           <p role="status" className="text-muted-foreground text-xs leading-5">
@@ -720,7 +717,7 @@ export function StudentMaterialExam({
             </p>
           )}
           <h2 className={cn('text-foreground text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]', topicSectionIndex !== undefined && 'mt-2')}>
-            {topicTitle ?? t('Elegí cuánto querés practicar')}
+            {t('Elegí cuánto querés practicar')}
           </h2>
         </header>
 
@@ -1671,11 +1668,6 @@ export function StudentMaterialExam({
   return (
     <>
       <div className="practice-screen-enter mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
-        {topicSectionIndex !== undefined && (
-          <div className="border-border border-b pb-3">
-            <p className="text-muted-foreground text-[13px] font-medium">{topicTitle}</p>
-          </div>
-        )}
         {topicSectionIndex !== undefined &&
           verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
             <p role="status" className="text-muted-foreground text-xs leading-5">
