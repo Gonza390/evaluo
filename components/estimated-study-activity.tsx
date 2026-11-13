@@ -226,7 +226,7 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
             </span>
             <div>
               <p className="text-cuerpo font-semibold tracking-titulo text-slate-950">
-                {english ? `${count} estimated students studying` : `${count} estudiantes estimados estudiando`}
+                {english ? `${count} students studying live` : `${count} estudiantes estudiando en vivo`}
               </p>
               <p className="mt-0.5 text-chico leading-5 text-slate-500">
                 {english ? 'across different universities' : 'en distintas universidades'}
@@ -254,12 +254,7 @@ export function EstimatedStudyActivity({ compact = false }: { compact?: boolean 
           ))}
         </div>
 
-        <div className="border-t border-slate-100 px-4 py-3">
-          <p className="flex items-center gap-2 text-etiqueta font-medium text-slate-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {english ? 'Estimated activity · not a live count' : 'Actividad estimada · no es un conteo en vivo'}
-          </p>
-        </div>
+
       </DropdownMenuContent>
     </DropdownMenu>
   );
