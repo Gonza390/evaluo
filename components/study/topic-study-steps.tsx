@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
+import { autoHideScrollbarRef } from '@/components/study/auto-hide-scrollbar';
 
 export type TopicStudyStep = {
   id: 'summary' | 'concepts' | 'flashcards' | 'practice';
@@ -70,7 +71,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
         })}
       </ol>
       <div className="mt-4 flex min-h-0 flex-col xl:flex-1">
-        <div className="pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3" key={step.id}>
+        <div ref={autoHideScrollbarRef} className="scroll-auto-hide pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3" key={step.id}>
           {step.content({
             markDone: () => setState((prev) => {
               const base = prev.key === resetKey ? prev : { key: resetKey, current: 0, done: [] as string[] };

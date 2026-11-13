@@ -31,6 +31,7 @@ import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { TopicConcepts, TopicFlashcards } from '@/components/study/topic-study-support';
 import { TopicStudySteps } from '@/components/study/topic-study-steps';
+import { autoHideScrollbarRef } from '@/components/study/auto-hide-scrollbar';
 import { buildTopicFlashcards } from '@/lib/student-materials/topic-flashcards';
 import { StudyRichText } from '@/components/study-rich-text';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
@@ -731,7 +732,8 @@ export function PdfProgressPanel({
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">{topicDetail}</div>
           {!reviewOpen && (
             <aside
-              className="hidden min-w-0 xl:block xl:min-h-0 xl:overflow-y-auto xl:pr-1"
+              ref={autoHideScrollbarRef}
+              className="scroll-auto-hide hidden min-w-0 xl:block xl:min-h-0 xl:overflow-y-auto xl:pr-1"
               aria-label={tr("Aprendizaje y próxima actividad del tema","Learning and next topic activity")}
             >
               {(pdfPagesLabel || (sourcePdfHref ?? simulation?.pdfHref)) && (

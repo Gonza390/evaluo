@@ -673,3 +673,15 @@
     background-color: CanvasText;
   }
 }
+
+/* Barra de scroll oculta; aparece sólo mientras se desliza (ver autoHideScrollbarRef). */
+.scroll-auto-hide {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.scroll-auto-hide[data-scrolling='true'] {
+  scrollbar-color: color-mix(in oklab, currentColor 35%, transparent) transparent;
+}
+.scroll-auto-hide::-webkit-scrollbar-button {
+  display: none;
+}
