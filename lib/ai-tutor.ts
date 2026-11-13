@@ -7,6 +7,7 @@ import {
   requestGroqText,
   requestGroqJson,
   requestGeminiJson,
+  streamGroqText,
 } from '@/lib/ai/providers';
 import { extractJsonObject } from '@/lib/ai/json';
 import {
@@ -86,7 +87,9 @@ function buildQuickHelpPrompt(input: QuickHelpInput) {
   return [
     studyGenerationInstruction(input.locale ?? 'es'),
     'Sos un tutor universitario claro y preciso.',
-    input.locale === 'en' ? 'Address the student directly in English without judgment; preserve original source quotations.' : 'Hablale directamente al estudiante con voseo argentino: "Elegiste", "podés", "pensá". No lo llames "el alumno" ni juzgues su capacidad.',
+    input.locale === 'en'
+      ? 'Address the student directly in English without judgment; preserve original source quotations.'
+      : 'Hablale directamente al estudiante con voseo argentino: "Elegiste", "podés", "pensá". No lo llames "el alumno" ni juzgues su capacidad.',
     instruction,
     'Ordená la ayuda en párrafos cortos. Primero aclarás la confusión, después mostrás cómo pensar el concepto. No repitas literalmente las dos respuestas sin explicarlas.',
     'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
@@ -160,7 +163,10 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
         ? await tryProvider('groq', () =>
             requestGroqText({
               ...common,
-              system: input.locale === 'en' ? 'You are an accurate tutor. Explain in English, citing original source language verbatim.' : 'Sos un tutor académico que explica de forma clara y accionable.',
+              system:
+                input.locale === 'en'
+                  ? 'You are an accurate tutor. Explain in English, citing original source language verbatim.'
+                  : 'Sos un tutor académico que explica de forma clara y accionable.',
               maxTokens: 420,
             })
           )
@@ -203,7 +209,10 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
         ? await tryProvider('groq', () =>
             requestGroqText({
               ...common,
-              system: input.locale === 'en' ? 'You are an accurate tutor. Explain in English, citing original source language verbatim.' : 'Sos un tutor académico que responde de forma breve, clara y accionable.',
+              system:
+                input.locale === 'en'
+                  ? 'You are an accurate tutor. Explain in English, citing original source language verbatim.'
+                  : 'Sos un tutor académico que responde de forma breve, clara y accionable.',
               maxTokens: outputBudget,
             })
           )
@@ -236,7 +245,11 @@ export type ReviewQuestionGenerationFailure =
 export async function generateStudyErrorReviewQuestion(
   input: Parameters<typeof buildStudyErrorReviewPrompt>[0]
 ): Promise<
-  | { question: NonNullable<ReturnType<typeof validateReviewQuestion>>; failureReason: null; providerOutcomes: string[] }
+  | {
+      question: NonNullable<ReturnType<typeof validateReviewQuestion>>;
+      failureReason: null;
+      providerOutcomes: string[];
+    }
   | { question: null; failureReason: ReviewQuestionGenerationFailure; providerOutcomes: string[] }
 > {
   const prompt = buildStudyErrorReviewPrompt(input);
@@ -306,4 +319,115 @@ export async function generateStudyErrorReviewQuestion(
         : 'invalid_response',
     providerOutcomes,
   };
+}
+
+type EviChatInput = {
+  locale?: AppLocale;
+  question: string;
+  chosen?: string | null;
+  correctAnswer?: string | null;
+  explanation?: string | null;
+  excerpt?: string | null;
+  page?: number | null;
+  history: { role: 'user' | 'assistant'; text: string }[];
+  message: string;
+};
+
+function buildEviChatPrompt(input: EviChatInput) {
+  const english = input.locale === 'en';
+  const conversation = input.history.length
+    ? input.history
+        .map(
+          (turn) =>
+            `${turn.role === 'user' ? 'Estudiante' : 'Evi'}: ${isolateUntrustedContent(turn.text)}`
+        )
+        .join('\n')
+    : 'Sin mensajes previos.';
+  return [
+    studyGenerationInstruction(input.locale ?? 'es'),
+    'Sos Evi, tutor de Evaluo. Respondés dudas sobre UNA pregunta que el estudiante acaba de practicar.',
+    english
+      ? 'Address the student directly in English, warmly and without judgment.'
+      : 'Hablale directamente al estudiante con voseo argentino ("fijate", "podés"). Sin juzgarlo.',
+    'Basate primero en el fragmento de su apunte. Si el fragmento no alcanza para responder, decilo con honestidad y explicá sólo lo general que sea seguro, sin inventar datos, autores, citas ni páginas.',
+    input.page
+      ? `Cuando uses el fragmento, mencioná que sale de la página ${input.page} de su apunte (una sola vez).`
+      : 'No menciones números de página.',
+    'Si te pide una pregunta parecida, hacé UNA pregunta nueva de opción múltiple con 3 opciones (A, B, C) y no reveles la respuesta hasta que conteste.',
+    'Si pregunta algo que no tiene que ver con esta materia o su apunte, respondé en una frase que sólo podés ayudar con este tema.',
+    'Respuesta breve: 40 a 140 palabras, párrafos cortos, texto sin Markdown, frases completas.',
+    PROMPT_INJECTION_GUARD,
+    '',
+    `Pregunta practicada: ${isolateUntrustedContent(input.question)}`,
+    `Lo que respondió: ${isolateUntrustedContent(input.chosen ?? 'No disponible')}`,
+    `Respuesta correcta: ${isolateUntrustedContent(input.correctAnswer ?? 'No disponible')}`,
+    `Explicación disponible: ${isolateUntrustedContent(input.explanation ?? 'No disponible')}`,
+    `Fragmento del apunte:\n${input.excerpt ? isolateUntrustedContent(input.excerpt) : 'No disponible.'}`,
+    '',
+    `Conversación previa:\n${conversation}`,
+    '',
+    `Nuevo mensaje del estudiante: ${isolateUntrustedContent(input.message)}`,
+  ].join('\n');
+}
+
+export async function generateEviChatReply(input: EviChatInput): Promise<{
+  text: string;
+  provider: string;
+}> {
+  const prompt = buildEviChatPrompt(input);
+  const providerOrder = await getNextInteractiveProviderOrder();
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqText({
+              prompt,
+              temperature: 0.3,
+              system:
+                input.locale === 'en'
+                  ? 'You are Evi, a precise and friendly study tutor.'
+                  : 'Sos Evi, un tutor de estudio preciso y amable.',
+              maxTokens: 450,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiText({ prompt, temperature: 0.3, maxOutputTokens: 450 })
+          );
+    if (result && isCompleteReviewHelp(result.content, result.finishReason)) {
+      return {
+        text: truncateUtf8Text(result.content, 1_800),
+        provider: result.model,
+      };
+    }
+  }
+  return { provider: 'fallback-local', text: '' };
+}
+
+/**
+ * Igual que generateEviChatReply pero entrega el texto a medida que llega.
+ * Si el streaming no está disponible, envía la respuesta completa de una vez.
+ */
+export async function streamEviChatReply(
+  input: EviChatInput,
+  onDelta: (text: string) => void
+): Promise<{ text: string; provider: string }> {
+  const prompt = buildEviChatPrompt(input);
+  if (providerIsHealthy('groq')) {
+    const streamed = await streamGroqText(
+      {
+        prompt,
+        temperature: 0.3,
+        system:
+          input.locale === 'en'
+            ? 'You are Evi, a precise and friendly study tutor.'
+            : 'Sos Evi, un tutor de estudio preciso y amable.',
+        maxTokens: 450,
+      },
+      onDelta
+    ).catch(() => null);
+    if (streamed) return { text: streamed.content, provider: streamed.model };
+  }
+  const fallback = await generateEviChatReply(input);
+  if (fallback.text) onDelta(fallback.text);
+  return fallback;
 }

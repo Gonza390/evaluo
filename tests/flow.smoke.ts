@@ -684,7 +684,7 @@ for (const count of [7, 31]) {
 // Conservar la rama de refuerzo y el panel derecho mientras se elimina el índice.
 const pdfProgressDetail = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
 assert.doesNotMatch(pdfProgressDetail, /Navegación entre temas del PDF|Temas del PDF/);
-assert.match(pdfProgressDetail, /xl:grid-cols-\[minmax\(0,1fr\)_260px\]/);
+assert.match(pdfProgressDetail, /xl:grid-cols-\[minmax\(0,1fr\)_340px\]/);
 assert.match(pdfProgressDetail, /data-reinforcement-focus=\{reviewOpen/);
 assert.match(pdfProgressDetail, /Aprendizaje y próxima actividad del tema/);
 assert.match(pdfProgressDetail, /Volver a los temas/);
@@ -756,11 +756,11 @@ assert.ok(practiceView.includes('max-w-[640px] px-2 py-3'));
 assert.ok(practiceView.includes('min-h-11 w-full rounded-lg text-[13px] font-medium'));
 assert.ok(diagnosticView.includes('max-w-[940px] px-1 py-2'));
 assert.ok(pdfProgressDetail.includes('text-[20px] sm:text-[22px]'));
-assert.ok(errorReviewView.includes('text-ui leading-6 break-words'));
+assert.ok(errorReviewView.includes('leading-7 break-words whitespace-pre-line'), 'Mis errores muestra la explicación con lectura cómoda.');
 assert.ok(chapterFinishView.includes('mt-3 min-h-11 w-full rounded-lg text-[13px]'));
 assert.ok(topicCheckView.includes('text-[20px] leading-6 font-bold'));
 assert.ok(summaryCompletionView.includes('text-[20px] leading-6 font-bold'));
-assert.ok(topicSupportView.includes('text-[13.5px] leading-6'));
+assert.ok(topicSupportView.includes('text-[14px] leading-6'));
 for (const src of [flashcardView, practiceView, diagnosticView, errorReviewView]) {
   assert.ok(!src.includes('transform: scale('), 'Compactar componentes sin zoom CSS');
 }

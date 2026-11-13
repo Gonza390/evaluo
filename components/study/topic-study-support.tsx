@@ -1,114 +1,40 @@
 'use client';
 
-import { useState } from 'react';
 import { useOptionalAppLocale } from '@/components/i18n/app-locale-provider';
-import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 
-export function TopicStudySupport({
-  concepts,
-  flashcards,
-  pdfHref,
-}: {
-  concepts: StudyGlossaryItem[];
-  flashcards: StudyFlashcard[];
-  pdfHref?: string;
-}) {
+export function TopicConcepts({ concepts }: { concepts: StudyGlossaryItem[] }) {
   const english = useOptionalAppLocale() === 'en';
-  const [cardIndex, setCardIndex] = useState(0);
-  const card = flashcards[cardIndex];
   return (
-    <div className="divide-border border-border mt-6 divide-y border-t">
-      <section className="py-3" aria-label={english ? "Key concepts for this topic" : "Conceptos importantes de este tema"}>
-        <h3 className="text-[16px] font-semibold">{english ? '2 · Key concepts' : '2 · Conceptos importantes'}</h3>
-        <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-          {english ? 'Review these glossary definitions before continuing.' : 'Revisá estas definiciones del glosario antes de continuar.'}
-        </p>
-        {concepts.length ? (
-          <dl className="divide-border mt-3 divide-y">
-            {concepts.map((concept, index) => (
-              <div key={`${concept.term}-${index}`} className="py-3">
-                <dt className="text-foreground text-[14px] font-semibold">{english && concept.englishTerm ? concept.englishTerm : concept.term}</dt>
-                <dd className="text-foreground mt-1.5 max-w-prose text-[13.5px] leading-6 whitespace-pre-line">
-                  {concept.definition}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        ) : (
-          <p className="text-muted-foreground py-3 text-sm">
-            {english ? 'No glossary concepts are clearly linked to this topic yet.' : 'Todavía no hay conceptos del glosario con una asociación clara a este tema.'}
-          </p>
-        )}
-      </section>
-      <details className="py-3">
-        <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
-          {english ? 'Review with flashcards' : 'Repasar con flashcards'} {flashcards.length > 0 && `(${flashcards.length})`}
-        </summary>
-        {card ? (
-          <div key={cardIndex} className="pb-4">
-            <p className="text-muted-foreground mb-3 text-xs">
-              {english ? `Card ${cardIndex + 1} of ${flashcards.length} · Try to answer before looking.` : `Tarjeta ${cardIndex + 1} de ${flashcards.length} · Intentá responder antes de mirar.`}
-            </p>
-            <p className="text-foreground text-[16px] leading-6 font-medium">{card.front}</p>
-            <details className="mt-4">
-              <summary className="text-primary min-h-11 cursor-pointer py-3 text-sm font-semibold">
-                {english ? 'Show answer' : 'Mostrar respuesta'}
-              </summary>
-              <p className="text-foreground py-2 text-[13.5px] leading-6 whitespace-pre-line">
-                {card.back}
-              </p>
-              {Number.isInteger(card.reference.pageStart) &&
-                Number(card.reference.pageStart) > 0 &&
-                card.reference.excerpt.trim() && (
-                  <div className="text-muted-foreground mt-3 text-xs leading-5">
-                    <p>
-                      {english ? 'Card source · p.' : 'Fuente de esta tarjeta · pág.'} {card.reference.pageStart}
-                      {card.reference.pageEnd && card.reference.pageEnd !== card.reference.pageStart
-                        ? `–${card.reference.pageEnd}`
-                        : ''}
-                    </p>
-                    {pdfHref && (
-                      <a
-                        href={`${pdfHref.split('#')[0]}#page=${card.reference.pageStart}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary inline-flex min-h-11 items-center underline underline-offset-4"
-                      >
-                        {english ? 'View in PDF' : 'Ver en PDF'}
-                      </a>
-                    )}
-                  </div>
-                )}
-            </details>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                disabled={cardIndex === 0}
-                onClick={() => setCardIndex((index) => index - 1)}
-                className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-[13px] disabled:opacity-40"
-              >
-                {english ? 'Previous' : 'Anterior'}
-              </button>
-              <button
-                type="button"
-                disabled={cardIndex === flashcards.length - 1}
-                onClick={() => setCardIndex((index) => index + 1)}
-                className="border-border focus-visible:outline-ring min-h-11 rounded-lg border px-4 text-[13px] disabled:opacity-40"
-              >
-                {english ? 'Next card' : 'Siguiente tarjeta'}
-              </button>
+    <section aria-label={english ? 'Key concepts for this topic' : 'Conceptos importantes de este tema'}>
+      <h3 className="text-[15px] font-semibold">
+        {english ? 'Review the concepts of this topic' : 'Repasá los conceptos de este tema'}
+      </h3>
+      <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
+        {english
+          ? 'These are the glossary definitions that belong to this topic.'
+          : 'Son las definiciones de tu glosario que pertenecen a este tema.'}
+      </p>
+      {concepts.length ? (
+        <dl className="divide-border mt-3 divide-y">
+          {concepts.map((concept, index) => (
+            <div key={`${concept.term}-${index}`} className="py-3">
+              <dt className="text-foreground text-[15px] font-semibold">
+                {english && concept.englishTerm ? concept.englishTerm : concept.term}
+              </dt>
+              <dd className="text-foreground mt-1.5 max-w-prose text-[14px] leading-6 whitespace-pre-line">
+                {concept.definition}
+              </dd>
             </div>
-            <p className="text-muted-foreground mt-3 text-xs">
-              {english ? 'Viewing flashcards does not change your topic assessment.' : 'Consultar tarjetas no cambia tu evaluación del tema.'}
-            </p>
-          </div>
-        ) : (
-          <p className="text-muted-foreground py-3 text-sm">
-            {english ? 'No flashcards are clearly linked to this topic yet. You can review its summary or use the general flashcards.' : 'Todavía no hay tarjetas con una asociación clara a este tema. Podés estudiar su resumen y consultar las flashcards generales.'}
-          </p>
-        )}
-      </details>
-    </div>
+          ))}
+        </dl>
+      ) : (
+        <p className="text-muted-foreground py-3 text-sm">
+          {english
+            ? 'No glossary concepts are clearly linked to this topic yet.'
+            : 'Todavía no hay conceptos del glosario con una asociación clara a este tema.'}
+        </p>
+      )}
+    </section>
   );
 }

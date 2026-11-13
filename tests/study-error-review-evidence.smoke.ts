@@ -110,5 +110,6 @@ const panelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 
 const detailSource = readFileSync('components/dashboard/study-error-detail.tsx', 'utf8');
 assert.doesNotMatch(panelSource, /Cambiar pregunta de repaso/);
 assert.doesNotMatch(detailSource, /Pasos para reforzar una dificultad/);
-assert.match(detailSource, /Comprobar lo aprendido/);
+assert.match(detailSource, /Probar con otra pregunta/);
+assert.match(detailSource, /Si la acertás, este error queda resuelto./);
 console.log('Study error review evidence smoke tests passed.');

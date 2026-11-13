@@ -43,5 +43,5 @@ assert.match(workspace, /initialPracticeSectionIndex/);
 assert.match(workspace, /initialReinforce=\{topicReturn\?\.reinforce\}/);
 assert.match(page, /query\.studyTopic/);
 assert.match(progress, /Entender mis errores/);
-assert.match(progress, /Tu próximo paso/);
+assert.match(progress, /Ponete a prueba con tu PDF/);
 console.log('study-flow-recovery.smoke: OK');

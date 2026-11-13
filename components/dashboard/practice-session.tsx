@@ -8,12 +8,14 @@ import './practice-motion.css';
 import { PracticePreparing } from '@/components/dashboard/practice-preparing';
 import { FreePracticeLimitScreen } from '@/components/dashboard/free-practice-limit-screen';
 import { PracticeResultsScreen, type PracticeResultEntry } from '@/components/dashboard/practice-results-screen';
+import { AnswerFeedback, answeredOptionClass } from '@/components/study/answer-feedback';
+import type { EviChatContext } from '@/lib/evi-chat-contract';
 import { ExamPracticeScreen } from '@/components/dashboard/practice-exam-screen';
 import { MatchPracticeScreen, CasesPracticeScreen, CompletePracticeScreen, MixedPracticeScreen } from '@/components/dashboard/practice-visual-screens';
 import { selectBalancedTrueFalse, sufficientTrueFalse, verifiedTrueFalsePool } from '@/lib/student-materials/practice-true-false';
 import {
   allowedWrittenVariants, balancedQuestions, groundedPracticeContrast,
-  groundedPracticeExplanation,
+  groundedPracticeExplanation, normalizedAnswer, writtenAnswerContrast,
   distinctApplicationCases, isCorrectWrittenAnswer, MIN_CASES_PER_PRACTICE, qualifiedQuestions, selectMixedQuestions,
   selectPracticePairs, shuffleMatchingDefinitions, shufflePracticeChoices, shufflePracticeItems,
   type PracticePair, type PracticeQuestion,
@@ -204,6 +206,15 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
   const current = tasks[step];
   const checked = reviewed.includes(step);
   const explanationFor = (question:PracticeQuestion) => groundedPracticeExplanation(question,pairs);
+  const pdfPageHref = (page:number) => '/materiales/' + materialId + '?tab=resumen&page=' + page;
+  const eviFor = (question: string, correctAnswer: string, explanation: string, page: number | null | undefined, kindLabel: string): EviChatContext | null => {
+    if (previewResult) return null;
+    const usablePage = !isWord && page ? page : null;
+    return {
+      kind: 'practice', materialId, question, chosen: responses[step] ?? null, correctAnswer, explanation, page: usablePage,
+      label: [english ? ({ Caso: 'Case', 'Práctica mixta': 'Mixed practice', Completar: 'Fill in the blank', 'Verdadero o falso': 'True or false', Práctica: 'Practice' } as Record<string, string>)[kindLabel] ?? kindLabel : kindLabel, correctAnswer.slice(0, 48), usablePage ? (english ? 'p. ' : 'pág. ') + usablePage : ''].filter(Boolean).join(' · '),
+    };
+  };
 
   useEffect(() => {
     if (mode !== 'simulacro' || !ready || finished || !examStarted) return;
@@ -615,20 +626,28 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.question.answer}
     explanation={groundedPracticeExplanation(current.question,pairs)}
+    page={isWord ? null : current.question.pageStart}
+    pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
+    evi={eviFor(current.question.prompt, current.question.answer, groundedPracticeExplanation(current.question,pairs), current.question.pageStart, 'Práctica mixta')}
     onSelect={setResponse} onConfirm={reviewOrNext}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
   if (ready && !finished && mode === 'completar' && current?.type === 'recall') return <div className={leavingActivity?'practice-screen-leave':''}><CompletePracticeScreen key={step}
     materialTitle={materialTitle} definition={current.pair.definition}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
     correct={correctAt(step)} answer={current.pair.term}
-    explanation={t(checked && !correctAt(step) ? 'Repasá el concepto y volvé a intentarlo en otra ronda.' : 'Este concepto forma parte del material que estás estudiando.')}
+    explanation={checked && !correctAt(step) ? writtenAnswerContrast(responses[step] ?? '', current.pair.term, pairs, english) ?? '' : ''}
+    page={isWord ? null : current.pair.pageStart ?? null}
+    pdfHref={current.pair.pageStart && !isWord ? pdfPageHref(current.pair.pageStart) : null}
+    evi={eviFor('Completar: ____: ' + current.pair.definition, current.pair.term, '', current.pair.pageStart, 'Completar')}
     onChange={setResponse} onConfirm={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }} /></div>;
   if (ready && !finished && mode === 'casos' && current?.type === 'question') return <div className={leavingActivity?'practice-screen-leave':''}><CasesPracticeScreen key={step}
     materialTitle={materialTitle} question={current.question}
     index={step} total={total} value={responses[step] ?? ''} checked={checked}
-    correct={correctAt(step)} explanation={correctAt(step) ? '' : explanationFor(current.question)}
+    correct={correctAt(step)} explanation={explanationFor(current.question)}
+    pdfHref={current.question.pageStart && !isWord ? pdfPageHref(current.question.pageStart) : null}
+    evi={eviFor(current.question.prompt, current.question.answer, explanationFor(current.question), current.question.pageStart, 'Caso')}
     onSelect={setResponse} onNext={reviewOrNext}
     onPrevious={() => { if(step>0)setStep(step-1); }}
     onSkip={() => { if(step<tasks.length-1)setStep(step+1);else completeWithTransition(); }}
@@ -794,25 +813,36 @@ export function PracticeSession({ mode, materialId, materialTitle, glossary, que
                 onClick={() => setResponse(option)}
                 className={'min-h-12 w-full rounded-xl border p-3 text-sm transition disabled:cursor-default ' +
                   (mode === 'opciones' ? 'text-center ' : 'text-left ') +
-                  (responses[step] === option ? 'border-blue-600 bg-blue-50' : 'border-slate-200 hover:bg-slate-50')}>
+                  (checked && mode !== 'simulacro'
+                    ? answeredOptionClass(normalizedAnswer(option) === normalizedAnswer(current.question.answer) ? 'correct' : responses[step] === option ? 'wrong' : 'other')
+                    : responses[step] === option ? 'border-blue-600 bg-blue-50' : 'border-slate-200 hover:bg-slate-50')}>
+                {checked && mode !== 'simulacro' && normalizedAnswer(option) === normalizedAnswer(current.question.answer)
+                  ? <span className="sr-only">{english ? 'Correct answer: ' : 'Respuesta correcta: '}</span>
+                  : checked && mode !== 'simulacro' && responses[step] === option
+                    ? <span className="sr-only">{english ? 'Your answer, incorrect: ' : 'Tu respuesta, incorrecta: '}</span>
+                    : null}
                 {option}
               </button>
             )}</div>
           </>}
         </div>
-        {checked && mode !== 'simulacro' && <div role="status" className="mt-3 rounded-xl bg-slate-50 p-4 text-sm">
+        {checked && mode !== 'simulacro' && current.type === 'question' && <div role="status" className="mt-4">
+          <AnswerFeedback correct={correctAt(step)} chosen={responses[step]}
+            explanation={[diagnosticFor(step), explanationFor(current.question)].filter(Boolean).join('\n\n')}
+            page={!isWord && current.question.pageStart ? (english ? `Page ${current.question.pageStart}` : `Página ${current.question.pageStart}`) : null}
+            pdfHref={!isWord && current.question.pageStart ? pdfPageHref(current.question.pageStart) : null}
+            evi={eviFor(current.question.prompt, current.question.answer, explanationFor(current.question), current.question.pageStart, mode === 'opciones' ? 'Verdadero o falso' : 'Práctica')} />
+        </div>}
+        {checked && mode !== 'simulacro' && current.type === 'recall' && <div role="status" className="mt-3 rounded-xl bg-slate-50 p-4 text-sm">
           <p className={correctAt(step) ? 'font-medium text-emerald-700' : 'font-medium text-rose-700'}>
             {correctAt(step) ? (english ? 'Correct' : 'Bien resuelto') : (english ? 'Needs review' : 'Para reforzar')}
           </p>
           {!correctAt(step) && responses[step]?.trim() &&
             <p className="mt-1 text-slate-600">
-              {current.type === 'recall'
-                ? (english ? 'Your answer does not match a term or an explicit equivalent in the material: ' : 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: ')
-                : (english ? 'You selected: ' : 'Elegiste: ')}{responses[step]}
+              {english ? 'Your answer does not match a term or an explicit equivalent in the material: ' : 'La respuesta escrita no coincide con el término o una equivalencia explícita del material: '}{responses[step]}
             </p>}
-          <p className="mt-1 text-slate-700">{t(mode === 'opciones' ? 'La afirmación es: ' : 'Respuesta: ')}{current.type === 'recall' ? current.pair.term : current.question.answer}</p>
+          <p className="mt-1 text-slate-700">{t('Respuesta: ')}{current.pair.term}</p>
           {diagnosticFor(step) && <p className="mt-1 text-slate-700">{diagnosticFor(step)}</p>}
-          {current.type === 'question' && <p className="mt-1 text-slate-600">{explanationFor(current.question)}</p>}
           {current.type === 'recall' && current.pair.pageStart && <Link
             href={'/materiales/' + materialId + '?tab=resumen&page=' + current.pair.pageStart}
             className="mt-2 inline-block text-blue-600 underline">{english ? "Review this concept in the source · page" : "Revisar el concepto en el material · página"} {current.pair.pageStart}</Link>}

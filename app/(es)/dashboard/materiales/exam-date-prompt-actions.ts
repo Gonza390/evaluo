@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
@@ -283,6 +284,8 @@ export async function saveStudentMaterialExamDateAction(input: {
     // Si el apunte todavía se procesa, lo arma el procesamiento al terminar.
     const plan = await ensureAutoStudyPlan({ userId: owned.user.id, materialId: input.materialId });
 
+    revalidatePath('/dashboard');
+    revalidatePath('/calendario');
     return { success: true, message: messages.saved, plan };
   } catch (error) {
     logError('examDatePrompt.save', error, { materialId: input.materialId });

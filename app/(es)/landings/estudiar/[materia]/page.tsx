@@ -170,7 +170,7 @@ const loadStudyLandingData = nextCache(
     };
   },
   ['study-landing-data-v3'],
-  { revalidate: 600, tags: ['materia-bootstrap'] }
+  { revalidate: 21600, tags: ['materia-bootstrap'] }
 );
 
 function buildStudyDescription(data: StudyLandingData) {

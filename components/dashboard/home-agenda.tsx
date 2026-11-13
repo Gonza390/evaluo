@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, X } from 'lucide-react';
+import { BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { saveStudentMaterialExamDateAction } from '@/app/dashboard/materiales/exam-date-prompt-actions';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { HomeView } from '@/lib/dashboard-home-model';
@@ -145,6 +145,8 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
   const [tab, setTab] = useState<'hoy' | 'examenes'>('hoy');
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Ocultar la pregunta del material apenas se confirma la fecha, sin esperar router.refresh().
+  const [savedExamMaterialId, setSavedExamMaterialId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const pick = (dateKey: string) => {
@@ -157,6 +159,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
         setError(result.message);
         return;
       }
+      setSavedExamMaterialId(materialId);
       trackMarketingEvent('exam_date_selected', { location: 'dashboard_agenda', material_id: materialId });
       // En la misma transición: el calendario se cierra recién cuando llegan los datos nuevos,
       // sin mostrar "Agregar fecha" un instante.
@@ -176,7 +179,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
   const tabClass = (active: boolean) =>
     `h-8 rounded-full text-ui font-medium transition-colors ${active ? 'bg-slate-100 text-slate-950' : 'text-slate-500 hover:text-slate-800'}`;
 
-  const askRow = agenda.askDate ? (
+  const askRow = agenda.askDate && agenda.askDate.materialId !== savedExamMaterialId ? (
     <div className="mt-2.5 border-t border-slate-100 pt-3">
       <div className="flex items-center justify-between gap-2.5">
         <span className="text-ui text-slate-600">{t.when(agenda.askDate.materialTitle)}</span>
@@ -253,11 +256,7 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
               <li key={task.id}>
                 <Link
                   href={task.href}
-                  className={`group flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-colors ${
-                    task.done
-                      ? 'border-transparent bg-slate-50'
-                      : 'border-blue-100/80 bg-gradient-to-r from-blue-50/80 to-white hover:border-blue-200 hover:from-blue-50'
-                  }`}
+                  className="group flex items-center gap-2.5 px-1 py-2 transition-colors"
                 >
                   <span
                     className={`relative flex size-8 shrink-0 items-center justify-center rounded-[9px] ${
@@ -282,11 +281,10 @@ export function HomeAgenda({ agenda, today, locale = 'es' }: { agenda: Agenda; t
                       {task.title}
                     </span>
                     <span
-                      className={`mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[11px] font-medium ${
-                        task.done ? 'text-slate-400' : 'bg-white text-blue-700 ring-1 ring-blue-100'
+                      className={`mt-1 block text-[11px] font-medium ${
+                        task.done ? 'text-slate-400' : 'text-blue-700'
                       }`}
                     >
-                      <Clock3 className="size-3" aria-hidden="true" />
                       {task.meta}
                     </span>
                   </span>

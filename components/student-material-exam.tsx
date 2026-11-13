@@ -13,6 +13,7 @@ import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-material
 import { cn } from '@/lib/utils';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { AnswerFeedback } from '@/components/study/answer-feedback';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import {
   saveNextStudyObjectiveAction,
@@ -657,9 +658,6 @@ export function StudentMaterialExam({
           <p className="text-primary text-[11px] font-medium tracking-[0.14em] uppercase">
             {t("Práctica de este tema")}
           </p>
-          <h2 className="text-foreground mt-2 text-xl font-semibold">
-            {topicTitle}
-          </h2>
         </div>
         {topicGenerationUnavailable && topicSectionIndex !== undefined && (
           <p role="status" className="text-muted-foreground text-xs leading-5">
@@ -719,7 +717,7 @@ export function StudentMaterialExam({
             </p>
           )}
           <h2 className={cn('text-foreground text-[20px] font-semibold tracking-[-0.035em] sm:text-[22px]', topicSectionIndex !== undefined && 'mt-2')}>
-            {topicTitle ?? t('Elegí cuánto querés practicar')}
+            {t('Elegí cuánto querés practicar')}
           </h2>
         </header>
 
@@ -1276,16 +1274,29 @@ export function StudentMaterialExam({
                         <summary className="text-foreground cursor-pointer text-sm font-medium leading-6">
                           {question.prompt}
                         </summary>
+                        {question.type === 'multiple_choice' ? (
+                          <AnswerFeedback
+                            className="pt-3"
+                            correct={false}
+                            chosen={selectedAnswers[question.id] || null}
+                            correctAnswer={question.answer}
+                            explanation={question.explanation}
+                            page={sourceLabel(question)}
+                            pdfHref={
+                              question.reference.pageStart
+                                ? '/materiales/' + materialId + '?tab=resumen&page=' + question.reference.pageStart
+                                : null
+                            }
+                          />
+                        ) : (
                         <div className="text-muted-foreground space-y-3 pt-4 text-sm leading-6">
                           <p>
                             <span className="text-foreground font-semibold">{t("Tu respuesta:")} </span>
-                            {question.type === 'multiple_choice'
-                              ? selectedAnswers[question.id] || 'Sin respuesta'
-                              : openDrafts[question.id] || 'Sin respuesta escrita'}
+                            {openDrafts[question.id] || 'Sin respuesta escrita'}
                           </p>
                           <p>
                             <span className="text-foreground font-semibold">
-                              {question.type === 'multiple_choice' ? 'Respuesta correcta: ' : 'Respuesta esperada: '}
+                              {'Respuesta esperada: '}
                             </span>
                             {question.answer}
                           </p>
@@ -1297,6 +1308,7 @@ export function StudentMaterialExam({
                             <p className="text-xs">{t("La respuesta abierta fue autoevaluada, no corregida automáticamente.")}</p>
                           )}
                         </div>
+                        )}
                       </details>
                     ))}
                   </div>
@@ -1656,11 +1668,6 @@ export function StudentMaterialExam({
   return (
     <>
       <div className="practice-screen-enter mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
-        {topicSectionIndex !== undefined && (
-          <div className="border-border border-b pb-3">
-            <p className="text-muted-foreground text-[13px] font-medium">{topicTitle}</p>
-          </div>
-        )}
         {topicSectionIndex !== undefined &&
           verifiedTopicCount < MIN_TOPIC_AUTO_CORRECTABLE_QUESTIONS && (
             <p role="status" className="text-muted-foreground text-xs leading-5">
@@ -1776,40 +1783,55 @@ export function StudentMaterialExam({
 
           {isRevealed ? (
             <div className="border-border mt-4 space-y-3 border-t pt-4">
-              <section
-                ref={correctionRef}
-                className={cn(
-                  'border-l-2 py-0.5 pl-4',
-                  current.type === 'multiple_choice' && isCorrect
-                    ? 'border-emerald-500'
-                    : current.type === 'multiple_choice'
-                      ? 'border-destructive'
-                      : 'border-primary'
-                )}
-              >
-                <p className="text-foreground text-sm font-medium">
-                  {current.type === 'multiple_choice'
-                    ? isCorrect
-                      ? tr('Correcto','Correct')
-                      : tr('Revisá este punto','Review this point')
-                    : tr('Respuesta esperada','Expected answer')}
-                </p>
-                <p className="text-foreground mt-2 text-[13.5px] leading-6">
-                  <span className="font-semibold">{t("Respuesta:")}</span> {current.answer}
-                </p>
-                {groundedMistakeContrast ? (
-                  <div className="border-primary/15 bg-primary/5 mt-3 rounded-lg border px-3 py-3">
-                    <p className="text-foreground text-[12px] font-semibold">{t("Por qué esa opción no era la correcta")}</p>
-                    <p className="text-foreground mt-1.5 text-[13px] leading-5">{groundedMistakeContrast}</p>
-                  </div>
-                ) : null}
-                <p className="text-muted-foreground mt-2 text-[13px] leading-5">
-                  {current.explanation}
-                </p>
-                <p className="text-muted-foreground mt-3 text-[11.5px] font-medium">
-                  Fuente: {sourceLabel(current)}
-                </p>
-              </section>
+              {current.type === 'multiple_choice' ? (
+                <section ref={correctionRef} aria-label={tr('Corrección','Feedback')}>
+                  <AnswerFeedback
+                    correct={isCorrect}
+                    chosen={selectedAnswer}
+                    explanation={groundedMistakeContrast || current.explanation}
+                    page={sourceLabel(current)}
+                    pdfHref={
+                      current.reference.pageStart
+                        ? '/materiales/' + materialId + '?tab=resumen&page=' + current.reference.pageStart
+                        : null
+                    }
+                    savedToErrors={!isCorrect}
+                    evi={isSimulation || !/^[0-9a-f-]{36}$/i.test(materialId) ? null : {
+                      kind: 'practice',
+                      materialId,
+                      question: current.prompt,
+                      chosen: selectedAnswer,
+                      correctAnswer: current.answer,
+                      explanation: groundedMistakeContrast || current.explanation,
+                      page: current.reference.pageStart ?? null,
+                      label: [
+                        tr('Práctica', 'Practice'),
+                        current.answer.slice(0, 48),
+                        current.reference.pageStart
+                          ? tr('pág. ', 'p. ') + current.reference.pageStart
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · '),
+                    }}
+                  />
+                </section>
+              ) : (
+                <section ref={correctionRef} className="border-primary border-l-2 py-0.5 pl-4">
+                  <p className="text-foreground text-sm font-medium">
+                    {tr('Respuesta esperada','Expected answer')}
+                  </p>
+                  <p className="text-foreground mt-2 text-[13.5px] leading-6">
+                    <span className="font-semibold">{t("Respuesta:")}</span> {current.answer}
+                  </p>
+                  <p className="text-muted-foreground mt-2 text-[13px] leading-5">
+                    {current.explanation}
+                  </p>
+                  <p className="text-muted-foreground mt-3 text-[11.5px] font-medium">
+                    Fuente: {sourceLabel(current)}
+                  </p>
+                </section>
+              )}
 
               {current.type === 'open' ? (
                 <div className="border-t border-slate-100 pt-4">
