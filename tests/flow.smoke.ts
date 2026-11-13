@@ -760,7 +760,7 @@ assert.ok(errorReviewView.includes('leading-7 break-words whitespace-pre-line'),
 assert.ok(chapterFinishView.includes('mt-3 min-h-11 w-full rounded-lg text-[13px]'));
 assert.ok(topicCheckView.includes('text-[20px] leading-6 font-bold'));
 assert.ok(summaryCompletionView.includes('text-[20px] leading-6 font-bold'));
-assert.ok(topicSupportView.includes('text-[13.5px] leading-6'));
+assert.ok(topicSupportView.includes('text-[14px] leading-6'));
 for (const src of [flashcardView, practiceView, diagnosticView, errorReviewView]) {
   assert.ok(!src.includes('transform: scale('), 'Compactar componentes sin zoom CSS');
 }
