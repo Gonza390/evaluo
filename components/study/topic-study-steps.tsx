@@ -59,7 +59,7 @@ export function TopicStudySteps({
               <button
                 type="button"
                 onClick={() => go(current - 1)}
-                className="text-muted-foreground focus-visible:outline-ring min-h-9 text-[13px] underline underline-offset-4 focus-visible:outline-2"
+                className="text-muted-foreground focus-visible:outline-ring min-h-11 text-[13px] underline underline-offset-4 focus-visible:outline-2 xl:min-h-9"
               >
                 {english ? 'Back' : 'Atrás'}
               </button>
@@ -76,7 +76,7 @@ export function TopicStudySteps({
                 <button
                   type="button"
                   onClick={() => go(current + 1)}
-                  className="bg-primary text-primary-foreground focus-visible:outline-ring inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full px-4 text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
+                  className="bg-primary text-primary-foreground focus-visible:outline-ring inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-4 xl:min-h-9 text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
                   {(english ? 'Next: ' : 'Siguiente: ') + next.label.toLowerCase()} <ArrowRight size={15} />
                 </button>

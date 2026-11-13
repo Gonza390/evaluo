@@ -31,6 +31,7 @@ import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { TopicConcepts } from '@/components/study/topic-study-support';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+import { markActivity } from '@/lib/study-plan-progress';
 import { buildTopicFlashcards, TOPIC_FLASHCARD_TARGET } from '@/lib/student-materials/topic-flashcards';
 import { TopicStudySteps } from '@/components/study/topic-study-steps';
 import { autoHideScrollbarRef } from '@/components/study/auto-hide-scrollbar';
@@ -217,6 +218,7 @@ export function PdfProgressPanel({
   );
   const summaryBody =
     currentSection && typeof currentSection.body === 'string' ? currentSection.body.trim() : '';
+  const isIllustrative = Boolean(simulation) || showOnboardingExample || showOnboardingTopic;
   const topicFlashcardDeck = useMemo(() => {
     const glossaryCards: StudyFlashcard[] = buildTopicFlashcards(resources.concepts, resources.flashcards, english)
       .filter((card) => card.origin === 'glossary')
@@ -424,7 +426,7 @@ export function PdfProgressPanel({
           header={currentTopic ? (
           <div className="pb-4">
             <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
-              <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-6 underline underline-offset-4 focus-visible:outline-2">
+              <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-9 underline underline-offset-4 focus-visible:outline-2 xl:min-h-6">
                 {tr("Progreso","Progress")}
               </button>
               <span aria-hidden="true">/</span>
@@ -465,6 +467,16 @@ export function PdfProgressPanel({
                       </ul>
                     </div>
                   )}
+                  {(sourcePdfHref ?? simulation?.pdfHref) && (
+                    <a
+                      href={sourcePdfHref ?? simulation?.pdfHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary mt-2 inline-flex min-h-11 items-center text-[13px] underline underline-offset-4 xl:hidden"
+                    >
+                      {tr('Abrir el PDF','Open the PDF')}
+                    </a>
+                  )}
                   {summaryBody ? (
                     <div className="mt-4 min-w-0 max-w-[78ch] [&_p]:text-[14px]! sm:[&_p]:text-[13px]! [&_p]:leading-5!">
                       <StudyRichText body={summaryBody} />
@@ -495,7 +507,8 @@ export function PdfProgressPanel({
                   materialId={material.id}
                   topicTitle={currentTopic?.title}
                   onPracticeTopic={canPracticeTopic ? () => onPracticeTopic?.(currentSectionIndex) : undefined}
-                  demoMode={Boolean(simulation) || showOnboardingExample || showOnboardingTopic}
+                  demoMode={isIllustrative}
+                  onComplete={isIllustrative ? undefined : () => markActivity(material.id, currentSectionIndex, 'flashcards')}
                 />
               ),
             },
