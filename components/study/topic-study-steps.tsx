@@ -15,7 +15,16 @@ export type TopicStudyStep = {
  * Estudio de un tema paso a paso. Sin pestañas: se avanza con el botón de abajo.
  * Cambiar de tema vuelve siempre al primer paso.
  */
-export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; resetKey: string }) {
+export function TopicStudySteps({
+  steps,
+  resetKey,
+  header,
+}: {
+  steps: TopicStudyStep[];
+  resetKey: string;
+  /** Encabezado del tema: va dentro del scroll, junto al contenido (no queda fijo). */
+  header?: ReactNode;
+}) {
   const english = useOptionalAppLocale() === 'en';
   const [state, setState] = useState({ key: resetKey, current: 0 });
   const current = state.key === resetKey ? state.current : 0;
@@ -32,10 +41,12 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
       <div className="flex min-h-0 flex-col xl:flex-1">
         <div
           ref={autoHideScrollbarRef}
-          className="evaluo-enter scroll-auto-hide pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3"
-          key={step.id}
+          className="scroll-auto-hide pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3"
         >
-          {step.content()}
+          {header}
+          <div className="evaluo-enter" key={step.id}>
+            {step.content()}
+          </div>
         </div>
         <div className="border-border bg-background mt-6 flex shrink-0 items-center justify-between gap-3 border-t pt-1 pb-0 xl:mt-0">
           <span className="text-muted-foreground text-xs">

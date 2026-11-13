@@ -379,31 +379,7 @@ export function PdfProgressPanel({
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full pb-2 focus-visible:outline-2 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
     >
-      {!reviewOpen && currentTopic ? (
-        <div className="xl:shrink-0">
-          <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
-            <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-6 underline underline-offset-4 focus-visible:outline-2">
-              {tr("Progreso","Progress")}
-            </button>
-            <span aria-hidden="true">/</span>
-            <span>{tr("Tema","Topic")} {currentSectionIndex + 1}</span>
-          </nav>
-          <div className="mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
-            <h2 id={`real-detail-title-${panelId}`} className="text-[18px] leading-[1.25] font-semibold tracking-[-0.03em] break-words sm:text-[20px]">
-              {currentTopic.title}
-            </h2>
-            {(() => {
-              const status = topicStatus(currentTopic, english);
-              return (
-                <span className={'inline-flex items-center gap-2 rounded-full px-3 py-1 text-[13px] font-medium whitespace-nowrap ' + status.style}>
-                  <status.Icon className="size-3.5" aria-hidden="true" />
-                  {status.label}
-                </span>
-              );
-            })()}
-          </div>
-        </div>
-      ) : (
+      {!reviewOpen && currentTopic ? null : (
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 id={`real-detail-title-${panelId}`} className="text-[16px] leading-[1.4] font-semibold break-words">
           {currentTopic?.title ?? tr("Otros conceptos","Other concepts")}
@@ -422,6 +398,32 @@ export function PdfProgressPanel({
       {!reviewOpen && (
         <TopicStudySteps
           resetKey={currentTopic?.id ?? 'unmatched'}
+          header={currentTopic ? (
+          <div className="pb-4">
+            <nav aria-label={tr("Ruta","Breadcrumb")} className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <button type="button" onClick={closeTopic} className="focus-visible:outline-ring min-h-6 underline underline-offset-4 focus-visible:outline-2">
+                {tr("Progreso","Progress")}
+              </button>
+              <span aria-hidden="true">/</span>
+              <span>{tr("Tema","Topic")} {currentSectionIndex + 1}</span>
+            </nav>
+            <div className="mt-2 flex flex-wrap items-center gap-3 sm:gap-4">
+              <h2 id={`real-detail-title-${panelId}`} className="text-[18px] leading-[1.25] font-semibold tracking-[-0.03em] break-words sm:text-[20px]">
+                {currentTopic.title}
+              </h2>
+              {(() => {
+                const status = topicStatus(currentTopic, english);
+                return (
+                  <span className={'inline-flex items-center gap-2 rounded-full px-3 py-1 text-[13px] font-medium whitespace-nowrap ' + status.style}>
+                    <status.Icon className="size-3.5" aria-hidden="true" />
+                    {status.label}
+                  </span>
+                );
+              })()}
+            </div>
+          </div>
+
+          ) : undefined}
           steps={[
             {
               id: 'summary',
