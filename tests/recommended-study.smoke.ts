@@ -484,7 +484,7 @@ assert.match(topicReaderSource, /reviewOpen\s*\?\s*'mx-auto mt-5 w-full max-w-\[
   'El refuerzo debe ocupar un área centrada sin columnas laterales.');
 assert.doesNotMatch(topicReaderSource, /Navegación entre temas del PDF|Temas del PDF/,
   'La navegación lateral redundante no debe aparecer en ningún modo del detalle.');
-assert.match(topicReaderSource, /\{!reviewOpen && \(\s*<aside\s+className="hidden min-w-0 xl:block/,
+assert.match(topicReaderSource, /\{!reviewOpen && \(\s*<aside\s+className="hidden min-w-0 xl:sticky/,
   'El panel lateral de aprendizaje debe desaparecer durante el refuerzo.');
 assert.doesNotMatch(topicReaderSource, />\s*Volver al tema\s*<\/button>/,
   'Eliminar el enlace azul Volver al tema durante el refuerzo.');
