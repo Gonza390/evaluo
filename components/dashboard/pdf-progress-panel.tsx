@@ -485,6 +485,7 @@ export function PdfProgressPanel({
             {
               id: 'flashcards',
               label: 'Flashcards',
+              hideHeader: true,
               content: () => (
                 <StudentMaterialFlashcards
                   key={currentTopic?.id ?? 'unmatched'}

@@ -8,6 +8,8 @@ import { autoHideScrollbarRef } from '@/components/study/auto-hide-scrollbar';
 export type TopicStudyStep = {
   id: 'summary' | 'concepts' | 'flashcards' | 'practice';
   label: string;
+  /** Oculta el encabezado del tema en este paso (ej. flashcards, que ya tiene su propia pantalla). */
+  hideHeader?: boolean;
   content: () => ReactNode;
 };
 
@@ -43,7 +45,7 @@ export function TopicStudySteps({
           ref={autoHideScrollbarRef}
           className="scroll-auto-hide pr-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:pr-3"
         >
-          {header}
+          {step.hideHeader ? null : header}
           <div className="evaluo-enter" key={step.id}>
             {step.content()}
           </div>
