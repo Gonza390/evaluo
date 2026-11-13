@@ -29,7 +29,9 @@ import type { StudyErrorConversation, StudyErrorReviewActions } from './study-er
 import { getTopicStudyResources } from '@/lib/student-materials/topic-study-resources';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
-import { TopicConcepts, TopicFlashcards } from '@/components/study/topic-study-support';
+import { TopicConcepts } from '@/components/study/topic-study-support';
+import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+import { buildTopicFlashcards, TOPIC_FLASHCARD_TARGET } from '@/lib/student-materials/topic-flashcards';
 import { TopicStudySteps } from '@/components/study/topic-study-steps';
 import { autoHideScrollbarRef } from '@/components/study/auto-hide-scrollbar';
 import { StudyRichText } from '@/components/study-rich-text';
@@ -215,6 +217,27 @@ export function PdfProgressPanel({
   );
   const summaryBody =
     currentSection && typeof currentSection.body === 'string' ? currentSection.body.trim() : '';
+  const topicFlashcardDeck = useMemo(() => {
+    const glossaryCards: StudyFlashcard[] = buildTopicFlashcards(resources.concepts, resources.flashcards, english)
+      .filter((card) => card.origin === 'glossary')
+      .map((card) => ({
+        front: card.front,
+        back: card.back,
+        level: 'recordar' as const,
+        kind: 'concept' as const,
+        reference: { pageStart: null, pageEnd: null, sectionTitle: null, excerpt: '' },
+      }));
+    const materialIndices = resources.flashcards
+      .slice(0, Math.max(TOPIC_FLASHCARD_TARGET - glossaryCards.length, 0))
+      .map((card) => flashcards.indexOf(card))
+      .filter((index) => index >= 0);
+    return {
+      cards: [...flashcards, ...glossaryCards],
+      // Las del glosario van primero y se numeran después del mazo original (sólo de sesión).
+      indices: [...glossaryCards.map((_, index) => flashcards.length + index), ...materialIndices],
+      persistentCount: flashcards.length,
+    };
+  }, [resources.concepts, resources.flashcards, flashcards, english]);
   const pdfPagesLabel = useMemo(() => {
     const pages = [...summaryBody.matchAll(/Ver en PDF\s*·\s*p[aá]ginas?\s+([\d,\s]+(?:y\s*\d+)?)/giu)]
       .flatMap((match) => (match[1] ?? '').match(/\d+/gu) ?? [])
@@ -463,11 +486,15 @@ export function PdfProgressPanel({
               id: 'flashcards',
               label: 'Flashcards',
               content: () => (
-                <TopicFlashcards
+                <StudentMaterialFlashcards
                   key={currentTopic?.id ?? 'unmatched'}
-                  concepts={resources.concepts}
-                  flashcards={resources.flashcards}
-                  pdfHref={sourcePdfHref ?? simulation?.pdfHref}
+                  cards={topicFlashcardDeck.cards}
+                  allowedCardIndices={topicFlashcardDeck.indices}
+                  persistentCardCount={topicFlashcardDeck.persistentCount}
+                  materialId={material.id}
+                  topicTitle={currentTopic?.title}
+                  onPracticeTopic={canPracticeTopic ? () => onPracticeTopic?.(currentSectionIndex) : undefined}
+                  demoMode={Boolean(simulation) || showOnboardingExample || showOnboardingTopic}
                 />
               ),
             },
