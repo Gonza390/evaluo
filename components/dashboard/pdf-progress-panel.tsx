@@ -329,20 +329,27 @@ export function PdfProgressPanel({
       }
       // El borde inferior disponible es el del contenedor que scrollea (no la ventana),
       // descontando el relleno de cada contenedor intermedio, para que la página no scrollee.
-      let bottom = window.innerHeight;
       let reserved = 0;
+      const scrollers: HTMLElement[] = [];
       for (let node: HTMLElement | null = el.parentElement; node; node = node.parentElement) {
         const style = window.getComputedStyle(node);
         reserved += (parseFloat(style.paddingBottom) || 0) + (parseFloat(style.borderBottomWidth) || 0);
-        if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-          bottom = Math.min(bottom, node.getBoundingClientRect().bottom);
-          break;
-        }
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll') scrollers.push(node);
       }
+      const root = document.scrollingElement as HTMLElement | null;
+      if (root) scrollers.push(root);
       const top = Math.max(el.getBoundingClientRect().top, 0);
-      el.style.setProperty('--split-h', `${Math.max(360, Math.floor(bottom - top - 12))}px`);
       // El relleno inferior de los contenedores no debe empujar la página a scrollear.
       el.style.marginBottom = `${-Math.floor(reserved)}px`;
+      // Se parte del borde de la ventana y se recorta lo que haga scrollear a cualquier
+      // contenedor: así la zona llega hasta donde realmente hay lugar, sin suposiciones.
+      let height = Math.max(360, Math.floor(window.innerHeight - top - 4));
+      for (let pass = 0; pass < 4; pass += 1) {
+        el.style.setProperty('--split-h', `${height}px`);
+        const overflow = Math.max(0, ...scrollers.map((node) => node.scrollHeight - node.clientHeight));
+        if (overflow <= 1 || height <= 360) break;
+        height = Math.max(360, height - overflow);
+      }
     };
     apply();
     // El layout de arriba (cabeceras, avisos, fuentes) puede cambiar después del primer
@@ -352,12 +359,16 @@ export function PdfProgressPanel({
     observer?.observe(document.body);
     if (el.parentElement) observer?.observe(el.parentElement);
     window.addEventListener('resize', apply);
-    window.addEventListener('scroll', apply, true);
+    const onScroll = (event: Event) => {
+      if (event.target instanceof Node && el.contains(event.target)) return;
+      apply();
+    };
+    window.addEventListener('scroll', onScroll, true);
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
       observer?.disconnect();
       window.removeEventListener('resize', apply);
-      window.removeEventListener('scroll', apply, true);
+      window.removeEventListener('scroll', onScroll, true);
       el.style.removeProperty('--split-h');
       el.style.removeProperty('margin-bottom');
     };
@@ -421,7 +432,6 @@ export function PdfProgressPanel({
               label: tr('Resumen', 'Summary'),
               content: () => (
                 <section id={panelId + '-topic-summary'} className="scroll-mt-4" aria-label={tr("Contenido de este tema","Topic content")}>
-                  <h3 className="text-[15px] font-semibold">{tr("Leé el resumen del tema","Read the topic summary")}</h3>
                   {summaryBody && focusConcepts.length > 0 && (
                     <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={tr("Guía de lectura del tema","Topic reading guide")}>
                       <span className="text-muted-foreground mr-1 text-[13px]">{tr("Fijate en:","Look for:")}</span>
