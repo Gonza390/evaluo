@@ -326,8 +326,20 @@ export function PdfProgressPanel({
         el.style.removeProperty('--split-h');
         return;
       }
+      // El borde inferior disponible es el del contenedor que scrollea (no la ventana),
+      // descontando el relleno de cada contenedor intermedio, para que la página no scrollee.
+      let bottom = window.innerHeight;
+      let reserved = 0;
+      for (let node: HTMLElement | null = el.parentElement; node; node = node.parentElement) {
+        const style = window.getComputedStyle(node);
+        reserved += (parseFloat(style.paddingBottom) || 0) + (parseFloat(style.borderBottomWidth) || 0);
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+          bottom = Math.min(bottom, node.getBoundingClientRect().bottom);
+          break;
+        }
+      }
       const top = Math.max(el.getBoundingClientRect().top, 0);
-      el.style.setProperty('--split-h', `${Math.max(360, window.innerHeight - top - 16)}px`);
+      el.style.setProperty('--split-h', `${Math.max(360, Math.floor(bottom - top - reserved - 12))}px`);
     };
     apply();
     // El layout de arriba (cabeceras, avisos, fuentes) puede cambiar después del primer
