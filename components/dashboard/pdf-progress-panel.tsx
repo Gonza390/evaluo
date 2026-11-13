@@ -343,7 +343,7 @@ export function PdfProgressPanel({
       el.style.marginBottom = `${-Math.floor(reserved)}px`;
       // Se parte del borde de la ventana y se recorta lo que haga scrollear a cualquier
       // contenedor: así la zona llega hasta donde realmente hay lugar, sin suposiciones.
-      let height = Math.max(360, Math.floor(window.innerHeight - top - 4));
+      let height = Math.max(360, Math.floor(window.innerHeight - top));
       for (let pass = 0; pass < 4; pass += 1) {
         el.style.setProperty('--split-h', `${height}px`);
         const overflow = Math.max(0, ...scrollers.map((node) => node.scrollHeight - node.clientHeight));

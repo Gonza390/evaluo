@@ -35,7 +35,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
 
   return (
     <div className="mt-3 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col">
-      <ol className="flex shrink-0 gap-1 sm:flex-wrap sm:gap-2" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
+      <ol className="flex shrink-0 gap-1 sm:flex-wrap sm:gap-1.5" aria-label={english ? 'Study steps' : 'Pasos de estudio'}>
         {steps.map((item, index) => {
           const current = index === view.current;
           const done = view.done.includes(item.id);
@@ -46,13 +46,13 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
                 aria-current={current ? 'step' : undefined}
                 onClick={() => set(index)}
                 className={
-                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-9 sm:flex-row sm:gap-2 sm:rounded-full sm:border sm:px-3 sm:text-[13px] ' +
+                  'focus-visible:outline-ring flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[12px] font-semibold focus-visible:outline-2 sm:min-h-8 sm:flex-row sm:gap-1.5 sm:rounded-full sm:border sm:px-2.5 sm:text-[12px] ' +
                   (current ? 'text-foreground sm:border-primary/30 sm:bg-primary/10' : 'text-muted-foreground sm:text-foreground sm:border-border sm:bg-card sm:hover:bg-muted/50')
                 }
               >
                 <span
                   className={
-                    'flex size-5 shrink-0 items-center justify-center rounded-full border text-[10px] ' +
+                    'flex size-[18px] shrink-0 items-center justify-center rounded-full border text-[9px] ' +
                     (done && !current
                       ? 'border-emerald-700 bg-emerald-700 text-white'
                       : current
@@ -60,10 +60,10 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
                         : 'border-border text-muted-foreground')
                   }
                 >
-                  {done && !current ? <Check size={13} strokeWidth={3} aria-label={english ? 'Done' : 'Hecho'} /> : index + 1}
+                  {done && !current ? <Check size={11} strokeWidth={3} aria-label={english ? 'Done' : 'Hecho'} /> : index + 1}
                 </span>
                 <span className="truncate">{item.label}</span>
-                {item.count ? <span className="text-muted-foreground hidden text-xs font-medium sm:inline">{item.count}</span> : null}
+                {item.count ? <span className="text-muted-foreground hidden text-[11px] font-medium sm:inline">{item.count}</span> : null}
               </button>
             </li>
           );
@@ -79,7 +79,7 @@ export function TopicStudySteps({ steps, resetKey }: { steps: TopicStudyStep[]; 
           })}
         </div>
         {!last && next && (
-          <div className="border-border bg-background mt-6 flex shrink-0 flex-col gap-2 border-t py-3 sm:flex-row sm:items-center sm:justify-between xl:mt-0">
+          <div className="border-border bg-background mt-6 flex shrink-0 flex-col gap-2 border-t pt-2 pb-0 sm:flex-row sm:items-center sm:justify-between xl:mt-0">
             <span className="text-muted-foreground hidden text-xs sm:block">
               {english ? `Step ${view.current + 1} of ${steps.length}` : `Paso ${view.current + 1} de ${steps.length}`}
             </span>
