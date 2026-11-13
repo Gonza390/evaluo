@@ -324,6 +324,7 @@ export function PdfProgressPanel({
     const apply = () => {
       if (!query.matches) {
         el.style.removeProperty('--split-h');
+        el.style.removeProperty('margin-bottom');
         return;
       }
       // El borde inferior disponible es el del contenedor que scrollea (no la ventana),
@@ -339,7 +340,9 @@ export function PdfProgressPanel({
         }
       }
       const top = Math.max(el.getBoundingClientRect().top, 0);
-      el.style.setProperty('--split-h', `${Math.max(360, Math.floor(bottom - top - reserved - 12))}px`);
+      el.style.setProperty('--split-h', `${Math.max(360, Math.floor(bottom - top - 12))}px`);
+      // El relleno inferior de los contenedores no debe empujar la página a scrollear.
+      el.style.marginBottom = `${-Math.floor(reserved)}px`;
     };
     apply();
     // El layout de arriba (cabeceras, avisos, fuentes) puede cambiar después del primer
@@ -356,6 +359,7 @@ export function PdfProgressPanel({
       window.removeEventListener('resize', apply);
       window.removeEventListener('scroll', apply, true);
       el.style.removeProperty('--split-h');
+      el.style.removeProperty('margin-bottom');
     };
   }, [topicId, reviewOpen]);
 
@@ -366,7 +370,7 @@ export function PdfProgressPanel({
       data-onboarding-topic-detail
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
-      className="bg-card focus-visible:outline-ring min-w-0 w-full py-2 focus-visible:outline-2 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
+      className="bg-card focus-visible:outline-ring min-w-0 w-full pb-2 focus-visible:outline-2 xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
     >
       {!reviewOpen && currentTopic ? (
         <div className="xl:shrink-0">
@@ -604,7 +608,7 @@ export function PdfProgressPanel({
 
   return (
     <div
-      className={`${topicId && !reviewOpen ? 'mr-auto w-full max-w-[1400px]' : 'mx-auto w-full max-w-[1000px]'} ${embedded ? 'py-2 sm:py-3' : 'px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
+      className={`${topicId && !reviewOpen ? 'mr-auto w-full max-w-[1400px] xl:-mt-3' : 'mx-auto w-full max-w-[1000px]'} ${embedded ? 'py-2 sm:py-3' : 'px-1 py-2 sm:px-3 sm:py-3'} min-w-0 [&_p]:leading-5!`}
     >
       {!embedded && !simulation && (
         <PdfMobileNavigation
@@ -711,7 +715,7 @@ export function PdfProgressPanel({
           className={
             reviewOpen
               ? 'mx-auto mt-5 w-full max-w-[980px] min-w-0'
-              : 'mt-5 grid min-w-0 items-start gap-5 xl:h-[var(--split-h,calc(100dvh-19rem))] xl:grid-cols-[minmax(0,1fr)_340px] xl:items-stretch xl:gap-8'
+              : 'mt-5 grid min-w-0 items-start gap-5 xl:-mt-2 xl:h-[var(--split-h,calc(100dvh-19rem))] xl:grid-cols-[minmax(0,1fr)_340px] xl:items-stretch xl:gap-8'
           }
         >
           <div className="min-w-0 xl:flex xl:min-h-0 xl:flex-col">{topicDetail}</div>
